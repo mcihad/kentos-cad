@@ -4,7 +4,7 @@
   "command": "cad.profiles.list",
   "commandVersion": 1,
   "title": "Veri profillerini listele",
-  "note": "Written by scripts/fixtures/profile_files_cases.py from the contract's rules and docs/adr/0558; do not edit by hand.",
+  "note": "Written by scripts/fixtures/profile_files_cases.py from the contract's rules, docs/adr/0558 and docs/adr/0735; do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -161,7 +161,7 @@
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf20/cizim.kcad"
+            "drawing": "$tmp:pf22/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -177,7 +177,7 @@
                   "migrations": 0
                 }
               ],
-              "folder": "$tmp:pf20/profiller"
+              "folder": "$tmp:pf22/profiller"
             },
             "warnings": []
           }
@@ -230,17 +230,17 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
-          "to": "$tmp:pf21/profiller/park-bahce.profil.json"
+          "to": "$tmp:pf23/profiller/park-bahce.profil.json"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce-kurum.eslem.json",
-          "to": "$tmp:pf21/profiller/park-bahce-kurum.eslem.json"
+          "to": "$tmp:pf23/profiller/park-bahce-kurum.eslem.json"
         },
         {
           "op": "plan",
           "input": {
-            "drawing": "$tmp:pf21/cizim.kcad"
+            "drawing": "$tmp:pf23/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -263,7 +263,7 @@
                   "release": 3,
                   "classes": 2,
                   "migrations": 2,
-                  "path": "$tmp:pf21/profiller/park-bahce.profil.json"
+                  "path": "$tmp:pf23/profiller/park-bahce.profil.json"
                 },
                 {
                   "kind": "mapping",
@@ -273,11 +273,11 @@
                   "release": 0,
                   "classes": 1,
                   "migrations": 0,
-                  "path": "$tmp:pf21/profiller/park-bahce-kurum.eslem.json",
+                  "path": "$tmp:pf23/profiller/park-bahce-kurum.eslem.json",
                   "profile": "park-bahce"
                 }
               ],
-              "folder": "$tmp:pf21/profiller"
+              "folder": "$tmp:pf23/profiller"
             },
             "warnings": []
           },
@@ -288,7 +288,7 @@
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf21/cizim.kcad"
+            "drawing": "$tmp:pf23/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -311,7 +311,7 @@
                   "release": 3,
                   "classes": 2,
                   "migrations": 2,
-                  "path": "$tmp:pf21/profiller/park-bahce.profil.json"
+                  "path": "$tmp:pf23/profiller/park-bahce.profil.json"
                 },
                 {
                   "kind": "mapping",
@@ -321,11 +321,11 @@
                   "release": 0,
                   "classes": 1,
                   "migrations": 0,
-                  "path": "$tmp:pf21/profiller/park-bahce-kurum.eslem.json",
+                  "path": "$tmp:pf23/profiller/park-bahce-kurum.eslem.json",
                   "profile": "park-bahce"
                 }
               ],
-              "folder": "$tmp:pf21/profiller"
+              "folder": "$tmp:pf23/profiller"
             },
             "warnings": []
           },
@@ -381,22 +381,22 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
-          "to": "$tmp:pf22/profiller/sivas-bel.eslem.json"
+          "to": "$tmp:pf24/profiller/sivas-bel.eslem.json"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
-          "to": "$tmp:pf22/profiller/peyzaj.profil.json"
+          "to": "$tmp:pf24/profiller/peyzaj.profil.json"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
-          "to": "$tmp:pf22/profiller/park-bahce.profil.json"
+          "to": "$tmp:pf24/profiller/park-bahce.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf22/cizim.kcad"
+            "drawing": "$tmp:pf24/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -419,7 +419,7 @@
                   "release": 3,
                   "classes": 2,
                   "migrations": 2,
-                  "path": "$tmp:pf22/profiller/park-bahce.profil.json"
+                  "path": "$tmp:pf24/profiller/park-bahce.profil.json"
                 },
                 {
                   "kind": "profile",
@@ -429,7 +429,7 @@
                   "release": 1,
                   "classes": 2,
                   "migrations": 0,
-                  "path": "$tmp:pf22/profiller/peyzaj.profil.json"
+                  "path": "$tmp:pf24/profiller/peyzaj.profil.json"
                 },
                 {
                   "kind": "mapping",
@@ -439,11 +439,11 @@
                   "release": 0,
                   "classes": 3,
                   "migrations": 0,
-                  "path": "$tmp:pf22/profiller/sivas-bel.eslem.json",
+                  "path": "$tmp:pf24/profiller/sivas-bel.eslem.json",
                   "profile": "tucbs-temel"
                 }
               ],
-              "folder": "$tmp:pf22/profiller"
+              "folder": "$tmp:pf24/profiller"
             },
             "warnings": []
           },
@@ -499,17 +499,17 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/peyzaj-kurum.eslem.json",
-          "to": "$tmp:pf23/profiller/peyzaj.eslem.json"
+          "to": "$tmp:pf25/profiller/peyzaj.eslem.json"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
-          "to": "$tmp:pf23/profiller/peyzaj.profil.json"
+          "to": "$tmp:pf25/profiller/peyzaj.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf23/cizim.kcad"
+            "drawing": "$tmp:pf25/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -532,7 +532,7 @@
                   "release": 1,
                   "classes": 2,
                   "migrations": 0,
-                  "path": "$tmp:pf23/profiller/peyzaj.profil.json"
+                  "path": "$tmp:pf25/profiller/peyzaj.profil.json"
                 },
                 {
                   "kind": "mapping",
@@ -541,11 +541,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf23/profiller/peyzaj.eslem.json",
-                  "problem": "$tmp:pf23/profiller/peyzaj.eslem.json dosyasının içindeki eşlemenin adı “peyzaj-kurum”; dosya adıyla aynı olmalı."
+                  "path": "$tmp:pf25/profiller/peyzaj.eslem.json",
+                  "problem": "$tmp:pf25/profiller/peyzaj.eslem.json dosyasının içindeki eşlemenin adı “peyzaj-kurum”; dosya adıyla aynı olmalı."
                 }
               ],
-              "folder": "$tmp:pf23/profiller"
+              "folder": "$tmp:pf25/profiller"
             },
             "warnings": []
           },
@@ -601,17 +601,17 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce-r2.profil.json",
-          "to": "$tmp:pf24/profiller/a-r2.profil.json"
+          "to": "$tmp:pf26/profiller/a-r2.profil.json"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce-r1.profil.json",
-          "to": "$tmp:pf24/profiller/b-r1.profil.json"
+          "to": "$tmp:pf26/profiller/b-r1.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf24/cizim.kcad"
+            "drawing": "$tmp:pf26/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -633,8 +633,8 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf24/profiller/a-r2.profil.json",
-                  "problem": "$tmp:pf24/profiller/a-r2.profil.json dosyasının içindeki profilin adı “park-bahce”; dosya adıyla aynı olmalı."
+                  "path": "$tmp:pf26/profiller/a-r2.profil.json",
+                  "problem": "$tmp:pf26/profiller/a-r2.profil.json dosyasının içindeki profilin adı “park-bahce”; dosya adıyla aynı olmalı."
                 },
                 {
                   "kind": "profile",
@@ -643,11 +643,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf24/profiller/b-r1.profil.json",
-                  "problem": "$tmp:pf24/profiller/b-r1.profil.json dosyasının içindeki profilin adı “park-bahce”; dosya adıyla aynı olmalı."
+                  "path": "$tmp:pf26/profiller/b-r1.profil.json",
+                  "problem": "$tmp:pf26/profiller/b-r1.profil.json dosyasının içindeki profilin adı “park-bahce”; dosya adıyla aynı olmalı."
                 }
               ],
-              "folder": "$tmp:pf24/profiller"
+              "folder": "$tmp:pf26/profiller"
             },
             "warnings": []
           },
@@ -703,12 +703,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/bozuk.json",
-          "to": "$tmp:pf25/profiller/bozuk.profil.json"
+          "to": "$tmp:pf27/profiller/bozuk.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf25/cizim.kcad"
+            "drawing": "$tmp:pf27/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -730,11 +730,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf25/profiller/bozuk.profil.json",
+                  "path": "$tmp:pf27/profiller/bozuk.profil.json",
                   "problem": "$any"
                 }
               ],
-              "folder": "$tmp:pf25/profiller"
+              "folder": "$tmp:pf27/profiller"
             },
             "warnings": []
           },
@@ -790,12 +790,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/taninmayan.json",
-          "to": "$tmp:pf26/profiller/x.profil.json"
+          "to": "$tmp:pf28/profiller/x.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf26/cizim.kcad"
+            "drawing": "$tmp:pf28/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -817,11 +817,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf26/profiller/x.profil.json",
+                  "path": "$tmp:pf28/profiller/x.profil.json",
                   "problem": "Dosyanın biçimi tanınmıyor: veri profili için “kentos.data-profile”, eşleme için “kentos.profile-mapping” yazılı olmalı."
                 }
               ],
-              "folder": "$tmp:pf26/profiller"
+              "folder": "$tmp:pf28/profiller"
             },
             "warnings": []
           },
@@ -877,12 +877,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/profil-surum2.json",
-          "to": "$tmp:pf27/profiller/x.profil.json"
+          "to": "$tmp:pf29/profiller/x.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf27/cizim.kcad"
+            "drawing": "$tmp:pf29/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -904,11 +904,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf27/profiller/x.profil.json",
+                  "path": "$tmp:pf29/profiller/x.profil.json",
                   "problem": "Profilin biçim sürümü 2; bu KentOS 1. sürümü okur."
                 }
               ],
-              "folder": "$tmp:pf27/profiller"
+              "folder": "$tmp:pf29/profiller"
             },
             "warnings": []
           },
@@ -964,12 +964,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/profil-surumsuz.json",
-          "to": "$tmp:pf28/profiller/x.profil.json"
+          "to": "$tmp:pf30/profiller/x.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf28/cizim.kcad"
+            "drawing": "$tmp:pf30/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -991,11 +991,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf28/profiller/x.profil.json",
+                  "path": "$tmp:pf30/profiller/x.profil.json",
                   "problem": "Profilin biçim sürümü yok; bu KentOS 1. sürümü okur."
                 }
               ],
-              "folder": "$tmp:pf28/profiller"
+              "folder": "$tmp:pf30/profiller"
             },
             "warnings": []
           },
@@ -1051,12 +1051,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/esleme-surum2.json",
-          "to": "$tmp:pf29/profiller/x.eslem.json"
+          "to": "$tmp:pf31/profiller/x.eslem.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf29/cizim.kcad"
+            "drawing": "$tmp:pf31/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1078,11 +1078,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf29/profiller/x.eslem.json",
+                  "path": "$tmp:pf31/profiller/x.eslem.json",
                   "problem": "Eşlemenin biçim sürümü 2; bu KentOS 1. sürümü okur."
                 }
               ],
-              "folder": "$tmp:pf29/profiller"
+              "folder": "$tmp:pf31/profiller"
             },
             "warnings": []
           },
@@ -1138,12 +1138,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/profil-sinifsiz.json",
-          "to": "$tmp:pf30/profiller/sinifsiz.profil.json"
+          "to": "$tmp:pf32/profiller/sinifsiz.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf30/cizim.kcad"
+            "drawing": "$tmp:pf32/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1165,11 +1165,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf30/profiller/sinifsiz.profil.json",
+                  "path": "$tmp:pf32/profiller/sinifsiz.profil.json",
                   "problem": "Veri profili geçersiz: Profilde 1 ile 64 arası sınıf olur."
                 }
               ],
-              "folder": "$tmp:pf30/profiller"
+              "folder": "$tmp:pf32/profiller"
             },
             "warnings": []
           },
@@ -1225,12 +1225,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/profil-basliksiz.json",
-          "to": "$tmp:pf31/profiller/x.profil.json"
+          "to": "$tmp:pf33/profiller/x.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf31/cizim.kcad"
+            "drawing": "$tmp:pf33/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1252,11 +1252,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf31/profiller/x.profil.json",
+                  "path": "$tmp:pf33/profiller/x.profil.json",
                   "problem": "$any"
                 }
               ],
-              "folder": "$tmp:pf31/profiller"
+              "folder": "$tmp:pf33/profiller"
             },
             "warnings": []
           },
@@ -1312,12 +1312,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/esleme-basliksiz.json",
-          "to": "$tmp:pf32/profiller/x.eslem.json"
+          "to": "$tmp:pf34/profiller/x.eslem.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf32/cizim.kcad"
+            "drawing": "$tmp:pf34/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1339,11 +1339,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf32/profiller/x.eslem.json",
+                  "path": "$tmp:pf34/profiller/x.eslem.json",
                   "problem": "Eşleme geçersiz: Eşlemenin başlığı boş olamaz."
                 }
               ],
-              "folder": "$tmp:pf32/profiller"
+              "folder": "$tmp:pf34/profiller"
             },
             "warnings": []
           },
@@ -1399,12 +1399,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/esleme-sinifsiz.json",
-          "to": "$tmp:pf33/profiller/x.eslem.json"
+          "to": "$tmp:pf35/profiller/x.eslem.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf33/cizim.kcad"
+            "drawing": "$tmp:pf35/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1426,11 +1426,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf33/profiller/x.eslem.json",
+                  "path": "$tmp:pf35/profiller/x.eslem.json",
                   "problem": "Eşleme geçersiz: Eşlemede 1 ile 256 arası sınıf olur."
                 }
               ],
-              "folder": "$tmp:pf33/profiller"
+              "folder": "$tmp:pf35/profiller"
             },
             "warnings": []
           },
@@ -1486,12 +1486,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
-          "to": "$tmp:pf34/profiller/baska.profil.json"
+          "to": "$tmp:pf36/profiller/baska.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf34/cizim.kcad"
+            "drawing": "$tmp:pf36/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1513,11 +1513,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf34/profiller/baska.profil.json",
-                  "problem": "$tmp:pf34/profiller/baska.profil.json dosyasının içindeki profilin adı “peyzaj”; dosya adıyla aynı olmalı."
+                  "path": "$tmp:pf36/profiller/baska.profil.json",
+                  "problem": "$tmp:pf36/profiller/baska.profil.json dosyasının içindeki profilin adı “peyzaj”; dosya adıyla aynı olmalı."
                 }
               ],
-              "folder": "$tmp:pf34/profiller"
+              "folder": "$tmp:pf36/profiller"
             },
             "warnings": []
           },
@@ -1573,12 +1573,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
-          "to": "$tmp:pf35/profiller/baska.eslem.json"
+          "to": "$tmp:pf37/profiller/baska.eslem.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf35/cizim.kcad"
+            "drawing": "$tmp:pf37/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1600,11 +1600,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf35/profiller/baska.eslem.json",
-                  "problem": "$tmp:pf35/profiller/baska.eslem.json dosyasının içindeki eşlemenin adı “sivas-bel”; dosya adıyla aynı olmalı."
+                  "path": "$tmp:pf37/profiller/baska.eslem.json",
+                  "problem": "$tmp:pf37/profiller/baska.eslem.json dosyasının içindeki eşlemenin adı “sivas-bel”; dosya adıyla aynı olmalı."
                 }
               ],
-              "folder": "$tmp:pf35/profiller"
+              "folder": "$tmp:pf37/profiller"
             },
             "warnings": []
           },
@@ -1660,12 +1660,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
-          "to": "$tmp:pf36/profiller/x.profil.json"
+          "to": "$tmp:pf38/profiller/x.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf36/cizim.kcad"
+            "drawing": "$tmp:pf38/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1687,11 +1687,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf36/profiller/x.profil.json",
-                  "problem": "$tmp:pf36/profiller/x.profil.json bir veri profili değil, eşleme."
+                  "path": "$tmp:pf38/profiller/x.profil.json",
+                  "problem": "$tmp:pf38/profiller/x.profil.json bir veri profili değil, eşleme."
                 }
               ],
-              "folder": "$tmp:pf36/profiller"
+              "folder": "$tmp:pf38/profiller"
             },
             "warnings": []
           },
@@ -1747,12 +1747,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
-          "to": "$tmp:pf37/profiller/x.eslem.json"
+          "to": "$tmp:pf39/profiller/x.eslem.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf37/cizim.kcad"
+            "drawing": "$tmp:pf39/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1774,11 +1774,11 @@
                   "release": 0,
                   "classes": 0,
                   "migrations": 0,
-                  "path": "$tmp:pf37/profiller/x.eslem.json",
-                  "problem": "$tmp:pf37/profiller/x.eslem.json bir eşleme değil, veri profili."
+                  "path": "$tmp:pf39/profiller/x.eslem.json",
+                  "problem": "$tmp:pf39/profiller/x.eslem.json bir eşleme değil, veri profili."
                 }
               ],
-              "folder": "$tmp:pf37/profiller"
+              "folder": "$tmp:pf39/profiller"
             },
             "warnings": []
           },
@@ -1834,12 +1834,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
-          "to": "$tmp:pf38/profiller/sivas-bel.eslem.json"
+          "to": "$tmp:pf40/profiller/sivas-bel.eslem.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf38/cizim.kcad"
+            "drawing": "$tmp:pf40/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1862,11 +1862,11 @@
                   "release": 0,
                   "classes": 3,
                   "migrations": 0,
-                  "path": "$tmp:pf38/profiller/sivas-bel.eslem.json",
+                  "path": "$tmp:pf40/profiller/sivas-bel.eslem.json",
                   "profile": "tucbs-temel"
                 }
               ],
-              "folder": "$tmp:pf38/profiller"
+              "folder": "$tmp:pf40/profiller"
             },
             "warnings": []
           },
@@ -1922,17 +1922,17 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce-bozuk.eslem.json",
-          "to": "$tmp:pf39/profiller/park-bahce-bozuk.eslem.json"
+          "to": "$tmp:pf41/profiller/park-bahce-bozuk.eslem.json"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
-          "to": "$tmp:pf39/profiller/park-bahce.profil.json"
+          "to": "$tmp:pf41/profiller/park-bahce.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf39/cizim.kcad"
+            "drawing": "$tmp:pf41/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -1955,7 +1955,7 @@
                   "release": 3,
                   "classes": 2,
                   "migrations": 2,
-                  "path": "$tmp:pf39/profiller/park-bahce.profil.json"
+                  "path": "$tmp:pf41/profiller/park-bahce.profil.json"
                 },
                 {
                   "kind": "mapping",
@@ -1965,12 +1965,12 @@
                   "release": 0,
                   "classes": 1,
                   "migrations": 0,
-                  "path": "$tmp:pf39/profiller/park-bahce-bozuk.eslem.json",
+                  "path": "$tmp:pf41/profiller/park-bahce-bozuk.eslem.json",
                   "profile": "park-bahce",
                   "problem": "“orman” sınıfı profilde yok."
                 }
               ],
-              "folder": "$tmp:pf39/profiller"
+              "folder": "$tmp:pf41/profiller"
             },
             "warnings": []
           },
@@ -2026,12 +2026,12 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/hayalet-esleme.eslem.json",
-          "to": "$tmp:pf40/profiller/hayalet-esleme.eslem.json"
+          "to": "$tmp:pf42/profiller/hayalet-esleme.eslem.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf40/cizim.kcad"
+            "drawing": "$tmp:pf42/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -2054,11 +2054,11 @@
                   "release": 0,
                   "classes": 1,
                   "migrations": 0,
-                  "path": "$tmp:pf40/profiller/hayalet-esleme.eslem.json",
+                  "path": "$tmp:pf42/profiller/hayalet-esleme.eslem.json",
                   "profile": "hayalet"
                 }
               ],
-              "folder": "$tmp:pf40/profiller"
+              "folder": "$tmp:pf42/profiller"
             },
             "warnings": []
           },
@@ -2114,17 +2114,17 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce-kurum.eslem.json",
-          "to": "$tmp:pf41/profiller/park-bahce-kurum.eslem.json"
+          "to": "$tmp:pf43/profiller/park-bahce-kurum.eslem.json"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
-          "to": "$tmp:pf41/profiller/park-bahce.profil.json"
+          "to": "$tmp:pf43/profiller/park-bahce.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf41/cizim.kcad"
+            "drawing": "$tmp:pf43/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -2147,7 +2147,7 @@
                   "release": 3,
                   "classes": 2,
                   "migrations": 2,
-                  "path": "$tmp:pf41/profiller/park-bahce.profil.json"
+                  "path": "$tmp:pf43/profiller/park-bahce.profil.json"
                 },
                 {
                   "kind": "mapping",
@@ -2157,11 +2157,11 @@
                   "release": 0,
                   "classes": 1,
                   "migrations": 0,
-                  "path": "$tmp:pf41/profiller/park-bahce-kurum.eslem.json",
+                  "path": "$tmp:pf43/profiller/park-bahce-kurum.eslem.json",
                   "profile": "park-bahce"
                 }
               ],
-              "folder": "$tmp:pf41/profiller"
+              "folder": "$tmp:pf43/profiller"
             },
             "warnings": []
           },
@@ -2217,22 +2217,22 @@
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/bozuk.json",
-          "to": "$tmp:pf42/profiller/notlar.txt"
+          "to": "$tmp:pf44/profiller/notlar.txt"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
-          "to": "$tmp:pf42/profiller/peyzaj.profil.json.bak"
+          "to": "$tmp:pf44/profiller/peyzaj.profil.json.bak"
         },
         {
           "op": "copyFile",
           "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
-          "to": "$tmp:pf42/profiller/peyzaj.profil.json"
+          "to": "$tmp:pf44/profiller/peyzaj.profil.json"
         },
         {
           "op": "execute",
           "input": {
-            "drawing": "$tmp:pf42/cizim.kcad"
+            "drawing": "$tmp:pf44/cizim.kcad"
           },
           "result": {
             "status": "completed",
@@ -2255,10 +2255,10 @@
                   "release": 1,
                   "classes": 2,
                   "migrations": 0,
-                  "path": "$tmp:pf42/profiller/peyzaj.profil.json"
+                  "path": "$tmp:pf44/profiller/peyzaj.profil.json"
                 }
               ],
-              "folder": "$tmp:pf42/profiller"
+              "folder": "$tmp:pf44/profiller"
             },
             "warnings": []
           },
@@ -2409,6 +2409,1190 @@
             "status": "completed",
             "output": null,
             "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimin taşıdığı profil ve eşleme: KentOS'unkinden sonra, adlarıyla; çizimin dosyası gerekmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "peyzaj-kurum",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj-kurum\",\n  \"title\": \"Peyzaj eşlemesi\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "peyzaj-kurum",
+                  "title": "Peyzaj eşlemesi",
+                  "release": 0,
+                  "classes": 2,
+                  "migrations": 0,
+                  "profile": "peyzaj"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "peyzaj-kurum",
+                  "title": "Peyzaj eşlemesi",
+                  "release": 0,
+                  "classes": 2,
+                  "migrations": 0,
+                  "profile": "peyzaj"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimdekiler önce, klasördekiler sonra; aynı ad ve türdeki klasör dosyası gölgede (shadowed)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf45/profiller/peyzaj.profil.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
+          "to": "$tmp:pf45/profiller/park-bahce.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf45/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2,
+                  "path": "$tmp:pf45/profiller/park-bahce.profil.json"
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0,
+                  "path": "$tmp:pf45/profiller/peyzaj.profil.json",
+                  "shadowed": true
+                }
+              ],
+              "folder": "$tmp:pf45/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı adlı eşleme klasörde: yalnız aynı türdeki gölgede kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj-kurum.eslem.json",
+          "to": "$tmp:pf46/profiller/peyzaj.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf46/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "path": "$tmp:pf46/profiller/peyzaj.eslem.json",
+                  "problem": "$tmp:pf46/profiller/peyzaj.eslem.json dosyasının içindeki eşlemenin adı “peyzaj-kurum”; dosya adıyla aynı olmalı."
+                }
+              ],
+              "folder": "$tmp:pf46/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimin taşıdığı okunmayan metin düşmez, nedeniyle gelir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "bozuk",
+              "text": "{ bu bir JSON degil\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "bozuk",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "problem": "$any"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimdeki profilin kendi adı farklı",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "baska",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "baska",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "problem": "Çizimin içindeki “baska” profilinin kendi adı “peyzaj”; aynı olmalı."
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profil diye taşınan eşleme",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "sivas-bel",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"sivas-bel\",\n  \"title\": \"Sivas Belediyesi eşlemesi\",\n  \"profile\": \"tucbs-temel\",\n  \"description\": \"Belediyenin kendi katman, alan ve kod adları.\",\n  \"classes\": [\n    {\n      \"class\": \"parsel\",\n      \"layer\": [\n        \"Kadastro\",\n        \"Parseller\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"ParselKimlik\",\n          \"name\": \"PARSEL_ID\"\n        },\n        {\n          \"profile\": \"AdaNo\",\n          \"name\": \"ADA_NO\"\n        },\n        {\n          \"profile\": \"ParselNo\",\n          \"name\": \"PARSEL_NO\"\n        },\n        {\n          \"profile\": \"TapuAlani\",\n          \"name\": \"TAPU_ALANI\"\n        },\n        {\n          \"profile\": \"Nitelik\",\n          \"name\": \"NITELIK\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Nitelik\",\n          \"codes\": [\n            {\n              \"profile\": \"arsa\",\n              \"name\": \"A\"\n            },\n            {\n              \"profile\": \"tarla\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"bahce\",\n              \"name\": \"B\"\n            },\n            {\n              \"profile\": \"bina\",\n              \"name\": \"KB\"\n            },\n            {\n              \"profile\": \"diger\",\n              \"name\": \"D\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"bina\",\n      \"layer\": [\n        \"Binalar\",\n        \"Yapılar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"BinaKimlik\",\n          \"name\": \"YAPI_ID\"\n        },\n        {\n          \"profile\": \"KatSayisi\",\n          \"name\": \"KAT\"\n        },\n        {\n          \"profile\": \"Kullanim\",\n          \"name\": \"KULLANIM\"\n        },\n        {\n          \"profile\": \"Parsel\",\n          \"name\": \"PARSEL_REF\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Kullanim\",\n          \"codes\": [\n            {\n              \"profile\": \"konut\",\n              \"name\": \"K\"\n            },\n            {\n              \"profile\": \"ticaret\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"karma\",\n              \"name\": \"KT\"\n            },\n            {\n              \"profile\": \"kamu\",\n              \"name\": \"KM\"\n            },\n            {\n              \"profile\": \"sanayi\",\n              \"name\": \"S\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"adres\",\n      \"fields\": [\n        {\n          \"profile\": \"Yol\",\n          \"name\": \"CADDE\"\n        },\n        {\n          \"profile\": \"KapiNo\",\n          \"name\": \"KAPI\"\n        },\n        {\n          \"profile\": \"Bina\",\n          \"name\": \"YAPI_REF\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "sivas-bel",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "problem": "Çizimin içindeki “sivas-bel” bir veri profili değil, eşleme."
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşleme diye taşınan profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "mapping",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "peyzaj",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "problem": "Çizimin içindeki “peyzaj” bir eşleme değil, veri profili."
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Biçim sürümü 2 olan taşınan profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 2,\n  \"name\": \"peyzaj\"\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "peyzaj",
+                  "release": 0,
+                  "classes": 0,
+                  "migrations": 0,
+                  "problem": "Profilin biçim sürümü 2; bu KentOS 1. sürümü okur."
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimdeki eşleme KentOS'un profiliyle denetlenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "mapping",
+              "name": "sivas-bel",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"sivas-bel\",\n  \"title\": \"Sivas Belediyesi eşlemesi\",\n  \"profile\": \"tucbs-temel\",\n  \"description\": \"Belediyenin kendi katman, alan ve kod adları.\",\n  \"classes\": [\n    {\n      \"class\": \"parsel\",\n      \"layer\": [\n        \"Kadastro\",\n        \"Parseller\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"ParselKimlik\",\n          \"name\": \"PARSEL_ID\"\n        },\n        {\n          \"profile\": \"AdaNo\",\n          \"name\": \"ADA_NO\"\n        },\n        {\n          \"profile\": \"ParselNo\",\n          \"name\": \"PARSEL_NO\"\n        },\n        {\n          \"profile\": \"TapuAlani\",\n          \"name\": \"TAPU_ALANI\"\n        },\n        {\n          \"profile\": \"Nitelik\",\n          \"name\": \"NITELIK\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Nitelik\",\n          \"codes\": [\n            {\n              \"profile\": \"arsa\",\n              \"name\": \"A\"\n            },\n            {\n              \"profile\": \"tarla\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"bahce\",\n              \"name\": \"B\"\n            },\n            {\n              \"profile\": \"bina\",\n              \"name\": \"KB\"\n            },\n            {\n              \"profile\": \"diger\",\n              \"name\": \"D\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"bina\",\n      \"layer\": [\n        \"Binalar\",\n        \"Yapılar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"BinaKimlik\",\n          \"name\": \"YAPI_ID\"\n        },\n        {\n          \"profile\": \"KatSayisi\",\n          \"name\": \"KAT\"\n        },\n        {\n          \"profile\": \"Kullanim\",\n          \"name\": \"KULLANIM\"\n        },\n        {\n          \"profile\": \"Parsel\",\n          \"name\": \"PARSEL_REF\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Kullanim\",\n          \"codes\": [\n            {\n              \"profile\": \"konut\",\n              \"name\": \"K\"\n            },\n            {\n              \"profile\": \"ticaret\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"karma\",\n              \"name\": \"KT\"\n            },\n            {\n              \"profile\": \"kamu\",\n              \"name\": \"KM\"\n            },\n            {\n              \"profile\": \"sanayi\",\n              \"name\": \"S\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"adres\",\n      \"fields\": [\n        {\n          \"profile\": \"Yol\",\n          \"name\": \"CADDE\"\n        },\n        {\n          \"profile\": \"KapiNo\",\n          \"name\": \"KAPI\"\n        },\n        {\n          \"profile\": \"Bina\",\n          \"name\": \"YAPI_REF\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "sivas-bel",
+                  "title": "Sivas Belediyesi eşlemesi",
+                  "release": 0,
+                  "classes": 3,
+                  "migrations": 0,
+                  "profile": "tucbs-temel"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimdeki eşleme klasördeki profile uymuyor: nedeniyle",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "mapping",
+              "name": "park-bahce-bozuk",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"park-bahce-bozuk\",\n  \"title\": \"Bozuk eşleme\",\n  \"profile\": \"park-bahce\",\n  \"classes\": [\n    {\n      \"class\": \"orman\",\n      \"layer\": [\n        \"Orman\"\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce.profil.json",
+          "to": "$tmp:pf47/profiller/park-bahce.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf47/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "park-bahce-bozuk",
+                  "title": "Bozuk eşleme",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "profile": "park-bahce",
+                  "problem": "“orman” sınıfı profilde yok."
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2,
+                  "path": "$tmp:pf47/profiller/park-bahce.profil.json"
+                }
+              ],
+              "folder": "$tmp:pf47/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Klasördeki eşleme çizimdeki profille denetlenir (çizimdeki önce okunur)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "park-bahce",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"park-bahce\",\n  \"title\": \"Park ve bahçeler profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar; üç sürüm.\",\n  \"basis\": \"Kurumun kendi çalışma profili; resmî bir şema değildir.\",\n  \"release\": 3,\n  \"migrations\": [\n    {\n      \"from\": 1,\n      \"to\": 2,\n      \"title\": \"Ağaç katmanı yeni adlarıyla\",\n      \"steps\": [\n        {\n          \"kind\": \"renameLayer\",\n          \"layer\": [\n            \"Peyzaj\",\n            \"Ağaçlar\"\n          ],\n          \"to\": \"Ağaç\"\n        },\n        {\n          \"kind\": \"renameField\",\n          \"layer\": [\n            \"Peyzaj\",\n            \"Ağaç\"\n          ],\n          \"from\": \"No\",\n          \"to\": \"AgacNo\"\n        },\n        {\n          \"kind\": \"renameField\",\n          \"layer\": [\n            \"Peyzaj\",\n            \"Ağaç\"\n          ],\n          \"from\": \"Alan\",\n          \"to\": \"YesilAlan\"\n        },\n        {\n          \"kind\": \"changeFieldType\",\n          \"layer\": [\n            \"Peyzaj\",\n            \"Ağaç\"\n          ],\n          \"field\": {\n            \"name\": \"Yas\",\n            \"alias\": \"Yaş\",\n            \"kind\": \"integer\",\n            \"min\": \"0\",\n            \"max\": \"500\"\n          },\n          \"onFail\": \"keep\"\n        }\n      ]\n    },\n    {\n      \"from\": 2,\n      \"to\": 3,\n      \"title\": \"Türler ve sulama listeleri; yeşil alan türleri\",\n      \"steps\": [\n        {\n          \"kind\": \"changeFieldType\",\n          \"layer\": [\n            \"Peyzaj\",\n            \"Ağaç\"\n          ],\n          \"field\": {\n            \"name\": \"Tur\",\n            \"alias\": \"Tür\",\n            \"kind\": \"text\",\n            \"domain\": \"agac-tur\"\n          },\n          \"onFail\": \"keep\"\n        },\n        {\n          \"kind\": \"retireCode\",\n          \"domain\": \"agac-tur\",\n          \"code\": \"palmiye\",\n          \"replaceWith\": \"diger\"\n        },\n        {\n          \"kind\": \"changeFieldType\",\n          \"layer\": [\n            \"Peyzaj\",\n            \"Ağaç\"\n          ],\n          \"field\": {\n            \"name\": \"Sulama\",\n            \"kind\": \"text\",\n            \"domain\": \"sulama\"\n          },\n          \"onFail\": \"clear\"\n        },\n        {\n          \"kind\": \"mapValues\",\n          \"layer\": [\n            \"Peyzaj\",\n            \"Yeşil alan\"\n          ],\n          \"field\": \"Tip\",\n          \"map\": [\n            {\n              \"from\": \"Bitki\",\n              \"to\": \"orman-bitkisi\",\n              \"whenField\": \"Bolge\",\n              \"whenEquals\": \"orman\"\n            },\n            {\n              \"from\": \"Bitki\",\n              \"to\": \"bahce-bitkisi\",\n              \"whenField\": \"Bolge\",\n              \"whenEquals\": \"bahce\"\n            },\n            {\n              \"from\": \"Bitki\",\n              \"to\": \"bitki\"\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        },\n        {\n          \"code\": \"palmiye\",\n          \"label\": \"Palmiye\"\n        },\n        {\n          \"code\": \"diger\",\n          \"label\": \"Diğer\"\n        }\n      ]\n    },\n    {\n      \"id\": \"sulama\",\n      \"name\": \"Sulama\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"damla\",\n          \"label\": \"Damla\"\n        },\n        {\n          \"code\": \"yagmur\",\n          \"label\": \"Yağmurlama\"\n        },\n        {\n          \"code\": \"yok\",\n          \"label\": \"Yok\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        },\n        {\n          \"name\": \"Yas\",\n          \"alias\": \"Yaş\",\n          \"kind\": \"integer\",\n          \"min\": \"0\",\n          \"max\": \"500\"\n        },\n        {\n          \"name\": \"Sulama\",\n          \"kind\": \"text\",\n          \"domain\": \"sulama\"\n        },\n        {\n          \"name\": \"YesilAlan\",\n          \"kind\": \"text\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"Bolge\",\n          \"alias\": \"Bölge\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"Tip\",\n          \"kind\": \"text\"\n        }\n      ]\n    }\n  ],\n  \"relations\": [\n    {\n      \"id\": \"agac-yesil\",\n      \"name\": \"Ağacın alanı\",\n      \"parent\": \"yesil\",\n      \"child\": \"agac\",\n      \"field\": \"YesilAlan\"\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/park-bahce-bozuk.eslem.json",
+          "to": "$tmp:pf48/profiller/park-bahce-bozuk.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf48/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "drawing",
+                  "name": "park-bahce",
+                  "title": "Park ve bahçeler profili",
+                  "release": 3,
+                  "classes": 2,
+                  "migrations": 2
+                },
+                {
+                  "kind": "mapping",
+                  "source": "project",
+                  "name": "park-bahce-bozuk",
+                  "title": "Bozuk eşleme",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "path": "$tmp:pf48/profiller/park-bahce-bozuk.eslem.json",
+                  "profile": "park-bahce",
+                  "problem": "“orman” sınıfı profilde yok."
+                }
+              ],
+              "folder": "$tmp:pf48/profiller"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizimdeki eşlemenin profili yok: denetlenmeden listelenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "mapping",
+              "name": "hayalet-esleme",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"hayalet-esleme\",\n  \"title\": \"Profili olmayan eşleme\",\n  \"profile\": \"hayalet\",\n  \"classes\": [\n    {\n      \"class\": \"x\",\n      \"layer\": [\n        \"X\"\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "hayalet-esleme",
+                  "title": "Profili olmayan eşleme",
+                  "release": 0,
+                  "classes": 1,
+                  "migrations": 0,
+                  "profile": "hayalet"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false
           }
         }
       ]

@@ -63,6 +63,7 @@ use kentos_native_application::pointclouds::{
 };
 use kentos_native_application::profile_files::{
     import as profiles_import, list as profiles_list, migrate as profiles_migrate,
+    remove as profiles_remove,
 };
 use kentos_native_application::profiles::{apply as profiles_apply, check as profiles_check};
 use kentos_native_application::records_page;
@@ -3248,6 +3249,12 @@ impl Input for kentos_commands::ProfilesMigrate {
     }
 }
 
+impl Input for kentos_commands::ProfilesRemove {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::SourcesReconcile {
     /// No number: a layer and the sides taken.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -4433,6 +4440,9 @@ fn run_op(
         kentos_commands::CAD_PROFILES_LIST => run!(profiles_list, kentos_commands::ProfilesList),
         kentos_commands::CAD_PROFILES_MIGRATE => {
             run!(profiles_migrate, kentos_commands::ProfilesMigrate)
+        }
+        kentos_commands::CAD_PROFILES_REMOVE => {
+            run!(profiles_remove, kentos_commands::ProfilesRemove)
         }
         kentos_commands::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
         kentos_commands::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),

@@ -3,4 +3,4 @@
 /**
  * Where a profile or a mapping is from.
  */
-export type ProfileSource = "builtin" | "project";
+export type ProfileSource = "builtin" | "project" | "drawing";

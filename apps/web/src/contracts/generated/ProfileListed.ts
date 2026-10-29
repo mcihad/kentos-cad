@@ -33,4 +33,8 @@ path?: string,
 /**
  * Why a file is not usable: it does not read, or does not hold.
  */
-problem?: string, };
+problem?: string, 
+/**
+ * A folder file the drawing's copy of the same name and kind stands for: the commands read the drawing's.
+ */
+shadowed?: boolean, };

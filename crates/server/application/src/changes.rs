@@ -1336,6 +1336,11 @@ pub(crate) async fn commit_in(
             &settings.address_locators,
             "project.settings.addressLocators",
         )?;
+        // And the profiles it carries inside its file (docs/adr/0735).
+        crate::projects::check_profile_files(
+            &settings.profile_files,
+            "project.settings.profileFiles",
+        )?;
     }
     // The sheet book keeps the file format's rules (docs/adr/0251).
     if let Some(Some(sheets)) = &patch.sheets {

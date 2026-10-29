@@ -266,6 +266,8 @@ pub(super) struct Features {
     pub(super) dimension_set_scales: bool,
     /// Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
     pub(super) audit_exceptions: bool,
+    /// Schema 131 (docs/adr/0735): the data profiles and mappings the project carries.
+    pub(super) profile_files: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -479,6 +481,7 @@ impl Features {
             dimension_set_spans: schema >= crate::SCHEMA_WITH_DIMENSION_SET_SPANS,
             dimension_set_scales: schema >= crate::SCHEMA_WITH_DIMENSION_SET_SCALES,
             audit_exceptions: schema >= crate::SCHEMA_WITH_AUDIT_EXCEPTIONS,
+            profile_files: schema >= crate::SCHEMA_WITH_PROFILE_FILES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

@@ -142,6 +142,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         auto_select: _,
         length_style: _,
         xref_paths: _,
+        profile_files: _,
         heights: _,
         coordinate_epoch: _,
     } = s;
@@ -190,6 +191,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         "autoSelect",
         "lengthStyle",
         "xrefPaths",
+        "profileFiles",
         "heights",
         "coordinateEpoch",
     ]

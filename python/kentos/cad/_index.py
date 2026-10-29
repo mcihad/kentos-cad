@@ -173,6 +173,7 @@ COMMANDS: dict[str, Any] = {
     "cad.profiles.import": profiles.import_,
     "cad.profiles.list": profiles.list,
     "cad.profiles.migrate": profiles.migrate,
+    "cad.profiles.remove": profiles.remove,
     "cad.ramps.create": ramps.create,
     "cad.rasters.georef": rasters.georef,
     "cad.rasters.gpkgread": rasters.gpkgread,

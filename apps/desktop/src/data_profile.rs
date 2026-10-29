@@ -3,8 +3,10 @@
 //! Uygula writes it: the layers and fields as one undo step “Veri profili”, the value lists, relations and address data
 //! as project settings; the findings are read again and the window stays. A finding's row selects its objects.
 //!
-//! The profile is one of KentOS's or of the project's own (the files of the `profiller` folder beside the drawing);
-//! İçe aktar… brings a profile or a mapping JSON into that folder (`cad.profiles.import`). A mapping makes the profile
+//! The profile is one of KentOS's or of the project's own: those the drawing carries inside its file (docs/adr/0735) and
+//! the files of the `profiller` folder beside it. İçe aktar… brings a profile or a mapping JSON where Nereye says, into
+//! the drawing (the default: it goes wherever the drawing goes) or that folder (`cad.profiles.import`); the drawing's own
+//! are taken out of it again with a question (`cad.profiles.remove`). A mapping makes the profile
 //! read with the institution's layer, field and code names (check and Uygula work through it; nothing is renamed). A
 //! profile with later releases offers its data migration (`cad.profiles.migrate`): the release the data is at, what the
 //! steps would do, and after it the values that did not fit.
@@ -15,14 +17,18 @@ use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DataProfile, ProfileFileKind, ProfileFinding, ProfileFindingKind,
-    ProfileImported, ProfileListed, ProfilesApplied, ProfilesApply, ProfilesCheck, ProfilesImport,
-    ProfilesList, ProfilesMigrate, ProfilesMigrated, ProfilesReport,
+    ProfileImported, ProfileListed, ProfileRemoved, ProfileSource, ProfileStore, ProfilesApplied,
+    ProfilesApply, ProfilesCheck, ProfilesImport, ProfilesList, ProfilesMigrate, ProfilesMigrated,
+    ProfilesRemove, ProfilesReport,
 };
 use kentos_interaction::Level;
+use kentos_native_application::profile_files::Shelf;
 use kentos_native_application::{ExecutionContext, profile_files, profiles};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Choice, Dialog as Frame, Elided, Select, VirtualList, overlay};
+use kentos_ui::widget::{
+    Choice, Confirm, Dialog as Frame, Elided, Segmented, Select, VirtualList, overlay,
+};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -35,14 +41,58 @@ const APPLY: &str = "Uygula";
 const CLOSE: &str = "Kapat";
 const IMPORT: &str = "İçe aktar…";
 const MIGRATE: &str = "Veriyi taşı";
-const OVERWRITE: &str = "Aynı adlı dosyanın üzerine yaz";
+const OVERWRITE: &str = "Aynı adlının üzerine yaz";
 const PROFILE_LIST: &str = "Profil";
 const MAPPING_LIST: &str = "Eşleme";
 const FROM_LIST: &str = "Verinin sürümü";
 const NO_MAPPING: &str = "Eşleme yok";
+const KEEP_LIST: &str = "Nereye";
+const REMOVE_PROFILE: &str = "Profili çizimden kaldır";
+const REMOVE_MAPPING: &str = "Eşlemeyi çizimden kaldır";
 const ROW: f32 = 26.0;
 /// The most loss lines the window says; the rest is counted.
 const LOSS_LINES: usize = 4;
+
+/// Where İçe aktar… keeps what it brings.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Keep {
+    /// Inside the drawing's own file: it goes wherever the drawing goes.
+    Drawing,
+    /// The `profiller` folder beside the drawing's file.
+    Folder,
+}
+
+impl Keep {
+    const ALL: [Keep; 2] = [Keep::Drawing, Keep::Folder];
+
+    fn store(self) -> ProfileStore {
+        match self {
+            Keep::Drawing => ProfileStore::Drawing,
+            Keep::Folder => ProfileStore::Folder,
+        }
+    }
+}
+
+impl std::fmt::Display for Keep {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Keep::Drawing => "Çizimin içine",
+            Keep::Folder => "Profiller klasörüne",
+        })
+    }
+}
+
+/// What the question takes out of the drawing: the profile or the mapping chosen and, with a profile no other copy of
+/// which is left, the drawing's mappings that name it (they could be chosen no more, docs/adr/0735 §7).
+#[derive(Debug, Clone)]
+pub(crate) struct Removal {
+    kind: ProfileFileKind,
+    name: String,
+    /// The drawing's mappings of the profile, taken out with it.
+    with: Vec<String>,
+    /// Whether the folder keeps a file of the same name and kind, read from then on.
+    folder: bool,
+}
 
 #[derive(Debug, Clone)]
 pub struct Window {
@@ -56,6 +106,10 @@ pub struct Window {
     from: u32,
     /// İçe aktar writes over a file of the same name.
     overwrite: bool,
+    /// Where İçe aktar keeps what it brings.
+    keep: Keep,
+    /// The drawing's own profile or mapping asked to be taken out: the question is open.
+    removing: Option<Removal>,
     report: Result<ProfilesReport, String>,
     preview: Result<ProfilesApplied, String>,
     /// What the migration would do; an empty error: the profile has no later release.
@@ -67,11 +121,12 @@ pub struct Window {
 }
 
 impl Window {
-    /// The profiles that can be chosen: the ones that read.
+    /// The profiles that can be chosen: the ones that read and are read (a folder file the drawing's copy stands for
+    /// is not).
     fn profiles(&self) -> Vec<&ProfileListed> {
         self.listed
             .iter()
-            .filter(|p| p.kind == ProfileFileKind::Profile && p.problem.is_none())
+            .filter(|p| p.kind == ProfileFileKind::Profile && p.problem.is_none() && !p.shadowed)
             .collect()
     }
 
@@ -82,9 +137,40 @@ impl Window {
             .filter(|m| {
                 m.kind == ProfileFileKind::Mapping
                     && m.problem.is_none()
+                    && !m.shadowed
                     && m.profile.as_deref() == Some(self.profile.as_str())
             })
             .collect()
+    }
+
+    /// The profile chosen (test code).
+    #[cfg(test)]
+    pub(crate) fn profile_name(&self) -> &str {
+        &self.profile
+    }
+
+    /// The mapping chosen (test code).
+    #[cfg(test)]
+    pub(crate) fn mapping_name(&self) -> Option<&str> {
+        self.mapping.as_deref()
+    }
+
+    /// Whether the question of taking the drawing's copy out is open (test code).
+    #[cfg(test)]
+    pub(crate) fn asking(&self) -> bool {
+        self.removing.is_some()
+    }
+
+    /// The chosen profile or mapping, when the drawing carries it.
+    fn carried(&self, kind: ProfileFileKind) -> Option<&str> {
+        let name = match kind {
+            ProfileFileKind::Profile => Some(self.profile.as_str()),
+            ProfileFileKind::Mapping => self.mapping.as_deref(),
+        }?;
+        self.listed
+            .iter()
+            .any(|p| p.kind == kind && p.name == name && p.source == ProfileSource::Drawing)
+            .then_some(name)
     }
 }
 
@@ -104,6 +190,12 @@ pub enum Event {
     /// İçe aktar… pressed: a file asked for.
     Import,
     Imported(Option<PathBuf>),
+    /// Nereye chosen.
+    Keep(Keep),
+    /// The chosen profile or mapping the drawing carries: the question asked.
+    Remove(ProfileFileKind),
+    /// The question answered: taken out, or left.
+    Removed(bool),
     /// The data moved to the profile's release.
     Migrate,
 }
@@ -131,13 +223,20 @@ fn kind_words(kind: ProfileFindingKind) -> &'static str {
     }
 }
 
-/// A profile in the list: its title, and for the project's own whose it is and its release.
+/// A profile in the list: its title, and for the project's own where it is and its release.
 fn profile_label(p: &ProfileListed) -> String {
     match p.source {
-        kentos_commands::ProfileSource::Builtin => p.title.clone(),
-        kentos_commands::ProfileSource::Project => {
-            format!("{} (projenin, sürüm {})", p.title, p.release)
-        }
+        ProfileSource::Builtin => p.title.clone(),
+        ProfileSource::Project => format!("{} (klasörde, sürüm {})", p.title, p.release),
+        ProfileSource::Drawing => format!("{} (çizimde, sürüm {})", p.title, p.release),
+    }
+}
+
+/// A mapping in the list: its title, and where it is.
+fn mapping_label(m: &ProfileListed) -> String {
+    match m.source {
+        ProfileSource::Drawing => format!("{} (çizimde)", m.title),
+        _ => m.title.clone(),
     }
 }
 
@@ -158,6 +257,8 @@ impl App {
             listed: Vec::new(),
             from: 1,
             overwrite: false,
+            keep: Keep::Drawing,
+            removing: None,
             report: Err(String::new()),
             preview: Err(String::new()),
             migration: Err(String::new()),
@@ -183,9 +284,12 @@ impl App {
         let (Some(w), Some(doc)) = (self.data_profile.as_mut(), self.document.as_ref()) else {
             return;
         };
-        w.listed = profile_files::list::run(&ProfilesList {
-            drawing: drawing.clone(),
-        })
+        w.listed = profile_files::list::run(
+            &doc.model.settings().profile_files,
+            &ProfilesList {
+                drawing: drawing.clone(),
+            },
+        )
         .items;
         // What was chosen is still there: a profile, and a mapping of it.
         let names: Vec<String> = w.profiles().iter().map(|p| p.name.clone()).collect();
@@ -198,7 +302,8 @@ impl App {
         if w.mapping.as_ref().is_some_and(|m| !maps.contains(m)) {
             w.mapping = None;
         }
-        let profile = profile_files::find_profile(drawing.as_deref(), &w.profile);
+        let profile =
+            profile_files::find_profile(Shelf::of(&doc.model, drawing.as_deref()), &w.profile);
         let release = profile.as_ref().map_or(1, |p| p.release);
         w.from = w.from.clamp(1, release.saturating_sub(1).max(1));
         let report = match profiles::check::run(
@@ -304,6 +409,46 @@ impl App {
                 w.overwrite = on;
                 return Task::none();
             }
+            Event::Keep(keep) => {
+                w.keep = keep;
+                return Task::none();
+            }
+            Event::Remove(kind) => {
+                w.removing = w.carried(kind).map(|name| {
+                    let folder = w.listed.iter().any(|p| {
+                        p.kind == kind && p.name == name && p.source == ProfileSource::Project
+                    });
+                    let with = if kind == ProfileFileKind::Profile && !folder {
+                        w.listed
+                            .iter()
+                            .filter(|m| {
+                                m.kind == ProfileFileKind::Mapping
+                                    && m.source == ProfileSource::Drawing
+                                    && m.profile.as_deref() == Some(name)
+                            })
+                            .map(|m| m.name.clone())
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
+                    Removal {
+                        kind,
+                        name: name.to_owned(),
+                        with,
+                        folder,
+                    }
+                });
+                return Task::none();
+            }
+            Event::Removed(false) => {
+                w.removing = None;
+                return Task::none();
+            }
+            Event::Removed(true) => {
+                if let Some(removal) = w.removing.take() {
+                    self.remove_profile(&removal);
+                }
+            }
             Event::Import => return self.import_dialog(),
             Event::Imported(None) => return Task::none(),
             Event::Imported(Some(path)) => {
@@ -332,10 +477,11 @@ impl App {
         )
     }
 
-    /// `cad.profiles.import` of a file: what it brought said, and chosen in the window.
-    fn import_profile(&mut self, path: &std::path::Path) {
+    /// `cad.profiles.import` of a file, kept where Nereye says: what it brought said, and chosen in the window.
+    pub(crate) fn import_profile(&mut self, path: &std::path::Path) {
         let drawing = self.profile_drawing();
         let overwrite = self.data_profile.as_ref().is_some_and(|w| w.overwrite);
+        let keep = self.data_profile.as_ref().map_or(Keep::Drawing, |w| w.keep);
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -345,6 +491,7 @@ impl App {
                 source: Some(path.display().to_string()),
                 drawing,
                 overwrite: Some(overwrite),
+                store: Some(keep.store()),
                 ..ProfilesImport::default()
             },
         );
@@ -376,6 +523,68 @@ impl App {
                     w.profile = of;
                     w.mapping = Some(done.name);
                 }
+            }
+        }
+    }
+
+    /// `cad.profiles.remove`: the drawing's own profile or mapping taken out of it, the drawing's mappings of the
+    /// profile first; what is read from now on said.
+    fn remove_profile(&mut self, removal: &Removal) {
+        let drawing = self.profile_drawing();
+        let results: Vec<CommandResult<ProfileRemoved>> = {
+            let Some(doc) = self.document.as_mut() else {
+                return;
+            };
+            removal
+                .with
+                .iter()
+                .map(|m| (ProfileFileKind::Mapping, m.as_str()))
+                .chain(std::iter::once((removal.kind, removal.name.as_str())))
+                .map(|(kind, name)| {
+                    profile_files::remove::execute(
+                        &mut ExecutionContext::new(&mut doc.model),
+                        ProfilesRemove {
+                            kind,
+                            name: name.to_owned(),
+                            drawing: drawing.clone(),
+                            expected_revision: None,
+                        },
+                    )
+                })
+                .collect()
+        };
+        let mut last = None;
+        for result in results {
+            match self.answered(result) {
+                Some(done) => last = Some(done),
+                None => return,
+            }
+        }
+        let Some(done) = last else {
+            return;
+        };
+        let words = match removal.with.as_slice() {
+            [] => removed_words(&done),
+            [one] => format!(
+                "“{}” profili ve onu adlandıran “{one}” eşlemesi çizimden kaldırıldı.",
+                removal.name
+            ),
+            many => format!(
+                "“{}” profili ve onu adlandıran {} eşleme ({}) çizimden kaldırıldı.",
+                removal.name,
+                many.len(),
+                many.join(", ")
+            ),
+        };
+        self.say(Level::Success, words);
+        if let Some(w) = self.data_profile.as_mut() {
+            match removal.kind {
+                ProfileFileKind::Profile => {
+                    w.mapping = None;
+                    w.from = 1;
+                    w.last = None;
+                }
+                ProfileFileKind::Mapping => w.mapping = None,
             }
         }
     }
@@ -467,7 +676,9 @@ impl App {
             return iced::widget::text("").into();
         };
         let drawing = self.profile_drawing();
-        let profile = profile_files::find_profile(drawing.as_deref(), &w.profile);
+        let profile = self.document.as_ref().and_then(|doc| {
+            profile_files::find_profile(Shelf::of(&doc.model, drawing.as_deref()), &w.profile)
+        });
         let about = profile.as_ref().map_or_else(String::new, |p| {
             format!("{} (sürüm {}): {}", p.title, p.release, p.description)
         });
@@ -589,7 +800,7 @@ impl App {
         if let Some(m) = migration {
             body = body.push(m);
         }
-        overlay::modal(
+        let window = overlay::modal(
             Frame::new(PROFILE_TITLE)
                 .scroll(body)
                 .action(words::secondary(CLOSE, Some(msg(Event::Close))))
@@ -601,7 +812,44 @@ impl App {
                 .width(820.0)
                 .max_height(760.0),
             msg(Event::Close),
-        )
+        );
+        let Some(removal) = &w.removing else {
+            return window;
+        };
+        // Taking the drawing's copy out is not undone: asked first.
+        let (name, what) = (
+            &removal.name,
+            match removal.kind {
+                ProfileFileKind::Profile => "profili",
+                ProfileFileKind::Mapping => "eşlemesi",
+            },
+        );
+        let with = match removal.with.as_slice() {
+            [] => String::new(),
+            [one] => format!(" Onu adlandıran “{one}” eşlemesi de kaldırılır."),
+            many => format!(
+                " Onu adlandıran {} eşleme de kaldırılır: {}.",
+                many.len(),
+                many.join(", ")
+            ),
+        };
+        let then = if removal.folder {
+            " Bundan sonra klasördeki aynı adlı dosya okunur."
+        } else {
+            " Bu geri alınamaz; gerekirse yeniden içe aktarın."
+        };
+        let question = overlay::modal(
+            Confirm::new(
+                "Çizimden kaldır",
+                msg(Event::Removed(true)),
+                msg(Event::Removed(false)),
+            )
+            .message(format!("“{name}” {what} çizimden kaldırılsın mı?{with}{then}"))
+            .confirm("Kaldır")
+            .destructive(),
+            msg(Event::Removed(false)),
+        );
+        iced::widget::stack![window, question].into()
     }
 
     /// The profile and the mapping to choose, and İçe aktar….
@@ -616,7 +864,7 @@ impl App {
         let mappings = w.mappings();
         let mapping_select = Select::new(
             std::iter::once(Choice::new(NO_MAPPING))
-                .chain(mappings.iter().map(|m| Choice::new(m.title.clone()))),
+                .chain(mappings.iter().map(|m| Choice::new(mapping_label(m)))),
             Some(
                 w.mapping
                     .as_ref()
@@ -627,13 +875,15 @@ impl App {
         )
         .searchable(false);
         let drawing = self.profile_drawing().is_some();
-        let hint = if drawing {
-            "Profil ve eşleme çizimin yanındaki “profiller” klasöründedir; eşleme profili kurumun katman, alan ve kod adlarıyla okutur, hiçbir ad kendiliğinden değişmez."
-        } else {
-            "Çizim henüz bir dosya değil: kurumun profilini ve eşlemesini almak için önce çizimi kaydedin."
+        let can_import = drawing || w.keep == Keep::Drawing;
+        let hint = match (w.keep, drawing) {
+            (Keep::Drawing, _) => "Çizimin içine alınan profil ve eşleme çizimin kendi dosyasıyla gider (bulut projesi de); eşleme profili kurumun katman, alan ve kod adlarıyla okutur, hiçbir ad kendiliğinden değişmez.",
+            (Keep::Folder, true) => "Profiller klasörü çizimin dosyasının yanındadır; aynı adlı profil çizimin içinde de varsa çizimin içindeki okunur.",
+            (Keep::Folder, false) => "Çizim henüz bir dosya değil: klasöre almak için önce çizimi kaydedin ya da çizimin içine alın.",
         };
         let bring = row![
-            words::ghost(IMPORT, drawing.then(|| msg(Event::Import))),
+            words::ghost(IMPORT, can_import.then(|| msg(Event::Import))),
+            Segmented::new(Keep::ALL, w.keep, |k| msg(Event::Keep(k))),
             words::check(
                 w.overwrite,
                 OVERWRITE,
@@ -642,7 +892,7 @@ impl App {
         ]
         .spacing(12)
         .align_y(Center);
-        Column::new()
+        let mut column = Column::new()
             .spacing(6)
             .push(
                 row![
@@ -651,9 +901,27 @@ impl App {
                 ]
                 .spacing(12),
             )
-            .push(bring)
-            .push(label::caption(hint))
-            .into()
+            .push(bring);
+        // The drawing's own, taken out of it: shown only when it carries some.
+        if w.listed.iter().any(|p| p.source == ProfileSource::Drawing) {
+            let profile = w.carried(ProfileFileKind::Profile).is_some();
+            let mapping = w.carried(ProfileFileKind::Mapping).is_some();
+            column = column.push(
+                row![
+                    words::ghost(
+                        REMOVE_PROFILE,
+                        profile.then(|| msg(Event::Remove(ProfileFileKind::Profile)))
+                    ),
+                    words::ghost(
+                        REMOVE_MAPPING,
+                        mapping.then(|| msg(Event::Remove(ProfileFileKind::Mapping)))
+                    ),
+                ]
+                .spacing(12)
+                .align_y(Center),
+            );
+        }
+        column.push(label::caption(hint)).into()
     }
 
     /// The migration's part: the release the data is at, what the steps would do and what the last one did; whether
@@ -743,6 +1011,12 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(IMPORT) => Some(msg(Event::Import)),
             Control::Press(MIGRATE) => Some(msg(Event::Migrate)),
+            Control::Press(REMOVE_PROFILE) => Some(msg(Event::Remove(ProfileFileKind::Profile))),
+            Control::Press(REMOVE_MAPPING) => Some(msg(Event::Remove(ProfileFileKind::Mapping))),
+            Control::Pick(KEEP_LIST, item) => Keep::ALL
+                .into_iter()
+                .find(|k| k.to_string() == item)
+                .map(|k| msg(Event::Keep(k))),
             Control::Check(OVERWRITE, on) => Some(msg(Event::Overwrite(on))),
             Control::Pick(PROFILE_LIST, item) => w
                 .profiles()
@@ -753,7 +1027,7 @@ impl App {
             Control::Pick(MAPPING_LIST, item) => w
                 .mappings()
                 .iter()
-                .position(|m| m.title == item || m.name == item)
+                .position(|m| mapping_label(m) == item || m.title == item || m.name == item)
                 .map(|i| msg(Event::Mapping(i + 1))),
             Control::Pick(FROM_LIST, item) => item
                 .trim_end_matches(". sürüm")
@@ -861,15 +1135,34 @@ fn applied_words(p: &ProfilesApplied) -> String {
 
 /// What a file that came in is, in a sentence.
 fn imported_words(p: &ProfileImported) -> String {
+    let place = p
+        .path
+        .as_ref()
+        .map_or_else(|| "çizimin içine".to_owned(), |path| format!("{path} dosyasına"));
     match p.kind {
         ProfileFileKind::Profile => format!(
-            "“{}” profili projeye alındı (sürüm {}, {} sınıf, {} göç): {}",
-            p.title, p.release, p.classes, p.migrations, p.path
+            "“{}” profili {place} alındı (sürüm {}, {} sınıf, {} göç).",
+            p.title, p.release, p.classes, p.migrations
         ),
         ProfileFileKind::Mapping => format!(
-            "“{}” eşlemesi projeye alındı ({} sınıf): {}",
-            p.title, p.classes, p.path
+            "“{}” eşlemesi {place} alındı ({} sınıf).",
+            p.title, p.classes
         ),
+    }
+}
+
+/// What came out of the drawing, in a sentence.
+fn removed_words(p: &ProfileRemoved) -> String {
+    let what = match p.kind {
+        ProfileFileKind::Profile => "profili",
+        ProfileFileKind::Mapping => "eşlemesi",
+    };
+    match &p.folder_path {
+        Some(path) => format!(
+            "“{}” {what} çizimden kaldırıldı; bundan sonra {path} okunur.",
+            p.name
+        ),
+        None => format!("“{}” {what} çizimden kaldırıldı.", p.name),
     }
 }
 

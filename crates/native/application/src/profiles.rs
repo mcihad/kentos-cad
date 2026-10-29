@@ -20,6 +20,7 @@ use kentos_geometry_core::entity::entity_area;
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
+use crate::profile_files::Shelf;
 
 pub const STEP: &str = "Veri profili";
 
@@ -27,30 +28,35 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
 }
 
-/// The profile a command names, as the profile's own file says it: `profile` when given, else the built-in `name`, else
-/// the project's file of that name (`drawing`'s folder, docs/adr/0558).
+/// The profile a command names, as the profile's own document says it: `profile` when given, else the built-in `name`,
+/// else the project's of that name (the drawing's copy, docs/adr/0735, else the file in `drawing`'s folder,
+/// docs/adr/0558).
 pub(crate) fn profile_only(
     name: Option<&str>,
     given: Option<&DataProfile>,
-    drawing: Option<&str>,
+    shelf: Shelf<'_>,
 ) -> Result<DataProfile, Stop> {
     let profile = match (given, name) {
         (Some(p), _) => p.clone(),
         (None, Some(n)) => match builtin_profile(n) {
             Some(p) => p,
-            None => match crate::profile_files::load_profile(drawing, n) {
+            None => match crate::profile_files::load_profile(shelf, n) {
                 Ok(Some(p)) => p,
                 Ok(None) => {
+                    let carried = crate::profile_files::carried_words(
+                        shelf,
+                        kentos_commands::ProfileFileKind::Profile,
+                    );
                     return Err(fail(
                         codes::UNKNOWN_PROFILE,
-                        match crate::profile_files::folder_of(drawing) {
+                        match crate::profile_files::folder_of(shelf.drawing) {
                             Some(_) => format!(
-                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin “{}” klasöründe de “{n}{}” yok.",
+                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel{carried}; çizimin “{}” klasöründe de “{n}{}” yok.",
                                 kentos_commands::PROFILE_FOLDER,
                                 kentos_commands::PROFILE_SUFFIX
                             ),
                             None => format!(
-                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel."
+                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel{carried}."
                             ),
                         },
                         "name",
@@ -96,10 +102,10 @@ pub(crate) fn resolve(
     given: Option<&DataProfile>,
     mapping: Option<&ProfileMapping>,
     mapping_name: Option<&str>,
-    drawing: Option<&str>,
+    shelf: Shelf<'_>,
 ) -> Result<Resolved, Stop> {
-    let profile = profile_only(name, given, drawing)?;
-    let Some(m) = mapping_for(&profile, mapping, mapping_name, drawing)? else {
+    let profile = profile_only(name, given, shelf)?;
+    let Some(m) = mapping_for(&profile, mapping, mapping_name, shelf)? else {
         return Ok(Resolved {
             profile,
             mapping: None,
@@ -124,24 +130,29 @@ pub(crate) fn mapping_for(
     profile: &DataProfile,
     mapping: Option<&ProfileMapping>,
     mapping_name: Option<&str>,
-    drawing: Option<&str>,
+    shelf: Shelf<'_>,
 ) -> Result<Option<ProfileMapping>, Stop> {
     let found: Option<ProfileMapping> = match (mapping, mapping_name) {
         (Some(m), _) => Some(m.clone()),
-        (None, Some(n)) => match crate::profile_files::load_mapping(drawing, n) {
+        (None, Some(n)) => match crate::profile_files::load_mapping(shelf, n) {
             Ok(Some(m)) => Some(m),
             Ok(None) => {
+                let carried = crate::profile_files::carried_words(
+                    shelf,
+                    kentos_commands::ProfileFileKind::Mapping,
+                );
                 return Err(fail(
                     codes::UNKNOWN_MAPPING,
-                    match crate::profile_files::folder_of(drawing) {
+                    match crate::profile_files::folder_of(shelf.drawing) {
                         Some(_) => format!(
-                            "“{n}” adlı eşleme yok: çizimin “{}” klasöründe “{n}{}” yok.",
+                            "“{n}” adlı eşleme yok: çizimin “{}” klasöründe “{n}{}” yok{carried}.",
                             kentos_commands::PROFILE_FOLDER,
                             kentos_commands::MAPPING_SUFFIX
                         ),
-                        None => format!(
+                        None if carried.is_empty() => format!(
                             "“{n}” adlı eşleme bulunamaz: çizimin dosyası yok; eşlemeyi kendisiyle (mapping) verin."
                         ),
+                        None => format!("“{n}” adlı eşleme yok{carried}."),
                     },
                     "mappingName",
                 ));
@@ -231,7 +242,7 @@ fn check_apply(doc: &Document, input: &ProfilesApply) -> Result<DataProfile, Sto
         input.profile.as_ref(),
         input.mapping.as_ref(),
         input.mapping_name.as_deref(),
-        input.drawing.as_deref(),
+        Shelf::of(doc, input.drawing.as_deref()),
     )?
     .profile;
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -990,18 +1001,18 @@ fn relation_findings(
 pub mod check {
     use super::*;
 
-    fn resolved(input: &ProfilesCheck) -> Result<Resolved, Stop> {
+    fn resolved(doc: &Document, input: &ProfilesCheck) -> Result<Resolved, Stop> {
         resolve(
             input.name.as_deref(),
             input.profile.as_ref(),
             input.mapping.as_ref(),
             input.mapping_name.as_deref(),
-            input.drawing.as_deref(),
+            Shelf::of(doc, input.drawing.as_deref()),
         )
     }
 
-    pub fn validate(_cx: &ExecutionContext<'_>, input: &ProfilesCheck) -> CommandResult<()> {
-        match resolved(input) {
+    pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesCheck) -> CommandResult<()> {
+        match resolved(cx.doc, input) {
             Ok(_) => CommandResult::Completed {
                 output: (),
                 warnings: Vec::new(),
@@ -1022,7 +1033,7 @@ pub mod check {
     }
 
     pub fn run(doc: &Document, input: &ProfilesCheck) -> CommandResult<ProfilesReport> {
-        match resolved(input) {
+        match resolved(doc, input) {
             Ok(r) => {
                 let mut report = report(doc, &r.profile);
                 report.mapping = r.mapping;

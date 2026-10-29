@@ -23,6 +23,7 @@ import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
 import type { ProjectForm } from "./ProjectForm";
+import type { ProjectProfileFile } from "./ProjectProfileFile";
 import type { ProjectRelation } from "./ProjectRelation";
 import type { ProjectVariable } from "./ProjectVariable";
 import type { ServiceConnection } from "./ServiceConnection";
@@ -213,6 +214,12 @@ lengthStyle?: LengthStyle,
  * to the project file's folder with `/` between their parts.
  */
 xrefPaths?: Array<string>, 
+/**
+ * The data profiles and mappings the project carries inside its file (docs/adr/0735): by name, a profile before a
+ * mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
+ * others; of a name both have, the drawing's is the one read.
+ */
+profileFiles?: Array<ProjectProfileFile>, 
 /**
  * What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
  * and the geoid model; absent: not said, and no command takes them for either.

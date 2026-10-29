@@ -17,7 +17,7 @@ use ts_rs::TS;
 use crate::cad::REVISION_TEXT;
 use crate::{
     AreaSource, DataProfile, DoorSource, FieldDomain, LayerField, LayerFieldKind, ProfileAddress,
-    StreetSource, follow_domains,
+    ProfileFileKind, StreetSource, follow_domains,
 };
 
 pub const CAD_PROFILES_IMPORT: &str = "cad.profiles.import";
@@ -26,6 +26,8 @@ pub const CAD_PROFILES_LIST: &str = "cad.profiles.list";
 pub const CAD_PROFILES_LIST_VERSION: u32 = 1;
 pub const CAD_PROFILES_MIGRATE: &str = "cad.profiles.migrate";
 pub const CAD_PROFILES_MIGRATE_VERSION: u32 = 1;
+pub const CAD_PROFILES_REMOVE: &str = "cad.profiles.remove";
+pub const CAD_PROFILES_REMOVE_VERSION: u32 = 1;
 
 /// The format a mapping file says it is.
 pub const MAPPING_FORMAT: &str = "kentos.profile-mapping";
@@ -42,10 +44,7 @@ pub const MAX_LOSS_UIDS: usize = 1000;
 pub const MAX_MAPPING_ITEMS: usize = 256;
 
 fn plain_name(id: &str) -> bool {
-    (1..=64).contains(&id.len())
-        && id
-            .bytes()
-            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    kentos_contracts::profile_name_ok(id)
 }
 
 /// Whether `name` is a name a profile or a mapping file may carry (small letters, digits and `-`, at most 64).
@@ -665,22 +664,28 @@ pub enum ProfileSource {
     Builtin,
     /// A file in the project's `profiller` folder.
     Project,
+    /// Carried inside the drawing's own file (the settings' `profileFiles`, docs/adr/0735).
+    Drawing,
 }
 
-/// What a file of the project's folder is.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// Where `cad.profiles.import` keeps a profile or a mapping (docs/adr/0735).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
-pub enum ProfileFileKind {
-    Profile,
-    Mapping,
+pub enum ProfileStore {
+    /// A file of the `profiller` folder beside the drawing's file (docs/adr/0558).
+    #[default]
+    Folder,
+    /// Inside the drawing's own file: it goes wherever the drawing goes, a cloud project's too.
+    Drawing,
 }
 
-/// Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles and the files of the project's `profiller`
-/// folder, profiles and mappings. It changes nothing. The folder is the drawing's own (`drawing`): without it only the
-/// built-in profiles are listed. Refusals: none; a file that does not read is listed with its problem.
+/// Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles, those the drawing carries inside its file
+/// (docs/adr/0735) and the files of the project's `profiller` folder, profiles and mappings. It changes nothing. The
+/// folder is the drawing's own (`drawing`): without it the folder is not read. Refusals: none; a file that does not read
+/// is listed with its problem; a folder file whose name and kind the drawing carries too is listed `shadowed`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -728,10 +733,14 @@ pub struct ProfileListed {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub problem: Option<String>,
+    /// A folder file the drawing's copy of the same name and kind stands for: the commands read the drawing's.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub shadowed: bool,
 }
 
-/// Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and
-/// mappings by name.
+/// Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the drawing's profiles and
+/// mappings by name, then the folder's by name.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -746,14 +755,18 @@ pub struct ProfilesListed {
 }
 
 /// Input of `cad.profiles.import` v1 (“Veri profili içe aktar”): a profile or a mapping the user brings, checked and
-/// kept as a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`), written whole or not
-/// at all. The source is a JSON file (`source`) or the profile (`profile`) or mapping (`mapping`) itself; one only.
+/// kept where `store` says: a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`, the
+/// default), written whole or not at all, or inside the drawing's own file (the settings' `profileFiles`, docs/adr/0735;
+/// a settings edit, not an undo step). The source is a JSON file (`source`) or the profile (`profile`) or mapping
+/// (`mapping`) itself; one only.
 ///
-/// Refusals, in this order: `profile_source_missing`, `invalid_file_path` (the source, the drawing), `file_not_found`,
-/// `invalid_profile` (JSON that does not read, or a profile that does not hold), `unknown_profile_format`,
-/// `unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade` (a
-/// profile of an earlier release than the file's, without `overwrite`), `file_exists`, `file_unwritable`. Warnings:
-/// `mapping_unchecked` (the profile it is for was not found), `profile_replaced`.
+/// Refusals, in this order: `profile_source_missing`, `invalid_revision`, `revision_conflict`, `invalid_file_path` (the
+/// source, the drawing), `file_not_found`, `invalid_profile` (JSON that does not read, a profile that does not hold, a
+/// text too long for the drawing, or more than the drawing carries), `unknown_profile_format`,
+/// `unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade`
+/// (a profile of an earlier release than the one kept, without `overwrite`), `file_exists` (the folder),
+/// `profile_exists` (the drawing), `file_unwritable`. Warnings: `mapping_unchecked` (the profile it is for was not
+/// found), `profile_replaced`, `profile_shadowed` (the drawing and the folder both have one of the name and kind).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -778,6 +791,15 @@ pub struct ProfilesImport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub overwrite: Option<bool>,
+    /// Where it is kept: the folder (the default) or the drawing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub store: Option<ProfileStore>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
 }
 
 /// Output (and plan) of `cad.profiles.import` v1.
@@ -804,12 +826,60 @@ pub struct ProfileImported {
     /// A profile's migrations; the releases they go from, in order.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub migrations: u32,
-    /// The file written.
-    pub path: String,
-    /// Whether a file was replaced.
+    /// Where it is kept.
+    pub store: ProfileStore,
+    /// The file written, when it is kept in the folder.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub path: Option<String>,
+    /// Whether a file (or the drawing's copy) was replaced.
     pub replaced: bool,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
+}
+
+/// Input of `cad.profiles.remove` v1 (“Veri profilini çizimden kaldır”): a profile or a mapping the drawing carries inside
+/// its file (docs/adr/0735) taken out of it; a settings edit, not an undo step. A file of the `profiller` folder is not
+/// touched: when the folder holds one of the same name and kind, the commands read it from then on (`folderPath`).
+///
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile` (a profile the drawing does not
+/// carry), `unknown_mapping` (a mapping the drawing does not carry). Warnings: `profile_still_named` (a mapping the
+/// project keeps names the profile, and no other copy of it is left).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfilesRemove {
+    pub kind: ProfileFileKind,
+    pub name: String,
+    /// The open drawing's own file, an absolute path: its folder is looked in for a file of the same name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output (and plan) of `cad.profiles.remove` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProfileRemoved {
+    pub kind: ProfileFileKind,
+    pub name: String,
+    /// The text taken out.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
+    pub bytes: u64,
+    /// The folder's file of the same name and kind, read from now on.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub folder_path: Option<String>,
 }
 
 /// Input of `cad.profiles.migrate` v1 (“Veri profili göçü”): the project's data moved from release `from` of a profile to

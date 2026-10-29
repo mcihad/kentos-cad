@@ -63,6 +63,7 @@ use crate::pointcloud_areas::{profile as pointclouds_profile, region as pointclo
 use crate::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
 use crate::profile_files::{
     import as profiles_import, list as profiles_list, migrate as profiles_migrate,
+    remove as profiles_remove,
 };
 use crate::profiles::{apply as profiles_apply, check as profiles_check};
 use crate::records_page;
@@ -457,6 +458,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_PROFILES_MIGRATE => {
                 $then!(profiles_migrate, kentos_commands::ProfilesMigrate)
+            }
+            kentos_commands::CAD_PROFILES_REMOVE => {
+                $then!(profiles_remove, kentos_commands::ProfilesRemove)
             }
             kentos_commands::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
             kentos_commands::CAD_HATCH_PATTERNS_EDIT => {

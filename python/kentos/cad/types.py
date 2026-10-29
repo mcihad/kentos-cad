@@ -4268,7 +4268,7 @@ PolygonSelectModeName = Literal["inside", "crossing", "outside"]
 
 
 class ProfileFileKind(_StrEnum):
-    """What a file of the project's folder is."""
+    """What a project's profile file is: a data profile or a mapping of one."""
     PROFILE = "profile"
     MAPPING = "mapping"
 
@@ -4334,13 +4334,29 @@ class ProfileSource(_StrEnum):
 
     - ``builtin``: KentOS's own (`catalog/v1/profiles/`).
     - ``project``: A file in the project's `profiller` folder.
+    - ``drawing``: Carried inside the drawing's own file (the settings' `profileFiles`, docs/adr/0735).
     """
     BUILTIN = "builtin"
     PROJECT = "project"
+    DRAWING = "drawing"
 
 
-ProfileSourceName = Literal["builtin", "project"]
+ProfileSourceName = Literal["builtin", "project", "drawing"]
 """The names of :class:`ProfileSource`, for a plain string."""
+
+
+class ProfileStore(_StrEnum):
+    """Where `cad.profiles.import` keeps a profile or a mapping (docs/adr/0735).
+
+    - ``folder``: A file of the `profiller` folder beside the drawing's file (docs/adr/0558).
+    - ``drawing``: Inside the drawing's own file: it goes wherever the drawing goes, a cloud project's too.
+    """
+    FOLDER = "folder"
+    DRAWING = "drawing"
+
+
+ProfileStoreName = Literal["folder", "drawing"]
+"""The names of :class:`ProfileStore`, for a plain string."""
 
 
 class ProjectPermission(_StrEnum):
@@ -45704,9 +45720,10 @@ class ProfileImported(_Model):
         release: A profile's release; a mapping's: 0. Unit: count.
         classes: A profile's classes, a mapping's classes it names. Unit: count.
         migrations: A profile's migrations; the releases they go from, in order. Unit: count.
-        path: The file written.
-        replaced: Whether a file was replaced.
+        store: Where it is kept.
+        replaced: Whether a file (or the drawing's copy) was replaced.
         bytes: Unit: bytes.
+        path: The file written, when it is kept in the folder.
         previous_release: The release of the file it replaced, when it replaced a profile's. Unit: count.
     """
     kind: ProfileFileKind | ProfileFileKindName
@@ -45715,9 +45732,10 @@ class ProfileImported(_Model):
     release: int
     classes: int
     migrations: int
-    path: str
+    store: ProfileStore | ProfileStoreName
     replaced: bool
     bytes: int
+    path: str | None | Unset = UNSET
     previous_release: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -45728,9 +45746,11 @@ class ProfileImported(_Model):
         out["release"] = self.release
         out["classes"] = self.classes
         out["migrations"] = self.migrations
-        out["path"] = self.path
+        out["store"] = _enum_out(self.store)
         out["replaced"] = self.replaced
         out["bytes"] = self.bytes
+        if self.path is not UNSET:
+            out["path"] = self.path
         if self.previous_release is not UNSET:
             out["previousRelease"] = self.previous_release
         return out
@@ -45744,9 +45764,10 @@ class ProfileImported(_Model):
             release=data["release"],
             classes=data["classes"],
             migrations=data["migrations"],
-            path=data["path"],
+            store=_enum_in(ProfileStore, data["store"]),
             replaced=data["replaced"],
             bytes=data["bytes"],
+            path=data.get("path", UNSET),
             previous_release=data.get("previousRelease", UNSET),
         )
 
@@ -45786,6 +45807,7 @@ class ProfileListed(_Model):
         path: A project file's path.
         problem: Why a file is not usable: it does not read, or does not hold.
         profile: The profile a mapping is for.
+        shadowed: A folder file the drawing's copy of the same name and kind stands for: the commands read the drawing's.
     """
     kind: ProfileFileKind | ProfileFileKindName
     source: ProfileSource | ProfileSourceName
@@ -45796,6 +45818,7 @@ class ProfileListed(_Model):
     path: str | None | Unset = UNSET
     problem: str | None | Unset = UNSET
     profile: str | None | Unset = UNSET
+    shadowed: bool | Unset = UNSET
     title: str | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -45812,6 +45835,8 @@ class ProfileListed(_Model):
             out["problem"] = self.problem
         if self.profile is not UNSET:
             out["profile"] = self.profile
+        if self.shadowed is not UNSET:
+            out["shadowed"] = self.shadowed
         if self.title is not UNSET:
             out["title"] = self.title
         return out
@@ -45828,6 +45853,7 @@ class ProfileListed(_Model):
             path=data.get("path", UNSET),
             problem=data.get("problem", UNSET),
             profile=data.get("profile", UNSET),
+            shadowed=data.get("shadowed", UNSET),
             title=data.get("title", UNSET),
         )
 
@@ -45990,6 +46016,37 @@ class ProfileRelation(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileRemoved(_Model):
+    """Output (and plan) of `cad.profiles.remove` v1.
+    Attributes:
+        bytes: The text taken out. Unit: bytes.
+        folder_path: The folder's file of the same name and kind, read from now on.
+    """
+    kind: ProfileFileKind | ProfileFileKindName
+    name: str
+    bytes: int
+    folder_path: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["bytes"] = self.bytes
+        if self.folder_path is not UNSET:
+            out["folderPath"] = self.folder_path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileRemoved:
+        return cls(
+            kind=_enum_in(ProfileFileKind, data["kind"]),
+            name=data["name"],
+            bytes=data["bytes"],
+            folder_path=data.get("folderPath", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfilesApplied(_Model):
     """Output (and plan) of `cad.profiles.apply` v1.
     Attributes:
@@ -46128,29 +46185,39 @@ class ProfilesCheck(_Model):
 @dataclass(kw_only=True, slots=True)
 class ProfilesImport(_Model):
     """Input of `cad.profiles.import` v1 (“Veri profili içe aktar”): a profile or a mapping the user brings, checked and
-    kept as a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`), written whole or not
-    at all. The source is a JSON file (`source`) or the profile (`profile`) or mapping (`mapping`) itself; one only.
+    kept where `store` says: a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`, the
+    default), written whole or not at all, or inside the drawing's own file (the settings' `profileFiles`, docs/adr/0735;
+    a settings edit, not an undo step). The source is a JSON file (`source`) or the profile (`profile`) or mapping
+    (`mapping`) itself; one only.
 
-    Refusals, in this order: `profile_source_missing`, `invalid_file_path` (the source, the drawing), `file_not_found`,
-    `invalid_profile` (JSON that does not read, or a profile that does not hold), `unknown_profile_format`,
-    `unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade` (a
-    profile of an earlier release than the file's, without `overwrite`), `file_exists`, `file_unwritable`. Warnings:
-    `mapping_unchecked` (the profile it is for was not found), `profile_replaced`.
+    Refusals, in this order: `profile_source_missing`, `invalid_revision`, `revision_conflict`, `invalid_file_path` (the
+    source, the drawing), `file_not_found`, `invalid_profile` (JSON that does not read, a profile that does not hold, a
+    text too long for the drawing, or more than the drawing carries), `unknown_profile_format`,
+    `unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade`
+    (a profile of an earlier release than the one kept, without `overwrite`), `file_exists` (the folder),
+    `profile_exists` (the drawing), `file_unwritable`. Warnings: `mapping_unchecked` (the profile it is for was not
+    found), `profile_replaced`, `profile_shadowed` (the drawing and the folder both have one of the name and kind).
     Attributes:
         drawing: The open drawing's own file, an absolute path: the folder is beside it.
+        expected_revision: The document revision the input was prepared against, as decimal text.
         overwrite: A file of the same name is written over (a profile of the same or an earlier release too).
         source: A JSON file, an absolute path or from the drawing's folder.
+        store: Where it is kept: the folder (the default) or the drawing.
     """
     drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
     mapping: ProfileMapping | None | Unset = UNSET
     overwrite: bool | None | Unset = UNSET
     profile: DataProfile | None | Unset = UNSET
     source: str | None | Unset = UNSET
+    store: ProfileStore | ProfileStoreName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
         if self.mapping is not UNSET:
             out["mapping"] = None if self.mapping is None else self.mapping.to_json()
         if self.overwrite is not UNSET:
@@ -46159,24 +46226,29 @@ class ProfilesImport(_Model):
             out["profile"] = None if self.profile is None else self.profile.to_json()
         if self.source is not UNSET:
             out["source"] = self.source
+        if self.store is not UNSET:
+            out["store"] = None if self.store is None else _enum_out(self.store)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ProfilesImport:
         return cls(
             drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
             mapping=UNSET if "mapping" not in data else None if data["mapping"] is None else ProfileMapping.from_json(data["mapping"]),
             overwrite=data.get("overwrite", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
             source=data.get("source", UNSET),
+            store=UNSET if "store" not in data else None if data["store"] is None else _enum_in(ProfileStore, data["store"]),
         )
 
 
 @dataclass(kw_only=True, slots=True)
 class ProfilesList(_Model):
-    """Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles and the files of the project's `profiller`
-    folder, profiles and mappings. It changes nothing. The folder is the drawing's own (`drawing`): without it only the
-    built-in profiles are listed. Refusals: none; a file that does not read is listed with its problem.
+    """Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles, those the drawing carries inside its file
+    (docs/adr/0735) and the files of the project's `profiller` folder, profiles and mappings. It changes nothing. The
+    folder is the drawing's own (`drawing`): without it the folder is not read. Refusals: none; a file that does not read
+    is listed with its problem; a folder file whose name and kind the drawing carries too is listed `shadowed`.
     Attributes:
         drawing: The open drawing's own file, an absolute path, when it has one.
     """
@@ -46197,8 +46269,8 @@ class ProfilesList(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ProfilesListed(_Model):
-    """Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and
-    mappings by name.
+    """Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the drawing's profiles and
+    mappings by name, then the folder's by name.
     Attributes:
         folder: The project's folder, when the drawing has a file.
     """
@@ -46326,6 +46398,44 @@ class ProfilesMigrated(_Model):
             objects=data["objects"],
             revision=data["revision"],
             mapping=data.get("mapping", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesRemove(_Model):
+    """Input of `cad.profiles.remove` v1 (“Veri profilini çizimden kaldır”): a profile or a mapping the drawing carries inside
+    its file (docs/adr/0735) taken out of it; a settings edit, not an undo step. A file of the `profiller` folder is not
+    touched: when the folder holds one of the same name and kind, the commands read it from then on (`folderPath`).
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile` (a profile the drawing does not
+    carry), `unknown_mapping` (a mapping the drawing does not carry). Warnings: `profile_still_named` (a mapping the
+    project keeps names the profile, and no other copy of it is left).
+    Attributes:
+        drawing: The open drawing's own file, an absolute path: its folder is looked in for a file of the same name.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    kind: ProfileFileKind | ProfileFileKindName
+    name: str
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesRemove:
+        return cls(
+            kind=_enum_in(ProfileFileKind, data["kind"]),
+            name=data["name"],
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
         )
 
 
@@ -47215,6 +47325,33 @@ class ProjectPatch(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProjectProfileFile(_Model):
+    """A profile or a mapping the project carries inside its file.
+    Attributes:
+        name: The profile's or the mapping's name, the name of its folder file too: small letters, digits and `-`, at most 64.
+        text: The document, JSON as the folder's file holds it (`kentos.data-profile` or `kentos.profile-mapping`).
+    """
+    kind: ProfileFileKind | ProfileFileKindName
+    name: str
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectProfileFile:
+        return cls(
+            kind=_enum_in(ProfileFileKind, data["kind"]),
+            name=data["name"],
+            text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectPurge(_Model):
     """Input of `project.purge` v1: the explicit confirmation of removing a project for good.
     Attributes:
@@ -47368,6 +47505,9 @@ class ProjectSettings(_Model):
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
+        profile_files: The data profiles and mappings the project carries inside its file (docs/adr/0735): by name, a profile before a
+            mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
+            others; of a name both have, the drawing's is the one read.
         relations: The project's relations (docs/adr/0405 §1).
         second_custom_crs: The second system when it is a definition (instead of `second_srid`).
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
@@ -47424,6 +47564,7 @@ class ProjectSettings(_Model):
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
+    profile_files: list[ProjectProfileFile] | Unset = UNSET
     relations: list[ProjectRelation] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
@@ -47500,6 +47641,8 @@ class ProjectSettings(_Model):
             out["namedViews"] = [e0.to_json() for e0 in self.named_views]
         if self.networks is not UNSET:
             out["networks"] = [e0.to_json() for e0 in self.networks]
+        if self.profile_files is not UNSET:
+            out["profileFiles"] = [e0.to_json() for e0 in self.profile_files]
         if self.relations is not UNSET:
             out["relations"] = [e0.to_json() for e0 in self.relations]
         if self.second_custom_crs is not UNSET:
@@ -47564,6 +47707,7 @@ class ProjectSettings(_Model):
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
+            profile_files=[ProjectProfileFile.from_json(e0) for e0 in data["profileFiles"]] if "profileFiles" in data else UNSET,
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
@@ -83797,8 +83941,11 @@ __all__ = [
     "ProfileMigration",
     "ProfilePoint",
     "ProfileRelation",
+    "ProfileRemoved",
     "ProfileSource",
     "ProfileSourceName",
+    "ProfileStore",
+    "ProfileStoreName",
     "ProfilesApplied",
     "ProfilesApply",
     "ProfilesCheck",
@@ -83807,6 +83954,7 @@ __all__ = [
     "ProfilesListed",
     "ProfilesMigrate",
     "ProfilesMigrated",
+    "ProfilesRemove",
     "ProfilesReport",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
@@ -83831,6 +83979,7 @@ __all__ = [
     "ProjectPatch",
     "ProjectPermission",
     "ProjectPermissionName",
+    "ProjectProfileFile",
     "ProjectPurge",
     "ProjectPurged",
     "ProjectRelation",

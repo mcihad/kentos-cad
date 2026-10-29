@@ -13357,12 +13357,12 @@
       "id": "cad.profiles.import",
       "version": 1,
       "title": "Veri profili içe aktar",
-      "summary": "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar çakışmamalı). Profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. KentOS'un kendi profilinin adı alınamaz (profile_name_taken). Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse file_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. Çizim değişmez, geri alma adımı yoktur; plan yazmadan aynısını söyler. Profilin sürümü kendi release sayısıdır (biçim sürümü version değil) ve migrations'ı bir sürümden sonrakine veriyi taşıyan adımlardır; Veri profili göçü onları çalıştırır.",
+      "summary": "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar çakışmamalı). store: folder (varsayılan) ise profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. store: drawing ise aynı metin çizimin kendi dosyasına, projenin ayarlarındaki profileFiles'a konur (en çok 256 profil ve eşleme, her biri en çok 4 MiB): çizim nereye giderse, bulut projesi de, onunla gider; çizimin dosyası gerekmez. Bu ayarın düzenlemesidir, geri alma adımı değildir. Aynı ad ve tür hem çizimde hem klasörde varsa komutlar çizimin içindekini okur (profile_shadowed). KentOS'un kendi profilinin adı alınamaz (profile_name_taken). Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse klasörde file_exists, çizimde profile_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Profilin sürümü kendi release sayısıdır (biçim sürümü version değil) ve migrations'ı bir sürümden sonrakine veriyi taşıyan adımlardır; Veri profili göçü onları çalıştırır.",
       "aliases": [
         "profilal",
         "profiliceaktar"
       ],
-      "effect": "query",
+      "effect": "document",
       "hosts": [
         "desktop"
       ],
@@ -13376,10 +13376,18 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.profiles.import` v1 (“Veri profili içe aktar”): a profile or a mapping the user brings, checked and\nkept as a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`), written whole or not\nat all. The source is a JSON file (`source`) or the profile (`profile`) or mapping (`mapping`) itself; one only.\n\nRefusals, in this order: `profile_source_missing`, `invalid_file_path` (the source, the drawing), `file_not_found`,\n`invalid_profile` (JSON that does not read, or a profile that does not hold), `unknown_profile_format`,\n`unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade` (a\nprofile of an earlier release than the file's, without `overwrite`), `file_exists`, `file_unwritable`. Warnings:\n`mapping_unchecked` (the profile it is for was not found), `profile_replaced`.",
+        "description": "Input of `cad.profiles.import` v1 (“Veri profili içe aktar”): a profile or a mapping the user brings, checked and\nkept where `store` says: a file of the project's `profiller` folder (`<name>.profil.json`, `<name>.eslem.json`, the\ndefault), written whole or not at all, or inside the drawing's own file (the settings' `profileFiles`, docs/adr/0735;\na settings edit, not an undo step). The source is a JSON file (`source`) or the profile (`profile`) or mapping\n(`mapping`) itself; one only.\n\nRefusals, in this order: `profile_source_missing`, `invalid_revision`, `revision_conflict`, `invalid_file_path` (the\nsource, the drawing), `file_not_found`, `invalid_profile` (JSON that does not read, a profile that does not hold, a\ntext too long for the drawing, or more than the drawing carries), `unknown_profile_format`,\n`unsupported_profile_version`, `invalid_profile_mapping`, `profile_name_taken` (a built-in's name), `profile_downgrade`\n(a profile of an earlier release than the one kept, without `overwrite`), `file_exists` (the folder),\n`profile_exists` (the drawing), `file_unwritable`. Warnings: `mapping_unchecked` (the profile it is for was not\nfound), `profile_replaced`, `profile_shadowed` (the drawing and the folder both have one of the name and kind).",
         "properties": {
           "drawing": {
             "description": "The open drawing's own file, an absolute path: the folder is beside it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
               "string",
               "null"
@@ -13418,6 +13426,17 @@
               "string",
               "null"
             ]
+          },
+          "store": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProfileStore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where it is kept: the folder (the default) or the drawing."
           }
         },
         "title": "ProfilesImport",
@@ -13454,8 +13473,11 @@
             "type": "string"
           },
           "path": {
-            "description": "The file written.",
-            "type": "string"
+            "description": "The file written, when it is kept in the folder.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "previousRelease": {
             "description": "The release of the file it replaced, when it replaced a profile's.",
@@ -13475,8 +13497,12 @@
             "x-unit": "count"
           },
           "replaced": {
-            "description": "Whether a file was replaced.",
+            "description": "Whether a file (or the drawing's copy) was replaced.",
             "type": "boolean"
+          },
+          "store": {
+            "$ref": "#/$defs/ProfileStore",
+            "description": "Where it is kept."
           },
           "title": {
             "type": "string"
@@ -13489,7 +13515,7 @@
           "release",
           "classes",
           "migrations",
-          "path",
+          "store",
           "replaced",
           "bytes"
         ],
@@ -13527,8 +13553,11 @@
             "type": "string"
           },
           "path": {
-            "description": "The file written.",
-            "type": "string"
+            "description": "The file written, when it is kept in the folder.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "previousRelease": {
             "description": "The release of the file it replaced, when it replaced a profile's.",
@@ -13548,8 +13577,12 @@
             "x-unit": "count"
           },
           "replaced": {
-            "description": "Whether a file was replaced.",
+            "description": "Whether a file (or the drawing's copy) was replaced.",
             "type": "boolean"
+          },
+          "store": {
+            "$ref": "#/$defs/ProfileStore",
+            "description": "Where it is kept."
           },
           "title": {
             "type": "string"
@@ -13562,7 +13595,7 @@
           "release",
           "classes",
           "migrations",
-          "path",
+          "store",
           "replaced",
           "bytes"
         ],
@@ -13581,11 +13614,15 @@
           "profile_name_taken",
           "profile_downgrade",
           "file_exists",
-          "file_unwritable"
+          "profile_exists",
+          "file_unwritable",
+          "invalid_revision",
+          "revision_conflict"
         ],
         "warnings": [
           "mapping_unchecked",
-          "profile_replaced"
+          "profile_replaced",
+          "profile_shadowed"
         ]
       },
       "examples": [
@@ -13595,6 +13632,13 @@
             "drawing": "/projeler/belediye/imar.kcad",
             "source": "kurum-profili.json"
           }
+        },
+        {
+          "title": "Kurumun profilini çizimin kendi dosyasına al",
+          "input": {
+            "source": "/kurum/profiller/kurum-profili.json",
+            "store": "drawing"
+          }
         }
       ]
     },
@@ -13602,7 +13646,7 @@
       "id": "cad.profiles.list",
       "version": 1,
       "title": "Veri profillerini listele",
-      "summary": "KentOS'un yerleşik veri profillerini ve çizimin “profiller” klasöründeki profil ve eşleme dosyalarını listeler; hiçbir şeyi değiştirmez. Önce yerleşik profiller kendi sırasıyla, sonra projenin dosyaları adıyla (aynı adda önce profil). Her satır: türü (profil ya da eşleme), kaynağı (builtin ya da project), komutlara verilen adı (dosyanın adı), başlığı, profilin sürümü (release) ve sınıf ve göç sayısı; eşlemede hangi profil için olduğu ve anan sınıf sayısı; proje dosyasında yolu. Okunmayan ya da tutmayan dosya listeden düşmez, problem alanında nedeniyle gelir (profilin adı dosyanın adıyla aynı olmalı; eşleme profiliyle denetlenir, profili bulunamayan eşleme denetlenmeden listelenir). Çizimin dosyası yoksa (drawing) yalnız yerleşik profiller gelir; folder çizimin klasörünü söyler.",
+      "summary": "KentOS'un yerleşik veri profillerini, çizimin kendi dosyasının taşıdıklarını (profileFiles) ve çizimin “profiller” klasöründeki profil ve eşleme dosyalarını listeler; hiçbir şeyi değiştirmez. Önce yerleşik profiller kendi sırasıyla, sonra çizimin içindekiler, sonra klasörün dosyaları, her biri adıyla (aynı adda önce profil). Her satır: türü (profil ya da eşleme), kaynağı (builtin, drawing ya da project: klasör), komutlara verilen adı, başlığı, profilin sürümü (release) ve sınıf ve göç sayısı; eşlemede hangi profil için olduğu ve anan sınıf sayısı; klasör dosyasında yolu. Okunmayan ya da tutmayan dosya listeden düşmez, problem alanında nedeniyle gelir (profilin adı dosyanın adıyla aynı olmalı; eşleme profiliyle denetlenir, profili bulunamayan eşleme denetlenmeden listelenir). Aynı ad ve tür çizimde de varsa klasörün dosyası shadowed gelir: komutlar çizimin içindekini okur. Çizimin dosyası yoksa (drawing) klasör okunmaz; folder çizimin klasörünü söyler.",
       "aliases": [
         "profiller",
         "profillistesi"
@@ -13621,7 +13665,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles and the files of the project's `profiller`\nfolder, profiles and mappings. It changes nothing. The folder is the drawing's own (`drawing`): without it only the\nbuilt-in profiles are listed. Refusals: none; a file that does not read is listed with its problem.",
+        "description": "Input of `cad.profiles.list` v1 (“Veri profilleri”): the built-in profiles, those the drawing carries inside its file\n(docs/adr/0735) and the files of the project's `profiller` folder, profiles and mappings. It changes nothing. The\nfolder is the drawing's own (`drawing`): without it the folder is not read. Refusals: none; a file that does not read\nis listed with its problem; a folder file whose name and kind the drawing carries too is listed `shadowed`.",
         "properties": {
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one.",
@@ -13636,7 +13680,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and\nmappings by name.",
+        "description": "Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the drawing's profiles and\nmappings by name, then the folder's by name.",
         "properties": {
           "folder": {
             "description": "The project's folder, when the drawing has a file.",
@@ -13660,7 +13704,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and\nmappings by name.",
+        "description": "Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the drawing's profiles and\nmappings by name, then the folder's by name.",
         "properties": {
           "folder": {
             "description": "The project's folder, when the drawing has a file.",
@@ -13944,6 +13988,146 @@
             "from": 1,
             "name": "kurum-profili",
             "to": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.profiles.remove",
+      "version": 1,
+      "title": "Veri profilini çizimden kaldır",
+      "summary": "Çizimin kendi dosyasının taşıdığı (profileFiles, Veri profili içe aktar'ın store: drawing'i) bir veri profilini ya da eşlemeyi çizimden çıkarır: kind (profile ya da mapping) ve name ile. “profiller” klasöründeki dosyaya dokunmaz: klasörde aynı ad ve türde dosya varsa komutlar bundan sonra onu okur, cevabın folderPath'i onu söyler (drawing çizimin dosyası, klasör onun yanındadır). Çizimin taşımadığı profil unknown_profile, eşleme unknown_mapping ile reddedilir (ileti klasördeki aynı adlı dosyayı da söyler). Projenin bir eşlemesi kaldırılan profili adlandırıyor ve profilin başka kopyası kalmıyorsa söylenir (profile_still_named). Projenin ayarının düzenlemesidir, geri alma adımı değildir; plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "profilkaldir"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.remove` v1 (“Veri profilini çizimden kaldır”): a profile or a mapping the drawing carries inside\nits file (docs/adr/0735) taken out of it; a settings edit, not an undo step. A file of the `profiller` folder is not\ntouched: when the folder holds one of the same name and kind, the commands read it from then on (`folderPath`).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile` (a profile the drawing does not\ncarry), `unknown_mapping` (a mapping the drawing does not carry). Warnings: `profile_still_named` (a mapping the\nproject keeps names the profile, and no other copy of it is left).",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path: its folder is looked in for a file of the same name.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "$ref": "#/$defs/ProfileFileKind"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name"
+        ],
+        "title": "ProfilesRemove",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.remove` v1.",
+        "properties": {
+          "bytes": {
+            "description": "The text taken out.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "folderPath": {
+            "description": "The folder's file of the same name and kind, read from now on.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "$ref": "#/$defs/ProfileFileKind"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "bytes"
+        ],
+        "title": "ProfileRemoved",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.remove` v1.",
+        "properties": {
+          "bytes": {
+            "description": "The text taken out.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "folderPath": {
+            "description": "The folder's file of the same name and kind, read from now on.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kind": {
+            "$ref": "#/$defs/ProfileFileKind"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "name",
+          "bytes"
+        ],
+        "title": "ProfileRemoved",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_profile",
+          "unknown_mapping",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "profile_still_named"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Çizimin taşıdığı kurum profilini çizimden kaldır",
+          "input": {
+            "kind": "profile",
+            "name": "kurum-profili"
           }
         }
       ]
@@ -66299,6 +66483,24 @@
       "meaning": "Projedeki aynı adlı profil ya da eşleme değiştirildi; iletisi eski sürümünü söyler."
     },
     {
+      "code": "profile_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizimin içinde aynı adlı profil ya da eşleme var; değiştirmek için overwrite verin."
+    },
+    {
+      "code": "profile_shadowed",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aynı adlı profil ya da eşleme hem çizimin içinde hem profiller klasöründe var; komutlar çizimin içindekini okur."
+    },
+    {
+      "code": "profile_still_named",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Projenin bir eşlemesi kaldırılan profili adlandırıyor; profilin başka kopyası yok, eşleme denetlenemez."
+    },
+    {
       "code": "invalid_period",
       "kind": "failed",
       "retryable": false,
@@ -112630,7 +112832,7 @@
       "type": "object"
     },
     "ProfileFileKind": {
-      "description": "What a file of the project's folder is.",
+      "description": "What a project's profile file is: a data profile or a mapping of one.",
       "enum": [
         "profile",
         "mapping"
@@ -112898,6 +113100,10 @@
           "type": "integer",
           "x-unit": "count"
         },
+        "shadowed": {
+          "description": "A folder file the drawing's copy of the same name and kind stands for: the commands read the drawing's.",
+          "type": "boolean"
+        },
         "source": {
           "$ref": "#/$defs/ProfileSource"
         },
@@ -113103,6 +113309,26 @@
         {
           "const": "project",
           "description": "A file in the project's `profiller` folder.",
+          "type": "string"
+        },
+        {
+          "const": "drawing",
+          "description": "Carried inside the drawing's own file (the settings' `profileFiles`, docs/adr/0735).",
+          "type": "string"
+        }
+      ]
+    },
+    "ProfileStore": {
+      "description": "Where `cad.profiles.import` keeps a profile or a mapping (docs/adr/0735).",
+      "oneOf": [
+        {
+          "const": "folder",
+          "description": "A file of the `profiller` folder beside the drawing's file (docs/adr/0558).",
+          "type": "string"
+        },
+        {
+          "const": "drawing",
+          "description": "Inside the drawing's own file: it goes wherever the drawing goes, a cloud project's too.",
           "type": "string"
         }
       ]
@@ -113438,6 +113664,29 @@
         }
       ]
     },
+    "ProjectProfileFile": {
+      "additionalProperties": false,
+      "description": "A profile or a mapping the project carries inside its file.",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ProfileFileKind"
+        },
+        "name": {
+          "description": "The profile's or the mapping's name, the name of its folder file too: small letters, digits and `-`, at most 64.",
+          "type": "string"
+        },
+        "text": {
+          "description": "The document, JSON as the folder's file holds it (`kentos.data-profile` or `kentos.profile-mapping`).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "name",
+        "text"
+      ],
+      "type": "object"
+    },
     "ProjectRelation": {
       "additionalProperties": false,
       "description": "A relation of the project (docs/adr/0405 §1): the child layer's field holds the parent object's\npersistent id.",
@@ -113749,6 +113998,13 @@
           "format": "double",
           "type": "number",
           "x-unit": "scale"
+        },
+        "profileFiles": {
+          "description": "The data profiles and mappings the project carries inside its file (docs/adr/0735): by name, a profile before a\nmapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds\nothers; of a name both have, the drawing's is the one read.",
+          "items": {
+            "$ref": "#/$defs/ProjectProfileFile"
+          },
+          "type": "array"
         },
         "relations": {
           "description": "The project's relations (docs/adr/0405 §1).",

@@ -1256,7 +1256,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_PROFILES_CHECK,
         kentos_commands::CAD_PROFILES_CHECK_VERSION,
     ),
-    // An institution's own profile imported, listed and migrated ([`profile_files`], docs/adr/0558).
+    // An institution's own profile imported, listed, migrated and taken out of the drawing ([`profile_files`],
+    // docs/adr/0558, 0735).
     (
         kentos_commands::CAD_PROFILES_IMPORT,
         kentos_commands::CAD_PROFILES_IMPORT_VERSION,
@@ -1268,6 +1269,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_PROFILES_MIGRATE,
         kentos_commands::CAD_PROFILES_MIGRATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PROFILES_REMOVE,
+        kentos_commands::CAD_PROFILES_REMOVE_VERSION,
     ),
     // The project's line types with patterns ([`line_types_edit`], docs/adr/0313).
     (

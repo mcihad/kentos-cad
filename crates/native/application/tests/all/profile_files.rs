@@ -77,7 +77,7 @@ fn an_imported_profile_reads_back_as_the_one_given() {
         panic!("not imported");
     };
     let written = dir.join("profiller").join("peyzaj.profil.json");
-    assert_eq!(output.path, written.display().to_string());
+    assert_eq!(output.path, Some(written.display().to_string()));
     let bytes = std::fs::read(&written).unwrap();
     assert_eq!(output.bytes, bytes.len() as u64);
     assert!(bytes.ends_with(b"\n"), "a file ends in a newline");
@@ -308,4 +308,87 @@ fn mapped_migrate_timing() {
     );
     assert_eq!(output.mapping.as_deref(), Some("park-bahce-kurum2"));
     assert!(planned.as_millis() < 8000 && written.as_millis() < 8000);
+}
+
+/// `cargo test --release -p kentos-native-application --test all profile_files::carried_timing -- --ignored --nocapture`
+/// (docs/adr/0735 Ölçümler): a drawing carrying 127 profiles (copies of the park profile with three releases) and 127
+/// mappings, each naming its profile: the list (every copy read and every mapping checked), a profile found by name, one
+/// more profile brought into the drawing, and the drawing saved and opened with them (255, one under the limit).
+#[test]
+#[ignore = "a timing, run on its own in release"]
+fn carried_timing() {
+    use kentos_commands::{ProfileFileKind, ProfileStore, ProfilesList, ProjectProfileFile};
+    use kentos_native_application::profile_files::{Shelf, find_profile, list};
+    let kurum = fixture("park-bahce.profil.json");
+    let mapping = fixture("park-bahce-kurum.eslem.json");
+    let text = |v: &Value| format!("{}\n", serde_json::to_string_pretty(v).unwrap());
+    let mut files = Vec::new();
+    for i in 0..127 {
+        let mut p = kurum.clone();
+        p["name"] = json!(format!("p{i:03}"));
+        files.push(ProjectProfileFile {
+            kind: ProfileFileKind::Profile,
+            name: format!("p{i:03}"),
+            text: text(&p),
+        });
+        let mut m = mapping.clone();
+        m["name"] = json!(format!("p{i:03}-m"));
+        m["profile"] = json!(format!("p{i:03}"));
+        files.push(ProjectProfileFile {
+            kind: ProfileFileKind::Mapping,
+            name: format!("p{i:03}-m"),
+            text: text(&m),
+        });
+    }
+    let files = kentos_commands::sanitized_profile_files(files);
+    assert_eq!(files.len(), 254);
+    let bytes: usize = files.iter().map(|f| f.text.len()).sum();
+    let mut d = doc();
+    let mut settings = d.settings().clone();
+    settings.profile_files = files;
+    d.set_settings(settings);
+    let median = |mut f: Box<dyn FnMut() -> std::time::Duration>| {
+        let mut runs: Vec<_> = (0..9).map(|_| f()).collect();
+        runs.sort();
+        runs[4]
+    };
+    let listed = median(Box::new(|| {
+        let t = std::time::Instant::now();
+        let out = list::run(&d.settings().profile_files, &ProfilesList { drawing: None });
+        assert_eq!(out.items.len(), 255);
+        assert!(out.items.iter().all(|i| i.problem.is_none()));
+        t.elapsed()
+    }));
+    let found = median(Box::new(|| {
+        let t = std::time::Instant::now();
+        let p = find_profile(Shelf::of(&d, None), "p126").expect("found");
+        assert_eq!(p.release, 3);
+        t.elapsed()
+    }));
+    let mut newest = profile("park-bahce.profil.json");
+    newest.name = "yeni".into();
+    let t = std::time::Instant::now();
+    let r = import::execute(
+        &mut ExecutionContext::new(&mut d),
+        ProfilesImport {
+            profile: Some(newest),
+            store: Some(ProfileStore::Drawing),
+            ..ProfilesImport::default()
+        },
+    );
+    let imported = t.elapsed();
+    assert!(matches!(r, CommandResult::Completed { .. }), "{r:?}");
+    let snapshot = d.to_snapshot_v2();
+    let t = std::time::Instant::now();
+    let saved = kentos_kcad::encode_verified(&snapshot).expect("saved");
+    let encoded = t.elapsed();
+    let t = std::time::Instant::now();
+    let back = kentos_kcad::decode(&saved).expect("opened");
+    let decoded = t.elapsed();
+    assert_eq!(back.settings.profile_files.len(), 255);
+    println!(
+        "254 kopya ({bytes} bayt metin): liste {listed:?}, adıyla bulmak {found:?}, çizime bir profil daha {imported:?}, \
+         .kcad yazmak (doğrulamayla) {encoded:?}, okumak {decoded:?}; dosya {} bayt",
+        saved.len()
+    );
 }

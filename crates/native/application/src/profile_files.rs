@@ -2,7 +2,10 @@
 //!
 //! [`import`] is `cad.profiles.import`: a profile or a mapping the user brings, checked and kept as a file of the
 //! project's `profiller` folder beside the drawing (written beside its place, read back, then moved there).
-//! [`list`] is `cad.profiles.list`: KentOS's profiles and the folder's. [`migrate`] is `cad.profiles.migrate`: the
+//! [`list`] is `cad.profiles.list`: KentOS's profiles, the drawing's and the folder's. [`remove`] is
+//! `cad.profiles.remove`: a profile or a mapping the drawing carries inside its file (docs/adr/0735) taken out. A
+//! profile or a mapping is kept in the folder or, with `store: drawing`, inside the drawing's own file (the settings'
+//! `profileFiles`); of a name both keep, the drawing's is read ([`Shelf`]). [`migrate`] is `cad.profiles.migrate`: the
 //! project's data moved from one release of a profile to a later one by the steps the profile lists, as one undo step
 //! “Profil göçü”, the values that did not fit reported by value. The shared cases are
 //! `fixtures/commands/v1/cad.profiles.{import,list,migrate}.json` (`scripts/fixtures/profile_files_cases.py`).
@@ -13,11 +16,13 @@ use std::path::{Path, PathBuf};
 use kentos_commands::{
     BUILTIN_PROFILES, CommandResult, CommandWarning, ConvertFail, DataProfile, Entity, FieldDomain,
     LayerField, LossKind, MAPPING_FORMAT, MAPPING_SUFFIX, MAX_LOSS_UIDS, MAX_MAPPING_ITEMS,
-    MULTIPLE_JOIN, MappingClass, MigratedStep, MigrationLoss, MigrationStep, PROFILE_FOLDER,
-    PROFILE_FORMAT, PROFILE_SUFFIX, ProfileClass, ProfileFileKind, ProfileImported, ProfileListed,
-    ProfileMapping, ProfileSource, ProfilesImport, ProfilesList, ProfilesListed, ProfilesMigrate,
-    ProfilesMigrated, builtin_profile, check_value, fold_name, follow_domains, js_trim,
-    mapping_problem, profile_file_name_ok, profile_problem,
+    MAX_PROFILE_TEXT_BYTES, MAX_PROJECT_PROFILE_FILES, MULTIPLE_JOIN, MappingClass, MigratedStep,
+    MigrationLoss, MigrationStep, PROFILE_FOLDER, PROFILE_FORMAT, PROFILE_SUFFIX, ProfileClass,
+    ProfileFileKind, ProfileImported, ProfileListed, ProfileMapping, ProfileRemoved,
+    ProfileSource, ProfileStore, ProfilesImport, ProfilesList, ProfilesListed, ProfilesMigrate,
+    ProfilesMigrated, ProfilesRemove, ProjectProfileFile, builtin_profile, check_value, fold_name,
+    follow_domains, js_trim, mapping_problem, profile_file_name_ok, profile_problem,
+    with_profile_file,
 };
 use kentos_domain::{Document, Slot};
 
@@ -201,22 +206,129 @@ fn parse(value: serde_json::Value) -> Result<Parsed, (&'static str, String)> {
     }
 }
 
-/// The project's profile of `name`: none when the drawing has no file or the folder no such file; why not, when the
-/// file does not read or does not hold. The name inside is the file's.
-pub(crate) fn load_profile(
-    drawing: Option<&str>,
-    name: &str,
-) -> Result<Option<DataProfile>, String> {
+// ── Where the project's profiles are ───────────────────────────────────────────────────────────────────────────
+
+/// Where a project's own profiles and mappings are: inside the drawing (the settings' `profileFiles`, docs/adr/0735)
+/// and in the `profiller` folder beside its file (docs/adr/0558). Of a name and kind both have, the drawing's is read.
+#[derive(Clone, Copy)]
+pub struct Shelf<'a> {
+    /// The drawing's own file, an absolute path: its folder is beside it.
+    pub drawing: Option<&'a str>,
+    /// What the drawing carries, in its order.
+    pub carried: &'a [ProjectProfileFile],
+}
+
+impl<'a> Shelf<'a> {
+    /// The open drawing's: what it carries, and the folder beside its file.
+    pub fn of(doc: &'a Document, drawing: Option<&'a str>) -> Self {
+        Shelf {
+            drawing,
+            carried: &doc.settings().profile_files,
+        }
+    }
+
+    /// The folder alone.
+    pub fn folder(drawing: Option<&'a str>) -> Self {
+        Shelf {
+            drawing,
+            carried: &[],
+        }
+    }
+
+    /// The drawing's profile or mapping of `name`.
+    pub fn carried(&self, kind: ProfileFileKind, name: &str) -> Option<&'a ProjectProfileFile> {
+        self.carried
+            .iter()
+            .find(|f| f.kind == kind && f.name == name)
+    }
+
+    /// The folder's file of `name`, when it is there.
+    pub fn folder_file(&self, kind: ProfileFileKind, name: &str) -> Option<PathBuf> {
+        if !profile_file_name_ok(name) {
+            return None;
+        }
+        let path = folder_of(self.drawing)?.join(file_name(kind, name));
+        path.is_file().then_some(path)
+    }
+
+    /// The names of the profiles or the mappings the drawing carries, for a refusal's words.
+    fn carried_names(&self, kind: ProfileFileKind) -> Vec<&'a str> {
+        self.carried
+            .iter()
+            .filter(|f| f.kind == kind)
+            .map(|f| f.name.as_str())
+            .collect()
+    }
+}
+
+/// A profile's or a mapping's file name in the folder.
+pub fn file_name(kind: ProfileFileKind, name: &str) -> String {
+    match kind {
+        ProfileFileKind::Profile => format!("{name}{PROFILE_SUFFIX}"),
+        ProfileFileKind::Mapping => format!("{name}{MAPPING_SUFFIX}"),
+    }
+}
+
+/// The words a list of the drawing's profiles (or mappings) adds to a refusal: none when it carries none.
+pub(crate) fn carried_words(shelf: Shelf<'_>, kind: ProfileFileKind) -> String {
+    let names = shelf.carried_names(kind);
+    let what = match kind {
+        ProfileFileKind::Profile => "profiller",
+        ProfileFileKind::Mapping => "eşlemeler",
+    };
+    if names.is_empty() {
+        String::new()
+    } else {
+        format!("; çizimin içindeki {what}: {}", names.join(", "))
+    }
+}
+
+/// What the drawing's copy of `name` is: read from its text as a folder file is read, its name the one it is kept by.
+fn read_carried(f: &ProjectProfileFile) -> Result<Parsed, String> {
+    let what = match f.kind {
+        ProfileFileKind::Profile => "profili",
+        ProfileFileKind::Mapping => "eşlemesi",
+    };
+    let value: serde_json::Value = serde_json::from_str(&f.text).map_err(|e| {
+        format!("Çizimin içindeki “{}” {what} JSON olarak okunamadı: {e}", f.name)
+    })?;
+    let parsed = parse(value).map_err(|(_, why)| why)?;
+    match (&parsed, f.kind) {
+        (Parsed::Profile(p), ProfileFileKind::Profile) if p.name != f.name => Err(format!(
+            "Çizimin içindeki “{}” profilinin kendi adı “{}”; aynı olmalı.",
+            f.name, p.name
+        )),
+        (Parsed::Mapping(m), ProfileFileKind::Mapping) if m.name != f.name => Err(format!(
+            "Çizimin içindeki “{}” eşlemesinin kendi adı “{}”; aynı olmalı.",
+            f.name, m.name
+        )),
+        (Parsed::Mapping(_), ProfileFileKind::Profile) => Err(format!(
+            "Çizimin içindeki “{}” bir veri profili değil, eşleme.",
+            f.name
+        )),
+        (Parsed::Profile(_), ProfileFileKind::Mapping) => Err(format!(
+            "Çizimin içindeki “{}” bir eşleme değil, veri profili.",
+            f.name
+        )),
+        _ => Ok(parsed),
+    }
+}
+
+/// The project's profile of `name`: the drawing's copy, else the folder's file; none when neither has one; why not,
+/// when the one found does not read or does not hold. The name inside is the one it is kept by.
+pub(crate) fn load_profile(shelf: Shelf<'_>, name: &str) -> Result<Option<DataProfile>, String> {
     if !profile_file_name_ok(name) {
         return Ok(None);
     }
-    let Some(folder) = folder_of(drawing) else {
+    if let Some(f) = shelf.carried(ProfileFileKind::Profile, name) {
+        return match read_carried(f)? {
+            Parsed::Profile(p) => Ok(Some(*p)),
+            Parsed::Mapping(_) => unreachable!("read_carried holds the kind"),
+        };
+    }
+    let Some(path) = shelf.folder_file(ProfileFileKind::Profile, name) else {
         return Ok(None);
     };
-    let path = folder.join(format!("{name}{PROFILE_SUFFIX}"));
-    if !path.is_file() {
-        return Ok(None);
-    }
     match parse(read_json(&path)?).map_err(|(_, why)| why)? {
         Parsed::Profile(p) if p.name == name => Ok(Some(*p)),
         Parsed::Profile(p) => Err(format!(
@@ -232,20 +344,19 @@ pub(crate) fn load_profile(
 }
 
 /// The project's mapping of `name`, as [`load_profile`] reads a profile.
-pub(crate) fn load_mapping(
-    drawing: Option<&str>,
-    name: &str,
-) -> Result<Option<ProfileMapping>, String> {
+pub(crate) fn load_mapping(shelf: Shelf<'_>, name: &str) -> Result<Option<ProfileMapping>, String> {
     if !profile_file_name_ok(name) {
         return Ok(None);
     }
-    let Some(folder) = folder_of(drawing) else {
+    if let Some(f) = shelf.carried(ProfileFileKind::Mapping, name) {
+        return match read_carried(f)? {
+            Parsed::Mapping(m) => Ok(Some(m)),
+            Parsed::Profile(_) => unreachable!("read_carried holds the kind"),
+        };
+    }
+    let Some(path) = shelf.folder_file(ProfileFileKind::Mapping, name) else {
         return Ok(None);
     };
-    let path = folder.join(format!("{name}{MAPPING_SUFFIX}"));
-    if !path.is_file() {
-        return Ok(None);
-    }
     match parse(read_json(&path)?).map_err(|(_, why)| why)? {
         Parsed::Mapping(m) if m.name == name => Ok(Some(m)),
         Parsed::Mapping(m) => Err(format!(
@@ -260,9 +371,9 @@ pub(crate) fn load_mapping(
     }
 }
 
-/// A profile by name: KentOS's, else the project's file beside the drawing.
-pub fn find_profile(drawing: Option<&str>, name: &str) -> Option<DataProfile> {
-    builtin_profile(name).or_else(|| load_profile(drawing, name).ok().flatten())
+/// A profile by name: KentOS's, else the drawing's copy, else the folder's file.
+pub fn find_profile(shelf: Shelf<'_>, name: &str) -> Option<DataProfile> {
+    builtin_profile(name).or_else(|| load_profile(shelf, name).ok().flatten())
 }
 
 // ── List ────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -270,8 +381,54 @@ pub fn find_profile(drawing: Option<&str>, name: &str) -> Option<DataProfile> {
 pub mod list {
     use super::*;
 
-    /// The built-in profiles and the folder's files (a window reads them as the command does).
-    pub fn run(input: &ProfilesList) -> ProfilesListed {
+    /// What the list says of one of the project's profiles or mappings, read or not.
+    fn item(
+        shelf: Shelf<'_>,
+        kind: ProfileFileKind,
+        source: ProfileSource,
+        name: &str,
+        path: Option<&Path>,
+        loaded: Result<Parsed, String>,
+    ) -> ProfileListed {
+        let mut item = ProfileListed {
+            kind,
+            source,
+            name: name.to_owned(),
+            title: String::new(),
+            release: 0,
+            classes: 0,
+            migrations: 0,
+            profile: None,
+            path: path.map(|p| p.display().to_string()),
+            problem: None,
+            shadowed: false,
+        };
+        match loaded {
+            Ok(Parsed::Profile(p)) => {
+                item.title = p.title.clone();
+                item.release = p.release;
+                item.classes = p.classes.len() as u32;
+                item.migrations = p.migrations.len() as u32;
+            }
+            Ok(Parsed::Mapping(m)) => {
+                item.title = m.title.clone();
+                item.classes = m.classes.len() as u32;
+                // A mapping that does not hold for its profile is listed with why.
+                item.problem =
+                    find_profile(shelf, &m.profile).and_then(|p| mapping_problem(&m, &p));
+                item.profile = Some(m.profile.clone());
+            }
+            Err(why) => item.problem = Some(why),
+        }
+        item
+    }
+
+    /// The built-in profiles, the drawing's and the folder's files (a window reads them as the command does).
+    pub fn run(carried: &[ProjectProfileFile], input: &ProfilesList) -> ProfilesListed {
+        let shelf = Shelf {
+            drawing: input.drawing.as_deref(),
+            carried,
+        };
         let mut items = Vec::new();
         for (name, _) in BUILTIN_PROFILES {
             let Some(p) = builtin_profile(name) else {
@@ -288,7 +445,18 @@ pub mod list {
                 profile: None,
                 path: None,
                 problem: None,
+                shadowed: false,
             });
+        }
+        for f in carried {
+            items.push(item(
+                shelf,
+                f.kind,
+                ProfileSource::Drawing,
+                &f.name,
+                None,
+                read_carried(f),
+            ));
         }
         let folder = folder_of(input.drawing.as_deref());
         if let Some(dir) = &folder
@@ -309,49 +477,27 @@ pub mod list {
                 }
                 found.push((name.to_owned(), kind, entry.path()));
             }
-            found.sort_by(|a, b| {
-                (a.0.as_str(), a.1 == ProfileFileKind::Mapping)
-                    .cmp(&(b.0.as_str(), b.1 == ProfileFileKind::Mapping))
-            });
+            found.sort_by(|a, b| (a.0.as_str(), a.1).cmp(&(b.0.as_str(), b.1)));
+            let only_folder = Shelf::folder(input.drawing.as_deref());
             for (name, kind, path) in found {
                 let loaded = match kind {
-                    ProfileFileKind::Profile => load_profile(input.drawing.as_deref(), &name)
+                    ProfileFileKind::Profile => load_profile(only_folder, &name)
                         .and_then(|o| o.ok_or_else(|| "dosya okunamadı".to_owned()))
                         .map(|p| Parsed::Profile(Box::new(p))),
-                    ProfileFileKind::Mapping => load_mapping(input.drawing.as_deref(), &name)
+                    ProfileFileKind::Mapping => load_mapping(only_folder, &name)
                         .and_then(|o| o.ok_or_else(|| "dosya okunamadı".to_owned()))
                         .map(Parsed::Mapping),
                 };
-                let mut item = ProfileListed {
+                let mut listed = item(
+                    shelf,
                     kind,
-                    source: ProfileSource::Project,
-                    name: name.clone(),
-                    title: String::new(),
-                    release: 0,
-                    classes: 0,
-                    migrations: 0,
-                    profile: None,
-                    path: Some(path.display().to_string()),
-                    problem: None,
-                };
-                match loaded {
-                    Ok(Parsed::Profile(p)) => {
-                        item.title = p.title.clone();
-                        item.release = p.release;
-                        item.classes = p.classes.len() as u32;
-                        item.migrations = p.migrations.len() as u32;
-                    }
-                    Ok(Parsed::Mapping(m)) => {
-                        item.title = m.title.clone();
-                        item.classes = m.classes.len() as u32;
-                        // A mapping that does not hold for its profile is listed with why.
-                        item.problem = find_profile(input.drawing.as_deref(), &m.profile)
-                            .and_then(|p| mapping_problem(&m, &p));
-                        item.profile = Some(m.profile.clone());
-                    }
-                    Err(why) => item.problem = Some(why),
-                }
-                items.push(item);
+                    ProfileSource::Project,
+                    &name,
+                    Some(&path),
+                    loaded,
+                );
+                listed.shadowed = shelf.carried(kind, &name).is_some();
+                items.push(listed);
             }
         }
         ProfilesListed {
@@ -367,19 +513,19 @@ pub mod list {
         }
     }
 
-    pub fn plan(_cx: &ExecutionContext<'_>, input: &ProfilesList) -> CommandResult<ProfilesListed> {
+    pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesList) -> CommandResult<ProfilesListed> {
         CommandResult::Completed {
-            output: run(input),
+            output: run(&cx.doc.settings().profile_files, input),
             warnings: Vec::new(),
         }
     }
 
     pub fn execute(
-        _cx: &mut ExecutionContext<'_>,
+        cx: &mut ExecutionContext<'_>,
         input: ProfilesList,
     ) -> CommandResult<ProfilesListed> {
         CommandResult::Completed {
-            output: run(&input),
+            output: run(&cx.doc.settings().profile_files, &input),
             warnings: Vec::new(),
         }
     }
@@ -390,11 +536,17 @@ pub mod list {
 pub mod import {
     use super::*;
 
+    /// Where the import puts what it brings.
+    enum Target {
+        File(PathBuf),
+        Drawing(ProjectProfileFile),
+    }
+
     /// What the import will write and say.
     struct Planned {
         out: ProfileImported,
         bytes: Vec<u8>,
-        target: PathBuf,
+        target: Target,
         warnings: Vec<CommandWarning>,
     }
 
@@ -453,7 +605,53 @@ pub mod import {
         fail(code, why, path)
     }
 
-    fn check(input: &ProfilesImport) -> Result<Planned, Stop> {
+    /// What `kind` is called in the words.
+    fn noun(kind: ProfileFileKind) -> &'static str {
+        match kind {
+            ProfileFileKind::Profile => "profili",
+            ProfileFileKind::Mapping => "eşlemesi",
+        }
+    }
+
+    /// The shadow warning, when the other place keeps one of the same name and kind.
+    fn shadow(
+        shelf: Shelf<'_>,
+        store: ProfileStore,
+        kind: ProfileFileKind,
+        name: &str,
+        path: &str,
+    ) -> Option<CommandWarning> {
+        match store {
+            ProfileStore::Drawing => shelf.folder_file(kind, name).map(|file| {
+                warn(
+                    codes::PROFILE_SHADOWED,
+                    format!(
+                        "Çizimin “{PROFILE_FOLDER}” klasöründe de {} var; komutlar çizimin içindekini okur.",
+                        file.display()
+                    ),
+                    Some(path.into()),
+                )
+            }),
+            ProfileStore::Folder => shelf.carried(kind, name).map(|_| {
+                warn(
+                    codes::PROFILE_SHADOWED,
+                    format!(
+                        "Çizimin içinde de “{name}” {} var; komutlar onu okur, klasördeki bu dosyayı değil.",
+                        noun(kind)
+                    ),
+                    Some(path.into()),
+                )
+            }),
+        }
+    }
+
+    /// Where the import writes: the folder beside the drawing's file, or the drawing.
+    enum Place {
+        Folder(PathBuf),
+        Drawing,
+    }
+
+    fn check(shelf: Shelf<'_>, doc: &Document, input: &ProfilesImport) -> Result<Planned, Stop> {
         let given = usize::from(input.source.is_some())
             + usize::from(input.profile.is_some())
             + usize::from(input.mapping.is_some());
@@ -464,12 +662,17 @@ pub mod import {
                 "source",
             ));
         }
+        checks::revision(doc, input.expected_revision.as_deref())?;
+        let store = input.store.unwrap_or_default();
         let drawing = input.drawing.as_deref();
         let source = match &input.source {
             Some(t) => Some(source_path(t, drawing)?),
             None => None,
         };
-        let folder = drawing_folder(drawing)?;
+        let place = match store {
+            ProfileStore::Folder => Place::Folder(drawing_folder(drawing)?),
+            ProfileStore::Drawing => Place::Drawing,
+        };
         let parsed = if let Some(path) = &source {
             if !path.is_file() {
                 return Err(fail(
@@ -492,7 +695,7 @@ pub mod import {
         };
         let overwrite = input.overwrite == Some(true);
         let mut warnings = Vec::new();
-        match parsed {
+        let (kind, name, title, release, classes, migrations, at, bytes) = match &parsed {
             Parsed::Profile(p) => {
                 if !profile_file_name_ok(&p.name) {
                     return Err(fail(
@@ -514,81 +717,28 @@ pub mod import {
                         "profile",
                     ));
                 }
-                let target = folder.join(format!("{}{PROFILE_SUFFIX}", p.name));
-                let mut previous = None;
-                if target.is_file() {
-                    let held = load_profile(drawing, &p.name).ok().flatten();
-                    previous = held.as_ref().map(|h| h.release);
-                    if !overwrite {
-                        match &held {
-                            Some(h) if h.release > p.release => {
-                                return Err(fail(
-                                    codes::PROFILE_DOWNGRADE,
-                                    format!(
-                                        "Projedeki “{}” profili {}. sürümde; içe aktarılan {}. sürüm daha eski. Üzerine yazmak için overwrite verin.",
-                                        p.name, h.release, p.release
-                                    ),
-                                    "profile",
-                                ));
-                            }
-                            Some(h) if h.release < p.release => {}
-                            _ => {
-                                return Err(fail(
-                                    codes::FILE_EXISTS,
-                                    format!(
-                                        "{} var; aynı sürümün üzerine yazmak için overwrite verin.",
-                                        target.display()
-                                    ),
-                                    "profile",
-                                ));
-                            }
-                        }
-                    }
-                    warnings.push(warn(
-                        codes::PROFILE_REPLACED,
-                        match previous {
-                            Some(r) => format!(
-                                "Projedeki “{}” profili {r}. sürümden {}. sürüme değiştirildi.",
-                                p.name, p.release
-                            ),
-                            None => format!(
-                                "Projedeki “{}” profilinin okunamayan dosyası yenisiyle değiştirildi.",
-                                p.name
-                            ),
-                        },
-                        Some("profile".into()),
-                    ));
-                }
-                let bytes = pretty(&p);
-                Ok(Planned {
-                    out: ProfileImported {
-                        kind: ProfileFileKind::Profile,
-                        name: p.name.clone(),
-                        title: p.title.clone(),
-                        release: p.release,
-                        previous_release: previous,
-                        classes: p.classes.len() as u32,
-                        migrations: p.migrations.len() as u32,
-                        path: target.display().to_string(),
-                        replaced: target.is_file(),
-                        bytes: bytes.len() as u64,
-                    },
-                    bytes,
-                    target,
-                    warnings,
-                })
+                (
+                    ProfileFileKind::Profile,
+                    p.name.clone(),
+                    p.title.clone(),
+                    p.release,
+                    p.classes.len() as u32,
+                    p.migrations.len() as u32,
+                    "profile",
+                    pretty(p.as_ref()),
+                )
             }
             Parsed::Mapping(m) => {
-                match find_profile(drawing, &m.profile) {
+                match find_profile(shelf, &m.profile) {
                     Some(p) => {
-                        if let Some(why) = mapping_problem(&m, &p) {
+                        if let Some(why) = mapping_problem(m, &p) {
                             return Err(fail(
                                 codes::INVALID_PROFILE_MAPPING,
                                 format!("Eşleme geçersiz: {why}"),
                                 "mapping",
                             ));
                         }
-                        let through = kentos_commands::through(&p, &m);
+                        let through = kentos_commands::through(&p, m);
                         if let Some(why) = profile_problem(&through) {
                             return Err(fail(
                                 codes::INVALID_PROFILE_MAPPING,
@@ -608,44 +758,170 @@ pub mod import {
                         Some("mapping".into()),
                     )),
                 }
-                let target = folder.join(format!("{}{MAPPING_SUFFIX}", m.name));
-                if target.is_file() {
-                    if !overwrite {
+                (
+                    ProfileFileKind::Mapping,
+                    m.name.clone(),
+                    m.title.clone(),
+                    0,
+                    m.classes.len() as u32,
+                    0,
+                    "mapping",
+                    pretty(m),
+                )
+            }
+        };
+        // The release of the one kept already, when it is a profile that reads; whether one is kept at all.
+        let held = |release_of: Option<u32>, exists: bool, place: &str, kept: &str| -> Result<(Option<u32>, bool), Stop> {
+            if !exists {
+                return Ok((None, false));
+            }
+            if !overwrite {
+                match (kind, release_of) {
+                    (ProfileFileKind::Profile, Some(r)) if r > release => {
                         return Err(fail(
-                            codes::FILE_EXISTS,
+                            codes::PROFILE_DOWNGRADE,
                             format!(
-                                "{} var; üzerine yazmak için overwrite verin.",
-                                target.display()
+                                "{place} “{name}” profili {r}. sürümde; içe aktarılan {release}. sürüm daha eski. Üzerine yazmak için overwrite verin."
                             ),
-                            "mapping",
+                            "profile",
                         ));
                     }
-                    warnings.push(warn(
-                        codes::PROFILE_REPLACED,
-                        format!("Projedeki “{}” eşlemesi değiştirildi.", m.name),
-                        Some("mapping".into()),
+                    (ProfileFileKind::Profile, Some(r)) if r < release => {}
+                    _ => {
+                        let code = if store == ProfileStore::Folder {
+                            codes::FILE_EXISTS
+                        } else {
+                            codes::PROFILE_EXISTS
+                        };
+                        let same = if kind == ProfileFileKind::Profile {
+                            "aynı sürümün "
+                        } else {
+                            ""
+                        };
+                        return Err(fail(
+                            code,
+                            format!("{kept}; {same}üzerine yazmak için overwrite verin."),
+                            at,
+                        ));
+                    }
+                }
+            }
+            Ok((release_of, true))
+        };
+        let (previous, replaced, out_path, target) = match place {
+            Place::Folder(folder) => {
+                let target = folder.join(file_name(kind, &name));
+                let only_folder = Shelf::folder(drawing);
+                let release_of = match kind {
+                    ProfileFileKind::Profile if target.is_file() => {
+                        load_profile(only_folder, &name).ok().flatten().map(|h| h.release)
+                    }
+                    _ => None,
+                };
+                let (previous, replaced) = held(
+                    release_of,
+                    target.is_file(),
+                    "Projedeki",
+                    &format!("{} var", target.display()),
+                )?;
+                (
+                    previous,
+                    replaced,
+                    Some(target.display().to_string()),
+                    Target::File(target),
+                )
+            }
+            Place::Drawing => {
+                if bytes.len() > MAX_PROFILE_TEXT_BYTES {
+                    return Err(fail(
+                        codes::INVALID_PROFILE,
+                        format!(
+                            "“{name}” {} bayt; çizimin içinde en çok {MAX_PROFILE_TEXT_BYTES} bayt olur. Profiller klasörüne alın.",
+                            bytes.len()
+                        ),
+                        at,
                     ));
                 }
-                let bytes = pretty(&m);
-                Ok(Planned {
-                    out: ProfileImported {
-                        kind: ProfileFileKind::Mapping,
-                        name: m.name.clone(),
-                        title: m.title.clone(),
-                        release: 0,
-                        previous_release: None,
-                        classes: m.classes.len() as u32,
-                        migrations: 0,
-                        path: target.display().to_string(),
-                        replaced: target.is_file(),
-                        bytes: bytes.len() as u64,
+                let kept = shelf.carried(kind, &name);
+                if kept.is_none() && shelf.carried.len() >= MAX_PROJECT_PROFILE_FILES {
+                    return Err(fail(
+                        codes::INVALID_PROFILE,
+                        format!(
+                            "Çizim en çok {MAX_PROJECT_PROFILE_FILES} profil ve eşleme taşır; birini kaldırın ya da profiller klasörüne alın."
+                        ),
+                        at,
+                    ));
+                }
+                let release_of = match (kind, kept) {
+                    (ProfileFileKind::Profile, Some(f)) => match read_carried(f) {
+                        Ok(Parsed::Profile(p)) => Some(p.release),
+                        _ => None,
                     },
-                    bytes,
-                    target,
-                    warnings,
-                })
+                    _ => None,
+                };
+                let (previous, replaced) = held(
+                    release_of,
+                    kept.is_some(),
+                    "Çizimin içindeki",
+                    &format!("Çizimin içinde “{name}” {} var", noun(kind)),
+                )?;
+                let text = String::from_utf8(bytes.clone()).unwrap_or_default();
+                (
+                    previous,
+                    replaced,
+                    None,
+                    Target::Drawing(ProjectProfileFile {
+                        kind,
+                        name: name.clone(),
+                        text,
+                    }),
+                )
             }
+        };
+        if replaced {
+            let place = match store {
+                ProfileStore::Folder => "Projedeki",
+                ProfileStore::Drawing => "Çizimin içindeki",
+            };
+            warnings.push(warn(
+                codes::PROFILE_REPLACED,
+                match (kind, previous) {
+                    (ProfileFileKind::Profile, Some(r)) => format!(
+                        "{place} “{name}” profili {r}. sürümden {release}. sürüme değiştirildi."
+                    ),
+                    (ProfileFileKind::Profile, None) => format!(
+                        "{place} “{name}” profilinin okunamayan {} yenisiyle değiştirildi.",
+                        match store {
+                            ProfileStore::Folder => "dosyası",
+                            ProfileStore::Drawing => "kopyası",
+                        }
+                    ),
+                    (ProfileFileKind::Mapping, _) => {
+                        format!("{place} “{name}” eşlemesi değiştirildi.")
+                    }
+                },
+                Some(at.into()),
+            ));
         }
+        warnings.extend(shadow(shelf, store, kind, &name, at));
+        Ok(Planned {
+            out: ProfileImported {
+                kind,
+                name,
+                title,
+                release,
+                previous_release: previous,
+                classes,
+                migrations,
+                store,
+                path: out_path,
+                replaced,
+                bytes: bytes.len() as u64,
+            },
+            bytes,
+            target,
+            warnings,
+        })
     }
 
     /// A file's text: indented JSON ending in a newline.
@@ -655,8 +931,9 @@ pub mod import {
         text.into_bytes()
     }
 
-    pub fn validate(_cx: &ExecutionContext<'_>, input: &ProfilesImport) -> CommandResult<()> {
-        match check(input) {
+    pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesImport) -> CommandResult<()> {
+        let shelf = Shelf::of(cx.doc, input.drawing.as_deref());
+        match check(shelf, cx.doc, input) {
             Ok(p) => CommandResult::Completed {
                 output: (),
                 warnings: p.warnings,
@@ -666,11 +943,9 @@ pub mod import {
     }
 
     /// What execute would write; writes nothing.
-    pub fn plan(
-        _cx: &ExecutionContext<'_>,
-        input: &ProfilesImport,
-    ) -> CommandResult<ProfileImported> {
-        match check(input) {
+    pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesImport) -> CommandResult<ProfileImported> {
+        let shelf = Shelf::of(cx.doc, input.drawing.as_deref());
+        match check(shelf, cx.doc, input) {
             Ok(p) => CommandResult::Completed {
                 output: p.out,
                 warnings: p.warnings,
@@ -705,25 +980,201 @@ pub mod import {
         done
     }
 
-    /// Checks `input` again and writes the file.
+    /// Checks `input` again and writes the file, or puts the copy into the drawing's settings (an edit, not an undo
+    /// step: the settings keep none, docs/adr/0735 §3); the journal keeps the command's own row.
     pub fn execute(
         cx: &mut ExecutionContext<'_>,
         input: ProfilesImport,
     ) -> CommandResult<ProfileImported> {
-        let p = match check(&input) {
+        crate::call::recorded(
+            cx,
+            kentos_commands::CAD_PROFILES_IMPORT,
+            kentos_commands::CAD_PROFILES_IMPORT_VERSION,
+            input,
+            write_execute,
+        )
+    }
+
+    fn write_execute(
+        cx: &mut ExecutionContext<'_>,
+        input: ProfilesImport,
+    ) -> CommandResult<ProfileImported> {
+        let shelf = Shelf::of(cx.doc, input.drawing.as_deref());
+        let p = match check(shelf, cx.doc, &input) {
             Ok(p) => p,
             Err(stop) => return stop.into(),
         };
-        if !cx.dry()
-            && let Err(why) = write_file(&p.target, &p.bytes)
-        {
-            return fail(
-                codes::FILE_UNWRITABLE,
-                format!("Profil yazılamadı: {why}. Dosya olduğu gibi kaldı."),
-                "drawing",
-            )
-            .into();
+        match p.target {
+            Target::File(target) => {
+                if !cx.dry()
+                    && let Err(why) = write_file(&target, &p.bytes)
+                {
+                    return fail(
+                        codes::FILE_UNWRITABLE,
+                        format!("Profil yazılamadı: {why}. Dosya olduğu gibi kaldı."),
+                        "drawing",
+                    )
+                    .into();
+                }
+            }
+            Target::Drawing(file) => {
+                let mut settings = cx.doc.settings().clone();
+                settings.profile_files =
+                    with_profile_file(std::mem::take(&mut settings.profile_files), file);
+                cx.doc.set_settings(settings);
+            }
         }
+        CommandResult::Completed {
+            output: p.out,
+            warnings: p.warnings,
+        }
+    }
+}
+
+// ── Remove ──────────────────────────────────────────────────────────────────────────────────────────────────────
+
+pub mod remove {
+    use super::*;
+
+    /// What the removal takes out and says.
+    struct Planned {
+        out: ProfileRemoved,
+        warnings: Vec<CommandWarning>,
+    }
+
+    fn check(doc: &Document, input: &ProfilesRemove) -> Result<Planned, Stop> {
+        checks::revision(doc, input.expected_revision.as_deref())?;
+        let shelf = Shelf::of(doc, input.drawing.as_deref());
+        let kind = input.kind;
+        let name = input.name.as_str();
+        let folder_file = shelf.folder_file(kind, name);
+        let Some(kept) = shelf.carried(kind, name) else {
+            let besides = match &folder_file {
+                Some(path) => format!(
+                    " Klasördeki {} bu komutla silinmez; dosyayı klasörden kaldırın.",
+                    path.display()
+                ),
+                None => String::new(),
+            };
+            return Err(match kind {
+                ProfileFileKind::Profile => fail(
+                    codes::UNKNOWN_PROFILE,
+                    format!("Çizimin içinde “{name}” profili yok.{besides}"),
+                    "name",
+                ),
+                ProfileFileKind::Mapping => fail(
+                    codes::UNKNOWN_MAPPING,
+                    format!("Çizimin içinde “{name}” eşlemesi yok.{besides}"),
+                    "name",
+                ),
+            });
+        };
+        let mut warnings = Vec::new();
+        if kind == ProfileFileKind::Profile && folder_file.is_none() {
+            // The mappings that name the profile, the drawing's and the folder's; none of them is checked from now on.
+            let mut naming: Vec<String> = Vec::new();
+            for f in shelf
+                .carried
+                .iter()
+                .filter(|f| f.kind == ProfileFileKind::Mapping)
+            {
+                if let Ok(Parsed::Mapping(m)) = read_carried(f)
+                    && m.profile == name
+                {
+                    naming.push(m.name.clone());
+                }
+            }
+            if let Some(dir) = folder_of(input.drawing.as_deref())
+                && let Ok(read) = std::fs::read_dir(&dir)
+            {
+                let mut found: Vec<String> = read
+                    .flatten()
+                    .filter_map(|e| {
+                        e.file_name()
+                            .to_string_lossy()
+                            .strip_suffix(MAPPING_SUFFIX)
+                            .map(str::to_owned)
+                    })
+                    .filter(|n| shelf.carried(ProfileFileKind::Mapping, n).is_none())
+                    .collect();
+                found.sort();
+                for n in found {
+                    if let Ok(Some(m)) = load_mapping(Shelf::folder(input.drawing.as_deref()), &n)
+                        && m.profile == name
+                    {
+                        naming.push(m.name.clone());
+                    }
+                }
+            }
+            for m in naming {
+                warnings.push(warn(
+                    codes::PROFILE_STILL_NAMED,
+                    format!(
+                        "“{m}” eşlemesi “{name}” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+                    ),
+                    Some("name".into()),
+                ));
+            }
+        }
+        Ok(Planned {
+            out: ProfileRemoved {
+                kind,
+                name: name.to_owned(),
+                bytes: kept.text.len() as u64,
+                folder_path: folder_file.map(|p| p.display().to_string()),
+            },
+            warnings,
+        })
+    }
+
+    pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesRemove) -> CommandResult<()> {
+        match check(cx.doc, input) {
+            Ok(p) => CommandResult::Completed {
+                output: (),
+                warnings: p.warnings,
+            },
+            Err(stop) => stop.into(),
+        }
+    }
+
+    pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesRemove) -> CommandResult<ProfileRemoved> {
+        match check(cx.doc, input) {
+            Ok(p) => CommandResult::Completed {
+                output: p.out,
+                warnings: p.warnings,
+            },
+            Err(stop) => stop.into(),
+        }
+    }
+
+    /// The copy taken out of the drawing's settings: an edit, not an undo step (docs/adr/0735 §3); the journal keeps
+    /// the command's own row.
+    pub fn execute(
+        cx: &mut ExecutionContext<'_>,
+        input: ProfilesRemove,
+    ) -> CommandResult<ProfileRemoved> {
+        crate::call::recorded(
+            cx,
+            kentos_commands::CAD_PROFILES_REMOVE,
+            kentos_commands::CAD_PROFILES_REMOVE_VERSION,
+            input,
+            write_execute,
+        )
+    }
+
+    fn write_execute(
+        cx: &mut ExecutionContext<'_>,
+        input: ProfilesRemove,
+    ) -> CommandResult<ProfileRemoved> {
+        let p = match check(cx.doc, &input) {
+            Ok(p) => p,
+            Err(stop) => return stop.into(),
+        };
+        let mut settings = cx.doc.settings().clone();
+        settings
+            .profile_files
+            .retain(|f| !(f.kind == input.kind && f.name == input.name));
+        cx.doc.set_settings(settings);
         CommandResult::Completed {
             output: p.out,
             warnings: p.warnings,
@@ -746,12 +1197,9 @@ pub mod migrate {
         mapping: Option<ProfileMapping>,
     }
 
-    fn chain(input: &ProfilesMigrate) -> Result<Chain, Stop> {
-        let profile = profiles::profile_only(
-            input.name.as_deref(),
-            input.profile.as_ref(),
-            input.drawing.as_deref(),
-        )?;
+    fn chain(doc: &Document, input: &ProfilesMigrate) -> Result<Chain, Stop> {
+        let shelf = Shelf::of(doc, input.drawing.as_deref());
+        let profile = profiles::profile_only(input.name.as_deref(), input.profile.as_ref(), shelf)?;
         let from = input.from;
         let to = input.to.unwrap_or(profile.release);
         if from == 0 || to <= from || to > profile.release {
@@ -785,7 +1233,7 @@ pub mod migrate {
             &profile,
             input.mapping.as_ref(),
             input.mapping_name.as_deref(),
-            input.drawing.as_deref(),
+            shelf,
         )?;
         Ok(Chain {
             profile,
@@ -797,7 +1245,7 @@ pub mod migrate {
     }
 
     fn check(doc: &Document, input: &ProfilesMigrate) -> Result<Chain, Stop> {
-        let c = chain(input)?;
+        let c = chain(doc, input)?;
         checks::revision(doc, input.expected_revision.as_deref())?;
         Ok(c)
     }

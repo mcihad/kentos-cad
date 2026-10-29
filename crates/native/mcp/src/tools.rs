@@ -685,9 +685,11 @@ fn command_tool(c: &Value) -> Value {
             | "cad.rasters.gpkgread"
             | "cad.rasters.gpkgwrite"
             // An import writes over a profile or a mapping of the same name with overwrite (or a newer release); a
-            // migration renames fields and layers and rewrites values (docs/adr/0558).
+            // migration renames fields and layers and rewrites values (docs/adr/0558); a removal takes the drawing's
+            // copy out of it (docs/adr/0735).
             | "cad.profiles.import"
             | "cad.profiles.migrate"
+            | "cad.profiles.remove"
             | "cad.inserts.clip"
             // It moves a raster, or points it at a resampled file, and replaces its record (docs/adr/0518).
             | "cad.rasters.georef"

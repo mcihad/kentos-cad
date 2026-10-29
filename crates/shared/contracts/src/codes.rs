@@ -1416,6 +1416,12 @@ codes! {
     MAPPING_UNCHECKED = "mapping_unchecked", Warning, false, "Eşlemenin profili bulunamadı; adları profille denetlenmedi.";
     /// A profile file replaced by a later or an equal release (docs/adr/0558).
     PROFILE_REPLACED = "profile_replaced", Warning, false, "Projedeki aynı adlı profil ya da eşleme değiştirildi; iletisi eski sürümünü söyler.";
+    /// A profile or a mapping the drawing carries already, brought again without overwrite (docs/adr/0735).
+    PROFILE_EXISTS = "profile_exists", Failed, false, "Çizimin içinde aynı adlı profil ya da eşleme var; değiştirmek için overwrite verin.";
+    /// A name and kind both the drawing and its folder keep: the drawing's is read (docs/adr/0735).
+    PROFILE_SHADOWED = "profile_shadowed", Warning, false, "Aynı adlı profil ya da eşleme hem çizimin içinde hem profiller klasöründe var; komutlar çizimin içindekini okur.";
+    /// A profile taken out of the drawing while a kept mapping names it and no copy is left (docs/adr/0735).
+    PROFILE_STILL_NAMED = "profile_still_named", Warning, false, "Projenin bir eşlemesi kaldırılan profili adlandırıyor; profilin başka kopyası yok, eşleme denetlenemez.";
     /// A valid time's period that does not hold: an instant and a period together, an end alone, an end not after the start (docs/adr/0537).
     INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
     /// A drawing compared with a state of its history that is not there: no steps back asked, or more than it holds (docs/adr/0576).

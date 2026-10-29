@@ -1,0 +1,74 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Taşınan profiller",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis",
+  "profileFiles": [
+   {
+    "kind": "profile",
+    "name": "peyzaj",
+    "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+   },
+   {
+    "kind": "mapping",
+    "name": "peyzaj",
+    "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj eşlemesi (belediyenin)\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+   },
+   {
+    "kind": "mapping",
+    "name": "peyzaj-kurum",
+    "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj-kurum\",\n  \"title\": \"Peyzaj eşlemesi\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+   }
+  ]
+ },
+ "origin": {
+  "x": 500000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "0",
+   "attrs": {
+    "NO": "A-1",
+    "TUR": "C"
+   },
+   "p": {
+    "x": 500010.0,
+    "y": 4400020.0
+   }
+  }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5301"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

@@ -67,6 +67,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         line_types: Vec::new(),
         length_style: None,
         xref_paths: Vec::new(),
+        profile_files: Vec::new(),
         heights: None,
         coordinate_epoch: None,
         named_ucs: Vec::new(),

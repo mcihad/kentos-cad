@@ -1,11 +1,13 @@
-//! The pictures of docs/adr/0541 and 0558 (data profiles): the reference municipality project (fixtures/profiles/v1)
-//! opened with its relation links; Veri profili with its findings, one pressed (its parcel selected and shown); the same
-//! window after Uygula (what Uygula added gone, the data's own findings left); the Veri tab with its Standart panel; an
-//! institution's profile brought in (İçe aktar…); an institution's project read through its mapping; the park project's
-//! data migration planned and done (its losses said). `tools_screens` takes them in both themes at 1440×900 and 1100×650:
+//! The pictures of docs/adr/0541, 0558 and 0735 (data profiles): the reference municipality project
+//! (fixtures/profiles/v1) opened with its relation links; Veri profili with its findings, one pressed (its parcel selected
+//! and shown); the same window after Uygula (what Uygula added gone, the data's own findings left); the Veri tab with its
+//! Standart panel; an institution's profile brought in (İçe aktar…, kept inside the drawing beside a folder's profile); an
+//! institution's project read through its mapping; the park project's data migration planned and done (its losses said);
+//! the drawing's own profile taken out of it, asked first and done. `tools_screens` takes them in both themes at
+//! 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=profil-bulgular,profil-uygulandi,profil-serit,profil-ice-aktar,profil-esleme,profil-goc,profil-goc-yapildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=profil-bulgular,profil-uygulandi,profil-serit,profil-ice-aktar,profil-esleme,profil-goc,profil-goc-yapildi,profil-cizimden-kaldir,profil-kaldirildi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -28,6 +30,7 @@ const PARK_PROFILE: &str =
     include_str!("../../../fixtures/profiles/v1/files/park-bahce.profil.json");
 const PARK_MAPPING: &str =
     include_str!("../../../fixtures/profiles/v1/files/park-bahce-kurum.eslem.json");
+const PEYZAJ: &str = include_str!("../../../fixtures/profiles/v1/files/peyzaj.profil.json");
 
 /// The reference project opened, its links written, the view on its district.
 fn opened(app: &mut App) {
@@ -114,10 +117,11 @@ fn ribbon(app: &mut App) {
     let _ = app.update(Message::RibbonTab("data"));
 }
 
-/// An institution's profile brought in: the file chosen, written beside the drawing, the profile chosen in the window.
+/// An institution's profile brought in: the file chosen, kept inside the drawing (Nereye's default), the profile chosen
+/// in the window; the folder beside the drawing keeps another, listed as the folder's.
 fn imported(app: &mut App) {
     opened(app);
-    let dir = beside(app, "ice-aktar", &[]);
+    let dir = beside(app, "ice-aktar", &[("peyzaj.profil.json", PEYZAJ)]);
     run(app, "profile.window");
     let file = dir.join("park-bahce.json");
     std::fs::write(&file, PARK_PROFILE).expect("the file");
@@ -157,6 +161,32 @@ fn migrated(app: &mut App) {
     let _ = app.update(Message::DataProfile(crate::data_profile::Event::Migrate));
 }
 
+/// The park project carrying its profile and mapping inside the drawing (brought in with Nereye's default): taking the
+/// profile out asked first.
+fn removing(app: &mut App) {
+    opened_from(app, PARK, r#"{ "links": [] }"#, 90.0, 30.0);
+    let dir = beside(app, "kaldir", &[]);
+    run(app, "profile.window");
+    for (name, text) in [("park-bahce.json", PARK_PROFILE), ("park-esleme.json", PARK_MAPPING)] {
+        let file = dir.join(name);
+        std::fs::write(&file, text).expect("the file");
+        let _ = app.update(Message::DataProfile(crate::data_profile::Event::Imported(
+            Some(file),
+        )));
+    }
+    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Remove(
+        kentos_commands::ProfileFileKind::Profile,
+    )));
+}
+
+/// The profile taken out, and the drawing's mapping of it with it: KentOS's profile chosen again.
+fn removed(app: &mut App) {
+    removing(app);
+    let _ = app.update(Message::DataProfile(crate::data_profile::Event::Removed(
+        true,
+    )));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("profil-bulgular", findings),
@@ -166,5 +196,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("profil-esleme", through_mapping),
         ("profil-goc", park),
         ("profil-goc-yapildi", migrated),
+        ("profil-cizimden-kaldir", removing),
+        ("profil-kaldirildi", removed),
     ]
 }

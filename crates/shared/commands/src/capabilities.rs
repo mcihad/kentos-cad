@@ -2785,16 +2785,25 @@ const ENTRIES: &[Entry] = &[
                 "profile_name_taken",
                 "profile_downgrade",
                 "file_exists",
+                "profile_exists",
                 "file_unwritable",
             ],
+            REVISION,
         ],
-        warnings: &["mapping_unchecked", "profile_replaced"],
+        warnings: &["mapping_unchecked", "profile_replaced", "profile_shadowed"],
         targets: none,
     },
     Entry {
         id: "cad.profiles.list",
         refusals: &[],
         warnings: &[],
+        targets: none,
+    },
+    // The drawing's own profiles and mappings (docs/adr/0735).
+    Entry {
+        id: "cad.profiles.remove",
+        refusals: &[&["unknown_profile", "unknown_mapping"], REVISION],
+        warnings: &["profile_still_named"],
         targets: none,
     },
     Entry {

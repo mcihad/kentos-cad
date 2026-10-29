@@ -1,8 +1,10 @@
 """Writes the shared cases of an institution's own data profile (docs/adr/0558; plan/gis.md CBS-34's remainder):
 
 - fixtures/commands/v1/cad.profiles.import.json (`cad.profiles.import` v1: a profile or a mapping the user brings, kept
-  in the project's `profiller` folder beside the drawing)
-- fixtures/commands/v1/cad.profiles.list.json (`cad.profiles.list` v1: KentOS's profiles and the folder's files)
+  in the project's `profiller` folder beside the drawing or inside the drawing's own file, docs/adr/0735)
+- fixtures/commands/v1/cad.profiles.list.json (`cad.profiles.list` v1: KentOS's profiles, the drawing's and the folder's)
+- fixtures/commands/v1/cad.profiles.remove.json (`cad.profiles.remove` v1: a profile or a mapping taken out of the drawing,
+  docs/adr/0735)
 - fixtures/commands/v1/cad.profiles.migrate.json (`cad.profiles.migrate` v1: the data moved from one release of a profile
   to a later one by the profile's own steps)
 - fixtures/profiles/v1/files/ (the profiles, mappings and broken files the cases bring or find in the folder) and
@@ -43,6 +45,7 @@ FIELDS = PC.FIELDS
 node, step, completed, failed, VALID = PC.node, PC.step, PC.completed, PC.failed, PC.VALID
 INVALID_REVISION, CONFLICT = PC.INVALID_REVISION, PC.CONFLICT
 IMPORT, LIST, MIGRATE = "cad.profiles.import", "cad.profiles.list", "cad.profiles.migrate"
+REMOVE = "cad.profiles.remove"
 FIX = "$fixture:profiles/v1/files/"
 STYLE = PC.NEW_STYLE
 UNIT_KIND = PC.KIND_LABEL
@@ -255,25 +258,109 @@ def list_item(f, name, kind, content, others):
     return item
 
 
-def listing(f, files):
-    """The listing's output for the folder holding `files` (file name → content), name order, a profile before a mapping."""
+def listing(f, files, carried=(), drawing=True):
+    """The listing's output for the folder holding `files` (file name → content), name order, a profile before a mapping;
+    the drawing's own (`carried`: (kind, name, content)) before them, and a folder file whose name and kind the drawing
+    carries too `shadowed` (docs/adr/0735). Without the drawing's file (`drawing` false) no folder is read."""
+    own = {(k, n): c for k, n, c in carried}
+
     def find_profile(name):
         if name == "tucbs-temel":
             return PC.PROFILE
+        if ("profile", name) in own:
+            got, value = carried_parse("profile", name, own[("profile", name)])
+            return value if got == "profile" else None
+        if not drawing:
+            return None
         content = files.get(name + ".profil.json")
         if content is None:
             return None
         got, value = parse_content(content)
         return value if got == "profile" and value["name"] == name else None
     items = [builtin_item()]
+    for kind, name, content in sorted(carried, key=lambda t: (t[1], t[0] == "mapping")):
+        items.append(drawing_item(kind, name, content, find_profile))
+    if not drawing:
+        return {"items": items}
     found = []
     for file, content in files.items():
         for suffix, kind in ((".profil.json", "profile"), (".eslem.json", "mapping")):
             if file.endswith(suffix) and file[: -len(suffix)]:
                 found.append((file[: -len(suffix)], kind == "mapping", kind, content))
     for name, _, kind, content in sorted(found, key=lambda t: (t[0], t[1])):
-        items.append(list_item(f, name, kind, content, find_profile))
+        item = list_item(f, name, kind, content, find_profile)
+        if (kind, name) in own:
+            item["shadowed"] = True
+        items.append(item)
     return {"items": items, "folder": f"$tmp:{f}/profiller"}
+
+
+# ── The drawing's own (docs/adr/0735) ────────────────────────────────────────
+
+def carried_text(value):
+    """The text a case keeps a profile or a mapping by inside the drawing: indented JSON ending in a newline, the folder
+    files' form (the commands read any JSON text)."""
+    return json.dumps(value, ensure_ascii=False, indent=2) + "\n"
+
+
+def compact(value):
+    """A copy's text written without indentation: the same document as another text."""
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def carry(doc, *entries):
+    """`doc` carrying `entries` ((kind, name, value | raw text)) in the order the file format keeps them: by name, a
+    profile before a mapping."""
+    d = copy.deepcopy(doc)
+    files = [{"kind": k, "name": n, "text": v if isinstance(v, str) else carried_text(v)} for k, n, v in entries]
+    files.sort(key=lambda x: (x["name"], x["kind"] == "mapping"))
+    d["settings"]["profileFiles"] = files
+    return d
+
+
+def kept(*entries):
+    """The settings' `profileFiles` after a step: the kinds and names the drawing carries, in order, any text; none when
+    it carries none (the field is not written)."""
+    files = sorted(({"kind": k, "name": n, "text": "$any"} for k, n in entries), key=lambda x: (x["name"], x["kind"] == "mapping"))
+    return {"profileFiles": files or None}
+
+
+def carried_parse(kind, name, content):
+    """(profile | mapping | error, value) as the commands read the drawing's copy: its text as JSON, then as a folder
+    file, then its kind and the name inside against the ones it is kept by."""
+    got, value = parse_content(content)
+    if got == "error":
+        return got, value
+    if got == "profile" and kind == "profile" and value["name"] != name:
+        return "error", f"Çizimin içindeki “{name}” profilinin kendi adı “{value['name']}”; aynı olmalı."
+    if got == "mapping" and kind == "mapping" and value["name"] != name:
+        return "error", f"Çizimin içindeki “{name}” eşlemesinin kendi adı “{value['name']}”; aynı olmalı."
+    if got == "mapping" and kind == "profile":
+        return "error", f"Çizimin içindeki “{name}” bir veri profili değil, eşleme."
+    if got == "profile" and kind == "mapping":
+        return "error", f"Çizimin içindeki “{name}” bir eşleme değil, veri profili."
+    return got, value
+
+
+def drawing_item(kind, name, content, find_profile):
+    """What `cad.profiles.list` says of one the drawing carries: no path; a mapping checked with its profile, found as
+    the commands find it."""
+    item = {"kind": kind, "source": "drawing", "name": name, "title": "", "release": 0, "classes": 0, "migrations": 0}
+    got, value = carried_parse(kind, name, content)
+    if got == "error":
+        item["problem"] = value
+    elif got == "profile":
+        item.update({"title": value["title"], "release": release_of(value), "classes": len(value["classes"]),
+                     "migrations": len(value.get("migrations", []))})
+    else:
+        item.update({"title": value["title"], "classes": len(value["classes"]), "profile": value["profile"]})
+        p = find_profile(value["profile"])
+        why = PC.mapping_problem(value, p) if p is not None else None
+        if why:
+            item["problem"] = why
+    if not item["title"]:
+        del item["title"]
+    return item
 
 
 def content_of(src):
@@ -344,7 +431,48 @@ def list_cases():
         step("execute", {"drawing": "cizim.kcad"}, completed({"items": [builtin_item()]})),
         step("execute", {"drawing": "  "}, completed({"items": [builtin_item()]}))]})
     cases.append({"name": "Doğrulama", "setup": PC.empty_doc(), "steps": [step("validate", {}, VALID)]})
-    return cases
+    return cases + carried_list_cases()
+
+
+def carried_list_case(name, carried, files=None, plan=False):
+    """A case whose drawing carries `carried` ((kind, name, value | raw text)); with `files` the folder holds them too."""
+    setup = carry(PC.empty_doc(), *carried)
+    steps = []
+    if files is None:
+        inp, out = {}, listing(None, {}, carried, drawing=False)
+    else:
+        f = folder()
+        steps = put(f, **files)
+        inp, out = {"drawing": tmp(f)}, listing(f, {n: content_of(src) for n, src in files.items()}, carried)
+    if plan:
+        steps.append(step("plan", inp, completed(out), {"revision": "same"}))
+    steps.append(step("execute", inp, completed(out), {"revision": "same", "dirty": False}))
+    return {"name": name, "setup": setup, "steps": steps}
+
+
+def carried_list_cases():
+    """What the drawing carries inside its own file (docs/adr/0735): after KentOS's, before the folder's."""
+    small = PC.SMALL
+    return [
+        carried_list_case("Çizimin taşıdığı profil ve eşleme: KentOS'unkinden sonra, adlarıyla; çizimin dosyası gerekmez",
+                          [("mapping", "peyzaj-kurum", PC.MAP_SMALL), ("profile", "peyzaj", small)], plan=True),
+        carried_list_case("Çizimdekiler önce, klasördekiler sonra; aynı ad ve türdeki klasör dosyası gölgede (shadowed)",
+                          [("profile", "peyzaj", small)],
+                          {"peyzaj.profil.json": "peyzaj.profil.json", "park-bahce.profil.json": "park-bahce.profil.json"}),
+        carried_list_case("Aynı adlı eşleme klasörde: yalnız aynı türdeki gölgede kalır",
+                          [("profile", "peyzaj", small)], {"peyzaj.eslem.json": "peyzaj-kurum.eslem.json"}),
+        carried_list_case("Çizimin taşıdığı okunmayan metin düşmez, nedeniyle gelir", [("profile", "bozuk", RAW_FILES["bozuk.json"])]),
+        carried_list_case("Çizimdeki profilin kendi adı farklı", [("profile", "baska", small)]),
+        carried_list_case("Profil diye taşınan eşleme", [("profile", "sivas-bel", PC.SIVAS)]),
+        carried_list_case("Eşleme diye taşınan profil", [("mapping", "peyzaj", small)]),
+        carried_list_case("Biçim sürümü 2 olan taşınan profil", [("profile", "peyzaj", content_of("profil-surum2.json"))]),
+        carried_list_case("Çizimdeki eşleme KentOS'un profiliyle denetlenir", [("mapping", "sivas-bel", PC.SIVAS)]),
+        carried_list_case("Çizimdeki eşleme klasördeki profile uymuyor: nedeniyle", [("mapping", "park-bahce-bozuk", BROKEN_MAP)],
+                          {"park-bahce.profil.json": "park-bahce.profil.json"}),
+        carried_list_case("Klasördeki eşleme çizimdeki profille denetlenir (çizimdeki önce okunur)", [("profile", "park-bahce", KURUM)],
+                          {"park-bahce-bozuk.eslem.json": "park-bahce-bozuk.eslem.json"}),
+        carried_list_case("Çizimdeki eşlemenin profili yok: denetlenmeden listelenir", [("mapping", "hayalet-esleme", GHOST_MAP)]),
+    ]
 
 
 # ── Import ───────────────────────────────────────────────────────────────────
@@ -360,9 +488,159 @@ def imported(kind, p, f, suffix, **extra):
            "release": release_of(p) if kind == "profile" else 0,
            "classes": len(p["classes"]),
            "migrations": len(p.get("migrations", [])) if kind == "profile" else 0,
-           "path": tmp(f, p["name"] + suffix), "replaced": False, "bytes": "$any"}
+           "store": "folder", "path": tmp(f, p["name"] + suffix), "replaced": False, "bytes": "$any"}
     out.update(extra)
     return out
+
+
+def carried_out(kind, p, **extra):
+    """What the import says of one it keeps inside the drawing (docs/adr/0735): no path."""
+    out = {"kind": kind, "name": p["name"], "title": p["title"],
+           "release": release_of(p) if kind == "profile" else 0,
+           "classes": len(p["classes"]),
+           "migrations": len(p.get("migrations", [])) if kind == "profile" else 0,
+           "store": "drawing", "replaced": False, "bytes": "$any"}
+    out.update(extra)
+    return out
+
+
+def carried_import(name, setup, inp, out, after_kept, before_kept=(), warnings=(), before=(), after=()):
+    """A case that keeps a profile or a mapping inside the drawing: the plan writes nothing; execute changes the
+    drawing's settings, an edit and no undo step (docs/adr/0735 §3)."""
+    steps = list(before)
+    steps.append(step("plan", inp, completed(out, list(warnings)), {"revision": "same", "dirty": False, "settings": kept(*before_kept)}))
+    steps.append(step("execute", inp, completed(out, list(warnings)),
+                      {"revision": "changed", "dirty": True, "canUndo": False, "settings": kept(*after_kept)}))
+    steps.extend(after)
+    return {"name": name, "setup": setup, "steps": steps}
+
+
+def carried_refusal(name, setup, inp, code, message, path, still=(), before=()):
+    return {"name": name, "setup": setup, "steps": list(before) + [
+        step("execute", inp, failed(code, message, path), {"revision": "same", "dirty": False, "settings": kept(*still)})]}
+
+
+def carried_import_cases():
+    """`store: drawing` (docs/adr/0735): the profile or the mapping kept inside the drawing's own file."""
+    cases = []
+    small, empty = PC.SMALL, PC.empty_doc()
+    cases.append(carried_import("Çizimin içine (store: drawing): dosyası olmayan çizime de; ayardır, geri alma adımı değildir; listede ve adıyla denetlenir",
+                                empty, {"profile": small, "store": "drawing"}, carried_out("profile", small), [("profile", "peyzaj")],
+                                after=[step("execute", {}, completed(listing(None, {}, [("profile", "peyzaj", small)], drawing=False)), command=LIST),
+                                       step("execute", {"name": "peyzaj"}, completed(PC.report(PC.linked(PC.empty_doc(), []), small)),
+                                            command=PC.CHECK)]))
+    cases.append(carried_import("Dosyadan çizimin içine: okunan profil yazılır, sürümü ve göçleriyle", empty,
+                                {"source": FIX + "park-bahce.profil.json", "store": "drawing"}, carried_out("profile", KURUM),
+                                [("profile", "park-bahce")],
+                                after=[step("execute", {}, completed(listing(None, {}, [("profile", "park-bahce", KURUM)], drawing=False)),
+                                            command=LIST)]))
+    cases.append(carried_import("Eşleme çizimin içine (KentOS'un profili için): adıyla okunur", empty,
+                                {"mapping": PC.SIVAS, "store": "drawing"}, carried_out("mapping", PC.SIVAS), [("mapping", "sivas-bel")],
+                                after=[step("execute", {"name": "tucbs-temel", "mappingName": "sivas-bel"},
+                                            completed(PC.report(PC.linked(PC.empty_doc(), []), PC.through(PC.PROFILE, PC.SIVAS), "sivas-bel")),
+                                            command=PC.CHECK)]))
+    own = carry(empty, ("profile", "park-bahce", KURUM))
+    cases.append(carried_import("Eşleme çizimdeki profil için: o profille denetlenir", own, {"mapping": KURUM_MAP, "store": "drawing"},
+                                carried_out("mapping", KURUM_MAP), [("profile", "park-bahce"), ("mapping", "park-bahce-kurum")],
+                                before_kept=[("profile", "park-bahce")]))
+    cases.append(carried_refusal("Eşleme çizimdeki profile uymuyor: invalid_profile_mapping", own, {"mapping": BROKEN_MAP, "store": "drawing"},
+                                 "invalid_profile_mapping", f"Eşleme geçersiz: {PC.mapping_problem(BROKEN_MAP, KURUM)}", "mapping",
+                                 still=[("profile", "park-bahce")]))
+    cases.append(carried_import("Eşlemenin profili bulunamıyor: yazılır, denetlenmediği söylenir (mapping_unchecked)", empty,
+                                {"mapping": GHOST_MAP, "store": "drawing"}, carried_out("mapping", GHOST_MAP), [("mapping", "hayalet-esleme")],
+                                warnings=[{"code": "mapping_unchecked", "path": "mapping",
+                                           "message": "“hayalet” profili bulunamadı; eşlemenin adları profille denetlenmedi."}]))
+    r2 = carry(empty, ("profile", "park-bahce", KURUM_R2))
+    cases.append(carried_import("Çizimdeki eski sürümün üstüne yenisi: overwrite olmadan değiştirilir, söylenir (profile_replaced)", r2,
+                                {"source": FIX + "park-bahce.profil.json", "store": "drawing"},
+                                carried_out("profile", KURUM, replaced=True, previousRelease=2), [("profile", "park-bahce")],
+                                before_kept=[("profile", "park-bahce")],
+                                warnings=[{"code": "profile_replaced", "path": "profile",
+                                           "message": "Çizimin içindeki “park-bahce” profili 2. sürümden 3. sürüme değiştirildi."}],
+                                after=[step("execute", {}, completed(listing(None, {}, [("profile", "park-bahce", KURUM)], drawing=False)),
+                                            command=LIST)]))
+    cases.append(carried_refusal("Çizimde aynı sürüm, overwrite yok: profile_exists", own,
+                                 {"source": FIX + "park-bahce.profil.json", "store": "drawing"}, "profile_exists",
+                                 "Çizimin içinde “park-bahce” profili var; aynı sürümün üzerine yazmak için overwrite verin.", "profile",
+                                 still=[("profile", "park-bahce")]))
+    # The copies the next two replace are written compact: the import's own text differs, the drawing changes.
+    cases.append(carried_import("Çizimde aynı sürüm overwrite ile değiştirilir", carry(empty, ("profile", "park-bahce", compact(KURUM))),
+                                {"source": FIX + "park-bahce.profil.json", "store": "drawing", "overwrite": True},
+                                carried_out("profile", KURUM, replaced=True, previousRelease=3), [("profile", "park-bahce")],
+                                before_kept=[("profile", "park-bahce")],
+                                warnings=[{"code": "profile_replaced", "path": "profile",
+                                           "message": "Çizimin içindeki “park-bahce” profili 3. sürümden 3. sürüme değiştirildi."}]))
+    cases.append(carried_refusal("Çizimdekinden eski sürüm: profile_downgrade", own,
+                                 {"source": FIX + "park-bahce-r2.profil.json", "store": "drawing"}, "profile_downgrade",
+                                 "Çizimin içindeki “park-bahce” profili 3. sürümde; içe aktarılan 2. sürüm daha eski. Üzerine yazmak için overwrite verin.",
+                                 "profile", still=[("profile", "park-bahce")]))
+    sivas = carry(empty, ("mapping", "sivas-bel", PC.SIVAS))
+    cases.append(carried_refusal("Çizimde aynı adlı eşleme, overwrite yok: profile_exists", sivas, {"mapping": PC.SIVAS, "store": "drawing"},
+                                 "profile_exists", "Çizimin içinde “sivas-bel” eşlemesi var; üzerine yazmak için overwrite verin.", "mapping",
+                                 still=[("mapping", "sivas-bel")]))
+    cases.append(carried_import("Çizimdeki eşleme overwrite ile değiştirilir", carry(empty, ("mapping", "sivas-bel", compact(PC.SIVAS))),
+                                {"mapping": PC.SIVAS, "store": "drawing", "overwrite": True},
+                                carried_out("mapping", PC.SIVAS, replaced=True), [("mapping", "sivas-bel")], before_kept=[("mapping", "sivas-bel")],
+                                warnings=[{"code": "profile_replaced", "path": "mapping",
+                                           "message": "Çizimin içindeki “sivas-bel” eşlemesi değiştirildi."}]))
+    broken = carry(empty, ("profile", "peyzaj", RAW_FILES["bozuk.json"]))
+    cases.append(carried_refusal("Okunmayan kopyanın üstüne overwrite olmadan yazılmaz", broken, {"profile": small, "store": "drawing"},
+                                 "profile_exists", "Çizimin içinde “peyzaj” profili var; aynı sürümün üzerine yazmak için overwrite verin.",
+                                 "profile", still=[("profile", "peyzaj")]))
+    cases.append(carried_import("Okunmayan kopya overwrite ile yenisiyle değiştirilir", broken, {"profile": small, "store": "drawing", "overwrite": True},
+                                carried_out("profile", small, replaced=True), [("profile", "peyzaj")], before_kept=[("profile", "peyzaj")],
+                                warnings=[{"code": "profile_replaced", "path": "profile",
+                                           "message": "Çizimin içindeki “peyzaj” profilinin okunamayan kopyası yenisiyle değiştirildi."}]))
+    # Both places: the drawing's copy is read; each import says so.
+    f = folder()
+    cases.append(carried_import("Klasörde aynı adlı dosya varken çizimin içine: söylenir (profile_shadowed); listede klasördeki gölgede", empty,
+                                {"profile": small, "store": "drawing", "drawing": tmp(f)}, carried_out("profile", small), [("profile", "peyzaj")],
+                                warnings=[{"code": "profile_shadowed", "path": "profile",
+                                           "message": f"Çizimin “profiller” klasöründe de {tmp(f, 'peyzaj.profil.json')} var; komutlar çizimin içindekini okur."}],
+                                before=put(f, **{"peyzaj.profil.json": "peyzaj.profil.json"}),
+                                after=[listed_after_with(f, {"peyzaj.profil.json": small}, [("profile", "peyzaj", small)])]))
+    f = folder()
+    mine = carry(empty, ("profile", "peyzaj", small))
+    cases.append({"name": "Çizimde aynı adlı profil varken klasöre: söylenir (profile_shadowed); çizim değişmez", "setup": mine, "steps": [
+        place_drawing(f),
+        step("execute", {"profile": small, "drawing": tmp(f)},
+             completed(imported("profile", small, f, ".profil.json"), [
+                 {"code": "profile_shadowed", "path": "profile",
+                  "message": "Çizimin içinde de “peyzaj” profili var; komutlar onu okur, klasördeki bu dosyayı değil."}]),
+             {"revision": "same", "dirty": False, "settings": kept(("profile", "peyzaj"))}),
+        listed_after_with(f, {"peyzaj.profil.json": small}, [("profile", "peyzaj", small)])]})
+    cases.append({"name": "Doğrulama (çizimin içine)", "setup": empty, "steps": [step("validate", {"profile": small, "store": "drawing"}, VALID)]})
+    # The expected revision.
+    cases.append({"name": "Beklenen sürüm tutmuyor: hiçbir şey yazılmaz", "setup": empty, "steps": [
+        step("captureRevision", **{"as": "once"}),
+        step("execute", {"mapping": PC.SIVAS, "store": "drawing"}, completed(carried_out("mapping", PC.SIVAS)), {"revision": "changed"}),
+        step("execute", {"profile": small, "store": "drawing", "expectedRevision": "$once"},
+             {"status": "conflict", "error": {"code": "revision_conflict", "message": CONFLICT, "path": "expectedRevision", "revision": "$current"}},
+             {"revision": "same", "settings": kept(("mapping", "sivas-bel"))})]})
+    cases.append(carried_import("Beklenen sürüm tutunca yazılır", empty, {"profile": small, "store": "drawing", "expectedRevision": "$current"},
+                                carried_out("profile", small), [("profile", "peyzaj")]))
+    cases.append(carried_refusal("geçersiz beklenen sürüm", empty, {"profile": small, "store": "drawing", "expectedRevision": "on iki"},
+                                 "invalid_revision", INVALID_REVISION, "expectedRevision"))
+    # The drawing carries at most 256.
+    full = carry(empty, *[("mapping", f"m{i:03d}", "{}") for i in range(256)])
+    cases.append(carried_refusal("Çizim 256 profil ve eşleme taşıyor: yenisi alınmaz", full, {"profile": small, "store": "drawing"},
+                                 "invalid_profile", "Çizim en çok 256 profil ve eşleme taşır; birini kaldırın ya da profiller klasörüne alın.",
+                                 "profile", still=[("mapping", f"m{i:03d}") for i in range(256)]))
+    # The source's own rules stay; the folder needs the drawing's file.
+    cases.append(carried_refusal("çizimin içine, göreli kaynak yolu ve çizimin dosyası yok", empty, {"source": "gelen/peyzaj.json", "store": "drawing"},
+                                 "invalid_file_path",
+                                 "“gelen/peyzaj.json” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin.",
+                                 "source"))
+    cases.append(carried_refusal("klasöre (store: folder) ama çizimin dosyası yok", empty, {"profile": small, "store": "folder"},
+                                 "invalid_file_path", NO_DRAWING, "drawing"))
+    cases.append(carried_refusal("KentOS'un profilinin adı çizimin içine de alınmaz", empty,
+                                 {"source": FIX + "profil-yerlesik-adli.json", "store": "drawing"}, "profile_name_taken",
+                                 "“tucbs-temel” KentOS'un kendi profilinin adı; projenin profiline başka bir ad verin.", "profile"))
+    return cases
+
+
+def listed_after_with(f, files, carried):
+    return step("execute", {"drawing": tmp(f)}, completed(listing(f, files, carried)), command=LIST)
 
 
 def listed_after(f, files):
@@ -548,7 +826,7 @@ def import_cases():
     cases.append(import_refusal("eşleme projenin profiline uymuyor", {"mapping": BROKEN_MAP, "drawing": d}, "invalid_profile_mapping",
                                 f"Eşleme geçersiz: {PC.mapping_problem(BROKEN_MAP, KURUM)}", "mapping",
                                 before=put(f, **{"park-bahce.profil.json": "park-bahce.profil.json"})))
-    return cases
+    return cases + carried_import_cases()
 
 
 # ── Migrate ──────────────────────────────────────────────────────────────────
@@ -1137,6 +1415,16 @@ def migrate_cases():
     c, _, _ = migrate_case("Profil adıyla (projenin klasöründen): park-bahce", doc, {"name": "park-bahce", "from": 1, "drawing": tmp(f)}, KURUM, 1, 3,
                            before=put(f, **{"park-bahce.profil.json": "park-bahce.profil.json"}))
     cases.append(c)
+    # By name, from the drawing's own copy (docs/adr/0735): no drawing file is needed.
+    c, _, _ = migrate_case("Profil adıyla (çizimin içinden): park-bahce", carry(doc, ("profile", "park-bahce", KURUM)),
+                           {"name": "park-bahce", "from": 1}, KURUM, 1, 3)
+    cases.append(c)
+    # The drawing's copy is read before the folder's file: release 3 there, release 2 in the folder.
+    f = folder()
+    c, _, _ = migrate_case("Çizimdeki kopya klasördekinden önce okunur (çizimde 3., klasörde 2. sürüm)", carry(doc, ("profile", "park-bahce", KURUM)),
+                           {"name": "park-bahce", "from": 1, "drawing": tmp(f)}, KURUM, 1, 3,
+                           before=put(f, **{"park-bahce.profil.json": "park-bahce-r2.profil.json"}))
+    cases.append(c)
     # Run again: nothing is left.
     again = copy.deepcopy(after_all)
     out2, w2 = migrate(again, KURUM, 1, 3)
@@ -1292,6 +1580,13 @@ def migrate_cases():
     c, _, _ = migrate_case("Eşlemeyle değer eşlemesi: profilin kodları kurumun kodlarına çevrilir (PL → CN)", inst,
                            {"profile": mvc, "from": 1, "mapping": imap}, mvc, 1, 2, mapping=imap)
     cases.append(c)
+    # docs/adr/0735: the mapping and the profile the drawing carries inside its own file.
+    c, _, _ = migrate_case("Eşlemenin adıyla (çizimin içinden): çizimin dosyası gerekmez", carry(inst, ("mapping", imap["name"], imap)),
+                           {"profile": KURUM, "from": 1, "mappingName": imap["name"]}, KURUM, 1, 3, mapping=imap)
+    cases.append(c)
+    cases.append(migrate_refusal("Çizimde olmayan eşleme: çizimin taşıdıkları söylenir", carry(inst, ("mapping", imap["name"], imap)),
+                                 {"profile": KURUM, "from": 1, "mappingName": "yok"}, "unknown_mapping",
+                                 "“yok” adlı eşleme yok; çizimin içindeki eşlemeler: park-bahce-kurum2.", "mappingName"))
     cases.append(migrate_refusal("Başka profilin eşlemesi: invalid_profile_mapping", inst, {"profile": KURUM, "from": 1, "mapping": GHOST_MAP},
                                  "invalid_profile_mapping", f"Eşleme geçersiz: {PC.mapping_problem(GHOST_MAP, KURUM)}", "mapping"))
     f = folder()
@@ -1309,6 +1604,14 @@ def migrate_cases():
     # Refusals.
     cases.append(migrate_refusal("bilinmeyen profil", doc, {"name": "yok", "from": 1}, "unknown_profile",
                                  "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel.", "name"))
+    cases.append(migrate_refusal("bilinmeyen profil: çizimin taşıdıkları da söylenir", carry(doc, ("profile", "park-bahce", KURUM)),
+                                 {"name": "yok", "from": 1}, "unknown_profile",
+                                 "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin içindeki profiller: park-bahce.", "name"))
+    f = folder()
+    cases.append(migrate_refusal("bilinmeyen profil: çizimdekiler ve klasör", carry(doc, ("profile", "park-bahce", KURUM)),
+                                 {"name": "yok", "from": 1, "drawing": tmp(f)}, "unknown_profile",
+                                 "“yok” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin içindeki profiller: park-bahce; "
+                                 "çizimin “profiller” klasöründe de “yok.profil.json” yok.", "name", before=[place_drawing(f)]))
     f = folder()
     cases.append(migrate_refusal("projenin klasöründe de yok", doc, {"name": "yok", "from": 1, "drawing": tmp(f)}, "unknown_profile",
                                  PC.no_profile_in_folder(), "name", before=[place_drawing(f)]))
@@ -1352,17 +1655,142 @@ def migrate_cases():
     return cases
 
 
+# ── Remove (docs/adr/0735) ───────────────────────────────────────────────────
+
+def removed(kind, name, value, folder_path=None):
+    """What the removal says: the copy's kind, name and length in bytes; the folder's file read from now on, if any."""
+    text = value if isinstance(value, str) else carried_text(value)
+    out = {"kind": kind, "name": name, "bytes": len(text.encode("utf-8"))}
+    if folder_path:
+        out["folderPath"] = folder_path
+    return out
+
+
+def still_named(mapping, profile):
+    return {"code": "profile_still_named", "path": "name",
+            "message": f"“{mapping}” eşlemesi “{profile}” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."}
+
+
+def remove_case(name, carried, inp, out, left, warnings=(), before=(), after=(), plan=True):
+    """A drawing carrying `carried` loses one: the plan writes nothing; execute changes the settings, an edit and no
+    undo step; `left` is what it carries then."""
+    setup = carry(PC.empty_doc(), *carried)
+    had = [(k, n) for k, n, _ in carried]
+    steps = list(before)
+    if plan:
+        steps.append(step("plan", inp, completed(out, list(warnings)), {"revision": "same", "dirty": False, "settings": kept(*had)}))
+    steps.append(step("execute", inp, completed(out, list(warnings)),
+                      {"revision": "changed", "dirty": True, "canUndo": False, "settings": kept(*left)}))
+    steps.extend(after)
+    return {"name": name, "setup": setup, "steps": steps}
+
+
+def remove_refusal(name, carried, inp, code, message, before=(), after=(), op="execute", path="name"):
+    setup = carry(PC.empty_doc(), *carried) if carried else PC.empty_doc()
+    had = [(k, n) for k, n, _ in carried]
+    return {"name": name, "setup": setup, "steps": list(before) + [
+        step(op, inp, failed(code, message, path), {"revision": "same", "dirty": False, "settings": kept(*had)})] + list(after)}
+
+
+def remove_cases():
+    cases = []
+    small, sivas, own_map = PC.SMALL, PC.SIVAS, {**PC.MAP_SMALL, "name": "peyzaj", "title": "Peyzaj eşlemesi (belediyenin)"}
+    p, s = ("profile", "peyzaj", small), ("mapping", "sivas-bel", sivas)
+    cases.append(remove_case("Çizimin taşıdığı profil çıkarılır: ayardır, geri alma adımı değildir; plan aynı cevabı verir, çıkarmaz",
+                             [p, s], {"kind": "profile", "name": "peyzaj"}, removed("profile", "peyzaj", small), [("mapping", "sivas-bel")],
+                             after=[step("execute", {}, completed(listing(None, {}, [s], drawing=False)), command=LIST)]))
+    cases.append(remove_case("Son kopya çıkınca alan hiç kalmaz; adıyla artık bulunmaz", [p], {"kind": "profile", "name": "peyzaj"},
+                             removed("profile", "peyzaj", small), [],
+                             after=[step("execute", {"name": "peyzaj"},
+                                         failed("unknown_profile", "“peyzaj” adlı veri profili yok; KentOS'un profili: tucbs-temel.", "name"),
+                                         command=PC.CHECK)]))
+    cases.append(remove_case("Eşleme çıkarılır, aynı adlı profil kalır", [p, ("mapping", "peyzaj", own_map)],
+                             {"kind": "mapping", "name": "peyzaj"}, removed("mapping", "peyzaj", own_map), [("profile", "peyzaj")]))
+    cases.append(remove_case("Profil çıkarılır, aynı adlı eşleme kalır ve söylenir (profile_still_named)", [p, ("mapping", "peyzaj", own_map)],
+                             {"kind": "profile", "name": "peyzaj"}, removed("profile", "peyzaj", small), [("mapping", "peyzaj")],
+                             warnings=[still_named("peyzaj", "peyzaj")]))
+    cases.append(remove_case("Profili adlandıran çizimdeki eşleme söylenir", [p, ("mapping", "peyzaj-kurum", PC.MAP_SMALL)],
+                             {"kind": "profile", "name": "peyzaj"}, removed("profile", "peyzaj", small), [("mapping", "peyzaj-kurum")],
+                             warnings=[still_named("peyzaj-kurum", "peyzaj")]))
+    f = folder()
+    cases.append(remove_case("Profili adlandıran klasördeki eşleme de söylenir", [p], {"kind": "profile", "name": "peyzaj", "drawing": tmp(f)},
+                             removed("profile", "peyzaj", small), [], warnings=[still_named("peyzaj-kurum", "peyzaj")],
+                             before=put(f, **{"peyzaj-kurum.eslem.json": "peyzaj-kurum.eslem.json"})))
+    f = folder()
+    cases.append(remove_case("Birden çok eşleme: önce çizimdekiler, sonra klasördekiler adlarıyla", [p, ("mapping", "peyzaj", own_map)],
+                             {"kind": "profile", "name": "peyzaj", "drawing": tmp(f)}, removed("profile", "peyzaj", small), [("mapping", "peyzaj")],
+                             warnings=[still_named("peyzaj", "peyzaj"), still_named("peyzaj-kurum", "peyzaj")],
+                             before=put(f, **{"peyzaj-kurum.eslem.json": "peyzaj-kurum.eslem.json",
+                                              "sivas-bel.eslem.json": "sivas-bel.eslem.json"})))
+    f = folder()
+    cases.append(remove_case("Klasörde aynı adlı dosya varken: bundan sonra o okunur (folderPath); eşlemeler için uyarı yok",
+                             [p, ("mapping", "peyzaj-kurum", PC.MAP_SMALL)], {"kind": "profile", "name": "peyzaj", "drawing": tmp(f)},
+                             removed("profile", "peyzaj", small, tmp(f, "peyzaj.profil.json")), [("mapping", "peyzaj-kurum")],
+                             before=put(f, **{"peyzaj.profil.json": "peyzaj.profil.json"}),
+                             after=[listed_after_with(f, {"peyzaj.profil.json": small}, [("mapping", "peyzaj-kurum", PC.MAP_SMALL)]),
+                                    step("execute", {"name": "peyzaj", "drawing": tmp(f)},
+                                         completed(PC.report(PC.linked(PC.empty_doc(), []), small)), command=PC.CHECK)]))
+    cases.append(remove_case("Okunmayan kopya da çıkarılır", [("profile", "bozuk", RAW_FILES["bozuk.json"])], {"kind": "profile", "name": "bozuk"},
+                             removed("profile", "bozuk", RAW_FILES["bozuk.json"]), []))
+    cases.append(remove_case("Okunmayan eşleme uyarı vermez", [p, ("mapping", "bozuk", RAW_FILES["bozuk.json"])],
+                             {"kind": "profile", "name": "peyzaj"}, removed("profile", "peyzaj", small), [("mapping", "bozuk")]))
+    cases.append(remove_case("Göreli çizim yolunun klasörü yok: yalnız çizimdeki çıkar", [p], {"kind": "profile", "name": "peyzaj", "drawing": "cizim.kcad"},
+                             removed("profile", "peyzaj", small), []))
+    cases.append(remove_case("Beklenen sürüm tutunca çıkarılır", [p], {"kind": "profile", "name": "peyzaj", "expectedRevision": "$current"},
+                             removed("profile", "peyzaj", small), [], plan=False))
+    cases.append({"name": "İki kez çıkarılamaz", "setup": carry(PC.empty_doc(), p), "steps": [
+        step("execute", {"kind": "profile", "name": "peyzaj"}, completed(removed("profile", "peyzaj", small)), {"settings": kept()}),
+        step("execute", {"kind": "profile", "name": "peyzaj"}, failed("unknown_profile", "Çizimin içinde “peyzaj” profili yok.", "name"),
+             {"revision": "same", "settings": kept()})]})
+    cases.append({"name": "Beklenen sürüm tutmuyor: hiçbir şey çıkarılmaz", "setup": carry(PC.empty_doc(), p, s), "steps": [
+        step("captureRevision", **{"as": "once"}),
+        step("execute", {"kind": "mapping", "name": "sivas-bel"}, completed(removed("mapping", "sivas-bel", sivas)), {"revision": "changed"}),
+        step("execute", {"kind": "profile", "name": "peyzaj", "expectedRevision": "$once"},
+             {"status": "conflict", "error": {"code": "revision_conflict", "message": CONFLICT, "path": "expectedRevision", "revision": "$current"}},
+             {"revision": "same", "settings": kept(("profile", "peyzaj"))})]})
+    cases.append({"name": "Doğrulama", "setup": carry(PC.empty_doc(), p), "steps": [
+        step("validate", {"kind": "profile", "name": "peyzaj"}, VALID, {"revision": "same", "settings": kept(("profile", "peyzaj"))})]})
+    # Refusals.
+    cases.append(remove_refusal("çizimde olmayan profil", [], {"kind": "profile", "name": "peyzaj"}, "unknown_profile",
+                                "Çizimin içinde “peyzaj” profili yok."))
+    cases.append(remove_refusal("doğrulama da reddeder", [], {"kind": "profile", "name": "peyzaj"}, "unknown_profile",
+                                "Çizimin içinde “peyzaj” profili yok.", op="validate"))
+    cases.append(remove_refusal("çizimde olmayan eşleme", [p], {"kind": "mapping", "name": "sivas-bel"}, "unknown_mapping",
+                                "Çizimin içinde “sivas-bel” eşlemesi yok."))
+    cases.append(remove_refusal("türü farklı: eşlemenin adıyla profil", [s], {"kind": "profile", "name": "sivas-bel"}, "unknown_profile",
+                                "Çizimin içinde “sivas-bel” profili yok."))
+    cases.append(remove_refusal("KentOS'un profili çizimde değildir", [p], {"kind": "profile", "name": "tucbs-temel"}, "unknown_profile",
+                                "Çizimin içinde “tucbs-temel” profili yok."))
+    cases.append(remove_refusal("büyük harfli ad başka addır", [p], {"kind": "profile", "name": "Peyzaj"}, "unknown_profile",
+                                "Çizimin içinde “Peyzaj” profili yok."))
+    f = folder()
+    cases.append(remove_refusal("yalnız klasörde olan profil bu komutla silinmez", [], {"kind": "profile", "name": "peyzaj", "drawing": tmp(f)},
+                                "unknown_profile",
+                                f"Çizimin içinde “peyzaj” profili yok. Klasördeki {tmp(f, 'peyzaj.profil.json')} bu komutla silinmez; dosyayı klasörden kaldırın.",
+                                before=put(f, **{"peyzaj.profil.json": "peyzaj.profil.json"}),
+                                after=[listed_after(f, {"peyzaj.profil.json": small})]))
+    f = folder()
+    cases.append(remove_refusal("yalnız klasörde olan eşleme de", [], {"kind": "mapping", "name": "sivas-bel", "drawing": tmp(f)},
+                                "unknown_mapping",
+                                f"Çizimin içinde “sivas-bel” eşlemesi yok. Klasördeki {tmp(f, 'sivas-bel.eslem.json')} bu komutla silinmez; dosyayı klasörden kaldırın.",
+                                before=put(f, **{"sivas-bel.eslem.json": "sivas-bel.eslem.json"})))
+    cases.append(remove_refusal("geçersiz beklenen sürüm", [p], {"kind": "profile", "name": "peyzaj", "expectedRevision": "on iki"},
+                                "invalid_revision", INVALID_REVISION, path="expectedRevision"))
+    return cases
+
+
 # ── Files ────────────────────────────────────────────────────────────────────
 
 def files():
     def wrap(command, title, cases):
         return {"format": "kentos.command-cases", "version": 1, "command": command, "commandVersion": 1, "title": title,
-                "note": "Written by scripts/fixtures/profile_files_cases.py from the contract's rules and docs/adr/0558; do not edit by hand.",
+                "note": "Written by scripts/fixtures/profile_files_cases.py from the contract's rules, docs/adr/0558 and docs/adr/0735; do not edit by hand.",
                 "setup": PC.empty_doc(), "cases": cases}
     out = {
         OUT / f"{IMPORT}.json": wrap(IMPORT, "Veri profili içe aktar", import_cases()),
         OUT / f"{LIST}.json": wrap(LIST, "Veri profillerini listele", list_cases()),
         OUT / f"{MIGRATE}.json": wrap(MIGRATE, "Veri profili göçü", migrate_cases()),
+        OUT / f"{REMOVE}.json": wrap(REMOVE, "Veri profilini çizimden kaldır", remove_cases()),
     }
     for name, value in BASE_FILES.items():
         out[FILES / name] = value

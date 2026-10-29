@@ -350,6 +350,8 @@ def settings(s):
                 "joinViews": (opaque, False),
                 # Schema 97 (docs/adr/0569): the project's links of event layers to their routes, as their JSON.
                 "linearEvents": (opaque, False),
+                # Schema 131 (docs/adr/0735): the profiles and mappings the project carries, as their JSON.
+                "profileFiles": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2212,6 +2214,9 @@ def document(d):
     if ((d["settings"].get("arch") or {}).get("auditExceptions")):
         # Mimari denetim's exceptions (docs/adr/0732 §3).
         schema = max(schema, 130)
+    if "profileFiles" in d["settings"]:
+        # The profiles and mappings the project carries inside its file (docs/adr/0735).
+        schema = max(schema, 131)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2925,7 +2930,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-131.kcad"] = container(root(cmap(parts), version=uint(131)))
+    files["schema-version-132.kcad"] = container(root(cmap(parts), version=uint(132)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5079,6 +5084,26 @@ def build():
     exception_bad("no-objects", lambda xs: xs[0].update(uids=[]))
     exception_bad("code", lambda xs: xs[0].update(code="Kısa duvar"))
     exception_bad("uid", lambda xs: xs[0].update(uids=["kısa"]))
+    # Schema 131 (docs/adr/0735): a profile, a mapping of the same name after it and another mapping, their documents
+    # as the folder's files hold them; schema 130 refuses them.
+    carried = load("profile-files.json")
+    pf = document(carried)
+    assert pf.count(b"\x67version\x18\x83") == 1
+    out["profile-files.kcad"] = container(pf)
+    out["broken/profile-files-in-schema-130.kcad"] = container(pf.replace(b"\x67version\x18\x83", b"\x67version\x18\x82"))
+    def carried_bad(name, change):
+        d = copy.deepcopy(carried)
+        change(d["settings"])
+        out["broken/profile-files-" + name + ".kcad"] = container(document(d))
+    carried_bad("empty", lambda s: s.update(profileFiles=[]))
+    carried_bad("unknown-field", lambda s: s["profileFiles"][0].update(path="/kurum/peyzaj.profil.json"))
+    carried_bad("kind", lambda s: s["profileFiles"][0].update(kind="Profil"))
+    carried_bad("name", lambda s: s["profileFiles"][0].update(name="Peyzaj"))
+    carried_bad("long-name", lambda s: s["profileFiles"][2].update(name="p" * 65))
+    carried_bad("blank-text", lambda s: s["profileFiles"][1].update(text=" \n\u00a0"))
+    carried_bad("twice", lambda s: s["profileFiles"].insert(1, dict(s["profileFiles"][0])))
+    carried_bad("unsorted", lambda s: s["profileFiles"].reverse())
+    carried_bad("mapping-first", lambda s: s["profileFiles"].insert(0, s["profileFiles"].pop(1)))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

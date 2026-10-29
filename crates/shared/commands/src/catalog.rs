@@ -2884,20 +2884,21 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
-        // A profile of an institution's own, its releases and mappings (docs/adr/0558), held together by
-        // fixtures/commands/v1/cad.profiles.{import,list,migrate}.json.
+        // A profile of an institution's own, its releases and mappings (docs/adr/0558), kept in the folder or inside the
+        // drawing (docs/adr/0735), held together by fixtures/commands/v1/cad.profiles.{import,list,migrate,remove}.json.
         CommandDescriptor {
             id: crate::CAD_PROFILES_IMPORT.into(),
             version: crate::CAD_PROFILES_IMPORT_VERSION,
             title: "Veri profili içe aktar".into(),
             summary: "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. \
                       Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar çakışmamalı). \
-                      Profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. KentOS'un kendi profilinin adı alınamaz (profile_name_taken). \
-                      Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse file_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. Çizim değişmez, geri alma adımı yoktur; plan yazmadan aynısını söyler. \
+                      store: folder (varsayılan) ise profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. \
+                      store: drawing ise aynı metin çizimin kendi dosyasına, projenin ayarlarındaki profileFiles'a konur (en çok 256 profil ve eşleme, her biri en çok 4 MiB): çizim nereye giderse, bulut projesi de, onunla gider; çizimin dosyası gerekmez. Bu ayarın düzenlemesidir, geri alma adımı değildir. Aynı ad ve tür hem çizimde hem klasörde varsa komutlar çizimin içindekini okur (profile_shadowed). KentOS'un kendi profilinin adı alınamaz (profile_name_taken). \
+                      Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse klasörde file_exists, çizimde profile_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Profilin sürümü kendi release sayısıdır (biçim sürümü version değil) ve migrations'ı bir sürümden sonrakine veriyi taşıyan adımlardır; Veri profili göçü onları çalıştırır."
                 .into(),
             aliases: vec!["profilal".into(), "profiliceaktar".into()],
-            effect: CommandEffect::Query,
+            effect: CommandEffect::Document,
             hosts: vec![CommandHost::Desktop],
             headless: true,
             requires: vec![CommandRequirement::Document],
@@ -2908,22 +2909,32 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::ProfileImported>(),
             plan: Some(schema::<crate::ProfileImported>()),
             capabilities: None,
-            examples: vec![CommandExample {
-                title: "Kurumun profilini çizimin klasöründen projeye al".into(),
-                input: json!({
-                    "source": "kurum-profili.json",
-                    "drawing": "/projeler/belediye/imar.kcad"
-                }),
-                output: None,
-            }],
+            examples: vec![
+                CommandExample {
+                    title: "Kurumun profilini çizimin klasöründen projeye al".into(),
+                    input: json!({
+                        "source": "kurum-profili.json",
+                        "drawing": "/projeler/belediye/imar.kcad"
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kurumun profilini çizimin kendi dosyasına al".into(),
+                    input: json!({
+                        "source": "/kurum/profiller/kurum-profili.json",
+                        "store": "drawing"
+                    }),
+                    output: None,
+                },
+            ],
         },
         CommandDescriptor {
             id: crate::CAD_PROFILES_LIST.into(),
             version: crate::CAD_PROFILES_LIST_VERSION,
             title: "Veri profillerini listele".into(),
-            summary: "KentOS'un yerleşik veri profillerini ve çizimin “profiller” klasöründeki profil ve eşleme dosyalarını listeler; hiçbir şeyi değiştirmez. \
-                      Önce yerleşik profiller kendi sırasıyla, sonra projenin dosyaları adıyla (aynı adda önce profil). Her satır: türü (profil ya da eşleme), kaynağı (builtin ya da project), komutlara verilen adı (dosyanın adı), başlığı, profilin sürümü (release) ve sınıf ve göç sayısı; eşlemede hangi profil için olduğu ve anan sınıf sayısı; proje dosyasında yolu. \
-                      Okunmayan ya da tutmayan dosya listeden düşmez, problem alanında nedeniyle gelir (profilin adı dosyanın adıyla aynı olmalı; eşleme profiliyle denetlenir, profili bulunamayan eşleme denetlenmeden listelenir). Çizimin dosyası yoksa (drawing) yalnız yerleşik profiller gelir; folder çizimin klasörünü söyler."
+            summary: "KentOS'un yerleşik veri profillerini, çizimin kendi dosyasının taşıdıklarını (profileFiles) ve çizimin “profiller” klasöründeki profil ve eşleme dosyalarını listeler; hiçbir şeyi değiştirmez. \
+                      Önce yerleşik profiller kendi sırasıyla, sonra çizimin içindekiler, sonra klasörün dosyaları, her biri adıyla (aynı adda önce profil). Her satır: türü (profil ya da eşleme), kaynağı (builtin, drawing ya da project: klasör), komutlara verilen adı, başlığı, profilin sürümü (release) ve sınıf ve göç sayısı; eşlemede hangi profil için olduğu ve anan sınıf sayısı; klasör dosyasında yolu. \
+                      Okunmayan ya da tutmayan dosya listeden düşmez, problem alanında nedeniyle gelir (profilin adı dosyanın adıyla aynı olmalı; eşleme profiliyle denetlenir, profili bulunamayan eşleme denetlenmeden listelenir). Aynı ad ve tür çizimde de varsa klasörün dosyası shadowed gelir: komutlar çizimin içindekini okur. Çizimin dosyası yoksa (drawing) klasör okunmaz; folder çizimin klasörünü söyler."
                 .into(),
             aliases: vec!["profiller".into(), "profillistesi".into()],
             effect: CommandEffect::Query,
@@ -2968,6 +2979,33 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Kurumun profilini 1. sürümden 2. sürüme taşı".into(),
                 input: json!({ "name": "kurum-profili", "from": 1, "to": 2 }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_REMOVE.into(),
+            version: crate::CAD_PROFILES_REMOVE_VERSION,
+            title: "Veri profilini çizimden kaldır".into(),
+            summary: "Çizimin kendi dosyasının taşıdığı (profileFiles, Veri profili içe aktar'ın store: drawing'i) bir veri profilini ya da eşlemeyi çizimden çıkarır: kind (profile ya da mapping) ve name ile. \
+                      “profiller” klasöründeki dosyaya dokunmaz: klasörde aynı ad ve türde dosya varsa komutlar bundan sonra onu okur, cevabın folderPath'i onu söyler (drawing çizimin dosyası, klasör onun yanındadır). \
+                      Çizimin taşımadığı profil unknown_profile, eşleme unknown_mapping ile reddedilir (ileti klasördeki aynı adlı dosyayı da söyler). Projenin bir eşlemesi kaldırılan profili adlandırıyor ve profilin başka kopyası kalmıyorsa söylenir (profile_still_named). \
+                      Projenin ayarının düzenlemesidir, geri alma adımı değildir; plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["profilkaldir".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesRemove>(),
+            output: schema::<crate::ProfileRemoved>(),
+            plan: Some(schema::<crate::ProfileRemoved>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimin taşıdığı kurum profilini çizimden kaldır".into(),
+                input: json!({ "kind": "profile", "name": "kurum-profili" }),
                 output: None,
             }],
         },
@@ -11179,6 +11217,9 @@ mod tests {
                     crate::CAD_PROFILES_MIGRATE => {
                         serde_json::from_value::<crate::ProfilesMigrate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_PROFILES_REMOVE => {
+                        serde_json::from_value::<crate::ProfilesRemove>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SHEETS_SET => {
                         serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())

@@ -384,6 +384,12 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub xref_paths: Vec<String>,
+    /// The data profiles and mappings the project carries inside its file (docs/adr/0735): by name, a profile before a
+    /// mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
+    /// others; of a name both have, the drawing's is the one read.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectProfileFile>>", optional))]
+    pub profile_files: Vec<crate::ProjectProfileFile>,
     /// What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
     /// and the geoid model; absent: not said, and no command takes them for either.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -838,6 +844,8 @@ impl ProjectSettings {
         self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
         self.named_views = crate::sanitized_named_views(std::mem::take(&mut self.named_views));
         self.xref_paths = crate::sanitized_xref_paths(std::mem::take(&mut self.xref_paths));
+        self.profile_files =
+            crate::sanitized_profile_files(std::mem::take(&mut self.profile_files));
         // Heights and an epoch that hold; ellipsoidal heights and an epoch only with a system (docs/adr/0519 §1).
         if self.heights.as_ref().is_some_and(|h| {
             h.problem().is_some()

@@ -2,8 +2,8 @@
 import type { ProfileListed } from "./ProfileListed";
 
 /**
- * Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the project's profiles and
- * mappings by name.
+ * Output (and plan) of `cad.profiles.list` v1: the built-in profiles in their order, then the drawing's profiles and
+ * mappings by name, then the folder's by name.
  */
 export type ProfilesListed = { items: Array<ProfileListed>, 
 /**

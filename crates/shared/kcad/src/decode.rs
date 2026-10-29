@@ -620,6 +620,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut relations = Vec::new();
     let mut join_views = Vec::new();
     let mut linear_events = Vec::new();
+    let mut profile_files = Vec::new();
     let mut lineage = Vec::new();
     let mut map_srid: Option<u32> = None;
     let mut auto_select: Option<bool> = None;
@@ -915,6 +916,33 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 linear_events = list;
+            }
+            // Schema 131 (docs/adr/0735): the data profiles and mappings the project carries, each its document as text;
+            // the text is the profile commands' to judge.
+            "profileFiles" if has.profile_files => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::ProjectProfileFile> =
+                    serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("profil dosyaları okunamadı: {words}"))
+                    })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; profil yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::profile_files_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                profile_files = list;
             }
             // Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, read whole and checked.
             "lineage" if has.lineage => {
@@ -1315,6 +1343,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         relations,
         join_views,
         linear_events,
+        profile_files,
         lineage,
         map_srid,
         auto_select,

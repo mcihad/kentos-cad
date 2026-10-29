@@ -16233,10 +16233,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 43,
+   "cases": 47,
    "files": [
     "fixtures/commands/v1/cad.profiles.check.json",
-    "fixtures/commands/v1/cad.profiles.import.json"
+    "fixtures/commands/v1/cad.profiles.import.json",
+    "fixtures/commands/v1/cad.profiles.remove.json"
    ],
    "options": [
     {
@@ -16460,7 +16461,7 @@
   {
    "id": "cad.profiles.import",
    "title": "Veri profili içe aktar",
-   "effect": "query",
+   "effect": "document",
    "hosts": {
     "desktop": true,
     "headless": true,
@@ -16468,7 +16469,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 51,
+   "cases": 87,
    "files": [
     "fixtures/commands/v1/cad.profiles.import.json"
    ],
@@ -16684,6 +16685,16 @@
      "covered": false
     },
     {
+     "key": "store",
+     "value": "drawing",
+     "covered": true
+    },
+    {
+     "key": "store",
+     "value": "folder",
+     "covered": true
+    },
+    {
      "key": "unique",
      "value": true,
      "covered": false
@@ -16707,10 +16718,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 34,
+   "cases": 55,
    "files": [
     "fixtures/commands/v1/cad.profiles.import.json",
-    "fixtures/commands/v1/cad.profiles.list.json"
+    "fixtures/commands/v1/cad.profiles.list.json",
+    "fixtures/commands/v1/cad.profiles.remove.json"
    ],
    "options": [],
    "kinds": []
@@ -16726,7 +16738,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 76,
+   "cases": 85,
    "files": [
     "fixtures/commands/v1/cad.profiles.migrate.json"
    ],
@@ -16945,6 +16957,35 @@
      "key": "withheld",
      "value": true,
      "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.profiles.remove",
+   "title": "Veri profilini çizimden kaldır",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 37,
+   "files": [
+    "fixtures/commands/v1/cad.profiles.remove.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "mapping",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "profile",
+     "covered": true
     }
    ],
    "kinds": []
@@ -29484,6 +29525,11 @@
     },
     {
      "key": "kind",
+     "value": "mapping",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "mid",
      "covered": false
     },
@@ -29635,6 +29681,11 @@
     {
      "key": "kind",
      "value": "postgis",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "profile",
      "covered": false
     },
     {
@@ -32011,6 +32062,11 @@
     },
     {
      "key": "kind",
+     "value": "mapping",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "mid",
      "covered": false
     },
@@ -32162,6 +32218,11 @@
     {
      "key": "kind",
      "value": "postgis",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "profile",
      "covered": false
     },
     {
@@ -34483,6 +34544,11 @@
     },
     {
      "key": "kind",
+     "value": "mapping",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "mid",
      "covered": false
     },
@@ -34599,6 +34665,11 @@
     {
      "key": "kind",
      "value": "postgis",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "profile",
      "covered": false
     },
     {

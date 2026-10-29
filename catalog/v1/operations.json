@@ -1311,9 +1311,10 @@
         "cad.profiles.apply",
         "cad.profiles.import",
         "cad.profiles.list",
-        "cad.profiles.migrate"
+        "cad.profiles.migrate",
+        "cad.profiles.remove"
       ],
-      "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un, Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558)."
+      "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un (Nereye: çizimin içine ya da profiller klasörüne, ADR 0735), Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558); çizimin taşıdığını kaldırmak cad.profiles.remove'un (ADR 0735)."
     },
     "standards.check": {
       "level": "query",

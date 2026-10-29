@@ -474,6 +474,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.join_views.is_empty())
             + usize::from(!s.linear_events.is_empty())
+            + usize::from(!s.profile_files.is_empty())
             + usize::from(!s.lineage.is_empty())
             + usize::from(s.map_srid.is_some())
             + usize::from(!s.sources.is_empty())
@@ -759,6 +760,19 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.linear_events)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        // Schema 131 (docs/adr/0735): the data profiles and mappings the project carries, each its document as text
+        // (after `linearEvents`, the last of the 12-letter keys).
+        if !s.profile_files.is_empty() {
+            self.key("profileFiles");
+            self.at(Seg::Name("profileFiles"), |e| {
+                if let Some(problem) = kentos_contracts::profile_files_problem(&s.profile_files) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.profile_files)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -1989,6 +2003,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 131 (docs/adr/0735): the data profiles and mappings the project carries.
+    if !doc.settings.profile_files.is_empty() {
+        return crate::SCHEMA_WITH_PROFILE_FILES;
+    }
     // Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
     if doc
         .settings

@@ -1,0 +1,2628 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.profiles.remove",
+  "commandVersion": 1,
+  "title": "Veri profilini çizimden kaldır",
+  "note": "Written by scripts/fixtures/profile_files_cases.py from the contract's rules, docs/adr/0558 and docs/adr/0735; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Belediye örnek projesi",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis"
+    },
+    "origin": {
+      "x": 500000,
+      "y": 4400000
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Çizimin taşıdığı profil çıkarılır: ayardır, geri alma adımı değildir; plan aynı cevabı verir, çıkarmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "sivas-bel",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"sivas-bel\",\n  \"title\": \"Sivas Belediyesi eşlemesi\",\n  \"profile\": \"tucbs-temel\",\n  \"description\": \"Belediyenin kendi katman, alan ve kod adları.\",\n  \"classes\": [\n    {\n      \"class\": \"parsel\",\n      \"layer\": [\n        \"Kadastro\",\n        \"Parseller\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"ParselKimlik\",\n          \"name\": \"PARSEL_ID\"\n        },\n        {\n          \"profile\": \"AdaNo\",\n          \"name\": \"ADA_NO\"\n        },\n        {\n          \"profile\": \"ParselNo\",\n          \"name\": \"PARSEL_NO\"\n        },\n        {\n          \"profile\": \"TapuAlani\",\n          \"name\": \"TAPU_ALANI\"\n        },\n        {\n          \"profile\": \"Nitelik\",\n          \"name\": \"NITELIK\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Nitelik\",\n          \"codes\": [\n            {\n              \"profile\": \"arsa\",\n              \"name\": \"A\"\n            },\n            {\n              \"profile\": \"tarla\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"bahce\",\n              \"name\": \"B\"\n            },\n            {\n              \"profile\": \"bina\",\n              \"name\": \"KB\"\n            },\n            {\n              \"profile\": \"diger\",\n              \"name\": \"D\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"bina\",\n      \"layer\": [\n        \"Binalar\",\n        \"Yapılar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"BinaKimlik\",\n          \"name\": \"YAPI_ID\"\n        },\n        {\n          \"profile\": \"KatSayisi\",\n          \"name\": \"KAT\"\n        },\n        {\n          \"profile\": \"Kullanim\",\n          \"name\": \"KULLANIM\"\n        },\n        {\n          \"profile\": \"Parsel\",\n          \"name\": \"PARSEL_REF\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Kullanim\",\n          \"codes\": [\n            {\n              \"profile\": \"konut\",\n              \"name\": \"K\"\n            },\n            {\n              \"profile\": \"ticaret\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"karma\",\n              \"name\": \"KT\"\n            },\n            {\n              \"profile\": \"kamu\",\n              \"name\": \"KM\"\n            },\n            {\n              \"profile\": \"sanayi\",\n              \"name\": \"S\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"adres\",\n      \"fields\": [\n        {\n          \"profile\": \"Yol\",\n          \"name\": \"CADDE\"\n        },\n        {\n          \"profile\": \"KapiNo\",\n          \"name\": \"KAPI\"\n        },\n        {\n          \"profile\": \"Bina\",\n          \"name\": \"YAPI_REF\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                },
+                {
+                  "kind": "mapping",
+                  "name": "sivas-bel",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "sivas-bel",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "sivas-bel",
+                  "title": "Sivas Belediyesi eşlemesi",
+                  "release": 0,
+                  "classes": 3,
+                  "migrations": 0,
+                  "profile": "tucbs-temel"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "command": "cad.profiles.list"
+        }
+      ]
+    },
+    {
+      "name": "Son kopya çıkınca alan hiç kalmaz; adıyla artık bulunmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "“peyzaj” adlı veri profili yok; KentOS'un profili: tucbs-temel.",
+              "path": "name"
+            }
+          },
+          "command": "cad.profiles.check"
+        }
+      ]
+    },
+    {
+      "name": "Eşleme çıkarılır, aynı adlı profil kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj eşlemesi (belediyenin)\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "mapping",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "mapping",
+              "name": "peyzaj",
+              "bytes": 863
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                },
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "mapping",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "mapping",
+              "name": "peyzaj",
+              "bytes": 863
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profil çıkarılır, aynı adlı eşleme kalır ve söylenir (profile_still_named)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj eşlemesi (belediyenin)\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                },
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profili adlandıran çizimdeki eşleme söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "peyzaj-kurum",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj-kurum\",\n  \"title\": \"Peyzaj eşlemesi\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj-kurum” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                },
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj-kurum",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj-kurum” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj-kurum",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profili adlandıran klasördeki eşleme de söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj-kurum.eslem.json",
+          "to": "$tmp:pf55/profiller/peyzaj-kurum.eslem.json"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "$tmp:pf55/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj-kurum” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "$tmp:pf55/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj-kurum” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Birden çok eşleme: önce çizimdekiler, sonra klasördekiler adlarıyla",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj eşlemesi (belediyenin)\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj-kurum.eslem.json",
+          "to": "$tmp:pf56/profiller/peyzaj-kurum.eslem.json"
+        },
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
+          "to": "$tmp:pf56/profiller/sivas-bel.eslem.json"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "$tmp:pf56/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              },
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj-kurum” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                },
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "$tmp:pf56/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": [
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              },
+              {
+                "code": "profile_still_named",
+                "path": "name",
+                "message": "“peyzaj-kurum” eşlemesi “peyzaj” profilini adlandırıyor; profilin başka kopyası kalmadı, eşleme profille denetlenemez."
+              }
+            ]
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Klasörde aynı adlı dosya varken: bundan sonra o okunur (folderPath); eşlemeler için uyarı yok",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "peyzaj-kurum",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"peyzaj-kurum\",\n  \"title\": \"Peyzaj eşlemesi\",\n  \"profile\": \"peyzaj\",\n  \"classes\": [\n    {\n      \"class\": \"agac\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaçlar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"AgacNo\",\n          \"name\": \"NO\"\n        },\n        {\n          \"profile\": \"Tur\",\n          \"name\": \"TUR\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Tur\",\n          \"codes\": [\n            {\n              \"profile\": \"cinar\",\n              \"name\": \"C\"\n            },\n            {\n              \"profile\": \"mese\",\n              \"name\": \"M\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"yesil\",\n      \"fields\": [\n        {\n          \"profile\": \"KayitliAlan\",\n          \"name\": \"KAYIT\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf57/profiller/peyzaj.profil.json"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "$tmp:pf57/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498,
+              "folderPath": "$tmp:pf57/profiller/peyzaj.profil.json"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                },
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj-kurum",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "$tmp:pf57/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498,
+              "folderPath": "$tmp:pf57/profiller/peyzaj.profil.json"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "peyzaj-kurum",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf57/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "mapping",
+                  "source": "drawing",
+                  "name": "peyzaj-kurum",
+                  "title": "Peyzaj eşlemesi",
+                  "release": 0,
+                  "classes": 2,
+                  "migrations": 0,
+                  "profile": "peyzaj"
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0,
+                  "path": "$tmp:pf57/profiller/peyzaj.profil.json"
+                }
+              ],
+              "folder": "$tmp:pf57/profiller"
+            },
+            "warnings": []
+          },
+          "command": "cad.profiles.list"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "name": "peyzaj",
+            "drawing": "$tmp:pf57/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "profile": "peyzaj",
+              "title": "Peyzaj profili",
+              "version": 1,
+              "basis": "Deneme profili.",
+              "classes": [
+                {
+                  "class": "agac",
+                  "title": "Ağaç",
+                  "objects": 0,
+                  "findings": 1
+                },
+                {
+                  "class": "yesil",
+                  "title": "Yeşil alan",
+                  "objects": 0,
+                  "findings": 1
+                }
+              ],
+              "findings": [
+                {
+                  "kind": "missingDomain",
+                  "subject": "agac-tur",
+                  "uids": [],
+                  "count": 0,
+                  "fixable": true,
+                  "message": "“Ağaç türü” değer listesi projede yok; Veri profilini uygula onu ekler."
+                },
+                {
+                  "kind": "missingLayer",
+                  "class": "agac",
+                  "uids": [],
+                  "count": 0,
+                  "fixable": true,
+                  "message": "“Ağaç” sınıfının katmanı (Peyzaj › Ağaç) çizimde yok; Veri profilini uygula onu ekler."
+                },
+                {
+                  "kind": "missingLayer",
+                  "class": "yesil",
+                  "uids": [],
+                  "count": 0,
+                  "fixable": true,
+                  "message": "“Yeşil alan” sınıfının katmanı (Peyzaj › Yeşil alan) çizimde yok; Veri profilini uygula onu ekler."
+                }
+              ],
+              "clean": false
+            },
+            "warnings": []
+          },
+          "command": "cad.profiles.check"
+        }
+      ]
+    },
+    {
+      "name": "Okunmayan kopya da çıkarılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "bozuk",
+              "text": "{ bu bir JSON degil\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "bozuk"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "bozuk",
+              "bytes": 20
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "bozuk",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "bozuk"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "bozuk",
+              "bytes": 20
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Okunmayan eşleme uyarı vermez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "mapping",
+              "name": "bozuk",
+              "text": "{ bu bir JSON degil\n"
+            },
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "bozuk",
+                  "text": "$any"
+                },
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "bozuk",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Göreli çizim yolunun klasörü yok: yalnız çizimdeki çıkar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm tutunca çıkarılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "expectedRevision": "$current"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "dirty": true,
+            "canUndo": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki kez çıkarılamaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "profile",
+              "name": "peyzaj",
+              "bytes": 1498
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "Çizimin içinde “peyzaj” profili yok.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm tutmuyor: hiçbir şey çıkarılmaz",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            },
+            {
+              "kind": "mapping",
+              "name": "sivas-bel",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"sivas-bel\",\n  \"title\": \"Sivas Belediyesi eşlemesi\",\n  \"profile\": \"tucbs-temel\",\n  \"description\": \"Belediyenin kendi katman, alan ve kod adları.\",\n  \"classes\": [\n    {\n      \"class\": \"parsel\",\n      \"layer\": [\n        \"Kadastro\",\n        \"Parseller\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"ParselKimlik\",\n          \"name\": \"PARSEL_ID\"\n        },\n        {\n          \"profile\": \"AdaNo\",\n          \"name\": \"ADA_NO\"\n        },\n        {\n          \"profile\": \"ParselNo\",\n          \"name\": \"PARSEL_NO\"\n        },\n        {\n          \"profile\": \"TapuAlani\",\n          \"name\": \"TAPU_ALANI\"\n        },\n        {\n          \"profile\": \"Nitelik\",\n          \"name\": \"NITELIK\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Nitelik\",\n          \"codes\": [\n            {\n              \"profile\": \"arsa\",\n              \"name\": \"A\"\n            },\n            {\n              \"profile\": \"tarla\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"bahce\",\n              \"name\": \"B\"\n            },\n            {\n              \"profile\": \"bina\",\n              \"name\": \"KB\"\n            },\n            {\n              \"profile\": \"diger\",\n              \"name\": \"D\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"bina\",\n      \"layer\": [\n        \"Binalar\",\n        \"Yapılar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"BinaKimlik\",\n          \"name\": \"YAPI_ID\"\n        },\n        {\n          \"profile\": \"KatSayisi\",\n          \"name\": \"KAT\"\n        },\n        {\n          \"profile\": \"Kullanim\",\n          \"name\": \"KULLANIM\"\n        },\n        {\n          \"profile\": \"Parsel\",\n          \"name\": \"PARSEL_REF\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Kullanim\",\n          \"codes\": [\n            {\n              \"profile\": \"konut\",\n              \"name\": \"K\"\n            },\n            {\n              \"profile\": \"ticaret\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"karma\",\n              \"name\": \"KT\"\n            },\n            {\n              \"profile\": \"kamu\",\n              \"name\": \"KM\"\n            },\n            {\n              \"profile\": \"sanayi\",\n              \"name\": \"S\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"adres\",\n      \"fields\": [\n        {\n          \"profile\": \"Yol\",\n          \"name\": \"CADDE\"\n        },\n        {\n          \"profile\": \"KapiNo\",\n          \"name\": \"KAPI\"\n        },\n        {\n          \"profile\": \"Bina\",\n          \"name\": \"YAPI_REF\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "once"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "mapping",
+            "name": "sivas-bel"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "kind": "mapping",
+              "name": "sivas-bel",
+              "bytes": 2638
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "expectedRevision": "$once"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same",
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "Çizimin içinde “peyzaj” profili yok.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrulama da reddeder",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "Çizimin içinde “peyzaj” profili yok.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan eşleme",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "mapping",
+            "name": "sivas-bel"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_mapping",
+              "message": "Çizimin içinde “sivas-bel” eşlemesi yok.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "türü farklı: eşlemenin adıyla profil",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "mapping",
+              "name": "sivas-bel",
+              "text": "{\n  \"format\": \"kentos.profile-mapping\",\n  \"version\": 1,\n  \"name\": \"sivas-bel\",\n  \"title\": \"Sivas Belediyesi eşlemesi\",\n  \"profile\": \"tucbs-temel\",\n  \"description\": \"Belediyenin kendi katman, alan ve kod adları.\",\n  \"classes\": [\n    {\n      \"class\": \"parsel\",\n      \"layer\": [\n        \"Kadastro\",\n        \"Parseller\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"ParselKimlik\",\n          \"name\": \"PARSEL_ID\"\n        },\n        {\n          \"profile\": \"AdaNo\",\n          \"name\": \"ADA_NO\"\n        },\n        {\n          \"profile\": \"ParselNo\",\n          \"name\": \"PARSEL_NO\"\n        },\n        {\n          \"profile\": \"TapuAlani\",\n          \"name\": \"TAPU_ALANI\"\n        },\n        {\n          \"profile\": \"Nitelik\",\n          \"name\": \"NITELIK\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Nitelik\",\n          \"codes\": [\n            {\n              \"profile\": \"arsa\",\n              \"name\": \"A\"\n            },\n            {\n              \"profile\": \"tarla\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"bahce\",\n              \"name\": \"B\"\n            },\n            {\n              \"profile\": \"bina\",\n              \"name\": \"KB\"\n            },\n            {\n              \"profile\": \"diger\",\n              \"name\": \"D\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"bina\",\n      \"layer\": [\n        \"Binalar\",\n        \"Yapılar\"\n      ],\n      \"fields\": [\n        {\n          \"profile\": \"BinaKimlik\",\n          \"name\": \"YAPI_ID\"\n        },\n        {\n          \"profile\": \"KatSayisi\",\n          \"name\": \"KAT\"\n        },\n        {\n          \"profile\": \"Kullanim\",\n          \"name\": \"KULLANIM\"\n        },\n        {\n          \"profile\": \"Parsel\",\n          \"name\": \"PARSEL_REF\"\n        }\n      ],\n      \"codes\": [\n        {\n          \"field\": \"Kullanim\",\n          \"codes\": [\n            {\n              \"profile\": \"konut\",\n              \"name\": \"K\"\n            },\n            {\n              \"profile\": \"ticaret\",\n              \"name\": \"T\"\n            },\n            {\n              \"profile\": \"karma\",\n              \"name\": \"KT\"\n            },\n            {\n              \"profile\": \"kamu\",\n              \"name\": \"KM\"\n            },\n            {\n              \"profile\": \"sanayi\",\n              \"name\": \"S\"\n            }\n          ]\n        }\n      ]\n    },\n    {\n      \"class\": \"adres\",\n      \"fields\": [\n        {\n          \"profile\": \"Yol\",\n          \"name\": \"CADDE\"\n        },\n        {\n          \"profile\": \"KapiNo\",\n          \"name\": \"KAPI\"\n        },\n        {\n          \"profile\": \"Bina\",\n          \"name\": \"YAPI_REF\"\n        }\n      ]\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "sivas-bel"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "Çizimin içinde “sivas-bel” profili yok.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "mapping",
+                  "name": "sivas-bel",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "KentOS'un profili çizimde değildir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "tucbs-temel"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "Çizimin içinde “tucbs-temel” profili yok.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "büyük harfli ad başka addır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "Peyzaj"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "Çizimin içinde “Peyzaj” profili yok.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "yalnız klasörde olan profil bu komutla silinmez",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/peyzaj.profil.json",
+          "to": "$tmp:pf58/profiller/peyzaj.profil.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "drawing": "$tmp:pf58/cizim.kcad"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_profile",
+              "message": "Çizimin içinde “peyzaj” profili yok. Klasördeki $tmp:pf58/profiller/peyzaj.profil.json bu komutla silinmez; dosyayı klasörden kaldırın.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "drawing": "$tmp:pf58/cizim.kcad"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "items": [
+                {
+                  "kind": "profile",
+                  "source": "builtin",
+                  "name": "tucbs-temel",
+                  "title": "TUCBS temel belediye profili",
+                  "release": 1,
+                  "classes": 7,
+                  "migrations": 0
+                },
+                {
+                  "kind": "profile",
+                  "source": "project",
+                  "name": "peyzaj",
+                  "title": "Peyzaj profili",
+                  "release": 1,
+                  "classes": 2,
+                  "migrations": 0,
+                  "path": "$tmp:pf58/profiller/peyzaj.profil.json"
+                }
+              ],
+              "folder": "$tmp:pf58/profiller"
+            },
+            "warnings": []
+          },
+          "command": "cad.profiles.list"
+        }
+      ]
+    },
+    {
+      "name": "yalnız klasörde olan eşleme de",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "copyFile",
+          "from": "$fixture:profiles/v1/files/sivas-bel.eslem.json",
+          "to": "$tmp:pf59/profiller/sivas-bel.eslem.json"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "kind": "mapping",
+            "name": "sivas-bel",
+            "drawing": "$tmp:pf59/cizim.kcad"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_mapping",
+              "message": "Çizimin içinde “sivas-bel” eşlemesi yok. Klasördeki $tmp:pf59/profiller/sivas-bel.eslem.json bu komutla silinmez; dosyayı klasörden kaldırın.",
+              "path": "name"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Belediye örnek projesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "profileFiles": [
+            {
+              "kind": "profile",
+              "name": "peyzaj",
+              "text": "{\n  \"format\": \"kentos.data-profile\",\n  \"version\": 1,\n  \"name\": \"peyzaj\",\n  \"title\": \"Peyzaj profili\",\n  \"description\": \"Ağaçlar ve yeşil alanlar.\",\n  \"basis\": \"Deneme profili.\",\n  \"domains\": [\n    {\n      \"id\": \"agac-tur\",\n      \"name\": \"Ağaç türü\",\n      \"kind\": \"text\",\n      \"values\": [\n        {\n          \"code\": \"cinar\",\n          \"label\": \"Çınar\"\n        },\n        {\n          \"code\": \"mese\",\n          \"label\": \"Meşe\"\n        }\n      ]\n    }\n  ],\n  \"classes\": [\n    {\n      \"id\": \"agac\",\n      \"title\": \"Ağaç\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Ağaç\"\n      ],\n      \"color\": \"#30A46C\",\n      \"geometry\": \"point\",\n      \"key\": \"AgacNo\",\n      \"fields\": [\n        {\n          \"name\": \"AgacNo\",\n          \"kind\": \"text\",\n          \"required\": true\n        },\n        {\n          \"name\": \"Tur\",\n          \"alias\": \"Tür\",\n          \"kind\": \"text\",\n          \"domain\": \"agac-tur\"\n        }\n      ]\n    },\n    {\n      \"id\": \"yesil\",\n      \"title\": \"Yeşil alan\",\n      \"theme\": \"Peyzaj\",\n      \"layer\": [\n        \"Peyzaj\",\n        \"Yeşil alan\"\n      ],\n      \"color\": \"#46A758\",\n      \"geometry\": \"area\",\n      \"fields\": [\n        {\n          \"name\": \"Ad\",\n          \"kind\": \"text\"\n        },\n        {\n          \"name\": \"KayitliAlan\",\n          \"alias\": \"Kayıtlı alan\",\n          \"kind\": \"decimal\",\n          \"scale\": 2\n        }\n      ],\n      \"registeredArea\": {\n        \"field\": \"KayitliAlan\",\n        \"tolerance\": 0.5\n      }\n    }\n  ]\n}\n"
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "kind": "profile",
+            "name": "peyzaj",
+            "expectedRevision": "on iki"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "revision": "same",
+            "dirty": false,
+            "settings": {
+              "profileFiles": [
+                {
+                  "kind": "profile",
+                  "name": "peyzaj",
+                  "text": "$any"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

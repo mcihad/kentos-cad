@@ -226,6 +226,22 @@ pub fn check_address_locators(
     }
 }
 
+/// The data profiles and mappings a project carries inside its file by the file format's rules
+/// (docs/adr/0735): the database project's `.kcad` snapshot could not be written otherwise. Their
+/// documents are the profile commands' to judge.
+pub fn check_profile_files(
+    files: &[kentos_contracts::ProjectProfileFile],
+    path: &str,
+) -> AppResult<()> {
+    match kentos_contracts::profile_files_problem(files) {
+        Some(problem) => Err(AppError::invalid_at(
+            path,
+            format!("Projenin taşıdığı profiller geçersiz: {problem}."),
+        )),
+        None => Ok(()),
+    }
+}
+
 /// A project's associative arrays by the contract's rules but for the blocks
 /// and objects they name (`arrays_shape_problem`, docs/adr/0300 §5), refused
 /// at their place under `path`; the blocks and objects are the document's.
@@ -514,6 +530,7 @@ pub async fn create(
     check_services(&input.layers, &input.settings.connections)?;
     check_networks(&input.settings.networks, "settings.networks")?;
     check_address_locators(&input.settings.address_locators, "settings.addressLocators")?;
+    check_profile_files(&input.settings.profile_files, "settings.profileFiles")?;
     check_sheets(input.sheets.as_ref(), "sheets")?;
     check_arrays(&input.arrays, "arrays")?;
     check_constraints(&input.constraints, "constraints")?;
@@ -1355,5 +1372,31 @@ mod tests {
         let twice = [net("ag-1", "Yollar", 0.01), net("ag-2", "YOLLAR", 0.01)];
         let e = check_networks(&twice, AT).expect_err("a name twice");
         assert!(e.to_string().contains("adlı ağ iki kez var"), "{e}");
+    }
+
+    #[test]
+    fn the_carried_profiles_keep_the_file_formats_rules() {
+        use kentos_contracts::{ProfileFileKind, ProjectProfileFile};
+        let file = |kind, name: &str| ProjectProfileFile {
+            kind,
+            name: name.to_owned(),
+            text: "{}".to_owned(),
+        };
+        const AT: &str = "settings.profileFiles";
+        assert!(check_profile_files(&[], AT).is_ok());
+        let ok = [
+            file(ProfileFileKind::Profile, "park"),
+            file(ProfileFileKind::Mapping, "park"),
+        ];
+        assert!(check_profile_files(&ok, AT).is_ok());
+        let twice = [
+            file(ProfileFileKind::Profile, "park"),
+            file(ProfileFileKind::Profile, "park"),
+        ];
+        let e = check_profile_files(&twice, AT).expect_err("a name twice");
+        assert!(e.to_string().contains("iki kez yazılmış"), "{e}");
+        let e = check_profile_files(&[file(ProfileFileKind::Profile, "Park")], AT)
+            .expect_err("a name the rule refuses");
+        assert!(e.to_string().contains("profil ya da eşleme adı olamaz"), "{e}");
     }
 }
