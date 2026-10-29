@@ -4467,11 +4467,13 @@ const ENTRIES: &[Entry] = &[
                 "invalid_extent",
                 "derived_dataset",
             ],
-            // docs/adr/0531, 0585: the neighbours outside a part's area, and rows the account may not change.
+            // docs/adr/0531, 0585: the neighbours outside a part's area, and rows the account may not change;
+            // docs/adr/0750: a column the table keeps NOT NULL left empty.
             &[
                 "topology_on_read",
                 "outside_neighbour_invalid",
                 "rows_denied",
+                "source_not_null",
             ],
             // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
             &["invalid_input", "transaction_split", "relation_dangling"],
@@ -4586,6 +4588,8 @@ const ENTRIES: &[Entry] = &[
                 "invalid_expression",
                 "layer_not_found",
                 "file_not_found",
+                // docs/adr/0740: a moved file's path given again wrong.
+                "invalid_file_path",
                 "import_unreadable",
                 "table_not_found",
             ],

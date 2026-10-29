@@ -532,7 +532,10 @@ pub enum SyncTopology {
 
 /// Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
 /// `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a
-/// database's rows the account may not change: privilege or row security, docs/adr/0585 §2); conflicts:
+/// database's rows the account may not change: privilege or row security, docs/adr/0585 §2), `source_not_null` (a column
+/// the table keeps NOT NULL a write would leave empty: a new row's without a default, any changed row's; a new row's
+/// empty value of a column with a default is the table's, and what the table gave comes back to the object in the
+/// same step, docs/adr/0750); conflicts:
 /// `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
 /// the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
 /// for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep

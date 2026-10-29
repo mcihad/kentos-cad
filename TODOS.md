@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0750: bağlı tablonun NOT NULL ve varsayılansız sütunu zorunlu alan, sabit varsayılanı alanın varsayılanı;
+  yeni kaydın boş değeri varsayılanlı sütunda tablonun, döndürdüğü değer aynı adımda nesnede; NOT NULL'u boş bırakan
+  yazma `source_not_null` (web'in kaynak yazması geldiğinde aynı kural).
 - ADR 0749: parçalı seçim yerinden taşmaz (sığmayınca ikonları, yoksa “…” ile kısalan yazıları ve ipucunda tamamı);
   form tasarımcısının üç bölmesi yazı boyuna ve pencereye göre, sekme değişince kaymaz; araç çubuğu sığmayınca
   ikonlarına iner; formların pencerelerinin gövdesi alçak pencerede kısalır, düğmeler hep görünür.

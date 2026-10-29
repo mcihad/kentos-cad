@@ -1354,6 +1354,9 @@ codes! {
     /// Rows a write would change that the account sees but may not change: no privilege or a row security policy
     /// (docs/adr/0585 §2).
     ROWS_DENIED = "rows_denied", Failed, false, "Hesap tablonun bazı satırlarını görür ama değiştiremez (yetki ya da satır güvenliği); hiçbir şey yazılmadı.";
+    /// A write that would leave empty a column the table keeps NOT NULL: a new row's without a default, any row's
+    /// (docs/adr/0750).
+    SOURCE_NOT_NULL = "source_not_null", Failed, false, "Tablo bazı sütunların boş kalmasına izin vermiyor (NOT NULL); o nesnelere değer verin, hiçbir şey yazılmadı.";
     /// A uid given to a point cloud command that is not a point cloud (docs/adr/0536).
     NOT_A_POINTCLOUD = "not_a_pointcloud", Failed, false, "Verilen nesne bir nokta bulutu değil.";
     /// Counting the classes would read more points than one call does (docs/adr/0536).

@@ -769,6 +769,98 @@ impl Diff {
     }
 }
 
+/// The objects a write would leave empty in a column the table keeps NOT NULL (docs/adr/0750): a new row's column
+/// without a default (one with a default the table fills), any changed row's column; refused at `at` before anything is
+/// written, the objects with it.
+fn empty_not_null(stored: &Stored, d: &Diff, table: &str, at: &str) -> Result<(), Stop> {
+    let columns = &stored.layer.columns;
+    let mut names: BTreeSet<&str> = BTreeSet::new();
+    let mut uids: Vec<Uuid> = Vec::new();
+    let mut empty = |row: &gpkg::NewRow, new: bool| {
+        let mut any = false;
+        for (c, v) in columns.iter().zip(&row.values) {
+            if c.not_null && (!new || c.default.is_none()) && matches!(v, Value::Null) {
+                names.insert(c.name.as_str());
+                any = true;
+            }
+        }
+        any
+    };
+    for (uid, row) in &d.insert {
+        if empty(row, true)
+            && let Ok(u) = Uuid::parse_str(uid)
+        {
+            uids.push(u);
+        }
+    }
+    for (fid, row) in &d.update {
+        if empty(row, false)
+            && let Some(u) = stored
+                .rows
+                .iter()
+                .find(|(_, (f, ..))| f == fid)
+                .map(|(u, _)| *u)
+        {
+            uids.push(u);
+        }
+    }
+    if names.is_empty() {
+        return Ok(());
+    }
+    let list: Vec<String> = names.iter().map(|n| format!("“{n}”")).collect();
+    Err(refuse_on(
+        codes::SOURCE_NOT_NULL,
+        format!(
+            "“{table}” tablosu {} sütununun boş kalmasına izin vermiyor (NOT NULL); {} nesnede boş. O nesnelere değer verin (formda zorunlu); hiçbir şey yazılmadı.",
+            list.join(", "),
+            uids.len()
+        ),
+        at,
+        &uids,
+    ))
+}
+
+/// New rows' objects by lasting id and the values the table gave their columns left to their defaults, by the
+/// layer's column index (docs/adr/0750).
+type Filled = Vec<(String, Vec<(usize, Value)>)>;
+
+/// The values a table gave new rows' columns left to their defaults (docs/adr/0750), written to the rows' objects on
+/// `layer` in the write's step: each value as the attribute it reads as there (its field's kind), so the layer and the
+/// table match again and a later write does not take them for someone else's change.
+fn take_filled(doc: &mut Document, layer: &str, columns: &[gpkg::Column], rows: &Filled) {
+    let fields: Vec<kentos_commands::LayerField> = doc
+        .layers()
+        .get(layer)
+        .map(|n| n.fields.clone())
+        .unwrap_or_default();
+    let mut changes = Vec::new();
+    for (uid, filled) in rows {
+        let Some(slot) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
+            continue;
+        };
+        let Some(mut e) = doc.get(slot).cloned() else {
+            continue;
+        };
+        let attrs = &mut e.base_mut().attrs;
+        for (i, v) in filled {
+            let Some(c) = columns.get(*i) else {
+                continue;
+            };
+            let field = fields
+                .iter()
+                .find(|f| f.name == c.name)
+                .or_else(|| fields.iter().find(|f| f.name.eq_ignore_ascii_case(&c.name)));
+            if let Some(t) = gp::field_text(v, c, field.map(|f| f.kind)) {
+                attrs.insert(field.map_or(c.name.clone(), |f| f.name.clone()), t);
+            }
+        }
+        changes.push((slot, e));
+    }
+    if !changes.is_empty() {
+        doc.update_many(changes, "Kaynağın verdiği değerler");
+    }
+}
+
 fn walk(g: &Geometry, sig: &mut Vec<u8>, xs: &mut Vec<f64>) {
     fn coord(c: &gpkg::Coord, sig: &mut Vec<u8>, xs: &mut Vec<f64>) {
         sig.push(10 + u8::from(c.z.is_some()) + 2 * u8::from(c.m.is_some()));
@@ -3343,19 +3435,27 @@ fn sync_run(
                 return Ok((out, warnings));
             }
             let label = read_step(&link.table);
+            // The table's rules come with its rows (docs/adr/0750): a field of a NOT NULL column without a default is
+            // required, a literal default is the field's when it has none; nothing the layer asks for is taken away.
+            let ruled: Vec<kentos_commands::LayerField> = fields_now
+                .iter()
+                .map(|f| {
+                    let mut f = f.clone();
+                    if let Some((_, to)) = renames.iter().find(|(from, _)| *from == f.name) {
+                        f.name = to.clone();
+                    }
+                    if let Some(t) = stored.fields.iter().find(|t| t.name == f.name) {
+                        f.required |= t.required;
+                        if f.default.is_none() {
+                            f.default.clone_from(&t.default);
+                        }
+                    }
+                    f
+                })
+                .collect();
             doc.transact(&label, |doc| {
-                if !renames.is_empty() {
-                    let fields: Vec<kentos_commands::LayerField> = fields_now
-                        .iter()
-                        .map(|f| {
-                            let mut f = f.clone();
-                            if let Some((_, to)) = renames.iter().find(|(from, _)| *from == f.name) {
-                                f.name = to.clone();
-                            }
-                            f
-                        })
-                        .collect();
-                    doc.set_layer_fields(&link.layer, fields, &renames)
+                if !renames.is_empty() || ruled != fields_now {
+                    doc.set_layer_fields(&link.layer, ruled, &renames)
                         .map_err(|e| e.0)?;
                 }
                 if !updates.is_empty() {

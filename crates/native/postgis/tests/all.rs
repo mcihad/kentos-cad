@@ -2441,3 +2441,118 @@ fn a_page_lost_with_its_table_or_its_server_goes_on_from_its_cursor() {
     assert_eq!(keys, (1..=2400).collect::<Vec<i64>>());
     sql(&["DROP TABLE sira.sorun"]);
 }
+
+/// A table like a municipality's (`kurallar.ilce`: an identity key, NOT NULL columns, a UUID, a time stamp, JSON and
+/// literal defaults; docs/adr/0750): bound, its fields take the table's rules; a new district written with only its
+/// name gets what the database works out back on its object in the write's step, a read after it changes nothing; a
+/// district without its name is refused before anything is written.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_new_row_takes_the_tables_defaults() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let (layer, _) = bind(&mut d, &url, "kurallar.ilce");
+    let fields =
+        serde_json::to_value(&d.layers().get(&layer).expect("the layer").fields).expect("fields");
+    let field = |name: &str| {
+        fields
+            .as_array()
+            .and_then(|a| a.iter().find(|f| f["name"] == name))
+            .cloned()
+            .unwrap_or(Value::Null)
+    };
+    assert_eq!(field("ad")["required"], true, "{fields}");
+    assert_eq!(field("tur")["default"], "İlçe", "{fields}");
+    assert_eq!(field("merkez_mi")["default"], "false", "{fields}");
+    assert_eq!(field("aktif")["default"], "true", "{fields}");
+    assert_eq!(field("kod")["default"], "-1", "{fields}");
+    assert_eq!(field("ek_veri")["default"], "{}", "{fields}");
+    for computed in ["genel_id", "olusturma_tarihi"] {
+        assert!(
+            field(computed)["default"].is_null() && field(computed)["required"].is_null(),
+            "{fields}"
+        );
+    }
+    let ring = json!([{ "x": 487200.0, "y": 4420000.0 }, { "x": 487240.0, "y": 4420000.0 },
+                      { "x": 487240.0, "y": 4420030.0 }, { "x": 487200.0, "y": 4420030.0 }]);
+    let made = ok(&run(
+        &mut d,
+        "cad.polygon.create",
+        CallOp::Execute,
+        json!({ "layerId": layer, "pts": ring, "attrs": { "ad": "Yeni ilçe" } }),
+    ))
+    .clone();
+    let uid = made["uid"].as_str().expect("a uid").to_owned();
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    ));
+    let slot = d.slot_of(uid.parse().expect("uid")).expect("the district");
+    let attrs = d.get(slot).expect("the district").base().attrs.clone();
+    assert_eq!(
+        attrs.get("tur").map(String::as_str),
+        Some("İlçe"),
+        "{attrs:?}"
+    );
+    assert_eq!(
+        attrs.get("ek_veri").map(String::as_str),
+        Some("{}"),
+        "{attrs:?}"
+    );
+    assert!(
+        attrs.get("genel_id").is_some_and(|u| u.len() == 36),
+        "the database's UUID came back: {attrs:?}"
+    );
+    assert!(
+        attrs
+            .get("olusturma_tarihi")
+            .is_some_and(|t| t.contains('T')),
+        "the database's time came back: {attrs:?}"
+    );
+    // The layer and the table match: a read changes nothing.
+    let before = d.revision();
+    let read = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "read" }),
+    ))
+    .clone();
+    assert_eq!(
+        (read["added"].clone(), read["modified"].clone()),
+        (json!(0), json!(0)),
+        "{read}"
+    );
+    assert_eq!(d.revision(), before, "the read changed the drawing");
+    // A district without its name: refused, the object named, nothing written.
+    let nameless = ok(&run(
+        &mut d,
+        "cad.polygon.create",
+        CallOp::Execute,
+        json!({ "layerId": layer, "pts": ring }),
+    ))["uid"]
+        .as_str()
+        .expect("a uid")
+        .to_owned();
+    let refused = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(refused["status"], "failed", "{refused}");
+    assert_eq!(refused["error"]["code"], "source_not_null", "{refused}");
+    assert_eq!(refused["error"]["uids"], json!([nameless]), "{refused}");
+    if let Ok(out) = std::env::var("KENTOS_PG_OUT") {
+        let _ = std::fs::write(
+            out,
+            json!({ "defaults": { "uid": uid, "genel_id": attrs.get("genel_id"), "olusturma_tarihi": attrs.get("olusturma_tarihi") } })
+                .to_string(),
+        );
+    }
+}

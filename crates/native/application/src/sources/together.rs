@@ -297,6 +297,7 @@ pub(super) fn write(
                 at(i),
             ));
         }
+        super::empty_not_null(&stored, &d, &link.table, at(i))?;
         // The neighbours outside a part's area follow the written objects' shared corners and edges (docs/adr/0531).
         let followed = match topology {
             None => Followed::default(),
@@ -498,7 +499,7 @@ pub(super) fn write(
                 "layer",
             )
         })?;
-        file.edit_many(&jobs, &maps).map_err(|e| {
+        let inserted = file.edit_many(&jobs, &maps).map_err(|e| {
             refuse(
                 codes::FILE_UNWRITABLE,
                 format!("{path} yazılamadı, dosya değişmedi: {}", e.0),
@@ -512,6 +513,19 @@ pub(super) fn write(
                 "layer",
             )
         })?;
+        // What the tables gave the new rows' columns left to their defaults, for their objects (docs/adr/0750).
+        for ((it, e), rows) in items.iter().zip(&edits).zip(&inserted) {
+            let filled: super::Filled = e
+                .insert
+                .iter()
+                .zip(rows)
+                .filter(|(_, r)| !r.filled.is_empty())
+                .map(|((uid, _), r)| (uid.clone(), r.filled.clone()))
+                .collect();
+            if !filled.is_empty() {
+                super::take_filled(doc, &it.link.layer, &it.stored.layer.columns, &filled);
+            }
+        }
     }
     let after =
         file_sha(Path::new(&path)).map_err(|why| refuse(codes::FILE_UNWRITABLE, why, "layer"))?;

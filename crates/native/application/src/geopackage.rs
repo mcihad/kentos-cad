@@ -495,7 +495,133 @@ fn field_of(c: &gpkg::Column, reading: Reading) -> Option<LayerField> {
     if let Some(n) = length {
         f["length"] = json!(n);
     }
+    // The table's rules (docs/adr/0750): NOT NULL without a default is a required field; a literal default is the
+    // field's, a new object takes it; a default the database works out (`now()`, `uuidv7()`) it gives a new row itself.
+    if c.not_null && c.default.is_none() {
+        f["required"] = json!(true);
+    }
+    if let Some(d) = c
+        .default
+        .as_deref()
+        .and_then(literal_default)
+        .and_then(|t| default_as(kind, &t))
+    {
+        f["default"] = json!(d);
+    }
     serde_json::from_value(f).ok()
+}
+
+/// A column's default as a value, when it is a literal (docs/adr/0750): a quoted text (`'İlçe'`,
+/// `'İlçe'::character varying`), a number (`0`, `(-1)`, `2.5::numeric`), `true` or `false`, as PostgreSQL's
+/// `pg_get_expr` and SQLite's `table_info` write it; none for NULL and for an expression the database works out
+/// (`now()`, `uuidv7()`, `nextval(…)`, `CURRENT_TIMESTAMP`), which it gives a new row itself.
+pub fn literal_default(sql: &str) -> Option<String> {
+    let mut t = sql.trim();
+    while t.len() >= 2 && t.starts_with('(') && t.ends_with(')') && closes_last(t) {
+        t = t[1..t.len() - 1].trim();
+    }
+    let t = before_cast(t).trim();
+    if let Some(rest) = t.strip_prefix('\'') {
+        let mut out = String::new();
+        let mut chars = rest.chars().peekable();
+        while let Some(c) = chars.next() {
+            if c != '\'' {
+                out.push(c);
+            } else if chars.peek() == Some(&'\'') {
+                chars.next();
+                out.push('\'');
+            } else {
+                return chars.next().is_none().then_some(out);
+            }
+        }
+        return None;
+    }
+    match t.to_ascii_lowercase().as_str() {
+        "true" => return Some("true".into()),
+        "false" => return Some("false".into()),
+        _ => {}
+    }
+    let n = t.trim_start_matches('(').trim_end_matches(')').trim();
+    let numeric = !n.is_empty()
+        && n.chars()
+            .all(|c| c.is_ascii_digit() || matches!(c, '-' | '+' | '.' | 'e' | 'E'))
+        && n.parse::<f64>().is_ok_and(f64::is_finite);
+    numeric.then(|| n.to_owned())
+}
+
+/// Whether the `(` that starts `t` closes at its last character (not `(a) + (b)`), quotes skipped.
+fn closes_last(t: &str) -> bool {
+    let mut depth = 0i32;
+    let mut quoted = false;
+    for (i, c) in t.char_indices() {
+        match c {
+            '\'' => quoted = !quoted,
+            '(' if !quoted => depth += 1,
+            ')' if !quoted => {
+                depth -= 1;
+                if depth == 0 {
+                    return i + 1 == t.len();
+                }
+            }
+            _ => {}
+        }
+    }
+    false
+}
+
+/// `t` before its first cast (`::`) outside quotes and parentheses.
+fn before_cast(t: &str) -> &str {
+    let mut depth = 0i32;
+    let mut quoted = false;
+    let bytes = t.as_bytes();
+    for (i, c) in t.char_indices() {
+        match c {
+            '\'' => quoted = !quoted,
+            '(' if !quoted => depth += 1,
+            ')' if !quoted => depth -= 1,
+            ':' if !quoted && depth == 0 && bytes.get(i + 1) == Some(&b':') => return &t[..i],
+            _ => {}
+        }
+    }
+    t
+}
+
+/// A literal default in the canonical text of the field's kind; none when it does not read as one. A boolean's
+/// `0` and `1` are SQLite's false and true.
+fn default_as(kind: LayerFieldKind, t: &str) -> Option<String> {
+    let t = match (kind, t) {
+        (LayerFieldKind::Boolean, "0") => "false",
+        (LayerFieldKind::Boolean, "1") => "true",
+        _ => t,
+    };
+    if t.is_empty() && kind == LayerFieldKind::Text {
+        return None;
+    }
+    canonical_as(kind, t)
+}
+
+/// A cell as the attribute it reads as on a layer whose field for its column is of `field`'s kind (docs/adr/0750): the
+/// values a table gave a new row's columns left to their defaults.
+pub(crate) fn field_text(
+    v: &Value,
+    c: &gpkg::Column,
+    field: Option<LayerFieldKind>,
+) -> Option<String> {
+    let mut quiet = BTreeSet::new();
+    value_text(v, &c.kind, reading_for(field), &mut quiet, &c.name)
+}
+
+/// The reading a layer's field of `field`'s kind gives its column (a plain one when the layer has no such field).
+fn reading_for(field: Option<LayerFieldKind>) -> Reading {
+    match field {
+        Some(LayerFieldKind::BigInt) => Reading::Big,
+        Some(LayerFieldKind::Instant) => Reading::Instant,
+        Some(LayerFieldKind::Uuid) => Reading::Uuid,
+        Some(LayerFieldKind::Json) => Reading::Json,
+        Some(LayerFieldKind::Binary) => Reading::Binary,
+        // A blob column the layer has no field for is not read (docs/adr/0512): only the same with the same.
+        _ => Reading::Plain,
+    }
 }
 
 /// Shortest text of a double that reads back to it, without an exponent.
@@ -594,15 +720,7 @@ pub(crate) fn same_cell_as(
     kind: &ColumnKind,
     field: Option<LayerFieldKind>,
 ) -> bool {
-    let reading = match field {
-        Some(LayerFieldKind::BigInt) => Reading::Big,
-        Some(LayerFieldKind::Instant) => Reading::Instant,
-        Some(LayerFieldKind::Uuid) => Reading::Uuid,
-        Some(LayerFieldKind::Json) => Reading::Json,
-        Some(LayerFieldKind::Binary) => Reading::Binary,
-        // A blob column the layer has no field for is not read (docs/adr/0512): only the same with the same.
-        _ => Reading::Plain,
-    };
+    let reading = reading_for(field);
     if reading == Reading::Binary {
         return a == b;
     }
@@ -1945,6 +2063,96 @@ pub fn column_kind(c: &gpkg::Column) -> Option<LayerFieldKind> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_columns_literal_default_is_read_as_postgresql_and_sqlite_write_it() {
+        // PostgreSQL's pg_get_expr.
+        assert_eq!(
+            literal_default("'İlçe'::character varying").as_deref(),
+            Some("İlçe")
+        );
+        assert_eq!(literal_default("'{}'::jsonb").as_deref(), Some("{}"));
+        assert_eq!(literal_default("false").as_deref(), Some("false"));
+        assert_eq!(literal_default("(-1)").as_deref(), Some("-1"));
+        assert_eq!(
+            literal_default("'2020-01-01'::date").as_deref(),
+            Some("2020-01-01")
+        );
+        assert_eq!(literal_default("'a::b'::text").as_deref(), Some("a::b"));
+        assert_eq!(literal_default("NULL::character varying"), None);
+        for computed in [
+            "now()",
+            "uuidv7()",
+            "gen_random_uuid()",
+            "nextval('ilceler_id_seq'::regclass)",
+            "CURRENT_TIMESTAMP",
+            "('a' || 'b')",
+            "(now() + '1 day'::interval)",
+        ] {
+            assert_eq!(literal_default(computed), None, "{computed}");
+        }
+        // SQLite's PRAGMA table_info.
+        assert_eq!(literal_default("'Ali''nin'").as_deref(), Some("Ali'nin"));
+        assert_eq!(literal_default("7").as_deref(), Some("7"));
+        assert_eq!(literal_default("-1.5").as_deref(), Some("-1.5"));
+        assert_eq!(literal_default("upper('ilce')"), None);
+        assert_eq!(literal_default("NULL"), None);
+        // A literal in its field's kind; one that does not read as the kind gives none.
+        assert_eq!(
+            default_as(LayerFieldKind::Boolean, "0").as_deref(),
+            Some("false")
+        );
+        assert_eq!(
+            default_as(LayerFieldKind::Boolean, "1").as_deref(),
+            Some("true")
+        );
+        assert_eq!(
+            default_as(LayerFieldKind::Integer, "3").as_deref(),
+            Some("3")
+        );
+        assert_eq!(default_as(LayerFieldKind::Integer, "yok"), None);
+        assert_eq!(default_as(LayerFieldKind::Text, ""), None);
+    }
+
+    #[test]
+    fn a_not_null_column_without_a_default_is_a_required_field() {
+        let column =
+            |name: &str, kind: ColumnKind, not_null: bool, default: Option<&str>| gpkg::Column {
+                name: name.into(),
+                decl: String::new(),
+                kind,
+                not_null,
+                default: default.map(str::to_owned),
+            };
+        let ad = field_of(
+            &column("ad", ColumnKind::Text(None), true, None),
+            Reading::Plain,
+        )
+        .expect("a field");
+        assert!(ad.required && ad.default.is_none());
+        let tur = field_of(
+            &column("tur", ColumnKind::Text(None), true, Some("'İlçe'")),
+            Reading::Plain,
+        )
+        .expect("a field");
+        assert!(!tur.required);
+        assert_eq!(tur.default.as_deref(), Some("İlçe"));
+        let made = field_of(
+            &column("zaman", ColumnKind::DateTime, true, Some("now()")),
+            Reading::Plain,
+        )
+        .expect("a field");
+        assert!(
+            !made.required && made.default.is_none(),
+            "the database gives it"
+        );
+        let free = field_of(
+            &column("notu", ColumnKind::Text(None), false, None),
+            Reading::Plain,
+        )
+        .expect("a field");
+        assert!(!free.required && free.default.is_none());
+    }
 
     fn column(name: &str, kind: ColumnKind, decl: &str) -> gpkg::Column {
         gpkg::Column {

@@ -99,10 +99,13 @@ pub struct MapWrite {
 /// as the layer last matched them (docs/adr/0582 §2).
 pub type RowCheck<'a> = dyn FnMut(&gpkg::Layer, &[gpkg::Row]) -> Result<(), Vec<i64>> + 'a;
 
-/// What an edit did: the inserted rows' keys, the area's revision before the edits (under the lock) and after.
+/// What an edit did: the inserted rows' keys, the values the table gave each inserted row's columns left to their
+/// defaults (by the layer's column index; docs/adr/0750), the area's revision before the edits (under the lock) and
+/// after.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Edited {
     pub inserted: Vec<i64>,
+    pub filled: Vec<Vec<(usize, gpkg::Value)>>,
     pub before: String,
     pub after: String,
 }

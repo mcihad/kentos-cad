@@ -196,3 +196,111 @@ fn every_forms_window_keeps_its_buttons_in_a_low_window() {
         cut.join("\n")
     );
 }
+
+/// The fields of the owner's `kbs.ilceler` table bound from PostGIS (docs/adr/0629's kinds), in its order, with the
+/// table's rules (docs/adr/0750): `id` is the key and no field; `il_id` and `ad` NOT NULL without a default, required;
+/// the literal defaults the fields'; `genel_id` and the times the database's (`uuidv7()`, `now()`).
+fn district_fields() -> serde_json::Value {
+    serde_json::json!([
+        { "name": "genel_id", "kind": "uuid" },
+        { "name": "ek_veri", "kind": "json", "default": "{}" },
+        { "name": "olusturma_tarihi", "kind": "instant" },
+        { "name": "guncelleme_tarihi", "kind": "instant" },
+        { "name": "il_id", "kind": "bigint", "required": true },
+        { "name": "ust_id", "kind": "bigint" },
+        { "name": "ad", "kind": "text", "required": true },
+        { "name": "kisa_ad", "kind": "text" },
+        { "name": "tur", "kind": "text", "default": "İlçe" },
+        { "name": "mernis_kodu", "kind": "text" },
+        { "name": "uavt_kodu", "kind": "text" },
+        { "name": "merkez_mi", "kind": "boolean", "default": "false" },
+        { "name": "kurulus_karar_no", "kind": "text" },
+        { "name": "kurulus_tarihi", "kind": "date" },
+        { "name": "kapanis_karar_no", "kind": "text" },
+        { "name": "kapanis_tarihi", "kind": "date" },
+        { "name": "maks_id", "kind": "text" },
+        { "name": "aktif", "kind": "boolean", "default": "true" }
+    ])
+}
+
+/// A district like the owner's, its values as PostGIS gives them.
+fn districts(app: &mut App) {
+    let mut o = crate::tools_scenes::Objects::new();
+    let id = o.path(
+        "ilceler",
+        &[[0.0, 0.0], [40.0, 0.0], [40.0, 30.0], [0.0, 30.0]],
+        true,
+    );
+    o.data(
+        id,
+        &[
+            ("genel_id", "6f1c2a7e-3b4d-4c5e-8f9a-0b1c2d3e4f5a"),
+            ("ek_veri", "{\"nufus\": 31245, \"kaynak\": \"TÜİK\"}"),
+            ("olusturma_tarihi", "2026-03-14T09:30:00+03:00"),
+            ("guncelleme_tarihi", "2026-10-28T16:05:12+03:00"),
+            ("il_id", "58"),
+            ("ust_id", "58"),
+            ("ad", "Suşehri"),
+            ("kisa_ad", "Suşehri"),
+            ("tur", "ilçe"),
+            ("mernis_kodu", "1779"),
+            ("uavt_kodu", "1779"),
+            ("merkez_mi", "false"),
+            ("kurulus_tarihi", "1869-01-01"),
+            ("aktif", "true"),
+        ],
+        None,
+    );
+    let fields = district_fields();
+    crate::tools_scenes::open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut layer = crate::tools_scenes::layer("ilceler", "İlçeler", "#3E63DD", 0.35);
+        layer["fields"] = fields;
+        layers.push(layer);
+        d["layers"] = serde_json::Value::Array(layers);
+        d["activeLayer"] = serde_json::json!("ilceler");
+    });
+}
+
+/// A form made from the owner's district layer with Yeni form: the designer, then the form on the district
+/// (docs/adr/0750). Pictures in `.run/shots/form-ilce-*`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn district_form_screens() {
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (w, h) in [(1100.0, 650.0), (1440.0, 900.0)] {
+        sizes::load(Default::default());
+        let (mut app, _) = App::boot(None);
+        owners_look(&mut app);
+        let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        districts(&mut app);
+        run(&mut app, "data.forms");
+        designer(&mut app, Event::NewForm);
+        designer(&mut app, Event::NewLayer("ilceler".into()));
+        designer(&mut app, Event::NewName("İlçe".into()));
+        designer(&mut app, Event::Create);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let shot = |snapshot: &mut Snapshot, app: &App, step: &str| {
+            let file = out.join(format!("form-ilce-{step}-{w}x{h}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("a picture");
+            println!("{}", file.display());
+        };
+        shot(&mut snapshot, &app, "1-tasarim");
+        designer(&mut app, Event::Preview(true));
+        snapshot.settle(&mut app, App::view, &mut update);
+        shot(&mut snapshot, &app, "2-onizleme");
+        designer(&mut app, Event::Save);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Forms(Event::Cancel));
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        snapshot.settle(&mut app, App::view, &mut update);
+        shot(&mut snapshot, &app, "3-formla-duzenle");
+    }
+    sizes::load(Default::default());
+}

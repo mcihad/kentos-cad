@@ -348,6 +348,16 @@ pub fn quote(name: &str) -> String {
     format!("\"{}\"", name.replace('"', "\"\""))
 }
 
+/// The extensions table, made when a file another writer made has none yet: the table is optional until an
+/// extension is used (OGC 12-128r18 §2.3), and a GeoPackage made without a spatial index may lack it (docs/adr/0750).
+pub(crate) fn ensure_extensions(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS gpkg_extensions (
+           table_name TEXT, column_name TEXT, extension_name TEXT NOT NULL, definition TEXT NOT NULL,
+           scope TEXT NOT NULL, CONSTRAINT ge_tce UNIQUE (table_name, column_name, extension_name));",
+    )
+}
+
 fn bounds_of(v: ValueRef<'_>) -> Option<[f64; 4]> {
     match v {
         ValueRef::Blob(b) => read_blob(b).ok().and_then(|g| g.geometry.bounds()),
@@ -1081,32 +1091,38 @@ impl GeoPackage {
     /// Edits a table of the file in place, in one transaction (docs/adr/0503): its missing columns added (as
     /// declared), rows updated by fid (their geometry, when the table has a column for it, and every value in the
     /// layer's column order, the added ones last), rows inserted with their lasting ids (`kentos_uids`, made when the
-    /// file lacks it), rows deleted with theirs. The spatial index follows by its triggers; unknown tables and
-    /// extensions are not touched. Returns the inserted rows' fids. Nothing is written when any step fails.
+    /// file lacks it), rows deleted with theirs. A new row's empty value of a column with a default is left to the
+    /// table (docs/adr/0750). The spatial index follows by its triggers; unknown tables and extensions are not touched.
+    /// Returns the inserted rows' fids. Nothing is written when any step fails.
     pub fn edit(&mut self, layer: &Layer, edits: &Edits) -> Result<Vec<i64>> {
         let tx = self.conn.transaction()?;
-        let fids = edit_in(&tx, layer, edits)?;
+        let rows = edit_in(&tx, layer, edits)?;
         tx.commit()?;
-        Ok(fids)
+        Ok(rows.into_iter().map(|r| r.fid).collect())
     }
 
     /// Edits several tables, and the mapping tables of their relations, in one transaction (docs/adr/0532 §1): all of
-    /// it or none of it. Returns each table's inserted rows' fids in the jobs' order.
+    /// it or none of it. Returns each table's inserted rows in the jobs' order: their fids and the values the table
+    /// gave the columns left to their defaults (docs/adr/0750).
     pub fn edit_many(
         &mut self,
         jobs: &[(&Layer, &Edits)],
         maps: &[relations::MapEdit],
-    ) -> Result<Vec<Vec<i64>>> {
+    ) -> Result<Vec<Vec<Inserted>>> {
         let tx = self.conn.transaction()?;
-        let mut fids = Vec::with_capacity(jobs.len());
+        let mut inserted = Vec::with_capacity(jobs.len());
         for (layer, edits) in jobs {
-            fids.push(edit_in(&tx, layer, edits)?);
+            inserted.push(edit_in(&tx, layer, edits)?);
         }
+        let fids: Vec<Vec<i64>> = inserted
+            .iter()
+            .map(|rows| rows.iter().map(|r| r.fid).collect())
+            .collect();
         for m in maps {
             relations::write_mapping(&tx, m, &fids)?;
         }
         tx.commit()?;
-        Ok(fids)
+        Ok(inserted)
     }
 
     /// Closes the file, writing everything out.
@@ -1115,7 +1131,27 @@ impl GeoPackage {
     }
 }
 
-fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Result<Vec<i64>> {
+/// A row an edit inserted (docs/adr/0750): its fid and, by the layer's column index, the values the table gave the
+/// columns the row left empty to their defaults.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Inserted {
+    pub fid: i64,
+    pub filled: Vec<(usize, Value)>,
+}
+
+/// Of a new row's values (in the layer's column order, the added columns after), the indices of the table's columns
+/// left to their defaults: an empty value of a column that has one (docs/adr/0750). An added column has none.
+pub fn left_to_default(columns: &[Column], values: &[Value]) -> Vec<usize> {
+    columns
+        .iter()
+        .zip(values)
+        .enumerate()
+        .filter(|(_, (c, v))| c.default.is_some() && matches!(v, Value::Null))
+        .map(|(i, _)| i)
+        .collect()
+}
+
+fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Result<Vec<Inserted>> {
         let t = quote(&layer.name);
         for c in &edits.add_columns {
             let decl = if c.decl.trim().is_empty() {
@@ -1178,19 +1214,54 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
                 }
             }
         }
-        let mut fids = Vec::with_capacity(edits.insert.len());
-        if !edits.insert.is_empty() {
-            let marks = vec!["?"; names.len()].join(", ");
-            let sql = if names.is_empty() {
+        let mut inserted = Vec::with_capacity(edits.insert.len());
+        // A column left to its default is not named: SQLite takes the default for a column an insert leaves out. Its
+        // value is read back, so the object gets what the table gave (docs/adr/0750).
+        let first = usize::from(geom.is_some());
+        for (_, row) in &edits.insert {
+            let mut v = values(row)?;
+            let left = left_to_default(&layer.columns, &row.values);
+            let named: Vec<(usize, &String)> = names
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i < first || !left.contains(&(i - first)))
+                .collect();
+            let sql = if named.is_empty() {
                 format!("INSERT INTO {t} DEFAULT VALUES")
             } else {
-                format!("INSERT INTO {t} ({}) VALUES ({marks})", names.join(", "))
+                let marks = vec!["?"; named.len()].join(", ");
+                let list: Vec<&str> = named.iter().map(|(_, n)| n.as_str()).collect();
+                format!("INSERT INTO {t} ({}) VALUES ({marks})", list.join(", "))
             };
-            let mut st = tx.prepare(&sql)?;
-            for (_, row) in &edits.insert {
-                st.execute(rusqlite::params_from_iter(values(row)?.iter()))?;
-                fids.push(tx.last_insert_rowid());
+            let kept: Vec<usize> = named.iter().map(|(i, _)| *i).collect();
+            v = v
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _)| kept.contains(i))
+                .map(|(_, x)| x)
+                .collect();
+            tx.prepare_cached(&sql)?
+                .execute(rusqlite::params_from_iter(v.iter()))?;
+            let fid = tx.last_insert_rowid();
+            let mut filled = Vec::with_capacity(left.len());
+            if !left.is_empty() {
+                let list: Vec<String> = left
+                    .iter()
+                    .map(|i| quote(&layer.columns[*i].name))
+                    .collect();
+                let read = format!(
+                    "SELECT {} FROM {t} WHERE {} = ?1",
+                    list.join(", "),
+                    quote(&layer.fid)
+                );
+                tx.query_row(&read, [fid], |r| {
+                    for (k, i) in left.iter().enumerate() {
+                        filled.push((*i, Value::of(r.get_ref(k)?)));
+                    }
+                    Ok(())
+                })?;
             }
+            inserted.push(Inserted { fid, filled });
         }
         if !edits.delete.is_empty() {
             let mut st = tx.prepare(&format!("DELETE FROM {t} WHERE {} = ?", quote(&layer.fid)))?;
@@ -1203,13 +1274,14 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
                 "CREATE TABLE IF NOT EXISTS kentos_uids (table_name TEXT NOT NULL, fid INTEGER NOT NULL, uid TEXT NOT NULL,
                  PRIMARY KEY (table_name, fid));",
             )?;
+            ensure_extensions(tx)?;
             tx.execute(
                 "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
                 [UIDS_EXTENSION],
             )?;
             let mut put = tx.prepare("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
-            for (fid, (uid, _)) in fids.iter().zip(&edits.insert) {
-                put.execute(params![layer.name, fid, uid])?;
+            for (row, (uid, _)) in inserted.iter().zip(&edits.insert) {
+                put.execute(params![layer.name, row.fid, uid])?;
             }
             let mut gone =
                 tx.prepare("DELETE FROM kentos_uids WHERE table_name = ?1 AND fid = ?2")?;
@@ -1229,7 +1301,7 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
                 [&layer.name],
             )?;
         }
-        Ok(fids)
+        Ok(inserted)
 }
 
 /// The written rows' parents (docs/adr/0598 §3): each row's `kentos_lineage` rows replaced by the drawing's, the table
@@ -1256,6 +1328,7 @@ fn write_lineage(
             "CREATE TABLE kentos_lineage (table_name TEXT NOT NULL, child TEXT NOT NULL, parent TEXT NOT NULL,
              operation TEXT NOT NULL, step TEXT NOT NULL, PRIMARY KEY (table_name, child, parent, operation, step));",
         )?;
+        ensure_extensions(tx)?;
         tx.execute(
             "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_lineage', NULL, ?1, 'https://kentos.app/geopackage/lineage (docs/adr/0598)', 'read-write')",
             [LINEAGE_EXTENSION],
@@ -1351,6 +1424,7 @@ fn index(conn: &Connection, table: &str, column: &str) -> Result<()> {
         del = trig("delete"),
         new = row("NEW"),
     ))?;
+    ensure_extensions(conn)?;
     conn.execute(
         "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, ?2, 'gpkg_rtree_index', 'http://www.geopackage.org/spec/#extension_rtree', 'write-only')",
         params![table, column],
@@ -1688,6 +1762,7 @@ fn append_in(
             "CREATE TABLE IF NOT EXISTS kentos_uids (table_name TEXT NOT NULL, fid INTEGER NOT NULL, uid TEXT NOT NULL,
              PRIMARY KEY (table_name, fid));",
         )?;
+        ensure_extensions(conn)?;
         conn.execute(
             "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
             [UIDS_EXTENSION],
@@ -1714,6 +1789,7 @@ fn finish_in(conn: &Connection, w: TableWrite) -> Result<()> {
     if let Some(g) = &def.geometry {
         index(conn, &def.name, &g.name)?;
         if w.curved {
+            ensure_extensions(conn)?;
             conn.execute(
                 "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, ?2, ?3, 'http://www.geopackage.org/spec/#extension_geometry_types', 'read-write')",
                 params![def.name, g.name, format!("gpkg_geom_{}", g.type_name)],
@@ -1751,6 +1827,7 @@ fn add_metadata_in(
            CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id));",
     )?;
     for t in ["gpkg_metadata", "gpkg_metadata_reference"] {
+        ensure_extensions(conn)?;
         conn.execute(
             "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, NULL, 'gpkg_metadata', ?2, 'read-write')",
             params![t, DEFINITION],

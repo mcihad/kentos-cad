@@ -147,6 +147,7 @@ pub(super) fn write(
                 at(i),
             ));
         }
+        super::empty_not_null(&stored, &d, &link.table, at(i))?;
         let followed = match topology {
             None => Followed::default(),
             Some(profile) => {
@@ -379,13 +380,29 @@ pub(super) fn write(
                 e => provider_stop(e, &address, at_one(place)),
             }
         })?;
-        for ((i, _), e) in jobs.iter().zip(edited) {
+        // What the tables gave the new rows' columns left to their defaults, for their objects (docs/adr/0750).
+        let mut filled: Vec<(usize, super::Filled)> = Vec::new();
+        for ((i, edits), e) in jobs.iter().zip(edited) {
             let it = &mut items[*i];
             it.others |= e.before != it.link.revision;
             // Someone else's rows in the area keep the link “changed” until a read takes them.
             if !it.others || it.base.is_none() {
                 it.link.revision = e.after;
             }
+            let rows: super::Filled = edits
+                .insert
+                .iter()
+                .zip(e.filled)
+                .filter(|(_, f)| !f.is_empty())
+                .map(|((uid, _), f)| (uid.clone(), f))
+                .collect();
+            if !rows.is_empty() {
+                filled.push((*i, rows));
+            }
+        }
+        for (i, rows) in &filled {
+            let it = &items[*i];
+            super::take_filled(doc, &it.link.layer, &it.stored.layer.columns, rows);
         }
     }
     for it in &mut items {

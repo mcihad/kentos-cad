@@ -1,0 +1,4937 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.sync",
+ "commandVersion": 1,
+ "title": "Bağlı tablonun zorunlu ve varsayılanlı sütunları",
+ "note": "ADR 0750. Tablonun kuralları sqlite3 ile PRAGMA table_info'dan okunur, KentOS kodu olmadan; satırlar ve bağ bound_sources_cases.py'nin bağlamasından (GDAL'ın OGR'ı). NOT NULL ve varsayılansız sütun zorunlu alan, sabit varsayılan alanın varsayılanı; yeni nesnenin boş değeri varsayılanlı sütunda tablonundur ve aynı adımda nesneye döner; NOT NULL sütunu boş bırakan yazma reddedilir, hiçbir şey yazılmaz.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlı katmanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bağlanınca NOT NULL ve varsayılansız sütunun alanı zorunlu",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-1.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-1.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-1.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-1.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca tırnaklı metin varsayılanı alanın varsayılanı",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-2.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-2.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-2.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-2.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca sayı varsayılanı alanın varsayılanı",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-3.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-3.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-3.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-3.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca SQLite'ın 0'ı mantıksal alanın false varsayılanı, NOT NULL olsa da zorunlu değil",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-4.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-4.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-4.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-4.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca ayraçlı eksi sayı varsayılanı alanın varsayılanı",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-5.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-5.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-5.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-5.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca tırnaklı sayı tam sayı alanının varsayılanı",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-6.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-6.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-6.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-6.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca çift tırnak tek tırnağa döner",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-7.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-7.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-7.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-7.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca hesaplanan varsayılan alana konmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-8.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-8.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-8.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca zaman damgası varsayılanı alana konmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-9.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-9.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-9.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-9.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "bağlanınca NULL varsayılanı varsayılan değil",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-10.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-10.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-10.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-10.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "yeni nesne alanların varsayılanlarını alır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-20.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-20.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-20.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-20.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "Yeni"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "4": {
+        "attrs": {
+         "tur": "İlçe",
+         "kod": "7",
+         "merkez": "false",
+         "oran": "-1.5",
+         "kat": "3",
+         "soz": "Ali'nin",
+         "ad": "Yeni",
+         "etiket": "ILCE",
+         "zaman": "$any"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "hesaplanan sütunun değerini tablo verir, nesneye aynı adımda döner",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-21.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-21.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-21.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-21.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "Yeni"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "4": {
+        "attrs": {
+         "tur": "İlçe",
+         "kod": "7",
+         "merkez": "false",
+         "oran": "-1.5",
+         "kat": "3",
+         "soz": "Ali'nin",
+         "ad": "Yeni",
+         "etiket": "ILCE",
+         "zaman": "$any"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "yazıldıktan sonra okumak bir şey değiştirmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-22.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-22.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-22.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-22.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "Yeni"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "değer verilen sütun varsayılanı almaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-23.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-23.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-23.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-23.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "Yeni",
+       "etiket": "Benim"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "4": {
+        "attrs": {
+         "tur": "İlçe",
+         "kod": "7",
+         "merkez": "false",
+         "oran": "-1.5",
+         "kat": "3",
+         "soz": "Ali'nin",
+         "ad": "Yeni",
+         "etiket": "Benim",
+         "zaman": "$any"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki yeni nesne birlikte: ikisi de tablonun değerini alır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-24.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-24.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-24.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-24.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "Bir"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487130.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "İki"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 2,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "4": {
+        "attrs": {
+         "tur": "İlçe",
+         "kod": "7",
+         "merkez": "false",
+         "oran": "-1.5",
+         "kat": "3",
+         "soz": "Ali'nin",
+         "ad": "Bir",
+         "etiket": "ILCE",
+         "zaman": "$any"
+        }
+       },
+       "5": {
+        "attrs": {
+         "tur": "İlçe",
+         "kod": "7",
+         "merkez": "false",
+         "oran": "-1.5",
+         "kat": "3",
+         "soz": "Ali'nin",
+         "ad": "İki",
+         "etiket": "ILCE",
+         "zaman": "$any"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşaltılan varsayılanlı NOT NULL sütunu tablo doldurur",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-25.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-25.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-25.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-25.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "Yeni"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "merkez": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "4": {
+        "attrs": {
+         "tur": "İlçe",
+         "kod": "7",
+         "oran": "-1.5",
+         "kat": "3",
+         "soz": "Ali'nin",
+         "ad": "Yeni",
+         "etiket": "ILCE",
+         "zaman": "$any",
+         "merkez": "false"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "zorunlu sütunu boş yeni nesne yazılmaz, nesnesi söylenir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-26.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-26.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-26.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-26.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_not_null",
+       "message": "“ilce” tablosu “ad” sütununun boş kalmasına izin vermiyor (NOT NULL); 1 nesnede boş. O nesnelere değer verin (formda zorunlu); hiçbir şey yazılmadı.",
+       "path": "layer",
+       "uids": [
+        "$uidOf:4"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan da reddeder",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-27.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-27.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-27.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-27.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_not_null",
+       "message": "“ilce” tablosu “ad” sütununun boş kalmasına izin vermiyor (NOT NULL); 1 nesnede boş. O nesnelere değer verin (formda zorunlu); hiçbir şey yazılmadı.",
+       "path": "layer",
+       "uids": [
+        "$uidOf:4"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki boş nesne: ikisi de söylenir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-28.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-28.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-28.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-28.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487130.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_not_null",
+       "message": "“ilce” tablosu “ad” sütununun boş kalmasına izin vermiyor (NOT NULL); 2 nesnede boş. O nesnelere değer verin (formda zorunlu); hiçbir şey yazılmadı.",
+       "path": "layer",
+       "uids": [
+        "$uidOf:4",
+        "$uidOf:5"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "biri boş biri dolu: hiçbiri yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-29.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-29.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-29.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-29.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "ad": "Dolu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-ilce",
+      "pts": [
+       {
+        "x": 487130.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487130.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_not_null",
+       "message": "“ilce” tablosu “ad” sütununun boş kalmasına izin vermiyor (NOT NULL); 1 nesnede boş. O nesnelere değer verin (formda zorunlu); hiçbir şey yazılmadı.",
+       "path": "layer",
+       "uids": [
+        "$uidOf:5"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-ilce",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_not_null",
+       "message": "“ilce” tablosu “ad” sütununun boş kalmasına izin vermiyor (NOT NULL); 1 nesnede boş. O nesnelere değer verin (formda zorunlu); hiçbir şey yazılmadı.",
+       "path": "layer",
+       "uids": [
+        "$uidOf:5"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "zorunlu alan nesnede boşaltılamaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kurallar.gpkg",
+     "to": "$tmp:kurallar-30.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kurallar-30.gpkg",
+       "table": "ilce"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kurallar-30.gpkg",
+        "table": "ilce",
+        "layer": "import-ilce",
+        "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 2,
+       "layers": [
+        {
+         "id": "import-ilce",
+         "name": "ilce"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Merkez",
+         "tur": "İlçe",
+         "kod": "1",
+         "merkez": "true",
+         "oran": "2.5",
+         "etiket": "A",
+         "zaman": "2026-01-01T10:00:00",
+         "kat": "4",
+         "soz": "x"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-ilce",
+        "attrs": {
+         "ad": "Suşehri",
+         "tur": "İlçe",
+         "kod": "2",
+         "merkez": "false",
+         "oran": "0.5",
+         "etiket": "B",
+         "zaman": "2026-02-01T10:00:00",
+         "kat": "2",
+         "notu": "n"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kurallar-30.gpkg",
+         "table": "ilce",
+         "layer": "import-ilce",
+         "revision": "6c893a584adc375a3bec2af1519c083c26e87078147e4a08752fc7785822e70c",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-ilce": {
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "default": "İlçe"
+         },
+         {
+          "name": "kod",
+          "kind": "integer",
+          "default": "7"
+         },
+         {
+          "name": "merkez",
+          "kind": "boolean",
+          "default": "false"
+         },
+         {
+          "name": "oran",
+          "kind": "decimal",
+          "default": "-1.5"
+         },
+         {
+          "name": "etiket",
+          "kind": "text"
+         },
+         {
+          "name": "zaman",
+          "kind": "datetime"
+         },
+         {
+          "name": "kat",
+          "kind": "integer",
+          "default": "3"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "soz",
+          "kind": "text",
+          "default": "Ali'nin"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "ad": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "attribute_required",
+       "message": "$any",
+       "path": "attrs.ad"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  }
+ ]
+}

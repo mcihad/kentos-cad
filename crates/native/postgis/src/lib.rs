@@ -1016,21 +1016,62 @@ async fn edit_in(
         }
     }
     let mut inserted = Vec::with_capacity(edits.insert.len());
-    if !edits.insert.is_empty() {
+    let mut lefts: Vec<Vec<usize>> = Vec::with_capacity(edits.insert.len());
+    // A new row's empty value of a column with a default is the table's: `DEFAULT` in its place (docs/adr/0750), the
+    // slots after it numbered on.
+    let first = usize::from(geom.is_some());
+    for (_, row) in &edits.insert {
+        let (wkb, vals) = bind_row(row)?;
+        let left = gpkg::left_to_default(&s.layer.columns, &row.values);
         let sql = if targets.is_empty() {
             format!("INSERT INTO {sql_name} DEFAULT VALUES RETURNING {}::bigint", quote(&s.layer.fid))
         } else {
+            let mut k = 0usize;
+            let places: Vec<String> = slots
+                .iter()
+                .enumerate()
+                .map(|(i, slot)| {
+                    if i >= first && left.contains(&(i - first)) {
+                        return "DEFAULT".to_owned();
+                    }
+                    k += 1;
+                    renumber(slot, k)
+                })
+                .collect();
             format!(
                 "INSERT INTO {sql_name} ({}) VALUES ({}) RETURNING {}::bigint",
                 targets.join(", "),
-                slots.join(", "),
+                places.join(", "),
                 quote(&s.layer.fid)
             )
         };
-        for (_, row) in &edits.insert {
-            let (wkb, vals) = bind_row(row)?;
-            let q = with_values!(sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals);
-            inserted.push(q.fetch_one(&mut *tx).await.map_err(refused)?);
+        let vals: Vec<Bound> = vals
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| !left.contains(i))
+            .map(|(_, v)| v)
+            .collect();
+        let q = with_values!(sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals);
+        inserted.push(q.fetch_one(&mut *tx).await.map_err(refused)?);
+        lefts.push(left);
+    }
+    // What the table gave the columns left to their defaults, read back as any row is read.
+    let mut filled: Vec<Vec<(usize, gpkg::Value)>> = vec![Vec::new(); inserted.len()];
+    let keys: Vec<i64> = inserted
+        .iter()
+        .zip(&lefts)
+        .filter(|(_, l)| !l.is_empty())
+        .map(|(k, _)| *k)
+        .collect();
+    if !keys.is_empty() {
+        let back = rows_by_keys(&mut *tx, &s, &keys).await?;
+        for ((key, left), out) in inserted.iter().zip(&lefts).zip(filled.iter_mut()) {
+            if let Some(row) = back.iter().find(|r| r.fid == *key) {
+                *out = left
+                    .iter()
+                    .filter_map(|i| row.values.get(*i).map(|v| (*i, v.clone())))
+                    .collect();
+            }
         }
     }
     if !edits.delete.is_empty() {
@@ -1073,9 +1114,21 @@ async fn edit_in(
     let (_, after) = rows(&mut *tx, &s, area).await?;
     Ok(Edited {
         inserted,
+        filled,
         before,
         after,
     })
+}
+
+/// A value slot (`CAST($3 AS text)`, `$3`) with its parameter numbered `k` instead.
+fn renumber(slot: &str, k: usize) -> String {
+    let Some(at) = slot.find('$') else {
+        return slot.to_owned();
+    };
+    let end = slot[at + 1..]
+        .find(|c: char| !c.is_ascii_digit())
+        .map_or(slot.len(), |n| at + 1 + n);
+    format!("{}${k}{}", &slot[..at], &slot[end..])
 }
 
 /// The written rows' parents (docs/adr/0598 §3), in the edit's transaction: each row's rows of the schema's

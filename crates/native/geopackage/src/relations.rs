@@ -183,6 +183,7 @@ impl GeoPackage {
              CREATE TABLE {} (base_id INTEGER NOT NULL, related_id INTEGER NOT NULL);",
             quote(mapping)
         ))?;
+        super::ensure_extensions(&tx)?;
         tx.execute(
             "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, NULL, ?2, ?3, 'read-write')",
             params![RELATIONS_TABLE, RELATED_TABLES, DEFINITION],

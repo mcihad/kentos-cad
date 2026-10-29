@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Bağlı tablonun zorunlu ve varsayılanlı sütunları (30 Ekim 2026; [ADR0750](docs/adr/0750-bound-table-not-null-and-defaults.md)).**
+  Sütun alan olurken (`geopackage::field_of`) NOT NULL ve varsayılansız sütun zorunlu, sabit varsayılan
+  (`literal_default`: tırnaklı metin, sayı, true/false, SQLite'ın 0/1'i) alanın varsayılanı; hesaplanan (`now()`,
+  `uuidv7()`) alana konmaz. Tablodan okuma kuralları var olan alanlara katar, kaldırmaz. Yeni satırın boş değeri
+  varsayılanlı sütunda tablonun (`gpkg::left_to_default`; PostgreSQL'de `DEFAULT`, GeoPackage'ta sütun listesinden çıkar),
+  döndürdüğü değer aynı adımda nesnede (`Edited.filled`, `Inserted.filled`, `sources::take_filled`). NOT NULL'u boş
+  bırakan yazma `source_not_null` (planda da). `gpkg_extensions` yoksa açılır (`ensure_extensions`). 21 ortak durum
+  (`source_defaults_cases.py`), PostGIS'te sahibinkine benzeyen tablo (`postgis_cases.py --only a_new_row_takes`).
+
 - **Formların pencereleri her boyda ve yazı boyunda sığar (30 Ekim 2026; [ADR0749](docs/adr/0749-forms-windows-fit.md)).**
   KentOS UI: `Segmented` yerinden taşmaz (KentOS UI `Responsive`'iyle en çok genişliği bilir; sığmayınca ikonları,
   yoksa `shrunk_widths` ile kısalan yazılar, `Tip::when_cut`); `segmented::natural_width`; `Panes` (yan bölmeler pay,
