@@ -337,9 +337,10 @@ impl App {
         let at = w.chosen.filter(|i| *i < w.groups.len());
         let left = column![
             label::strong("Gruplar"),
-            container(scrollable(list).height(typography::scaled(320.0)))
+            container(scrollable(list).height(Fill))
                 .style(style::container::field_box)
-                .width(Fill),
+                .width(Fill)
+                .height(Fill),
             words::secondary(NEW, Some(msg(Event::New))),
         ]
         .spacing(8);
@@ -353,15 +354,36 @@ impl App {
         };
         let problem =
             contingents_problem(&fields, subtypes.as_ref(), &w.groups).map(|(_, why)| why);
-        let mut body = column![
-            words::field("Katman", container(layer).width(320), None),
-            row![container(left).width(250), container(right).width(Fill)].spacing(16),
-        ]
-        .spacing(14);
+        // The groups and the chosen one take what the window has when it was given a size (docs/adr/0746),
+        // else 400 high at most (12 px text), less in a low window; the chosen group scrolls, the buttons
+        // stay in sight (docs/adr/0749).
+        let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
+        let panes = container(
+            row![
+                container(left).width(250).height(Fill),
+                container(
+                    scrollable(right)
+                        .direction(style::field::body_scrollbar())
+                        .height(Fill)
+                )
+                .width(Fill)
+                .height(Fill)
+            ]
+            .spacing(16),
+        )
+        .height(Fill)
+        .max_height(if sized {
+            f32::INFINITY
+        } else {
+            typography::scaled(400.0)
+        });
+        let mut frame = Frame::new(TITLE)
+            .push(words::field("Katman", container(layer).width(320), None))
+            .fill(panes);
         if let Some(why) = &problem {
-            body = body.push(words::text_line(Kind::Warn, why.clone()));
+            frame = frame.push(words::text_line(Kind::Warn, why.clone()));
         }
-        body = body.push(
+        frame = frame.push(
             row![
                 words::ghost(REMOVE, at.map(|_| msg(Event::Remove))),
                 space::horizontal().width(Fill),
@@ -371,10 +393,7 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(
-            Frame::new(TITLE).push(body).width(940.0),
-            msg(Event::Cancel),
-        )
+        overlay::modal(frame.width(940.0), msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

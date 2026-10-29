@@ -10,7 +10,10 @@
 //! ```
 //!
 //! Seçili parçanın yazısı yarı kalındır; parçanın genişliği kalın yazıya
-//! göre ayrılır, seçim değişince parçalar yerinden oynamaz. Parçalar ikon
+//! göre ayrılır, seçim değişince parçalar yerinden oynamaz. Seçim yerinden
+//! taşmaz: sığmayınca parçalar ikonu varsa yalnız ikonlarıyla, yoksa yazıları
+//! “…” ile kısalarak durur, tamamı ipucundadır ([`natural_width`] sığması
+//! için gereken genişliği söyler). Parçalar ikon
 //! taşıyabilir ([`Segmented::icons`]), yalnız ikonla dizilebilir
 //! ([`Segmented::icon_only`]; ad ipucuna geçer), satır içinde sıkışık
 //! durabilir ([`Segmented::compact`]) ya da kip değiştiren büyük seçimlerde
@@ -25,13 +28,15 @@
 use std::fmt::Display;
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Row, button, container, responsive, row, space, stack};
+use iced::widget::{Row, button, container, row, space, stack};
 use iced::{Center, Element, Length, Theme};
 
 use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
 use crate::theme::{Tokens, metrics, typography};
+use crate::widget::Responsive;
+use crate::widget::elided::Elided;
 use crate::widget::tip::{Tip, tip};
 
 /// Parçaların yuvanın kenarından uzaklığı. Yuvayla birlikte seçim bir
@@ -207,8 +212,8 @@ fn separator<'a, Message: 'a>(visible: bool, height: f32) -> Element<'a, Message
 /// Genişliği dolduran seçimde parçaların genişlikleri (web'in `flex: 1`'i,
 /// `white-space: nowrap` ile): parçalar yuvayı eşit paylaşır, ama hiçbiri
 /// yazısından dar olmaz; yazısı payına sığmayan yazısı kadar alır, kalanı
-/// öbürleri eşit paylaşır. `room`: parçalara kalan genişlik (aralıklar
-/// düşülmüş).
+/// diğerleri eşit paylaşır. `room`: parçalara kalan genişlik (aralıklar
+/// düşülmüş). Yazılar birlikte sığmıyorsa [`shrunk_widths`].
 pub fn fill_widths(needs: &[f32], room: f32) -> Vec<f32> {
     let n = needs.len();
     let mut fixed = vec![false; n];
@@ -229,6 +234,61 @@ pub fn fill_widths(needs: &[f32], room: f32) -> Vec<f32> {
             fixed[i] = true;
         }
     }
+}
+
+/// Yazıları birlikte `room`'a sığmayan parçaların genişlikleri (docs/adr/0749):
+/// dar parçalar kendi genişliğini tutar, geniş olanlar kalanı eşit paylaşır;
+/// hiçbiri `least`'ten dar olmaz. Seçili parça (`keep`) diğerlerine en az
+/// `least` kalıyorsa yazısının tamamını tutar.
+pub fn shrunk_widths(needs: &[f32], room: f32, keep: Option<usize>, least: f32) -> Vec<f32> {
+    if let Some(k) = keep.filter(|&k| k < needs.len() && needs.len() > 1) {
+        let others: Vec<f32> = needs
+            .iter()
+            .enumerate()
+            .filter(|&(i, _)| i != k)
+            .map(|(_, w)| *w)
+            .collect();
+        let left = room - needs[k];
+        if left >= least * others.len() as f32 {
+            let mut widths = shared(&others, left, least);
+            widths.insert(k, needs[k]);
+            return widths;
+        }
+    }
+    shared(needs, room, least)
+}
+
+/// `room` shared so that the narrow keep their width and the wide get the same cap, none under `least`.
+fn shared(needs: &[f32], room: f32, least: f32) -> Vec<f32> {
+    let mut sorted = needs.to_vec();
+    sorted.sort_by(f32::total_cmp);
+    let mut left = room.max(0.0);
+    let mut cap = f32::INFINITY;
+    for (i, need) in sorted.iter().enumerate() {
+        let even = left / (sorted.len() - i) as f32;
+        if *need > even {
+            cap = even;
+            break;
+        }
+        left -= need;
+    }
+    needs.iter().map(|&need| need.min(cap.max(least))).collect()
+}
+
+/// Bir seçimin yazılarını kısaltmadan göstermesi için gereken genişlik (yuva ve
+/// aralıklar dahil, ikonsuz): seçimi taşıyan bölme en az bu kadar olur ki
+/// yazılar kısalmasın (docs/adr/0749).
+pub fn natural_width(labels: &[&str], compact: bool) -> f32 {
+    let (padding, inset) = if compact {
+        (8.0, COMPACT_INSET)
+    } else {
+        (12.0, INSET)
+    };
+    let parts: f32 = labels
+        .iter()
+        .map(|l| 2.0 * padding + typography::measured_width(l, typography::body(), true).ceil())
+        .sum();
+    parts + GAP * labels.len().saturating_sub(1) as f32 + 2.0 * inset
 }
 
 impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Message> {
@@ -257,26 +317,13 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
             accent: segmented.accent,
             height,
         };
-        // Filling its width, the row is laid out when the width is known: the parts' shares and
-        // their labels' widths decide (fill_widths).
-        let content: Element<'a, Message> = if fill {
-            responsive(move |size| {
-                let n = parts.segments.len();
-                let room = size.width - GAP * n.saturating_sub(1) as f32;
-                let needs = parts.needs();
-                // Unbounded (a row that grows with its contents): each part as wide as its label.
-                let widths = if room.is_finite() {
-                    fill_widths(&needs, room)
-                } else {
-                    needs
-                };
-                parts.row(Some(&widths))
-            })
-            .height(height)
-            .into()
-        } else {
-            parts.row(None)
-        };
+        // The row is laid out when its room is known: filling it, the parts' shares and their labels'
+        // widths decide (fill_widths); short of it, the labels give way (docs/adr/0749).
+        let content: Element<'a, Message> =
+            Responsive::new(move |size| parts.fitted(size.width, fill))
+                .width(if fill { Length::Fill } else { Length::Shrink })
+                .height(height)
+                .into();
         let boxed = container(content)
             .padding(inset)
             .height(outer)
@@ -331,16 +378,47 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
         }
     }
 
+    /// The parts in `room`: as wide as their labels (or sharing it when filling) when they fit;
+    /// else their icons alone when every part has one, else their labels cut with “…”, the whole
+    /// label in the tip (docs/adr/0749).
+    fn fitted(&self, room: f32, fill: bool) -> Element<'a, Message> {
+        let n = self.segments.len();
+        let room = room - GAP * n.saturating_sub(1) as f32;
+        let fits = |needs: &[f32]| !room.is_finite() || needs.iter().sum::<f32>() <= room + 0.5;
+        let laid = |needs: &[f32], icon_only: bool| {
+            if fill && room.is_finite() {
+                self.row(Some(&fill_widths(needs, room)), icon_only)
+            } else {
+                self.row(None, icon_only)
+            }
+        };
+        let needs = self.needs(self.icon_only);
+        if fits(&needs) {
+            return laid(&needs, self.icon_only);
+        }
+        if !self.icon_only && n > 0 && self.icons.len() >= n {
+            let bare = self.needs(true);
+            if fits(&bare) {
+                return laid(&bare, true);
+            }
+        }
+        let keep = self.segments.iter().position(|s| s.selected);
+        let least = 2.0 * self.padding(true)
+            + typography::measured_width("W…", typography::body(), true).ceil();
+        let widths = shrunk_widths(&needs, room, keep, least);
+        self.row(Some(&widths), self.icon_only)
+    }
+
     /// Each part's least width: its label in the strong face (the part keeps that width when
-    /// chosen), its icon and its padding.
-    fn needs(&self) -> Vec<f32> {
+    /// chosen), its icon and its padding; `icon_only`: its icon alone when it has one.
+    fn needs(&self, icon_only: bool) -> Vec<f32> {
         let size = if self.compact { 12.0 } else { 14.0 };
         self.segments
             .iter()
             .enumerate()
             .map(|(i, s)| {
                 let glyph = self.icons.get(i).is_some();
-                let shows_name = !(self.icon_only && glyph);
+                let shows_name = !(icon_only && glyph);
                 let mut w = 2.0 * self.padding(shows_name);
                 if glyph {
                     w += size;
@@ -356,9 +434,11 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
             .collect()
     }
 
-    /// The parts in a row: `widths` when filling (each part's), else as wide as their contents.
-    fn row(&self, widths: Option<&[f32]>) -> Element<'a, Message> {
+    /// The parts in a row: `widths` when filling or short of room (each part's), else as wide as
+    /// their contents; a part narrower than its label shows it cut. `icon_only`: the icons alone.
+    fn row(&self, widths: Option<&[f32]>, icon_only: bool) -> Element<'a, Message> {
         let height = self.height;
+        let needs = widths.map(|_| self.needs(icon_only));
         let selected: Vec<bool> = self.segments.iter().map(|s| s.selected).collect();
         let mut segments = Row::new().align_y(Center);
         for (index, segment) in self.segments.iter().enumerate() {
@@ -368,12 +448,29 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
             }
             let glyph = self.icons.get(index).copied();
             let name = segment.text.clone();
-            let shows_name = !(self.icon_only && glyph.is_some());
+            let shows_name = !(icon_only && glyph.is_some());
+            let cut = shows_name
+                && matches!(
+                    (widths.and_then(|w| w.get(index)), needs.as_ref().and_then(|n| n.get(index))),
+                    (Some(w), Some(n)) if w + 0.5 < *n
+                );
             let mut content = row![].spacing(6).align_y(Center);
             if let Some(glyph) = glyph {
                 content = content.push(icon(glyph).size(if self.compact { 12.0 } else { 14.0 }));
             }
-            if shows_name {
+            if cut {
+                let font = if segment.selected {
+                    typography::ui_strong()
+                } else {
+                    typography::ui()
+                };
+                content = content.push(
+                    Elided::new(name.clone())
+                        .size(typography::body())
+                        .font(font)
+                        .width(Length::Fill),
+                );
+            } else if shows_name {
                 content = content.push(face(name.clone(), segment.selected));
             }
             let on = segment.selected;
@@ -398,14 +495,17 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
                 Some(w) => segment_button.width(Length::Fixed(*w)).into(),
                 None => segment_button.into(),
             };
-            // Yalnız ikonlu parçanın ipucu, verilmemişse adıdır.
+            // Yalnız ikonlu parçanın ipucu, verilmemişse adıdır; yazısı kısalanınki
+            // kısaldığında adının tamamıdır.
             let hint = self
                 .hints
                 .get(index)
                 .cloned()
-                .or_else(|| (!shows_name).then(|| name.clone()));
+                .map(Tip::new)
+                .or_else(|| (!shows_name).then(|| Tip::new(name.clone())))
+                .or_else(|| cut.then(|| Tip::new(name.clone()).when_cut()));
             segments = segments.push(match hint {
-                Some(hint) => tip(segment_button, Tip::new(hint), Position::Bottom),
+                Some(hint) => tip(segment_button, hint, Position::Bottom),
                 None => segment_button,
             });
         }
@@ -415,7 +515,7 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
 
 #[cfg(test)]
 mod tests {
-    use super::fill_widths;
+    use super::{fill_widths, shrunk_widths};
 
     #[test]
     fn parts_share_the_width_but_none_is_narrower_than_its_label() {
@@ -430,6 +530,118 @@ mod tests {
         assert_eq!(
             fill_widths(&[120.0, 110.0, 100.0], 300.0),
             vec![120.0, 110.0, 100.0]
+        );
+    }
+
+    #[test]
+    fn short_of_room_the_wide_parts_share_what_is_left() {
+        // The narrow keep their width, the widest get the same cap.
+        assert_eq!(
+            shrunk_widths(&[93.0, 86.0, 115.0, 80.0], 363.0, None, 20.0),
+            vec![93.0, 86.0, 104.0, 80.0]
+        );
+        // The chosen one keeps its label whole, the others share the rest.
+        assert_eq!(
+            shrunk_widths(&[100.0, 100.0, 100.0], 250.0, Some(1), 20.0),
+            vec![75.0, 100.0, 75.0]
+        );
+        // Too little for that: all share alike.
+        assert_eq!(
+            shrunk_widths(&[100.0, 100.0, 100.0], 120.0, Some(1), 20.0),
+            vec![40.0, 40.0, 40.0]
+        );
+        // Never under the least.
+        assert_eq!(
+            shrunk_widths(&[100.0, 100.0], 20.0, None, 20.0),
+            vec![20.0, 20.0]
+        );
+    }
+
+    /// The texts a view shows: their words and where their right edges are.
+    #[cfg(feature = "snapshot")]
+    fn texts(
+        snapshot: &mut crate::snapshot::Snapshot,
+        view: iced::Element<'_, ()>,
+    ) -> Vec<(String, f32)> {
+        use iced::Rectangle;
+        use iced::advanced::widget::{Id, Operation};
+        use std::sync::{Arc, Mutex};
+        struct Find(Arc<Mutex<Vec<(String, f32)>>>);
+        impl Operation for Find {
+            fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+                operate(self);
+            }
+            fn text(&mut self, _: Option<&Id>, bounds: Rectangle, text: &str) {
+                self.0
+                    .lock()
+                    .expect("a lock")
+                    .push((text.to_owned(), bounds.x + bounds.width));
+            }
+        }
+        let found = Arc::new(Mutex::new(Vec::new()));
+        snapshot.operate(view, Box::new(Find(found.clone())));
+        found.lock().map_or(Vec::new(), |f| f.clone())
+    }
+
+    #[cfg(feature = "snapshot")]
+    #[test]
+    fn a_row_short_of_room_stays_in_it_its_labels_cut_and_whole_in_their_tips() {
+        use super::{Segmented, natural_width};
+        use crate::icon::Icon;
+        use crate::snapshot::{Input, Snapshot};
+        use iced::widget::{column, container};
+        use iced::{Point, Size};
+        use std::time::Duration;
+        const TABS: [&str; 4] = ["Özellikler", "Önizleme", "Değişiklikler", "İş akışı"];
+        fn view(_: &()) -> iced::Element<'_, ()> {
+            column![
+                container(Segmented::new(TABS, "Önizleme", |_| ())).width(220),
+                container(Segmented::new(TABS, "Önizleme", |_| ()).width(iced::Fill)).width(220),
+                container(Segmented::new(TABS, "Önizleme", |_| ()).icons([
+                    Icon::Properties,
+                    Icon::Eye,
+                    Icon::Clock,
+                    Icon::Play
+                ]))
+                .width(220),
+            ]
+            .spacing(10)
+            .into()
+        }
+        assert!(
+            natural_width(&TABS, false) > 220.0,
+            "the four labels need more than the pane"
+        );
+        let mut snapshot = Snapshot::new(Size::new(400.0, 200.0)).expect("a renderer");
+        let shown = texts(&mut snapshot, view(&()));
+        // Nothing past the pane. Each label in the two rows of labels, whole or cut; the row of icons shows
+        // none, its parts' names are in their tips.
+        for (words, right) in &shown {
+            assert!(*right <= 220.5, "“{words}” ends at {right}");
+        }
+        for tab in TABS {
+            assert_eq!(
+                shown.iter().filter(|(w, _)| w == tab).count(),
+                2,
+                "{tab}: {shown:?}"
+            );
+        }
+        // A cut label's whole text in its tip when the pointer rests on it.
+        let mut update = |_: &mut (), _: ()| {};
+        let at = Point::new(200.0, 14.0);
+        snapshot.input(&mut (), view, &mut update, Input::Move(at));
+        snapshot.wait(Duration::from_millis(500));
+        snapshot.input(
+            &mut (),
+            view,
+            &mut update,
+            Input::Move(Point::new(at.x + 1.0, at.y)),
+        );
+        let shown = texts(&mut snapshot, view(&()));
+        assert_eq!(
+            shown.iter().filter(|(w, _)| w == "İş akışı").count(),
+            3,
+            "the last part's tip: {shown:?}"
         );
     }
 }

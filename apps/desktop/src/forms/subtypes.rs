@@ -381,11 +381,19 @@ impl App {
                         .to_owned()
                 })
             });
-        let mut col = column![top, body].spacing(14);
+        // The types and their rules take what the window has when it was given a size (docs/adr/0746), else
+        // 380 high at most (12 px text), less in a low window: the buttons stay in sight (docs/adr/0749).
+        let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
+        let body = container(body).height(Fill).max_height(if sized {
+            f32::INFINITY
+        } else {
+            typography::scaled(380.0)
+        });
+        let mut frame = Frame::new(TITLE).push(top).fill(body);
         if let Some(why) = &problem {
-            col = col.push(words::text_line(Kind::Warn, why.clone()));
+            frame = frame.push(words::text_line(Kind::Warn, why.clone()));
         }
-        col = col.push(
+        frame = frame.push(
             row![
                 space::horizontal().width(Fill),
                 words::secondary(CANCEL, Some(msg(Event::Cancel))),
@@ -394,7 +402,7 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(Frame::new(TITLE).push(col).width(900.0), msg(Event::Cancel))
+        overlay::modal(frame.width(900.0), msg(Event::Cancel))
     }
 
     fn subtypes_body<'a>(
@@ -443,9 +451,10 @@ impl App {
         }
         let left = column![
             label::strong("Alt türler"),
-            container(scrollable(list).height(typography::scaled(300.0)))
+            container(scrollable(list).height(Fill))
                 .style(style::container::field_box)
-                .width(Fill),
+                .width(Fill)
+                .height(Fill),
             label::caption(
                 "İşaretli değerler alt türdür; birine basınca kuralları sağda düzenlenir."
             )
@@ -464,9 +473,12 @@ impl App {
             .into(),
             Some(t) => self.subtype_editor(sorter, t, fields),
         };
-        row![container(left).width(260), container(right).width(Fill)]
-            .spacing(16)
-            .into()
+        row![
+            container(left).width(260).height(Fill),
+            container(right).width(Fill).height(Fill)
+        ]
+        .spacing(16)
+        .into()
     }
 
     fn subtype_editor<'a>(
@@ -505,9 +517,10 @@ impl App {
                 container(focus_ring(name)).width(320),
                 Some(format!("Boş bırakılırsa listedeki adı: {listed_label}.")),
             ),
-            container(scrollable(rows).height(typography::scaled(280.0)))
+            container(scrollable(rows).height(Fill))
                 .padding([4, 0])
-                .width(Fill),
+                .width(Fill)
+                .height(Fill),
             label::caption(
                 "Bu türün kayıtları yalnız sunulan değerleri alır; tür değişince eski değerler kalır, formda ve uyarıyla söylenir.",
             )

@@ -2195,12 +2195,26 @@ impl App {
         } else {
             key.clone()
         };
-        // A window given a size of its own: the pages take what it has, the footer at its bottom.
-        let frame = if kentos_ui::widget::sizable::sizes::get(&key).is_some() {
-            Frame::new(title).fill(self.entry_column(e, Some(f32::INFINITY), true).height(Fill))
-        } else {
-            Frame::new(title).push(self.entry_column(e, Some(460.0), true))
-        };
+        // The pages take what the window has when it was given a size of its own (docs/adr/0746), else they
+        // are 460 high (at 12 px text), less in a low window: the footer is always in sight (docs/adr/0749).
+        let sized = kentos_ui::widget::sizable::sizes::get(&key).is_some();
+        let locked = self.entry_locked(e);
+        let mut head = self.entry_head(e, locked);
+        let (tabs, page) = self.entry_tabs_and_page(e, locked, Some(f32::INFINITY));
+        if let Some(tabs) = tabs {
+            head = head.push(tabs);
+        }
+        let page = container(page.unwrap_or_else(|| space::vertical().into()))
+            .height(Fill)
+            .max_height(if sized {
+                f32::INFINITY
+            } else {
+                typography::scaled(460.0)
+            });
+        let frame = Frame::new(title)
+            .push(head)
+            .fill(page)
+            .push(self.entry_footer(e, locked));
         overlay::modal(frame.key(key).width(760.0), e.msg(Event::Cancel))
     }
 
@@ -2243,6 +2257,17 @@ impl App {
         footer: bool,
     ) -> Column<'a, Message> {
         let locked = self.entry_locked(e);
+        let body = self.entry_head(e, locked);
+        let mut body = self.entry_pages(e, locked, body, height);
+        if footer {
+            body = body.push(self.entry_footer(e, locked));
+        }
+        body
+    }
+
+    /// What the editor shows above its pages: the record, its place among the layer's, how the form is
+    /// opened, and what is wrong with its values.
+    fn entry_head<'a>(&'a self, e: &'a Entry, locked: bool) -> Column<'a, Message> {
         let mut body = Column::new().spacing(12);
         let mut head = if e.members.is_empty() {
             format!("{} · {}", e.screen.object.kind, e.screen.object.layer)
@@ -2387,10 +2412,6 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             );
-        }
-        body = self.entry_pages(e, locked, body, height);
-        if footer {
-            body = body.push(self.entry_footer(e, locked));
         }
         body
     }
@@ -2543,6 +2564,24 @@ impl App {
         mut body: Column<'a, Message>,
         height: Option<f32>,
     ) -> Column<'a, Message> {
+        let (tabs, page) = self.entry_tabs_and_page(e, locked, height);
+        if let Some(tabs) = tabs {
+            body = body.push(tabs);
+        }
+        if let Some(page) = page {
+            body = body.push(page);
+        }
+        body
+    }
+
+    /// The form's tabs (none when it has none) and the chosen tab's items or its items, scrolled `height`
+    /// high, else as tall as they are.
+    fn entry_tabs_and_page<'a>(
+        &'a self,
+        e: &'a Entry,
+        locked: bool,
+        height: Option<f32>,
+    ) -> (Option<Element<'a, Message>>, Option<Element<'a, Message>>) {
         let scrolled = |content: Element<'a, Message>| -> Element<'a, Message> {
             match height {
                 // Infinite: as high as the window gives (a resized window, docs/adr/0746).
@@ -2557,7 +2596,10 @@ impl App {
         };
         let tabbed = matches!(e.body.items.first(), Some(FormItem::Tab { .. }));
         if !tabbed {
-            return body.push(scrolled(self.entry_block(e, &e.body.items, locked)));
+            return (
+                None,
+                Some(scrolled(self.entry_block(e, &e.body.items, locked))),
+            );
         }
         let shown: Vec<&FormItem> = e
             .body
@@ -2605,11 +2647,13 @@ impl App {
         } else {
             tabs
         };
-        body = body.push(Tabs::new(tabs, e.tab, |i| e.msg(Event::Tab(i))));
-        if let Some(tab) = shown.get(e.tab.min(shown.len().saturating_sub(1))) {
-            body = body.push(scrolled(self.entry_block(e, tab.items(), locked)));
-        }
-        body
+        let page = shown
+            .get(e.tab.min(shown.len().saturating_sub(1)))
+            .map(|tab| scrolled(self.entry_block(e, tab.items(), locked)));
+        (
+            Some(Tabs::new(tabs, e.tab, |i| e.msg(Event::Tab(i))).into()),
+            page,
+        )
     }
 
     /// The designer's preview of its copy (docs/adr/0403 §3): what the record is, the pages, and

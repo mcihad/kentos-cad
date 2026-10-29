@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Formların pencereleri her boyda ve yazı boyunda sığar (30 Ekim 2026; [ADR0749](docs/adr/0749-forms-windows-fit.md)).**
+  KentOS UI: `Segmented` yerinden taşmaz (KentOS UI `Responsive`'iyle en çok genişliği bilir; sığmayınca ikonları,
+  yoksa `shrunk_widths` ile kısalan yazılar, `Tip::when_cut`); `segmented::natural_width`; `Panes` (yan bölmeler pay,
+  en az ve en çok, ölçülen en az `.least`, önce sağ geri verir); `fallback(geniş, dar)`. Form tasarımcısı `Panes` ile,
+  sağ bölme dört sekmede aynı; araç çubuğu sığmayınca ikonlarına iner, Geri al ve Yinele ikinci satırda. Tasarımcı,
+  Formla düzenle, Alt türler, Değer listeleri ve Değer bileşimleri'nin gövdesi esnek (`Dialog::fill`, en çok eski
+  yüksekliği). Sahibin görünüşüyle (14 px, Jakarta, açık) resimler `form_fit_screens`, 92 sahnenin düğme taraması.
+
 - **Öznitelikler'de kısalan ad ve değer, “Çeşitli” (29 Ekim 2026; [ADR0748](docs/adr/0748-inspector-cut-texts-and-mixed-values.md)).**
   Satırın adı `Elided`; `EditCell` düzenlenmezken değerini alanına sığdırır (`elided::fit`, “…”), basış önce
   gösterilen metne verilir (iced imleci önceki metinden bulur; Türkçe harfin ortası), “…”ya basmak imleci sona koyar.

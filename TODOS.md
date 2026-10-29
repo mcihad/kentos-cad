@@ -51,6 +51,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0749: parçalı seçim yerinden taşmaz (sığmayınca ikonları, yoksa “…” ile kısalan yazıları ve ipucunda tamamı);
+  form tasarımcısının üç bölmesi yazı boyuna ve pencereye göre, sekme değişince kaymaz; araç çubuğu sığmayınca
+  ikonlarına iner; formların pencerelerinin gövdesi alçak pencerede kısalır, düğmeler hep görünür.
 - ADR 0748: Öznitelikler'de sığmayan ad ve değer “…” ile biter (düzenlenebilir hücre de, düzenlenmezken), tamamı
   yalnız kısalınca açılan ipucunda; “Çeşitli” soluk yazılır, hücresi boş düzenlenir ve yalnız yazılan seçime gider.
 - ADR 0747: Öznitelikler'in satırı üzerine gelince bütünüyle aydınlanır, değeri düzenlenirken solunda 2 px vurgu

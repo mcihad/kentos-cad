@@ -8,8 +8,11 @@ use kentos_commands::{
 };
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::panes::Side as PaneSide;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, Segmented, focus_ring, overlay};
+use kentos_ui::widget::{
+    Dialog as Frame, Elided, Panes, Segmented, fallback, focus_ring, overlay, segmented,
+};
 use kentos_ui::{label, style};
 
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
@@ -187,29 +190,45 @@ impl App {
             },
         );
         let inspector: Element<'_, Message> = column![side, inspector].spacing(8).into();
-        let main = row![
-            container(left).width(220).height(Fill),
-            container(center).width(Fill).height(Fill),
-            container(inspector)
-                .width(if w.previewing || w.changes || w.flow {
-                    400
-                } else {
-                    340
-                })
-                .height(Fill),
-        ]
-        .spacing(12);
-        // A window given a size of its own (docs/adr/0746): the three panes take what it has.
+        // The panes from the window's width and the text (docs/adr/0749): the list and the inspector their
+        // shares, at least as wide as their tabs, the tree the rest; the inspector keeps its width whichever
+        // tab shows, so nothing moves sideways when one is pressed.
+        let main = Panes::new(
+            container(left).height(Fill),
+            container(center).height(Fill),
+            container(inspector).height(Fill),
+        )
+        .left(0.2, 200.0, 260.0)
+        .right(0.36, 330.0, 480.0)
+        .middle(300.0)
+        .least(
+            PaneSide::Left,
+            segmented::natural_width(
+                &[
+                    PALETTE_FIELDS,
+                    PALETTE_RELATIONS,
+                    PALETTE_DOMAINS,
+                    PALETTE_SECTIONS,
+                ],
+                true,
+            ),
+        )
+        .least(
+            PaneSide::Right,
+            segmented::natural_width(&[PROPERTIES, PREVIEW, CHANGES, FLOW], false),
+        );
+        // A window given a size of its own (docs/adr/0746): the three panes take what it has; else they are
+        // 390 high (at 12 px text), less in a low window, the buttons under them in sight (docs/adr/0749).
         let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
-        let main = if sized {
-            main.height(Fill)
+        let main = container(main).height(Fill).max_height(if sized {
+            f32::INFINITY
         } else {
-            main.height(typography::scaled(390.0))
-        };
+            typography::scaled(390.0)
+        });
 
-        let mut body = Column::new().spacing(12);
+        let mut above: Vec<Element<'_, Message>> = Vec::new();
         if let Some(why) = locked {
-            body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
+            above.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
         }
         // The layer's fields changed since the latest release (docs/adr/0444 §2): published again over them.
         if let Some(r) = form.and_then(|f| f.releases.last())
@@ -217,7 +236,7 @@ impl App {
                 .as_ref()
                 .is_some_and(|d| *d != kentos_commands::bound_fields_digest(&r.body, &fields))
         {
-            body = body.push(words::summary(vec![words::text_line(
+            above.push(words::summary(vec![words::text_line(
                 Kind::Warn,
                 format!(
                     "Katmanın alanları {}. yayından sonra değişti; formu gözden geçirip yeniden yayınlayın (taslak aynıysa da yayınlanır).",
@@ -238,7 +257,7 @@ impl App {
                     format!("{name} ({})", f.records)
                 })
                 .collect();
-            body = body.push(
+            above.push(
                 container(
                     row![
                         icon(Icon::Info).size(14.0),
@@ -263,12 +282,13 @@ impl App {
                 )
                 .padding([6, 10])
                 .style(style::container::field_box)
-                .width(Fill),
+                .width(Fill)
+                .into(),
             );
         }
         // A draft kept on this device that is not the form's (docs/adr/0441 §5).
         if let Some(k) = &w.kept {
-            body = body.push(
+            above.push(
                 container(
                     row![
                         icon(Icon::Info).size(14.0),
@@ -285,23 +305,24 @@ impl App {
                 )
                 .padding([6, 10])
                 .style(style::container::field_box)
-                .width(Fill),
+                .width(Fill)
+                .into(),
             );
-        }
-        body = body.push(main);
-        if form.is_some() {
-            body = body.push(self.forms_footer(w, form, &issues, locked.is_none()));
         }
         let title = match form {
             Some(f) if w.dirty => format!("{TITLE} · {} ●", f.name),
             Some(f) => format!("{TITLE} · {}", f.name),
             None => TITLE.to_owned(),
         };
-        let frame = if sized {
-            Frame::new(title).fill(body.height(Fill))
-        } else {
-            Frame::new(title).push(body)
-        };
+        // The warnings, the panes taking what is left, the footer (docs/adr/0749).
+        let mut frame = Frame::new(title);
+        for part in above {
+            frame = frame.push(part);
+        }
+        frame = frame.fill(main);
+        if form.is_some() {
+            frame = frame.push(self.forms_footer(w, form, &issues, locked.is_none()));
+        }
         overlay::modal(frame.key(TITLE).width(1040.0), msg(Event::Cancel))
     }
 
@@ -973,40 +994,41 @@ impl App {
             )
         };
         let has_item = chosen.is_some();
-        // The components (docs/adr/0441 §1): the common three named, the rest by their icons.
-        let toolbar = row![
-            tool(ADD_TAB, Icon::Tabs, Some(Event::AddTab)),
-            tool(ADD_GROUP, Icon::Layout, Some(Event::AddGroup)),
-            tool(ADD_NOTE, Icon::Info, Some(Event::AddNote)),
-            icon_tool(ADD_DIVIDER, Icon::Minus, Some(Event::AddDivider)),
-            icon_tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
-            icon_tool(ADD_REFERENCE, Icon::Target, Some(Event::AddReference)),
-            icon_tool(
-                ADD_ATTACHMENTS,
-                crate::icons::from_web(Some("photo")),
-                Some(Event::AddAttachments)
-            ),
-            icon_tool(
-                ADD_LOCATION,
-                crate::icons::from_web(Some("pin")),
-                Some(Event::AddLocation)
-            ),
-            icon_tool(ADD_ACTION, Icon::Play, Some(Event::AddAction)),
-            space::horizontal().width(Fill),
-            icon_tool(
-                UNDO,
-                Icon::Undo,
-                (!w.undo.is_empty()).then_some(Event::Undo)
-            ),
-            icon_tool(
-                REDO,
-                Icon::Redo,
-                (!w.redo.is_empty()).then_some(Event::Redo)
-            ),
-        ]
-        .spacing(4)
-        .align_y(Center);
-        // The chosen item's tools on a line of their own: the add tools fill the first (docs/adr/0437).
+        // The components (docs/adr/0441 §1): the common three named, the rest by their icons; where the
+        // three named do not fit, they too by their icons, their names in their tips (docs/adr/0749).
+        let adds = |named: bool| {
+            let first = |words: &'static str, glyph: Icon, event: Event| -> Element<'_, Message> {
+                if named {
+                    tool(words, glyph, Some(event)).into()
+                } else {
+                    icon_tool(words, glyph, Some(event))
+                }
+            };
+            row![
+                first(ADD_TAB, Icon::Tabs, Event::AddTab),
+                first(ADD_GROUP, Icon::Layout, Event::AddGroup),
+                first(ADD_NOTE, Icon::Info, Event::AddNote),
+                icon_tool(ADD_DIVIDER, Icon::Minus, Some(Event::AddDivider)),
+                icon_tool(ADD_RELATED, Icon::Link, Some(Event::AddRelated)),
+                icon_tool(ADD_REFERENCE, Icon::Target, Some(Event::AddReference)),
+                icon_tool(
+                    ADD_ATTACHMENTS,
+                    crate::icons::from_web(Some("photo")),
+                    Some(Event::AddAttachments)
+                ),
+                icon_tool(
+                    ADD_LOCATION,
+                    crate::icons::from_web(Some("pin")),
+                    Some(Event::AddLocation)
+                ),
+                icon_tool(ADD_ACTION, Icon::Play, Some(Event::AddAction)),
+            ]
+            .spacing(4)
+            .align_y(Center)
+        };
+        let toolbar = fallback(adds(true), adds(false));
+        // The chosen item's tools on a line of their own, the form's undo and redo at its end: the add tools
+        // fill the first (docs/adr/0437, 0749).
         let item_tools = row![
             icon_tool(UP, Icon::ChevronUp, has_item.then_some(Event::Move(-1))),
             icon_tool(DOWN, Icon::ChevronDown, has_item.then_some(Event::Move(1))),
@@ -1020,6 +1042,17 @@ impl App {
                 PASTE_ITEM,
                 crate::icons::from_web(Some("paste")),
                 self.form_clipboard.is_some().then_some(Event::PasteItem)
+            ),
+            space::horizontal().width(Fill),
+            icon_tool(
+                UNDO,
+                Icon::Undo,
+                (!w.undo.is_empty()).then_some(Event::Undo)
+            ),
+            icon_tool(
+                REDO,
+                Icon::Redo,
+                (!w.redo.is_empty()).then_some(Event::Redo)
             ),
         ]
         .spacing(4)
