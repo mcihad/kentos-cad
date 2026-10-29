@@ -198,8 +198,14 @@ impl App {
                 })
                 .height(Fill),
         ]
-        .spacing(12)
-        .height(typography::scaled(390.0));
+        .spacing(12);
+        // A window given a size of its own (docs/adr/0746): the three panes take what it has.
+        let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
+        let main = if sized {
+            main.height(Fill)
+        } else {
+            main.height(typography::scaled(390.0))
+        };
 
         let mut body = Column::new().spacing(12);
         if let Some(why) = locked {
@@ -291,10 +297,12 @@ impl App {
             Some(f) => format!("{TITLE} · {}", f.name),
             None => TITLE.to_owned(),
         };
-        overlay::modal(
-            Frame::new(title).push(body).width(1040.0),
-            msg(Event::Cancel),
-        )
+        let frame = if sized {
+            Frame::new(title).fill(body.height(Fill))
+        } else {
+            Frame::new(title).push(body)
+        };
+        overlay::modal(frame.key(TITLE).width(1040.0), msg(Event::Cancel))
     }
 
     fn forms_list(

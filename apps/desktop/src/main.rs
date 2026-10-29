@@ -217,6 +217,9 @@ mod layer_commands;
 mod layer_fields;
 mod layer_filters;
 mod dataset_window;
+mod dialog_sizes;
+#[cfg(test)]
+mod dialog_size_tests;
 mod layer_info;
 mod layer_list;
 mod font_report;
@@ -612,6 +615,8 @@ fn main() -> iced::Result {
             }
             // The layout kept last time (yerlesim.json beside the settings, docs/adr/0115).
             if let Some(dir) = settings::Settings::config_dir() {
+                // Each window's size (pencereler.json, docs/adr/0746).
+                app.dialog_sizes = dialog_sizes::Keeper::open(&dir);
                 app.layout = layout::Keeper::open(&dir);
                 app.apply_layout();
             }

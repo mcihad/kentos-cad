@@ -907,6 +907,8 @@ pub struct App {
     pub(crate) follow: crate::message_log::Follow,
     /// The layout kept between runs (layout.rs) and the window's size it is shown in.
     pub(crate) layout: crate::layout::Keeper,
+    /// Where the windows' sizes are written (docs/adr/0746).
+    pub(crate) dialog_sizes: crate::dialog_sizes::Keeper,
     /// The device's NTv2 grid library and the grids looked for (grids.rs, docs/adr/0168 §4).
     pub(crate) grids: crate::grids::Grids,
     /// The rows round the bound layers' parts, asked for and arrived (band_ghosts.rs, docs/adr/0578 §1).
@@ -1365,6 +1367,7 @@ impl App {
             typed: Vec::new(),
             follow: crate::message_log::Follow::default(),
             layout: crate::layout::Keeper::memory(),
+            dialog_sizes: crate::dialog_sizes::Keeper::default(),
             grids: crate::grids::Grids::default(),
             bands: crate::band_ghosts::Bands::default(),
             window_size: iced::Size::new(1440.0, 900.0),
@@ -1713,6 +1716,8 @@ impl App {
         let held = self.window_over();
         let view = self.viewpoint();
         let task = self.handle(message);
+        // A window resized since the last message keeps its size (dialog_sizes.rs, docs/adr/0746).
+        self.dialog_sizes.write_changed();
         // A template's run ends with its tool (templates.rs).
         self.follow_template();
         // The running command's preview follows a view change and a tool run over it (navigation.rs, docs/adr/0283).

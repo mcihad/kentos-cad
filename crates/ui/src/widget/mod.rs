@@ -25,6 +25,7 @@ pub mod compass;
 pub mod context_menu;
 pub mod date_picker;
 pub mod dialog;
+pub mod sizable;
 pub mod dock;
 pub mod docking;
 mod dropdown;

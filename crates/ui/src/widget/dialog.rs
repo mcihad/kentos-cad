@@ -4,6 +4,7 @@
 //! arkasını karartmak için [`overlay::modal`](crate::widget::overlay::modal)
 //! ile gösterilir.
 
+use iced::widget::space::Space;
 use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Background, Center, Element, Fill, Shrink, Theme, border};
@@ -13,6 +14,7 @@ use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::fit::Fit;
+use crate::widget::sizable;
 use crate::widget::{Severity, horizontal_divider};
 
 /// Başlık, gövde ve sağa hizalı eylem düğmelerinden oluşan kutu.
@@ -26,6 +28,9 @@ pub struct Dialog<'a, Message> {
     actions: Vec<Element<'a, Message>>,
     width: f32,
     max_height: Option<f32>,
+    /// The key its size is kept by (docs/adr/0746); none: its title. `None` after `fixed`: not sized.
+    key: Option<String>,
+    sizable: bool,
 }
 
 impl<'a, Message: 'a> Dialog<'a, Message> {
@@ -38,6 +43,8 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
             actions: Vec::new(),
             width: 500.0,
             max_height: None,
+            key: None,
+            sizable: true,
         }
     }
 
@@ -117,14 +124,35 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
         self.max_height = Some(height);
         self
     }
+
+    /// The key the box's size is kept by, when its title changes (`Formla düzenle — bina`): one key, one size.
+    pub fn key(mut self, key: impl Into<String>) -> Self {
+        self.key = Some(key.into());
+        self
+    }
+
+    /// A box that keeps its own size: it is not resized, not made full screen (a short question).
+    pub fn fixed(mut self) -> Self {
+        self.sizable = false;
+        self
+    }
 }
 
 impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
     fn from(dialog: Dialog<'a, Message>) -> Self {
-        let mut header = row![label::title(dialog.title), space::horizontal()].align_y(Center);
+        let key = dialog.key.unwrap_or_else(|| dialog.title.to_string());
+        let kept = dialog.sizable && sizable::sizes::get(&key).is_some();
+        let mut header = row![label::title(dialog.title), space::horizontal()]
+            .spacing(6)
+            .align_y(Center);
 
         if let Some(hint) = dialog.hint {
             header = header.push(label::mono_caption(hint));
+        }
+        // The full screen toggle's square, drawn by `Sizable` (docs/adr/0746).
+        if dialog.sizable {
+            let side = typography::scaled(sizable::TOGGLE);
+            header = header.push(Space::new().width(side).height(side));
         }
 
         // Kayan parça, başlık ve düğmeler yerleştikten sonra kalan yeri alır.
@@ -160,13 +188,23 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
         // The dialog is Tab's scope: the keyboard goes round its fields, not out to the window behind.
         let boxed = container(content)
             .id(crate::focus::scope_id())
-            .width(typography::scaled(dialog.width))
-            .padding(18)
+            .padding(sizable::PAD)
             .style(style::container::dialog);
 
-        match dialog.max_height {
-            Some(height) => boxed.max_height(typography::scaled(height)).into(),
-            None => boxed.into(),
+        // A kept size: the box fills what `Sizable` gives it; else its own width and height.
+        let boxed = if kept {
+            boxed.width(Fill).height(Fill)
+        } else {
+            let boxed = boxed.width(typography::scaled(dialog.width));
+            match dialog.max_height {
+                Some(height) => boxed.max_height(typography::scaled(height)),
+                None => boxed,
+            }
+        };
+        if dialog.sizable {
+            sizable::Sizable::new(key, boxed).into()
+        } else {
+            boxed.into()
         }
     }
 }

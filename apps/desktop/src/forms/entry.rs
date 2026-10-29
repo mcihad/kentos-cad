@@ -2187,17 +2187,21 @@ impl App {
         let Some(e) = &self.form_entry else {
             return iced::widget::text("").into();
         };
-        let body = self.entry_column(e, Some(380.0), true);
         let name = e.name_in();
+        // One size a form, whether what is typed is saved or not (docs/adr/0746).
+        let key = format!("{TITLE} · {name}");
         let title = if e.dirty() {
-            format!("{TITLE} · {name} ●")
+            format!("{key} ●")
         } else {
-            format!("{TITLE} · {name}")
+            key.clone()
         };
-        overlay::modal(
-            Frame::new(title).push(body).width(620.0),
-            e.msg(Event::Cancel),
-        )
+        // A window given a size of its own: the pages take what it has, the footer at its bottom.
+        let frame = if kentos_ui::widget::sizable::sizes::get(&key).is_some() {
+            Frame::new(title).fill(self.entry_column(e, Some(f32::INFINITY), true).height(Fill))
+        } else {
+            Frame::new(title).push(self.entry_column(e, Some(460.0), true))
+        };
+        overlay::modal(frame.key(key).width(760.0), e.msg(Event::Cancel))
     }
 
     /// The docked editor (docs/adr/0416): the form's title, its pages and its footer, scrolled in the
@@ -2541,6 +2545,10 @@ impl App {
     ) -> Column<'a, Message> {
         let scrolled = |content: Element<'a, Message>| -> Element<'a, Message> {
             match height {
+                // Infinite: as high as the window gives (a resized window, docs/adr/0746).
+                Some(h) if h.is_infinite() => scrollable(container(content).padding(SCROLLED))
+                    .height(Fill)
+                    .into(),
                 Some(h) => scrollable(container(content).padding(SCROLLED))
                     .height(typography::scaled(h))
                     .into(),

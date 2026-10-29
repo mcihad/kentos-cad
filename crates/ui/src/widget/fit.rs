@@ -113,9 +113,31 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Fit<'a, Message> {
                 nodes[i] = node;
             }
         }
+        // A box given a height of its own (a resized dialog, docs/adr/0746): the last elastic child takes what is
+        // over, else the space goes above the last child (the buttons stay at the bottom).
+        let mut gap_before_last = 0.0;
+        let over = limits.min().height - used;
+        if over > 0.5 && count > 0 {
+            match (0..count).rev().find(|&i| elastic[i]) {
+                Some(i) => {
+                    let height = nodes[i].size().height + over;
+                    let room =
+                        layout::Limits::new(Size::new(0.0, height), Size::new(max.width, height));
+                    nodes[i] = self.children[i].as_widget_mut().layout(
+                        &mut tree.children[i],
+                        renderer,
+                        &room,
+                    );
+                }
+                None => gap_before_last = over,
+            }
+        }
         let mut y = 0.0;
         let mut width: f32 = 0.0;
-        for node in &mut nodes {
+        for (i, node) in nodes.iter_mut().enumerate() {
+            if i + 1 == count {
+                y += gap_before_last;
+            }
             let size = node.size();
             node.move_to_mut((0.0, y));
             y += size.height + self.spacing;
@@ -300,6 +322,33 @@ mod tests {
         // The body gets what the others leave; the last child ends at the bottom.
         assert_eq!(children[1], (40.0, 600.0 - 30.0 - 40.0 - 20.0));
         assert_eq!(children[2], (560.0, 40.0));
+    }
+
+    #[test]
+    fn a_box_given_its_height_gives_it_to_the_body_and_keeps_the_buttons_down() {
+        // A resized dialog (docs/adr/0746): the box is 500 high however short its body.
+        let snapshot = Snapshot::new(Size::new(400.0, 600.0)).expect("çizici kurulamadı");
+        let mut element: Element<'_, ()> = dialog(100.0).into();
+        let mut tree = Tree::new(&element);
+        let limits = Limits::new(Size::new(0.0, 500.0), Size::new(400.0, 500.0));
+        let node = element
+            .as_widget_mut()
+            .layout(&mut tree, snapshot.renderer(), &limits);
+        let children: Vec<_> = node
+            .children()
+            .iter()
+            .map(|c| (c.bounds().y, c.bounds().height))
+            .collect();
+        assert_eq!(node.size().height, 500.0);
+        assert_eq!(children, [(0.0, 30.0), (40.0, 410.0), (460.0, 40.0)]);
+        // Without an elastic child the buttons go down.
+        let fit = Fit::new().spacing(10.0).push(block(30.0)).push(block(40.0));
+        let mut element: Element<'_, ()> = fit.into();
+        let mut tree = Tree::new(&element);
+        let node = element
+            .as_widget_mut()
+            .layout(&mut tree, snapshot.renderer(), &limits);
+        assert_eq!(node.children()[1].bounds().y, 460.0);
     }
 
     #[test]
