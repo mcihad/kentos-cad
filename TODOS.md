@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0752: yeni kaydın varsayılanları her yolda aynı sırayla (verilen değer, formun düz varsayılanı, alt türün ve
+  alanın varsayılanı, formun ifadesi, ifade boşsa alanınki); formun yeni kaydı ve önizlemesi katman alanının
+  varsayılanını gösterir; çizim komutu kuralları uygulanan formun düz varsayılanını kendisi yazar (web'in formu ve
+  çizim komutları geldiğinde aynı kural, `new_record_defaults`).
 - ADR 0751: form tasarımcısının ağacında ve Öğe türü listesinde bileşenin ikonu; Formla düzenle'de geniş sayfada
   alanlar iki sütunda (yazı boyuyla büyüyen 880 piksel, önizleme ve alt panel tek sütun); saat dilimli tarihin
   seçicisi değerin dilimini korur, boşsa cihazınkini alır; seçicilerin “Şimdi”si ve bugünü UTC değil, değerin ya da

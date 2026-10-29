@@ -578,26 +578,25 @@ def form_twin():
                 base = [c["code"] for c in f.get("values", []) if not c.get("retired") or c["code"] in held]
             return [c for c in base if offers(f, t, c) or c in held]
 
-        def complete(self, attrs, obj=None, new=False):
-            if new:
-                probe = dict(attrs)
-                for x, _ in self.bound():
-                    f = self.layer(x)
-                    if "default" in x and not probe.get(f["name"], "").strip():
-                        v, why = fc.check_value(f, x["default"])
-                        if not why and v:
-                            probe[f["name"]] = v
-                t = self.kind(probe)
-                if t:
-                    attrs = dict(attrs)
-                    for x, _ in self.bound():
-                        f = self.layer(x)
-                        r = rule_of(t, f)
-                        if "default" in x or "defaultExpr" in x or not r or "default" not in r:
-                            continue
-                        if not attrs.get(f["name"], "").strip():
-                            attrs[f["name"]] = r["default"]
-            return super().complete(attrs, obj, new)
+        def layer_defaults(self, out, skip):
+            """docs/adr/0752: as a drawing command fills a new record (`new_defaults`), but the fields the form gives
+            a default of its own: the subtype field by its own default, then each by its subtype's, else its own,
+            when the subtype offers it."""
+            sorter = next(f for f in self.fields if key(f) == self.subtypes["field"])
+            if key(sorter) not in skip and sorter.get("default") and not out.get(sorter["name"], "").strip():
+                out[sorter["name"]] = sorter["default"]
+            t = self.kind(out)
+            for f in self.fields:
+                if key(f) in skip or out.get(f["name"], "").strip():
+                    continue
+                d = seen_default(f, t)
+                if not d:
+                    continue
+                r = rule_of(t, f) if t else None
+                narrowed = bool(f.get("values")) and r is not None and r.get("values") is not None
+                if narrowed and not all(offers(f, t, c) for c in codes_of(f, d)):
+                    continue
+                out[f["name"]] = d
 
         def retired(self, changed, before, after):
             issues = super().retired(changed, before, after)
@@ -685,7 +684,7 @@ def validate_file():
     run("sanayinin notu boşaltılır: zorunlu", {"form": "bina", "values": {"Not": ""}}, slot=2)
     run("yeni sanayi kaydı: alt türün varsayılanı", {"form": "bina", "values": {"Tür": "sanayi"}, "defaults": True}, slot=5)
     run("yeni konut kaydı: alt türün kat varsayılanı", {"form": "bina", "values": {"Tür": "konut"}, "defaults": True}, slot=5)
-    run("yeni kayıt, türsüz: varsayılan yok", {"form": "bina", "defaults": True}, slot=5)
+    run("yeni kayıt, türsüz: alanın kendi varsayılanı (ahşap)", {"form": "bina", "defaults": True}, slot=5)
     run("yeni depo kaydı: varsayılan yok, seçenekler daraltılır", {"form": "bina", "values": {"Tür": "depo"}, "defaults": True}, slot=5)
     run("yeni sanayi kaydı, verilen malzeme varsayılanın önünde",
         {"form": "bina", "values": {"Tür": "sanayi", "Malzeme": "beton"}, "defaults": True}, slot=5)

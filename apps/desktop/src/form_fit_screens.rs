@@ -361,6 +361,12 @@ fn district_form_screens() {
         designer(&mut app, Event::Preview(true));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "2-onizleme");
+        // Further down the new record: the layer's defaults where the form gives none (docs/adr/0752).
+        if let Some(caption) = text_at(&mut snapshot, &app, "Yeni kayıt · İlçeler") {
+            let at = iced::Point::new(caption.x + 150.0, caption.y + 200.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -6.0));
+            shot(&mut snapshot, &app, "2b-onizleme-asagi");
+        }
         designer(&mut app, Event::Save);
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Forms(Event::Cancel));

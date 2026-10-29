@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Yeni kaydın varsayılanları her yolda aynı sırayla (30 Ekim 2026; [ADR0752](docs/adr/0752-new-record-defaults-everywhere.md)).**
+  Verilen değer, formun düz varsayılanı, alt türün ve alanın varsayılanı (formda olmayan alanlar da; formun seçtiği alt
+  türle), formun ifadesi (önce dolanları okur), ifade boş ya da bekliyorsa alanınki. Kural tek yerde
+  (`kentos_commands::new_record_defaults`); formun oturumu (`Prepared::complete`) ve çizim komutları
+  (`checks::new_defaults`, kuralları uygulanan formun düz varsayılanı `Document::form_defaults` ile önce) onu kullanır.
+  Önizleme yeni kayıtta katmanın varsayılanlarını gösterir; `cad.forms.validate`'in `defaults`'u komutun yazacağını verir.
+  47 ortak durum (`form_defaults_cases.py`), alt tür ve bileşim durumları ikizlerle yeniden yazıldı.
+
 - **Formda bileşenin ikonu, iki sütun, saat dilimli tarihin seçicisi (30 Ekim 2026; [ADR0751](docs/adr/0751-forms-widget-icons-columns-and-instants.md)).**
   Tasarımcının ağacında ve Öğe türü listesinde her alan kaydın göstereceği bileşenin ikonuyla (`widget_glyph`; tür
   tarihi saatten, büyük sayıyı metinden, JSON'u ve baytları ayırır; yeni ikonlar `designer_view::glyphs`). Formla

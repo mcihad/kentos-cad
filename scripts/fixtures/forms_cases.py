@@ -1022,6 +1022,12 @@ class Form:
                 state["text"] = fill(x["text"], values)
         return states
 
+    def layer_defaults(self, out, skip):
+        """docs/adr/0199 §2, 0752: a new record's empty fields, but those in `skip`, take their layer field's default."""
+        for f in self.fields:
+            if key_of(f) not in skip and empty(out, f["name"]) and f.get("default"):
+                out[f["name"]] = f["default"]
+
     def complete(self, attrs, obj=None, new=False):
         out, issues = dict(attrs), []
         if new:
@@ -1036,6 +1042,10 @@ class Form:
                     v, why = check_value(f, x["default"])
                     if not why and v:
                         out[f["name"]] = v
+            # docs/adr/0752: every field of the layer the form gives no default of its own takes the layer's, before
+            # the expressions read them; a field the form's expression left empty takes it after all.
+            by_form = {key_of(self.layer(x)) for x, _ in self.bound() if "default" in x or "defaultExpr" in x}
+            self.layer_defaults(out, by_form)
             for x, _ in self.bound():
                 if "defaultExpr" not in x:
                     continue
@@ -1050,6 +1060,7 @@ class Form:
                     issues.append(issue("form_default_invalid", False, x["id"], key_of(f), "defaultExpr"))
                 elif v:
                     out[f["name"]] = v
+            self.layer_defaults(out, set())
         for rnd in range(self.ROUNDS):
             start, round_issues = dict(out), []
             shown = self.states(out, obj) if self.clear_hidden else None

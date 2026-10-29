@@ -1532,6 +1532,7 @@
        "version": 1,
        "attrs": {
         "Tür": "konut",
+        "Malzeme": "ahsap",
         "Kat": "2"
        }
       },
@@ -1554,7 +1555,7 @@
    ]
   },
   {
-   "name": "yeni kayıt, türsüz: varsayılan yok",
+   "name": "yeni kayıt, türsüz: alanın kendi varsayılanı (ahşap)",
    "steps": [
     {
      "op": "execute",
@@ -1587,7 +1588,9 @@
         }
        ],
        "version": 1,
-       "attrs": {}
+       "attrs": {
+        "Malzeme": "ahsap"
+       }
       },
       "warnings": []
      },
@@ -1912,7 +1915,8 @@
        "version": 1,
        "attrs": {
         "Tür": "konut",
-        "Kat": "9"
+        "Kat": "9",
+        "Malzeme": "ahsap"
        }
       },
       "warnings": []

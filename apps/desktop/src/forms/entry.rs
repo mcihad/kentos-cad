@@ -3985,7 +3985,7 @@ fn entry_control<'a>(
                 set_at(d.map_or_else(String::new, |d| instant_text(&d, &written)))
             })
             .anchor(focus_ring(
-                text_input("YYYY-AA-GGTSS:DD:SS+03:00", &value)
+                text_input("YYYY-AA-GGTSS:DD+03:00", &value)
                     .size(typography::body())
                     .id(input_id(&key))
                     .on_input(set)

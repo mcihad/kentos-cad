@@ -248,35 +248,38 @@ pub(crate) fn unique_fit(doc: &Document, writes: &[UniqueWrite<'_>]) -> Result<(
     Ok(())
 }
 
-/// A new record's empty fields filled (docs/adr/0199 §2, 0422 §2): the subtype field first by its own
-/// default, then every other field by its subtype's default, else the field's.
+/// A new record's empty fields filled (docs/adr/0199 §2, 0422 §2, 0752), as its form fills them: a form the layer
+/// enforces gives its plain defaults first (so the subtype they choose is known), then the subtype field by its own
+/// default, every other field by its subtype's default, else the field's. A field the form defaults by an expression
+/// is left to the form, which works it out in the same step and gives the field's default when it gives none.
 pub(crate) fn new_defaults(doc: &Document, layer: &str, out: &mut BTreeMap<String, String>) {
     let Some(node) = doc.layers().get(layer) else {
         return;
     };
-    let subtypes = node.subtypes.as_ref();
-    if let Some(sorter) = subtypes.and_then(|s| s.sorter(&node.fields))
-        && let Some(d) = &sorter.default
-    {
-        out.entry(sorter.name.clone()).or_insert_with(|| d.clone());
-    }
-    let subtype = subtypes.and_then(|s| s.of(&node.fields, |n| out.get(n).cloned()));
-    for f in &node.fields {
-        let seen = kentos_commands::LayerSubtypes::field_for(f, subtype);
-        let offered = |d: &str| {
-            seen.values.is_none()
-                || (if f.holds_many() {
-                    f.codes_of(d)
-                } else {
-                    vec![d]
-                })
-                .iter()
-                .all(|c| kentos_commands::subtype_offers(f, subtype, c))
+    let (plain, by_expression) = doc.form_defaults(layer);
+    for (key, d) in &plain {
+        let Some(f) = node.fields.iter().find(|f| f.key() == key) else {
+            continue;
         };
-        if let Some(d) = seen.default.filter(|d| !d.is_empty() && offered(d)) {
-            out.entry(f.name.clone()).or_insert(d);
+        if out
+            .get(&f.name)
+            .is_some_and(|v| !kentos_commands::js_trim(v).is_empty())
+        {
+            continue;
+        }
+        let loose = kentos_commands::LayerField {
+            required: false,
+            ..f.clone()
+        };
+        if let Ok(v) = kentos_commands::check_value(&loose, d)
+            && !v.is_empty()
+        {
+            out.insert(f.name.clone(), v);
         }
     }
+    kentos_commands::new_record_defaults(&node.fields, node.subtypes.as_ref(), out, |f| {
+        by_expression.contains(f.key())
+    });
 }
 
 /// A record's values on `layer` against the layer's value groups (docs/adr/0423 §2): a group whose

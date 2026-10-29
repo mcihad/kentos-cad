@@ -190,6 +190,49 @@ pub fn subtype_offers(field: &LayerField, subtype: Option<&Subtype>, code: &str)
         .is_none_or(|v| v.iter().any(|c| c == code))
 }
 
+/// A new record's empty fields filled (docs/adr/0199 §2, 0422 §2, 0752): the subtype field first by its own
+/// default, then every other field by its subtype's default, else the field's own; a default the record's subtype
+/// does not offer is left out. A field `skip` names is left to whoever gives it its default first (a form's own).
+/// Every way a record is made fills the same: a drawing command, a form's new record, a record from a form.
+pub fn new_record_defaults(
+    fields: &[LayerField],
+    subtypes: Option<&LayerSubtypes>,
+    out: &mut std::collections::BTreeMap<String, String>,
+    skip: impl Fn(&LayerField) -> bool,
+) {
+    let blank = |out: &std::collections::BTreeMap<String, String>, name: &str| {
+        out.get(name)
+            .is_none_or(|v| crate::fields::js_trim(v).is_empty())
+    };
+    if let Some(sorter) = subtypes.and_then(|s| s.sorter(fields))
+        && !skip(sorter)
+        && let Some(d) = sorter.default.as_ref().filter(|d| !d.is_empty())
+        && blank(out, &sorter.name)
+    {
+        out.insert(sorter.name.clone(), d.clone());
+    }
+    let subtype = subtypes.and_then(|s| s.of(fields, |n| out.get(n).cloned()));
+    for f in fields {
+        if skip(f) || !blank(out, &f.name) {
+            continue;
+        }
+        let seen = LayerSubtypes::field_for(f, subtype);
+        let offered = |d: &str| {
+            seen.values.is_none()
+                || (if f.holds_many() {
+                    f.codes_of(d)
+                } else {
+                    vec![d]
+                })
+                .iter()
+                .all(|c| subtype_offers(f, subtype, c))
+        };
+        if let Some(d) = seen.default.filter(|d| !d.is_empty() && offered(d)) {
+            out.insert(f.name.clone(), d);
+        }
+    }
+}
+
 /// The values of a record of `subtype` its subtype does not allow (docs/adr/0422 §2): each field
 /// (in the fields' order) whose value holds codes the subtype does not offer, with those codes.
 pub fn subtype_misfits<'a, V: AsRef<str>>(

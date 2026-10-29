@@ -595,8 +595,10 @@ impl Prepared {
         out
     }
 
-    /// The record completed (docs/adr/0402 §3): a new record's empty fields take their plain
-    /// defaults, then their expressions' in the form's order; the calculations follow in their order;
+    /// The record completed (docs/adr/0402 §3, 0752): a new record's empty fields take the form's plain
+    /// defaults, then the subtype's and the layer field's (every field of the layer the form gives none
+    /// of its own), then the form's expressions in its order, a field an expression left empty the
+    /// subtype's or the field's after all; the calculations follow in their order;
     /// with `clearHidden` the fields the record hides are emptied and the calculations done again. An
     /// expression reading the moment or the user is left out when they were not given. Its issues:
     /// a calculation whose value its field refuses (an error: the record is not written), a default
@@ -659,7 +661,8 @@ impl Prepared {
         (out, issues)
     }
 
-    /// A new record's empty fields with their defaults.
+    /// A new record's empty fields with their defaults: the form's, then the subtype's and the field's
+    /// (docs/adr/0752: as a drawing command fills them).
     fn defaults(&self, out: &mut Attrs, object: &Object, issues: &mut Vec<FormIssue>) {
         for (_, b) in self.bound() {
             let field = &self.fields[b.index];
@@ -671,27 +674,17 @@ impl Prepared {
                 out.insert(field.name.clone(), v);
             }
         }
-        // The record's subtype's defaults, where the form gives none (docs/adr/0422 §2).
-        if self.subtypes.is_some() {
-            for (_, b) in self.bound() {
-                let field = &self.fields[b.index];
-                if b.item.default.is_some()
-                    || b.default_expr.is_some()
-                    || !is_empty(out, &field.name)
-                {
-                    continue;
-                }
-                let Some(t) = self.subtype(out) else { break };
-                if let Some(d) = t
-                    .fields
-                    .iter()
-                    .find(|r| r.field == field.key())
-                    .and_then(|r| r.default.clone())
-                {
-                    out.insert(field.name.clone(), d);
-                }
-            }
-        }
+        // The record's subtype's defaults, else the layer field's own, where the form gives none
+        // (docs/adr/0422 §2, 0752): every field of the layer, shown or not, as a drawing command fills them;
+        // before the expressions, which may read them.
+        let by_form: Vec<&str> = self
+            .bound()
+            .filter(|(_, b)| b.item.default.is_some() || b.default_expr.is_some())
+            .map(|(_, b)| self.fields[b.index].key())
+            .collect();
+        kentos_contracts::new_record_defaults(&self.fields, self.subtypes.as_ref(), out, |f| {
+            by_form.contains(&f.key())
+        });
         for (node, b) in self.bound() {
             let Some(e) = &b.default_expr else { continue };
             let field = &self.fields[b.index];
@@ -720,6 +713,9 @@ impl Prepared {
                 )),
             }
         }
+        // A field the form's own default left empty (its expression gave nothing, or waits for what only a
+        // host gives) takes its subtype's or its own after all (docs/adr/0752).
+        kentos_contracts::new_record_defaults(&self.fields, self.subtypes.as_ref(), out, |_| false);
     }
 
     /// One calculated field worked out into `out`.

@@ -1547,6 +1547,13 @@
          "item": "tur",
          "field": "Tür",
          "message": "$any"
+        },
+        {
+         "code": "form_combination",
+         "severity": "warning",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
         }
        ],
        "valid": false,
@@ -1556,14 +1563,14 @@
          "shown": true,
          "choices": [
           "konut",
-          "sanayi",
-          "depo"
+          "sanayi"
          ]
         },
         {
          "id": "malzeme",
          "shown": true,
          "choices": [
+          "ahsap",
           "beton",
           "celik"
          ]
@@ -1575,7 +1582,8 @@
        ],
        "version": 1,
        "attrs": {
-        "Tür": "sanayi"
+        "Tür": "sanayi",
+        "Malzeme": "ahsap"
        }
       },
       "warnings": []
@@ -1754,16 +1762,29 @@
      "result": {
       "status": "completed",
       "output": {
-       "issues": [],
-       "valid": true,
+       "issues": [
+        {
+         "code": "form_combination",
+         "severity": "error",
+         "item": "tur",
+         "field": "Tür",
+         "message": "$any"
+        },
+        {
+         "code": "form_combination",
+         "severity": "warning",
+         "item": "malzeme",
+         "field": "Malzeme",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
        "items": [
         {
          "id": "tur",
          "shown": true,
          "choices": [
-          "konut",
-          "sanayi",
-          "depo"
+          "konut"
          ]
         },
         {
@@ -1776,7 +1797,9 @@
         }
        ],
        "version": 1,
-       "attrs": {}
+       "attrs": {
+        "Malzeme": "ahsap"
+       }
       },
       "warnings": []
      },

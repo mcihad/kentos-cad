@@ -73,15 +73,43 @@ impl Document {
         world
     }
 
-    /// The ops that complete the records `ops` (a step about to be recorded, applied) added or changed
-    /// on a layer whose form enforces its rules, applied: the step takes them in.
-    pub(crate) fn follow_forms(&mut self, ops: &[Op]) -> Vec<Op> {
-        let enforcing: Vec<&ProjectForm> = self
-            .settings
+    /// The forms the drawing's writes are completed by (docs/adr/0402 §4): released, their rules enforced.
+    pub fn enforcing_forms(&self) -> impl Iterator<Item = &ProjectForm> {
+        self.settings
             .forms
             .iter()
             .filter(|f| f.enforce && f.release().is_some())
-            .collect();
+    }
+
+    /// What the forms `layer` enforces give a new record before its subtype's and its fields' defaults
+    /// (docs/adr/0752): each field's plain default by its key (the first form's), and the keys of the fields they
+    /// default by an expression, which the step works out once the record is made.
+    pub fn form_defaults(&self, layer: &str) -> (Vec<(String, String)>, HashSet<String>) {
+        let mut plain: Vec<(String, String)> = Vec::new();
+        let mut by_expression = HashSet::new();
+        for f in self.enforcing_forms().filter(|f| f.layer == layer) {
+            let Some(release) = f.release() else { continue };
+            for (_, item) in release.body.walk() {
+                let FormItem::Field(x) = item else { continue };
+                if x.mirror {
+                    continue;
+                }
+                if let Some(d) = x.default.as_deref().filter(|d| !d.is_empty()) {
+                    if !plain.iter().any(|(k, _)| *k == x.field) {
+                        plain.push((x.field.clone(), d.to_owned()));
+                    }
+                } else if x.default_expr.is_some() {
+                    by_expression.insert(x.field.clone());
+                }
+            }
+        }
+        (plain, by_expression)
+    }
+
+    /// The ops that complete the records `ops` (a step about to be recorded, applied) added or changed
+    /// on a layer whose form enforces its rules, applied: the step takes them in.
+    pub(crate) fn follow_forms(&mut self, ops: &[Op]) -> Vec<Op> {
+        let enforcing: Vec<&ProjectForm> = self.enforcing_forms().collect();
         if enforcing.is_empty() {
             return Vec::new();
         }
