@@ -167,6 +167,13 @@ LABELS = {
 }
 
 
+# Ranges of whole months, each a case (docs/adr/0741 §2; scripts/fixtures/terrain_cases.py's MONTH_RANGES, the same rule).
+MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+MONTH_CASES = [(f"Güneşlenme (1 {MONTH_NAMES[a - 1]}–{MONTH_DAYS[b - 1]} {MONTH_NAMES[b - 1]}, 2 saat)", a, b)
+               for a, b in [(1, 1), (1, 2), (3, 3), (4, 4), (5, 5), (5, 6), (7, 7), (8, 10), (9, 11), (10, 12), (11, 12)]]
+
+
 def tool_label(tool):
     return LABELS[tool]
 
@@ -253,6 +260,63 @@ def cases():
                     style=STYLES["ramp"]("Sıcaklık"), area=AREA_EDGE),
     ]
     assert window_of(dem("tepe"), AREA_BESIDE) is None
+    # Every option of the tools (docs/adr/0741 §2), each from the reference's case; “add”: false writes only the file.
+    ramp = STYLES["ramp"]
+    rgb = dict(style=STYLES["rgb"], bands=4, sample="u8")
+    out += [
+        raster_case("aspect-area-file", "Bakı, Horn, Kapsam nesnelerin kutusu, çizime eklenmeden", "surface.aspect",
+                    {**on("alan"), "add": False}, suffix="-baki", layer="Bakı", terrain=terrain_case("Bakı (Horn)"), style=None, add=False,
+                    area=AREA_INSIDE),
+        raster_case("hillshade-file", "Gölgeli kabartma, varsayılanlar, çizime eklenmeden", "surface.hillshade", {"add": False},
+                    suffix="-golge", layer="Gölgeli kabartma", terrain=terrain_case("Gölgeli kabartma (315, 45, 1)"), style=None, sample="u8",
+                    add=False),
+        raster_case("curvature-profile", "Eğrilik, profil", "surface.curvature", {"curvature": "profile"}, suffix="-egrilik",
+                    layer="Eğrilik", terrain=terrain_case("Eğrilik (profil)"), style=ramp("Mavi-kırmızı", "percent")),
+        raster_case("curvature-plan-file", "Eğrilik, plan, çizime eklenmeden", "surface.curvature", {"curvature": "plan", "add": False},
+                    suffix="-egrilik", layer="Eğrilik", terrain=terrain_case("Eğrilik (plan)"), style=None, add=False),
+        raster_case("ruggedness-area", "Pürüzlülük, TRI (Riley), Kapsam nesnelerin kutusu", "surface.ruggedness",
+                    {"index": "triRiley", **on("alan")}, suffix="-puruzluluk", layer="Pürüzlülük", terrain=terrain_case("TRI (Riley)"),
+                    style=ramp("Viridis"), area=AREA_INSIDE),
+        raster_case("ruggedness-wilson-file", "Pürüzlülük, TRI (Wilson), çizime eklenmeden", "surface.ruggedness",
+                    {"index": "triWilson", "add": False}, suffix="-puruzluluk", layer="Pürüzlülük", terrain=terrain_case("TRI (Wilson)"),
+                    style=None, add=False),
+        raster_case("ruggedness-roughness", "Pürüzlülük, Engebe", "surface.ruggedness", {"index": "roughness"}, suffix="-puruzluluk",
+                    layer="Pürüzlülük", terrain=terrain_case("Engebe"), style=ramp("Viridis")),
+        raster_case("color-relief-gray", "Renkli kabartma, Gri", "surface.colorRelief", {"ramp": "Gri"}, suffix="-renkli",
+                    layer="Renkli kabartma", terrain=terrain_case("Renkli kabartma (Gri)"), **rgb),
+        # An area's ramp spans the area's own heights; with the range written, the area's cells are the whole raster's.
+        raster_case("color-relief-area", "Renkli kabartma, Viridis ters 100–200, en yakın, Kapsam nesnelerin kutusu", "surface.colorRelief",
+                    {"ramp": "Viridis", "invert": True, "range": "manual", "min": 100, "max": 200, "interp": "nearest", **on("alan")},
+                    suffix="-renkli", layer="Renkli kabartma", terrain=terrain_case("Renkli kabartma (Viridis ters, 100–200, en yakın)"),
+                    area=AREA_INSIDE, **rgb),
+        raster_case("color-relief-spectral-file", "Renkli kabartma, Spektral, çizime eklenmeden", "surface.colorRelief",
+                    {"ramp": "Spektral", "add": False}, suffix="-renkli", layer="Renkli kabartma",
+                    terrain=terrain_case("Renkli kabartma (Spektral)"), add=False, **{**rgb, "style": None}),
+        raster_case("color-relief-blue-red", "Renkli kabartma, Mavi-kırmızı", "surface.colorRelief", {"ramp": "Mavi-kırmızı"},
+                    suffix="-renkli", layer="Renkli kabartma", terrain=terrain_case("Renkli kabartma (Mavi-kırmızı)"), **rgb),
+        raster_case("color-relief-heat", "Renkli kabartma, Sıcaklık", "surface.colorRelief", {"ramp": "Sıcaklık"}, suffix="-renkli",
+                    layer="Renkli kabartma", terrain=terrain_case("Renkli kabartma (Sıcaklık)"), **rgb),
+        raster_case("insolation-year-file", "Güneşlenme, varsayılanlar (yıl, 14 gün, 0,5 saat), çizime eklenmeden", "surface.insolation",
+                    {"add": False}, suffix="-gunes", layer="Güneşlenme", terrain=terrain_case("Güneşlenme (yıl, 14 gün, 0,5 saat, 0,5)"),
+                    style=None, add=False),
+        raster_case("insolation-day", "Güneşlenme, 21 Aralık, 0,25 saat, z 2", "surface.insolation",
+                    {"period": "day", "startDay": 21, "startMonth": "12", "hourStep": "0.25", "zFactor": 2}, suffix="-gunes",
+                    layer="Güneşlenme", terrain=terrain_case("Güneşlenme (21 Aralık, 0,25 saat)"), style=ramp("Sıcaklık")),
+    ]
+    for title, a, b in MONTH_CASES:
+        out.append(raster_case(f"insolation-{a}-{b}", f"{title}: ayları bütün, 31 günde bir", "surface.insolation",
+                               {"period": "range", "startDay": 1, "startMonth": str(a), "endDay": MONTH_DAYS[b - 1], "endMonth": str(b),
+                                "dayStep": 31, "hourStep": "2"},
+                               suffix="-gunes", layer="Güneşlenme", terrain=terrain_case(title), style=ramp("Sıcaklık")))
+    w = contour_case(7)
+    out.append({
+        "id": "contours-area", "title": "Eş yükselti eğrileri, tepe, 5 m, Kapsam nesnelerin kutusu: yalnız kutunun hücrelerinden",
+        "document": "surface.kcad", "selection": [1], "run": {"tool": "surface.contours"}, "values": on("alan"),
+        "expect": {
+            "status": "ok", "summary": w["summary"], "undo": "Eş yükselti eğrileri", "layers": [new_layer("Eş yükselti eğrileri", CONTOUR_LAYER)],
+            "contoursOf": 7, "outputs": {"lines": w["lines"]}, "layerAbove": {layer_id("Eş yükselti eğrileri"): "dem"},
+        },
+    })
     c = contour_case(2)
     out.append({
         "id": "contours", "title": "Eş yükselti eğrileri, tepe, 5 m, her beşincisi ana: kotlu çoklu çizgiler", "document": "surface.kcad", "selection": [1],

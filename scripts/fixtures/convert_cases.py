@@ -664,6 +664,7 @@ LAYERS = [
     layer("nokta", "Nokta", "#0090FF"),
     layer("olcu", "Ölçüler", "#AB4ABA"),
     layer("kilitli", "Arşiv", "#8E8C99", locked=True),
+    layer("tablo", "Tablo noktaları", "#FFB224"),
 ]
 
 
@@ -708,6 +709,13 @@ ENTITIES = [
     ent(31, "point", "olcu", {"Ad": "Ö1", "Doğu": "487200", "Kuzey": "4420100", "Semt": "45", "Uzunluk": "20"}, p=P(200, 100)),
     ent(32, "point", "olcu", {"Ad": "Ö2", "Doğu": "487200", "Kuzey": "4420100", "Semt": "270,5", "Uzunluk": "12,25"}, p=P(200, 100)),
     ent(33, "point", "olcu", {"Ad": "Ö3", "Doğu": "487200", "Kuzey": "4420100", "Semt": "kuzey", "Uzunluk": "5"}, p=P(200, 100)),
+    # Rows on objects (docs/adr/0741): two ends and an error ellipse each, the angles in degrees; one row's ends meet.
+    ent(51, "point", "tablo", {"Y1": "487300", "X1": "4420100", "Y2": "487320,5", "X2": "4420130", "Y": "487300", "X": "4420100",
+                               "a": "3", "b": "1,5", "Semt": "30"}, p=P(300, 100)),
+    ent(52, "point", "tablo", {"Y1": "487310", "X1": "4420110", "Y2": "487310", "X2": "4420110", "Y": "487310", "X": "4420110",
+                               "a": "1", "b": "2", "Semt": "120,5"}, p=P(310, 110)),
+    ent(53, "point", "tablo", {"Y1": "487320", "X1": "x", "Y2": "487330", "X2": "4420140", "Y": "487320", "X": "4420120",
+                               "a": "2,5", "b": "2,5"}, p=P(320, 120)),
     # A locked layer's parcel: read, not written.
     ent(41, "polygon", "kilitli", {"Parsel": "41"}, pts=rect(0, 150, 10, 160)),
 ]
@@ -1122,6 +1130,18 @@ def build():
              T["convert.tableEllipse"],
              {"sourceKind": "file", "file": "convert-elips.csv", "east": "Y", "north": "X", "major": "a", "minor": "b", "bearing": "Semt", "unit": "grad"},
              ellipse_file("convert.tableEllipse", "convert-elips.csv", elips_cols, "grad")),
+        # The options the first cases leave untried (docs/adr/0741 §2).
+        case("vertices-begin", "Başlangıç: parsellerin ilk köşesi",
+             T["convert.vertices"], {"input": L("parsel"), "which": "start"}, vertices("convert.vertices", objects("parsel"), "start")),
+        case("xy-layer", "XY'den çizgi: katmanın nesnelerinden; uçları aynı yerde ve okunamayan satır atlanır",
+             T["convert.xyLine"],
+             {"sourceKind": "layer", "source": L("tablo"), "startEast": "Y1", "startNorth": "X1", "endEast": "Y2", "endNorth": "X2"},
+             from_rows("convert.xyLine", *layer_rows("tablo"), lambda r: xy_row(r, xy_cols), xy_cols, "çizgi")),
+        case("ellipse-layer", "Tablodan elips: katmanın nesnelerinden, derece; yer değiştiren eksenler ve boş semt",
+             T["convert.tableEllipse"],
+             {"sourceKind": "layer", "source": L("tablo"), "east": "Y", "north": "X", "major": "a", "minor": "b", "bearing": "Semt",
+              "unit": "deg"},
+             from_rows("convert.tableEllipse", *layer_rows("tablo"), lambda r: ellipse_row(r, elips_cols, "deg"), elips_cols, "elips")),
         case("substring-fixed", "Çizginin parçası 5 ile 25 m arası: kotlar boyunca, yay parçası, çizgi, yay, iki parçalı ve kısa çizgi",
              T["convert.substring"], {"input": L("yol"), "start": "5", "end": "25"},
              pieces("convert.substring", road, [5] * len(road), [25] * len(road))),

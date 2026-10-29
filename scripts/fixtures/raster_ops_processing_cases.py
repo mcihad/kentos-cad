@@ -71,6 +71,15 @@ FILES = [
     ("yil1.tif", "hucre-mean", 0, "yil1", "Yıl 1"),
     ("yil2.tif", "hucre-mean", 1, "yil2", "Yıl 2"),
     ("yil3.tif", "hucre-mean", 2, "yil3", "Yıl 3"),
+    # Every option of the tools (docs/adr/0741 §2): class rasters for Çoğunluk, Azınlık and Çeşit, Yeniden örnekle's Mod, and
+    # the coarse sheet Mozaik resamples bilinear and cubic.
+    ("sinif-bolge.tif", "bolge-majority", 0, "sinif-bolge", "Sınıf bölgesi"),
+    ("sinif-komsu.tif", "komsu-cogunluk", 0, "sinif-komsu", "Sınıf komşuluğu"),
+    ("sinif-ornek.tif", "ornekle-mode-3.0", 0, "sinif-ornek", "Sınıf örneği"),
+    ("pafta-iri.tif", "mozaik-bilinear", 1, "pafta-iri", "İri pafta"),
+    ("sinif-yil1.tif", "hucre-majority", 0, "sinif-yil1", "Sınıf yıl 1"),
+    ("sinif-yil2.tif", "hucre-majority", 1, "sinif-yil2", "Sınıf yıl 2"),
+    ("sinif-yil3.tif", "hucre-majority", 2, "sinif-yil3", "Sınıf yıl 3"),
 ]
 
 
@@ -102,6 +111,7 @@ def read_tiff(path):
 # ── The drawing ──────────────────────────────────────────────────────────
 
 MASK = ref("kirp-kare")["shapes"]
+PARTS = ref("kirp-delikli-parcali")["shapes"]
 ZONES = ref("bolge-mean")["shapes"]
 ZONE_LABELS = ["B1", "B2", "B3", "B4"]
 # A mask far from every raster.
@@ -134,9 +144,12 @@ def drawing():
     for file, bands in ORTHOS:
         add({"kind": "raster", "affine": [500100.0, 0.5, 0.0, 4420100.0, 0.0, -0.5], "width": 4, "height": 4, "bands": bands, "sample": "u8",
              "file": file, "srid": 5254, "style": {"render": "rgb", "bands": [1, 2, 3]}}, "orto")
+    for s in PARTS:
+        add(s, "maske-parcali")
     layers = [layer(lid, name, "#8D6E63") for _, _, _, lid, name in FILES]
     layers += [layer("orto", "Ortofoto", "#8D6E63")]
-    layers += [layer("maske", "Maske", "#C62828"), layer("bolgeler", "Bölgeler", "#1565C0"), layer("uzak", "Uzak maske", "#C62828")]
+    layers += [layer("maske", "Maske", "#C62828"), layer("bolgeler", "Bölgeler", "#1565C0"), layer("uzak", "Uzak maske", "#C62828"),
+               layer("maske-parcali", "Delikli maske", "#C62828")]
     return {
         "format": "kentos.document",
         "version": 1,
@@ -308,6 +321,72 @@ def histogram_case():
                        "layers": [], "added": []}}
 
 
+STAT_LABELS = {"count": "Sayı", "sum": "Toplam", "mean": "Ortalama", "min": "En küçük", "max": "En büyük", "range": "Aralık",
+               "std": "Standart sapma", "median": "Ortanca", "majority": "Çoğunluk", "minority": "Azınlık", "variety": "Çeşit",
+               "area": "Alan"}
+
+
+def zonal_stat_case(stat, layer, refname):
+    """Bölgesel istatistik with another statistic (docs/adr/0741 §2): the reference's value per zone into a field of its
+    label (a count and a variety whole, Sayı 0 for an empty zone), the table's moments by the reference's rules and, for a
+    statistic the moments do not give, its column."""
+    c = ref(refname)
+    r_json = c["inputs"][0]
+    r = ops.Raster(r_json["affine"], r_json["width"], r_json["height"], [math.nan if v is None else v for v in r_json["values"]],
+                   1, r_json["sample"], r_json["nodata"])
+    label = STAT_LABELS[stat]
+    whole = stat in ("count", "variety")
+    extra = stat not in ("count", "sum", "mean", "min", "max", "std")
+    updated, rows = [], []
+    empty = 0
+    for k, (s, z) in enumerate(zip(ZONES, c["expect"]["zones"])):
+        zone_id = len(FILES) + len(MASK) + k + 1
+        cells = ops.inside_cells(s, r.affine, r.width, r.height)
+        vals = [Fraction(v) for (i, j) in cells for v in [r.get(i, j, 0)] if v is not None and not math.isnan(v)]
+        if not vals:
+            empty += 1
+        figure = lambda st: ops.as_float(ops.stat_of(vals, st))
+        text = "" if z["value"] is None else shown(z["value"], 0 if whole else 3)
+        if text:
+            updated.append({"id": zone_id, "attrs": {"Ad": f"Bölge {k + 1}", label: text}, "label": ZONE_LABELS[k]})
+        row = [ZONE_LABELS[k], shown(len(vals), 0), fig(figure("sum")), fig(figure("mean")), fig(figure("min")),
+               fig(figure("max")), fig(figure("std"))]
+        if extra:
+            row.append(text)
+        rows.append(row)
+    columns = ["Nesne", "Sayı", "Toplam", "Ortalama", "En küçük", "En büyük", "Standart sapma"] + ([label] if extra else [])
+    expect = {
+        "status": "ok",
+        "undo": LABELS["raster.zonalStatistics"],
+        "summary": f"{len(updated)} bölgeye “{label}” yazıldı ({label.lower()}).",
+        "outputs": {"table": {"columns": columns, "rows": rows}, "changed": [u["id"] for u in updated], "count": len(updated)},
+        "updated": updated,
+        "layers": [],
+        "added": [],
+    }
+    if empty:
+        expect["log"] = [{"level": "warn", "text": f"{words(empty)} bölgenin içinde değeri olan hücre merkezi yok."}]
+    return {"id": f"zonal-{stat}", "title": f"Bölgesel istatistik, {label}: başvurunun {refname} durumu", "document": "raster-ops.kcad",
+            "selection": [], "run": {"tool": "raster.zonalStatistics"},
+            "values": {"input": {"scope": "layer", "layerId": layer}, "zones": {"scope": "layer", "layerId": "bolgeler"},
+                       "stat": stat, "output": label},
+            "expect": expect}
+
+
+def quiet(case, title):
+    """The same run with Çizime ekle off (docs/adr/0741 §2): the file written as it was, no layer, no object, no step."""
+    out = json.loads(json.dumps(case))
+    out["id"] = case["id"] + "-eklemeden"
+    out["title"] = title
+    out["values"]["add"] = False
+    e = out["expect"]
+    e.pop("undo", None)
+    e.pop("layerAbove", None)
+    e["layers"] = []
+    e["added"] = []
+    return out
+
+
 def defaults():
     ends = lambda layer: {"output": "", "add": True, "layer": {"newName": layer}}
     here = {"scope": "layer", "layerId": "kot"}
@@ -362,6 +441,84 @@ def cases():
         zonal_case(),
         histogram_case(),
     ]
+    # Every option of the tools (docs/adr/0741 §2), each from the reference's case.
+    calc_of = lambda id, title, expression, refname, **more: raster_case(
+        id, title, "raster.calculator", {"input": {"scope": "layer", "layerId": "kot"}, "expression": expression, **more}, refname,
+        first="kot.tif", files=["kot.tif"], style=ramp("Viridis"))
+    out += [
+        calc_of("calculator-empty", "Raster hesaplayıcı, Değersiz hücre: İfade yazar; boş hücre -1 olur", "durum eğer [Kot] boş ise -1 yoksa [Kot] son",
+                "hesap-bos", empty="expression"),
+        calc_of("calculator-f64", "Raster hesaplayıcı, 64 bit ondalık: [Kot] / 3", "[Kot] / 3", "hesap-64", sample="f64"),
+        raster_case("reclassify-lower", "Yeniden sınıflandır, alt uç kapalı, tabloda olmayan boş, 8 bit", "raster.reclassify",
+                    {"input": {"scope": "layer", "layerId": "egim"}, "table": "0 10 1; 10 20 2; 20 30 3; 7 70", "bounds": "lowerClosed",
+                     "unmatched": "empty", "sample": "u8"}, "sinif-alt-kapali", first="egim.tif", files=["egim.tif"],
+                    style=ramp("Spektral"), extra=f" Tablonun hiçbir kuralının tutmadığı {words(unmatched('sinif-alt-kapali'))} hücre."),
+        raster_case("reclassify-i32", "Yeniden sınıflandır, 32 bit tam sayı: eksi ve büyük değerler", "raster.reclassify",
+                    {"input": {"scope": "layer", "layerId": "egim"}, "table": "* 10 -5; 10 * 1000000", "sample": "i32"}, "sinif-tam-sayi",
+                    first="egim.tif", files=["egim.tif"], style=ramp("Spektral"),
+                    extra=f" Tablonun hiçbir kuralının tutmadığı {words(unmatched('sinif-tam-sayi'))} hücre."),
+        raster_case("clip-whole", "Maskeyle kırp, kutuya kırpmadan: delikli ve iki parçalı maske, ızgara bütün kalır", "raster.clipByMask",
+                    {"input": {"scope": "layer", "layerId": "buyuk"}, "mask": {"scope": "layer", "layerId": "maske-parcali"}, "crop": False},
+                    "kirp-delikli-parcali", first="buyuk.tif", files=["buyuk.tif"], style=ARAZI, extra=" Maskenin içinde {parts} hücre."),
+    ]
+    for overlap, title in [("bottom", "Alttaki"), ("mean", "Ortalama"), ("min", "En küçük"), ("max", "En büyük")]:
+        out.append(raster_case(f"mosaic-{overlap}", f"Mozaik, üç pafta, örtüşmede {title}", "raster.mosaic",
+                               {"input": {"scope": "selection"}, "overlap": overlap}, f"mozaik-{overlap}", first="pafta1.tif",
+                               files=["pafta1.tif", "pafta2.tif", "pafta3.tif"], style=ARAZI, extra=f" {words(3)} raster birleşti.",
+                               selection=ids_of("pafta1", "pafta2", "pafta3")))
+    for sampling, title in [("bilinear", "çift doğrusal"), ("cubic", "kübik")]:
+        out.append(raster_case(f"mosaic-{sampling}", f"Mozaik, iri hücreli pafta {title} örneklenir", "raster.mosaic",
+                               {"input": {"scope": "selection"}, "sampling": sampling}, f"mozaik-{sampling}", first="pafta1.tif",
+                               files=["pafta1.tif", "pafta-iri.tif"], style=ARAZI, extra=f" {words(2)} raster birleşti.",
+                               selection=ids_of("pafta1", "pafta-iri")))
+    for method, cell, title in [("bilinear", 1.0, "Çift doğrusal, 1 m"), ("cubic", 1.3, "Kübik, 1,3 m"), ("min", 5.0, "En küçük, 5 m"),
+                                ("max", 5.0, "En büyük, 5 m")]:
+        out.append(raster_case(f"resample-{method}", f"Yeniden örnekle, {title}", "raster.resample",
+                               {"input": {"scope": "layer", "layerId": "dem"}, "cell": cell, "method": method}, f"ornekle-{method}-{cell}",
+                               first="dem.tif", files=["dem.tif"], style=ARAZI))
+    out.append(raster_case("resample-mode", "Yeniden örnekle, Mod, 3 m: sınıf rasterinde en çok örtüşen", "raster.resample",
+                           {"input": {"scope": "layer", "layerId": "sinif-ornek"}, "cell": 3.0, "method": "mode"}, "ornekle-mode-3.0",
+                           first="sinif-ornek.tif", files=["sinif-ornek.tif"], style=ARAZI))
+    focal_of = lambda id, title, layer, refname, **more: raster_case(
+        id, title, "raster.focalStatistics", {"input": {"scope": "layer", "layerId": layer}, **more}, refname, first=f"{layer}.tif",
+        files=[f"{layer}.tif"], style=ramp("Viridis"))
+    out += [
+        focal_of("focal-sum", "Komşuluk istatistiği, 5 × 3 Toplam", "arazi", "komsu-toplam-5x3", width=5, height=3, stat="sum"),
+        focal_of("focal-std", "Komşuluk istatistiği, 5 × 5 Standart sapma; değersiz komşu sonucu boşaltır", "arazi", "komsu-sapma-5x5-bos",
+                 width=5, height=5, stat="std", ignore=False),
+        focal_of("focal-circle-max", "Komşuluk istatistiği, daire (2 hücre) En büyük", "arazi", "komsu-buyuk-daire", shape="circle",
+                 radius=2, stat="max"),
+        focal_of("focal-circle-min", "Komşuluk istatistiği, daire (3 hücre) En küçük", "arazi", "komsu-kucuk-daire", shape="circle",
+                 radius=3, stat="min"),
+        focal_of("focal-range", "Komşuluk istatistiği, 3 × 3 Aralık; değersiz komşu sonucu boşaltır", "arazi", "komsu-aralik-3x3",
+                 stat="range", ignore=False),
+        focal_of("focal-ring-median", "Komşuluk istatistiği, halka (1–3 hücre) Ortanca", "arazi", "komsu-ortanca-halka", shape="ring",
+                 radius=3, inner=1, stat="median"),
+        focal_of("focal-majority", "Komşuluk istatistiği, sınıflarda 3 × 3 Çoğunluk", "sinif-komsu", "komsu-cogunluk", stat="majority"),
+        focal_of("focal-minority", "Komşuluk istatistiği, sınıflarda daire (2 hücre) Azınlık", "sinif-komsu", "komsu-azinlik",
+                 shape="circle", radius=2, stat="minority"),
+        focal_of("focal-variety", "Komşuluk istatistiği, sınıflarda halka (1–2 hücre) Çeşit", "sinif-komsu", "komsu-cesit", shape="ring",
+                 radius=2, inner=1, stat="variety"),
+    ]
+    for stat, ignore in [("max", False), ("std", True), ("median", True), ("count", True), ("sum", True), ("min", True),
+                         ("range", False)]:
+        values = {"input": {"scope": "selection"}, "stat": stat}
+        if not ignore:
+            values["ignore"] = False
+        out.append(raster_case(f"cells-{stat}", f"Hücre istatistiği, üç yıl {STAT_LABELS[stat]}"
+                               + ("; değersiz yıl sonucu boşaltır" if not ignore else ""), "raster.cellStatistics", values, f"hucre-{stat}",
+                               first="yil1.tif", files=["yil1.tif", "yil2.tif", "yil3.tif"], style=ramp("Viridis"),
+                               extra=f" {words(3)} raster birleşti.", selection=ids_of("yil1", "yil2", "yil3")))
+    for stat in ("majority", "minority", "variety"):
+        out.append(raster_case(f"cells-{stat}", f"Hücre istatistiği, üç yılın sınıfları {STAT_LABELS[stat]}", "raster.cellStatistics",
+                               {"input": {"scope": "selection"}, "stat": stat}, f"hucre-{stat}", first="sinif-yil1.tif",
+                               files=["sinif-yil1.tif", "sinif-yil2.tif", "sinif-yil3.tif"], style=ramp("Viridis"),
+                               extra=f" {words(3)} raster birleşti.", selection=ids_of("sinif-yil1", "sinif-yil2", "sinif-yil3")))
+    for stat in ("count", "sum", "min", "max", "range", "std", "median", "area"):
+        out.append(zonal_stat_case(stat, "bolge", f"bolge-{stat}"))
+    for stat in ("majority", "minority", "variety"):
+        out.append(zonal_stat_case(stat, "sinif-bolge", f"bolge-{stat}"))
+
     # Maskenin içindeki hücreler: the reference's cells.
     clip = next(c for c in out if c["id"] == "clip")
     r_json = ref("kirp-kare")["inputs"][0]
@@ -369,6 +526,15 @@ def cases():
     for s in MASK:
         inside |= ops.inside_cells(s, r_json["affine"], r_json["width"], r_json["height"])
     clip["expect"]["summary"] = clip["expect"]["summary"].replace("{inside}", words(len(inside)))
+    whole = next(c for c in out if c["id"] == "clip-whole")
+    inside = set()
+    for s in PARTS:
+        inside |= ops.inside_cells(s, r_json["affine"], r_json["width"], r_json["height"])
+    whole["expect"]["summary"] = whole["expect"]["summary"].replace("{parts}", words(len(inside)))
+    # Çizime ekle off: the file only.
+    first = {c["id"]: c for c in out}
+    out += [quiet(first[id], f"{first[id]['title']}; çizime eklenmeden: yalnız dosya") for id in
+            ("calculator", "reclassify", "clip", "mosaic", "resample", "focal", "cells", "cog")]
     refused = lambda id, title, tool, values, message, selection=(): {
         "id": id, "title": title, "document": "raster-ops.kcad", "selection": list(selection), "run": {"tool": tool}, "values": values,
         "expect": {"status": "error", "message": message},

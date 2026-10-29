@@ -200,6 +200,104 @@
    "children": []
   },
   {
+   "id": "sinif-bolge",
+   "name": "Sınıf bölgesi",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sinif-komsu",
+   "name": "Sınıf komşuluğu",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sinif-ornek",
+   "name": "Sınıf örneği",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "pafta-iri",
+   "name": "İri pafta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sinif-yil1",
+   "name": "Sınıf yıl 1",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sinif-yil2",
+   "name": "Sınıf yıl 2",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sinif-yil3",
+   "name": "Sınıf yıl 3",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
    "id": "orto",
    "name": "Ortofoto",
    "type": "layer",
@@ -244,6 +342,20 @@
   {
    "id": "uzak",
    "name": "Uzak maske",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#C62828",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "maske-parcali",
+   "name": "Delikli maske",
    "type": "layer",
    "visible": true,
    "locked": false,
@@ -623,6 +735,202 @@
    "attrs": {}
   },
   {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 12,
+   "height": 10,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sinif-bolge.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 14,
+   "layerId": "sinif-bolge",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 13,
+   "height": 11,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sinif-komsu.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 15,
+   "layerId": "sinif-komsu",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 10,
+   "height": 9,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sinif-ornek.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 16,
+   "layerId": "sinif-ornek",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    499997.0,
+    3.0,
+    0.0,
+    4420003.0,
+    0.0,
+    -3.0
+   ],
+   "width": 5,
+   "height": 4,
+   "bands": 1,
+   "sample": "f32",
+   "file": "pafta-iri.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 17,
+   "layerId": "pafta-iri",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 8,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sinif-yil1.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 18,
+   "layerId": "sinif-yil1",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 8,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sinif-yil2.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 19,
+   "layerId": "sinif-yil2",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    500000.0,
+    2.0,
+    0.0,
+    4420000.0,
+    0.0,
+    -2.0
+   ],
+   "width": 8,
+   "height": 7,
+   "bands": 1,
+   "sample": "f32",
+   "file": "sinif-yil3.tif",
+   "srid": 5254,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi"
+   },
+   "id": 20,
+   "layerId": "sinif-yil3",
+   "attrs": {}
+  },
+  {
    "kind": "polygon",
    "pts": [
     {
@@ -642,7 +950,7 @@
      "y": 4419994.9
     }
    ],
-   "id": 14,
+   "id": 21,
    "layerId": "maske",
    "attrs": {}
   },
@@ -666,7 +974,7 @@
      "y": 4419997.6
     }
    ],
-   "id": 15,
+   "id": 22,
    "layerId": "bolgeler",
    "attrs": {
     "Ad": "Bölge 1"
@@ -693,7 +1001,7 @@
      "y": 4419990.9
     }
    ],
-   "id": 16,
+   "id": 23,
    "layerId": "bolgeler",
    "attrs": {
     "Ad": "Bölge 2"
@@ -707,7 +1015,7 @@
     "y": 4419991.0
    },
    "r": 6.0,
-   "id": 17,
+   "id": 24,
    "layerId": "bolgeler",
    "attrs": {
     "Ad": "Bölge 3"
@@ -734,7 +1042,7 @@
      "y": 4420910.0
     }
    ],
-   "id": 18,
+   "id": 25,
    "layerId": "bolgeler",
    "attrs": {
     "Ad": "Bölge 4"
@@ -761,7 +1069,7 @@
      "y": 4421010.0
     }
    ],
-   "id": 19,
+   "id": 26,
    "layerId": "uzak",
    "attrs": {}
   },
@@ -789,7 +1097,7 @@
      3
     ]
    },
-   "id": 20,
+   "id": 27,
    "layerId": "orto",
    "attrs": {}
   },
@@ -817,8 +1125,72 @@
      3
     ]
    },
-   "id": 21,
+   "id": 28,
    "layerId": "orto",
+   "attrs": {}
+  },
+  {
+   "kind": "polygon",
+   "pts": [
+    {
+     "x": 500001.2,
+     "y": 4419979.8
+    },
+    {
+     "x": 500020.6,
+     "y": 4419979.8
+    },
+    {
+     "x": 500020.6,
+     "y": 4419998.6
+    },
+    {
+     "x": 500001.2,
+     "y": 4419998.6
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 500007.1,
+       "y": 4419986.7
+      },
+      {
+       "x": 500013.6,
+       "y": 4419986.7
+      },
+      {
+       "x": 500013.6,
+       "y": 4419992.3
+      },
+      {
+       "x": 500007.1,
+       "y": 4419992.3
+      }
+     ]
+    }
+   ],
+   "parts": [
+    {
+     "pts": [
+      {
+       "x": 500022.3,
+       "y": 4419978.9
+      },
+      {
+       "x": 500027.4,
+       "y": 4419978.9
+      },
+      {
+       "x": 500026.2,
+       "y": 4419984.2
+      }
+     ]
+    }
+   ],
+   "id": 29,
+   "layerId": "maske-parcali",
    "attrs": {}
   }
  ],

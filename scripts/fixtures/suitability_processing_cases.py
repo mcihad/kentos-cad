@@ -419,7 +419,76 @@ def cases():
          "values": {"input": SELECTION, "weights": {"Eğim": 2e9}},
          "expect": {"status": "invalid", "issues": [{"param": "weights",
                                                       "message": "“Ağırlıklar”: Eğim -1000000000 ile 1000000000 arasında olmalı."}]}},
+    ] + more_cases()
+
+
+def overlay_log_of(notes):
+    log = []
+    if notes["unmatched"]:
+        log.append({"level": "warn", "text": f"Sınıf tablosunun hiçbir kuralının tutmadığı {words(notes['unmatched'])} hücre "
+                                             "değersiz bırakıldı."})
+    if notes["outside"]:
+        log.append({"level": "warn", "text": f"Ölçeğin dışında (ya da tam sayı olmayan) değerli {words(notes['outside'])} "
+                                             "hücre değersiz bırakıldı."})
+    return log
+
+
+def more_cases():
+    """The options the first cases leave untried (docs/adr/0741 §2): the other membership functions and overlay
+    operators, a lower-closed class table, float64 results, and every raster-writing tool with Çizime ekle off."""
+    M, O, S, W, P = ("suitability.fuzzyMembership", "suitability.fuzzyOverlay", "suitability.weightedSum",
+                     "suitability.weightedOverlay", "suitability.pairwise")
+    three = ["uyelik-a", "uyelik-b", "uyelik-c"]
+    sums = (["Eğim", "Yol", "Toprak"], ["Eğim", "Yol", "Toprak"])
+    overlay_names = (ref("cakistirma-alt-kapali")["names"], ["Sınıf", "Eğim sınıfı", "Örtü"])
+    low = ref("cakistirma-alt-kapali")
+    ahp = ref("ahp-tutarli-raster-64")
+    ahp_p = ahp["expect"]["pairwise"]
+    sum64 = ref("agirlikli-toplam-64")
+    out = [
+        raster_case("membership-power", "Bulanık üyelik, Üslü 0–20, üs 2,5", M,
+                    {"function": "power", "low": 0, "high": 20, "exponent": 2.5}, "uyelik-uslu", MEMBERSHIP, "", inputs=["deger"]),
+        raster_case("membership-small", "Bulanık üyelik, Küçük: orta nokta 10, diklik 3", M,
+                    {"function": "small", "midpoint": 10, "steep": 3}, "uyelik-kucuk", MEMBERSHIP, "", inputs=["deger"]),
+        raster_case("membership-near", "Bulanık üyelik, Yakın: orta nokta 10, yayılım 0,1", M,
+                    {"function": "near", "midpoint": 10, "spread": 0.1}, "uyelik-yakin", MEMBERSHIP, "", inputs=["deger"]),
+        raster_case("membership-f64", "Bulanık üyelik, Gauss, 64 bit sonuç", M,
+                    {"function": "gaussian", "midpoint": 7.5, "spread": 0.02, "sample": "f64"}, "uyelik-gauss-64", MEMBERSHIP, "",
+                    inputs=["deger"], sample="f64"),
     ]
+    for op, name in (("or", "Veya"), ("product", "Çarpım"), ("sum", "Toplam")):
+        out.append(raster_case(f"fuzzy-{op}", f"Bulanık çakıştırma, {name}: üç üyelik", O, {"op": op}, f"bulanik-{op}", MEMBERSHIP,
+                               joined(3), inputs=three, log=[invalid_warn(ref(f"bulanik-{op}")["expect"]["notes"]["invalid"])]))
+    out += [
+        raster_case("fuzzy-or-f64", "Bulanık çakıştırma, Veya, 64 bit sonuç", O, {"op": "or", "sample": "f64"}, "bulanik-or-64",
+                    MEMBERSHIP, joined(3), inputs=three, sample="f64",
+                    log=[invalid_warn(ref("bulanik-or-64")["expect"]["notes"]["invalid"])]),
+        raster_case("weighted-sum-f64", "Ağırlıklı toplam, 64 bit sonuç: ağırlıklar 0,3, 0,001, −2", S,
+                    {"weights": renamed(sum64["tool"]["weights"], sums), "sample": "f64"}, "agirlikli-toplam-64", SUM,
+                    joined(3) + sensitivity_sum(sum64, weights_of(sum64)), inputs=["egim", "yol", "toprak"], sample="f64"),
+        raster_case("weighted-overlay-lower", "Ağırlıklı çakıştırma, alt sınır kapalı: etkiler %10, %60, %30", W,
+                    {"low": 1, "high": 9, "influence": renamed(low["tool"]["influence"], overlay_names),
+                     "classes": renamed(low["tool"]["classes"], overlay_names), "bounds": "lowerClosed"},
+                    "cakistirma-alt-kapali", ramp("manual", 0.0, 9.0, "nearest"),
+                    f"{joined(3)} Kısıtlı {words(low['expect']['notes']['restricted'])} hücre.{sensitivity_overlay(low)}",
+                    inputs=["sinif", "egim-sinifi", "ortu"], sample="i32", log=overlay_log_of(low["expect"]["notes"])),
+        raster_case("pairwise-f64", "İkili karşılaştırma, ağırlıklı toplam 64 bit", P,
+                    {"comparisons": pairs_renamed(ahp["tool"]["pairs"], (ahp["names"], ["Eğim", "Yol", "Toprak"])), "write": True,
+                     "sample": "f64"},
+                    "ahp-tutarli-raster-64", SUM, f" Ağırlıklar tabloda; {consistency(ahp_p)}{sensitivity_sum(ahp, ahp_p['weights'])}",
+                    inputs=["egim", "yol", "toprak"], sample="f64",
+                    outputs={"table": weights_table(["Eğim", "Yol", "Toprak"], ahp_p)}),
+    ]
+    firsts = {c["id"]: c for c in out}
+    for cid, title in [
+        ("membership-power", "Bulanık üyelik, Çizime ekle kapalı: dosya yazılır, katman ve adım yok"),
+        ("fuzzy-or", "Bulanık çakıştırma, Çizime ekle kapalı"),
+        ("weighted-sum-f64", "Ağırlıklı toplam, Çizime ekle kapalı"),
+        ("weighted-overlay-lower", "Ağırlıklı çakıştırma, Çizime ekle kapalı"),
+        ("pairwise-f64", "İkili karşılaştırma, Çizime ekle kapalı"),
+    ]:
+        out.append(rop.quiet(firsts[cid], title))
+    return out
 
 
 def defaults():

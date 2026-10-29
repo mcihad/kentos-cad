@@ -1817,6 +1817,198 @@
     "status": "error",
     "message": "Kaynak hücre yok: kaynak nesneleri maliyet rasterinin değerli hücrelerine düşmüyor."
    }
+  },
+  {
+   "id": "corridor-surface",
+   "title": "Maliyet koridoru, yükseklik modeliyle: yüzey uzunluğu, en büyük eğim %12, eşik yok, 64 bit",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.corridor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "baslangic"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "ikinci"
+    },
+    "useSurface": true,
+    "surface": {
+     "scope": "layer",
+     "layerId": "yukseklik"
+    },
+    "surfaceLength": true,
+    "slope": 12,
+    "threshold": "none",
+    "sample": "f64"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Maliyet koridoru",
+    "summary": "31 × 23 hücrelik raster; “maliyet-koridor.tif” yazıldı. En ucuz yolun maliyeti 1705.17; koridorda 712 hücre.",
+    "outputs": {
+     "file": "maliyet-koridor.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-maliyet-koridoru",
+      "name": "Maliyet koridoru",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-maliyet-koridoru",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 31,
+      "height": 23,
+      "bands": 1,
+      "sample": "f64",
+      "file": "maliyet-koridor.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-maliyet-koridoru": "maliyet"
+    },
+    "distanceOf": {
+     "maliyet-koridor.tif": "koridor-yukseklik"
+    }
+   }
+  },
+  {
+   "id": "euclid-raster-eklemeden",
+   "title": "Uzaklık yüzeyi, Çizime ekle kapalı: dosya yazılır, katman ve adım yok",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.euclidean"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaynak-raster"
+    },
+    "from": "raster",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "23 × 17 hücrelik raster; “kaynak-raster-uzaklik.tif” yazıldı. 6 kaynak hücre; en uzak hücre 120.416 m.",
+    "outputs": {
+     "file": "kaynak-raster-uzaklik.tif"
+    },
+    "layers": [],
+    "added": [],
+    "distanceOf": {
+     "kaynak-raster-uzaklik.tif": "uzaklik-raster-kare"
+    }
+   }
+  },
+  {
+   "id": "cost-eklemeden",
+   "title": "Birikimli maliyet, Çizime ekle kapalı",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.cost"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "kaynaklar"
+    },
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "31 × 23 hücrelik raster; “maliyet-maliyet.tif” yazıldı. 7 kaynak hücre; en büyük birikimli maliyet 1047.067.",
+    "outputs": {
+     "file": "maliyet-maliyet.tif"
+    },
+    "layers": [],
+    "added": [],
+    "distanceOf": {
+     "maliyet-maliyet.tif": "maliyet-16"
+    }
+   }
+  },
+  {
+   "id": "corridor-surface-eklemeden",
+   "title": "Maliyet koridoru, Çizime ekle kapalı",
+   "document": "distance.kcad",
+   "selection": [],
+   "run": {
+    "tool": "distance.corridor"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "maliyet"
+    },
+    "sources": {
+     "scope": "layer",
+     "layerId": "baslangic"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "ikinci"
+    },
+    "useSurface": true,
+    "surface": {
+     "scope": "layer",
+     "layerId": "yukseklik"
+    },
+    "surfaceLength": true,
+    "slope": 12,
+    "threshold": "none",
+    "sample": "f64",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "31 × 23 hücrelik raster; “maliyet-koridor.tif” yazıldı. En ucuz yolun maliyeti 1705.17; koridorda 712 hücre.",
+    "outputs": {
+     "file": "maliyet-koridor.tif"
+    },
+    "layers": [],
+    "added": [],
+    "distanceOf": {
+     "maliyet-koridor.tif": "koridor-yukseklik"
+    }
+   }
   }
  ]
 }

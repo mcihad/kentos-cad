@@ -5551,6 +5551,79 @@
    }
   },
   {
+   "id": "concave-each",
+   "title": "İçbükey zarf, her nesne ayrı, oran 0,5: çok noktalı nesnelerin kendi zarfları (docs/adr/0741)",
+   "document": "generate.kcad",
+   "run": {
+    "tool": "generate.concaveHull"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nokta"
+    },
+    "ratio": 0.5,
+    "holes": false,
+    "group": "each",
+    "field": ""
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "20 nesneden 1 içbükey zarf yazıldı.",
+    "undo": "İçbükey zarf",
+    "layers": [
+     {
+      "id": "islem-icbukey-zarf",
+      "name": "İçbükey zarf",
+      "style": {
+       "color": "#8E4EC6",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#8E4EC626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-icbukey-zarf",
+      "attrs": {
+       "No": "Ç",
+       "Tür": "B",
+       "Zarf alanı": "435.16"
+      },
+      "pts": [
+       {
+        "x": 487213.13,
+        "y": 4420005.28
+       },
+       {
+        "x": 487252.47,
+        "y": 4420036.36
+       },
+       {
+        "x": 487213.81,
+        "y": 4420027.94
+       }
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "9 nesnenin kotları sonuca taşınmadı."
+     },
+     {
+      "level": "warn",
+      "text": "19 sonuç alan değil (bir nokta ya da bir doğru); yazılmadı."
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
    "id": "concave-line",
    "title": "Bir doğrudaki noktalar alan vermez",
    "document": "generate.kcad",

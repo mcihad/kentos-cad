@@ -1113,6 +1113,8 @@ def build():
              concave_case(c, objects("halka"), 0.5, False, "all")),
         case("concave-kinds", "Türlerine göre içbükey zarflar, oran 0,5",
              c, {"input": L("nokta"), "ratio": 0.5, "holes": False, "group": "field", "field": "Tür"}, concave_case(c, nokta, 0.5, False, "field", "Tür")),
+        case("concave-each", "İçbükey zarf, her nesne ayrı, oran 0,5: çok noktalı nesnelerin kendi zarfları (docs/adr/0741)",
+             c, {"input": L("nokta"), "ratio": 0.5, "holes": False, "group": "each", "field": ""}, concave_case(c, nokta, 0.5, False, "each")),
         case("concave-line", "Bir doğrudaki noktalar alan vermez",
              c, {"input": L("hat"), "ratio": 0.3, "holes": False, "group": "all", "field": ""}, concave_case(c, objects("hat"), 0.3, False, "all")),
         case("pole-parcels", "Parsellerin ulaşılmazlık kutupları, 0,1 m: L, delik, iki parça, yay",

@@ -1451,6 +1451,1153 @@
      }
     ]
    }
+  },
+  {
+   "id": "membership-power",
+   "title": "Bulanık üyelik, Üslü 0–20, üs 2,5",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "power",
+    "low": 0,
+    "high": 20,
+    "exponent": 2.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık üyelik",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uyelik",
+      "name": "Üyelik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uyelik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "deger-uyelik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uyelik": "deger"
+    },
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-uslu"
+    }
+   }
+  },
+  {
+   "id": "membership-small",
+   "title": "Bulanık üyelik, Küçük: orta nokta 10, diklik 3",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "small",
+    "midpoint": 10,
+    "steep": 3
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık üyelik",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uyelik",
+      "name": "Üyelik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uyelik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "deger-uyelik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uyelik": "deger"
+    },
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-kucuk"
+    }
+   }
+  },
+  {
+   "id": "membership-near",
+   "title": "Bulanık üyelik, Yakın: orta nokta 10, yayılım 0,1",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "near",
+    "midpoint": 10,
+    "spread": 0.1
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık üyelik",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uyelik",
+      "name": "Üyelik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uyelik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "deger-uyelik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uyelik": "deger"
+    },
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-yakin"
+    }
+   }
+  },
+  {
+   "id": "membership-f64",
+   "title": "Bulanık üyelik, Gauss, 64 bit sonuç",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "gaussian",
+    "midpoint": 7.5,
+    "spread": 0.02,
+    "sample": "f64"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık üyelik",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-uyelik",
+      "name": "Üyelik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-uyelik",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f64",
+      "file": "deger-uyelik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-uyelik": "deger"
+    },
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-gauss-64"
+    }
+   }
+  },
+  {
+   "id": "fuzzy-or",
+   "title": "Bulanık çakıştırma, Veya: üç üyelik",
+   "document": "suitability.kcad",
+   "selection": [
+    8,
+    9,
+    10
+   ],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "op": "or"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “uyelik-a-bulanik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "uyelik-a-bulanik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-bulanik-cakistirma",
+      "name": "Bulanık çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-bulanik-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "uyelik-a-bulanik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-bulanik-cakistirma": "uyelik-a"
+    },
+    "suitabilityOf": {
+     "uyelik-a-bulanik.tif": "bulanik-or"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 hücrede üyelik 0–1 aralığının dışında; o hücreler değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "fuzzy-product",
+   "title": "Bulanık çakıştırma, Çarpım: üç üyelik",
+   "document": "suitability.kcad",
+   "selection": [
+    8,
+    9,
+    10
+   ],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "op": "product"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “uyelik-a-bulanik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "uyelik-a-bulanik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-bulanik-cakistirma",
+      "name": "Bulanık çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-bulanik-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "uyelik-a-bulanik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-bulanik-cakistirma": "uyelik-a"
+    },
+    "suitabilityOf": {
+     "uyelik-a-bulanik.tif": "bulanik-product"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 hücrede üyelik 0–1 aralığının dışında; o hücreler değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "fuzzy-sum",
+   "title": "Bulanık çakıştırma, Toplam: üç üyelik",
+   "document": "suitability.kcad",
+   "selection": [
+    8,
+    9,
+    10
+   ],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "op": "sum"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “uyelik-a-bulanik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "uyelik-a-bulanik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-bulanik-cakistirma",
+      "name": "Bulanık çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-bulanik-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f32",
+      "file": "uyelik-a-bulanik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-bulanik-cakistirma": "uyelik-a"
+    },
+    "suitabilityOf": {
+     "uyelik-a-bulanik.tif": "bulanik-sum"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 hücrede üyelik 0–1 aralığının dışında; o hücreler değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "fuzzy-or-f64",
+   "title": "Bulanık çakıştırma, Veya, 64 bit sonuç",
+   "document": "suitability.kcad",
+   "selection": [
+    8,
+    9,
+    10
+   ],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "op": "or",
+    "sample": "f64"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bulanık çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “uyelik-a-bulanik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "uyelik-a-bulanik.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-bulanik-cakistirma",
+      "name": "Bulanık çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-bulanik-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f64",
+      "file": "uyelik-a-bulanik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 1.0,
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-bulanik-cakistirma": "uyelik-a"
+    },
+    "suitabilityOf": {
+     "uyelik-a-bulanik.tif": "bulanik-or-64"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 hücrede üyelik 0–1 aralığının dışında; o hücreler değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "weighted-sum-f64",
+   "title": "Ağırlıklı toplam, 64 bit sonuç: ağırlıklar 0,3, 0,001, −2",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "suitability.weightedSum"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "weights": {
+     "Eğim": 0.3,
+     "Yol": 0.001,
+     "Toprak": -2.0
+    },
+    "sample": "f64"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Ağırlıklı toplam",
+    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti. Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 1.5782, ortalama 1.0101 değişebilir.",
+    "outputs": {
+     "file": "egim-agirlikli.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-agirlikli-toplam",
+      "name": "Ağırlıklı toplam",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-agirlikli-toplam",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f64",
+      "file": "egim-agirlikli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-agirlikli-toplam": "egim"
+    },
+    "suitabilityOf": {
+     "egim-agirlikli.tif": "agirlikli-toplam-64"
+    }
+   }
+  },
+  {
+   "id": "weighted-overlay-lower",
+   "title": "Ağırlıklı çakıştırma, alt sınır kapalı: etkiler %10, %60, %30",
+   "document": "suitability.kcad",
+   "selection": [
+    4,
+    5,
+    6
+   ],
+   "run": {
+    "tool": "suitability.weightedOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "low": 1,
+    "high": 9,
+    "influence": {
+     "Sınıf": 10.0,
+     "Eğim sınıfı": 60.0,
+     "Örtü": 30.0
+    },
+    "classes": {
+     "Eğim sınıfı": "* 5 9; 5 15 6; 15 30 3; 30 * kısıt",
+     "Örtü": "1 9; 2 7; 3 5; 4 boş"
+    },
+    "bounds": "lowerClosed"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Ağırlıklı çakıştırma",
+    "summary": "6 × 5 hücrelik raster; “sinif-cakistirma.tif” yazıldı. 3 raster birleşti. Kısıtlı 5 hücre. Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 1 sınıf, ortalama 1.00 sınıf değişebilir.",
+    "outputs": {
+     "file": "sinif-cakistirma.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-agirlikli-cakistirma",
+      "name": "Ağırlıklı çakıştırma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-agirlikli-cakistirma",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "i32",
+      "file": "sinif-cakistirma.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.0,
+       "max": 9.0,
+       "ramp": "Spektral",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-agirlikli-cakistirma": "sinif"
+    },
+    "suitabilityOf": {
+     "sinif-cakistirma.tif": "cakistirma-alt-kapali"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Sınıf tablosunun hiçbir kuralının tutmadığı 5 hücre değersiz bırakıldı."
+     },
+     {
+      "level": "warn",
+      "text": "Ölçeğin dışında (ya da tam sayı olmayan) değerli 6 hücre değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "pairwise-f64",
+   "title": "İkili karşılaştırma, ağırlıklı toplam 64 bit",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "suitability.pairwise"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "comparisons": [
+     [
+      "Eğim",
+      "Yol",
+      2.0
+     ],
+     [
+      "Eğim",
+      "Toprak",
+      4.0
+     ],
+     [
+      "Toprak",
+      "Yol",
+      -2.0
+     ]
+    ],
+    "write": true,
+    "sample": "f64"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "İkili karşılaştırma (AHP)",
+    "summary": "6 × 5 hücrelik raster; “egim-ahp.tif” yazıldı. Ağırlıklar tabloda; λ 3.0000; CI 0.0000; RI 0.58; CR 0.0000 (tutarlı). Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 9.1642, ortalama 7.3952 değişebilir.",
+    "outputs": {
+     "file": "egim-ahp.tif",
+     "table": {
+      "columns": [
+       "Ölçüt",
+       "Ağırlık",
+       "Yüzde (%)"
+      ],
+      "rows": [
+       [
+        "Eğim",
+        "0.571429",
+        "57.14"
+       ],
+       [
+        "Yol",
+        "0.285714",
+        "28.57"
+       ],
+       [
+        "Toprak",
+        "0.142857",
+        "14.29"
+       ]
+      ]
+     }
+    },
+    "layers": [
+     {
+      "id": "islem-agirlikli-toplam-ahp-",
+      "name": "Ağırlıklı toplam (AHP)",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-agirlikli-toplam-ahp-",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 6,
+      "height": 5,
+      "bands": 1,
+      "sample": "f64",
+      "file": "egim-ahp.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-agirlikli-toplam-ahp-": "egim"
+    },
+    "suitabilityOf": {
+     "egim-ahp.tif": "ahp-tutarli-raster-64"
+    }
+   }
+  },
+  {
+   "id": "membership-power-eklemeden",
+   "title": "Bulanık üyelik, Çizime ekle kapalı: dosya yazılır, katman ve adım yok",
+   "document": "suitability.kcad",
+   "selection": [],
+   "run": {
+    "tool": "suitability.fuzzyMembership"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "deger"
+    },
+    "function": "power",
+    "low": 0,
+    "high": 20,
+    "exponent": 2.5,
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 × 5 hücrelik raster; “deger-uyelik.tif” yazıldı.",
+    "outputs": {
+     "file": "deger-uyelik.tif"
+    },
+    "layers": [],
+    "added": [],
+    "suitabilityOf": {
+     "deger-uyelik.tif": "uyelik-uslu"
+    }
+   }
+  },
+  {
+   "id": "fuzzy-or-eklemeden",
+   "title": "Bulanık çakıştırma, Çizime ekle kapalı",
+   "document": "suitability.kcad",
+   "selection": [
+    8,
+    9,
+    10
+   ],
+   "run": {
+    "tool": "suitability.fuzzyOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "op": "or",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 × 5 hücrelik raster; “uyelik-a-bulanik.tif” yazıldı. 3 raster birleşti.",
+    "outputs": {
+     "file": "uyelik-a-bulanik.tif"
+    },
+    "layers": [],
+    "added": [],
+    "suitabilityOf": {
+     "uyelik-a-bulanik.tif": "bulanik-or"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 hücrede üyelik 0–1 aralığının dışında; o hücreler değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "weighted-sum-f64-eklemeden",
+   "title": "Ağırlıklı toplam, Çizime ekle kapalı",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "suitability.weightedSum"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "weights": {
+     "Eğim": 0.3,
+     "Yol": 0.001,
+     "Toprak": -2.0
+    },
+    "sample": "f64",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 × 5 hücrelik raster; “egim-agirlikli.tif” yazıldı. 3 raster birleşti. Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 1.5782, ortalama 1.0101 değişebilir.",
+    "outputs": {
+     "file": "egim-agirlikli.tif"
+    },
+    "layers": [],
+    "added": [],
+    "suitabilityOf": {
+     "egim-agirlikli.tif": "agirlikli-toplam-64"
+    }
+   }
+  },
+  {
+   "id": "weighted-overlay-lower-eklemeden",
+   "title": "Ağırlıklı çakıştırma, Çizime ekle kapalı",
+   "document": "suitability.kcad",
+   "selection": [
+    4,
+    5,
+    6
+   ],
+   "run": {
+    "tool": "suitability.weightedOverlay"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "low": 1,
+    "high": 9,
+    "influence": {
+     "Sınıf": 10.0,
+     "Eğim sınıfı": 60.0,
+     "Örtü": 30.0
+    },
+    "classes": {
+     "Eğim sınıfı": "* 5 9; 5 15 6; 15 30 3; 30 * kısıt",
+     "Örtü": "1 9; 2 7; 3 5; 4 boş"
+    },
+    "bounds": "lowerClosed",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 × 5 hücrelik raster; “sinif-cakistirma.tif” yazıldı. 3 raster birleşti. Kısıtlı 5 hücre. Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 1 sınıf, ortalama 1.00 sınıf değişebilir.",
+    "outputs": {
+     "file": "sinif-cakistirma.tif"
+    },
+    "layers": [],
+    "added": [],
+    "suitabilityOf": {
+     "sinif-cakistirma.tif": "cakistirma-alt-kapali"
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "Sınıf tablosunun hiçbir kuralının tutmadığı 5 hücre değersiz bırakıldı."
+     },
+     {
+      "level": "warn",
+      "text": "Ölçeğin dışında (ya da tam sayı olmayan) değerli 6 hücre değersiz bırakıldı."
+     }
+    ]
+   }
+  },
+  {
+   "id": "pairwise-f64-eklemeden",
+   "title": "İkili karşılaştırma, Çizime ekle kapalı",
+   "document": "suitability.kcad",
+   "selection": [
+    1,
+    2,
+    3
+   ],
+   "run": {
+    "tool": "suitability.pairwise"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "comparisons": [
+     [
+      "Eğim",
+      "Yol",
+      2.0
+     ],
+     [
+      "Eğim",
+      "Toprak",
+      4.0
+     ],
+     [
+      "Toprak",
+      "Yol",
+      -2.0
+     ]
+    ],
+    "write": true,
+    "sample": "f64",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 × 5 hücrelik raster; “egim-ahp.tif” yazıldı. Ağırlıklar tabloda; λ 3.0000; CI 0.0000; RI 0.58; CR 0.0000 (tutarlı). Her ağırlık ayrı ayrı %10 değişirse bir hücre en çok 9.1642, ortalama 7.3952 değişebilir.",
+    "outputs": {
+     "file": "egim-ahp.tif",
+     "table": {
+      "columns": [
+       "Ölçüt",
+       "Ağırlık",
+       "Yüzde (%)"
+      ],
+      "rows": [
+       [
+        "Eğim",
+        "0.571429",
+        "57.14"
+       ],
+       [
+        "Yol",
+        "0.285714",
+        "28.57"
+       ],
+       [
+        "Toprak",
+        "0.142857",
+        "14.29"
+       ]
+      ]
+     }
+    },
+    "layers": [],
+    "added": [],
+    "suitabilityOf": {
+     "egim-ahp.tif": "ahp-tutarli-raster-64"
+    }
+   }
   }
  ]
 }

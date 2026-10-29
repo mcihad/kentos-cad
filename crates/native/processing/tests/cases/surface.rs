@@ -515,17 +515,20 @@ fn raster_cases(name: &str, least: usize) {
                     .clone();
                 let values = match window.as_ref().and_then(Value::as_array) {
                     Some(w) => {
-                        let dem_width = terrain["dems"]
+                        let dem = terrain["dems"]
                             .as_array()
                             .unwrap()
                             .iter()
                             .find(|d| d["name"] == "tepe")
-                            .and_then(|d| d["width"].as_u64())
-                            .expect("tepe's width")
-                            as usize;
+                            .expect("tepe");
+                        let size = |key: &str| dem[key].as_u64().expect("tepe's size") as usize;
+                        let dem_width = size("width");
+                        // A colour relief's cells are its bands side by side (docs/adr/0741).
+                        let per = values.len() / (dem_width * size("height"));
                         let [x0, y0, w, h] = [0, 1, 2, 3].map(|k| w[k].as_u64().unwrap() as usize);
                         (y0..y0 + h)
                             .flat_map(|j| (x0..x0 + w).map(move |i| j * dem_width + i))
+                            .flat_map(|k| (0..per).map(move |b| k * per + b))
                             .map(|k| values[k].clone())
                             .collect()
                     }

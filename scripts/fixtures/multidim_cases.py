@@ -1652,6 +1652,8 @@ def calc_cases(files):
         ("Ortalama fark", "stage - level", "mean", "stage", "face",
          [[a - b for a, b in zip(stage[st], level[st])] for st in range(steps)]),
         ("Toplam hız", "ucx * 10", "sum", "ucx", "node", [[x * 10 for x in speed[st]] for st in range(steps)]),
+        # The least of the steps too (docs/adr/0741).
+        ("En küçük derinlik", "depth", "min", "depth", "node", [list(depth[st]) for st in range(steps)]),
     ]
     words = {"max": "en büyüğü", "min": "en küçüğü", "mean": "ortalaması", "sum": "toplamı"}
     cases, outs = [], {}

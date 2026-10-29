@@ -3094,6 +3094,166 @@
    }
   },
   {
+   "id": "parts-only",
+   "title": "Yalnız parçalar: küçük delikler kalır (docs/adr/0741)",
+   "document": "generalize.kcad",
+   "run": {
+    "tool": "generalize.dropParts"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "ada"
+    },
+    "minArea": 20,
+    "percent": 0,
+    "parts": true,
+    "holes": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne yazıldı; 2 parça ve 0 delik atıldı.",
+    "undo": "Küçük parçaları ayıkla",
+    "layers": [
+     {
+      "id": "islem-ayiklanan",
+      "name": "Ayıklanan",
+      "style": {
+       "color": "#12A594",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#12A59426"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-ayiklanan",
+      "attrs": {
+       "Ad": "Adalar"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420200.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420200.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420240.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420240.0
+       }
+      ],
+      "zs": [
+       1.0,
+       2.0,
+       3.0,
+       4.0
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487005.0,
+          "y": 4420205.0
+         },
+         {
+          "x": 487005.0,
+          "y": 4420207.0
+         },
+         {
+          "x": 487007.0,
+          "y": 4420207.0
+         },
+         {
+          "x": 487007.0,
+          "y": 4420205.0
+         }
+        ]
+       },
+       {
+        "pts": [
+         {
+          "x": 487020.0,
+          "y": 4420210.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420218.0
+         },
+         {
+          "x": 487028.0,
+          "y": 4420218.0
+         },
+         {
+          "x": 487028.0,
+          "y": 4420210.0
+         }
+        ]
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 487070.0,
+          "y": 4420200.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420200.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420210.0
+         },
+         {
+          "x": 487070.0,
+          "y": 4420210.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-ayiklanan",
+      "attrs": {
+       "Ad": "Kırıntılar"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420200.0
+       },
+       {
+        "x": 487105.0,
+        "y": 4420200.0
+       },
+       {
+        "x": 487105.0,
+        "y": 4420205.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420205.0
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   }
+  },
+  {
    "id": "parts-all-small",
    "title": "Bütün parçaları küçük alanın en büyük parçası kalır",
    "document": "generalize.kcad",

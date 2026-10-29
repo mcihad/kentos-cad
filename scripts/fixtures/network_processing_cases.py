@@ -230,8 +230,8 @@ def build():
          "outputs": {"table": {"columns": ["Başlangıç", "Varış", "Sıra", "Uzunluk"], "rows": table}}}))
 
     # Hizmet alanları: Okul A's 150 and 300 m, discs and rings; two schools apart; the lines too.
-    def areas(cid, title, facilities, breaks, ring, separate, lines_too, names):
-        got = run_area(net, [schools[i] for i in facilities], breaks, 0, False, separate, [], 20.0, shapes=True)
+    def areas(cid, title, facilities, breaks, ring, separate, lines_too, names, toward=False):
+        got = run_area(net, [schools[i] for i in facilities], breaks, 0, toward, separate, [], 20.0, shapes=True)
         key = "ring" if ring else "disc"
         shapes = []
         for a in got["areas"]:
@@ -256,8 +256,10 @@ def build():
         summary = f"{len(facilities)} tesisin {len(breaks)} aralıkta {n_areas} hizmet alanı yazıldı{roads}; “Yollar” ağında Uzunluk."
         values = {"network": {"network": "yollar", "cost": "Uzunluk"}, "facilities": {"scope": "selection"}, "breaks": " ".join(("%g" % b) for b in breaks),
                   "shape": "ring" if ring else "disc", "merged": not separate, "trim": 20, "lines": lines_too}
+        if toward:
+            values["direction"] = "to"
         # What cuts the area off (docs/adr/0640 §2): one search of the facilities together.
-        cut = run_cut(net, [schools[i] for i in facilities], breaks, 0, False, [])
+        cut = run_cut(net, [schools[i] for i in facilities], breaks, 0, toward, [])
         log = [{"level": "info", "text": f"Yollar: {cut['words']}."}] if cut["words"] else []
         cases.append(proc_case(cid, title, "network.serviceAreas", values,
                                {"status": "ok", "summary": summary, "undo": "Hizmet alanları", "layers": new_layers, "addedShapes": shapes, "log": log,
@@ -267,6 +269,8 @@ def build():
     areas("areas-discs", "Hizmet alanları: Okul A'dan 150 ve 300 m, diskler", [0], [150.0, 300.0], False, False, False, ["Okul A"])
     areas("areas-rings", "Hizmet alanları: aynı aralıklar halka olarak", [0], [150.0, 300.0], True, False, False, ["Okul A"])
     areas("areas-apart", "Hizmet alanları: iki okul ayrı, 200 m; ulaşılan yollarla", [0, 1], [200.0], False, True, True, ["Okul A", "Okul B"])
+    areas("areas-toward", "Hizmet alanları: Okul A'ya doğru 150 ve 300 m, tek yönlü sokaklar ters işler; yollarla (docs/adr/0741)", [0],
+          [150.0, 300.0], False, False, True, ["Okul A"], toward=True)
 
     # Refusals.
     cases.append(proc_case("refuse-network", "Projede olmayan ağ adı verilirse çalışmaz", "network.closestFacility",

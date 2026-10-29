@@ -589,6 +589,242 @@
    }
   },
   {
+   "id": "distance-1",
+   "title": "Standart uzaklık, 1 standart sapma",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.standardDistance"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "deviations": "1"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesnenin standart uzaklığı yazıldı: 63.216 m.",
+    "undo": "Standart uzaklık",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-standart-uzaklik",
+      "name": "Standart uzaklık",
+      "style": {
+       "color": "#1C7ED6",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#1C7ED626"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-standart-uzaklik": "kaza"
+    },
+    "added": [
+     {
+      "kind": "circle",
+      "layerId": "islem-standart-uzaklik",
+      "attrs": {
+       "Nesne sayısı": "27",
+       "Standart uzaklık": "63.216",
+       "Kat": "1"
+      },
+      "c": {
+       "x": 487069.6203703704,
+       "y": 4420069.277777778
+      },
+      "r": 63.21629184145345
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "distance-3",
+   "title": "Standart uzaklık, 3 standart sapma",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.standardDistance"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "deviations": "3"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesnenin standart uzaklığı yazıldı: 63.216 m.",
+    "undo": "Standart uzaklık",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-standart-uzaklik",
+      "name": "Standart uzaklık",
+      "style": {
+       "color": "#1C7ED6",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#1C7ED626"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-standart-uzaklik": "kaza"
+    },
+    "added": [
+     {
+      "kind": "circle",
+      "layerId": "islem-standart-uzaklik",
+      "attrs": {
+       "Nesne sayısı": "27",
+       "Standart uzaklık": "63.216",
+       "Kat": "3"
+      },
+      "c": {
+       "x": 487069.6203703704,
+       "y": 4420069.277777778
+      },
+      "r": 189.64887552436034
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "ellipse-2",
+   "title": "Yön dağılımı, 2 standart sapma",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.directionalDistribution"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "deviations": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesnenin yön dağılımı elipsi yazıldı: büyük yarı eksen 129.804 m, küçük 122.969 m, doğrultu 120.07°.",
+    "undo": "Yön dağılımı",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-yon-dagilimi",
+      "name": "Yön dağılımı",
+      "style": {
+       "color": "#0CA678",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0CA67826"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-yon-dagilimi": "kaza"
+    },
+    "added": [
+     {
+      "kind": "ellipse",
+      "layerId": "islem-yon-dagilimi",
+      "attrs": {
+       "Nesne sayısı": "27",
+       "Büyük yarı eksen": "129.804",
+       "Küçük yarı eksen": "122.969",
+       "Doğrultu": "120.07",
+       "Kat": "2"
+      },
+      "c": {
+       "x": 487069.6203703704,
+       "y": 4420069.277777778
+      },
+      "major": {
+       "x": 112.33307785913388,
+       "y": -65.0416872439401
+      },
+      "ratio": 0.947338156459673,
+      "t0": 0,
+      "t1": 6.283185307179586
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "ellipse-3",
+   "title": "Yön dağılımı, 3 standart sapma",
+   "document": "spatial-stats.kcad",
+   "run": {
+    "tool": "stats.directionalDistribution"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kaza"
+    },
+    "deviations": "3"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "27 nesnenin yön dağılımı elipsi yazıldı: büyük yarı eksen 194.706 m, küçük 184.453 m, doğrultu 120.07°.",
+    "undo": "Yön dağılımı",
+    "log": [],
+    "layers": [
+     {
+      "id": "islem-yon-dagilimi",
+      "name": "Yön dağılımı",
+      "style": {
+       "color": "#0CA678",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0CA67826"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-yon-dagilimi": "kaza"
+    },
+    "added": [
+     {
+      "kind": "ellipse",
+      "layerId": "islem-yon-dagilimi",
+      "attrs": {
+       "Nesne sayısı": "27",
+       "Büyük yarı eksen": "194.706",
+       "Küçük yarı eksen": "184.453",
+       "Doğrultu": "120.07",
+       "Kat": "3"
+      },
+      "c": {
+       "x": 487069.6203703704,
+       "y": 4420069.277777778
+      },
+      "major": {
+       "x": 168.49961678870082,
+       "y": -97.56253086591016
+      },
+      "ratio": 0.947338156459673,
+      "t0": 0,
+      "t1": 6.283185307179586
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
    "id": "nearest",
    "title": "En yakın komşu: kümelenmiş, tablo; çizim değişmez",
    "document": "spatial-stats.kcad",

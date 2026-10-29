@@ -138,11 +138,11 @@
        }
       ],
       "bulges": [
-       0.4142135623730951
+       0.41421356237309503
       ],
       "ms": [
        0.0,
-       15.707963267948967
+       15.707963267948966
       ]
      }
     ],
@@ -290,7 +290,7 @@
        }
       ],
       "bulges": [
-       0.4142135623730951
+       0.41421356237309503
       ],
       "ms": [
        1000.0,
@@ -1895,6 +1895,1272 @@
         "D-200",
         "50.000",
         "Yerine taşındı"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "create-upperLeft",
+   "title": "Rota oluştur, Uzunluk, başlangıç sol üst köşeden",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.createRoutes"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "idField": "Yol",
+    "method": "length",
+    "priority": "upperLeft",
+    "factor": 1,
+    "start": 0,
+    "ignoreGaps": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 3 rota yazıldı.",
+    "undo": "Rota oluştur",
+    "layers": [
+     {
+      "id": "islem-rotalar",
+      "name": "Rotalar",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "A"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420050.0
+       }
+      ],
+      "ms": [
+       0.0,
+       100.0,
+       150.0
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487250.0,
+          "y": 4420050.0
+         }
+        ],
+        "ms": [
+         150.0,
+         250.0
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "B"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420200.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420200.0
+       }
+      ],
+      "bulges": [
+       1.0
+      ],
+      "ms": [
+       0.0,
+       157.07963267948966
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "C"
+      },
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420410.0
+       },
+       {
+        "x": 487410.0,
+        "y": 4420400.0
+       }
+      ],
+      "bulges": [
+       -0.41421356237309503
+      ],
+      "ms": [
+       0.0,
+       15.707963267948966
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesne atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "#5",
+        "“Yol” boş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "create-upperRight",
+   "title": "Rota oluştur, Uzunluk, başlangıç sağ üst köşeden",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.createRoutes"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "idField": "Yol",
+    "method": "length",
+    "priority": "upperRight",
+    "factor": 1,
+    "start": 0,
+    "ignoreGaps": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 3 rota yazıldı.",
+    "undo": "Rota oluştur",
+    "layers": [
+     {
+      "id": "islem-rotalar",
+      "name": "Rotalar",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "A"
+      },
+      "pts": [
+       {
+        "x": 487250.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420050.0
+       }
+      ],
+      "ms": [
+       0.0,
+       100.0
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         }
+        ],
+        "ms": [
+         100.0,
+         150.0,
+         250.0
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "B"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420200.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420200.0
+       }
+      ],
+      "bulges": [
+       -1.0
+      ],
+      "ms": [
+       0.0,
+       157.07963267948966
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "C"
+      },
+      "pts": [
+       {
+        "x": 487410.0,
+        "y": 4420400.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420410.0
+       }
+      ],
+      "bulges": [
+       0.41421356237309503
+      ],
+      "ms": [
+       0.0,
+       15.707963267948966
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesne atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "#5",
+        "“Yol” boş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "create-lowerRight",
+   "title": "Rota oluştur, Uzunluk, başlangıç sağ alt köşeden",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.createRoutes"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "idField": "Yol",
+    "method": "length",
+    "priority": "lowerRight",
+    "factor": 1,
+    "start": 0,
+    "ignoreGaps": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 3 rota yazıldı.",
+    "undo": "Rota oluştur",
+    "layers": [
+     {
+      "id": "islem-rotalar",
+      "name": "Rotalar",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "A"
+      },
+      "pts": [
+       {
+        "x": 487250.0,
+        "y": 4420050.0
+       },
+       {
+        "x": 487150.0,
+        "y": 4420050.0
+       }
+      ],
+      "ms": [
+       0.0,
+       100.0
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         }
+        ],
+        "ms": [
+         100.0,
+         200.0
+        ]
+       },
+       {
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420050.0
+         }
+        ],
+        "ms": [
+         200.0,
+         250.0
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "B"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4420200.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420200.0
+       }
+      ],
+      "bulges": [
+       -1.0
+      ],
+      "ms": [
+       0.0,
+       157.07963267948966
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-rotalar",
+      "attrs": {
+       "Yol": "C"
+      },
+      "pts": [
+       {
+        "x": 487410.0,
+        "y": 4420400.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420410.0
+       }
+      ],
+      "bulges": [
+       0.41421356237309503
+      ],
+      "ms": [
+       0.0,
+       15.707963267948966
+      ]
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesne atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "#5",
+        "“Yol” boş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "calibrate-no-before",
+   "title": "Rotayı kalibre et: ilk noktadan öncesi uzatılmaz",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.calibrateRoutes"
+   },
+   "values": {
+    "routes": {
+     "scope": "layer",
+     "layerId": "kalib"
+    },
+    "routeField": "Rota",
+    "points": {
+     "scope": "layer",
+     "layerId": "km"
+    },
+    "pointRoute": "Rota",
+    "measure": "Km",
+    "radius": 2,
+    "before": false,
+    "after": true,
+    "ignoreGaps": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 rotadan 2 rota kalibre edildi; 4 nokta kullanıldı.",
+    "undo": "Rotayı kalibre et",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 noktanın ölçüsü sayı değil; kullanılmadı."
+     }
+    ],
+    "updated": [
+     {
+      "id": 20,
+      "attrs": {
+       "Rota": "K-1"
+      },
+      "geometry": {
+       "pts": [
+        {
+         "x": 489000.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489020.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422050.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422100.0
+        }
+       ],
+       "ms": [
+        null,
+        1000.0,
+        1080.0,
+        1130.0,
+        1180.0
+       ]
+      }
+     },
+     {
+      "id": 22,
+      "attrs": {
+       "Rota": "K-3"
+      },
+      "geometry": {
+       "a": {
+        "x": 489300,
+        "y": 4422200
+       },
+       "b": {
+        "x": 489400,
+        "y": 4422200
+       },
+       "mb": 90.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Rota",
+       "Kullanılan nokta",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "K-1",
+        "2",
+        "Kalibre edildi"
+       ],
+       [
+        "K-2",
+        "1",
+        "İkiden az nokta"
+       ],
+       [
+        "K-3",
+        "2",
+        "Kalibre edildi"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "calibrate-no-after",
+   "title": "Rotayı kalibre et: son noktadan sonrası uzatılmaz",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.calibrateRoutes"
+   },
+   "values": {
+    "routes": {
+     "scope": "layer",
+     "layerId": "kalib"
+    },
+    "routeField": "Rota",
+    "points": {
+     "scope": "layer",
+     "layerId": "km"
+    },
+    "pointRoute": "Rota",
+    "measure": "Km",
+    "radius": 2,
+    "before": true,
+    "after": false,
+    "ignoreGaps": true
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 rotadan 2 rota kalibre edildi; 4 nokta kullanıldı.",
+    "undo": "Rotayı kalibre et",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 noktanın ölçüsü sayı değil; kullanılmadı."
+     }
+    ],
+    "updated": [
+     {
+      "id": 20,
+      "attrs": {
+       "Rota": "K-1"
+      },
+      "geometry": {
+       "pts": [
+        {
+         "x": 489000.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489020.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422050.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422100.0
+        }
+       ],
+       "ms": [
+        980.0,
+        1000.0,
+        1080.0,
+        1130.0,
+        null
+       ]
+      }
+     },
+     {
+      "id": 22,
+      "attrs": {
+       "Rota": "K-3"
+      },
+      "geometry": {
+       "a": {
+        "x": 489300,
+        "y": 4422200
+       },
+       "b": {
+        "x": 489400,
+        "y": 4422200
+       },
+       "ma": -10.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Rota",
+       "Kullanılan nokta",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "K-1",
+        "2",
+        "Kalibre edildi"
+       ],
+       [
+        "K-2",
+        "1",
+        "İkiden az nokta"
+       ],
+       [
+        "K-3",
+        "2",
+        "Kalibre edildi"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "calibrate-no-ignoreGaps",
+   "title": "Rotayı kalibre et: boşluklar sayılır",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.calibrateRoutes"
+   },
+   "values": {
+    "routes": {
+     "scope": "layer",
+     "layerId": "kalib"
+    },
+    "routeField": "Rota",
+    "points": {
+     "scope": "layer",
+     "layerId": "km"
+    },
+    "pointRoute": "Rota",
+    "measure": "Km",
+    "radius": 2,
+    "before": true,
+    "after": true,
+    "ignoreGaps": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 rotadan 2 rota kalibre edildi; 4 nokta kullanıldı.",
+    "undo": "Rotayı kalibre et",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 noktanın ölçüsü sayı değil; kullanılmadı."
+     }
+    ],
+    "updated": [
+     {
+      "id": 20,
+      "attrs": {
+       "Rota": "K-1"
+      },
+      "geometry": {
+       "pts": [
+        {
+         "x": 489000.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489020.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422000.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422050.0
+        },
+        {
+         "x": 489100.0,
+         "y": 4422100.0
+        }
+       ],
+       "ms": [
+        980.0,
+        1000.0,
+        1080.0,
+        1130.0,
+        1180.0
+       ]
+      }
+     },
+     {
+      "id": 22,
+      "attrs": {
+       "Rota": "K-3"
+      },
+      "geometry": {
+       "a": {
+        "x": 489300,
+        "y": 4422200
+       },
+       "b": {
+        "x": 489400,
+        "y": 4422200
+       },
+       "ma": -10.0,
+       "mb": 90.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Rota",
+       "Kullanılan nokta",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "K-1",
+        "2",
+        "Kalibre edildi"
+       ],
+       [
+        "K-2",
+        "1",
+        "İkiden az nokta"
+       ],
+       [
+        "K-3",
+        "2",
+        "Kalibre edildi"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "events-layer",
+   "title": "Olayları rotada göster, nokta, Olay nesneleri katmanından: nesnelerin öznitelikleri satırdır",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.routeEvents"
+   },
+   "values": {
+    "routes": {
+     "scope": "layer",
+     "layerId": "rota"
+    },
+    "routeField": "Rota",
+    "sourceKind": "layer",
+    "eventRoute": "Rota",
+    "eventKind": "point",
+    "measure": "Km",
+    "offset": "Ofset",
+    "side": "right",
+    "source": {
+     "scope": "layer",
+     "layerId": "olay"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "11 satırdan 3 olay yazıldı.",
+    "undo": "Olayları rotada göster",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 rota kimliği birden çok kez var; ilki kullanıldı."
+     },
+     {
+      "level": "warn",
+      "text": "8 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "layers": [
+     {
+      "id": "islem-olaylar",
+      "name": "Olaylar",
+      "style": {
+       "color": "#8E4EC6",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#8E4EC626"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-olaylar",
+      "attrs": {
+       "Km": "40",
+       "Ofset": "5",
+       "Rota": "D-100"
+      },
+      "p": {
+       "x": 488040.0,
+       "y": 4420995.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-olaylar",
+      "attrs": {
+       "Km": "125",
+       "Rota": "D-100"
+      },
+      "p": {
+       "x": 488100.0,
+       "y": 4421025.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-olaylar",
+      "attrs": {
+       "Km": "50",
+       "Rota": "D-200"
+      },
+      "p": {
+       "x": 488050.0,
+       "y": 4421150.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "#72",
+        "“D-999” rotası yok"
+       ],
+       [
+        "#73",
+        "Ölçü rotanın dışında (0.000 – 150.000)"
+       ],
+       [
+        "#74",
+        "“Km” sayı değil: x"
+       ],
+       [
+        "#76",
+        "“Km” boş"
+       ],
+       [
+        "#77",
+        "“Km” boş"
+       ],
+       [
+        "#78",
+        "“Km” boş"
+       ],
+       [
+        "#79",
+        "“Km” boş"
+       ],
+       [
+        "#80",
+        "“Km” boş"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "overlay-a-layer",
+   "title": "Olayları çakıştır, Kesişim: ilk olaylar Olay nesneleri katmanından; ölçüsüz nesneler alınmaz",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.overlayEvents"
+   },
+   "values": {
+    "aSourceKind": "layer",
+    "aRoute": "Rota",
+    "aFrom": "Bas",
+    "aTo": "Son",
+    "bSourceKind": "file",
+    "bFile": "lrs-hizlar.csv",
+    "bRoute": "Rota",
+    "bFrom": "Bas",
+    "bTo": "Son",
+    "how": "intersect",
+    "aSource": {
+     "scope": "layer",
+     "layerId": "olay"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 ve 3 olaydan 6 parça.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "6 satırın rotası ya da ölçüsü yok; alınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 6,
+     "table": {
+      "columns": [
+       "Rota",
+       "Başlangıç",
+       "Bitiş",
+       "Km",
+       "Ofset",
+       "Hiz",
+       "Kaplama"
+      ],
+      "rows": [
+       [
+        "D-100",
+        "20.000",
+        "50.000",
+        "",
+        "",
+        "50",
+        "eski"
+       ],
+       [
+        "D-100",
+        "20.000",
+        "50.000",
+        "",
+        "",
+        "50",
+        "eski"
+       ],
+       [
+        "D-100",
+        "50.000",
+        "130.000",
+        "",
+        "",
+        "70",
+        "eski"
+       ],
+       [
+        "D-100",
+        "50.000",
+        "120.000",
+        "",
+        "",
+        "70",
+        "eski"
+       ],
+       [
+        "D-100",
+        "50.000",
+        "120.000",
+        "",
+        "",
+        "70",
+        "eski"
+       ],
+       [
+        "D-300",
+        "920.000",
+        "950.000",
+        "",
+        "",
+        "30",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "overlay-b-layer",
+   "title": "Olayları çakıştır, Birleşim: ikinci olaylar Olay nesneleri katmanından",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.overlayEvents"
+   },
+   "values": {
+    "aSourceKind": "file",
+    "aFile": "lrs-cizgiler.csv",
+    "aRoute": "Rota",
+    "aFrom": "Bas",
+    "aTo": "Son",
+    "bSourceKind": "layer",
+    "bRoute": "Rota",
+    "bFrom": "Bas",
+    "bTo": "Son",
+    "how": "union",
+    "bSource": {
+     "scope": "layer",
+     "layerId": "olay"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 ve 5 olaydan 8 parça.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "6 satırın rotası ya da ölçüsü yok; alınmadı."
+     }
+    ],
+    "outputs": {
+     "count": 8,
+     "table": {
+      "columns": [
+       "Rota",
+       "Başlangıç",
+       "Bitiş",
+       "Kaplama",
+       "Km",
+       "Ofset"
+      ],
+      "rows": [
+       [
+        "D-100",
+        "20.000",
+        "130.000",
+        "asfalt",
+        "",
+        ""
+       ],
+       [
+        "D-100",
+        "20.000",
+        "120.000",
+        "asfalt",
+        "",
+        ""
+       ],
+       [
+        "D-100",
+        "50.000",
+        "120.000",
+        "asfalt",
+        "",
+        ""
+       ],
+       [
+        "D-100",
+        "120.000",
+        "130.000",
+        "beton",
+        "",
+        ""
+       ],
+       [
+        "D-100",
+        "130.000",
+        "140.000",
+        "beton",
+        "",
+        ""
+       ],
+       [
+        "D-300",
+        "920.000",
+        "990.000",
+        "parke",
+        "",
+        ""
+       ],
+       [
+        "D-500",
+        "50.000",
+        "150.000",
+        "stabilize",
+        "",
+        ""
+       ],
+       [
+        "D-200",
+        "0.000",
+        "100.000",
+        "",
+        "",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "drift-left",
+   "title": "Olay kaymasını denetle, nokta, öteleme solda: sağdaki olaylar kaymış sayılır",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.eventDrift"
+   },
+   "values": {
+    "events": {
+     "scope": "layer",
+     "layerId": "olay"
+    },
+    "routes": {
+     "scope": "layer",
+     "layerId": "rota"
+    },
+    "routeField": "Rota",
+    "eventRoute": "Rota",
+    "eventKind": "point",
+    "measure": "Km",
+    "offset": "Ofset",
+    "side": "left",
+    "tolerance": 0.001,
+    "fix": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 olaydan 2 olay kaymış, 3 olay rotasında gösterilemiyor.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 rota kimliği birden çok kez var; ilki kullanıldı."
+     },
+     {
+      "level": "info",
+      "text": "5 nesne olay türünde değil; denetlenmedi."
+     },
+     {
+      "level": "warn",
+      "text": "2 olay rotanın verdiği yerden kaymış; Yerine taşı ile düzeltilir."
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Rota",
+       "Kayma",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "#70",
+        "D-100",
+        "10.000",
+        "Kaydı"
+       ],
+       [
+        "#71",
+        "D-100",
+        "5.000",
+        "Kaydı"
+       ],
+       [
+        "#72",
+        "D-999",
+        "",
+        "“D-999” rotası yok"
+       ],
+       [
+        "#73",
+        "D-100",
+        "",
+        "Ölçü rotanın dışında (0.000 – 150.000)"
+       ],
+       [
+        "#74",
+        "D-100",
+        "",
+        "“Km” sayı değil: x"
        ]
       ]
      }

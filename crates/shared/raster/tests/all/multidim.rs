@@ -292,5 +292,5 @@ fn mesh_hesaplayici_writes_the_reference_file() {
         }
         played += 1;
     }
-    assert_eq!(played, 9);
+    assert_eq!(played, 10);
 }

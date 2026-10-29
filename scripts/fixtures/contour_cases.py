@@ -318,10 +318,24 @@ def build():
         ("int16", TERRAIN / "int16.tif", {"interval": 50.0, "base": 0.0, "indexEvery": 5, "simplify": 0.0}, True),
         ("genis", TERRAIN / "genis.tif", {"interval": 10.0, "base": 0.0, "indexEvery": 5, "simplify": 0.0}, False),
     ]
-    for name, path, spec, full in specs:
+    # Kapsam nesnelerin kutusu (docs/adr/0535, 0741 §2): the cells the analysis area of the processing cases touches,
+    # tepe's columns 8–19 and rows 10–21 (scripts/fixtures/surface_processing_cases.py's AREA_INSIDE).
+    windows = {len(specs): ((8, 10, 11, 11), [500183.0, 4420121.0, 500287.5, 4420226.0])}
+    specs.append(("tepe", TERRAIN / "tepe.tif", {"interval": 5.0, "base": 0.0, "indexEvery": 5, "simplify": 0.0}, True))
+    for at, (name, path, spec, full) in enumerate(specs):
         z, gt, nodata = read(path)
+        source = list(gt)
+        window, box = windows.get(at, (None, None))
+        if window:
+            i0, j0, w, h = window
+            z = z[j0:j0 + h, i0:i0 + w]
+            gt = [gt[0] + gt[1] * i0 + gt[2] * j0, gt[1], gt[2], gt[3] + gt[4] * i0 + gt[5] * j0, gt[4], gt[5]]
         lines = contours(z, gt, nodata, spec["interval"], spec["base"], spec["indexEvery"], spec["simplify"])
-        case = {"dem": name, "file": str(path.relative_to(ROOT / "fixtures")), "spec": {"tool": {"kind": "contours", **spec}, "band": 1, "affine": gt, "epsg": 5254}}
+        case = {"dem": name, "file": str(path.relative_to(ROOT / "fixtures")), "spec": {"tool": {"kind": "contours", **spec}, "band": 1, "affine": source, "epsg": 5254}}
+        if window:
+            # The source's cells the box touches (the job's window, docs/adr/0535): the lines of those cells alone.
+            case["spec"]["window"] = box
+            case["window"] = list(window)
         case["texts"] = texts(lines, spec)
         if full:
             case["lines"] = lines

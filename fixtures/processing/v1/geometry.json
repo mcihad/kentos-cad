@@ -511,6 +511,57 @@
    ]
   },
   {
+   "id": "buffer-right",
+   "title": "Tampon, Sağ: sağa dönen sokağın içi, iki şeridin ortak 1 m²'si bir kez (docs/adr/0741)",
+   "document": "geometry.kcad",
+   "run": {
+    "tool": "geometry.buffer"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "distance": 1,
+    "side": "right"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesnenin tamponu yazıldı (1 alan).",
+    "undo": "Tampon",
+    "layers": [
+     {
+      "id": "islem-tampon",
+      "name": "Tampon",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-tampon",
+      "attrs": {
+       "Ad": "Okul Sokağı",
+       "Uzaklık": "1"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 104
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   },
+   "selection": [
+    8
+   ]
+  },
+  {
    "id": "refuse-buffer-rings",
    "title": "Eksi uzaklıkla birden çok halka çizilmez",
    "document": "geometry.kcad",

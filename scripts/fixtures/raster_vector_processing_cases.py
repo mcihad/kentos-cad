@@ -306,6 +306,40 @@ def cases():
                 {"input": {"scope": "layer", "layerId": "cizgiler"}, "select": "color", "color": "#000000"},
                 "Renkle seçmek üç bantlı (RGB) bir raster ister; bu rasterde Değer aralığı'nı kullanın."),
     ]
+    # Every option of the tools (docs/adr/0741 §2), each from the reference's case.
+    unread = [{"level": "warn", "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."}]
+    for overlap, title in [("first", "İlk çizilen"), ("min", "En küçük"), ("sum", "Toplam"), ("count", "Sayı")]:
+        out.append(rasterize_case(f"rasterize-{overlap}", f"Rasterleştir, Alandan, örtüşmede {title}, 0,5 m",
+                                  {"input": {"scope": "layer", "layerId": "nesneler"}, "valueFrom": "field", "field": "Değer",
+                                   "overlap": overlap, "cellSize": 0.5}, f"rasterlestir-{overlap}", unread))
+    out.append(rasterize_case("rasterize-i32", "Rasterleştir, Toplam, Tam sayı 32 bit, 0,5 m",
+                              {"input": {"scope": "layer", "layerId": "nesneler"}, "valueFrom": "field", "field": "Değer", "overlap": "sum",
+                               "sample": "i32", "cellSize": 0.5}, "rasterlestir-tam-sayi", unread))
+    quiet = json.loads(json.dumps(out[0]))
+    quiet.update(id="rasterize-eklemeden", title="Rasterleştir, çizime eklenmeden: yalnız dosya")
+    quiet["values"]["add"] = False
+    for key in ("undo", "layerBelow"):
+        quiet["expect"].pop(key, None)
+    quiet["expect"].update(layers=[], added=[])
+    out.append(quiet)
+    out += [
+        vector_case("polygons-eight", "Rasterden alan, 8 komşu: köşeden değen hücreler bir bölge", "raster.toPolygons",
+                    {"input": {"scope": "layer", "layerId": "siniflar"}, "connect": "eight"}, "alan-eight", "Bölgeler", "siniflar",
+                    lambda f, added: f"{words(distinct(f, added))} değerden {words(len(added))} alan yazıldı.",
+                    attrs=lambda f, k: {"Değer": f["texts"][k]}),
+        vector_case("lines-range", "Rasterden çizgi, Değer aralığı 0,5–1,5, sadeleştirmeden: 7 değerli leke çizgi değil", "raster.toLines",
+                    {"input": {"scope": "layer", "layerId": "cizgiler"}, "select": "range", "min": 0.5, "max": 1.5, "simplify": 0},
+                    "cizgi-aralik-bir", "Çizgiler", "cizgiler", lambda f, added: f"{words(len(added))} çizgi yazıldı."),
+        vector_case("points-step", "Rasterden nokta, 3 hücrede bir, kot olarak yazılmadan", "raster.toPoints",
+                    {"input": {"scope": "layer", "layerId": "yukseklik"}, "mode": "step", "step": 3, "elevation": False},
+                    "nokta-step-3", "Noktalar", "yukseklik", lambda f, added: f"{words(len(added))} nokta yazıldı.",
+                    attrs=lambda f, k: {"Değer": f["texts"][k]}),
+        vector_case("points-all", "Rasterden nokta, Her hücre: kotlu", "raster.toPoints",
+                    {"input": {"scope": "layer", "layerId": "yukseklik"}, "mode": "all"},
+                    "nokta-all-0", "Noktalar", "yukseklik", lambda f, added: f"{words(len(added))} nokta yazıldı.",
+                    attrs=lambda f, k: {"Değer": f["texts"][k]},
+                    z=lambda k: ref("nokta-all-0")["expect"]["features"]["values"][k]),
+    ]
     return out
 
 

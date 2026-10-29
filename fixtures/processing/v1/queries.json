@@ -666,6 +666,229 @@
    }
   },
   {
+   "id": "inside-min",
+   "title": "En az: parseldeki yapıların en küçük taban alanı (docs/adr/0741)",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromInside"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "relation": "intersects",
+    "stat": "min",
+    "field": "Taban alanı",
+    "output": "En küçük taban"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 hedef nesneye “En küçük taban” yazıldı (en az).",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için atlandı."
+     }
+    ],
+    "undo": "İçindekinden bilgi al",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "En küçük taban": "70"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "En küçük taban": "25.5"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "En küçük taban": "25.5"
+      },
+      "label": "3"
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "changed": [
+      1,
+      2,
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "inside-max",
+   "title": "En çok: parseldeki yapıların en büyük taban alanı",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.fromInside"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "source": {
+     "scope": "layer",
+     "layerId": "yapi"
+    },
+    "relation": "intersects",
+    "stat": "max",
+    "field": "Taban alanı",
+    "output": "En büyük taban"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 hedef nesneye “En büyük taban” yazıldı (en çok).",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 değer sayı olarak okunamadığı için atlandı."
+     }
+    ],
+    "undo": "İçindekinden bilgi al",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "En büyük taban": "70"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "En büyük taban": "100"
+      },
+      "label": "2"
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Tapu alanı": "450,25",
+       "En büyük taban": "25.5"
+      },
+      "label": "3"
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "changed": [
+      1,
+      2,
+      3
+     ]
+    }
+   }
+  },
+  {
+   "id": "location-add",
+   "title": "Seçime ekle: seçili parsele yolla kesişenler eklenir",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "relation": "intersects",
+    "reference": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "mode": "add"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 4 nesne “Kesişen” ilişkisini sağladı; seçimde 2 nesne var.",
+    "undo": null,
+    "selection": [
+     4,
+     3
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      3
+     ]
+    }
+   },
+   "selection": [
+    4
+   ]
+  },
+  {
+   "id": "location-in-selection",
+   "title": "Seçimin içinden seç: seçili üç parselden yalnız yolla kesişenler kalır",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byLocation"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "relation": "intersects",
+    "reference": {
+     "scope": "layer",
+     "layerId": "yol"
+    },
+    "mode": "within"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 4 nesne “Kesişen” ilişkisini sağladı; seçimde 1 nesne var.",
+    "undo": null,
+    "selection": [
+     3
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      3
+     ]
+    }
+   },
+   "selection": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
    "id": "enclosing-parcel",
    "title": "Çevreleyenden bilgi al: yapıların parsel numarası; sınırdaki yapı ilk parselden, delikteki değişmez",
    "document": "queries.kcad",
@@ -1171,6 +1394,77 @@
    }
   },
   {
+   "id": "join-only-empty",
+   "title": "Anahtarla birleştir, Yalnız boşlara: dolu alanlar korunur (docs/adr/0741)",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.joinByField"
+   },
+   "values": {
+    "target": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "targetKey": "Parsel",
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "kayit"
+    },
+    "sourceKey": "",
+    "fields": "Malik",
+    "existing": "empty"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "2 nesne eşleşti; 2 nesnede 1 alan aktarıldı.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 anahtar kaynakta birden çok kez var; ilk satırları alındı."
+     },
+     {
+      "level": "info",
+      "text": "2 hedef nesnenin kaynakta eşi yok."
+     },
+     {
+      "level": "info",
+      "text": "1 kaynak satırı hiçbir hedefle eşleşmedi."
+     }
+    ],
+    "undo": "Anahtarla birleştir",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Tapu alanı": "600.00",
+       "Malik": "Ayşe Yılmaz"
+      },
+      "label": "1"
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Tapu alanı": "750.00",
+       "Malik": "Hasan Demir"
+      },
+      "label": "2"
+     }
+    ],
+    "outputs": {
+     "count": 2,
+     "changed": [
+      1,
+      2
+     ]
+    }
+   }
+  },
+  {
    "id": "refuse-join-column",
    "title": "Dosyada kaynak anahtar sütunu yoksa çalışmaz, sütunları söyler",
    "document": "queries.kcad",
@@ -1506,6 +1800,145 @@
       18,
       19,
       20
+     ]
+    }
+   }
+  },
+  {
+   "id": "expr-add",
+   "title": "İfadeyle seç, seçime ekle: seçili iki parsele Yol'la kesişenler eklenir",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byExpression"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "condition": "kesişir('Yol')",
+    "mode": "add"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 4 nesne koşulu sağladı; seçimde 3 nesne var.",
+    "undo": null,
+    "selection": [
+     1,
+     4,
+     3
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      3
+     ]
+    }
+   },
+   "selection": [
+    1,
+    4
+   ]
+  },
+  {
+   "id": "expr-remove",
+   "title": "İfadeyle seç, seçimden çıkar: Yol'la kesişenler seçimden çıkar",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "selection.byExpression"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "condition": "kesişir('Yol')",
+    "mode": "remove"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 / 4 nesne koşulu sağladı; seçimde 2 nesne var.",
+    "undo": null,
+    "selection": [
+     1,
+     2
+    ],
+    "outputs": {
+     "count": 1,
+     "matched": [
+      3
+     ]
+    }
+   },
+   "selection": [
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "id": "expr-from-layer-clear",
+   "title": "Öznitelik hesapla, Boşalt: eşi olmayan kaydın adası boş metin olur",
+   "document": "queries.kcad",
+   "run": {
+    "tool": "attributes.calculate"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "kayit"
+    },
+    "field": "Ada",
+    "value": "katmandan('Parsel', Ada, 'Parsel', Parsel)",
+    "where": "",
+    "empty": "clear",
+    "label": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 nesnede “Ada” yazıldı.",
+    "undo": "Öznitelik hesapla",
+    "updated": [
+     {
+      "id": 18,
+      "attrs": {
+       "Parsel": "1",
+       "Malik": "Ayşe Yılmaz",
+       "Ada": "101"
+      }
+     },
+     {
+      "id": 19,
+      "attrs": {
+       "Parsel": "2",
+       "Malik": "Hasan Demir",
+       "Ada": "101"
+      }
+     },
+     {
+      "id": 20,
+      "attrs": {
+       "Parsel": "002",
+       "Malik": "Tekrar Kayıt",
+       "Ada": "101"
+      }
+     },
+     {
+      "id": 21,
+      "attrs": {
+       "Parsel": "9",
+       "Malik": "Kayıtsız",
+       "Ada": ""
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "changed": [
+      18,
+      19,
+      20,
+      21
      ]
     }
    }

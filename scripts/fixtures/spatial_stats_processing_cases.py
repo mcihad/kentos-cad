@@ -237,6 +237,15 @@ def cases():
     run = ref.centers(kz, "ellipse", None, attr_list("kaza", "Tür"))
     out.append(ok_case("ellipse-grouped", "Yön dağılımı, Tür'e göre: Bisiklet'in üç yeri de elips verir, (boş) grubunun tek yeri vermez",
                        "stats.directionalDistribution", "kaza", {"groupField": "Tür"}, run, "Yön dağılımı", "#0CA678", "Yön dağılımı"))
+    # The other deviations (docs/adr/0741): one and three for the circle, two and three for the ellipse.
+    for k, word in ((1, "1"), (3, "3")):
+        run = ref.centers(kz, "distance", k=k)
+        out.append(ok_case(f"distance-{word}", f"Standart uzaklık, {word} standart sapma", "stats.standardDistance", "kaza",
+                           {"deviations": word}, run, "Standart uzaklık", "#1C7ED6", "Standart uzaklık"))
+    for k, word in ((2, "2"), (3, "3")):
+        run = ref.centers(kz, "ellipse", k=k)
+        out.append(ok_case(f"ellipse-{word}", f"Yön dağılımı, {word} standart sapma", "stats.directionalDistribution", "kaza",
+                           {"deviations": word}, run, "Yön dağılımı", "#0CA678", "Yön dağılımı"))
     run = ref.nearest(kz)
     out.append(ok_case("nearest", "En yakın komşu: kümelenmiş, tablo; çizim değişmez", "stats.nearestNeighbor", "kaza", {}, run))
     run = ref.nearest(kz, 250000)

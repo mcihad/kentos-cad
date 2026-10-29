@@ -106,7 +106,7 @@ fn every_case_draws_the_reference_s_lines() {
         }
         checked += 1;
     }
-    assert_eq!(checked, 7);
+    assert_eq!(checked, 8);
 }
 
 #[test]

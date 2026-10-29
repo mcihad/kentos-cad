@@ -1575,6 +1575,2529 @@
     "status": "error",
     "message": "Renkle seçmek üç bantlı (RGB) bir raster ister; bu rasterde Değer aralığı'nı kullanın."
    }
+  },
+  {
+   "id": "rasterize-first",
+   "title": "Rasterleştir, Alandan, örtüşmede İlk çizilen, 0,5 m",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "first",
+    "cellSize": 0.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterleştir",
+    "summary": "6 nesneden 38 × 22 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 359 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-rasterlestirilmis",
+      "name": "Rasterleştirilmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-rasterlestirilmis",
+      "attrs": {},
+      "affine": [
+       500.0,
+       0.5,
+       0.0,
+       311.0,
+       0.0,
+       -0.5
+      ],
+      "width": 38,
+      "height": 22,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-raster.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-rasterlestirilmis": "nesneler"
+    },
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-first"
+    }
+   }
+  },
+  {
+   "id": "rasterize-min",
+   "title": "Rasterleştir, Alandan, örtüşmede En küçük, 0,5 m",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "min",
+    "cellSize": 0.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterleştir",
+    "summary": "6 nesneden 38 × 22 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 359 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-rasterlestirilmis",
+      "name": "Rasterleştirilmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-rasterlestirilmis",
+      "attrs": {},
+      "affine": [
+       500.0,
+       0.5,
+       0.0,
+       311.0,
+       0.0,
+       -0.5
+      ],
+      "width": 38,
+      "height": 22,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-raster.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-rasterlestirilmis": "nesneler"
+    },
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-min"
+    }
+   }
+  },
+  {
+   "id": "rasterize-sum",
+   "title": "Rasterleştir, Alandan, örtüşmede Toplam, 0,5 m",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "sum",
+    "cellSize": 0.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterleştir",
+    "summary": "6 nesneden 38 × 22 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 359 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-rasterlestirilmis",
+      "name": "Rasterleştirilmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-rasterlestirilmis",
+      "attrs": {},
+      "affine": [
+       500.0,
+       0.5,
+       0.0,
+       311.0,
+       0.0,
+       -0.5
+      ],
+      "width": 38,
+      "height": 22,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-raster.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-rasterlestirilmis": "nesneler"
+    },
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-sum"
+    }
+   }
+  },
+  {
+   "id": "rasterize-count",
+   "title": "Rasterleştir, Alandan, örtüşmede Sayı, 0,5 m",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "count",
+    "cellSize": 0.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterleştir",
+    "summary": "6 nesneden 38 × 22 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 359 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-rasterlestirilmis",
+      "name": "Rasterleştirilmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-rasterlestirilmis",
+      "attrs": {},
+      "affine": [
+       500.0,
+       0.5,
+       0.0,
+       311.0,
+       0.0,
+       -0.5
+      ],
+      "width": 38,
+      "height": 22,
+      "bands": 1,
+      "sample": "f32",
+      "file": "Nesneler-raster.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-rasterlestirilmis": "nesneler"
+    },
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-count"
+    }
+   }
+  },
+  {
+   "id": "rasterize-i32",
+   "title": "Rasterleştir, Toplam, Tam sayı 32 bit, 0,5 m",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "sum",
+    "sample": "i32",
+    "cellSize": 0.5
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterleştir",
+    "summary": "6 nesneden 38 × 22 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 359 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-rasterlestirilmis",
+      "name": "Rasterleştirilmiş",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-rasterlestirilmis",
+      "attrs": {},
+      "affine": [
+       500.0,
+       0.5,
+       0.0,
+       311.0,
+       0.0,
+       -0.5
+      ],
+      "width": 38,
+      "height": 22,
+      "bands": 1,
+      "sample": "i32",
+      "file": "Nesneler-raster.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis",
+       "resampling": "nearest"
+      }
+     }
+    ],
+    "layerBelow": {
+     "islem-rasterlestirilmis": "nesneler"
+    },
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-tam-sayi"
+    }
+   }
+  },
+  {
+   "id": "rasterize-eklemeden",
+   "title": "Rasterleştir, çizime eklenmeden: yalnız dosya",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.rasterize"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "nesneler"
+    },
+    "valueFrom": "field",
+    "field": "Değer",
+    "overlap": "last",
+    "cellSize": 0.5,
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 38 × 22 hücrelik raster; “Nesneler-raster.tif” yazıldı. Değersiz 359 hücre.",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 nesnenin değeri sayı olarak okunamadığı için alınmadı."
+     }
+    ],
+    "outputs": {
+     "file": "Nesneler-raster.tif"
+    },
+    "layers": [],
+    "added": [],
+    "rasterVectorOf": {
+     "Nesneler-raster.tif": "rasterlestir-last"
+    }
+   }
+  },
+  {
+   "id": "polygons-eight",
+   "title": "Rasterden alan, 8 komşu: köşeden değen hücreler bir bölge",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toPolygons"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "siniflar"
+    },
+    "connect": "eight"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterden alan",
+    "summary": "8 değerden 10 alan yazıldı.",
+    "outputs": {
+     "count": 10
+    },
+    "layers": [
+     {
+      "id": "islem-bolgeler",
+      "name": "Bölgeler",
+      "style": {
+       "color": "#3E63DD",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#3E63DD26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "1"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1004.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "2"
+      },
+      "pts": [
+       {
+        "x": 1004.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2000.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "3"
+      },
+      "pts": [
+       {
+        "x": 1010.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1018.0,
+        "y": 2000.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1012.0,
+          "y": 1998.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1998.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1994.0
+         },
+         {
+          "x": 1012.0,
+          "y": 1994.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "4"
+      },
+      "pts": [
+       {
+        "x": 1002.0,
+        "y": 1998.0
+       },
+       {
+        "x": 1002.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1998.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "5"
+      },
+      "pts": [
+       {
+        "x": 1014.0,
+        "y": 1996.0
+       },
+       {
+        "x": 1014.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1994.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1996.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "2"
+      },
+      "pts": [
+       {
+        "x": 1000.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1000.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1004.0,
+        "y": 1992.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1002.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1004.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1004.0,
+          "y": 1988.0
+         },
+         {
+          "x": 1002.0,
+          "y": 1988.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "6"
+      },
+      "pts": [
+       {
+        "x": 1006.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1006.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1992.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1008.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1010.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1010.0,
+          "y": 1988.0
+         },
+         {
+          "x": 1008.0,
+          "y": 1988.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "1"
+      },
+      "pts": [
+       {
+        "x": 1012.0,
+        "y": 1992.0
+       },
+       {
+        "x": 1012.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1986.0
+       },
+       {
+        "x": 1018.0,
+        "y": 1992.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 1014.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1990.0
+         },
+         {
+          "x": 1016.0,
+          "y": 1988.0
+         },
+         {
+          "x": 1014.0,
+          "y": 1988.0
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "7"
+      },
+      "pts": [
+       {
+        "x": 1008.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1008.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1010.0,
+        "y": 1990.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-bolgeler",
+      "attrs": {
+       "Değer": "8"
+      },
+      "pts": [
+       {
+        "x": 1014.0,
+        "y": 1990.0
+       },
+       {
+        "x": 1014.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1988.0
+       },
+       {
+        "x": 1016.0,
+        "y": 1990.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-bolgeler": "siniflar"
+    }
+   }
+  },
+  {
+   "id": "lines-range",
+   "title": "Rasterden çizgi, Değer aralığı 0,5–1,5, sadeleştirmeden: 7 değerli leke çizgi değil",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toLines"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "cizgiler"
+    },
+    "select": "range",
+    "min": 0.5,
+    "max": 1.5,
+    "simplify": 0
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterden çizgi",
+    "summary": "3 çizgi yazıldı.",
+    "outputs": {
+     "count": 3
+    },
+    "layers": [
+     {
+      "id": "islem-cizgiler",
+      "name": "Çizgiler",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "polyline",
+      "layerId": "islem-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1003.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1013.0,
+        "y": 1993.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1013.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1025.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1025.0,
+        "y": 1979.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-cizgiler",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 1013.0,
+        "y": 1993.0
+       },
+       {
+        "x": 1013.0,
+        "y": 1987.0
+       },
+       {
+        "x": 1015.0,
+        "y": 1987.0
+       },
+       {
+        "x": 1015.0,
+        "y": 1985.0
+       },
+       {
+        "x": 1017.0,
+        "y": 1985.0
+       },
+       {
+        "x": 1017.0,
+        "y": 1983.0
+       },
+       {
+        "x": 1019.0,
+        "y": 1983.0
+       },
+       {
+        "x": 1019.0,
+        "y": 1981.0
+       },
+       {
+        "x": 1021.0,
+        "y": 1981.0
+       },
+       {
+        "x": 1021.0,
+        "y": 1979.0
+       }
+      ]
+     }
+    ],
+    "layerAbove": {
+     "islem-cizgiler": "cizgiler"
+    }
+   }
+  },
+  {
+   "id": "points-step",
+   "title": "Rasterden nokta, 3 hücrede bir, kot olarak yazılmadan",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yukseklik"
+    },
+    "mode": "step",
+    "step": 3,
+    "elevation": false
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterden nokta",
+    "summary": "12 nokta yazıldı.",
+    "outputs": {
+     "count": 12
+    },
+    "layers": [
+     {
+      "id": "islem-noktalar",
+      "name": "Noktalar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "11.293"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1997.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.701"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1997.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.973"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1997.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "15.921"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1997.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "0.665"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1991.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-0.927"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1991.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-12.602"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1991.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "5.293"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1991.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "13.941"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1985.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "12.349"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1985.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "0.674"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1985.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "18.569"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1985.0
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-noktalar": "yukseklik"
+    }
+   }
+  },
+  {
+   "id": "points-all",
+   "title": "Rasterden nokta, Her hücre: kotlu",
+   "document": "raster-vector.kcad",
+   "selection": [],
+   "run": {
+    "tool": "raster.toPoints"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "yukseklik"
+    },
+    "mode": "all"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Rasterden nokta",
+    "summary": "107 nokta yazıldı.",
+    "outputs": {
+     "count": 107
+    },
+    "layers": [
+     {
+      "id": "islem-noktalar",
+      "name": "Noktalar",
+      "style": {
+       "color": "#30A46C",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#30A46C26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "7"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1999.0
+      },
+      "z": 7.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "13.942"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1999.0
+      },
+      "z": 13.942000389099121
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "17.854"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1999.0
+      },
+      "z": 17.854000091552734
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "17.132"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1999.0
+      },
+      "z": 17.131999969482422
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "12.35"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1999.0
+      },
+      "z": 12.350000381469727
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "5.992"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1999.0
+      },
+      "z": 5.992000102996826
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "1.284"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1999.0
+      },
+      "z": 1.284000039100647
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "0.675"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1999.0
+      },
+      "z": 0.675000011920929
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.687"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1999.0
+      },
+      "z": 4.686999797821045
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "11.668"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1999.0
+      },
+      "z": 11.668000221252441
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "18.57"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1999.0
+      },
+      "z": 18.56999969482422
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "22.382"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1999.0
+      },
+      "z": 22.381999969482422
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.351"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1997.0
+      },
+      "z": 4.35099983215332
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "11.293"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1997.0
+      },
+      "z": 11.293000221252441
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "15.206"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1997.0
+      },
+      "z": 15.206000328063965
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "14.483"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1997.0
+      },
+      "z": 14.482999801635742
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.701"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1997.0
+      },
+      "z": 9.701000213623047
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.343"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1997.0
+      },
+      "z": 3.3429999351501465
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.364"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1997.0
+      },
+      "z": -1.3639999628067017
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.973"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1997.0
+      },
+      "z": -1.9730000495910645
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "2.039"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1997.0
+      },
+      "z": 2.0390000343322754
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.019"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1997.0
+      },
+      "z": 9.019000053405762
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "15.921"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1997.0
+      },
+      "z": 15.920999526977539
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "19.733"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1997.0
+      },
+      "z": 19.732999801635742
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.59"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1995.0
+      },
+      "z": -1.590000033378601
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "5.352"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1995.0
+      },
+      "z": 5.3520002365112305
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.264"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1995.0
+      },
+      "z": 9.263999938964844
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "8.542"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1995.0
+      },
+      "z": 8.541999816894531
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.759"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1995.0
+      },
+      "z": 3.759000062942505
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-2.598"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1995.0
+      },
+      "z": -2.5980000495910645
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-7.306"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1995.0
+      },
+      "z": -7.306000232696533
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-7.915"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1995.0
+      },
+      "z": -7.914999961853027
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-3.903"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1995.0
+      },
+      "z": -3.9030001163482666
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.078"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1995.0
+      },
+      "z": 3.078000068664551
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.979"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1995.0
+      },
+      "z": 9.979000091552734
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "13.791"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1995.0
+      },
+      "z": 13.791000366210938
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-6.329"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1993.0
+      },
+      "z": -6.328999996185303
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "0.614"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1993.0
+      },
+      "z": 0.6140000224113464
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.526"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1993.0
+      },
+      "z": 4.526000022888184
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.804"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1993.0
+      },
+      "z": 3.803999900817871
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-7.336"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1993.0
+      },
+      "z": -7.335999965667725
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-12.044"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1993.0
+      },
+      "z": -12.043999671936035
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-12.653"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1993.0
+      },
+      "z": -12.652999877929688
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-8.641"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1993.0
+      },
+      "z": -8.640999794006348
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.66"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1993.0
+      },
+      "z": -1.659999966621399
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "5.241"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1993.0
+      },
+      "z": 5.241000175476074
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.053"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1993.0
+      },
+      "z": 9.053000450134277
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-6.277"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1991.0
+      },
+      "z": -6.2769999504089355
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "0.665"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1991.0
+      },
+      "z": 0.6650000214576721
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.577"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1991.0
+      },
+      "z": 4.577000141143799
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.855"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1991.0
+      },
+      "z": 3.8550000190734863
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-0.927"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1991.0
+      },
+      "z": -0.9269999861717224
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-7.285"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1991.0
+      },
+      "z": -7.284999847412109
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-11.993"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1991.0
+      },
+      "z": -11.993000030517578
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-12.602"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1991.0
+      },
+      "z": -12.60200023651123
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-8.59"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1991.0
+      },
+      "z": -8.59000015258789
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.609"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1991.0
+      },
+      "z": -1.6089999675750732
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "5.293"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1991.0
+      },
+      "z": 5.293000221252441
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.104"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1991.0
+      },
+      "z": 9.104000091552734
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.476"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1989.0
+      },
+      "z": -1.4759999513626099
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "5.467"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1989.0
+      },
+      "z": 5.4670000076293945
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.379"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1989.0
+      },
+      "z": 9.378999710083008
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "8.657"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1989.0
+      },
+      "z": 8.656999588012695
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.874"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1989.0
+      },
+      "z": 3.874000072479248
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-2.483"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1989.0
+      },
+      "z": -2.4830000400543213
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-7.191"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1989.0
+      },
+      "z": -7.190999984741211
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-7.8"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1989.0
+      },
+      "z": -7.800000190734863
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-3.788"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1989.0
+      },
+      "z": -3.7880001068115234
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.193"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1989.0
+      },
+      "z": 3.193000078201294
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "10.094"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1989.0
+      },
+      "z": 10.093999862670898
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "13.906"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1989.0
+      },
+      "z": 13.906000137329102
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.443"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1987.0
+      },
+      "z": 4.442999839782715
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "11.385"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1987.0
+      },
+      "z": 11.385000228881836
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "15.297"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1987.0
+      },
+      "z": 15.29699993133545
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "14.575"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1987.0
+      },
+      "z": 14.574999809265137
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.793"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1987.0
+      },
+      "z": 9.793000221252441
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.435"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1987.0
+      },
+      "z": 3.434999942779541
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.273"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1987.0
+      },
+      "z": -1.2730000019073486
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.882"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1987.0
+      },
+      "z": -1.8819999694824219
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "2.13"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1987.0
+      },
+      "z": 2.130000114440918
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.111"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1987.0
+      },
+      "z": 9.111000061035156
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "16.013"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1987.0
+      },
+      "z": 16.01300048828125
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "19.825"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1987.0
+      },
+      "z": 19.825000762939453
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "6.999"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1985.0
+      },
+      "z": 6.999000072479248
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "13.941"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1985.0
+      },
+      "z": 13.940999984741211
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "17.854"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1985.0
+      },
+      "z": 17.854000091552734
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "17.131"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1985.0
+      },
+      "z": 17.131000518798828
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "12.349"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1985.0
+      },
+      "z": 12.348999977111816
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "5.991"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1985.0
+      },
+      "z": 5.991000175476074
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "1.283"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1985.0
+      },
+      "z": 1.2829999923706055
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "0.674"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1985.0
+      },
+      "z": 0.6740000247955322
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.686"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1985.0
+      },
+      "z": 4.685999870300293
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "11.667"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1985.0
+      },
+      "z": 11.666999816894531
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "18.569"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1985.0
+      },
+      "z": 18.569000244140625
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "22.381"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1985.0
+      },
+      "z": 22.381000518798828
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "4.258"
+      },
+      "p": {
+       "x": 1001.0,
+       "y": 1983.0
+      },
+      "z": 4.257999897003174
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "11.201"
+      },
+      "p": {
+       "x": 1003.0,
+       "y": 1983.0
+      },
+      "z": 11.201000213623047
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "15.113"
+      },
+      "p": {
+       "x": 1005.0,
+       "y": 1983.0
+      },
+      "z": 15.11299991607666
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "14.391"
+      },
+      "p": {
+       "x": 1007.0,
+       "y": 1983.0
+      },
+      "z": 14.390999794006348
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "9.608"
+      },
+      "p": {
+       "x": 1009.0,
+       "y": 1983.0
+      },
+      "z": 9.607999801635742
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "3.251"
+      },
+      "p": {
+       "x": 1011.0,
+       "y": 1983.0
+      },
+      "z": 3.250999927520752
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-1.457"
+      },
+      "p": {
+       "x": 1013.0,
+       "y": 1983.0
+      },
+      "z": -1.4570000171661377
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "-2.066"
+      },
+      "p": {
+       "x": 1015.0,
+       "y": 1983.0
+      },
+      "z": -2.065999984741211
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "1.946"
+      },
+      "p": {
+       "x": 1017.0,
+       "y": 1983.0
+      },
+      "z": 1.9459999799728394
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "8.927"
+      },
+      "p": {
+       "x": 1019.0,
+       "y": 1983.0
+      },
+      "z": 8.927000045776367
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "15.828"
+      },
+      "p": {
+       "x": 1021.0,
+       "y": 1983.0
+      },
+      "z": 15.82800006866455
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-noktalar",
+      "attrs": {
+       "Değer": "19.64"
+      },
+      "p": {
+       "x": 1023.0,
+       "y": 1983.0
+      },
+      "z": 19.639999389648438
+     }
+    ],
+    "layerAbove": {
+     "islem-noktalar": "yukseklik"
+    }
+   }
   }
  ]
 }

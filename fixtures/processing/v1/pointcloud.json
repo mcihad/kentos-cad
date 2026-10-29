@@ -289,6 +289,39 @@
    }
   },
   {
+   "id": "ground-copc",
+   "title": "Zemin süzgeci, COPC: dizini kurulur, sınıflar noktalarıyla (docs/adr/0741)",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.ground"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "format": "copc",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 noktadan 57.461 nokta zemin (2) sınıfında; “koy-zemin.copc.laz” yazıldı.",
+    "outputs": {
+     "ground": 57461
+    },
+    "cloudOf": {
+     "koy-zemin.copc.laz": {
+      "count": 71212,
+      "points": "3eb1a3a240267219",
+      "copc": true,
+      "classes": "e1f16136c80bc814"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
    "id": "classify-all",
    "title": "Yüksekliğe göre sınıfla, zemin olmayan bütün noktalar: zeminden yüksekliğe göre 3, 4, 5",
    "document": "pointcloud.kcad",
@@ -401,6 +434,39 @@
       }
      }
     ]
+   }
+  },
+  {
+   "id": "classify-copc",
+   "title": "Yüksekliğe göre sınıfla, COPC (docs/adr/0741)",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.classify"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "format": "copc",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "0 nokta sınıflandı: düşük bitki 0, orta bitki 0, yüksek bitki 0; “koy-sinifli.copc.laz” yazıldı.",
+    "outputs": {
+     "classed": 0
+    },
+    "cloudOf": {
+     "koy-sinifli.copc.laz": {
+      "count": 71212,
+      "points": "3eb1a3a240267219",
+      "copc": true,
+      "classes": "55c9897c4aed3ac6"
+     }
+    },
+    "undo": null
    }
   },
   {
@@ -1491,6 +1557,85 @@
      "koy-birlesik.laz": {
       "count": 71712,
       "records": "74020edfe5b1e88f"
+     }
+    }
+   }
+  },
+  {
+   "id": "merge-las",
+   "title": "Bulutları birleştir, LAS (docs/adr/0741)",
+   "document": "pointcloud.kcad",
+   "selection": [
+    4,
+    5
+   ],
+   "run": {
+    "tool": "pointcloud.merge"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "add": false,
+    "format": "las"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "2 dosyanın 71.712 noktası “koy-birlesik.las” dosyasında birleşti.",
+    "outputs": {
+     "count": 71712
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "56.204 noktanın koordinatı sonucun ölçeğine yuvarlandı (kaynakların ölçek ve ötelemeleri farklı)."
+     }
+    ],
+    "cloudOf": {
+     "koy-birlesik.las": {
+      "count": 71712,
+      "records": "74020edfe5b1e88f"
+     }
+    }
+   }
+  },
+  {
+   "id": "merge-copc",
+   "title": "Bulutları birleştir, COPC: kayıtlar dizinin sırasıyla",
+   "document": "pointcloud.kcad",
+   "selection": [
+    4,
+    5
+   ],
+   "run": {
+    "tool": "pointcloud.merge"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "add": false,
+    "format": "copc"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "2 dosyanın 71.712 noktası “koy-birlesik.copc.laz” dosyasında birleşti.",
+    "outputs": {
+     "count": 71712
+    },
+    "log": [
+     {
+      "level": "warn",
+      "text": "56.204 noktanın koordinatı sonucun ölçeğine yuvarlandı (kaynakların ölçek ve ötelemeleri farklı)."
+     }
+    ],
+    "cloudOf": {
+     "koy-birlesik.copc.laz": {
+      "count": 71712,
+      "sortedRecords": "6935f97a6a2a16ff",
+      "copc": true
      }
     }
    }

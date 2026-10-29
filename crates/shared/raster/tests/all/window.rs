@@ -103,7 +103,7 @@ fn an_area_s_cells_are_the_whole_raster_s() {
         }
         checked += 1;
     }
-    assert_eq!(checked, 39, "every case but the ramps without bounds");
+    assert_eq!(checked, 50, "every case but the ramps without bounds");
 }
 
 #[test]

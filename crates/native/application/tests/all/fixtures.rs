@@ -4757,6 +4757,63 @@ fn node_with_parent<'a>(
     None
 }
 
+/// What a step that writes nothing leaves as it was (docs/adr/0741 §1, plan/gis.md CBS-41): a plan or a validation, a
+/// query's execute and a refused one change neither the drawing's revision nor its dirty flag, its undo and redo (the
+/// calls' journal may note them: it is the record, not the drawing).
+#[derive(Debug, PartialEq)]
+struct Held {
+    revision: u64,
+    dirty: bool,
+    undo: bool,
+    redo: bool,
+}
+
+impl Held {
+    fn of(doc: &Document) -> Self {
+        Self {
+            revision: doc.revision(),
+            dirty: doc.is_dirty(),
+            undo: doc.can_undo(),
+            redo: doc.can_redo(),
+        }
+    }
+
+    /// Why the step must write nothing: its op, the command's effect or its refusal; none when it may write.
+    fn why(step: &Value, name: &str) -> Option<&'static str> {
+        static QUERIES: std::sync::OnceLock<std::collections::HashSet<String>> =
+            std::sync::OnceLock::new();
+        let queries = QUERIES.get_or_init(|| {
+            kentos_commands::catalog()
+                .commands
+                .into_iter()
+                .filter(|c| c.effect == kentos_commands::CommandEffect::Query)
+                .map(|c| c.id)
+                .collect()
+        });
+        match step["op"].as_str() {
+            Some("validate") => Some("doğrulama"),
+            Some("plan") => Some("plan"),
+            Some("execute") => match step["result"]["status"].as_str() {
+                Some("failed" | "conflict" | "needsInput") => Some("ret"),
+                _ if queries.contains(name) => Some("sorgu"),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn same(&self, doc: &Document, why: &str, at: &str) -> Outcome<()> {
+        let now = Self::of(doc);
+        if now == *self {
+            Ok(())
+        } else {
+            Err(format!(
+                "{at}: {why} çizimi değiştirdi: önce {self:?}, sonra {now:?}"
+            ))
+        }
+    }
+}
+
 /// Every node's id of a layer tree.
 fn layer_ids(nodes: &[kentos_commands::LayerNode]) -> std::collections::HashSet<String> {
     let mut out = std::collections::HashSet::new();
@@ -4782,6 +4839,7 @@ fn run_step(
         }
     }
     let before = doc.revision();
+    let held = Held::of(doc);
     match step["op"].as_str().unwrap_or("?") {
         // A step may run another command first (a dimension tied before it is broken, docs/adr/0296).
         // A write that relaxes the constraints (docs/adr/0337 §1).
@@ -4795,11 +4853,17 @@ fn run_step(
                 at,
             );
             doc.set_relax(kentos_domain::Relax::Off);
-            ran?
+            ran?;
+            if let Some(why) = Held::why(step, step["command"].as_str().unwrap_or(command)) {
+                held.same(doc, why, at)?;
+            }
         }
         "validate" | "plan" | "execute" => {
             let name = step["command"].as_str().unwrap_or(command);
             run_command(name, doc, state, step, at)?;
+            if let Some(why) = Held::why(step, name) {
+                held.same(doc, why, at)?;
+            }
             // A write is the command's own row in the journal (docs/adr/0253 §3, 0548 §4): its name and input, so
             // the history says it and a replay runs it again; never an anonymous edit.
             if step["op"] == "execute" && doc.revision() != before {

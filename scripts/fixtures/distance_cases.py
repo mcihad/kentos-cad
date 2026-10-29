@@ -641,6 +641,9 @@ def cases():
     for th_name, value in (("none", 0.0), ("percent", 10.0), ("value", 700.0)):
         out.append(ops_case(f"koridor-{th_name}", c, tool_of("costCorridor", neighbours="16", surfaceLength=False, slope=0.0, first=1,
                                                              threshold=th_name, value=value, sample="f32"), a_end + b_end))
+    # Over the height model, its surface length and the steepest slope, every cell kept, in float64 (docs/adr/0741).
+    out.append(ops_case("koridor-yukseklik", c, tool_of("costCorridor", neighbours="16", surfaceLength=True, slope=12.0, first=1,
+                                                        threshold="none", value=0.0, sample="f64"), a_end + b_end, surface=dem))
     # A threshold below the cheapest path's cost: no cell, the least still said.
     out.append(ops_case("koridor-esik-alti", c, tool_of("costCorridor", neighbours="8", surfaceLength=False, slope=0.0, first=1,
                                                         threshold="value", value=300.0, sample="f32"), a_end + b_end))

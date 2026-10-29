@@ -734,6 +734,346 @@
    }
   },
   {
+   "id": "nearest-centres",
+   "title": "En yakını bul, merkezden merkeze, semtsiz: beş parselin en yakın durağı",
+   "document": "proximity.kcad",
+   "selection": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "run": {
+    "tool": "proximity.nearest"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "targets": {
+     "scope": "layer",
+     "layerId": "durak"
+    },
+    "measure": "centers",
+    "max": 0,
+    "fields": "Ad",
+    "prefix": "Yakın ",
+    "bearing": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 nesneye en yakın hedef yazıldı (“Yakın uzaklık”).",
+    "undo": "En yakını bul",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ad": "P1",
+       "Yakın uzaklık": "20.000",
+       "Yakın Ad": "Çarşı"
+      }
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ad": "P2",
+       "Yakın uzaklık": "18.173",
+       "Yakın Ad": "Pazar"
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ad": "P3",
+       "Yakın uzaklık": "25.125",
+       "Yakın Ad": "Okul önü"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ad": "P4",
+       "Yakın uzaklık": "20.616",
+       "Yakın Ad": "Okul önü"
+      }
+     },
+     {
+      "id": 5,
+      "attrs": {
+       "Ad": "P5",
+       "Yakın uzaklık": "33.541",
+       "Yakın Ad": "Sanayi"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 5,
+     "changed": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ]
+    }
+   }
+  },
+  {
+   "id": "neighbours-edges-only",
+   "title": "Komşu alanlar, yalnız ortak kenarlar: köşeden değen ve örtüşen sayılmaz",
+   "document": "proximity.kcad",
+   "run": {
+    "tool": "proximity.neighbors"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "tolerance": 0.001,
+    "corners": false,
+    "overlaps": false,
+    "name": "Ad",
+    "write": true,
+    "countField": "Komşu sayısı",
+    "listField": "Komşular"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 alanda 3 komşuluk bulundu.",
+    "undo": "Komşu alanlar",
+    "updated": [
+     {
+      "id": 1,
+      "attrs": {
+       "Ad": "P1",
+       "Komşu sayısı": "1",
+       "Komşular": "P2"
+      }
+     },
+     {
+      "id": 2,
+      "attrs": {
+       "Ad": "P2",
+       "Komşu sayısı": "2",
+       "Komşular": "P1, P3"
+      }
+     },
+     {
+      "id": 3,
+      "attrs": {
+       "Ad": "P3",
+       "Komşu sayısı": "1",
+       "Komşular": "P2"
+      }
+     },
+     {
+      "id": 4,
+      "attrs": {
+       "Ad": "P4",
+       "Komşu sayısı": "0"
+      }
+     },
+     {
+      "id": 5,
+      "attrs": {
+       "Ad": "P5",
+       "Komşu sayısı": "0"
+      }
+     },
+     {
+      "id": 6,
+      "attrs": {
+       "Ad": "P6",
+       "Komşu sayısı": "1",
+       "Komşular": "P7"
+      }
+     },
+     {
+      "id": 7,
+      "attrs": {
+       "Ad": "P7",
+       "Komşu sayısı": "1",
+       "Komşular": "P6"
+      }
+     }
+    ],
+    "outputs": {
+     "count": 6,
+     "table": {
+      "columns": [
+       "Alan",
+       "Komşu",
+       "Komşuluk",
+       "Ortak kenar",
+       "Örtüşen alan"
+      ],
+      "rows": [
+       [
+        "P1",
+        "P2",
+        "Kenar",
+        "30.000",
+        ""
+       ],
+       [
+        "P2",
+        "P1",
+        "Kenar",
+        "30.000",
+        ""
+       ],
+       [
+        "P2",
+        "P3",
+        "Kenar",
+        "20.000",
+        ""
+       ],
+       [
+        "P3",
+        "P2",
+        "Kenar",
+        "20.000",
+        ""
+       ],
+       [
+        "P6",
+        "P7",
+        "Kenar",
+        "23.182",
+        ""
+       ],
+       [
+        "P7",
+        "P6",
+        "Kenar",
+        "23.182",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "neighbours-table-only",
+   "title": "Komşu alanlar, yazmadan: yalnız tablo, adım yok",
+   "document": "proximity.kcad",
+   "run": {
+    "tool": "proximity.neighbors"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "tolerance": 0.001,
+    "corners": true,
+    "overlaps": true,
+    "name": "Ad",
+    "write": false,
+    "countField": "Komşu sayısı",
+    "listField": "Komşular"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "7 alanda 5 komşuluk bulundu.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 alan çiftinin içleri örtüşüyor."
+     }
+    ],
+    "outputs": {
+     "count": 10,
+     "table": {
+      "columns": [
+       "Alan",
+       "Komşu",
+       "Komşuluk",
+       "Ortak kenar",
+       "Örtüşen alan"
+      ],
+      "rows": [
+       [
+        "P1",
+        "P2",
+        "Kenar",
+        "30.000",
+        ""
+       ],
+       [
+        "P2",
+        "P1",
+        "Kenar",
+        "30.000",
+        ""
+       ],
+       [
+        "P2",
+        "P3",
+        "Kenar",
+        "20.000",
+        ""
+       ],
+       [
+        "P3",
+        "P2",
+        "Kenar",
+        "20.000",
+        ""
+       ],
+       [
+        "P3",
+        "P4",
+        "Köşe",
+        "0.000",
+        ""
+       ],
+       [
+        "P4",
+        "P3",
+        "Köşe",
+        "0.000",
+        ""
+       ],
+       [
+        "P4",
+        "P5",
+        "Örtüşme",
+        "0.000",
+        "50.00"
+       ],
+       [
+        "P5",
+        "P4",
+        "Örtüşme",
+        "0.000",
+        "50.00"
+       ],
+       [
+        "P6",
+        "P7",
+        "Kenar",
+        "23.182",
+        ""
+       ],
+       [
+        "P7",
+        "P6",
+        "Kenar",
+        "23.182",
+        ""
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
    "id": "shortest-lines-roads",
    "title": "En kısa çizgi: iki parselden en yakın iki yola, en yakın noktalar arası; Kaynak, Hedef, Sıra, Uzaklık",
    "document": "proximity.kcad",

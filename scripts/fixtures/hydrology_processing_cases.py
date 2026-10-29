@@ -255,10 +255,10 @@ def direction_says(refname):
     return s
 
 
-def accumulation_says(dem, method, exponent, unit):
+def accumulation_says(dem, method, exponent, unit, fill=True):
     """The largest sum, from the reference's own 64-bit sums."""
     g = grid_of(dem)
-    _, _, acc = hc.accumulation(g, True, method, exponent, unit)
+    _, _, acc = hc.accumulation(g, fill, method, exponent, unit)
     most = max([a for a in acc if not math.isnan(a)] + [0.0])
     name = {"cells": "hücre", "area": "m²", "sca": "m"}[unit]
     return f" En büyük birikim {trimmed(most, 3)} {name}."
@@ -269,6 +269,10 @@ def skipped_warning(notes):
 
 
 def cases():
+    return cases_first() + more_cases()
+
+
+def cases_first():
     points = {"points": {"scope": "layer", "layerId": "noktalar"}}
     out = [
         raster_case("fill", "Çukur doldur, en küçük eğim 0: vadinin altı hücrelik çukuru taşma yüksekliğine; DEM'in görünüşü kalır",
@@ -328,6 +332,54 @@ def cases():
                 {"input": {"scope": "layer", "layerId": "vadi"}, "method": "mfd", "exponent": 0.05},
                 "Çoklu yönün üssü 0 (uyarlanan) ya da 0,1 ile 100 arasında olmalı."),
     ]
+    return out
+
+
+def wetness_says(refname):
+    cells = ref(refname)["expect"]["notes"]["cells"]
+    return f" {words(cells)} hücrede en küçük eğim kullanıldı." if cells else ""
+
+
+def more_cases():
+    """The options the first cases leave untried (docs/adr/0741 §2): Çukurları doldur off for every tool that has it, the
+    wetness index's D8 and D∞, and the raster tools with Çizime ekle off."""
+    points = {"points": {"scope": "layer", "layerId": "noktalar"}}
+    unfilled_havza = ref("ag-havza-25-dolgusuz")["expect"]["notes"]
+    out = [
+        raster_case("accumulation-unfilled", "Akış birikimi, D8, Çukurları doldur kapalı: çukura akan su orada kalır",
+                    "hydrology.flowAccumulation", {"fill": False}, "vadi-birikim-d8-cells-0-dolgusuz", "vadi", ACCUMULATION,
+                    accumulation_says("vadi", "d8", 0.0, "cells", fill=False)),
+        raster_case("wetness-unfilled", "Topografik nemlilik indisi, Çukurları doldur kapalı", "hydrology.wetness", {"fill": False},
+                    "vadi-twi-mfd-0.1-dolgusuz", "vadi", WETNESS, wetness_says("vadi-twi-mfd-0.1-dolgusuz")),
+        raster_case("wetness-d8", "Topografik nemlilik indisi, D8", "hydrology.wetness", {"method": "d8"}, "vadi-twi-d8-0.1", "vadi",
+                    WETNESS, wetness_says("vadi-twi-d8-0.1")),
+        raster_case("wetness-dinf", "Topografik nemlilik indisi, D∞, en küçük eğim %1", "hydrology.wetness",
+                    {"method": "dinf", "slope": 1}, "vadi-twi-dinf-1", "vadi", WETNESS, wetness_says("vadi-twi-dinf-1")),
+        object_case("pour-points-unfilled", "Döküm noktası, 25 m, Çukurları doldur kapalı", "hydrology.pourPoint",
+                    {**points, "snap": 25, "fill": False}, "ag-dokum-25-dolgusuz", "Döküm noktaları",
+                    lambda f, added, n: f"{words(len(added))} döküm noktası yazıldı.",
+                    log=[skipped_warning(ref("ag-dokum-25-dolgusuz")["expect"]["notes"])]),
+        object_case("watershed-unfilled", "Noktadan havza, 25 m, Çukurları doldur kapalı", "hydrology.watershed",
+                    {**points, "snap": 25, "fill": False}, "ag-havza-25-dolgusuz", "Havzalar",
+                    lambda f, added, n: f"{words(len(added))} havza yazıldı.",
+                    log=[skipped_warning(unfilled_havza)] + ([
+                        {"level": "warn", "text": f"{words(len(unfilled_havza['empty']))} noktanın hücresini sonraki bir nokta aldığı "
+                                                  "için havzası boş."}] if unfilled_havza["empty"] else [])),
+        object_case("basins-unfilled", "Havzalar, Ana havzalar, Çukurları doldur kapalı", "hydrology.basins", {"fill": False},
+                    "ag-ana-havzalar-dolgusuz", "Havzalar",
+                    lambda f, added, n: f"{words(len(added))} havza yazıldı." + (
+                        f" En küçük alandan küçük {words(n['dropped'])} havza yazılmadı." if n["dropped"] else "")),
+        object_case("streams-unfilled", "Dere ağı, eşik 2000 m², Çukurları doldur kapalı", "hydrology.streams",
+                    {"threshold": 2000, "fill": False}, "ag-dere-dolgusuz", "Dere ağı", streams_says),
+    ]
+    firsts = {c["id"]: c for c in cases_first()}
+    for cid, title in [
+        ("fill", "Çukur doldur, Çizime ekle kapalı: dosya yazılır, katman ve adım yok"),
+        ("direction", "Akış yönü, Çizime ekle kapalı"),
+        ("accumulation", "Akış birikimi, Çizime ekle kapalı"),
+        ("wetness", "Topografik nemlilik indisi, Çizime ekle kapalı"),
+    ]:
+        out.append(rop.quiet(firsts[cid], title))
     return out
 
 

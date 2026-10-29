@@ -545,6 +545,8 @@ def cases():
     for op in ("and", "or", "product", "sum", "gamma"):
         t = {"kind": "fuzzyOverlay", "band": 1, "op": op, "gamma": 0.9, "sample": "f32"}
         out.append(ops_case(f"bulanik-{op}", t, [U1, U2, U3], ["A", "B", "C"], fuzzy_overlay([U1, U2, U3], t)))
+    t = {"kind": "fuzzyOverlay", "band": 1, "op": "or", "gamma": 0.9, "sample": "f64"}
+    out.append(ops_case("bulanik-or-64", t, [U1, U2, U3], ["A", "B", "C"], fuzzy_overlay([U1, U2, U3], t)))
     t = {"kind": "fuzzyOverlay", "band": 1, "op": "product", "gamma": 0.0, "sample": "f64"}
     out.append(ops_case("bulanik-kesisim", t, [U4, U1], ["Kaba", "İnce"], fuzzy_overlay([U4, U1], t)))
     t = {"kind": "fuzzyOverlay", "band": 1, "op": "gamma", "gamma": 1.5, "sample": "f32"}
@@ -603,6 +605,11 @@ def cases():
     e = weighted_sum([S1, S2, S3], pnames, {"sample": "f32", "rule": "f32ulp"}, dict(zip(pnames, p["weights"])))
     e["pairwise"] = p
     out.append(ops_case("ahp-tutarli-raster", t, [S1, S2, S3], pnames, e))
+    # The same in float64: the weights the core's own eigenvector gives, within a float32 unit (docs/adr/0741).
+    t = {**t, "sample": "f64"}
+    e = weighted_sum([S1, S2, S3], pnames, {"sample": "f64", "rule": "f32ulp"}, dict(zip(pnames, p["weights"])))
+    e["pairwise"] = p
+    out.append(ops_case("ahp-tutarli-raster-64", t, [S1, S2, S3], pnames, e))
     four = ["A", "B", "C", "D"]
     for name, names_, pairs in [
         ("ahp-dort", four, [["A", "B", 3.0], ["A", "C", 5.0], ["A", "D", 7.0], ["B", "C", 3.0], ["B", "D", 5.0], ["C", "D", 3.0]]),

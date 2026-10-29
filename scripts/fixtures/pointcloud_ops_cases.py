@@ -548,6 +548,7 @@ def merge(first: Cloud, second: Cloud):
     scale = [min(a, b) for a, b in zip(first.scale, second.scale)]
     offset = first.offset
     out = bytearray()
+    each = []
     rounded = 0
     for c in (first, second):
         raw = c.records()
@@ -573,7 +574,10 @@ def merge(first: Cloud, second: Cloud):
                 rec = bytearray(r[:30]) + bytes(6) + bytearray(r[30:])
             struct.pack_into("<iii", rec, 0, *moved)
             out += rec
-    return {"count": first.n + second.n, "rounded": rounded, "scale": scale, "records": fnv(bytes(out))}
+            each.append(bytes(rec))
+    # A COPC's index orders the records: their bytes sorted are its check (docs/adr/0741).
+    return {"count": first.n + second.n, "rounded": rounded, "scale": scale, "records": fnv(bytes(out)),
+            "sorted": fnv(b"".join(sorted(each)))}
 
 
 # ---------------------------------------------------------------- the small clouds

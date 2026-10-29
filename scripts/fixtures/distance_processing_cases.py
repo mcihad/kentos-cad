@@ -325,6 +325,25 @@ def cases():
         refused("cost-source-in-barrier", "Birikimli maliyet, kaynak engelin içinde: ret", C,
                 {"input": on("engel"), "sources": on("engelde")},
                 "Kaynak hücre yok: kaynak nesneleri maliyet rasterinin değerli hücrelerine düşmüyor."),
+    ] + more_cases()
+
+
+def more_cases():
+    """The options the first cases leave untried (docs/adr/0741 §2): the corridor over the height model with every cell
+    kept, in float64, and the raster tools with Çizime ekle off."""
+    corridor = raster_case("corridor-surface", "Maliyet koridoru, yükseklik modeliyle: yüzey uzunluğu, en büyük eğim %12, eşik yok, "
+                           "64 bit", "distance.corridor",
+                           {"sources": on("baslangic"), "targets": on("ikinci"), "useSurface": True, "surface": on("yukseklik"),
+                            "surfaceLength": True, "slope": 12, "threshold": "none", "sample": "f64"},
+                           "koridor-yukseklik", VIRIDIS, corridor_says, input="maliyet")
+    euclid = raster_case("euclid-raster", "", "distance.euclidean", {"from": "raster"}, "uzaklik-raster-kare", VIRIDIS,
+                         euclid_raster_says(False), input="kaynak-raster")
+    cost = raster_case("cost", "", "distance.cost", {"sources": on("kaynaklar")}, "maliyet-16", COST, cost_says(False), input="maliyet")
+    return [
+        corridor,
+        rop.quiet(euclid, "Uzaklık yüzeyi, Çizime ekle kapalı: dosya yazılır, katman ve adım yok"),
+        rop.quiet(cost, "Birikimli maliyet, Çizime ekle kapalı"),
+        rop.quiet(corridor, "Maliyet koridoru, Çizime ekle kapalı"),
     ]
 
 

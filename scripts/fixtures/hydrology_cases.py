@@ -948,6 +948,20 @@ def cases():
                                 basins(g, True, "route", 3000.0, least, road), rule="km"))
     out.append(feature_case("ag-dere-dolgusuz", net, tool("streams", fill=False, threshold=2000.0, simplify=0.0), [],
                             streams(g, False, 2000.0, 0.0)))
+    # Çukurları doldur off for the other tools (docs/adr/0741): the pits keep their water.
+    _, _, acc = accumulation(gv, False, "d8", 0.0, "cells")
+    out.append(raster_case("vadi-birikim-d8-cells-0-dolgusuz", v,
+                           tool("flowAccumulation", fill=False, method="d8", exponent=0.0, unit="cells"),
+                           as_sample("f32", acc), "f32"))
+    twi, floored = wetness(gv, False, "mfd", 0.0, 0.1)
+    out.append(raster_case("vadi-twi-mfd-0.1-dolgusuz", v, tool("wetness", fill=False, method="mfd", exponent=0.0, slope=0.1),
+                           as_sample("f32", twi), "f32", rule="f32ulp", notes={"cells": floored}))
+    out.append(feature_case("ag-dokum-25-dolgusuz", net, tool("pourPoint", fill=False, snap=25.0), pts,
+                            pour_points(g, False, pts, 25.0)))
+    out.append(feature_case("ag-havza-25-dolgusuz", net, tool("watershed", fill=False, snap=25.0), pts,
+                            watershed(g, False, pts, 25.0)))
+    out.append(feature_case("ag-ana-havzalar-dolgusuz", net, tool("basins", fill=False, mode="main", threshold=0.0, least=0.0), [],
+                            basins(g, False, "main", 0.0, 0.0, [])))
 
     # Refusals.
     out.append({"name": "ret-esik", "input": net.json(), "geographic": False, "tool": tool("streams", fill=True,

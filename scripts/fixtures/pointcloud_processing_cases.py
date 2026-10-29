@@ -222,7 +222,11 @@ def thin_cases():
     return out
 
 
-def classes_hash(cls):
+def classes_hash(cls, sort=False):
+    """The classes' FNV-1a; a COPC's (its index orders the points) in the order of the points' X, Y, Z and class."""
+    if sort:
+        keyed = sorted((int(KOY.X[i]), int(KOY.Y[i]), int(KOY.Z[i]), int(v)) for i, v in enumerate(cls))
+        return ref.fnv(bytes(k[3] for k in keyed))
     return ref.fnv(bytes(int(v) for v in cls))
 
 
@@ -233,13 +237,14 @@ def ground_cases():
     for id_, title, last, fmt, add in [
         ("ground", "Zemin süzgeci (SMRF), yalnız son dönüşler: zemin 2'ye, zemin olmayan 2'ler 1'e", True, "laz", True),
         ("ground-all-returns", "Zemin süzgeci, bütün dönüşler yüzeyi kurar; LAS, çizime eklenmez", False, "las", False),
+        ("ground-copc", "Zemin süzgeci, COPC: dizini kurulur, sınıflar noktalarıyla (docs/adr/0741)", True, "copc", False),
     ]:
         n, cls = ref.smrf(KOY, KOY_PLAN, last_only=last)
         values = {} if last else {"lastOnly": False}
         out.append(written_cloud(
             id_, title, "pointcloud.ground", values, "-zemin", "Zemini ayrılmış bulut", "#8A6A3E", every,
             lambda p, n=n: f"{words(KOY.n)} noktadan {words(n)} nokta zemin (2) sınıfında; “{p}” yazıldı.",
-            {"ground": n}, "Zemin süzgeci", fmt=fmt, style=style, classes=classes_hash(cls), add=add))
+            {"ground": n}, "Zemin süzgeci", fmt=fmt, style=style, classes=classes_hash(cls, fmt == "copc"), add=add))
     return out
 
 
@@ -251,6 +256,7 @@ def classify_cases():
         ("classify-all", "Yüksekliğe göre sınıfla, zemin olmayan bütün noktalar: zeminden yüksekliğe göre 3, 4, 5",
          True, "laz", False),
         ("classify-unclassed", "Yüksekliğe göre sınıfla, yalnız sınıfsızlar (0, 1); LAS, çizime eklenir", False, "las", True),
+        ("classify-copc", "Yüksekliğe göre sınıfla, COPC (docs/adr/0741)", False, "copc", False),
     ]:
         n, cls = ref.hag(KOY, KOY_PLAN, every=all_)
         values = {"all": True} if all_ else {}
@@ -259,7 +265,7 @@ def classify_cases():
             id_, title, "pointcloud.classify", values, "-sinifli", "Sınıflanmış bulut", "#3E8A4C", every,
             lambda p, n=n, s=s: (f"{words(s)} nokta sınıflandı: düşük bitki {words(n[0])}, orta bitki {words(n[1])}, "
                                  f"yüksek bitki {words(n[2])}; “{p}” yazıldı."),
-            {"classed": s}, "Yüksekliğe göre sınıfla", fmt=fmt, style=style, classes=classes_hash(cls), add=add))
+            {"classed": s}, "Yüksekliğe göre sınıfla", fmt=fmt, style=style, classes=classes_hash(cls, fmt == "copc"), add=add))
     return out
 
 
@@ -449,18 +455,26 @@ def boundary_case():
                  "added": [{**first, "layerId": layer["id"], "attrs": {"Hücre": "1", "En az nokta": "2"}}]})
 
 
-def merge_case():
+def merge_case(fmt="laz"):
     m = ref.merge(KOY, IKINCI)
-    path = "koy-birlesik.laz"
+    path = "koy-birlesik" + FORMAT[fmt][1]
     layer = new_layer("Birleşik bulut", "#7A5C9A")
-    return case("merge", "Bulutları birleştir, iki dosya: biçim 7'ye genişletilir, ince ızgaraya taşınır, yarım sıfırdan uzağa",
-                "pointcloud.merge", {"input": {"scope": "selection"}, "add": False},
+    values = {"input": {"scope": "selection"}, "add": False}
+    check = {"count": m["count"], "records": m["records"]}
+    if fmt != "laz":
+        values["format"] = fmt
+    if fmt == "copc":
+        check = {"count": m["count"], "sortedRecords": m["sorted"], "copc": True}
+    title = {"laz": "Bulutları birleştir, iki dosya: biçim 7'ye genişletilir, ince ızgaraya taşınır, yarım sıfırdan uzağa",
+             "las": "Bulutları birleştir, LAS (docs/adr/0741)", "copc": "Bulutları birleştir, COPC: kayıtlar dizinin sırasıyla"}[fmt]
+    return case("merge" if fmt == "laz" else f"merge-{fmt}", title,
+                "pointcloud.merge", values,
                 {"status": "ok", "undo": None,
                  "summary": f"2 dosyanın {words(m['count'])} noktası “{path}” dosyasında birleşti.",
                  "outputs": {"count": m["count"]},
                  "log": [{"level": "warn", "text": f"{words(m['rounded'])} noktanın koordinatı sonucun ölçeğine yuvarlandı "
                                                    "(kaynakların ölçek ve ötelemeleri farklı)."}],
-                 "cloudOf": {path: {"count": m["count"], "records": m["records"]}}},
+                 "cloudOf": {path: check}},
                 selection=[IDS["koy"], IDS["ikinci"]])
 
 
@@ -483,7 +497,7 @@ def refusals():
 
 def cases():
     return (thin_cases() + ground_cases() + classify_cases() + clip_cases() + [area_stats_case()] + tile_cases()
-            + rasterize_cases() + [boundary_case(), merge_case()] + refusals())
+            + rasterize_cases() + [boundary_case(), merge_case(), merge_case("las"), merge_case("copc")] + refusals())
 
 
 def build():

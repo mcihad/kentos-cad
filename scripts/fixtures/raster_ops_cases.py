@@ -946,9 +946,18 @@ def cases():
     c1 = Raster(PLACE, 8, 7, field(8, 7, 0.0, holes=(9,)))
     c2 = Raster(PLACE, 8, 7, field(8, 7, 1.3))
     c3 = Raster([x0 + 4.0, 2.0, 0.0, y0 - 2.0, 0.0, -2.0], 8, 7, field(8, 7, 2.6))
-    for stat, ignore in [("mean", True), ("max", False), ("std", True), ("median", True), ("count", True), ("sum", True)]:
+    for stat, ignore in [("mean", True), ("max", False), ("std", True), ("median", True), ("count", True), ("sum", True),
+                         ("min", True), ("range", False)]:
         case(f"hucre-{stat}", {"kind": "cellStatistics", "band": 1, "stat": stat, "ignore": ignore},
              [c1, c2, c3], cell_statistics([c1, c2, c3], 1, stat, ignore))
+    # Three years' classes (docs/adr/0741 §2): two agree on most cells, the third differs; one cell of the second empty.
+    k1 = Raster(PLACE, 8, 7, classes(8, 7, 0))
+    k2 = Raster(PLACE, 8, 7, [v if (k % 3) else float((int(v) + 1) % 5) for k, v in enumerate(classes(8, 7, 0))])
+    k2.values[17] = math.nan
+    k3 = Raster(PLACE, 8, 7, classes(8, 7, 2))
+    for stat in ("majority", "minority", "variety"):
+        case(f"hucre-{stat}", {"kind": "cellStatistics", "band": 1, "stat": stat, "ignore": True},
+             [k1, k2, k3], cell_statistics([k1, k2, k3], 1, stat, True))
     # Raster hesaplayıcı's result takes the grid of the raster its expression names first, here the second input (the
     # processing cases run it over every raster of their drawing, the host opening only these two).
     calc("hesap-ilk-anilan", "[B] - [A]", [c1, c3], [(1, 0), (0, 0)], lambda v, x, y, s: v[0] - v[1])

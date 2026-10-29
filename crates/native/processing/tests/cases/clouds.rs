@@ -79,7 +79,18 @@ fn cloud_faults(id: &str, name: &str, bytes: &[u8], want: &Value) -> Vec<String>
     if let Some(h) = want["classes"].as_str() {
         let at = if format >= 6 { 16 } else { 15 };
         let mask = if format >= 6 { 0xFF } else { 0x1F };
-        let classes: Vec<u8> = records.iter().map(|r| r[at] & mask).collect();
+        let mut keyed: Vec<([i32; 3], u8)> = records
+            .iter()
+            .map(|r| {
+                let n = |k: usize| i32::from_le_bytes(r[k..k + 4].try_into().expect("four bytes"));
+                ([n(0), n(4), n(8)], r[at] & mask)
+            })
+            .collect();
+        // A COPC's index orders the points: its classes in the order of their X, Y, Z and class (docs/adr/0741).
+        if want["copc"] == true {
+            keyed.sort();
+        }
+        let classes: Vec<u8> = keyed.iter().map(|(_, c)| *c).collect();
         let got = fnv(&classes);
         if got != h {
             found.push(format!("{id}: “{name}” classes {got} for {h}"));
@@ -89,6 +100,14 @@ fn cloud_faults(id: &str, name: &str, bytes: &[u8], want: &Value) -> Vec<String>
         let got = fnv(&records.concat());
         if got != h {
             found.push(format!("{id}: “{name}” records {got} for {h}"));
+        }
+    }
+    if let Some(h) = want["sortedRecords"].as_str() {
+        let mut sorted = records.clone();
+        sorted.sort();
+        let got = fnv(&sorted.concat());
+        if got != h {
+            found.push(format!("{id}: “{name}” sorted records {got} for {h}"));
         }
     }
     found

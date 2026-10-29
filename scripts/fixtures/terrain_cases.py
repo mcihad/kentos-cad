@@ -276,6 +276,9 @@ RAMP_TABLE = {
     "Arazi": [(0x2E, 0x7D, 0x32), (0x9C, 0xCC, 0x65), (0xFF, 0xF5, 0x9D), (0xA1, 0x88, 0x7F), (0xFA, 0xFA, 0xFA)],
     "Spektral": [(0x2B, 0x83, 0xBA), (0xAB, 0xDD, 0xA4), (0xFF, 0xFF, 0xBF), (0xFD, 0xAE, 0x61), (0xD7, 0x19, 0x1C)],
     "Viridis": [(0x44, 0x01, 0x54), (0x3B, 0x52, 0x8B), (0x21, 0x91, 0x8C), (0x5E, 0xC9, 0x62), (0xFD, 0xE7, 0x25)],
+    # ColorBrewer's RdBu (9 classes, every other, blue first) and YlOrRd (5 classes) (docs/adr/0204 §4, 0741 §2).
+    "Mavi-kırmızı": [(0x21, 0x66, 0xAC), (0x92, 0xC5, 0xDE), (0xF7, 0xF7, 0xF7), (0xF4, 0xA5, 0x82), (0xB2, 0x18, 0x2B)],
+    "Sıcaklık": [(0xFF, 0xFF, 0xB2), (0xFE, 0xCC, 0x5C), (0xFD, 0x8D, 0x3C), (0xF0, 0x3B, 0x20), (0xBD, 0x00, 0x26)],
 }
 
 
@@ -346,6 +349,20 @@ def relief_of(dem, spec):
 # ── Güneşlenme (§8) ──────────────────────────────────────────────────────
 
 MONTHS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+
+# Ranges of whole months (a year of 365 days), each a case (docs/adr/0741 §2): name, first and last day of the year.
+MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+MONTH_NAMES = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"]
+MONTH_RANGES = [(1, 1), (1, 2), (3, 3), (4, 4), (5, 5), (5, 6), (7, 7), (8, 10), (9, 11), (10, 12), (11, 12)]
+
+
+def day_of_year(month, day):
+    return sum(MONTH_DAYS[:month - 1]) + day
+
+
+INSOLATION_MONTHS = [(f"Güneşlenme (1 {MONTH_NAMES[a - 1]}–{MONTH_DAYS[b - 1]} {MONTH_NAMES[b - 1]}, 2 saat)",
+                      day_of_year(a, 1), day_of_year(b, MONTH_DAYS[b - 1])) for a, b in MONTH_RANGES]
 
 
 def day_blocks(first, last, step):
@@ -578,12 +595,22 @@ def build():
         ]:
             if want(key):
                 add(dem, title, {"kind": "colorRelief", **rspec}, relief_of(dem, rspec), sample="u8", bands=4, full=full)
+        # Every ramp of the tool (docs/adr/0741 §2), on tepe only.
+        for ramp in ("Gri", "Spektral", "Mavi-kırmızı", "Sıcaklık"):
+            if wants is None:
+                rspec = {"ramp": ramp, "invert": False, "interp": "linear"}
+                add(dem, f"Renkli kabartma ({ramp})", {"kind": "colorRelief", **rspec}, relief_of(dem, rspec), sample="u8", bands=4, full=full)
         for key, title, ispec in [
             ("insolation-year", "Güneşlenme (yıl, 14 gün, 0,5 saat, 0,5)", {"firstDay": 1, "lastDay": 365, "dayStep": 14, "hourStep": 0.5, "transmissivity": 0.5, "zFactor": 1.0}),
             ("insolation", "Güneşlenme (1 Haziran–31 Ağustos, 7 gün, 1 saat, 0,6)", {"firstDay": 152, "lastDay": 243, "dayStep": 7, "hourStep": 1.0, "transmissivity": 0.6, "zFactor": 1.0}),
             ("insolation", "Güneşlenme (21 Aralık, 0,25 saat)", {"firstDay": 355, "lastDay": 355, "dayStep": 1, "hourStep": 0.25, "transmissivity": 0.5, "zFactor": 2.0}),
         ]:
             if want(key, "insolation"):
+                add(dem, title, {"kind": "insolation", **ispec}, insolation_of(dem, ispec), full=full)
+        # Every month and step of the tool (docs/adr/0741 §2), on tepe only: whole months, a month a block, 2 hours.
+        if wants is None:
+            for title, first, last in INSOLATION_MONTHS:
+                ispec = {"firstDay": first, "lastDay": last, "dayStep": 31, "hourStep": 2.0, "transmissivity": 0.5, "zFactor": 1.0}
                 add(dem, title, {"kind": "insolation", **ispec}, insolation_of(dem, ispec), full=full)
     return dems, {"format": "kentos.terrain-cases", "version": 1,
                   "dems": [{"name": d["name"], "file": f"{d['name']}.tif", "width": int(d["array"].shape[1]), "height": int(d["array"].shape[0]),

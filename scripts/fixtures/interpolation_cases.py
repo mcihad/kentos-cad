@@ -822,6 +822,23 @@ def build():
     turned = {'affine': [500010.0, 4.0, 1.5, 4420075.0, 1.0, -4.5], 'width': 18, 'height': 14}
     vals = [idw(fpts, center(turned['affine'], i, j), 2.0, 12, 0.0, 1) for j in range(turned['height']) for i in range(turned['width'])]
     add('idw-alan-donuk-izgara', {'kind': 'idw', 'power': 2.0, 'points': 12}, vals, values=field, grid=turned)
+    # The other surfaces on the same turned grid (docs/adr/0741): the field's values, no cross-validation.
+    def on_turned(f):
+        return [f(center(turned['affine'], i, j)) for j in range(turned['height']) for i in range(turned['width'])]
+    ftris = qhull_triangles(fpts['xy'])
+    add('tin-alan-donuk-izgara', {'kind': 'tin'}, on_turned(lambda q: tin(fpts['xy'], fpts['v'], ftris, q)), values=field, grid=turned)
+    add('dogal-komsu-alan-donuk-izgara', {'kind': 'naturalNeighbor'}, on_turned(lambda q: sibson(fpts['xy'], fpts['v'], q)),
+        values=field, grid=turned)
+    cache = {}
+    add('spline-alan-donuk-izgara', {'kind': 'spline', 'spline': 'regularized', 'weight': 0.1, 'points': 12},
+        on_turned(lambda q: spline_at(fpts, q, 'regularized', 0.1, 12, cache=cache)), values=field, grid=turned,
+        tol=1e-12)  # the field's 12 × 12 systems lose a digit more than the hill's (measured 2.2·10⁻¹³)
+    g = {'model': 'spherical', 'nugget': mpmath.mpf(0.5), 'sill': mpmath.mpf(120.0), 'range': mpmath.mpf(90.0)}
+    cache = {}
+    add('kriging-alan-donuk-izgara', {'kind': 'kriging', 'model': 'spherical',
+                                      'variogram': {'fit': 'manual', 'nugget': 0.5, 'sill': 120.0, 'range': 90.0},
+                                      'points': 12, 'error': False},
+        on_turned(lambda q: kriging_at(fpts, q, g, 12, 0.0, cache=cache)[0]), values=field, grid=turned)
 
     # Çekirdek yoğunluğu: five kernels at a radius; the automatic radius with weights.
     dens = [pt(round(500000.0 + float(x), 2), round(4420000.0 + float(y), 2)) for x, y in rng.random((60, 2)) * 200.0]
@@ -834,6 +851,21 @@ def build():
         cases.append({'name': f'cekirdek-{kernel}', 'kind': 'surface', 'sources': dens, 'values': None,
                       'tool': {'kind': 'kernel', 'radius': r, 'kernel': kernel, 'unit': 'squareKilometre'}, 'cell': 10.0,
                       'expect': {'affine': daff, 'width': dw, 'height': dh, 'values': vals, 'radius': r}})
+    # The other area units, and the turned raster's grid (docs/adr/0741).
+    for name, unit in (('cekirdek-dekar', 'decare'), ('cekirdek-metrekare', 'squareMetre')):
+        r = 30.0
+        b = bounds(dxy)
+        daff, dw, dh = grid_of_box([b[0] - r, b[1] - r, b[2] + r, b[3] + r], 10.0)
+        vals = run_grid(daff, dw, dh, lambda q: kernel_at(dxy, [1.0] * len(dxy), q, r, 'quartic', SCALES[unit]))
+        cases.append({'name': name, 'kind': 'surface', 'sources': dens, 'values': None,
+                      'tool': {'kind': 'kernel', 'radius': r, 'kernel': 'quartic', 'unit': unit}, 'cell': 10.0,
+                      'expect': {'affine': daff, 'width': dw, 'height': dh, 'values': vals, 'radius': r}})
+    vals = run_grid(turned['affine'], turned['width'], turned['height'],
+                    lambda q: kernel_at(dxy, [1.0] * len(dxy), q, 30.0, 'quartic', 1e6))
+    cases.append({'name': 'cekirdek-donuk-izgara', 'kind': 'surface', 'sources': dens, 'values': None, 'grid': turned,
+                  'tool': {'kind': 'kernel', 'radius': 30.0, 'kernel': 'quartic', 'unit': 'squareKilometre'}, 'cell': 10.0,
+                  'expect': {'affine': turned['affine'], 'width': turned['width'], 'height': turned['height'], 'values': vals,
+                             'radius': 30.0}})
     weights = [str(1 + k % 4) for k in range(len(dens))]
     ww = [float(1 + k % 4) for k in range(len(dens))]
     r = silverman(dxy, ww)
@@ -860,6 +892,7 @@ def build():
             edges.append(e)
             ews.append(read_number(w))
     for name, radius, weights_used, unit in (('cizgi', 12.0, None, 'kilometrePerSquareKilometre'),
+                                             ('cizgi-metrekare', 12.0, None, 'metrePerSquareMetre'),
                                              ('cizgi-agirlikli-otomatik', 0.0, lweights, 'metrePerHectare')):
         ws = ews if weights_used else [1.0] * len(edges)
         boxes = []

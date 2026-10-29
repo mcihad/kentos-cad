@@ -170,7 +170,7 @@ fn every_case_works_out_as_the_reference_and_its_levels_halve() {
         }
         checked += 1;
     }
-    assert_eq!(checked, 43, "every case");
+    assert_eq!(checked, 58, "every case");
 }
 
 #[test]

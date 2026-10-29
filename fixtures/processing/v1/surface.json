@@ -1094,6 +1094,1622 @@
    }
   },
   {
+   "id": "aspect-area-file",
+   "title": "Bakı, Horn, Kapsam nesnelerin kutusu, çizime eklenmeden",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.aspect"
+   },
+   "values": {
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "alan"
+    },
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "11 × 11 hücrelik raster; “tepe-baki.tif” yazıldı.",
+    "undo": null,
+    "layers": [],
+    "added": [],
+    "outputs": {
+     "file": "tepe-baki.tif"
+    },
+    "rasterOf": {
+     "tepe-baki.tif": {
+      "case": "Bakı (Horn)",
+      "window": [
+       8,
+       10,
+       11,
+       11
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "hillshade-file",
+   "title": "Gölgeli kabartma, varsayılanlar, çizime eklenmeden",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.hillshade"
+   },
+   "values": {
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-golge.tif” yazıldı.",
+    "undo": null,
+    "layers": [],
+    "added": [],
+    "outputs": {
+     "file": "tepe-golge.tif"
+    },
+    "rasterOf": {
+     "tepe-golge.tif": "Gölgeli kabartma (315, 45, 1)"
+    }
+   }
+  },
+  {
+   "id": "curvature-profile",
+   "title": "Eğrilik, profil",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.curvature"
+   },
+   "values": {
+    "curvature": "profile"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-egrilik.tif” yazıldı.",
+    "undo": "Eğrilik",
+    "layers": [
+     {
+      "id": "islem-egrilik",
+      "name": "Eğrilik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-egrilik",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-egrilik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Mavi-kırmızı"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-egrilik.tif"
+    },
+    "rasterOf": {
+     "tepe-egrilik.tif": "Eğrilik (profil)"
+    },
+    "layerAbove": {
+     "islem-egrilik": "dem"
+    }
+   }
+  },
+  {
+   "id": "curvature-plan-file",
+   "title": "Eğrilik, plan, çizime eklenmeden",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.curvature"
+   },
+   "values": {
+    "curvature": "plan",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-egrilik.tif” yazıldı.",
+    "undo": null,
+    "layers": [],
+    "added": [],
+    "outputs": {
+     "file": "tepe-egrilik.tif"
+    },
+    "rasterOf": {
+     "tepe-egrilik.tif": "Eğrilik (plan)"
+    }
+   }
+  },
+  {
+   "id": "ruggedness-area",
+   "title": "Pürüzlülük, TRI (Riley), Kapsam nesnelerin kutusu",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.ruggedness"
+   },
+   "values": {
+    "index": "triRiley",
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "alan"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "11 × 11 hücrelik raster; “tepe-puruzluluk.tif” yazıldı.",
+    "undo": "Pürüzlülük",
+    "layers": [
+     {
+      "id": "islem-puruzluluk",
+      "name": "Pürüzlülük",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-puruzluluk",
+      "attrs": {},
+      "affine": [
+       500180.0,
+       10.0,
+       0.0,
+       4420230.0,
+       0.0,
+       -10.0
+      ],
+      "width": 11,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-puruzluluk.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-puruzluluk.tif"
+    },
+    "rasterOf": {
+     "tepe-puruzluluk.tif": {
+      "case": "TRI (Riley)",
+      "window": [
+       8,
+       10,
+       11,
+       11
+      ]
+     }
+    },
+    "layerAbove": {
+     "islem-puruzluluk": "dem"
+    }
+   }
+  },
+  {
+   "id": "ruggedness-wilson-file",
+   "title": "Pürüzlülük, TRI (Wilson), çizime eklenmeden",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.ruggedness"
+   },
+   "values": {
+    "index": "triWilson",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-puruzluluk.tif” yazıldı.",
+    "undo": null,
+    "layers": [],
+    "added": [],
+    "outputs": {
+     "file": "tepe-puruzluluk.tif"
+    },
+    "rasterOf": {
+     "tepe-puruzluluk.tif": "TRI (Wilson)"
+    }
+   }
+  },
+  {
+   "id": "ruggedness-roughness",
+   "title": "Pürüzlülük, Engebe",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.ruggedness"
+   },
+   "values": {
+    "index": "roughness"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-puruzluluk.tif” yazıldı.",
+    "undo": "Pürüzlülük",
+    "layers": [
+     {
+      "id": "islem-puruzluluk",
+      "name": "Pürüzlülük",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-puruzluluk",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-puruzluluk.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-puruzluluk.tif"
+    },
+    "rasterOf": {
+     "tepe-puruzluluk.tif": "Engebe"
+    },
+    "layerAbove": {
+     "islem-puruzluluk": "dem"
+    }
+   }
+  },
+  {
+   "id": "color-relief-gray",
+   "title": "Renkli kabartma, Gri",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.colorRelief"
+   },
+   "values": {
+    "ramp": "Gri"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-renkli.tif” yazıldı.",
+    "undo": "Renkli kabartma",
+    "layers": [
+     {
+      "id": "islem-renkli-kabartma",
+      "name": "Renkli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-renkli-kabartma",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 4,
+      "sample": "u8",
+      "file": "tepe-renkli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "rgb",
+       "bands": [
+        1,
+        2,
+        3,
+        4
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-renkli.tif"
+    },
+    "rasterOf": {
+     "tepe-renkli.tif": "Renkli kabartma (Gri)"
+    },
+    "layerAbove": {
+     "islem-renkli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "color-relief-area",
+   "title": "Renkli kabartma, Viridis ters 100–200, en yakın, Kapsam nesnelerin kutusu",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.colorRelief"
+   },
+   "values": {
+    "ramp": "Viridis",
+    "invert": true,
+    "range": "manual",
+    "min": 100,
+    "max": 200,
+    "interp": "nearest",
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "alan"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "11 × 11 hücrelik raster; “tepe-renkli.tif” yazıldı.",
+    "undo": "Renkli kabartma",
+    "layers": [
+     {
+      "id": "islem-renkli-kabartma",
+      "name": "Renkli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-renkli-kabartma",
+      "attrs": {},
+      "affine": [
+       500180.0,
+       10.0,
+       0.0,
+       4420230.0,
+       0.0,
+       -10.0
+      ],
+      "width": 11,
+      "height": 11,
+      "bands": 4,
+      "sample": "u8",
+      "file": "tepe-renkli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "rgb",
+       "bands": [
+        1,
+        2,
+        3,
+        4
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-renkli.tif"
+    },
+    "rasterOf": {
+     "tepe-renkli.tif": {
+      "case": "Renkli kabartma (Viridis ters, 100–200, en yakın)",
+      "window": [
+       8,
+       10,
+       11,
+       11
+      ]
+     }
+    },
+    "layerAbove": {
+     "islem-renkli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "color-relief-spectral-file",
+   "title": "Renkli kabartma, Spektral, çizime eklenmeden",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.colorRelief"
+   },
+   "values": {
+    "ramp": "Spektral",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-renkli.tif” yazıldı.",
+    "undo": null,
+    "layers": [],
+    "added": [],
+    "outputs": {
+     "file": "tepe-renkli.tif"
+    },
+    "rasterOf": {
+     "tepe-renkli.tif": "Renkli kabartma (Spektral)"
+    }
+   }
+  },
+  {
+   "id": "color-relief-blue-red",
+   "title": "Renkli kabartma, Mavi-kırmızı",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.colorRelief"
+   },
+   "values": {
+    "ramp": "Mavi-kırmızı"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-renkli.tif” yazıldı.",
+    "undo": "Renkli kabartma",
+    "layers": [
+     {
+      "id": "islem-renkli-kabartma",
+      "name": "Renkli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-renkli-kabartma",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 4,
+      "sample": "u8",
+      "file": "tepe-renkli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "rgb",
+       "bands": [
+        1,
+        2,
+        3,
+        4
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-renkli.tif"
+    },
+    "rasterOf": {
+     "tepe-renkli.tif": "Renkli kabartma (Mavi-kırmızı)"
+    },
+    "layerAbove": {
+     "islem-renkli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "color-relief-heat",
+   "title": "Renkli kabartma, Sıcaklık",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.colorRelief"
+   },
+   "values": {
+    "ramp": "Sıcaklık"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-renkli.tif” yazıldı.",
+    "undo": "Renkli kabartma",
+    "layers": [
+     {
+      "id": "islem-renkli-kabartma",
+      "name": "Renkli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-renkli-kabartma",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 4,
+      "sample": "u8",
+      "file": "tepe-renkli.tif",
+      "srid": 5254,
+      "style": {
+       "render": "rgb",
+       "bands": [
+        1,
+        2,
+        3,
+        4
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-renkli.tif"
+    },
+    "rasterOf": {
+     "tepe-renkli.tif": "Renkli kabartma (Sıcaklık)"
+    },
+    "layerAbove": {
+     "islem-renkli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-year-file",
+   "title": "Güneşlenme, varsayılanlar (yıl, 14 gün, 0,5 saat), çizime eklenmeden",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": null,
+    "layers": [],
+    "added": [],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (yıl, 14 gün, 0,5 saat, 0,5)"
+    }
+   }
+  },
+  {
+   "id": "insolation-day",
+   "title": "Güneşlenme, 21 Aralık, 0,25 saat, z 2",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "day",
+    "startDay": 21,
+    "startMonth": "12",
+    "hourStep": "0.25",
+    "zFactor": 2
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (21 Aralık, 0,25 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-1-1",
+   "title": "Güneşlenme (1 Ocak–31 Ocak, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "1",
+    "endDay": 31,
+    "endMonth": "1",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Ocak–31 Ocak, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-1-2",
+   "title": "Güneşlenme (1 Ocak–28 Şubat, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "1",
+    "endDay": 28,
+    "endMonth": "2",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Ocak–28 Şubat, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-3-3",
+   "title": "Güneşlenme (1 Mart–31 Mart, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "3",
+    "endDay": 31,
+    "endMonth": "3",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Mart–31 Mart, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-4-4",
+   "title": "Güneşlenme (1 Nisan–30 Nisan, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "4",
+    "endDay": 30,
+    "endMonth": "4",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Nisan–30 Nisan, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-5-5",
+   "title": "Güneşlenme (1 Mayıs–31 Mayıs, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "5",
+    "endDay": 31,
+    "endMonth": "5",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Mayıs–31 Mayıs, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-5-6",
+   "title": "Güneşlenme (1 Mayıs–30 Haziran, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "5",
+    "endDay": 30,
+    "endMonth": "6",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Mayıs–30 Haziran, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-7-7",
+   "title": "Güneşlenme (1 Temmuz–31 Temmuz, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "7",
+    "endDay": 31,
+    "endMonth": "7",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Temmuz–31 Temmuz, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-8-10",
+   "title": "Güneşlenme (1 Ağustos–31 Ekim, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "8",
+    "endDay": 31,
+    "endMonth": "10",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Ağustos–31 Ekim, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-9-11",
+   "title": "Güneşlenme (1 Eylül–30 Kasım, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "9",
+    "endDay": 30,
+    "endMonth": "11",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Eylül–30 Kasım, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-10-12",
+   "title": "Güneşlenme (1 Ekim–31 Aralık, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "10",
+    "endDay": 31,
+    "endMonth": "12",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Ekim–31 Aralık, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-11-12",
+   "title": "Güneşlenme (1 Kasım–31 Aralık, 2 saat): ayları bütün, 31 günde bir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "11",
+    "endDay": 31,
+    "endMonth": "12",
+    "dayStep": 31,
+    "hourStep": "2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "41 × 33 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500100.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 41,
+      "height": 33,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": "Güneşlenme (1 Kasım–31 Aralık, 2 saat)"
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
+   "id": "contours-area",
+   "title": "Eş yükselti eğrileri, tepe, 5 m, Kapsam nesnelerin kutusu: yalnız kutunun hücrelerinden",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.contours"
+   },
+   "values": {
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "alan"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "14 eğri (4 ana, 10 ara), 123 köşe; kotlar 125 ile 160 arası.",
+    "undo": "Eş yükselti eğrileri",
+    "layers": [
+     {
+      "id": "islem-es-yukselti-egrileri",
+      "name": "Eş yükselti eğrileri",
+      "style": {
+       "color": "#A0522D",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "contoursOf": 7,
+    "outputs": {
+     "lines": 14
+    },
+    "layerAbove": {
+     "islem-es-yukselti-egrileri": "dem"
+    }
+   }
+  },
+  {
    "id": "contours",
    "title": "Eş yükselti eğrileri, tepe, 5 m, her beşincisi ana: kotlu çoklu çizgiler",
    "document": "surface.kcad",

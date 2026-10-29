@@ -40,6 +40,12 @@ os.environ["KENTOS_GRID_DIR"] = str(_GRIDS)
 import kentos.cad as cad  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
+# The catalog's queries: commands that write nothing (docs/adr/0741 §1).
+QUERIES = {
+    c["id"]
+    for c in json.loads((ROOT / "apps/web/src/contracts/generated/commandCatalog.json").read_text("utf-8"))["commands"]
+    if c.get("effect") == "query"
+}
 # Read the actual persisted metadata, independently of the command being tested.
 _KCAD_SPEC = importlib.util.spec_from_file_location("command_case_kcad", ROOT / "tools/kcad/kcad.py")
 assert _KCAD_SPEC is not None and _KCAD_SPEC.loader is not None
@@ -87,6 +93,11 @@ class Case:
         self.layer: str | None = None
         # The layers the last command that added any added or would add, by their number (`$layer:1` …, docs/adr/0210 §11).
         self.fresh: list[str] = []
+
+    def held(self) -> tuple[str, bool, bool, bool]:
+        """What a step that writes nothing leaves as it was: the revision, the dirty flag, undo and redo."""
+        i = self.doc.info()
+        return (i.revision, i.dirty, i.can_undo, i.can_redo)
 
     def layer_ids(self) -> set[str]:
         out: set[str] = set()
@@ -223,6 +234,7 @@ class Case:
             assert self.doc.revision == before, f"{at}: written"
             return
         layers_before = self.layer_ids()
+        held = self.held()
         if step.get("relaxConstraints"):
             # The write relaxes the constraints (docs/adr/0337 §1).
             with self.doc.relaxed():
@@ -230,6 +242,10 @@ class Case:
         else:
             outcome = wrapper.run(self.doc, typed, op=step["op"])
         got = wire(outcome)
+        # A plan, a validation, a query's execute and a refused one leave the drawing as it was (docs/adr/0741 §1).
+        why = writes_nothing(step, wrapper, got)
+        if why:
+            assert self.held() == held, f"{at}: {why} çizimi değiştirdi: önce {held}, sonra {self.held()}"
         want = json.loads(json.dumps(step["result"]))
         if want == "$any":
             # A step that only prepares the case (a dimension tied before the command, docs/adr/0296): any answer.
@@ -470,6 +486,19 @@ class Case:
         if isinstance(value, dict):
             return {k: self.block_ids(v, at) for k, v in value.items()}
         return value
+
+
+def writes_nothing(step: dict[str, Any], wrapper: Any, got: dict[str, Any]) -> str | None:
+    """Why the step must write nothing: its op, its refusal or the command's effect; None when it may write."""
+    if step["op"] == "validate":
+        return "doğrulama"
+    if step["op"] == "plan":
+        return "plan"
+    if got.get("status") in ("failed", "conflict", "needsInput"):
+        return "ret"
+    if wrapper.id in QUERIES:
+        return "sorgu"
+    return None
 
 
 def strings(value: Any) -> list[str]:

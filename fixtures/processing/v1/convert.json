@@ -2144,6 +2144,346 @@
    }
   },
   {
+   "id": "vertices-begin",
+   "title": "Başlangıç: parsellerin ilk köşesi",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.vertices"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "parsel"
+    },
+    "which": "start"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 nesneden 6 nokta yazıldı.",
+    "undo": "Köşeleri noktaya çevir",
+    "layers": [
+     {
+      "id": "islem-koseler",
+      "name": "Köşeler",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#0090FF26"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "1",
+       "Ada": "101",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "2",
+       "Ada": "101",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487020.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "3",
+       "Ada": "102",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487060.0,
+       "y": 4420000.0
+      },
+      "z": 10.0
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "4",
+       "Ada": "102",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487100.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "5",
+       "Ada": "103",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487130.0,
+       "y": 4420000.0
+      }
+     },
+     {
+      "kind": "point",
+      "layerId": "islem-koseler",
+      "attrs": {
+       "Parsel": "6",
+       "Ada": "103",
+       "Köşe": "1",
+       "Parça": "1",
+       "Halka": "0",
+       "Uzaklık": "0.000"
+      },
+      "p": {
+       "x": 487000.0,
+       "y": 4420040.0
+      }
+     }
+    ],
+    "outputs": {
+     "count": 6
+    }
+   }
+  },
+  {
+   "id": "xy-layer",
+   "title": "XY'den çizgi: katmanın nesnelerinden; uçları aynı yerde ve okunamayan satır atlanır",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.xyLine"
+   },
+   "values": {
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "tablo"
+    },
+    "startEast": "Y1",
+    "startNorth": "X1",
+    "endEast": "Y2",
+    "endNorth": "X2"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 satırdan 1 çizgi yazıldı.",
+    "undo": "XY'den çizgi",
+    "layers": [
+     {
+      "id": "islem-cizgiler",
+      "name": "Çizgiler",
+      "style": {
+       "color": "#12A594",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#12A59426"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "line",
+      "layerId": "islem-cizgiler",
+      "attrs": {
+       "Y1": "487300",
+       "X1": "4420100",
+       "Y2": "487320,5",
+       "X2": "4420130",
+       "Y": "487300",
+       "X": "4420100",
+       "a": "3",
+       "b": "1,5",
+       "Semt": "30"
+      },
+      "a": {
+       "x": 487300.0,
+       "y": 4420100.0
+      },
+      "b": {
+       "x": 487320.5,
+       "y": 4420130.0
+      }
+     }
+    ],
+    "log": [
+     {
+      "level": "warn",
+      "text": "2 satır atlandı; nedenleri tabloda."
+     }
+    ],
+    "outputs": {
+     "count": 1,
+     "table": {
+      "columns": [
+       "Satır",
+       "Neden"
+      ],
+      "rows": [
+       [
+        "#52",
+        "Başlangıç ve bitiş aynı yerde"
+       ],
+       [
+        "#53",
+        "“X1” sayı değil: x"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "ellipse-layer",
+   "title": "Tablodan elips: katmanın nesnelerinden, derece; yer değiştiren eksenler ve boş semt",
+   "document": "convert.kcad",
+   "run": {
+    "tool": "convert.tableEllipse"
+   },
+   "values": {
+    "sourceKind": "layer",
+    "source": {
+     "scope": "layer",
+     "layerId": "tablo"
+    },
+    "east": "Y",
+    "north": "X",
+    "major": "a",
+    "minor": "b",
+    "bearing": "Semt",
+    "unit": "deg"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "3 satırdan 3 elips yazıldı.",
+    "undo": "Tablodan elips",
+    "layers": [
+     {
+      "id": "islem-elipsler",
+      "name": "Elipsler",
+      "style": {
+       "color": "#F76B15",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#F76B1526"
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "ellipse",
+      "layerId": "islem-elipsler",
+      "attrs": {
+       "Y1": "487300",
+       "X1": "4420100",
+       "Y2": "487320,5",
+       "X2": "4420130",
+       "Y": "487300",
+       "X": "4420100",
+       "a": "3",
+       "b": "1,5",
+       "Semt": "30"
+      },
+      "c": {
+       "x": 487300.0,
+       "y": 4420100.0
+      },
+      "major": {
+       "x": 1.5,
+       "y": 2.598076211353316
+      },
+      "ratio": 0.5,
+      "t0": 0,
+      "t1": 0
+     },
+     {
+      "kind": "ellipse",
+      "layerId": "islem-elipsler",
+      "attrs": {
+       "Y1": "487310",
+       "X1": "4420110",
+       "Y2": "487310",
+       "X2": "4420110",
+       "Y": "487310",
+       "X": "4420110",
+       "a": "1",
+       "b": "2",
+       "Semt": "120,5"
+      },
+      "c": {
+       "x": 487310.0,
+       "y": 4420110.0
+      },
+      "major": {
+       "x": -1.0150767259214084,
+       "y": -1.7232583208830514
+      },
+      "ratio": 0.5,
+      "t0": 0,
+      "t1": 0
+     },
+     {
+      "kind": "ellipse",
+      "layerId": "islem-elipsler",
+      "attrs": {
+       "Y1": "487320",
+       "X1": "x",
+       "Y2": "487330",
+       "X2": "4420140",
+       "Y": "487320",
+       "X": "4420120",
+       "a": "2,5",
+       "b": "2,5"
+      },
+      "c": {
+       "x": 487320.0,
+       "y": 4420120.0
+      },
+      "major": {
+       "x": 0.0,
+       "y": 2.5
+      },
+      "ratio": 1.0,
+      "t0": 0,
+      "t1": 0
+     }
+    ],
+    "outputs": {
+     "count": 3
+    }
+   }
+  },
+  {
    "id": "substring-fixed",
    "title": "Çizginin parçası 5 ile 25 m arası: kotlar boyunca, yay parçası, çizgi, yay, iki parçalı ve kısa çizgi",
    "document": "convert.kcad",

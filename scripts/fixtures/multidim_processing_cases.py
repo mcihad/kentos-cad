@@ -294,6 +294,19 @@ def calc_case(id, title, refname, output, file):
                        "multidimOf": {path: file}}}
 
 
+def quiet_calc(c):
+    """The same run with Çizime ekle off: the file written as it was, no layer, no object, no step."""
+    c = json.loads(json.dumps(c))
+    c["id"] += "-eklemeden"
+    c["title"] = "Mesh hesaplayıcı, Çizime ekle kapalı: dosya yazılır, katman ve adım yok"
+    c["values"]["add"] = False
+    e = c["expect"]
+    e["undo"] = None
+    e.pop("layerAbove")
+    e["layers"], e["added"] = [], []
+    return c
+
+
 def refused(id, title, tool, values, message):
     return {"id": id, "title": title, "document": "multidim.kcad", "selection": [], "run": {"tool": tool}, "values": values,
             "expect": {"status": "error", "message": message}}
@@ -314,6 +327,12 @@ def cases():
                   "", "calc-2.nc"),
         calc_case("calc-steps", "Mesh hesaplayıcı, zaman özeti yok: her adım yazılır, adı verilen dosyaya", "calc depth * 2 + 1 none",
                   "derinlik.nc", "calc-1.nc"),
+        # The other summaries and Çizime ekle off (docs/adr/0741 §2).
+        calc_case("calc-mean", "Mesh hesaplayıcı, Ortalama: yüzlerde, etkin olmayan yüz sayılmaz", "calc stage - level mean", "ortalama.nc",
+                  "calc-3.nc"),
+        calc_case("calc-sum", "Mesh hesaplayıcı, Toplam: hızın adımlardaki toplamı", "calc ucx * 10 sum", "toplam.nc", "calc-4.nc"),
+        calc_case("calc-min", "Mesh hesaplayıcı, En küçük: derinliğin adımlardaki en küçüğü", "calc depth min", "en-kucuk.nc", "calc-5.nc"),
+        quiet_calc(calc_case("calc-min", "", "calc depth min", "en-kucuk.nc", "calc-5.nc")),
         refused("calc-places", "Mesh hesaplayıcı, düğüm ve yüz veri setleri birlikte: ret", "multidim.meshCalculator",
                 {"input": on("hesap"), "expression": "depth + level", "summary": "none", "name": "x"}, calc_error),
         refused("series-one-band", "Zaman serisi, tek bantlı ve zamansız raster: ret", "multidim.series",

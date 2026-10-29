@@ -36525,8 +36525,8 @@
   {
    "id": "attributes.calculate",
    "title": "Öznitelik hesapla",
-   "cases": 15,
-   "command": 58,
+   "cases": 16,
+   "command": 59,
    "options": [
     {
      "key": "empty",
@@ -36536,7 +36536,7 @@
     {
      "key": "empty",
      "value": "clear",
-     "covered": false
+     "covered": true
     },
     {
      "key": "label",
@@ -36560,8 +36560,8 @@
   {
    "id": "attributes.fromInside",
    "title": "İçindekinden bilgi al",
-   "cases": 5,
-   "command": 7,
+   "cases": 7,
+   "command": 9,
    "options": [
     {
      "key": "relation",
@@ -36596,12 +36596,12 @@
     {
      "key": "stat",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "max",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
@@ -36613,8 +36613,8 @@
   {
    "id": "attributes.joinByField",
    "title": "Anahtarla birleştir",
-   "cases": 6,
-   "command": 7,
+   "cases": 7,
+   "command": 8,
    "options": [
     {
      "key": "sourceKind",
@@ -36634,7 +36634,7 @@
     {
      "key": "existing",
      "value": "empty",
-     "covered": false
+     "covered": true
     },
     {
      "key": "duplicates",
@@ -36825,8 +36825,8 @@
   {
    "id": "convert.tableEllipse",
    "title": "Tablodan elips",
-   "cases": 1,
-   "command": 1,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "sourceKind",
@@ -36836,7 +36836,7 @@
     {
      "key": "sourceKind",
      "value": "layer",
-     "covered": false
+     "covered": true
     },
     {
      "key": "unit",
@@ -36846,14 +36846,14 @@
     {
      "key": "unit",
      "value": "deg",
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "convert.tablePoints",
    "title": "Tablodan nokta",
-   "cases": 4,
+   "cases": 29,
    "command": 4,
    "options": [
     {
@@ -36874,117 +36874,117 @@
     {
      "key": "system",
      "value": "5253",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "5254",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "5255",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "5256",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "5257",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "5258",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "5259",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "5252",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "2319",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "2320",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "2321",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "2322",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "2323",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "2324",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "2325",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "23035",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "23036",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "23037",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "23038",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "32635",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "32636",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "32637",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
      "value": "32638",
-     "covered": false
+     "covered": true
     },
     {
      "key": "system",
@@ -36994,7 +36994,7 @@
     {
      "key": "system",
      "value": "3857",
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -37029,8 +37029,8 @@
   {
    "id": "convert.vertices",
    "title": "Köşeleri noktaya çevir",
-   "cases": 4,
-   "command": 4,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "which",
@@ -37040,7 +37040,7 @@
     {
      "key": "which",
      "value": "start",
-     "covered": false
+     "covered": true
     },
     {
      "key": "which",
@@ -37062,8 +37062,8 @@
   {
    "id": "convert.xyLine",
    "title": "XY'den çizgi",
-   "cases": 1,
-   "command": 1,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "sourceKind",
@@ -37073,15 +37073,15 @@
     {
      "key": "sourceKind",
      "value": "layer",
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "density.kernel",
    "title": "Çekirdek yoğunluğu",
-   "cases": 2,
-   "command": 2,
+   "cases": 10,
+   "command": 10,
    "options": [
     {
      "key": "kernel",
@@ -37091,22 +37091,22 @@
     {
      "key": "kernel",
      "value": "triangular",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kernel",
      "value": "uniform",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kernel",
      "value": "epanechnikov",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kernel",
      "value": "triweight",
-     "covered": false
+     "covered": true
     },
     {
      "key": "unit",
@@ -37121,12 +37121,12 @@
     {
      "key": "unit",
      "value": "decare",
-     "covered": false
+     "covered": true
     },
     {
      "key": "unit",
      "value": "squareMetre",
-     "covered": false
+     "covered": true
     },
     {
      "key": "extent",
@@ -37136,7 +37136,7 @@
     {
      "key": "extent",
      "value": "raster",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -37146,15 +37146,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "density.line",
    "title": "Çizgi yoğunluğu",
-   "cases": 2,
-   "command": 2,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "unit",
@@ -37169,7 +37169,7 @@
     {
      "key": "unit",
      "value": "metrePerSquareMetre",
-     "covered": false
+     "covered": true
     },
     {
      "key": "extent",
@@ -37189,15 +37189,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "distance.corridor",
    "title": "Maliyet koridoru",
-   "cases": 2,
-   "command": 2,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "neighbours",
@@ -37212,7 +37212,7 @@
     {
      "key": "useSurface",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "useSurface",
@@ -37222,7 +37222,7 @@
     {
      "key": "surfaceLength",
      "value": true,
-     "covered": false
+     "covered": true
     },
     {
      "key": "surfaceLength",
@@ -37232,7 +37232,7 @@
     {
      "key": "threshold",
      "value": "none",
-     "covered": false
+     "covered": true
     },
     {
      "key": "threshold",
@@ -37252,7 +37252,7 @@
     {
      "key": "sample",
      "value": "f64",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -37262,15 +37262,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "distance.cost",
    "title": "Birikimli maliyet",
-   "cases": 8,
-   "command": 8,
+   "cases": 9,
+   "command": 9,
    "options": [
     {
      "key": "neighbours",
@@ -37330,15 +37330,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "distance.euclidean",
    "title": "Uzaklık yüzeyi",
-   "cases": 5,
-   "command": 5,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "from",
@@ -37378,7 +37378,7 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -37466,8 +37466,8 @@
   {
    "id": "generalize.dropParts",
    "title": "Küçük parçaları ayıkla",
-   "cases": 4,
-   "command": 4,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "parts",
@@ -37487,7 +37487,7 @@
     {
      "key": "holes",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -37580,8 +37580,8 @@
   {
    "id": "generate.concaveHull",
    "title": "İçbükey zarf",
-   "cases": 5,
-   "command": 5,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "holes",
@@ -37596,7 +37596,7 @@
     {
      "key": "group",
      "value": "each",
-     "covered": false
+     "covered": true
     },
     {
      "key": "group",
@@ -37634,8 +37634,8 @@
   {
    "id": "geometry.buffer",
    "title": "Tampon",
-   "cases": 6,
-   "command": 20,
+   "cases": 7,
+   "command": 21,
    "options": [
     {
      "key": "side",
@@ -37650,7 +37650,7 @@
     {
      "key": "side",
      "value": "right",
-     "covered": false
+     "covered": true
     },
     {
      "key": "dissolve",
@@ -37713,13 +37713,13 @@
   {
    "id": "geometry.reproject",
    "title": "Koordinat sistemine dönüştür",
-   "cases": 2,
+   "cases": 26,
    "command": 3,
    "options": [
     {
      "key": "source",
      "value": "5253",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
@@ -37729,37 +37729,37 @@
     {
      "key": "source",
      "value": "5255",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "5256",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "5257",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "5258",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "5259",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "5252",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "2319",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
@@ -37769,77 +37769,77 @@
     {
      "key": "source",
      "value": "2321",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "2322",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "2323",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "2324",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "2325",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "23035",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "23036",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "23037",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "23038",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "32635",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "32636",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "32637",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "32638",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "4326",
-     "covered": false
+     "covered": true
     },
     {
      "key": "source",
      "value": "3857",
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -37874,8 +37874,8 @@
   {
    "id": "hydrology.basins",
    "title": "Havzalar",
-   "cases": 4,
-   "command": 4,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "fill",
@@ -37885,7 +37885,7 @@
     {
      "key": "fill",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "mode",
@@ -37907,8 +37907,8 @@
   {
    "id": "hydrology.fill",
    "title": "Çukur doldur",
-   "cases": 4,
-   "command": 4,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "result",
@@ -37928,15 +37928,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "hydrology.flowAccumulation",
    "title": "Akış birikimi",
-   "cases": 4,
-   "command": 4,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "fill",
@@ -37946,7 +37946,7 @@
     {
      "key": "fill",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
@@ -37986,15 +37986,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "hydrology.flowDirection",
    "title": "Akış yönü",
-   "cases": 3,
-   "command": 3,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "fill",
@@ -38024,31 +38024,13 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "hydrology.pourPoint",
    "title": "Döküm noktası",
-   "cases": 1,
-   "command": 1,
-   "options": [
-    {
-     "key": "fill",
-     "value": true,
-     "covered": true
-    },
-    {
-     "key": "fill",
-     "value": false,
-     "covered": false
-    }
-   ]
-  },
-  {
-   "id": "hydrology.streams",
-   "title": "Dere ağı",
    "cases": 2,
    "command": 2,
    "options": [
@@ -38060,15 +38042,33 @@
     {
      "key": "fill",
      "value": false,
-     "covered": false
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "hydrology.streams",
+   "title": "Dere ağı",
+   "cases": 3,
+   "command": 3,
+   "options": [
+    {
+     "key": "fill",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "fill",
+     "value": false,
+     "covered": true
     }
    ]
   },
   {
    "id": "hydrology.watershed",
    "title": "Noktadan havza",
-   "cases": 1,
-   "command": 1,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "fill",
@@ -38078,15 +38078,15 @@
     {
      "key": "fill",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "hydrology.wetness",
    "title": "Topografik nemlilik indisi",
-   "cases": 1,
-   "command": 1,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "fill",
@@ -38096,7 +38096,7 @@
     {
      "key": "fill",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
@@ -38106,12 +38106,12 @@
     {
      "key": "method",
      "value": "d8",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
      "value": "dinf",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -38121,15 +38121,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "interpolation.idw",
    "title": "Ters uzaklık (IDW)",
-   "cases": 5,
-   "command": 5,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "extent",
@@ -38159,15 +38159,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "interpolation.kriging",
    "title": "Kriging",
-   "cases": 3,
-   "command": 3,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "model",
@@ -38177,12 +38177,12 @@
     {
      "key": "model",
      "value": "exponential",
-     "covered": false
+     "covered": true
     },
     {
      "key": "model",
      "value": "gaussian",
-     "covered": false
+     "covered": true
     },
     {
      "key": "variogram",
@@ -38212,7 +38212,7 @@
     {
      "key": "extent",
      "value": "raster",
-     "covered": false
+     "covered": true
     },
     {
      "key": "cross",
@@ -38239,8 +38239,8 @@
   {
    "id": "interpolation.naturalNeighbor",
    "title": "Doğal komşu",
-   "cases": 1,
-   "command": 1,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "extent",
@@ -38250,7 +38250,7 @@
     {
      "key": "extent",
      "value": "raster",
-     "covered": false
+     "covered": true
     },
     {
      "key": "cross",
@@ -38260,7 +38260,7 @@
     {
      "key": "cross",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -38270,15 +38270,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "interpolation.spline",
    "title": "Spline",
-   "cases": 1,
-   "command": 1,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "splineType",
@@ -38288,7 +38288,7 @@
     {
      "key": "splineType",
      "value": "tension",
-     "covered": false
+     "covered": true
     },
     {
      "key": "extent",
@@ -38298,7 +38298,7 @@
     {
      "key": "extent",
      "value": "raster",
-     "covered": false
+     "covered": true
     },
     {
      "key": "cross",
@@ -38308,7 +38308,7 @@
     {
      "key": "cross",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -38318,15 +38318,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "interpolation.tin",
    "title": "TIN'den raster",
-   "cases": 2,
-   "command": 2,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "extent",
@@ -38336,7 +38336,7 @@
     {
      "key": "extent",
      "value": "raster",
-     "covered": false
+     "covered": true
     },
     {
      "key": "cross",
@@ -38356,7 +38356,7 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -38452,8 +38452,8 @@
   {
    "id": "linearRef.calibrateRoutes",
    "title": "Rotayı kalibre et",
-   "cases": 1,
-   "command": 1,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "before",
@@ -38463,7 +38463,7 @@
     {
      "key": "before",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "after",
@@ -38473,7 +38473,7 @@
     {
      "key": "after",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "ignoreGaps",
@@ -38483,15 +38483,15 @@
     {
      "key": "ignoreGaps",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "linearRef.createRoutes",
    "title": "Rota oluştur",
-   "cases": 4,
-   "command": 4,
+   "cases": 7,
+   "command": 7,
    "options": [
     {
      "key": "method",
@@ -38511,7 +38511,7 @@
     {
      "key": "priority",
      "value": "upperLeft",
-     "covered": false
+     "covered": true
     },
     {
      "key": "priority",
@@ -38521,12 +38521,12 @@
     {
      "key": "priority",
      "value": "upperRight",
-     "covered": false
+     "covered": true
     },
     {
      "key": "priority",
      "value": "lowerRight",
-     "covered": false
+     "covered": true
     },
     {
      "key": "ignoreGaps",
@@ -38543,8 +38543,8 @@
   {
    "id": "linearRef.eventDrift",
    "title": "Olay kaymasını denetle",
-   "cases": 3,
-   "command": 3,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "eventKind",
@@ -38564,7 +38564,7 @@
     {
      "key": "side",
      "value": "left",
-     "covered": false
+     "covered": true
     },
     {
      "key": "fix",
@@ -38626,8 +38626,8 @@
   {
    "id": "linearRef.overlayEvents",
    "title": "Olayları çakıştır",
-   "cases": 2,
-   "command": 2,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "aSourceKind",
@@ -38637,7 +38637,7 @@
     {
      "key": "aSourceKind",
      "value": "layer",
-     "covered": false
+     "covered": true
     },
     {
      "key": "bSourceKind",
@@ -38647,7 +38647,7 @@
     {
      "key": "bSourceKind",
      "value": "layer",
-     "covered": false
+     "covered": true
     },
     {
      "key": "how",
@@ -38664,8 +38664,8 @@
   {
    "id": "linearRef.routeEvents",
    "title": "Olayları rotada göster",
-   "cases": 3,
-   "command": 3,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "sourceKind",
@@ -38675,7 +38675,7 @@
     {
      "key": "sourceKind",
      "value": "layer",
-     "covered": false
+     "covered": true
     },
     {
      "key": "eventKind",
@@ -38702,8 +38702,8 @@
   {
    "id": "multidim.meshCalculator",
    "title": "Mesh hesaplayıcı",
-   "cases": 3,
-   "command": 3,
+   "cases": 7,
+   "command": 7,
    "options": [
     {
      "key": "summary",
@@ -38718,17 +38718,17 @@
     {
      "key": "summary",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "summary",
      "value": "mean",
-     "covered": false
+     "covered": true
     },
     {
      "key": "summary",
      "value": "sum",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -38738,7 +38738,7 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -38806,8 +38806,8 @@
   {
    "id": "network.serviceAreas",
    "title": "Hizmet alanları",
-   "cases": 5,
-   "command": 5,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "direction",
@@ -38817,7 +38817,7 @@
     {
      "key": "direction",
      "value": "to",
-     "covered": false
+     "covered": true
     },
     {
      "key": "shape",
@@ -38868,8 +38868,8 @@
   {
    "id": "pointcloud.classify",
    "title": "Yüksekliğe göre sınıfla",
-   "cases": 2,
-   "command": 2,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "all",
@@ -38894,7 +38894,7 @@
     {
      "key": "format",
      "value": "copc",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -38954,8 +38954,8 @@
   {
    "id": "pointcloud.ground",
    "title": "Zemin süzgeci",
-   "cases": 2,
-   "command": 2,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "lastOnly",
@@ -38980,7 +38980,7 @@
     {
      "key": "format",
      "value": "copc",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -38997,8 +38997,8 @@
   {
    "id": "pointcloud.merge",
    "title": "Bulutları birleştir",
-   "cases": 3,
-   "command": 3,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "format",
@@ -39008,12 +39008,12 @@
     {
      "key": "format",
      "value": "las",
-     "covered": false
+     "covered": true
     },
     {
      "key": "format",
      "value": "copc",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39282,8 +39282,8 @@
   {
    "id": "proximity.nearest",
    "title": "En yakını bul",
-   "cases": 2,
-   "command": 2,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "measure",
@@ -39293,7 +39293,7 @@
     {
      "key": "measure",
      "value": "centers",
-     "covered": false
+     "covered": true
     },
     {
      "key": "bearing",
@@ -39303,15 +39303,15 @@
     {
      "key": "bearing",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "proximity.neighbors",
    "title": "Komşu alanlar",
-   "cases": 1,
-   "command": 2,
+   "cases": 3,
+   "command": 4,
    "options": [
     {
      "key": "corners",
@@ -39321,7 +39321,7 @@
     {
      "key": "corners",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "overlaps",
@@ -39331,7 +39331,7 @@
     {
      "key": "overlaps",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "write",
@@ -39341,7 +39341,7 @@
     {
      "key": "write",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -39355,8 +39355,8 @@
   {
    "id": "raster.calculator",
    "title": "Raster hesaplayıcı",
-   "cases": 4,
-   "command": 4,
+   "cases": 7,
+   "command": 7,
    "options": [
     {
      "key": "empty",
@@ -39366,7 +39366,7 @@
     {
      "key": "empty",
      "value": "expression",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sample",
@@ -39376,7 +39376,7 @@
     {
      "key": "sample",
      "value": "f64",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39386,15 +39386,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.cellStatistics",
    "title": "Hücre istatistiği",
-   "cases": 1,
-   "command": 1,
+   "cases": 12,
+   "command": 12,
    "options": [
     {
      "key": "stat",
@@ -39404,52 +39404,52 @@
     {
      "key": "stat",
      "value": "sum",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "max",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "range",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "std",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "median",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "majority",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "minority",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "variety",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "count",
-     "covered": false
+     "covered": true
     },
     {
      "key": "ignore",
@@ -39459,7 +39459,7 @@
     {
      "key": "ignore",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39469,15 +39469,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.clipByMask",
    "title": "Maskeyle kırp",
-   "cases": 2,
-   "command": 2,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "crop",
@@ -39487,7 +39487,7 @@
     {
      "key": "crop",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39497,15 +39497,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.cog",
    "title": "COG olarak kaydet",
-   "cases": 1,
-   "command": 1,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "add",
@@ -39515,15 +39515,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.focalStatistics",
    "title": "Komşuluk istatistiği",
-   "cases": 1,
-   "command": 1,
+   "cases": 11,
+   "command": 11,
    "options": [
     {
      "key": "shape",
@@ -39533,12 +39533,12 @@
     {
      "key": "shape",
      "value": "circle",
-     "covered": false
+     "covered": true
     },
     {
      "key": "shape",
      "value": "ring",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
@@ -39548,47 +39548,47 @@
     {
      "key": "stat",
      "value": "sum",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "max",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "range",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "std",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "median",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "majority",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "minority",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "variety",
-     "covered": false
+     "covered": true
     },
     {
      "key": "ignore",
@@ -39598,7 +39598,7 @@
     {
      "key": "ignore",
      "value": false,
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39608,7 +39608,7 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -39622,8 +39622,8 @@
   {
    "id": "raster.mosaic",
    "title": "Mozaik",
-   "cases": 2,
-   "command": 2,
+   "cases": 9,
+   "command": 9,
    "options": [
     {
      "key": "overlap",
@@ -39633,22 +39633,22 @@
     {
      "key": "overlap",
      "value": "bottom",
-     "covered": false
+     "covered": true
     },
     {
      "key": "overlap",
      "value": "mean",
-     "covered": false
+     "covered": true
     },
     {
      "key": "overlap",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "overlap",
      "value": "max",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sampling",
@@ -39658,12 +39658,12 @@
     {
      "key": "sampling",
      "value": "bilinear",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sampling",
      "value": "cubic",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39673,15 +39673,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.rasterize",
    "title": "Rasterleştir",
-   "cases": 3,
-   "command": 3,
+   "cases": 9,
+   "command": 9,
    "options": [
     {
      "key": "valueFrom",
@@ -39701,7 +39701,7 @@
     {
      "key": "overlap",
      "value": "first",
-     "covered": false
+     "covered": true
     },
     {
      "key": "overlap",
@@ -39711,17 +39711,17 @@
     {
      "key": "overlap",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "overlap",
      "value": "sum",
-     "covered": false
+     "covered": true
     },
     {
      "key": "overlap",
      "value": "count",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sample",
@@ -39736,7 +39736,7 @@
     {
      "key": "sample",
      "value": "i32",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sample",
@@ -39761,15 +39761,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.reclassify",
    "title": "Yeniden sınıflandır",
-   "cases": 1,
-   "command": 1,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "bounds",
@@ -39779,7 +39779,7 @@
     {
      "key": "bounds",
      "value": "lowerClosed",
-     "covered": false
+     "covered": true
     },
     {
      "key": "unmatched",
@@ -39789,7 +39789,7 @@
     {
      "key": "unmatched",
      "value": "empty",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sample",
@@ -39799,12 +39799,12 @@
     {
      "key": "sample",
      "value": "i32",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sample",
      "value": "u8",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39814,15 +39814,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.resample",
    "title": "Yeniden örnekle",
-   "cases": 2,
-   "command": 2,
+   "cases": 8,
+   "command": 8,
    "options": [
     {
      "key": "method",
@@ -39832,12 +39832,12 @@
     {
      "key": "method",
      "value": "bilinear",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
      "value": "cubic",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
@@ -39847,17 +39847,17 @@
     {
      "key": "method",
      "value": "mode",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
      "value": "max",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -39867,15 +39867,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.toLines",
    "title": "Rasterden çizgi",
-   "cases": 2,
-   "command": 2,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "select",
@@ -39885,7 +39885,7 @@
     {
      "key": "select",
      "value": "range",
-     "covered": false
+     "covered": true
     },
     {
      "key": "select",
@@ -39897,18 +39897,18 @@
   {
    "id": "raster.toPoints",
    "title": "Rasterden nokta",
-   "cases": 1,
-   "command": 1,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "mode",
      "value": "step",
-     "covered": false
+     "covered": true
     },
     {
      "key": "mode",
      "value": "all",
-     "covered": false
+     "covered": true
     },
     {
      "key": "mode",
@@ -39923,15 +39923,15 @@
     {
      "key": "elevation",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.toPolygons",
    "title": "Rasterden alan",
-   "cases": 1,
-   "command": 1,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "connect",
@@ -39941,15 +39941,15 @@
     {
      "key": "connect",
      "value": "eight",
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "raster.zonalStatistics",
    "title": "Bölgesel istatistik",
-   "cases": 1,
-   "command": 1,
+   "cases": 12,
+   "command": 12,
    "options": [
     {
      "key": "stat",
@@ -39959,57 +39959,57 @@
     {
      "key": "stat",
      "value": "count",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "sum",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "min",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "max",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "range",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "std",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "median",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "majority",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "minority",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "variety",
-     "covered": false
+     "covered": true
     },
     {
      "key": "stat",
      "value": "area",
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -40023,8 +40023,8 @@
   {
    "id": "remote.change",
    "title": "Değişim tespiti",
-   "cases": 3,
-   "command": 3,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "method",
@@ -40034,12 +40034,12 @@
     {
      "key": "method",
      "value": "ratio",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
      "value": "normalized",
-     "covered": false
+     "covered": true
     },
     {
      "key": "method",
@@ -40054,15 +40054,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "remote.composite",
    "title": "Bant birleştir",
-   "cases": 2,
-   "command": 2,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "sampling",
@@ -40072,7 +40072,7 @@
     {
      "key": "sampling",
      "value": "bilinear",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -40082,15 +40082,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "remote.index",
    "title": "Spektral indis",
-   "cases": 4,
-   "command": 4,
+   "cases": 10,
+   "command": 10,
    "options": [
     {
      "key": "index",
@@ -40100,12 +40100,12 @@
     {
      "key": "index",
      "value": "gndvi",
-     "covered": false
+     "covered": true
     },
     {
      "key": "index",
      "value": "savi",
-     "covered": false
+     "covered": true
     },
     {
      "key": "index",
@@ -40115,7 +40115,7 @@
     {
      "key": "index",
      "value": "ndwi",
-     "covered": false
+     "covered": true
     },
     {
      "key": "index",
@@ -40125,12 +40125,12 @@
     {
      "key": "index",
      "value": "ndbi",
-     "covered": false
+     "covered": true
     },
     {
      "key": "index",
      "value": "ratio",
-     "covered": false
+     "covered": true
     },
     {
      "key": "index",
@@ -40145,15 +40145,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "remote.pansharpen",
    "title": "Görüntü birleştirme",
-   "cases": 4,
-   "command": 4,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "method",
@@ -40188,15 +40188,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "remote.qaMask",
    "title": "Kalite maskesi uygula",
-   "cases": 4,
-   "command": 4,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "add",
@@ -40206,15 +40206,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "remote.split",
    "title": "Bantlara ayır",
-   "cases": 1,
-   "command": 1,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "add",
@@ -40224,15 +40224,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "remote.supervised",
    "title": "Denetimli sınıflandırma",
-   "cases": 3,
-   "command": 3,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "method",
@@ -40252,15 +40252,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "remote.unsupervised",
    "title": "Denetimsiz sınıflandırma",
-   "cases": 2,
-   "command": 2,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "add",
@@ -40270,7 +40270,7 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -40417,8 +40417,8 @@
   {
    "id": "selection.byExpression",
    "title": "İfadeyle seç",
-   "cases": 6,
-   "command": 15,
+   "cases": 8,
+   "command": 17,
    "options": [
     {
      "key": "mode",
@@ -40428,12 +40428,12 @@
     {
      "key": "mode",
      "value": "add",
-     "covered": false
+     "covered": true
     },
     {
      "key": "mode",
      "value": "remove",
-     "covered": false
+     "covered": true
     },
     {
      "key": "mode",
@@ -40445,8 +40445,8 @@
   {
    "id": "selection.byLocation",
    "title": "Konuma göre seç",
-   "cases": 8,
-   "command": 16,
+   "cases": 10,
+   "command": 18,
    "options": [
     {
      "key": "relation",
@@ -40486,7 +40486,7 @@
     {
      "key": "mode",
      "value": "add",
-     "covered": false
+     "covered": true
     },
     {
      "key": "mode",
@@ -40496,7 +40496,7 @@
     {
      "key": "mode",
      "value": "within",
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -40576,8 +40576,8 @@
   {
    "id": "stats.directionalDistribution",
    "title": "Yön dağılımı",
-   "cases": 1,
-   "command": 1,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "deviations",
@@ -40587,12 +40587,12 @@
     {
      "key": "deviations",
      "value": "2",
-     "covered": false
+     "covered": true
     },
     {
      "key": "deviations",
      "value": "3",
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -40642,8 +40642,8 @@
   {
    "id": "stats.kMeans",
    "title": "k-ortalamalar kümeleme",
-   "cases": 5,
-   "command": 5,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "stability",
@@ -40658,15 +40658,15 @@
     {
      "key": "stability",
      "value": "subset",
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "stats.localMoran",
    "title": "Yerel Moran (LISA)",
-   "cases": 6,
-   "command": 6,
+   "cases": 7,
+   "command": 7,
    "options": [
     {
      "key": "concept",
@@ -40676,7 +40676,7 @@
     {
      "key": "concept",
      "value": "inverse",
-     "covered": false
+     "covered": true
     },
     {
      "key": "concept",
@@ -40721,7 +40721,7 @@
     {
      "key": "significance",
      "value": "0.01",
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -40823,13 +40823,13 @@
   {
    "id": "stats.standardDistance",
    "title": "Standart uzaklık",
-   "cases": 1,
-   "command": 1,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "deviations",
      "value": "1",
-     "covered": false
+     "covered": true
     },
     {
      "key": "deviations",
@@ -40839,15 +40839,15 @@
     {
      "key": "deviations",
      "value": "3",
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "suitability.fuzzyMembership",
    "title": "Bulanık üyelik",
-   "cases": 4,
-   "command": 4,
+   "cases": 9,
+   "command": 9,
    "options": [
     {
      "key": "function",
@@ -40857,7 +40857,7 @@
     {
      "key": "function",
      "value": "power",
-     "covered": false
+     "covered": true
     },
     {
      "key": "function",
@@ -40872,12 +40872,12 @@
     {
      "key": "function",
      "value": "small",
-     "covered": false
+     "covered": true
     },
     {
      "key": "function",
      "value": "near",
-     "covered": false
+     "covered": true
     },
     {
      "key": "sample",
@@ -40887,7 +40887,7 @@
     {
      "key": "sample",
      "value": "f64",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -40897,15 +40897,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "suitability.fuzzyOverlay",
    "title": "Bulanık çakıştırma",
-   "cases": 3,
-   "command": 3,
+   "cases": 8,
+   "command": 8,
    "options": [
     {
      "key": "op",
@@ -40915,17 +40915,17 @@
     {
      "key": "op",
      "value": "or",
-     "covered": false
+     "covered": true
     },
     {
      "key": "op",
      "value": "product",
-     "covered": false
+     "covered": true
     },
     {
      "key": "op",
      "value": "sum",
-     "covered": false
+     "covered": true
     },
     {
      "key": "op",
@@ -40940,7 +40940,7 @@
     {
      "key": "sample",
      "value": "f64",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -40950,15 +40950,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "suitability.pairwise",
    "title": "İkili karşılaştırma (AHP)",
-   "cases": 4,
-   "command": 4,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "write",
@@ -40978,7 +40978,7 @@
     {
      "key": "sample",
      "value": "f64",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -40988,7 +40988,7 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -41023,8 +41023,8 @@
   {
    "id": "suitability.weightedOverlay",
    "title": "Ağırlıklı çakıştırma",
-   "cases": 3,
-   "command": 3,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "bounds",
@@ -41034,7 +41034,7 @@
     {
      "key": "bounds",
      "value": "lowerClosed",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -41044,15 +41044,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "suitability.weightedSum",
    "title": "Ağırlıklı toplam",
-   "cases": 3,
-   "command": 3,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "sample",
@@ -41062,7 +41062,7 @@
     {
      "key": "sample",
      "value": "f64",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -41072,15 +41072,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "surface.aspect",
    "title": "Bakı",
-   "cases": 2,
-   "command": 2,
+   "cases": 3,
+   "command": 3,
    "options": [
     {
      "key": "method",
@@ -41100,7 +41100,7 @@
     {
      "key": "area",
      "value": "objects",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -41110,15 +41110,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "surface.colorRelief",
    "title": "Renkli kabartma",
-   "cases": 2,
-   "command": 2,
+   "cases": 6,
+   "command": 6,
    "options": [
     {
      "key": "colors",
@@ -41133,7 +41133,7 @@
     {
      "key": "ramp",
      "value": "Gri",
-     "covered": false
+     "covered": true
     },
     {
      "key": "ramp",
@@ -41143,7 +41143,7 @@
     {
      "key": "ramp",
      "value": "Spektral",
-     "covered": false
+     "covered": true
     },
     {
      "key": "ramp",
@@ -41153,12 +41153,12 @@
     {
      "key": "ramp",
      "value": "Mavi-kırmızı",
-     "covered": false
+     "covered": true
     },
     {
      "key": "ramp",
      "value": "Sıcaklık",
-     "covered": false
+     "covered": true
     },
     {
      "key": "invert",
@@ -41198,7 +41198,7 @@
     {
      "key": "area",
      "value": "objects",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -41208,15 +41208,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "surface.contours",
    "title": "Eş yükselti eğrileri",
-   "cases": 1,
-   "command": 1,
+   "cases": 2,
+   "command": 2,
    "options": [
     {
      "key": "area",
@@ -41226,15 +41226,15 @@
     {
      "key": "area",
      "value": "objects",
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "surface.curvature",
    "title": "Eğrilik",
-   "cases": 3,
-   "command": 3,
+   "cases": 5,
+   "command": 5,
    "options": [
     {
      "key": "curvature",
@@ -41244,12 +41244,12 @@
     {
      "key": "curvature",
      "value": "profile",
-     "covered": false
+     "covered": true
     },
     {
      "key": "curvature",
      "value": "plan",
-     "covered": false
+     "covered": true
     },
     {
      "key": "area",
@@ -41269,15 +41269,15 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "surface.hillshade",
    "title": "Gölgeli kabartma",
-   "cases": 3,
-   "command": 3,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "area",
@@ -41297,20 +41297,20 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "surface.insolation",
    "title": "Güneşlenme",
-   "cases": 3,
-   "command": 3,
+   "cases": 16,
+   "command": 16,
    "options": [
     {
      "key": "period",
      "value": "year",
-     "covered": false
+     "covered": true
     },
     {
      "key": "period",
@@ -41325,7 +41325,7 @@
     {
      "key": "startMonth",
      "value": "1",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
@@ -41335,17 +41335,17 @@
     {
      "key": "startMonth",
      "value": "3",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
      "value": "4",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
      "value": "5",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
@@ -41355,67 +41355,67 @@
     {
      "key": "startMonth",
      "value": "7",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
      "value": "8",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
      "value": "9",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
      "value": "10",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
      "value": "11",
-     "covered": false
+     "covered": true
     },
     {
      "key": "startMonth",
      "value": "12",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "1",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "2",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "3",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "4",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "5",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "6",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "7",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
@@ -41430,22 +41430,22 @@
     {
      "key": "endMonth",
      "value": "10",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "11",
-     "covered": false
+     "covered": true
     },
     {
      "key": "endMonth",
      "value": "12",
-     "covered": false
+     "covered": true
     },
     {
      "key": "hourStep",
      "value": "0.25",
-     "covered": false
+     "covered": true
     },
     {
      "key": "hourStep",
@@ -41460,7 +41460,7 @@
     {
      "key": "hourStep",
      "value": "2",
-     "covered": false
+     "covered": true
     },
     {
      "key": "area",
@@ -41480,25 +41480,25 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },
   {
    "id": "surface.ruggedness",
    "title": "Pürüzlülük",
-   "cases": 1,
-   "command": 1,
+   "cases": 4,
+   "command": 4,
    "options": [
     {
      "key": "index",
      "value": "triRiley",
-     "covered": false
+     "covered": true
     },
     {
      "key": "index",
      "value": "triWilson",
-     "covered": false
+     "covered": true
     },
     {
      "key": "index",
@@ -41508,7 +41508,7 @@
     {
      "key": "index",
      "value": "roughness",
-     "covered": false
+     "covered": true
     },
     {
      "key": "area",
@@ -41518,7 +41518,7 @@
     {
      "key": "area",
      "value": "objects",
-     "covered": false
+     "covered": true
     },
     {
      "key": "add",
@@ -41528,7 +41528,7 @@
     {
      "key": "add",
      "value": false,
-     "covered": false
+     "covered": true
     }
    ]
   },

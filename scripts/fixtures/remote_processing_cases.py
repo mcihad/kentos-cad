@@ -64,6 +64,7 @@ FILES = [
     ("pankromatik.tif", "pankromatik", "Pankromatik", ("birlestirme-mean-nearest", 1), GRAY),
     ("scl.tif", "scl", "SCL", ("kalite-maskesi-scl", 1), CLASSES),
     ("siniflar-model.tif", "siniflar-model", "Sınıflar (modelli)", ("dogruluk", 0), CLASSES),
+    ("kaba.tif", "kaba", "Kaba", ("birlestir-kaba-cift-dogrusal", 1), GRAY),
 ]
 # The rasters' own attributes: the quality band's rule (as STAC verisini hazırla writes it), a model's training layer.
 RASTER_ATTRS = {
@@ -421,7 +422,59 @@ def cases():
         refused("pansharpen-weights-count", "Görüntü birleştirme, iki ağırlık dört banda: ret", P,
                 {"input": on("cok-bantli"), "pan": on("pankromatik"), "weights": "0,5; 0,5"},
                 "Ağırlıkların sayısı (2) çok bantlının bant sayısı (4) değil."),
+    ] + more_cases()
+
+
+def more_cases():
+    """The options the first cases leave untried (docs/adr/0741 §2): the other indices and change methods, a coarse band
+    sampled bilinearly, and every tool with Çizime ekle off."""
+    C, I, D = "remote.composite", "remote.index", "remote.change"
+    water = ramp("Mavi-kırmızı", invert=True)
+    out = [
+        raster_case("composite-bilinear", "Bant birleştir: kaba bant çift doğrusal örneklenir; ızgara ilk rasterin", C,
+                    {"sampling": "bilinear"}, "birlestir-kaba-cift-dogrusal", {**BAND, "ramp": "Arazi"}, first="kirmizi",
+                    selection=[id_of("kirmizi"), id_of("kaba")]),
+        raster_case("index-gndvi", "Spektral indis, GNDVI: yeşil ve yakın kızılötesi", I, {"index": "gndvi"}, "indis-gndvi",
+                    VEGETATION, first="goruntu"),
+        raster_case("index-savi", "Spektral indis, SAVI: L 0,5", I, {"index": "savi"}, "indis-savi", VEGETATION, first="goruntu"),
+        raster_case("index-ndwi", "Spektral indis, NDWI: su indisi, su mavi", I, {"index": "ndwi"}, "indis-ndwi", water,
+                    first="goruntu"),
+        raster_case("index-ndbi", "Spektral indis, NDBI: kısa dalga bandı 1", I, {"index": "ndbi", "swir": 1}, "indis-ndbi",
+                    DIVERGING, first="goruntu"),
+        raster_case("index-ratio", "Spektral indis, oran: bant 4 ÷ bant 3", I, {"index": "ratio"}, "indis-ratio", DIVERGING,
+                    first="goruntu"),
+        raster_case("change-ratio", "Değişim tespiti, oran: değişmeyen 1, renk 1'in çevresinde eşit", D,
+                    {"after": on("sonraki"), "band": 4, "method": "ratio"}, "degisim-ratio", change_look("degisim-ratio", 1.0),
+                    first="goruntu"),
+        raster_case("change-normalized", "Değişim tespiti, normalize fark", D,
+                    {"after": on("sonraki"), "band": 4, "method": "normalized"}, "degisim-normalized",
+                    change_look("degisim-normalized"), first="goruntu"),
     ]
+    firsts = {c["id"]: c for c in out}
+    firsts.update({c["id"]: c for c in [
+        split_case(),
+        raster_case("supervised-distance", "", "remote.supervised", {"training": on("egitim"), "classField": "Sınıf",
+                                                                       "method": "distance"},
+                    "denetimli-distance", class_look(len(ref("denetimli-likelihood")["expect"]["notes"]["table"]["rows"])),
+                    first="goruntu", attrs=model_of_supervised("distance", "denetimli-distance")),
+        raster_case("unsupervised-four", "", "remote.unsupervised", {"clusters": 4, "iterations": 20}, "denetimsiz-4-20",
+                    class_look(4), first="goruntu", attrs=model_of_unsupervised(4, 20)),
+        raster_case("qa-mask-own", "", "remote.qaMask", {"qa": on("scl")}, "kalite-maskesi-scl", RGB, first="goruntu"),
+        raster_case("pansharpen-mean", "", "remote.pansharpen", {"pan": on("pankromatik"), "method": "mean", "sampling": "nearest"},
+                    "birlestirme-mean-nearest", RGB, first="cok-bantli"),
+    ]})
+    for cid, title in [
+        ("composite-bilinear", "Bant birleştir, Çizime ekle kapalı: dosya yazılır, katman ve adım yok"),
+        ("split-four", "Bantlara ayır, Çizime ekle kapalı: dört dosya yazılır, katman ve adım yok"),
+        ("index-gndvi", "Spektral indis, Çizime ekle kapalı"),
+        ("supervised-distance", "Denetimli sınıflandırma, Çizime ekle kapalı"),
+        ("unsupervised-four", "Denetimsiz sınıflandırma, Çizime ekle kapalı"),
+        ("change-ratio", "Değişim tespiti, Çizime ekle kapalı"),
+        ("pansharpen-mean", "Görüntü birleştirme, Çizime ekle kapalı"),
+        ("qa-mask-own", "Kalite maskesi uygula, Çizime ekle kapalı"),
+    ]:
+        out.append(rop.quiet(firsts[cid], title))
+    return out
 
 
 def defaults():

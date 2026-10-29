@@ -1,0 +1,1617 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 0.001,
+ "measureTolerance": 0.001,
+ "documents": {},
+ "cases": [
+  {
+   "id": "source-5253",
+   "title": "Koordinat sistemine dönüştür: TUREF / TM27 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s5253"
+    },
+    "source": "5253",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:5253 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 5253"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2694297404,
+        "y": 4362911.895670092
+       },
+       {
+        "x": 498377.13311753323,
+        "y": 4362908.573737351
+       },
+       {
+        "x": 498380.45508096536,
+        "y": 4363008.437392344
+       },
+       {
+        "x": 498280.5913952813,
+        "y": 4363011.759388575
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-5255",
+   "title": "Koordinat sistemine dönüştür: TUREF / TM33 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s5255"
+    },
+    "source": "5255",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:5255 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 5255"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2686388349,
+        "y": 4362911.896440701
+       },
+       {
+        "x": 498377.1301996387,
+        "y": 4362915.218376125
+       },
+       {
+        "x": 498373.80823143054,
+        "y": 4363015.079967631
+       },
+       {
+        "x": 498273.9466727071,
+        "y": 4363011.757968718
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-5256",
+   "title": "Koordinat sistemine dönüştür: TUREF / TM36 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s5256"
+    },
+    "source": "5256",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:5256 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 5256"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.269171278,
+        "y": 4362911.895744025
+       },
+       {
+        "x": 498376.7179224165,
+        "y": 4362918.530578503
+       },
+       {
+        "x": 498370.08302063204,
+        "y": 4363017.979388618
+       },
+       {
+        "x": 498270.6342778223,
+        "y": 4363011.3444278585
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-5257",
+   "title": "Koordinat sistemine dönüştür: TUREF / TM39 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s5257"
+    },
+    "source": "5257",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:5257 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 5257"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2695812399,
+        "y": 4362911.896182841
+       },
+       {
+        "x": 498376.0322887025,
+        "y": 4362921.825866244
+       },
+       {
+        "x": 498366.1025021166,
+        "y": 4363020.588658212
+       },
+       {
+        "x": 498267.33981333015,
+        "y": 4363010.658787121
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-5258",
+   "title": "Koordinat sistemine dönüştür: TUREF / TM42 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s5258"
+    },
+    "source": "5258",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:5258 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 5258"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26888563164,
+        "y": 4362911.896004111
+       },
+       {
+        "x": 498375.0742045453,
+        "y": 4362925.093523034
+       },
+       {
+        "x": 498361.8765455967,
+        "y": 4363022.898948965
+       },
+       {
+        "x": 498264.0712596902,
+        "y": 4363009.701183
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-5259",
+   "title": "Koordinat sistemine dönüştür: TUREF / TM45 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s5259"
+    },
+    "source": "5259",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:5259 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 5259"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26878205413,
+        "y": 4362911.8960925145
+       },
+       {
+        "x": 498373.84800465533,
+        "y": 4362928.325545842
+       },
+       {
+        "x": 498357.4183739014,
+        "y": 4363024.904894699
+       },
+       {
+        "x": 498260.83920246863,
+        "y": 4363008.47513769
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-5252",
+   "title": "Koordinat sistemine dönüştür: TUREF parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s5252"
+    },
+    "source": "5252",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:5252 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 5252"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2691199016,
+        "y": 4362911.896063956
+       },
+       {
+        "x": 498363.405664544,
+        "y": 4362911.877456423
+       },
+       {
+        "x": 498363.42903345457,
+        "y": 4363022.90059253
+       },
+       {
+        "x": 498277.2937187549,
+        "y": 4363022.919200193
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-2319",
+   "title": "Koordinat sistemine dönüştür: ED50 / TM27 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s2319"
+    },
+    "source": "2319",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:2319 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 2319"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2698091314,
+        "y": 4362911.896482154
+       },
+       {
+        "x": 498377.13291040756,
+        "y": 4362908.574643272
+       },
+       {
+        "x": 498380.4547800692,
+        "y": 4363008.437709044
+       },
+       {
+        "x": 498280.5916808737,
+        "y": 4363011.759611412
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-2320",
+   "title": "Koordinat sistemine dönüştür: ED50 / TM30 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s2320"
+    },
+    "source": "2320",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:2320 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 2320"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2694659171,
+        "y": 4362911.897200953
+       },
+       {
+        "x": 498377.26889716607,
+        "y": 4362911.897346633
+       },
+       {
+        "x": 498377.26875148516,
+        "y": 4363011.896775174
+       },
+       {
+        "x": 498277.26932020846,
+        "y": 4363011.896629492
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-2321",
+   "title": "Koordinat sistemine dönüştür: ED50 / TM33 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s2321"
+    },
+    "source": "2321",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:2321 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 2321"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26952420047,
+        "y": 4362911.8969789455
+       },
+       {
+        "x": 498377.13053281803,
+        "y": 4362915.21911146
+       },
+       {
+        "x": 498373.8083674294,
+        "y": 4363015.080148079
+       },
+       {
+        "x": 498273.9473608641,
+        "y": 4363011.757952075
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-2322",
+   "title": "Koordinat sistemine dönüştür: ED50 / TM36 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s2322"
+    },
+    "source": "2322",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:2322 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 2322"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26905386307,
+        "y": 4362911.897233963
+       },
+       {
+        "x": 498376.7172681412,
+        "y": 4362918.532316673
+       },
+       {
+        "x": 498370.08211794373,
+        "y": 4363017.980587235
+       },
+       {
+        "x": 498270.6339119681,
+        "y": 4363011.3453782415
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-2323",
+   "title": "Koordinat sistemine dönüştür: ED50 / TM39 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s2323"
+    },
+    "source": "2323",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:2323 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 2323"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26939072413,
+        "y": 4362911.897269116
+       },
+       {
+        "x": 498376.031575393,
+        "y": 4362921.82725176
+       },
+       {
+        "x": 498366.10148929426,
+        "y": 4363020.589518259
+       },
+       {
+        "x": 498267.33932327485,
+        "y": 4363010.659347928
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-2324",
+   "title": "Koordinat sistemine dönüştür: ED50 / TM42 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s2324"
+    },
+    "source": "2324",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:2324 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 2324"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2698900592,
+        "y": 4362911.896739272
+       },
+       {
+        "x": 498375.07469899,
+        "y": 4362925.094608467
+       },
+       {
+        "x": 498361.8766894111,
+        "y": 4363022.899521766
+       },
+       {
+        "x": 498264.071913462,
+        "y": 4363009.701405531
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-2325",
+   "title": "Koordinat sistemine dönüştür: ED50 / TM45 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s2325"
+    },
+    "source": "2325",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:2325 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 2325"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2690256884,
+        "y": 4362911.89691799
+       },
+       {
+        "x": 498373.8477498747,
+        "y": 4362928.3267727895
+       },
+       {
+        "x": 498357.4177172026,
+        "y": 4363024.905620617
+       },
+       {
+        "x": 498260.83904415916,
+        "y": 4363008.47546214
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-23035",
+   "title": "Koordinat sistemine dönüştür: ED50 / UTM 35N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s23035"
+    },
+    "source": "23035",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:23035 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 23035"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26965678355,
+        "y": 4362911.896520425
+       },
+       {
+        "x": 498377.17271927267,
+        "y": 4362908.573352276
+       },
+       {
+        "x": 498380.49591822486,
+        "y": 4363008.476379236
+       },
+       {
+        "x": 498280.592857818,
+        "y": 4363011.799610922
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-23036",
+   "title": "Koordinat sistemine dönüştür: ED50 / UTM 36N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s23036"
+    },
+    "source": "23036",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:23036 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 23036"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26975727535,
+        "y": 4362911.896959498
+       },
+       {
+        "x": 498377.1707262932,
+        "y": 4362915.220421396
+       },
+       {
+        "x": 498373.8472314917,
+        "y": 4363015.121418436
+       },
+       {
+        "x": 498273.9462645292,
+        "y": 4363011.797893
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-23037",
+   "title": "Koordinat sistemine dönüştür: ED50 / UTM 37N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s23037"
+    },
+    "source": "23037",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:23037 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 23037"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2696030285,
+        "y": 4362911.896483673
+       },
+       {
+        "x": 498376.0713084164,
+        "y": 4362921.830439905
+       },
+       {
+        "x": 498366.1372486517,
+        "y": 4363020.63222719
+       },
+       {
+        "x": 498267.33556192747,
+        "y": 4363010.698083122
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-23038",
+   "title": "Koordinat sistemine dönüştür: ED50 / UTM 38N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s23038"
+    },
+    "source": "23038",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:23038 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 23038"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2698095609,
+        "y": 4362911.897305441
+       },
+       {
+        "x": 498373.8871807605,
+        "y": 4362928.333734826
+       },
+       {
+        "x": 498357.45057336235,
+        "y": 4363024.951229766
+       },
+       {
+        "x": 498260.8332533464,
+        "y": 4363008.514496458
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-32635",
+   "title": "Koordinat sistemine dönüştür: WGS 84 / UTM 35N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s32635"
+    },
+    "source": "32635",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:32635 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 32635"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26929106214,
+        "y": 4362911.89603216
+       },
+       {
+        "x": 498377.1729403033,
+        "y": 4362908.572770114
+       },
+       {
+        "x": 498380.49623306456,
+        "y": 4363008.4763865275
+       },
+       {
+        "x": 498280.5925859344,
+        "y": 4363011.799712114
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-32636",
+   "title": "Koordinat sistemine dönüştür: WGS 84 / UTM 36N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s32636"
+    },
+    "source": "32636",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:32636 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 32636"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2692598005,
+        "y": 4362911.895676667
+       },
+       {
+        "x": 498377.17078122706,
+        "y": 4362915.218941396
+       },
+       {
+        "x": 498373.84748368675,
+        "y": 4363015.120493549
+       },
+       {
+        "x": 498273.94596434257,
+        "y": 4363011.797165282
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-32637",
+   "title": "Koordinat sistemine dönüştür: WGS 84 / UTM 37N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s32637"
+    },
+    "source": "32637",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:32637 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 32637"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2694258493,
+        "y": 4362911.895814764
+       },
+       {
+        "x": 498376.0716542414,
+        "y": 4362921.829471633
+       },
+       {
+        "x": 498366.13789410715,
+        "y": 4363020.631784597
+       },
+       {
+        "x": 498267.335684406,
+        "y": 4363010.69793989
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-32638",
+   "title": "Koordinat sistemine dönüştür: WGS 84 / UTM 38N parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s32638"
+    },
+    "source": "32638",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:32638 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 32638"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26946480153,
+        "y": 4362911.896434294
+       },
+       {
+        "x": 498373.88733461406,
+        "y": 4362928.332462045
+       },
+       {
+        "x": 498357.4511292958,
+        "y": 4363024.950458214
+       },
+       {
+        "x": 498260.83331069245,
+        "y": 4363008.514126537
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-4326",
+   "title": "Koordinat sistemine dönüştür: WGS 84 parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s4326"
+    },
+    "source": "4326",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:4326 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 4326"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.2691199016,
+        "y": 4362911.896063956
+       },
+       {
+        "x": 498363.405664544,
+        "y": 4362911.877456423
+       },
+       {
+        "x": 498363.42903345457,
+        "y": 4363022.90059253
+       },
+       {
+        "x": 498277.2937187549,
+        "y": 4363022.919200193
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  },
+  {
+   "id": "source-3857",
+   "title": "Koordinat sistemine dönüştür: WGS 84 / Pseudo-Mercator parseli TUREF / TM30'a, köşeleri PROJ'la",
+   "document": "reproject.kcad",
+   "run": {
+    "tool": "geometry.reproject"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "s3857"
+    },
+    "source": "3857",
+    "layer": {
+     "newName": "Dönüştürülen"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 nesne dönüştürüldü: EPSG:3857 → EPSG:5254.",
+    "undo": "Koordinat sistemine dönüştür",
+    "layers": [
+     {
+      "id": "islem-donusturulen",
+      "name": "Dönüştürülen",
+      "style": {
+       "color": "#AB4ABA",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#AB4ABA26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-donusturulen",
+      "attrs": {
+       "Ad": "Parsel 3857"
+      },
+      "parts": 1,
+      "holes": 0,
+      "vertices": [
+       {
+        "x": 498277.26913352654,
+        "y": 4362911.8958896715
+       },
+       {
+        "x": 498354.646908106,
+        "y": 4362911.879130658
+       },
+       {
+        "x": 498354.66321651224,
+        "y": 4362988.946385422
+       },
+       {
+        "x": 498277.28620888566,
+        "y": 4362988.963144517
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 1
+    }
+   }
+  }
+ ]
+}

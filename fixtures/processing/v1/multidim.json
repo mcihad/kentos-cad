@@ -1028,6 +1028,285 @@
    }
   },
   {
+   "id": "calc-mean",
+   "title": "Mesh hesaplayıcı, Ortalama: yüzlerde, etkin olmayan yüz sayılmaz",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.meshCalculator"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hesap"
+    },
+    "expression": "stage - level",
+    "summary": "mean",
+    "name": "Ortalama fark",
+    "output": "ortalama.nc",
+    "add": true,
+    "layer": {
+     "newName": "Mesh hesabı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Mesh hesaplayıcı",
+    "summary": "“Ortalama fark”: 6 yüz, 3 adımın ortalaması. “ortalama.nc” yazıldı.",
+    "outputs": {
+     "file": "ortalama.nc"
+    },
+    "layers": [
+     {
+      "id": "islem-mesh-hesabi",
+      "name": "Mesh hesabı",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-mesh-hesabi",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       0.125,
+       0.0,
+       4420040.0,
+       0.0,
+       -0.125
+      ],
+      "width": 320,
+      "height": 320,
+      "bands": 1,
+      "sample": "f32",
+      "file": "ortalama.nc",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      },
+      "dataset": {
+       "variable": "Ortalama_fark",
+       "mesh": "Mesh2d"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-mesh-hesabi": "hesap"
+    },
+    "multidimOf": {
+     "ortalama.nc": "calc-3.nc"
+    }
+   }
+  },
+  {
+   "id": "calc-sum",
+   "title": "Mesh hesaplayıcı, Toplam: hızın adımlardaki toplamı",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.meshCalculator"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hesap"
+    },
+    "expression": "ucx * 10",
+    "summary": "sum",
+    "name": "Toplam hız",
+    "output": "toplam.nc",
+    "add": true,
+    "layer": {
+     "newName": "Mesh hesabı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Mesh hesaplayıcı",
+    "summary": "“Toplam hız”: 10 düğüm, 3 adımın toplamı. “toplam.nc” yazıldı.",
+    "outputs": {
+     "file": "toplam.nc"
+    },
+    "layers": [
+     {
+      "id": "islem-mesh-hesabi",
+      "name": "Mesh hesabı",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-mesh-hesabi",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       0.125,
+       0.0,
+       4420040.0,
+       0.0,
+       -0.125
+      ],
+      "width": 320,
+      "height": 320,
+      "bands": 1,
+      "sample": "f32",
+      "file": "toplam.nc",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      },
+      "dataset": {
+       "variable": "Toplam_hiz",
+       "mesh": "Mesh2d"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-mesh-hesabi": "hesap"
+    },
+    "multidimOf": {
+     "toplam.nc": "calc-4.nc"
+    }
+   }
+  },
+  {
+   "id": "calc-min",
+   "title": "Mesh hesaplayıcı, En küçük: derinliğin adımlardaki en küçüğü",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.meshCalculator"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hesap"
+    },
+    "expression": "depth",
+    "summary": "min",
+    "name": "En küçük derinlik",
+    "output": "en-kucuk.nc",
+    "add": true,
+    "layer": {
+     "newName": "Mesh hesabı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Mesh hesaplayıcı",
+    "summary": "“En küçük derinlik”: 10 düğüm, 3 adımın en küçüğü. “en-kucuk.nc” yazıldı.",
+    "outputs": {
+     "file": "en-kucuk.nc"
+    },
+    "layers": [
+     {
+      "id": "islem-mesh-hesabi",
+      "name": "Mesh hesabı",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-mesh-hesabi",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       0.125,
+       0.0,
+       4420040.0,
+       0.0,
+       -0.125
+      ],
+      "width": 320,
+      "height": 320,
+      "bands": 1,
+      "sample": "f32",
+      "file": "en-kucuk.nc",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Viridis"
+      },
+      "dataset": {
+       "variable": "En_kucuk_derinlik",
+       "mesh": "Mesh2d"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-mesh-hesabi": "hesap"
+    },
+    "multidimOf": {
+     "en-kucuk.nc": "calc-5.nc"
+    }
+   }
+  },
+  {
+   "id": "calc-min-eklemeden",
+   "title": "Mesh hesaplayıcı, Çizime ekle kapalı: dosya yazılır, katman ve adım yok",
+   "document": "multidim.kcad",
+   "selection": [],
+   "run": {
+    "tool": "multidim.meshCalculator"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "hesap"
+    },
+    "expression": "depth",
+    "summary": "min",
+    "name": "En küçük derinlik",
+    "output": "en-kucuk.nc",
+    "add": false,
+    "layer": {
+     "newName": "Mesh hesabı"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "undo": null,
+    "summary": "“En küçük derinlik”: 10 düğüm, 3 adımın en küçüğü. “en-kucuk.nc” yazıldı.",
+    "outputs": {
+     "file": "en-kucuk.nc"
+    },
+    "layers": [],
+    "added": [],
+    "multidimOf": {
+     "en-kucuk.nc": "calc-5.nc"
+    }
+   }
+  },
+  {
    "id": "calc-places",
    "title": "Mesh hesaplayıcı, düğüm ve yüz veri setleri birlikte: ret",
    "document": "multidim.kcad",

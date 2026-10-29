@@ -1105,6 +1105,201 @@
    ]
   },
   {
+   "id": "areas-toward",
+   "title": "Hizmet alanları: Okul A'ya doğru 150 ve 300 m, tek yönlü sokaklar ters işler; yollarla (docs/adr/0741)",
+   "document": "network.kcad",
+   "run": {
+    "tool": "network.serviceAreas"
+   },
+   "values": {
+    "network": {
+     "network": "yollar",
+     "cost": "Uzunluk"
+    },
+    "facilities": {
+     "scope": "selection"
+    },
+    "breaks": "150 300",
+    "shape": "disc",
+    "merged": true,
+    "trim": 20,
+    "lines": true,
+    "direction": "to"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "1 tesisin 2 aralıkta 2 hizmet alanı yazıldı (8 yol); “Yollar” ağında Uzunluk.",
+    "undo": "Hizmet alanları",
+    "layers": [
+     {
+      "id": "islem-hizmet-alani",
+      "name": "Hizmet alanı",
+      "style": {
+       "color": "#1976D2",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "fill": "#1976D233"
+      }
+     },
+     {
+      "id": "islem-hizmet-alani-cizgileri",
+      "name": "Hizmet alanı çizgileri",
+      "style": {
+       "color": "#1565C0",
+       "lineType": "continuous",
+       "lineWeight": 0.35
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Başlangıç": "0.000",
+       "Bitiş": "150.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 13170.793862638593
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-hizmet-alani",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Başlangıç": "0.000",
+       "Bitiş": "300.000"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 26447.91313625383
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–150"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 50.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–150"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 50.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–150"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 100.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "0–150"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 100.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "150–300"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 10.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "150–300"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 140.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "150–300"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 140.0
+     },
+     {
+      "kind": "polyline",
+      "layerId": "islem-hizmet-alani-cizgileri",
+      "attrs": {
+       "Ağ": "Yollar",
+       "Maliyet": "Uzunluk",
+       "Tesis": "Okul A",
+       "Aralık": "150–300"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 50.0
+     }
+    ],
+    "log": [
+     {
+      "level": "info",
+      "text": "Yollar: alanı son aralığın içinde kesenler: kenar 7 (kapalı kenarlar ifadesiyle kapalı), kenar 2 (tek yön, ters yönde); 3 kenar hiçbir tesise bağlanmayan parçalarda."
+     }
+    ],
+    "outputs": {
+     "count": 2
+    }
+   },
+   "selection": [
+    11
+   ]
+  },
+  {
    "id": "refuse-network",
    "title": "Projede olmayan ağ adı verilirse çalışmaz",
    "document": "network.kcad",

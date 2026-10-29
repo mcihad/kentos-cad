@@ -158,7 +158,7 @@ def gathered(sources):
 
 
 REF_POINTS = {name: gathered(ref(name)["sources"]) for name in (
-    "idw", "idw-yaricap", "tin", "dogal-komsu", "spline", "kriging-kuresel")}
+    "idw", "idw-yaricap", "tin", "dogal-komsu", "spline", "kriging-kuresel", "spline-gerilimli", "kriging-ustel", "kriging-gauss")}
 
 
 def case(id, title, tool, values, refname, *, input_layer, layer_name, file=None, cross=False, kriging_error=False, density=None, add=True):
@@ -277,6 +277,7 @@ def cases():
              {"weightField": "Ağırlık", "unit": "metrePerHectare", "cellSize": 4}, "cizgi-agirlikli-otomatik", input_layer="yollar",
              layer_name="Çizgi yoğunluğu", density="lines"),
     ]
+    out += more_cases()
     refused = lambda id, title, tool, values, message: {
         "id": id, "title": title, "document": "interpolation.kcad", "selection": [], "run": {"tool": tool}, "values": values,
         "expect": {"status": "error", "message": message},
@@ -292,6 +293,65 @@ def cases():
         refused("auto-few", "Kriging otomatik variogram, beş doğrusal nokta, üç aralık: ikisi dolu", "interpolation.kriging",
                 {"input": {"scope": "layer", "layerId": "dogru"}, "lags": 3},
                 "Variogram için yeterli nokta çifti yok (üçten az dolu aralık): Variogram'ı elle girin."),
+    ]
+    return out
+
+
+def more_cases():
+    """The options the first cases leave untried (docs/adr/0741 §2): tension splines, the other variogram models, the
+    turned raster's grid for every surface and the kernel, the other kernels and units, no cross-validation, and the
+    tools with Çizime ekle off."""
+    I, N, S, K, T, D, L = ("interpolation.idw", "interpolation.naturalNeighbor", "interpolation.spline", "interpolation.kriging",
+                           "interpolation.tin", "density.kernel", "density.line")
+    grid = {"field": "Değer", "extent": "raster", "grid": {"scope": "layer", "layerId": "izgara"}}
+    out = [
+        case("spline-tension", "Spline gerilimli 0,1, 12 nokta, çapraz doğrulamalı", S,
+             {"cellSize": 5, "cross": True, "splineType": "tension"}, "spline-gerilimli", input_layer="noktalar", layer_name="Spline",
+             cross=True),
+        case("kriging-exponential", "Kriging üstel, elle variogram, hata yüzeyiyle", K,
+             {"cellSize": 5, "model": "exponential", "variogram": "manual", "nugget": 0, "sill": 100, "range": 150,
+              "errorSurface": True, "cross": True}, "kriging-ustel", input_layer="noktalar", layer_name="Kriging", cross=True,
+             kriging_error=True),
+        case("kriging-gaussian", "Kriging Gauss, elle variogram, hata yüzeyiyle", K,
+             {"cellSize": 5, "model": "gaussian", "variogram": "manual", "nugget": 1, "sill": 80, "range": 60,
+              "errorSurface": True, "cross": True}, "kriging-gauss", input_layer="noktalar", layer_name="Kriging", cross=True,
+             kriging_error=True),
+        case("tin-grid", "TIN'den raster, Değer alanından, dönük rasterin ızgarasında", T, grid, "tin-alan-donuk-izgara",
+             input_layer="noktalar", layer_name="TIN"),
+        case("natural-grid", "Doğal komşu, Değer alanından, dönük rasterin ızgarasında", N, grid, "dogal-komsu-alan-donuk-izgara",
+             input_layer="noktalar", layer_name="Doğal komşu"),
+        case("spline-grid", "Spline, Değer alanından, dönük rasterin ızgarasında", S, grid, "spline-alan-donuk-izgara",
+             input_layer="noktalar", layer_name="Spline"),
+        case("kriging-grid", "Kriging küresel, elle variogram, Değer alanından, dönük rasterin ızgarasında", K,
+             {**grid, "variogram": "manual", "nugget": 0.5, "sill": 120, "range": 90}, "kriging-alan-donuk-izgara",
+             input_layer="noktalar", layer_name="Kriging"),
+        case("kernel-grid", "Çekirdek yoğunluğu, dörtlü, 30 m, dönük rasterin ızgarasında", D,
+             {"radius": 30, "extent": "raster", "grid": {"scope": "layer", "layerId": "izgara"}}, "cekirdek-donuk-izgara",
+             input_layer="olaylar", layer_name="Yoğunluk", density="points"),
+    ]
+    for kernel, name in (("triangular", "üçgen"), ("uniform", "düzgün"), ("epanechnikov", "Epanechnikov"), ("triweight", "üçlü ağırlık")):
+        out.append(case(f"kernel-{kernel}", f"Çekirdek yoğunluğu, {name} çekirdek, 30 m, 10 m hücre", D,
+                        {"radius": 30, "cellSize": 10, "kernel": kernel}, f"cekirdek-{kernel}", input_layer="olaylar",
+                        layer_name="Yoğunluk", density="points"))
+    out += [
+        case("kernel-decare", "Çekirdek yoğunluğu, dekar başına", D, {"radius": 30, "cellSize": 10, "unit": "decare"}, "cekirdek-dekar",
+             input_layer="olaylar", layer_name="Yoğunluk", density="points"),
+        case("kernel-square-metre", "Çekirdek yoğunluğu, m² başına", D, {"radius": 30, "cellSize": 10, "unit": "squareMetre"},
+             "cekirdek-metrekare", input_layer="olaylar", layer_name="Yoğunluk", density="points"),
+        case("line-square-metre", "Çizgi yoğunluğu, m/m²", L, {"radius": 12, "cellSize": 4, "unit": "metrePerSquareMetre"},
+             "cizgi-metrekare", input_layer="yollar", layer_name="Çizgi yoğunluğu", density="lines"),
+        case("idw-quiet", "IDW, Çizime ekle kapalı: dosya yazılır, katman ve adım yok", I, {"cellSize": 5, "add": False}, "idw",
+             input_layer="noktalar", layer_name="IDW", add=False),
+        case("natural-quiet", "Doğal komşu, çapraz doğrulamasız, Çizime ekle kapalı", N, {"cellSize": 10, "add": False}, "dogal-komsu",
+             input_layer="noktalar", layer_name="Doğal komşu", add=False),
+        case("spline-quiet", "Spline, çapraz doğrulamasız, Çizime ekle kapalı", S, {"cellSize": 5, "add": False}, "spline",
+             input_layer="noktalar", layer_name="Spline", add=False),
+        case("tin-quiet", "TIN'den raster, Çizime ekle kapalı", T, {"cellSize": 5, "add": False}, "tin", input_layer="noktalar",
+             layer_name="TIN", add=False),
+        case("kernel-quiet", "Çekirdek yoğunluğu, Çizime ekle kapalı", D, {"radius": 30, "cellSize": 10, "add": False}, "cekirdek-quartic",
+             input_layer="olaylar", layer_name="Yoğunluk", density="points", add=False),
+        case("line-quiet", "Çizgi yoğunluğu, Çizime ekle kapalı", L, {"radius": 12, "cellSize": 4, "add": False}, "cizgi",
+             input_layer="yollar", layer_name="Çizgi yoğunluğu", density="lines", add=False),
     ]
     return out
 

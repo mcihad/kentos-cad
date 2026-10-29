@@ -920,7 +920,19 @@ fn the_conversion_cases_do_what_they_say() {
 /// the drawing's reading copy as the background runs it.
 #[test]
 fn the_table_point_cases_do_what_they_say() {
-    let file = case_file("table-points.json");
+    table_point_cases("table-points.json", 4);
+}
+
+/// Tablodan nokta from every system its Koordinat sistemi offers (docs/adr/0741):
+/// scripts/fixtures/table_points_systems_cases.py puts two places into each
+/// system and moves them to the drawing's with PROJ's named EPSG paths.
+#[test]
+fn the_table_point_system_cases_do_what_they_say() {
+    table_point_cases("table-points-systems.json", 24);
+}
+
+fn table_point_cases(name: &str, at_least: usize) {
+    let file = case_file(name);
     let tol = file["tolerance"].as_f64().expect("a tolerance");
     let more: Vec<String> = file["toleranceFields"]
         .as_array()
@@ -955,7 +967,7 @@ fn the_table_point_cases_do_what_they_say() {
         problems.extend(found);
     }
     println!("{}", report.join("\n"));
-    assert!(report.len() >= 4, "{} cases", report.len());
+    assert!(report.len() >= at_least, "{} cases", report.len());
     assert!(
         problems.is_empty(),
         "\n{}\n\n{}",
@@ -2262,6 +2274,36 @@ fn the_geometry_cases_do_what_they_say() {
     }
     println!("{}", report.join("\n"));
     assert!(report.len() >= 19, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
+/// Koordinat sistemine dönüştür from every source system it offers
+/// (docs/adr/0741): scripts/fixtures/reproject_systems_cases.py puts a parcel
+/// into each system and moves its corners with PROJ's named EPSG paths.
+#[test]
+fn the_reproject_system_cases_do_what_they_say() {
+    let file = case_file("reproject.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let found = check_measured(c, play(c, &registry, false, &json!({})), tol, tol);
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 23, "{} cases", report.len());
     assert!(
         problems.is_empty(),
         "\n{}\n\n{}",

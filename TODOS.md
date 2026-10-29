@@ -2835,6 +2835,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   [ADR 0652](docs/adr/0652-every-processing-tool-through-the-command.md).**
 - [ ] `CBS-41` doğal dil başarısının ayrı ölçümü (dilim): `kentos.gis_eval` (valid, scope, outcome, untrusted, hidden; `report` oranları; `python -m kentos.gis_eval`), `fixtures/gis-eval/v1` (üç görev, 15 elle yazılmış cevap), `test_gis_eval.py`. Kalan: gerçek bir modelin cevaplarının düzenli koşturulması, daha çok görev, açık seçenek hücreleri, modellerin ve uzun işin kalanı. — **26 Ekim,
   [ADR 0653](docs/adr/0653-gis-agent-eval.md).**
+- [ ] `CBS-41` açık seçenek hücreleri ve yazmayan adımın değişmezi (dilim): İşlemler araçlarında 788 hücrenin 781'i bağımsız
+  başvurulu durumla denenir (287 → 7); yeni `table_points_systems_cases.py` ve `reproject_systems_cases.py` (PROJ'un adlı EPSG
+  yolları, 1 mm), on dokuz başvurunun genişlemesi; Rust ve Python ortak durum koşucuları plan, doğrulama, sorgu ve retten sonra
+  revizyonu, kirliliği, geri alma ve yinelemeyi denetler. Kalan: numaralama ve kenar uzunluklarının 6 hücresine bağımsız başvuru,
+  çizgi yoğunluğunun raster ızgarası, komutların 4141 açık seçenek hücresi. — **29 Ekim,
+  [ADR 0741](docs/adr/0741-processing-option-cells-and-read-only-steps.md).**
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
   `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;
   `feed_paging_cases.py`, `tests/all/paging.rs`, `test_services.py`. Kalan: canlı sağlayıcı, ETag, belirteç yenileme. — **18 Ekim,

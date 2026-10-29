@@ -1037,33 +1037,46 @@ def number_key(v):
     return ("n", d[0] / 10 ** d[1]) if d is not None and "," not in v else ("t", v)
 
 
-def case_expr_select(cid, title, layer_id, condition, test):
+def case_expr_select(cid, title, layer_id, condition, test, mode="new", selection=None):
     inputs = on_layer(layer_id)
     hits = [i for i in inputs if test(i)]
+    current, hit = list(selection or []), set(hits)
+    sel = {"new": hits, "add": current + [i for i in hits if i not in current], "remove": [i for i in current if i not in hit]}.get(
+        mode, [i for i in current if i in hit])
     expect = {
         "status": "ok",
-        "summary": f"{len(hits)} / {len(inputs)} nesne koşulu sağladı; seçimde {len(hits)} nesne var.",
+        "summary": f"{len(hits)} / {len(inputs)} nesne koşulu sağladı; seçimde {len(dict.fromkeys(sel))} nesne var.",
         "undo": None,
-        "selection": hits,
+        "selection": sel,
         "outputs": {"count": len(hits), "matched": hits},
     }
-    return {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "selection.byExpression"},
-            "values": {"input": {"scope": "layer", "layerId": layer_id}, "condition": condition}, "expect": expect}
+    values = {"input": {"scope": "layer", "layerId": layer_id}, "condition": condition}
+    if mode != "new":
+        values["mode"] = mode
+    c = {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "selection.byExpression"}, "values": values, "expect": expect}
+    if selection is not None:
+        c["selection"] = selection
+    return c
 
 
-def case_expr_calculate(cid, title, layer_id, field, value, compute):
+def case_expr_calculate(cid, title, layer_id, field, value, compute, empty_rule="keep"):
     inputs = on_layer(layer_id)
-    changes, empty = {}, 0
+    changes, empty, same = {}, 0, 0
     for i in inputs:
         v = compute(i)
-        if v is None:
+        if v is None and empty_rule == "keep":
             empty += 1
             continue
-        v = canonical_for(layer_id, field, v)
+        # Boşalt: an empty result is written as empty text (docs/adr/0741).
+        v = "" if v is None else canonical_for(layer_id, field, v)
+        if BY_ID[i]["attrs"].get(field) == v:
+            same += 1
+            continue
         attrs = dict(BY_ID[i]["attrs"])
         attrs[field] = v
         changes[i] = attrs
-    notes = [f"{empty} nesnede sonuç boş olduğu için dokunulmadı"] if empty else []
+    notes = ([f"{same} nesnede değer zaten aynıydı"] if same else []) + (
+        [f"{empty} nesnede sonuç boş olduğu için dokunulmadı"] if empty else [])
     expect = {
         "status": "ok",
         "summary": f"{len(changes)} nesnede “{field}” yazıldı" + "".join(f"; {n}" for n in notes) + ".",
@@ -1073,7 +1086,7 @@ def case_expr_calculate(cid, title, layer_id, field, value, compute):
     }
     return {"id": cid, "title": title, "document": "queries.kcad", "run": {"tool": "attributes.calculate"},
             "values": {"input": {"scope": "layer", "layerId": layer_id}, "field": field, "value": value, "where": "",
-                       "empty": "keep", "label": False}, "expect": expect}
+                       "empty": empty_rule, "label": False}, "expect": expect}
 
 
 def nearest(i, layer_id):
@@ -1101,6 +1114,16 @@ def world_cases():
                             "kayit", "Ada", "katmandan('Parsel', Ada, 'Parsel', Parsel)",
                             lambda i: next((BY_ID[p]["attrs"]["Ada"] for p in parcels
                                             if number_key(BY_ID[p]["attrs"].get("Parsel")) == number_key(BY_ID[i]["attrs"].get("Parsel"))), None)),
+        # The options the first cases leave untried (docs/adr/0741 §2).
+        case_expr_select("expr-add", "İfadeyle seç, seçime ekle: seçili iki parsele Yol'la kesişenler eklenir", "parsel", "kesişir('Yol')",
+                         lambda i: any(related(i, r, "intersects") for r in roads), "add", [parcels[0], parcels[-1]]),
+        case_expr_select("expr-remove", "İfadeyle seç, seçimden çıkar: Yol'la kesişenler seçimden çıkar", "parsel", "kesişir('Yol')",
+                         lambda i: any(related(i, r, "intersects") for r in roads), "remove", parcels[:3]),
+        case_expr_calculate("expr-from-layer-clear", "Öznitelik hesapla, Boşalt: eşi olmayan kaydın adası boş metin olur",
+                            "kayit", "Ada", "katmandan('Parsel', Ada, 'Parsel', Parsel)",
+                            lambda i: next((BY_ID[p]["attrs"]["Ada"] for p in parcels
+                                            if number_key(BY_ID[p]["attrs"].get("Parsel")) == number_key(BY_ID[i]["attrs"].get("Parsel"))), None),
+                            "clear"),
         case_expr_calculate("expr-variable", "Öznitelik hesapla, projenin değişkeniyle: @proje_adi çizimin adıdır",
                             "parsel", "Proje", "@proje_adi || ' / ' || Parsel",
                             lambda i: f"{DOCUMENT['name']} / {BY_ID[i]['attrs']['Parsel']}"),
@@ -1161,6 +1184,20 @@ def build_processing():
         case_inside("inside-first", "İlk değer: ağaçların türü, çizim sırasıyla ilki",
                     {"target": lay("parsel"), "source": lay("agac"), "relation": "within", "stat": "first", "field": "Tür", "output": "İlk ağaç"},
                     parcels, trees, "within", "first", "Tür", "İlk ağaç"),
+        case_inside("inside-min", "En az: parseldeki yapıların en küçük taban alanı (docs/adr/0741)",
+                    {"target": lay("parsel"), "source": lay("yapi"), "relation": "intersects", "stat": "min", "field": "Taban alanı",
+                     "output": "En küçük taban"},
+                    parcels, buildings, "intersects", "min", "Taban alanı", "En küçük taban"),
+        case_inside("inside-max", "En çok: parseldeki yapıların en büyük taban alanı",
+                    {"target": lay("parsel"), "source": lay("yapi"), "relation": "intersects", "stat": "max", "field": "Taban alanı",
+                     "output": "En büyük taban"},
+                    parcels, buildings, "intersects", "max", "Taban alanı", "En büyük taban"),
+        case_location("location-add", "Seçime ekle: seçili parsele yolla kesişenler eklenir",
+                      {"input": lay("parsel"), "relation": "intersects", "reference": lay("yol"), "mode": "add"}, selection=[parcels[-1]],
+                      inputs=parcels, refs=roads, mode="add"),
+        case_location("location-in-selection", "Seçimin içinden seç: seçili üç parselden yalnız yolla kesişenler kalır",
+                      {"input": lay("parsel"), "relation": "intersects", "reference": lay("yol"), "mode": "within"}, selection=[1, 2, 3],
+                      inputs=parcels, refs=roads, mode="within"),
         case_enclosing("enclosing-parcel", "Çevreleyenden bilgi al: yapıların parsel numarası; sınırdaki yapı ilk parselden, delikteki değişmez",
                        {"target": lay("yapi"), "source": lay("parsel"), "field": "Parsel", "output": ""},
                        buildings, parcels, "Parsel", "Parsel"),
@@ -1187,6 +1224,10 @@ def build_processing():
                   {"target": lay("parsel"), "targetKey": "Parsel", "sourceKind": "layer", "source": lay("kayit"), "sourceKey": "", "fields": "Malik",
                    "duplicates": "first"},
                   parcels, "Parsel", layer_rows("kayit", "Parsel", ["Malik"]), "Parsel", ["Malik"], "", False),
+        case_join("join-only-empty", "Anahtarla birleştir, Yalnız boşlara: dolu alanlar korunur (docs/adr/0741)",
+                  {"target": lay("parsel"), "targetKey": "Parsel", "sourceKind": "layer", "source": lay("kayit"), "sourceKey": "", "fields": "Malik",
+                   "existing": "empty"},
+                  parcels, "Parsel", layer_rows("kayit", "Parsel", ["Malik"]), "Parsel", ["Malik"], "", True),
         {
             "id": "refuse-join-column",
             "title": "Dosyada kaynak anahtar sütunu yoksa çalışmaz, sütunları söyler",

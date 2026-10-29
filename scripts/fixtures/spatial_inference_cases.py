@@ -819,6 +819,11 @@ def cases():
                     {"input": LAY("kaza"), "valueField": "Ağırlık", "standardize": False, "correction": "bonferroni", "permutations": 499,
                      "seed": 5},
                     local_moran(kaza, "Ağırlık", "band", None, 8, False, 499, 5, "bonferroni", "0.05", ("layer", "kaza")), "kaza"))
+    out.append(case("lisa-inverse", "Yerel Moran, ters uzaklık, %1 anlamlılık, 199 permütasyon, tohum 4 (docs/adr/0741)",
+                    "stats.localMoran",
+                    {"input": LAY("parsel"), "valueField": "Değer", "concept": "inverse", "significance": "0.01", "permutations": 199,
+                     "seed": 4},
+                    local_moran(parsel, "Değer", "inverse", None, 8, True, 199, 4, "none", "0.01", ("layer", "parsel")), "parsel"))
     sel = ids("parsel")[:18]
     out.append(case("lisa-subset", "Yerel Moran, seçili 18 parsel: alt küme diye söylenir, profilde Kapsam", "stats.localMoran",
                     {"input": {"scope": "selection"}, "valueField": "Değer"},

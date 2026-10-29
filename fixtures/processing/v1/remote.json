@@ -16,7 +16,8 @@
   "cok-bantli.tif": "remote/cok-bantli.tif",
   "pankromatik.tif": "remote/pankromatik.tif",
   "scl.tif": "remote/scl.tif",
-  "siniflar-model.tif": "remote/siniflar-model.tif"
+  "siniflar-model.tif": "remote/siniflar-model.tif",
+  "kaba.tif": "remote/kaba.tif"
  },
  "documents": {
   "remote.kcad": {
@@ -1922,8 +1923,8 @@
    "title": "Denetimli sınıflandırma, sınıf adları boş: ret",
    "document": "remote.kcad",
    "selection": [
-    20,
-    22
+    21,
+    23
    ],
    "run": {
     "tool": "remote.supervised"
@@ -2037,6 +2038,990 @@
    "expect": {
     "status": "error",
     "message": "Ağırlıkların sayısı (2) çok bantlının bant sayısı (4) değil."
+   }
+  },
+  {
+   "id": "composite-bilinear",
+   "title": "Bant birleştir: kaba bant çift doğrusal örneklenir; ızgara ilk rasterin",
+   "document": "remote.kcad",
+   "selection": [
+    3,
+    15
+   ],
+   "run": {
+    "tool": "remote.composite"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "sampling": "bilinear"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Bant birleştir",
+    "summary": "12 × 10 hücrelik raster; “kirmizi-birlesik.tif” yazıldı. 2 bant.",
+    "outputs": {
+     "file": "kirmizi-birlesik.tif",
+     "table": {
+      "columns": [
+       "Bant",
+       "Kaynak",
+       "Kaynağın bandı"
+      ],
+      "rows": [
+       [
+        "1",
+        "Kırmızı",
+        "1"
+       ],
+       [
+        "2",
+        "Kaba",
+        "1"
+       ]
+      ]
+     }
+    },
+    "layers": [
+     {
+      "id": "islem-bant-birlestir",
+      "name": "Bant birleştir",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-bant-birlestir",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 2,
+      "sample": "u16",
+      "file": "kirmizi-birlesik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Arazi"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-bant-birlestir": "kirmizi"
+    },
+    "remoteOf": {
+     "kirmizi-birlesik.tif": "birlestir-kaba-cift-dogrusal"
+    }
+   }
+  },
+  {
+   "id": "index-gndvi",
+   "title": "Spektral indis, GNDVI: yeşil ve yakın kızılötesi",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.index"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "index": "gndvi"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Spektral indis",
+    "summary": "12 × 10 hücrelik raster; “goruntu-indis.tif” yazıldı. GNDVI -0.6277 … 0.6639.",
+    "outputs": {
+     "file": "goruntu-indis.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-spektral-indis",
+      "name": "Spektral indis",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-spektral-indis",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "goruntu-indis.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Arazi",
+       "invert": true
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-spektral-indis": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-indis.tif": "indis-gndvi"
+    }
+   }
+  },
+  {
+   "id": "index-savi",
+   "title": "Spektral indis, SAVI: L 0,5",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.index"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "index": "savi"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Spektral indis",
+    "summary": "12 × 10 hücrelik raster; “goruntu-indis.tif” yazıldı. SAVI -0.7515 … 1.2290.",
+    "outputs": {
+     "file": "goruntu-indis.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-spektral-indis",
+      "name": "Spektral indis",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-spektral-indis",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "goruntu-indis.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Arazi",
+       "invert": true
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-spektral-indis": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-indis.tif": "indis-savi"
+    }
+   }
+  },
+  {
+   "id": "index-ndwi",
+   "title": "Spektral indis, NDWI: su indisi, su mavi",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.index"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "index": "ndwi"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Spektral indis",
+    "summary": "12 × 10 hücrelik raster; “goruntu-indis.tif” yazıldı. NDWI -0.6639 … 0.6277.",
+    "outputs": {
+     "file": "goruntu-indis.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-spektral-indis",
+      "name": "Spektral indis",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-spektral-indis",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "goruntu-indis.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Mavi-kırmızı",
+       "invert": true
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-spektral-indis": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-indis.tif": "indis-ndwi"
+    }
+   }
+  },
+  {
+   "id": "index-ndbi",
+   "title": "Spektral indis, NDBI: kısa dalga bandı 1",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.index"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "index": "ndbi",
+    "swir": 1
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Spektral indis",
+    "summary": "12 × 10 hücrelik raster; “goruntu-indis.tif” yazıldı. NDBI -0.7929 … 0.6544.",
+    "outputs": {
+     "file": "goruntu-indis.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-spektral-indis",
+      "name": "Spektral indis",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-spektral-indis",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "goruntu-indis.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Mavi-kırmızı"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-spektral-indis": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-indis.tif": "indis-ndbi"
+    }
+   }
+  },
+  {
+   "id": "index-ratio",
+   "title": "Spektral indis, oran: bant 4 ÷ bant 3",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.index"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "index": "ratio"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Spektral indis",
+    "summary": "12 × 10 hücrelik raster; “goruntu-indis.tif” yazıldı. Oran 0.3322 … 10.0774.",
+    "outputs": {
+     "file": "goruntu-indis.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-spektral-indis",
+      "name": "Spektral indis",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-spektral-indis",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "goruntu-indis.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Mavi-kırmızı"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-spektral-indis": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-indis.tif": "indis-ratio"
+    }
+   }
+  },
+  {
+   "id": "change-ratio",
+   "title": "Değişim tespiti, oran: değişmeyen 1, renk 1'in çevresinde eşit",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.change"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "after": {
+     "scope": "layer",
+     "layerId": "sonraki"
+    },
+    "band": 4,
+    "method": "ratio"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Değişim tespiti",
+    "summary": "12 × 10 hücrelik raster; “goruntu-degisim.tif” yazıldı. Artan 39, azalan 79, değişmeyen 0 hücre.",
+    "outputs": {
+     "file": "goruntu-degisim.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-degisim",
+      "name": "Değişim",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-degisim",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "goruntu-degisim.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": 0.7872340679168701,
+       "max": 1.2127659320831299,
+       "ramp": "Mavi-kırmızı"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-degisim": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-degisim.tif": "degisim-ratio"
+    }
+   }
+  },
+  {
+   "id": "change-normalized",
+   "title": "Değişim tespiti, normalize fark",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.change"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "after": {
+     "scope": "layer",
+     "layerId": "sonraki"
+    },
+    "band": 4,
+    "method": "normalized"
+   },
+   "expect": {
+    "status": "ok",
+    "undo": "Değişim tespiti",
+    "summary": "12 × 10 hücrelik raster; “goruntu-degisim.tif” yazıldı. Artan 39, azalan 79, değişmeyen 0 hücre.",
+    "outputs": {
+     "file": "goruntu-degisim.tif"
+    },
+    "layers": [
+     {
+      "id": "islem-degisim",
+      "name": "Değişim",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-degisim",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       10.0,
+       0.0,
+       4420000.0,
+       0.0,
+       -10.0
+      ],
+      "width": 12,
+      "height": 10,
+      "bands": 1,
+      "sample": "f32",
+      "file": "goruntu-degisim.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "manual",
+       "min": -0.09615384787321091,
+       "max": 0.09615384787321091,
+       "ramp": "Mavi-kırmızı"
+      }
+     }
+    ],
+    "layerAbove": {
+     "islem-degisim": "goruntu"
+    },
+    "remoteOf": {
+     "goruntu-degisim.tif": "degisim-normalized"
+    }
+   }
+  },
+  {
+   "id": "composite-bilinear-eklemeden",
+   "title": "Bant birleştir, Çizime ekle kapalı: dosya yazılır, katman ve adım yok",
+   "document": "remote.kcad",
+   "selection": [
+    3,
+    15
+   ],
+   "run": {
+    "tool": "remote.composite"
+   },
+   "values": {
+    "input": {
+     "scope": "selection"
+    },
+    "sampling": "bilinear",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "12 × 10 hücrelik raster; “kirmizi-birlesik.tif” yazıldı. 2 bant.",
+    "outputs": {
+     "file": "kirmizi-birlesik.tif",
+     "table": {
+      "columns": [
+       "Bant",
+       "Kaynak",
+       "Kaynağın bandı"
+      ],
+      "rows": [
+       [
+        "1",
+        "Kırmızı",
+        "1"
+       ],
+       [
+        "2",
+        "Kaba",
+        "1"
+       ]
+      ]
+     }
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "kirmizi-birlesik.tif": "birlestir-kaba-cift-dogrusal"
+    }
+   }
+  },
+  {
+   "id": "split-four-eklemeden",
+   "title": "Bantlara ayır, Çizime ekle kapalı: dört dosya yazılır, katman ve adım yok",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.split"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "4 bant ayrı rasterlere yazıldı: “goruntu-b1.tif” … “goruntu-b4.tif” (12 × 10 hücre).",
+    "outputs": {
+     "table": {
+      "columns": [
+       "Bant",
+       "Dosya"
+      ],
+      "rows": [
+       [
+        "1",
+        "goruntu-b1.tif"
+       ],
+       [
+        "2",
+        "goruntu-b2.tif"
+       ],
+       [
+        "3",
+        "goruntu-b3.tif"
+       ],
+       [
+        "4",
+        "goruntu-b4.tif"
+       ]
+      ]
+     }
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "goruntu-b1.tif": "ayir-bant-1",
+     "goruntu-b2.tif": "ayir-bant-2",
+     "goruntu-b3.tif": "ayir-bant-3",
+     "goruntu-b4.tif": "ayir-bant-4"
+    }
+   }
+  },
+  {
+   "id": "index-gndvi-eklemeden",
+   "title": "Spektral indis, Çizime ekle kapalı",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.index"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "index": "gndvi",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "12 × 10 hücrelik raster; “goruntu-indis.tif” yazıldı. GNDVI -0.6277 … 0.6639.",
+    "outputs": {
+     "file": "goruntu-indis.tif"
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "goruntu-indis.tif": "indis-gndvi"
+    }
+   }
+  },
+  {
+   "id": "supervised-distance-eklemeden",
+   "title": "Denetimli sınıflandırma, Çizime ekle kapalı",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.supervised"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "training": {
+     "scope": "layer",
+     "layerId": "egitim"
+    },
+    "classField": "Sınıf",
+    "method": "distance",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "12 × 10 hücrelik raster; “goruntu-siniflar.tif” yazıldı. 4 sınıf, 79 eğitim hücresi.",
+    "outputs": {
+     "file": "goruntu-siniflar.tif",
+     "table": {
+      "columns": [
+       "Sınıf",
+       "Değer",
+       "Eğitim hücresi",
+       "Hücre sayısı",
+       "Alan (m²)"
+      ],
+      "rows": [
+       [
+        "Orman",
+        "1",
+        "15",
+        "22",
+        "2200.00"
+       ],
+       [
+        "Su",
+        "2",
+        "31",
+        "40",
+        "4000.00"
+       ],
+       [
+        "Toprak",
+        "3",
+        "21",
+        "40",
+        "4000.00"
+       ],
+       [
+        "Yapı",
+        "4",
+        "12",
+        "16",
+        "1600.00"
+       ]
+      ]
+     }
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "goruntu-siniflar.tif": "denetimli-distance"
+    }
+   }
+  },
+  {
+   "id": "unsupervised-four-eklemeden",
+   "title": "Denetimsiz sınıflandırma, Çizime ekle kapalı",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.unsupervised"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "clusters": 4,
+    "iterations": 20,
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "12 × 10 hücrelik raster; “goruntu-kumeler.tif” yazıldı. 4 küme, 2 yineleme (118 örnek hücre).",
+    "outputs": {
+     "file": "goruntu-kumeler.tif",
+     "table": {
+      "columns": [
+       "Küme",
+       "Hücre sayısı",
+       "Alan (m²)",
+       "Merkez 1",
+       "Merkez 2",
+       "Merkez 3",
+       "Merkez 4"
+      ],
+      "rows": [
+       [
+        "1",
+        "40",
+        "4000.00",
+        "898.300",
+        "797.250",
+        "501.425",
+        "303.200"
+       ],
+       [
+        "2",
+        "0",
+        "0.00",
+        "882.248",
+        "981.051",
+        "844.768",
+        "1324.653"
+       ],
+       [
+        "3",
+        "22",
+        "2200.00",
+        "401.727",
+        "703.273",
+        "396.318",
+        "3194.727"
+       ],
+       [
+        "4",
+        "56",
+        "5600.00",
+        "1243.875",
+        "1400.071",
+        "1557.571",
+        "1868.071"
+       ]
+      ]
+     }
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "goruntu-kumeler.tif": "denetimsiz-4-20"
+    }
+   }
+  },
+  {
+   "id": "change-ratio-eklemeden",
+   "title": "Değişim tespiti, Çizime ekle kapalı",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.change"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "after": {
+     "scope": "layer",
+     "layerId": "sonraki"
+    },
+    "band": 4,
+    "method": "ratio",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "12 × 10 hücrelik raster; “goruntu-degisim.tif” yazıldı. Artan 39, azalan 79, değişmeyen 0 hücre.",
+    "outputs": {
+     "file": "goruntu-degisim.tif"
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "goruntu-degisim.tif": "degisim-ratio"
+    }
+   }
+  },
+  {
+   "id": "pansharpen-mean-eklemeden",
+   "title": "Görüntü birleştirme, Çizime ekle kapalı",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.pansharpen"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "cok-bantli"
+    },
+    "pan": {
+     "scope": "layer",
+     "layerId": "pankromatik"
+    },
+    "method": "mean",
+    "sampling": "nearest",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "24 × 20 hücrelik raster; “cok-bantli-birlesim.tif” yazıldı. Basit ortalama, 4 bant.",
+    "outputs": {
+     "file": "cok-bantli-birlesim.tif"
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "cok-bantli-birlesim.tif": "birlestirme-mean-nearest"
+    }
+   }
+  },
+  {
+   "id": "qa-mask-own-eklemeden",
+   "title": "Kalite maskesi uygula, Çizime ekle kapalı",
+   "document": "remote.kcad",
+   "selection": [],
+   "run": {
+    "tool": "remote.qaMask"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "goruntu"
+    },
+    "qa": {
+     "scope": "layer",
+     "layerId": "scl"
+    },
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "12 × 10 hücrelik raster; “goruntu-maskeli.tif” yazıldı. Maskelenen 58 / 118 hücre (%49.15).",
+    "outputs": {
+     "file": "goruntu-maskeli.tif"
+    },
+    "layers": [],
+    "added": [],
+    "remoteOf": {
+     "goruntu-maskeli.tif": "kalite-maskesi-scl"
+    }
    }
   }
  ]

@@ -491,6 +491,9 @@ def cases(case):
     out.append(case("kmeans-boot-5", "k-ortalamalar, k = 5, 50 bootstrap tekrarı, tohum 2: üç küme ve iki aykırı, hepsi çok kararlı",
                     "stats.kMeans", {"input": lay, "clusters": 5, "stability": "bootstrap", "resamples": 50, "seed": 2},
                     k_means(kaza, 5, resamples=50, seed=2)))
+    out.append(case("kmeans-subset", "k-ortalamalar, k = 4, 40 alt örnek tekrarı, tohum 9 (docs/adr/0741)",
+                    "stats.kMeans", {"input": lay, "clusters": 4, "stability": "subset", "resamples": 40, "seed": 9},
+                    k_means(kaza, 4, scheme="subset", resamples=40, seed=9)))
     out.append(case("kmeans-few", "k-ortalamalar, 5 tekrar: alan en az 10 ister", "stats.kMeans",
                     {"input": lay, "clusters": 3, "stability": "bootstrap", "resamples": 5},
                     {"invalid": [{"param": "resamples", "message": "“Tekrar sayısı” en az 10 olmalı."}]}))

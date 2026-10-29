@@ -353,9 +353,9 @@ def updated(changes):
     return out
 
 
-def case_nearest(cid, title, inputs, max_d):
+def case_nearest(cid, title, inputs, max_d, measure="edges", with_bearing=True):
     targets = on_layer("durak")
-    rows = {r[0]: r for r in found(inputs, targets, 1, max_d if max_d > 0 else math.inf, "edges")}
+    rows = {r[0]: r for r in found(inputs, targets, 1, max_d if max_d > 0 else math.inf, measure)}
     changes = {}
     none = 0
     for i, a in enumerate(inputs):
@@ -367,7 +367,7 @@ def case_nearest(cid, title, inputs, max_d):
             t = BY_ID[targets[r[1]]]
             attrs["Yakın uzaklık"] = length(r[2])
             attrs["Yakın Ad"] = t["attrs"]["Ad"]
-            if r[2] > 0:
+            if r[2] > 0 and with_bearing:
                 attrs["Yakın semt"] = shown(bearing(r[3], r[4]) * 200 / math.pi, 4)
         if attrs != BY_ID[a]["attrs"]:
             changes[a] = attrs
@@ -377,8 +377,8 @@ def case_nearest(cid, title, inputs, max_d):
     if log:
         expect["log"] = log
     return {"id": cid, "title": title, "document": "proximity.kcad", "selection": inputs, "run": {"tool": "proximity.nearest"},
-            "values": {"input": {"scope": "selection"}, "targets": {"scope": "layer", "layerId": "durak"}, "measure": "edges",
-                       "max": max_d, "fields": "Ad", "prefix": "Yakın ", "bearing": True},
+            "values": {"input": {"scope": "selection"}, "targets": {"scope": "layer", "layerId": "durak"}, "measure": measure,
+                       "max": max_d, "fields": "Ad", "prefix": "Yakın ", "bearing": with_bearing},
             "expect": expect}
 
 
@@ -438,9 +438,9 @@ def case_hub():
                        "added": added, "outputs": {"count": len(added)}}}
 
 
-def case_neighbours():
+def case_neighbours(cid="neighbours-parcels", title=None, corners=True, overlaps=True, write=True):
     ids = on_layer("parsel")
-    rows_found = neighbours(ids, True, True)
+    rows_found = neighbours(ids, corners, overlaps)
     rows = [[name(ids[i], "Ad", i), name(ids[j], "Ad", j), kind, length(L), shown(area, 2) if kind == "Örtüşme" else ""]
             for i, j, kind, L, area in rows_found]
     changes = {}
@@ -452,14 +452,20 @@ def case_neighbours():
             attrs["Komşular"] = ", ".join(names)
         changes[a] = attrs
     overlapping = sum(1 for r in rows_found if r[2] == "Örtüşme") // 2
-    return {"id": "neighbours-parcels", "title": "Komşu alanlar: ortak kenarlar (biri yaylı), köşeden değen ve örtüşen parseller; komşu sayısı ve adları yazılır",
+    expect = {"status": "ok", "summary": f"{len(ids)} alanda {len(rows_found) // 2} komşuluk bulundu.",
+              "undo": "Komşu alanlar" if write else None}
+    if overlapping:
+        expect["log"] = [{"level": "warn", "text": f"{overlapping} alan çiftinin içleri örtüşüyor."}]
+    if write:
+        expect["updated"] = updated(changes)
+    expect["outputs"] = {"count": len(rows_found),
+                         "table": {"columns": ["Alan", "Komşu", "Komşuluk", "Ortak kenar", "Örtüşen alan"], "rows": rows}}
+    return {"id": cid,
+            "title": title or "Komşu alanlar: ortak kenarlar (biri yaylı), köşeden değen ve örtüşen parseller; komşu sayısı ve adları yazılır",
             "document": "proximity.kcad", "run": {"tool": "proximity.neighbors"},
-            "values": {"input": {"scope": "layer", "layerId": "parsel"}, "tolerance": 0.001, "corners": True, "overlaps": True, "name": "Ad",
-                       "write": True, "countField": "Komşu sayısı", "listField": "Komşular"},
-            "expect": {"status": "ok", "summary": f"{len(ids)} alanda {len(rows_found) // 2} komşuluk bulundu.", "undo": "Komşu alanlar",
-                       "log": [{"level": "warn", "text": f"{overlapping} alan çiftinin içleri örtüşüyor."}],
-                       "updated": updated(changes),
-                       "outputs": {"count": len(rows_found), "table": {"columns": ["Alan", "Komşu", "Komşuluk", "Ortak kenar", "Örtüşen alan"], "rows": rows}}}}
+            "values": {"input": {"scope": "layer", "layerId": "parsel"}, "tolerance": 0.001, "corners": corners, "overlaps": overlaps,
+                       "name": "Ad", "write": write, "countField": "Komşu sayısı", "listField": "Komşular"},
+            "expect": expect}
 
 
 def case_shortest():
@@ -502,6 +508,11 @@ def build():
         case_matrix_centres(),
         case_hub(),
         case_neighbours(),
+        # The options the first cases leave untried (docs/adr/0741 §2).
+        case_nearest("nearest-centres", "En yakını bul, merkezden merkeze, semtsiz: beş parselin en yakın durağı", [1, 2, 3, 4, 5], 0,
+                     "centers", False),
+        case_neighbours("neighbours-edges-only", "Komşu alanlar, yalnız ortak kenarlar: köşeden değen ve örtüşen sayılmaz", False, False),
+        case_neighbours("neighbours-table-only", "Komşu alanlar, yazmadan: yalnız tablo, adım yok", write=False),
         case_shortest(),
     ]
     return {"format": "kentos.processing-cases", "version": 1, "tolerance": 1e-9, "documents": {}, "cases": cases}

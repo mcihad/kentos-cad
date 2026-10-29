@@ -127344,6 +127344,38 @@
    }
   },
   {
+   "name": "calc depth min",
+   "kind": "calc",
+   "file": "ugrid-calc.nc",
+   "part": {
+    "variable": "depth",
+    "slice": [
+     0
+    ],
+    "mesh": "mesh",
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320
+   },
+   "spec": {
+    "expression": "depth",
+    "summary": "min",
+    "name": "En küçük derinlik"
+   },
+   "expect": {
+    "file": "calc-5.nc",
+    "summary": "“En küçük derinlik”: 10 düğüm, 3 adımın en küçüğü.",
+    "variable": "En_kucuk_derinlik"
+   }
+  },
+  {
    "name": "calc refuses 'depth + level' named 'x'",
    "kind": "calc",
    "file": "ugrid-calc.nc",

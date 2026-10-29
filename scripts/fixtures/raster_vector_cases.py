@@ -961,6 +961,7 @@ def cases():
         ("cizgi-sifir-disi", ("nonZero",), 0, 0.0),
         ("cizgi-kisa-parcalar", ("nonZero",), 3, 1.0),
         ("cizgi-aralik", ("range", 6.5, 7.5), 0, 0.0),
+        ("cizgi-aralik-bir", ("range", 0.5, 1.5), 0, 0.0),
     ]:
         tool = {"kind": "toLines", "band": 1, "select": select[0], "spur": spur, "simplify": eps}
         if select[0] == "range":

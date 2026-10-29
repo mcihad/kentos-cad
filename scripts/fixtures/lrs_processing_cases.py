@@ -382,7 +382,8 @@ def calibrate_run(values):
         # The run's update as the cases observe it: the attributes, then the changed geometry whole.
         if e["kind"] == "line":
             ms = parts[0][2]
-            geometry = {"a": e["a"], "b": e["b"], "ma": num(ms[0]), "mb": num(ms[1])}
+            # A line's measure left unknown is no field at all (docs/adr/0224 §1).
+            geometry = {"a": e["a"], "b": e["b"], **{k: num(m) for k, m in (("ma", ms[0]), ("mb", ms[1])) if m is not None}}
         else:
             first, *rest = [part_out({"pts": q[0], "bulges": q[1], "ms": q[2]}) for q in parts]
             geometry = dict(first)
@@ -553,8 +554,12 @@ def locate_run(values, ids):
 
 def overlay_run(values):
     sides = []
-    for prefix, name in (("a", values["aFile"]), ("b", values["bFile"])):
-        header, rows, _ = table_of(name)
+    for prefix in ("a", "b"):
+        if values.get(f"{prefix}SourceKind") == "layer":
+            lid = values[f"{prefix}Source"]["layerId"]
+            header, rows, _ = objects_table([e for e in ENTITIES if e["layerId"] == lid])
+        else:
+            header, rows, _ = table_of(values[f"{prefix}File"])
         keys = [values[f"{prefix}Route"], values[f"{prefix}From"], values[f"{prefix}To"]]
         events, kept, dropped = [], [], 0
         for r in rows:
@@ -783,7 +788,35 @@ def cases():
              "linearRef.eventDrift", {**drift, "tolerance": 6}, drift_run({**drift, "tolerance": 6})),
         case("drift-lines-fix", "Olay kaymasını denetle, çizgi, Yerine taşı: köşesi kayan çoklu çizgi ve kayan çizgi taşınır, kırıklı yola düşen çizgi nesnesi taşınamaz; yaylı rotadaki olay yerinde",
              "linearRef.eventDrift", lines_drift, drift_run(lines_drift)),
-    ]
+    ] + more_cases(create, calibrate, points, overlay, drift, olay)
+
+
+def more_cases(create, calibrate, points, overlay, drift, olay):
+    """The options the first cases leave untried (docs/adr/0741 §2): the other three start corners, calibration without
+    extrapolating before or after or with the gaps counted, events and overlays read from a layer's objects, and the
+    drift's left side."""
+    out = []
+    for priority, name in (("upperLeft", "sol üst"), ("upperRight", "sağ üst"), ("lowerRight", "sağ alt")):
+        v = {**create, "priority": priority}
+        out.append(case(f"create-{priority}", f"Rota oluştur, Uzunluk, başlangıç {name} köşeden", "linearRef.createRoutes", v, create_run(v)))
+    for key, name in (("before", "ilk noktadan öncesi uzatılmaz"), ("after", "son noktadan sonrası uzatılmaz"),
+                      ("ignoreGaps", "boşluklar sayılır")):
+        v = {**calibrate, key: False}
+        out.append(case(f"calibrate-no-{key}", f"Rotayı kalibre et: {name}", "linearRef.calibrateRoutes", v, calibrate_run(v)))
+    from_layer = {**{k: v for k, v in points.items() if k != "file"}, "sourceKind": "layer", "source": olay}
+    olay_objects = [e for e in ENTITIES if e["layerId"] == "olay"]
+    out.append(case("events-layer", "Olayları rotada göster, nokta, Olay nesneleri katmanından: nesnelerin öznitelikleri satırdır",
+                    "linearRef.routeEvents", from_layer, events_run(from_layer, objects=olay_objects)))
+    a_layer = {**{k: v for k, v in overlay.items() if k != "aFile"}, "aSourceKind": "layer", "aSource": olay}
+    out.append(case("overlay-a-layer", "Olayları çakıştır, Kesişim: ilk olaylar Olay nesneleri katmanından; ölçüsüz nesneler alınmaz",
+                    "linearRef.overlayEvents", a_layer, overlay_run(a_layer)))
+    b_layer = {**{k: v for k, v in overlay.items() if k != "bFile"}, "bSourceKind": "layer", "bSource": olay, "how": "union"}
+    out.append(case("overlay-b-layer", "Olayları çakıştır, Birleşim: ikinci olaylar Olay nesneleri katmanından",
+                    "linearRef.overlayEvents", b_layer, overlay_run(b_layer)))
+    left = {**drift, "side": "left"}
+    out.append(case("drift-left", "Olay kaymasını denetle, nokta, öteleme solda: sağdaki olaylar kaymış sayılır", "linearRef.eventDrift",
+                    left, drift_run(left)))
+    return out
 
 
 def text_of(v):

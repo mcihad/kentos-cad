@@ -1,0 +1,1002 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "İşlem durumları: Koordinat sistemine dönüştür",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 499000,
+  "y": 4361000
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s5253",
+   "name": "TUREF / TM27 (EPSG:5253)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s5255",
+   "name": "TUREF / TM33 (EPSG:5255)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s5256",
+   "name": "TUREF / TM36 (EPSG:5256)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s5257",
+   "name": "TUREF / TM39 (EPSG:5257)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s5258",
+   "name": "TUREF / TM42 (EPSG:5258)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s5259",
+   "name": "TUREF / TM45 (EPSG:5259)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s5252",
+   "name": "TUREF (EPSG:5252)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s2319",
+   "name": "ED50 / TM27 (EPSG:2319)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s2320",
+   "name": "ED50 / TM30 (EPSG:2320)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s2321",
+   "name": "ED50 / TM33 (EPSG:2321)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s2322",
+   "name": "ED50 / TM36 (EPSG:2322)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s2323",
+   "name": "ED50 / TM39 (EPSG:2323)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s2324",
+   "name": "ED50 / TM42 (EPSG:2324)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s2325",
+   "name": "ED50 / TM45 (EPSG:2325)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s23035",
+   "name": "ED50 / UTM 35N (EPSG:23035)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s23036",
+   "name": "ED50 / UTM 36N (EPSG:23036)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s23037",
+   "name": "ED50 / UTM 37N (EPSG:23037)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s23038",
+   "name": "ED50 / UTM 38N (EPSG:23038)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s32635",
+   "name": "WGS 84 / UTM 35N (EPSG:32635)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s32636",
+   "name": "WGS 84 / UTM 36N (EPSG:32636)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s32637",
+   "name": "WGS 84 / UTM 37N (EPSG:32637)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s32638",
+   "name": "WGS 84 / UTM 38N (EPSG:32638)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s4326",
+   "name": "WGS 84 (EPSG:4326)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "s3857",
+   "name": "WGS 84 / Pseudo-Mercator (EPSG:3857)",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#AD7F58",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "s5253",
+   "attrs": {
+    "Ad": "Parsel 5253"
+   },
+   "pts": [
+    {
+     "x": 756709.619,
+     "y": 4367151.176
+    },
+    {
+     "x": 756809.619,
+     "y": 4367151.176
+    },
+    {
+     "x": 756809.619,
+     "y": 4367251.176
+    },
+    {
+     "x": 756709.619,
+     "y": 4367251.176
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "s5255",
+   "attrs": {
+    "Ad": "Parsel 5255"
+   },
+   "pts": [
+    {
+     "x": 239843.993,
+     "y": 4367265.821
+    },
+    {
+     "x": 239943.993,
+     "y": 4367265.821
+    },
+    {
+     "x": 239943.993,
+     "y": 4367365.821
+    },
+    {
+     "x": 239843.993,
+     "y": 4367365.821
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "s5256",
+   "attrs": {
+    "Ad": "Parsel 5256"
+   },
+   "pts": [
+    {
+     "x": -18728.318,
+     "y": 4380244.062
+    },
+    {
+     "x": -18628.318,
+     "y": 4380244.062
+    },
+    {
+     "x": -18628.318,
+     "y": 4380344.062
+    },
+    {
+     "x": -18728.318,
+     "y": 4380344.062
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 4,
+   "layerId": "s5257",
+   "attrs": {
+    "Ad": "Parsel 5257"
+   },
+   "pts": [
+    {
+     "x": -277572.969,
+     "y": 4401939.399
+    },
+    {
+     "x": -277472.969,
+     "y": 4401939.399
+    },
+    {
+     "x": -277472.969,
+     "y": 4402039.399
+    },
+    {
+     "x": -277572.969,
+     "y": 4402039.399
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "s5258",
+   "attrs": {
+    "Ad": "Parsel 5258"
+   },
+   "pts": [
+    {
+     "x": -536813.471,
+     "y": 4432507.037
+    },
+    {
+     "x": -536713.471,
+     "y": 4432507.037
+    },
+    {
+     "x": -536713.471,
+     "y": 4432607.037
+    },
+    {
+     "x": -536813.471,
+     "y": 4432607.037
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "s5259",
+   "attrs": {
+    "Ad": "Parsel 5259"
+   },
+   "pts": [
+    {
+     "x": -796558.115,
+     "y": 4472165.848
+    },
+    {
+     "x": -796458.115,
+     "y": 4472165.848
+    },
+    {
+     "x": -796458.115,
+     "y": 4472265.848
+    },
+    {
+     "x": -796558.115,
+     "y": 4472265.848
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "s5252",
+   "attrs": {
+    "Ad": "Parsel 5252"
+   },
+   "pts": [
+    {
+     "x": 29.98,
+     "y": 39.4
+    },
+    {
+     "x": 29.981,
+     "y": 39.4
+    },
+    {
+     "x": 29.981,
+     "y": 39.401
+    },
+    {
+     "x": 29.98,
+     "y": 39.401
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 8,
+   "layerId": "s2319",
+   "attrs": {
+    "Ad": "Parsel 2319"
+   },
+   "pts": [
+    {
+     "x": 756752.116,
+     "y": 4367337.583
+    },
+    {
+     "x": 756852.116,
+     "y": 4367337.583
+    },
+    {
+     "x": 756852.116,
+     "y": 4367437.583
+    },
+    {
+     "x": 756752.116,
+     "y": 4367437.583
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 9,
+   "layerId": "s2320",
+   "attrs": {
+    "Ad": "Parsel 2320"
+   },
+   "pts": [
+    {
+     "x": 498311.802,
+     "y": 4363096.932
+    },
+    {
+     "x": 498411.802,
+     "y": 4363096.932
+    },
+    {
+     "x": 498411.802,
+     "y": 4363196.932
+    },
+    {
+     "x": 498311.802,
+     "y": 4363196.932
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 10,
+   "layerId": "s2321",
+   "attrs": {
+    "Ad": "Parsel 2321"
+   },
+   "pts": [
+    {
+     "x": 239870.581,
+     "y": 4367449.932
+    },
+    {
+     "x": 239970.581,
+     "y": 4367449.932
+    },
+    {
+     "x": 239970.581,
+     "y": 4367549.932
+    },
+    {
+     "x": 239870.581,
+     "y": 4367549.932
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 11,
+   "layerId": "s2322",
+   "attrs": {
+    "Ad": "Parsel 2322"
+   },
+   "pts": [
+    {
+     "x": -18709.645,
+     "y": 4380427.69
+    },
+    {
+     "x": -18609.645,
+     "y": 4380427.69
+    },
+    {
+     "x": -18609.645,
+     "y": 4380527.69
+    },
+    {
+     "x": -18709.645,
+     "y": 4380527.69
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 12,
+   "layerId": "s2323",
+   "attrs": {
+    "Ad": "Parsel 2323"
+   },
+   "pts": [
+    {
+     "x": -277562.166,
+     "y": 4402122.979
+    },
+    {
+     "x": -277462.166,
+     "y": 4402122.979
+    },
+    {
+     "x": -277462.166,
+     "y": 4402222.979
+    },
+    {
+     "x": -277562.166,
+     "y": 4402222.979
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 13,
+   "layerId": "s2324",
+   "attrs": {
+    "Ad": "Parsel 2324"
+   },
+   "pts": [
+    {
+     "x": -536810.479,
+     "y": 4432691.004
+    },
+    {
+     "x": -536710.479,
+     "y": 4432691.004
+    },
+    {
+     "x": -536710.479,
+     "y": 4432791.004
+    },
+    {
+     "x": -536810.479,
+     "y": 4432791.004
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 14,
+   "layerId": "s2325",
+   "attrs": {
+    "Ad": "Parsel 2325"
+   },
+   "pts": [
+    {
+     "x": -796562.863,
+     "y": 4472350.639
+    },
+    {
+     "x": -796462.863,
+     "y": 4472350.639
+    },
+    {
+     "x": -796462.863,
+     "y": 4472450.639
+    },
+    {
+     "x": -796562.863,
+     "y": 4472450.639
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 15,
+   "layerId": "s23035",
+   "attrs": {
+    "Ad": "Parsel 23035"
+   },
+   "pts": [
+    {
+     "x": 756649.415,
+     "y": 4365590.648
+    },
+    {
+     "x": 756749.415,
+     "y": 4365590.648
+    },
+    {
+     "x": 756749.415,
+     "y": 4365690.648
+    },
+    {
+     "x": 756649.415,
+     "y": 4365690.648
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 16,
+   "layerId": "s23036",
+   "attrs": {
+    "Ad": "Parsel 23036"
+   },
+   "pts": [
+    {
+     "x": 239974.633,
+     "y": 4365702.952
+    },
+    {
+     "x": 240074.633,
+     "y": 4365702.952
+    },
+    {
+     "x": 240074.633,
+     "y": 4365802.952
+    },
+    {
+     "x": 239974.633,
+     "y": 4365802.952
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 17,
+   "layerId": "s23037",
+   "attrs": {
+    "Ad": "Parsel 23037"
+   },
+   "pts": [
+    {
+     "x": -277251.141,
+     "y": 4400362.129
+    },
+    {
+     "x": -277151.141,
+     "y": 4400362.129
+    },
+    {
+     "x": -277151.141,
+     "y": 4400462.129
+    },
+    {
+     "x": -277251.141,
+     "y": 4400462.129
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 18,
+   "layerId": "s23038",
+   "attrs": {
+    "Ad": "Parsel 23038"
+   },
+   "pts": [
+    {
+     "x": -796044.237,
+     "y": 4470561.699
+    },
+    {
+     "x": -795944.237,
+     "y": 4470561.699
+    },
+    {
+     "x": -795944.237,
+     "y": 4470661.699
+    },
+    {
+     "x": -796044.237,
+     "y": 4470661.699
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 19,
+   "layerId": "s32635",
+   "attrs": {
+    "Ad": "Parsel 32635"
+   },
+   "pts": [
+    {
+     "x": 756606.935,
+     "y": 4365404.316
+    },
+    {
+     "x": 756706.935,
+     "y": 4365404.316
+    },
+    {
+     "x": 756706.935,
+     "y": 4365504.316
+    },
+    {
+     "x": 756606.935,
+     "y": 4365504.316
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 20,
+   "layerId": "s32636",
+   "attrs": {
+    "Ad": "Parsel 32636"
+   },
+   "pts": [
+    {
+     "x": 239948.056,
+     "y": 4365518.914
+    },
+    {
+     "x": 240048.056,
+     "y": 4365518.914
+    },
+    {
+     "x": 240048.056,
+     "y": 4365618.914
+    },
+    {
+     "x": 239948.056,
+     "y": 4365618.914
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 21,
+   "layerId": "s32637",
+   "attrs": {
+    "Ad": "Parsel 32637"
+   },
+   "pts": [
+    {
+     "x": -277261.94,
+     "y": 4400178.623
+    },
+    {
+     "x": -277161.94,
+     "y": 4400178.623
+    },
+    {
+     "x": -277161.94,
+     "y": 4400278.623
+    },
+    {
+     "x": -277261.94,
+     "y": 4400278.623
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 22,
+   "layerId": "s32638",
+   "attrs": {
+    "Ad": "Parsel 32638"
+   },
+   "pts": [
+    {
+     "x": -796039.491,
+     "y": 4470376.982
+    },
+    {
+     "x": -795939.491,
+     "y": 4470376.982
+    },
+    {
+     "x": -795939.491,
+     "y": 4470476.982
+    },
+    {
+     "x": -796039.491,
+     "y": 4470476.982
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 23,
+   "layerId": "s4326",
+   "attrs": {
+    "Ad": "Parsel 4326"
+   },
+   "pts": [
+    {
+     "x": 29.98,
+     "y": 39.4
+    },
+    {
+     "x": 29.981,
+     "y": 39.4
+    },
+    {
+     "x": 29.981,
+     "y": 39.401
+    },
+    {
+     "x": 29.98,
+     "y": 39.401
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 24,
+   "layerId": "s3857",
+   "attrs": {
+    "Ad": "Parsel 3857"
+   },
+   "pts": [
+    {
+     "x": 3337358.334,
+     "y": 4779131.181
+    },
+    {
+     "x": 3337458.334,
+     "y": 4779131.181
+    },
+    {
+     "x": 3337458.334,
+     "y": 4779231.181
+    },
+    {
+     "x": 3337358.334,
+     "y": 4779231.181
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}
