@@ -42,7 +42,7 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::spaces_discover;
-use kentos_native_application::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
+use kentos_native_application::{arch_exceptions, dimension_sets_create, dimension_sets_edit, dimension_sets_query};
 use kentos_native_application::dimensions_interior;
 use kentos_native_application::spaces_separators;
 use kentos_native_application::spaces_number;
@@ -256,6 +256,25 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
                 .uid(Slot(slot))
                 .ok_or_else(|| format!("{at}: {slot} yuvasında nesne yok"))?;
             Value::String(uid.to_string())
+        }
+        // Inside a text (a finding's key names its objects, docs/adr/0732 §1): each `$uidOf:12` its slot's id.
+        Value::String(text) if text.contains("$uidOf:") => {
+            let mut out = String::new();
+            let mut rest = text.as_str();
+            while let Some(start) = rest.find("$uidOf:") {
+                out.push_str(&rest[..start]);
+                let digits: String = rest[start + "$uidOf:".len()..].chars().take_while(char::is_ascii_digit).collect();
+                let slot = digits
+                    .parse::<u32>()
+                    .map_err(|_| format!("{at}: {text}: yuva bir sayı olmalı"))?;
+                let uid = doc
+                    .uid(Slot(slot))
+                    .ok_or_else(|| format!("{at}: {slot} yuvasında nesne yok"))?;
+                out.push_str(&uid.to_string());
+                rest = &rest[start + "$uidOf:".len() + digits.len()..];
+            }
+            out.push_str(rest);
+            Value::String(out)
         }
         // The drawing's constraint at this place now (docs/adr/0335).
         Value::String(text) if text.starts_with("$constraint:") => {
@@ -1581,12 +1600,20 @@ impl Input for kentos_commands::CaseworkQuery {
     }
 }
 
+impl Input for kentos_commands::ArchExceptions {
+    /// The finding audit's numbers after `audit.` (docs/adr/0732 §3).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        self.audit.as_mut()?.number(path.strip_prefix("audit.")?)
+    }
+}
+
 impl Input for kentos_commands::ArchAudit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "maxGap" => self.max_gap.as_mut(),
             "minArea" => self.min_area.as_mut(),
             "minWidth" => self.min_width.as_mut(),
+            "minLength" => self.min_length.as_mut(),
             _ => None,
         }
     }
@@ -4171,6 +4198,9 @@ fn run_op(
         }
         kentos_commands::CAD_ARCH_AUDIT => {
             run!(arch_audit, kentos_commands::ArchAudit)
+        }
+        kentos_commands::CAD_ARCH_EXCEPTIONS => {
+            run!(arch_exceptions, kentos_commands::ArchExceptions)
         }
         kentos_commands::CAD_CASEWORK_RUN => {
             run!(casework_run, kentos_commands::CaseworkRun)

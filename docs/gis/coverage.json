@@ -435,16 +435,22 @@
     "mcp": true,
     "server": false
    },
-   "cases": 122,
+   "cases": 183,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.accessibility.json",
     "fixtures/commands/v1/cad.arch.audit.json",
-    "fixtures/commands/v1/cad.arch.audit.stairs.json"
+    "fixtures/commands/v1/cad.arch.audit.stairs.json",
+    "fixtures/commands/v1/cad.arch.exceptions.json"
    ],
    "options": [
     {
      "key": "checks",
      "value": "accessibility",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "casework",
      "covered": false
     },
     {
@@ -479,6 +485,11 @@
     },
     {
      "key": "checks",
+     "value": "ramps",
+     "covered": false
+    },
+    {
+     "key": "checks",
      "value": "spaces",
      "covered": false
     },
@@ -501,6 +512,21 @@
      "key": "checks",
      "value": "walls",
      "covered": false
+    },
+    {
+     "key": "exceptions",
+     "value": "hide",
+     "covered": false
+    },
+    {
+     "key": "exceptions",
+     "value": "only",
+     "covered": true
+    },
+    {
+     "key": "exceptions",
+     "value": "show",
+     "covered": true
     }
    ],
    "kinds": []
@@ -516,7 +542,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 137,
+   "cases": 140,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.accessibility.json",
     "fixtures/commands/v1/cad.arch.audit.json",
@@ -714,6 +740,125 @@
      "covered": true
     }
    ]
+  },
+  {
+   "id": "cad.arch.exceptions",
+   "title": "Denetim istisnası",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 25,
+   "files": [
+    "fixtures/commands/v1/cad.arch.exceptions.json"
+   ],
+   "options": [
+    {
+     "key": "checks",
+     "value": "accessibility",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "casework",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "columns",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "levels",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "numbers",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "openings",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "ramps",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "stairs",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "viewmarks",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "walls",
+     "covered": false
+    },
+    {
+     "key": "exceptions",
+     "value": "hide",
+     "covered": false
+    },
+    {
+     "key": "exceptions",
+     "value": "only",
+     "covered": false
+    },
+    {
+     "key": "exceptions",
+     "value": "show",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "mark",
+     "covered": true
+    },
+    {
+     "key": "operation",
+     "value": "prune",
+     "covered": true
+    },
+    {
+     "key": "operation",
+     "value": "unmark",
+     "covered": true
+    }
+   ],
+   "kinds": []
   },
   {
    "id": "cad.areas.edit",
@@ -1679,8 +1824,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 34,
+   "cases": 35,
    "files": [
+    "fixtures/commands/v1/cad.arch.audit.json",
     "fixtures/commands/v1/cad.casework.edit.json",
     "fixtures/commands/v1/cad.casework.query.json"
    ],
@@ -5428,7 +5574,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 211,
+   "cases": 214,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.json",
     "fixtures/commands/v1/cad.arrays.edit.json",

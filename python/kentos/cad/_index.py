@@ -18,6 +18,7 @@ COMMANDS: dict[str, Any] = {
     "cad.arc.create": arc.create,
     "cad.arch.audit": arch.audit,
     "cad.arch.edit": arch.edit,
+    "cad.arch.exceptions": arch.exceptions,
     "cad.areas.edit": areas.edit,
     "cad.arrays.edit": arrays.edit,
     "cad.assets.check": assets.check,

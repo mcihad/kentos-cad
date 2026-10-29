@@ -129,6 +129,7 @@ def findings(ramps):
                             "step": {"command": "cad.arch.edit",
                                      "input": {"uids": [uid], "operation": {"kind": "set", "width": RULES["turn"]}}}}
             out.append(f)
+    out = [{"key": f"{f['code']}:{','.join(f['uids'])}", **f} for f in out]
     return sorted(out, key=lambda f: (CODES.index(f["code"]), f["at"]["x"], f["at"]["y"]))
 
 
@@ -138,7 +139,8 @@ def create(ramps, layer_id="rampa"):
 
 def audit(found, inp=None, op="execute"):
     inp = {"profiles": [PROFILE["id"]], "checks": ["accessibility"]} if inp is None else inp
-    result = {"status": "completed", "output": {"findings": found, "revision": "$current"}, "warnings": []}
+    result = {"status": "completed", "output": {"findings": found, "outside": 0, "excepted": 0, "revision": "$current"},
+              "warnings": []}
     if op == "validate":
         result = {"status": "completed", "output": None, "warnings": []}
     return {"op": op, "command": COMMAND, "input": inp, "result": result, "within": 1e-9, "expect": {"revision": "same"}}

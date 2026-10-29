@@ -1162,6 +1162,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin etkin katı ve kat görünümü şema 120'den beri yazılır",
                     ));
                 }
+                if !has.audit_exceptions && a.has_audit_exceptions() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "mimari denetimin istisnaları şema 130'dan beri yazılır",
+                    ));
+                }
                 if !has.phases && a.phase_view.is_some() {
                     return Err(r.fail_at(
                         Code::UnknownField,

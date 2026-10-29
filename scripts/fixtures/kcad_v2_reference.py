@@ -2209,6 +2209,9 @@ def document(d):
     if any(item.get("scales") or "tight" in item or any("shift" in m for m in item.get("members", [])) for item in sets):
         # A recipe's sheet scales, its values shifted, a member's value place (docs/adr/0730 §6).
         schema = max(schema, 129)
+    if ((d["settings"].get("arch") or {}).get("auditExceptions")):
+        # Mimari denetim's exceptions (docs/adr/0732 §3).
+        schema = max(schema, 130)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2922,7 +2925,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-130.kcad"] = container(root(cmap(parts), version=uint(130)))
+    files["schema-version-131.kcad"] = container(root(cmap(parts), version=uint(131)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5061,6 +5064,21 @@ def build():
     scale_bad("below-one", lambda s: s.update(scales=[0.5]))
     scale_bad("same", lambda s: s.update(scales=[100.0, 100.00000000001]))
     scale_bad("keep", lambda s: s.update(tight="keep"))
+    # Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions, one with a note of two lines; schema 129 refuses them.
+    excepted = load("audit-exceptions.json")
+    xe = document(excepted)
+    assert xe.count(b"\x67version\x18\x82") == 1
+    out["audit-exceptions.kcad"] = container(xe)
+    out["broken/audit-exceptions-in-schema-129.kcad"] = container(xe.replace(b"\x67version\x18\x82", b"\x67version\x18\x81"))
+    def exception_bad(name, change):
+        d = copy.deepcopy(excepted)
+        change(d["settings"]["arch"]["auditExceptions"])
+        out["broken/audit-exceptions-" + name + ".kcad"] = container(document(d))
+    exception_bad("twice", lambda xs: xs.append(dict(xs[0])))
+    exception_bad("digest", lambda xs: xs[0].update(digest="0F3A91C27BE45D68"))
+    exception_bad("no-objects", lambda xs: xs[0].update(uids=[]))
+    exception_bad("code", lambda xs: xs[0].update(code="Kısa duvar"))
+    exception_bad("uid", lambda xs: xs[0].update(uids=["kısa"]))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

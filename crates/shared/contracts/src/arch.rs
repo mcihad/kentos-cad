@@ -1007,6 +1007,62 @@ pub struct ArchLevel {
     pub height: Option<f64>,
 }
 
+/// The most findings of Mimari denetim a project keeps as exceptions (docs/adr/0732 §3).
+pub const AUDIT_EXCEPTIONS_MAX: usize = 10_000;
+
+/// A finding of Mimari denetim left on purpose (docs/adr/0732 §3): its lasting key, its code and objects (persistent
+/// ids, in the finding's order), the digest of the finding as it was marked (of its code, objects, words and place:
+/// sixteen lowercase hexadecimal digits) and the user's note. A finding whose digest no longer matches is open again.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ArchAuditException {
+    pub key: String,
+    pub code: String,
+    pub uids: Vec<String>,
+    pub digest: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub note: Option<String>,
+}
+
+/// What is wrong with a project's audit exceptions (docs/adr/0732 §3), its path and words; none when they hold: at most
+/// [`AUDIT_EXCEPTIONS_MAX`], each key given once and not empty, a code, at least one object by its persistent id, a
+/// digest of sixteen lowercase hexadecimal digits, a note of at most 1000 characters without control characters but
+/// line breaks.
+pub fn audit_exceptions_problem(list: &[ArchAuditException]) -> Option<(String, String)> {
+    if list.len() > AUDIT_EXCEPTIONS_MAX {
+        return Some((
+            "auditExceptions".into(),
+            format!("Denetimin en çok {AUDIT_EXCEPTIONS_MAX} istisnası olur."),
+        ));
+    }
+    let mut keys = std::collections::BTreeSet::new();
+    for (i, x) in list.iter().enumerate() {
+        let path = |field: &str| format!("auditExceptions[{i}].{field}");
+        if x.key.is_empty() || x.key.chars().count() > 4096 || !keys.insert(x.key.as_str()) {
+            return Some((path("key"), "İstisnanın anahtarı boş, çok uzun ya da iki kez verilmiş.".into()));
+        }
+        if x.code.is_empty() || !x.code.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
+            return Some((path("code"), "İstisnanın kodu küçük harf ve alt çizgiden oluşmalı.".into()));
+        }
+        if x.uids.is_empty() || x.uids.iter().any(|u| crate::identity::uuid_from_text(u).is_none()) {
+            return Some((path("uids"), "İstisnanın nesneleri kalıcı kimlikleriyle verilmeli.".into()));
+        }
+        if x.digest.len() != 16 || !x.digest.chars().all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c)) {
+            return Some((path("digest"), "İstisnanın özeti on altı küçük onaltılık rakamdır.".into()));
+        }
+        if let Some(note) = &x.note
+            && (note.chars().count() > 1000 || note.chars().any(|c| c.is_control() && c != '\n'))
+        {
+            return Some((path("note"), "İstisnanın notu en çok 1000 karakterdir, satır sonu dışında denetim karakteri olmaz.".into()));
+        }
+    }
+    None
+}
+
 /// The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
 /// by the drawing's scale, `WallDetail::at_scale`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1058,6 +1114,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level_view: Option<LevelView>,
+    /// Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditException>>", optional))]
+    pub audit_exceptions: Vec<ArchAuditException>,
 }
 
 impl ArchSettings {
@@ -1068,6 +1128,11 @@ impl ArchSettings {
     /// Whether it says the level and view the drawing opens with (KCAD 120, docs/adr/0720 §1).
     pub fn has_level_state(&self) -> bool {
         self.active_level.is_some() || self.level_view.is_some()
+    }
+
+    /// Whether it keeps Mimari denetim's exceptions (KCAD 130, docs/adr/0732 §3).
+    pub fn has_audit_exceptions(&self) -> bool {
+        !self.audit_exceptions.is_empty()
     }
 
     /// The detail walls are drawn at in a drawing at 1:`scale`.
@@ -1091,6 +1156,9 @@ impl ArchSettings {
 
     /// What is wrong with it; none when it holds.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(problem) = audit_exceptions_problem(&self.audit_exceptions) {
+            return Some(problem);
+        }
         if let Some(why) = crate::annotation::names_problem(
             "kat",
             self.levels.iter().map(|l| (l.id.as_str(), l.name.as_str())),

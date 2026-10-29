@@ -4039,7 +4039,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_ARCH_AUDIT.into(),
             version: crate::CAD_ARCH_AUDIT_VERSION,
             title: "Mimari denetim".into(),
-            summary: "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir."
+            summary: "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,
@@ -4058,6 +4058,7 @@ pub fn catalog() -> CommandCatalog {
                 input: json!({ "checks": ["walls"] }),
                 output: Some(json!({
                     "findings": [{
+                        "key": "arch_wall_end_gap:0192f5a1-7030-7000-8000-000000000003,0192f5a1-7030-7000-8000-000000000002:end",
                         "check": "walls", "code": "arch_wall_end_gap",
                         "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
                         "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
@@ -4074,9 +4075,51 @@ pub fn catalog() -> CommandCatalog {
                             }
                         }
                     }],
+                    "outside": 0,
+                    "excepted": 0,
                     "revision": "7"
                 })),
             }],
+        },
+        // İstisna (docs/adr/0732 §3), held together by fixtures/commands/v1/cad.arch.exceptions.json.
+        CommandDescriptor {
+            id: crate::CAD_ARCH_EXCEPTIONS.into(),
+            version: crate::CAD_ARCH_EXCEPTIONS_VERSION,
+            title: "Denetim istisnası".into(),
+            summary: "Mimari denetimin bulgularını bilerek bırakılmış sayar ya da işareti kaldırır (docs/adr/0732 §3); tek geri alma adımı. operation: mark (İstisna yap: keys cad.arch.audit'in verdiği anahtarlar, note isteğe bağlı not; istisna bulgunun o anki kodu, nesneleri, iletisi ve yerinin özetine bağlanır, bulgu değişince düşer), unmark (İstisnayı kaldır: keys istisnaların anahtarları), prune (İstisnaları temizle: bulgusu artık olmayanlar). audit bulguları bulan denetimin girdisidir (yok: bütün gruplar, varsayılan eşikler, profilsiz); within ve exceptions okunmaz. İstisnalar projenin ayarıdır (arch.auditExceptions, KCAD 130). Retler: invalid_input (anahtar yok ya da yineleniyor, not 1000 karakterden uzun), denetimin retleri audit. yoluyla, finding_not_found (keys[i]: bulgu ya da istisna yok). Zaten öyle olanlar değişmez, değişen yoksa adım yazılmaz. Çıktı değişen anahtarlar (changed), istisna sayısı ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ArchExceptions>(),
+            output: schema::<crate::ArchExceptionsEdited>(),
+            plan: Some(schema::<crate::ArchExceptionsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bilerek kısa bırakılan duvar parçası istisna".into(),
+                    input: json!({
+                        "operation": "mark",
+                        "keys": ["arch_wall_short:0192f5a1-7030-7000-8000-000000000009"],
+                        "note": "Pencere ayağı; bilerek kısa."
+                    }),
+                    output: Some(json!({
+                        "changed": ["arch_wall_short:0192f5a1-7030-7000-8000-000000000009"],
+                        "exceptions": 1,
+                        "revision": "8"
+                    })),
+                },
+                CommandExample {
+                    title: "Bulgusu kalmayan istisnaları temizle".into(),
+                    input: json!({ "operation": "prune" }),
+                    output: Some(json!({ "changed": [], "exceptions": 1, "revision": "8" })),
+                },
+            ],
         },
         // Kat ver (docs/adr/0717), held together by fixtures/commands/v1/cad.levels.assign.json.
         CommandDescriptor {
@@ -11240,6 +11283,9 @@ mod tests {
                     crate::CAD_ARCH_AUDIT => {
                         serde_json::from_value::<crate::ArchAudit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ARCH_EXCEPTIONS => {
+                        serde_json::from_value::<crate::ArchExceptions>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LEVELS_ASSIGN => {
                         serde_json::from_value::<crate::LevelsAssign>(e.input.clone()).map(|_| ())
                     }
@@ -12326,6 +12372,10 @@ mod tests {
                         }
                         crate::CAD_ARCH_AUDIT => {
                             serde_json::from_value::<crate::ArchAudited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ARCH_EXCEPTIONS => {
+                            serde_json::from_value::<crate::ArchExceptionsEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_LEVELS_ASSIGN => {
                             serde_json::from_value::<crate::LevelsAssigned>(output.clone())

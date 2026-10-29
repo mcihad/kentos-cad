@@ -1324,14 +1324,15 @@ codes! {
     NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
     /// A rule id `cad.topology.check` was given that the project does not have (docs/adr/0589).
     TOPOLOGY_RULE_NOT_FOUND = "topology_rule_not_found", Failed, false, "Projede bu kimlikte topoloji kuralı yok.";
-    /// A finding's lasting key no finding of the drawing as it is now has (docs/adr/0589).
-    FINDING_NOT_FOUND = "finding_not_found", Failed, false, "Çizimin bugünkü denetiminde bu anahtarla bulgu yok; önce cad.topology.check ile denetleyin.";
+    /// A finding's lasting key no finding of the drawing as it is now has (docs/adr/0589, 0732).
+    FINDING_NOT_FOUND = "finding_not_found", Failed, false, "Çizimin bugünkü denetiminde bu anahtarla bulgu ya da istisna yok; önce denetleyin (cad.topology.check, cad.arch.audit).";
     /// A fix the finding does not offer, that has no answer, or that would change a row outside a bound part (docs/adr/0589).
     FIX_UNAVAILABLE = "fix_unavailable", Failed, false, "Bu düzeltme bu bulguya uygulanamaz.";
     /// A topology check whose bound part's neighbours could not all be read (docs/adr/0589 §1).
     TOPOLOGY_INCOMPLETE = "topology_incomplete", Warning, false, "Bağlı parçanın komşuları tam okunamadı; denetim eksik, katman temiz sayılmaz.";
-    /// An exception whose objects' geometry changed since it was marked (docs/adr/0589 §3).
-    EXCEPTION_LAPSED = "exception_lapsed", Warning, false, "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık.";
+    /// An exception whose finding changed since it was marked: its objects' geometry (docs/adr/0589 §3), or its words
+    /// and place (docs/adr/0732 §3).
+    EXCEPTION_LAPSED = "exception_lapsed", Warning, false, "İstisna verildikten sonra bulgu değişti (nesnelerinin geometrisi ya da ölçüsü); bulgu yeniden açık.";
     /// A question ordered here by a text field that keeps more records than may be ordered in memory (docs/adr/0591 §2).
     ORDER_TOO_LARGE = "order_too_large", Failed, false, "Metin alanına göre sıralanacak kayıt çok fazla; süzgeçle daraltın ya da sayı alanına göre sıralayın.";
     /// A processing input read from its source holds more records than a run takes in memory (docs/adr/0592 §1).
@@ -1812,6 +1813,14 @@ codes! {
     ARCH_VIEWMARK_TARGET_GONE = "arch_viewmark_target_gone", Warning, false, "Görünüm işaretinin hedefi yok.";
     /// An object without a level, or with one the project lacks, while the project has levels.
     ARCH_LEVEL_MISSING = "arch_level_missing", Warning, false, "Projede kat varken nesnenin katı yok ya da projede olmayan bir kat.";
+    /// An open wall shorter than the audit's least length: a leftover piece (docs/adr/0732 §4).
+    ARCH_WALL_SHORT = "arch_wall_short", Warning, false, "Duvar denetimin en kısa boyundan kısa; artık bir parça olabilir.";
+    /// Two straight walls of a level drawn over each other along their length (docs/adr/0732 §4).
+    ARCH_WALL_OVERLAP = "arch_wall_overlap", Warning, false, "İki duvar boyları boyunca üst üste çizilmiş; mahal sınırında biri yok sayılabilir.";
+    /// Two room separators of a level over each other on one line (docs/adr/0732 §4).
+    ARCH_SEPARATOR_OVERLAP = "arch_separator_overlap", Warning, false, "İki mahal ayırıcı aynı doğruda üst üste çizilmiş.";
+    /// A kitchen run whose wall is gone or that can no longer be laid (docs/adr/0727 §5, 0732 §4).
+    ARCH_CASEWORK_BROKEN = "arch_casework_broken", Warning, false, "Mutfak dizisinin duvarı yok ya da dizi kurulamıyor; nesneleri son yerlerinde.";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).
     RAMP_SLOPE_OVER_PROFILE = "ramp_slope_over_profile", Warning, false, "Rampanın eğimi kot farkı için erişilebilirlik profilinin sınırını aşıyor.";
     /// A sloped run longer than the profile's long run and steeper than it allows there.

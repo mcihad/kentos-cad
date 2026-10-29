@@ -1989,6 +1989,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_audit_exceptions)
+    {
+        return crate::SCHEMA_WITH_AUDIT_EXCEPTIONS;
+    }
     // Schema 129 (docs/adr/0730): a dimension recipe's sheet scales, its values shifted, a member's value placed.
     if doc.dimension_sets.iter().any(|s| {
         !s.scales.is_empty() || !s.tight.is_keep() || s.members.iter().any(|m| m.shift.is_some())

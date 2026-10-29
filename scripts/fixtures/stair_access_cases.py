@@ -31,6 +31,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import arch_cases as ac  # noqa: E402  (the walking line's landings, a bulged line's arc)
+import arch_command_cases as acmd  # noqa: E402  (the stairs' own warnings, ADR 0343; docs/adr/0732 §4)
 from numeric_display import shown as fixed  # noqa: E402  (the display rule)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,6 +54,9 @@ KNOWN = ["erisilebilirlik-rampa/1", "imar-merdiven-konut/1", "imar-merdiven-konu
          "imar-merdiven-daire-ici/1"]
 CODES = ["stair_riser_over_profile", "stair_tread_short", "stair_step_over_profile", "stair_width_narrow",
          "stair_landing_short", "stair_winder_narrow", "stair_railing_missing"]
+# The stairs' own checks come first in the group (docs/adr/0732 §4); the drawing has no levels, so no level's height.
+OWN = ["stair_short", "stair_long", "stair_rise_level"]
+ORDER = OWN + CODES
 FIRST = 2  # the setup holds one line; the first stair made is 2
 EPS = 1e-9
 
@@ -92,9 +96,36 @@ def first_landing_middle(pts, width, landing, tread):
     return (float(p[0]), float(p[1]))
 
 
-def findings(stairs, rules, profile_id):
-    """The stairs group's findings of `stairs`: (id, fields, locked) in the drawing's order."""
+def own(stairs):
+    """The stairs' own findings (docs/adr/0732 §4): a walking line too short or too long."""
     out = []
+    for i, s, _ in stairs:
+        uid = f"$uidOf:{i}"
+        start = P(s["pts"][0]["x"], s["pts"][0]["y"])
+        for w in acmd.stair_warnings({"riserHeight": s["riserHeight"], **s}, "stair"):
+            if w["code"] == "stair_short":
+                what, repair = w["message"].split(". ", 1)
+                out.append({"check": "stairs", "code": "stair_short", "message": what + ".", "repair": repair,
+                            "uids": [uid], "at": start})
+            elif w["code"] == "stair_long":
+                out.append({"check": "stairs", "code": "stair_long", "message": w["message"],
+                            "repair": "Yolu son rıhtta bitirin (Merdiven'in Sığdır'ı) ya da rıht sayısını artırın.",
+                            "uids": [uid], "at": start})
+    return out
+
+
+def keyed(found):
+    """Each finding's key (docs/adr/0732 §1), in the group's order."""
+    out = [{"key": f"{f['code']}:{','.join(f['uids'])}", **f} for f in found]
+    return sorted(out, key=lambda f: (ORDER.index(f["code"]), f["at"]["x"], f["at"]["y"]))
+
+
+def findings(stairs, rules, profile_id, own_too=True):
+    """The stairs group's findings of `stairs`: (id, fields, locked) in the drawing's order; with `rules`, the profile's
+    measures too."""
+    out = own(stairs) if own_too else []
+    if rules is None:
+        return keyed(out)
     regulation = f"{profile_id}, mevzuat onayı değildir"
     for i, s, locked in stairs:
         uid = f"$uidOf:{i}"
@@ -146,7 +177,7 @@ def findings(stairs, rules, profile_id):
                 s.get("railings"), "Merdivende korkuluk yok")
             say(CODES[6], f"{missing}; iki yanında olmalı.", f"İki yanına korkuluk koyun ({regulation}).", start,
                 edit("İki yana korkuluk koy", {"railings": "both"}))
-    return sorted(out, key=lambda f: (CODES.index(f["code"]), f["at"]["x"], f["at"]["y"]))
+    return keyed(out)
 
 
 def create(stairs, layer_id="merdiven"):
@@ -155,7 +186,8 @@ def create(stairs, layer_id="merdiven"):
 
 
 def audit(found, inp, op="execute"):
-    result = {"status": "completed", "output": {"findings": found, "revision": "$current"}, "warnings": []}
+    result = {"status": "completed", "output": {"findings": found, "outside": 0, "excepted": 0, "revision": "$current"},
+              "warnings": []}
     if op == "validate":
         result = {"status": "completed", "output": None, "warnings": []}
     return {"op": op, "command": COMMAND, "input": inp, "result": result, "within": 1e-9, "expect": {"revision": "same"}}
@@ -189,8 +221,10 @@ def one(name, s, p=KONUT, inp=None, locked=False):
         steps.append({"op": "execute", "command": "cad.layers.set",
                       "input": {"operation": "locked", "layer": "kilitli", "value": True}, "result": "$any"})
     inp = asked(p) if inp is None else inp
-    measured = p["id"] in inp.get("profiles", []) and (not inp.get("checks") or "stairs" in inp["checks"])
-    steps.append(audit(findings([(FIRST, s, locked)], p["stair"], p["id"]) if measured else [], inp))
+    group = not inp.get("checks") or "stairs" in inp["checks"]
+    measured = p["id"] in inp.get("profiles", []) and group
+    found = findings([(FIRST, s, locked)], p["stair"] if measured else None, p["id"]) if group else []
+    steps.append(audit(found, inp))
     return {"name": name, "steps": steps}
 
 
@@ -228,7 +262,8 @@ def cases():
     # Every group with a ramp profile and a stair profile: the ramps' and the stairs' findings, in the groups' order.
     s = straight(width=1.0)
     ramp = {"pts": [P(0, 10), P(1.8, 10)], "width": 1.5, "rise": 0.15}
-    ramp_found = [{"check": "accessibility", "code": "ramp_slope_over_profile",
+    ramp_found = [{"key": f"ramp_slope_over_profile:$uidOf:{FIRST + 1}", "check": "accessibility",
+                   "code": "ramp_slope_over_profile",
                    "message": f"Rampanın eğimi %{fixed(0.15 / 1.8 * 100.0, 2)}; 0.15 m kot farkı için en çok %8.",
                    "repair": f"Rampayı uzatın ya da kot farkını azaltın; eğim en çok %8 olmalı ({RAMPA['id']}, mevzuat onayı değildir).",
                    "uids": [f"$uidOf:{FIRST + 1}"], "at": P(0, 10)}]

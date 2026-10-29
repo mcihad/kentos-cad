@@ -5,8 +5,8 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 
 ## Ürün komutları
 
-- 299 komut; masaüstü 277, başsız 299, Python 299, MCP 277, sunucu 22.
-- Seçenekler: 5803 hücre, 1728 tanesi bir durumda deneniyor (4075 açık).
+- 300 komut; masaüstü 278, başsız 300, Python 300, MCP 278, sunucu 22.
+- Seçenekler: 5828 hücre, 1733 tanesi bir durumda deneniyor (4095 açık).
 - Veri türleri (hedef türler): 204 hücre, 132 tanesi bir durumda deneniyor (72 açık).
 - Ortak komut durumu olmayan: 40; 22 sunucu komutu (sunucunun veritabanı testlerinde), 18 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dwg, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.maplibre, file.export.parquet, file.export.pdf, file.export.qml, file.export.shp, file.export.sld, file.export.xyz, file.package, file.preflight.sheets).
 
@@ -16,8 +16,9 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 |---|---|---|
 | `cad.annotations.write` | align="baselineCenter", align="baselineRight", align="bottomCenter", align="bottomRight", align="middleLeft", align="middleRight", align="topLeft", align="topRight", bold=true, font="architects-daughter", font="arimo", font="barlow", font="courier-prime", font="overpass", font="plex-mono", font="quicksand", italic=true, lean="northWest", lean="southEast", measures=true | — |
 | `cad.arc.create` | lineType="continuous", lineType="dashdot", lineType="dashed" | — |
-| `cad.arch.audit` | checks="accessibility", checks="columns", checks="dimensions", checks="grids", checks="levels", checks="numbers", checks="openings", checks="spaces", checks="stairs", checks="tags", checks="viewmarks", checks="walls" | — |
+| `cad.arch.audit` | checks="accessibility", checks="casework", checks="columns", checks="dimensions", checks="grids", checks="levels", checks="numbers", checks="openings", checks="ramps", checks="spaces", checks="stairs", checks="tags", checks="viewmarks", checks="walls", exceptions="hide" | — |
 | `cad.arch.edit` | anchor="bottom", anchor="bottomRight", anchor="topLeft", anchor="topRight", bubbles="both", bubbles="none", bubbles="start", phase="demolish", phase="existing", phase="temporary", to="face" | — |
+| `cad.arch.exceptions` | checks="accessibility", checks="casework", checks="columns", checks="dimensions", checks="grids", checks="levels", checks="numbers", checks="openings", checks="ramps", checks="spaces", checks="stairs", checks="tags", checks="viewmarks", checks="walls", exceptions="hide", exceptions="only", exceptions="show" | — |
 | `cad.arrays.edit` | align=true, fit=true | — |
 | `cad.assets.check` | digests=true, kinds="attachment", kinds="image", kinds="pointCloud", kinds="raster", kinds="source", kinds="table", kinds="xref" | — |
 | `cad.blocks.define` | units="cm", units="ft", units="in", units="m", units="mm", units="unitless" | — |

@@ -78,7 +78,7 @@ use crate::spaces_separators;
 use crate::spaces_number;
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, adjoin_cmd, annotations_scales,
-    annotations_write, arc, arch_audit, arch_edit, areas, casework_edit, casework_query, casework_run, array, arrays_edit, assets_check, blocks_define,
+    annotations_write, arc, arch_audit, arch_edit, arch_exceptions, areas, casework_edit, casework_query, casework_run, array, arrays_edit, assets_check, blocks_define,
     blocks_edit, changeset, circle, columns_create, constraints_edit, constraints_query,
     constructions, create, crs_transform, curves_construct, curves_edit, delete, dimensions_create, dimensions_interior,
     dimensions_edit, dimensions_query, dimensions_reassociate, divide, drawing_audit, edit,
@@ -266,6 +266,9 @@ macro_rules! by_command {
             kentos_commands::CAD_WALLS_DISTANCES => $then!(walls_distances, kentos_commands::WallsDistancesInput),
             kentos_commands::CAD_COLUMNS_DISTANCES => $then!(columns_distances, kentos_commands::ColumnsDistancesInput),
             kentos_commands::CAD_ARCH_AUDIT => $then!(arch_audit, kentos_commands::ArchAudit),
+            kentos_commands::CAD_ARCH_EXCEPTIONS => {
+                $then!(arch_exceptions, kentos_commands::ArchExceptions)
+            }
             kentos_commands::CAD_CASEWORK_RUN => $then!(casework_run, kentos_commands::CaseworkRun),
             kentos_commands::CAD_CASEWORK_EDIT => $then!(casework_edit, kentos_commands::CaseworkEdit),
             kentos_commands::CAD_CASEWORK_QUERY => $then!(casework_query, kentos_commands::CaseworkQuery),

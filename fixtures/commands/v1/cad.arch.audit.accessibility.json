@@ -117,6 +117,8 @@
             "status": "completed",
             "output": {
               "findings": [],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -171,6 +173,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %8.33; 0.15 m kot farkı için en çok %8.",
@@ -184,6 +187,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -238,6 +243,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %7.14; 0.50 m kot farkı için en çok %7.",
@@ -251,6 +257,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -304,6 +312,8 @@
             "status": "completed",
             "output": {
               "findings": [],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -358,6 +368,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %7.62; 0.16 m kot farkı için en çok %7.",
@@ -371,6 +382,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -425,6 +438,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %6.25; 1.00 m kot farkı için en çok %6.",
@@ -438,6 +452,7 @@
                   }
                 },
                 {
+                  "key": "ramp_long_run_slope:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_long_run_slope",
                   "message": "Rampanın 1. eğimli kolu 16.00 m, eğimi %6.25; 10 m'den uzun kolda en çok %6.",
@@ -451,6 +466,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -504,6 +521,8 @@
             "status": "completed",
             "output": {
               "findings": [],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -558,6 +577,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %6.00; 1.20 m kot farkı için en çok %5.",
@@ -571,6 +591,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -626,6 +648,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %8.33; 0.50 m kot farkı için en çok %7.",
@@ -639,6 +662,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -697,6 +722,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_landing_short:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_landing_short",
                   "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
@@ -725,6 +751,7 @@
                   }
                 },
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -753,6 +780,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -811,6 +840,8 @@
             "status": "completed",
             "output": {
               "findings": [],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -874,6 +905,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.40 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -902,6 +934,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -961,6 +995,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_landing_short:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_landing_short",
                   "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
@@ -989,6 +1024,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1042,6 +1079,8 @@
             "status": "completed",
             "output": {
               "findings": [],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1101,6 +1140,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.00 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -1129,6 +1169,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1197,6 +1239,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_landing_short:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_landing_short",
                   "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
@@ -1210,6 +1253,7 @@
                   }
                 },
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -1223,6 +1267,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1273,6 +1319,8 @@
             "status": "completed",
             "output": {
               "findings": [],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1326,6 +1374,8 @@
             "status": "completed",
             "output": {
               "findings": [],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1381,6 +1431,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_landing_short:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_landing_short",
                   "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
@@ -1409,6 +1460,7 @@
                   }
                 },
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -1437,6 +1489,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1523,6 +1577,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:4",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %8.33; 0.15 m kot farkı için en çok %8.",
@@ -1536,6 +1591,7 @@
                   }
                 },
                 {
+                  "key": "ramp_slope_over_profile:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_slope_over_profile",
                   "message": "Rampanın eğimi %8.33; 0.15 m kot farkı için en çok %8.",
@@ -1549,6 +1605,7 @@
                   }
                 },
                 {
+                  "key": "ramp_landing_short:$uidOf:3",
                   "check": "accessibility",
                   "code": "ramp_landing_short",
                   "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
@@ -1577,6 +1634,7 @@
                   }
                 },
                 {
+                  "key": "ramp_turn_narrow:$uidOf:3",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -1605,6 +1663,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1663,6 +1723,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_landing_short:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_landing_short",
                   "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
@@ -1691,6 +1752,7 @@
                   }
                 },
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -1719,6 +1781,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1758,6 +1822,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -1786,6 +1851,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []
@@ -1844,6 +1911,7 @@
             "output": {
               "findings": [
                 {
+                  "key": "ramp_landing_short:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_landing_short",
                   "message": "Rampanın sahanlığı 1.20 m; en az 1.50 m olmalı.",
@@ -1872,6 +1940,7 @@
                   }
                 },
                 {
+                  "key": "ramp_turn_narrow:$uidOf:2",
                   "check": "accessibility",
                   "code": "ramp_turn_narrow",
                   "message": "Rampa dönüşte 1.20 m geniş; yön değiştiren sahanlık en az 1.50 × 1.50 m olmalı.",
@@ -1900,6 +1969,8 @@
                   }
                 }
               ],
+              "outside": 0,
+              "excepted": 0,
               "revision": "$current"
             },
             "warnings": []

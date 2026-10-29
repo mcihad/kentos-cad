@@ -2,27 +2,37 @@
 //! findings in a table, by group; a row selects its objects and fits the view on them (Archicad's “Seçili bölgelere
 //! yakınlaştır”); Düzelt runs the chosen finding's fix — its command call, one undo step — and checks again. The
 //! thresholds are the bar's choices. The drawing changes only by a fix.
+//!
+//! Since docs/adr/0732: Kapsam (the whole drawing, Etkin kat, the objects selected), İstisnalar (hidden, shown, only
+//! they), rows chosen with Ctrl/⌘ and Shift, Düzelt (n) as one `cad.changeset.apply` step, İstisna yap… with a note
+//! and İstisnayı kaldır through `cad.arch.exceptions`, and the chosen fixes previewed on the drawing: their objects'
+//! new outlines dashed, those they remove in the danger colour, from a reading copy (nothing written). The writes are
+//! write.rs's, the preview preview.rs's, the tab's drawing view.rs's.
 
-use iced::widget::{Column, button, container, row, space};
-use iced::{Background, Center, Element, Fill, Length, Task};
+use std::cell::RefCell;
+use std::collections::BTreeSet;
+
+use iced::widget::{button, row};
+use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_WIDTH, ArchAudit, ArchAuditCheck, ArchAuditFinding, CallOp,
-    CommandResult,
+    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_LENGTH, ARCH_AUDIT_MIN_WIDTH, ArchAudit, ArchAuditCheck,
+    ArchAuditExceptionView, ArchAuditFinding, ArchAuditWithin, CommandResult,
 };
 use kentos_domain::{Slot, Uuid};
-use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, arch_audit, registry};
-use kentos_ui::icon::{Tone, icon};
+use kentos_native_application::arch_audit;
+use kentos_ui::icon::icon;
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
-use kentos_ui::widget::{Elided, Tip, horizontal_divider, tip};
+use kentos_ui::widget::{Elided, Tip, tip};
 
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 use crate::icons::from_web;
+
+mod preview;
+mod view;
+mod write;
 
 /// The tab's title, which a trace names it by.
 pub(crate) const TAB: &str = "Denetim";
@@ -34,12 +44,24 @@ const NOT_CHECKED: &str = "Denetle ile çizimin mimari sorunlarını bulun.";
 const CLEAN: &str = "Bulgu yok. Bu, ruhsat ya da standart uygunluğunu göstermez.";
 const NONE_SHOWN: &str = "Bu grupta bulgu yok.";
 const ALL: &str = "Bütün gruplar";
+const EXCEPT: &str = "İstisna yap";
+const UNEXCEPT: &str = "İstisnayı kaldır";
+const EXCEPT_HINT: &str = "Seçili bulguları bilerek bırakılmış sayar; notuyla projede saklanır ve listede gizlenir. Bulgu değişirse istisna düşer, bulgu yeniden açılır. Tek geri alma adımıdır.";
+/// The part of the drawing a bar offers (docs/adr/0732 §2).
+const SCOPES: [&str; 3] = ["Bütün çizim", "Etkin kat", "Seçili nesneler"];
+/// What the exceptions a bar offers (docs/adr/0732 §3).
+const VIEWS: [(ArchAuditExceptionView, &str); 3] = [
+    (ArchAuditExceptionView::Hide, "Gizle"),
+    (ArchAuditExceptionView::Show, "Göster"),
+    (ArchAuditExceptionView::Only, "Yalnız istisnalar"),
+];
 const COLUMNS: [&str; 5] = ["#", "Grup", "Bulgu", "Ne yapılır", "Nesne"];
 
 /// The thresholds a bar offers (docs/adr/0703 §1), metres and square metres.
 const GAPS: [f64; 5] = [0.02, 0.05, ARCH_AUDIT_MAX_GAP, 0.20, 0.50];
 const AREAS: [f64; 5] = [0.05, ARCH_AUDIT_MIN_AREA, 0.25, 0.50, 1.00];
 const WIDTHS: [f64; 4] = [0.10, ARCH_AUDIT_MIN_WIDTH, 0.20, 0.30];
+const LENGTHS: [f64; 4] = [0.02, ARCH_AUDIT_MIN_LENGTH, 0.10, 0.20];
 /// The ramp profiles a bar offers (docs/adr/0723 §4): none, or one of the catalog's, by its words.
 const RAMP_PROFILES: [(Option<&str>, &str); 2] = [(None, "Yok"), (Some("erisilebilirlik-rampa/1"), "TS 9111 özeti")];
 /// The stair profiles a bar offers (docs/adr/0724 §2): none, or one of the catalog's, by its words.
@@ -50,16 +72,41 @@ const STAIR_PROFILES: [(Option<&str>, &str); 5] = [
     (Some("imar-merdiven-diger/1"), "Diğer yapılar"),
     (Some("imar-merdiven-daire-ici/1"), "Daire içi"),
 ];
-/// The widest the bar needs on one line (logical pixels at the default text size).
-const BAR_WIDTH: f32 = 1640.0;
+/// The bar's measures for its layout, logical pixels at the default text size: the controls at its start, İstisna yap…
+/// with the gaps, Kata ver ▾, and a character of its words, roughly.
+const START: f32 = 700.0;
+const BUTTONS: f32 = 140.0;
+const LEVELS: f32 = 130.0;
+const TEXT_ADVANCE: f32 = 6.8;
+/// The most objects a fix preview outlines.
+const PREVIEW_LIMIT: usize = 2000;
 
-/// The last check: its findings and the drawing's state it saw.
+/// The part of the drawing a check reports on (docs/adr/0732 §2): all of it, Etkin kat's objects, or the objects
+/// selected when it was chosen (by their persistent ids).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub(crate) enum AuditScope {
+    #[default]
+    All,
+    ActiveLevel,
+    Selection(Vec<String>),
+}
+
+/// The last check: its findings, what it left out, and the drawing's state it saw.
 #[derive(Clone, Debug)]
 pub(crate) struct Audited {
     pub findings: Vec<ArchAuditFinding>,
     pub generation: u64,
     pub revision: u64,
+    /// The findings the scope left out.
+    pub outside: u32,
+    /// The exceptions in the scope, listed or not.
+    pub excepted: u32,
+    /// The exceptions whose finding is gone, by their keys.
+    pub stale: Vec<String>,
 }
+
+/// A fix preview kept for the drawing's state and the fixes' keys.
+type KeptPreview = (u64, u64, String, Option<kentos_interaction::Preview>);
 
 /// The tab's state for as long as the app lives.
 #[derive(Clone, Debug)]
@@ -76,6 +123,15 @@ pub(crate) struct ArchAuditPanel {
     pub ramp_profile: Option<&'static str>,
     /// The profile the stairs are measured against (docs/adr/0724 §2); none: not measured.
     pub stair_profile: Option<&'static str>,
+    pub min_length: f64,
+    pub scope: AuditScope,
+    pub view: ArchAuditExceptionView,
+    /// The rows chosen with Ctrl/⌘ and Shift, by their places in the findings; the one pressed last is `selected`.
+    pub chosen: BTreeSet<usize>,
+    /// İstisna yap's note being written; none: not asked.
+    pub note: Option<String>,
+    /// The chosen fixes' preview, kept until the drawing or the choice changes.
+    pub preview: RefCell<Option<KeptPreview>>,
 }
 
 impl Default for ArchAuditPanel {
@@ -89,6 +145,12 @@ impl Default for ArchAuditPanel {
             min_width: ARCH_AUDIT_MIN_WIDTH,
             ramp_profile: RAMP_PROFILES[1].0,
             stair_profile: STAIR_PROFILES[1].0,
+            min_length: ARCH_AUDIT_MIN_LENGTH,
+            scope: AuditScope::All,
+            view: ArchAuditExceptionView::Hide,
+            chosen: BTreeSet::new(),
+            note: None,
+            preview: RefCell::new(None),
         }
     }
 }
@@ -114,6 +176,25 @@ pub enum Event {
     RampProfile(usize),
     /// Merdiven's choice, by its place in [`STAIR_PROFILES`].
     StairProfile(usize),
+    /// Kısa <'s choice, by its place in [`LENGTHS`].
+    Length(usize),
+    /// Kapsam's choice, by its place in [`SCOPES`].
+    Scope(usize),
+    /// İstisnalar' choice, by its place in [`VIEWS`].
+    View(usize),
+    /// İstisna yap…: the note asked for the chosen findings, or for the row a right press opened the menu on (by its
+    /// place shown).
+    Except(Option<usize>),
+    Note(String),
+    /// The note given: the chosen findings marked.
+    ExceptConfirm,
+    ExceptCancel,
+    /// İstisnayı kaldır: the chosen findings' exceptions taken away, or the row's.
+    Unexcept(Option<usize>),
+    /// The row menu's Düzelt: that row's fix, or the chosen ones' when it is among them.
+    FixRow(usize),
+    /// Eski istisnaları temizle: the exceptions whose finding is gone dropped.
+    Prune,
 }
 
 fn msg(e: Event) -> Message {
@@ -135,6 +216,8 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Levels => "archSettings",
         ArchAuditCheck::Accessibility => "ramp",
         ArchAuditCheck::Stairs => "stair",
+        ArchAuditCheck::Ramps => "ramp",
+        ArchAuditCheck::Casework => "casework",
     }
 }
 
@@ -154,42 +237,51 @@ fn bar_button<'a>(glyph: &str, words: &'a str, hint: &'a str, on: Option<Message
     )
 }
 
+/// How a row's words are drawn: plain, quiet (a note, an exception's row, an old check's), or in the warning colour
+/// (a lapsed exception's finding, docs/adr/0732 §5).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Ink {
+    Plain,
+    Quiet,
+    Warning,
+}
+
+/// A row as the table draws it.
+struct Line {
+    check: ArchAuditCheck,
+    /// Grup, Bulgu, Ne yapılır, Nesne.
+    cells: [String; 4],
+    ink: Ink,
+    /// Among the rows chosen (the one pressed last too).
+    chosen: bool,
+    /// The one pressed last.
+    current: bool,
+    /// Its fix's words, when it has one.
+    fix: Option<String>,
+    /// An exception's, lapsed or not.
+    exception: bool,
+}
+
+/// İstisna yap's note field, which the question focuses.
+const NOTE_FIELD: &str = "arch-audit-note";
+
 /// A table cell's words: one line, cut with an ellipsis.
-fn cell<'a>(words: String, quiet: bool) -> Element<'a, Message> {
+fn cell<'a>(words: String, ink: Ink) -> Element<'a, Message> {
     Elided::new(words)
         .size(typography::body())
         .font(typography::ui())
         .style(move |theme: &iced::Theme| {
             let t = Tokens::of(theme);
             iced::widget::text::Style {
-                color: Some(if quiet { t.muted } else { t.text }),
+                color: Some(match ink {
+                    Ink::Plain => t.text,
+                    Ink::Quiet => t.muted,
+                    Ink::Warning => t.warning,
+                }),
             }
         })
         .width(Fill)
         .into()
-}
-
-/// A threshold's choice: its label before it, its values in the project's words.
-fn threshold<'a>(
-    words: &'a str,
-    values: &[f64],
-    now: f64,
-    show: impl Fn(f64) -> String,
-    pick: fn(usize) -> Event,
-) -> Element<'a, Message> {
-    let picked = values.iter().position(|v| (v - now).abs() < 1e-12);
-    let select = Select::new(
-        values.iter().map(|v| Choice::new(show(*v))).collect::<Vec<_>>(),
-        picked,
-        move |i| msg(pick(i)),
-    );
-    row![
-        label::muted(words),
-        container(select).width(Length::Fixed(typography::scaled(96.0)))
-    ]
-    .spacing(6)
-    .align_y(Center)
-    .into()
 }
 
 impl App {
@@ -211,8 +303,8 @@ impl App {
         Task::none()
     }
 
-    /// The bar's thresholds as the command's input.
-    fn arch_audit_input(&self) -> ArchAudit {
+    /// The bar's thresholds and profiles as the command's input: the findings `cad.arch.exceptions` names.
+    fn arch_audit_finding_input(&self) -> ArchAudit {
         ArchAudit {
             checks: Vec::new(),
             max_gap: Some(self.arch_audit.max_gap),
@@ -225,38 +317,105 @@ impl App {
                 .flatten()
                 .map(str::to_owned)
                 .collect(),
+            min_length: Some(self.arch_audit.min_length),
+            within: None,
+            exceptions: None,
         }
     }
 
-    /// Denetle: every group checked; the chosen finding kept when it is still there.
+    /// The bar's choices as the command's input: its thresholds, its profiles, its scope (docs/adr/0732 §2) and its
+    /// exceptions (§3). A selection's objects since gone are left out of the scope.
+    fn arch_audit_input(&self) -> ArchAudit {
+        let within = match &self.arch_audit.scope {
+            AuditScope::All => None,
+            AuditScope::ActiveLevel => Some(ArchAuditWithin {
+                levels: Some(vec![self.active_level()]),
+                uids: None,
+            }),
+            AuditScope::Selection(uids) => {
+                let model = self.document.as_ref().map(|d| &d.model);
+                let kept: Vec<String> = uids
+                    .iter()
+                    .filter(|u| {
+                        Uuid::parse_str(u)
+                            .ok()
+                            .and_then(|u| model.and_then(|m| m.slot_of(u)))
+                            .is_some()
+                    })
+                    .cloned()
+                    .collect();
+                Some(ArchAuditWithin {
+                    levels: None,
+                    uids: Some(kept),
+                })
+            }
+        };
+        ArchAudit {
+            within,
+            exceptions: Some(self.arch_audit.view),
+            ..self.arch_audit_finding_input()
+        }
+    }
+
+    /// Denetle: every group checked; the chosen findings kept, by their keys, when they are still there.
     pub(crate) fn arch_audit_check(&mut self) {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
         let input = self.arch_audit_input();
-        let kept = self
-            .arch_audit
-            .selected
-            .and_then(|i| self.arch_audit.audited.as_ref()?.findings.get(i))
-            .map(|f| (f.code.clone(), f.uids.clone()));
+        let key_of = |i: usize| {
+            self.arch_audit
+                .audited
+                .as_ref()
+                .and_then(|a| a.findings.get(i))
+                .map(|f| f.key.clone())
+        };
+        let kept = self.arch_audit.selected.and_then(key_of);
+        let chosen: Vec<String> = self.arch_audit.chosen.iter().filter_map(|i| key_of(*i)).collect();
         match arch_audit::plan_in(&doc.model, &input) {
-            CommandResult::Completed { output, .. } => {
-                self.arch_audit.selected = kept.and_then(|(code, uids)| {
-                    output
-                        .findings
-                        .iter()
-                        .position(|f| f.code == code && f.uids == uids)
-                });
+            CommandResult::Completed { output, warnings } => {
+                let place = |key: &str| output.findings.iter().position(|f| f.key == key);
+                self.arch_audit.selected = kept.as_deref().and_then(place);
+                self.arch_audit.chosen = chosen.iter().filter_map(|k| place(k)).collect();
                 self.arch_audit.audited = Some(Audited {
                     findings: output.findings,
                     generation: doc.model.generation(),
                     revision: doc.model.revision(),
+                    outside: output.outside,
+                    excepted: output.excepted,
+                    stale: output.stale,
                 });
+                for w in warnings {
+                    self.warn(w.message);
+                }
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => self.warn(error.message),
             CommandResult::Queued { .. } | CommandResult::Cancelled => {}
+        }
+    }
+
+    /// The chosen findings, in the findings' order: those chosen with Ctrl/⌘ and Shift, else the one pressed.
+    fn arch_audit_chosen(&self) -> Vec<&ArchAuditFinding> {
+        let Some(a) = self.arch_audit.audited.as_ref() else {
+            return Vec::new();
+        };
+        let mut places: BTreeSet<usize> = self.arch_audit.chosen.clone();
+        if let Some(i) = self.arch_audit.selected {
+            places.insert(i);
+        }
+        places.into_iter().filter_map(|i| a.findings.get(i)).collect()
+    }
+
+    /// A row menu's row, by its place shown: it becomes the choice unless it is among the rows chosen already.
+    fn arch_audit_take_row(&mut self, row: Option<usize>) {
+        let Some(i) = row.and_then(|at| self.arch_audit_shown().get(at).copied()) else {
+            return;
+        };
+        if self.arch_audit.selected != Some(i) && !self.arch_audit.chosen.contains(&i) {
+            self.arch_audit.chosen.clear();
+            self.arch_audit.selected = Some(i);
         }
     }
 
@@ -288,12 +447,95 @@ impl App {
                 self.arch_audit.selected = None;
             }
             Event::Press(at) => {
-                if let Some(&i) = self.arch_audit_shown().get(at) {
-                    self.arch_audit.selected = Some(i);
-                    self.arch_audit_show(i);
+                let shown = self.arch_audit_shown();
+                if let Some(&i) = shown.get(at) {
+                    let m = self.modifiers;
+                    if m.command() {
+                        // Ctrl/⌘: one more row, or one less (docs/adr/0732 §5).
+                        if let Some(was) = self.arch_audit.selected.filter(|_| self.arch_audit.chosen.is_empty()) {
+                            self.arch_audit.chosen.insert(was);
+                        }
+                        if !self.arch_audit.chosen.insert(i) {
+                            self.arch_audit.chosen.remove(&i);
+                        }
+                        self.arch_audit.selected = Some(i);
+                        self.arch_audit_show_chosen();
+                    } else if m.shift() {
+                        // Shift: the rows shown from the one pressed last to this one.
+                        let from = self
+                            .arch_audit
+                            .selected
+                            .and_then(|s| shown.iter().position(|x| *x == s))
+                            .unwrap_or(at);
+                        let (a, b) = (from.min(at), from.max(at));
+                        self.arch_audit.chosen = shown[a..=b].iter().copied().collect();
+                        self.arch_audit.selected = Some(i);
+                        self.arch_audit_show_chosen();
+                    } else {
+                        self.arch_audit.chosen.clear();
+                        self.arch_audit.selected = Some(i);
+                        self.arch_audit_show(i);
+                    }
                 }
             }
             Event::Fix => self.arch_audit_fix(),
+            Event::Length(i) => {
+                self.arch_audit.min_length = LENGTHS[i.min(LENGTHS.len() - 1)];
+                self.arch_audit_check();
+            }
+            Event::Scope(i) => {
+                self.arch_audit.scope = match i {
+                    1 => AuditScope::ActiveLevel,
+                    2 => {
+                        let uids: Vec<String> = self
+                            .document
+                            .as_ref()
+                            .map(|d| {
+                                self.selection
+                                    .ids()
+                                    .iter()
+                                    .filter_map(|s| d.model.uid(*s))
+                                    .map(|u| u.to_string())
+                                    .collect()
+                            })
+                            .unwrap_or_default();
+                        if uids.is_empty() {
+                            self.warn("Seçili nesne yok; önce denetlenecek nesneleri seçin.".to_owned());
+                            return Task::none();
+                        }
+                        AuditScope::Selection(uids)
+                    }
+                    _ => AuditScope::All,
+                };
+                self.arch_audit_check();
+            }
+            Event::View(i) => {
+                self.arch_audit.view = VIEWS[i.min(VIEWS.len() - 1)].0;
+                self.arch_audit_check();
+            }
+            Event::Except(row) => {
+                self.arch_audit_take_row(row);
+                if self.arch_audit_chosen().iter().any(|f| !f.exception) {
+                    self.arch_audit.note = Some(String::new());
+                    return iced::widget::operation::focus(iced::widget::Id::new(NOTE_FIELD));
+                }
+            }
+            Event::Note(t) => {
+                if self.arch_audit.note.is_some() {
+                    self.arch_audit.note = Some(t);
+                }
+            }
+            Event::ExceptCancel => self.arch_audit.note = None,
+            Event::ExceptConfirm => self.arch_audit_except(),
+            Event::Unexcept(row) => {
+                self.arch_audit_take_row(row);
+                self.arch_audit_unexcept();
+            }
+            Event::FixRow(at) => {
+                self.arch_audit_take_row(Some(at));
+                self.arch_audit_fix();
+            }
+            Event::Prune => self.arch_audit_prune(),
             Event::ShowLevelless => self.arch_audit_show_levelless(),
             Event::AssignLevel(level) => self.arch_audit_assign_level(&level),
             Event::Gap(i) => {
@@ -318,6 +560,26 @@ impl App {
             }
         }
         Task::none()
+    }
+
+    /// The chosen findings' objects selected together and the view fitted on them all.
+    fn arch_audit_show_chosen(&mut self) {
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let mut slots: Vec<Slot> = Vec::new();
+        for f in self.arch_audit_chosen() {
+            for s in f.uids.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)) {
+                if !slots.contains(&s) {
+                    slots.push(s);
+                }
+            }
+        }
+        let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
+        self.selection.set(slots);
+        if !ids.is_empty() {
+            self.navigating(|app| app.zoom_to_objects(&ids));
+        }
     }
 
     /// A finding's objects selected and the view fitted on them.
@@ -348,54 +610,6 @@ impl App {
         self.navigating(|app| app.zoom_to_objects(&ids));
     }
 
-    /// Düzelt: the chosen finding's fix, its command run as one undo step; the drawing checked again.
-    fn arch_audit_fix(&mut self) {
-        if self.arch_audit_stale() {
-            self.warn(STALE);
-            return;
-        }
-        let Some(f) = self
-            .arch_audit
-            .selected
-            .and_then(|i| self.arch_audit.audited.as_ref()?.findings.get(i))
-            .cloned()
-        else {
-            return;
-        };
-        let Some(fix) = f.fix else {
-            return;
-        };
-        let Some(doc) = self.document.as_mut() else {
-            return;
-        };
-        let answer = registry::run(
-            &mut ExecutionContext::new(&mut doc.model),
-            &fix.step.command,
-            CallOp::Execute,
-            fix.step.input.clone(),
-        );
-        match answer {
-            Ok(v) if v["status"] == "completed" => {
-                self.say(Level::Success, format!("Düzeltildi: {}. Geri al ile dönülür.", fix.label));
-                for w in v["warnings"].as_array().into_iter().flatten() {
-                    if let Some(m) = w["message"].as_str() {
-                        self.warn(m.to_owned());
-                    }
-                }
-            }
-            Ok(v) => {
-                let why = v["error"]["message"].as_str().unwrap_or("Düzeltme yazılamadı.");
-                self.warn(why.to_owned());
-                return;
-            }
-            Err(e) => {
-                self.warn(format!("Düzeltme çalıştırılamadı: {e:?}"));
-                return;
-            }
-        }
-        self.arch_audit_check();
-    }
-
     /// The level findings' objects of the last check.
     fn arch_audit_levelless(&self) -> Vec<String> {
         self.arch_audit.audited.as_ref().map_or_else(Vec::new, |a| {
@@ -405,354 +619,5 @@ impl App {
                 .flat_map(|f| f.uids.iter().cloned())
                 .collect()
         })
-    }
-
-    /// Kata ver ▾'s Seç ve göster: the objects without a level selected and the view on them, before any level is
-    /// given (docs/adr/0717 §2).
-    fn arch_audit_show_levelless(&mut self) {
-        let uids = self.arch_audit_levelless();
-        let Some(doc) = self.document.as_ref() else {
-            return;
-        };
-        let slots: Vec<Slot> = uids
-            .iter()
-            .filter_map(|u| Uuid::parse_str(u).ok())
-            .filter_map(|u| doc.model.slot_of(u))
-            .collect();
-        let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
-        self.selection.set(slots);
-        if !ids.is_empty() {
-            self.navigating(|app| app.zoom_to_objects(&ids));
-        }
-    }
-
-    /// Kata ver ▾'s level: every object without a level given it through `cad.levels.assign`, one undo step; the
-    /// objects stay selected so the step shows; the drawing checked again.
-    fn arch_audit_assign_level(&mut self, level: &str) {
-        if self.arch_audit_stale() {
-            self.warn(STALE);
-            return;
-        }
-        let Some(doc) = self.document.as_mut() else {
-            return;
-        };
-        let answer = registry::run(
-            &mut ExecutionContext::new(&mut doc.model),
-            kentos_commands::CAD_LEVELS_ASSIGN,
-            CallOp::Execute,
-            serde_json::json!({ "level": level }),
-        );
-        match answer {
-            Ok(v) if v["status"] == "completed" => {
-                let given: Vec<Slot> = v["output"]["assigned"]
-                    .as_array()
-                    .into_iter()
-                    .flatten()
-                    .filter_map(|a| a["id"].as_u64())
-                    .map(|id| Slot(id as u32))
-                    .collect();
-                let name = doc
-                    .model
-                    .settings()
-                    .arch
-                    .as_ref()
-                    .and_then(|a| a.levels.iter().find(|l| l.id == level))
-                    .map_or_else(|| level.to_owned(), |l| l.name.clone());
-                let count = given.len();
-                self.selection.set(given);
-                self.say(
-                    Level::Success,
-                    format!("{count} nesnenin katı {name} oldu. Geri al ile dönülür."),
-                );
-                for w in v["warnings"].as_array().into_iter().flatten() {
-                    if let Some(m) = w["message"].as_str() {
-                        self.warn(m.to_owned());
-                    }
-                }
-            }
-            Ok(v) => {
-                let why = v["error"]["message"].as_str().unwrap_or("Kat verilemedi.");
-                self.warn(why.to_owned());
-                return;
-            }
-            Err(e) => {
-                self.warn(format!("Kat verilemedi: {e:?}"));
-                return;
-            }
-        }
-        self.arch_audit_check();
-    }
-
-    /// Kata ver ▾ while the check found objects without a level (docs/adr/0717 §2): Seç ve göster, then the project's
-    /// levels, Etkin kat marked; none otherwise.
-    fn arch_audit_levels_button(&self) -> Option<Element<'_, Message>> {
-        let count = self.arch_audit_levelless().len();
-        if count == 0 {
-            return None;
-        }
-        let levels: Vec<(String, String)> = self
-            .document
-            .as_ref()?
-            .model
-            .settings()
-            .arch
-            .as_ref()?
-            .levels
-            .iter()
-            .map(|l| (l.id.clone(), l.name.clone()))
-            .collect();
-        let active = self.active_level();
-        let stale = self.arch_audit_stale();
-        let face = row![
-            icon(from_web(Some("archSettings"))).size(14.0),
-            label::body(format!("Kata ver ({count})")),
-            icon(from_web(Some("chevronDown"))).size(12.0).tone(Tone::Muted),
-        ]
-        .spacing(6)
-        .align_y(Center);
-        let menu = move || {
-            let mut menu = kentos_ui::widget::Menu::new()
-                .header(format!("Katsız {count} nesne"))
-                .item("Seç ve göster", msg(Event::ShowLevelless))
-                .icon(from_web(Some("zoomSelection")))
-                .separator()
-                .header("Kata ver: hepsi tek adımda");
-            for (id, name) in &levels {
-                let words = if active.as_deref() == Some(id.as_str()) {
-                    format!("{name} · etkin kat")
-                } else {
-                    name.clone()
-                };
-                menu = menu.item(words, (!stale).then(|| msg(Event::AssignLevel(id.clone()))));
-            }
-            menu
-        };
-        Some(tip(
-            kentos_ui::widget::MenuButton::new(container(face).padding([4, 10]), menu),
-            Tip::new("Kata ver").body(
-                "Katsız ya da projede olmayan bir kattaki duvar, mahal, kolon, merdiven, rampa ve mahal ayırıcılara bir kat verir; yerleri değişmez. Seç ve göster önce onları seçer. Tek geri alma adımıdır.",
-            ),
-            iced::widget::tooltip::Position::Top,
-        ))
-    }
-
-    /// The Denetim tab: its bar, a note when the check is old, the table.
-    pub(crate) fn arch_audit_tab(&self) -> Element<'_, Message> {
-        let bar = iced::widget::responsive(move |room| self.arch_audit_bar(room.width)).height(Length::Shrink);
-        let stale = self.arch_audit_stale();
-        let audited = self.arch_audit.audited.as_ref();
-        let shown = self.arch_audit_shown();
-        let columns = COLUMNS.iter().enumerate().map(|(i, title)| {
-            let width = match i {
-                0 => Length::Fixed(typography::scaled(44.0)),
-                1 => Length::FillPortion(2),
-                2 => Length::FillPortion(6),
-                3 => Length::FillPortion(5),
-                _ => Length::FillPortion(2),
-            };
-            let column = TableColumn::new(*title).width(width);
-            if i == 0 { column.align_right() } else { column }
-        });
-        let empty = match audited {
-            None => NOT_CHECKED,
-            Some(a) if a.findings.is_empty() => CLEAN,
-            Some(_) => NONE_SHOWN,
-        };
-        let lines: Vec<(ArchAuditCheck, [String; 4], bool)> = audited.map_or_else(Vec::new, |a| {
-            shown
-                .iter()
-                .map(|&i| {
-                    let f = &a.findings[i];
-                    let objects = match f.uids.len() {
-                        1 => "1 nesne".to_owned(),
-                        n => format!("{n} nesne"),
-                    };
-                    (
-                        f.check,
-                        [f.check.label().to_owned(), f.message.clone(), f.repair.clone(), objects],
-                        self.arch_audit.selected == Some(i),
-                    )
-                })
-                .collect()
-        });
-        let first = lines.iter().position(|(_, _, on)| *on);
-        let count = lines.len();
-        let table = Table::new(columns)
-            .virtualized(count, move |i| {
-                let (check, cells, on) = &lines[i];
-                let group = row![
-                    icon(from_web(Some(group_icon(*check)))).size(13.0).tone(Tone::Muted),
-                    cell(cells[0].clone(), false)
-                ]
-                .spacing(6)
-                .align_y(Center);
-                TableLine::new([
-                    label::muted((i + 1).to_string()).into(),
-                    group.into(),
-                    cell(cells[1].clone(), stale),
-                    cell(cells[2].clone(), true),
-                    cell(cells[3].clone(), true),
-                ])
-                .selected(*on)
-                .current(false)
-                .on_press(msg(Event::Press(i)))
-            })
-            .reveal(first)
-            .empty(empty);
-        let mut out = Column::new().push(bar);
-        if stale {
-            out = out.push(
-                container(
-                    row![
-                        icon(from_web(Some("warning"))).size(14.0).tone(Tone::Warning),
-                        label::body(STALE),
-                        space::horizontal(),
-                        bar_button("archAudit", CHECK, CHECK_HINT, Some(msg(Event::Check))),
-                    ]
-                    .spacing(8)
-                    .align_y(Center),
-                )
-                .padding([4, 10])
-                .width(Fill)
-                .style(|theme: &iced::Theme| container::Style {
-                    background: Some(Background::Color(Tokens::of(theme).warning.scale_alpha(0.14))),
-                    ..container::Style::default()
-                }),
-            );
-        }
-        out.push(horizontal_divider()).push(table).width(Fill).height(Fill).into()
-    }
-
-    /// Rampa and Merdiven: the profiles the ramps (docs/adr/0723 §4) and the stairs (0724 §2) are measured against;
-    /// the chosen profile's name and note in its tip.
-    fn arch_audit_profiles(&self) -> Element<'_, Message> {
-        let profile = |caption: &'static str,
-                       list: &'static [(Option<&'static str>, &'static str)],
-                       chosen: Option<&'static str>,
-                       on: fn(usize) -> Event,
-                       width: f32| {
-            let picked = list.iter().position(|(id, _)| *id == chosen);
-            let select = Select::new(
-                list.iter().map(|(_, words)| Choice::new(*words)).collect::<Vec<_>>(),
-                picked,
-                move |i| msg(on(i)),
-            );
-            let note = chosen.and_then(kentos_commands::arch_profile).map_or_else(
-                || format!("{caption} denetlenmez. Bir profil seçin."),
-                |p| format!("{}. {}", p.name, p.note),
-            );
-            tip(
-                row![label::muted(caption), container(select).width(Length::Fixed(typography::scaled(width)))]
-                    .spacing(6)
-                    .align_y(Center),
-                Tip::new(caption).body(note),
-                iced::widget::tooltip::Position::Top,
-            )
-        };
-        row![
-            profile("Rampa", &RAMP_PROFILES, self.arch_audit.ramp_profile, Event::RampProfile, 124.0),
-            profile("Merdiven", &STAIR_PROFILES, self.arch_audit.stair_profile, Event::StairProfile, 150.0),
-        ]
-        .spacing(12)
-        .align_y(Center)
-        .into()
-    }
-
-    /// The bar at `width`: Denetle, the group, the thresholds; the count and Düzelt at its end, or under it when
-    /// narrow.
-    fn arch_audit_bar(&self, width: f32) -> Element<'_, Message> {
-        let audited = self.arch_audit.audited.as_ref();
-        let count_of = |g: Option<ArchAuditCheck>| {
-            audited.map(|a| a.findings.iter().filter(|f| g.is_none_or(|g| f.check == g)).count())
-        };
-        let mut choices = vec![match count_of(None) {
-            Some(n) => Choice::new(ALL).detail(n.to_string()),
-            None => Choice::new(ALL),
-        }];
-        choices.extend(ArchAuditCheck::ALL.iter().map(|g| {
-            let c = Choice::new(g.label()).icon(from_web(Some(group_icon(*g))));
-            match count_of(Some(*g)) {
-                Some(n) => c.detail(n.to_string()),
-                None => c,
-            }
-        }));
-        let picked = self
-            .arch_audit
-            .group
-            .and_then(|g| ArchAuditCheck::ALL.iter().position(|x| *x == g))
-            .map_or(0, |i| i + 1);
-        let group = Select::new(choices, Some(picked), |i| {
-            msg(Event::Group(if i == 0 { None } else { Some(ArchAuditCheck::ALL[i - 1]) }))
-        });
-        let format = self.format();
-        let length = |v: f64| format.length(v);
-        let start = row![
-            bar_button("archAudit", CHECK, CHECK_HINT, Some(msg(Event::Check))),
-            container(group).width(Length::Fixed(typography::scaled(210.0))),
-        ]
-        .spacing(12)
-        .align_y(Center);
-        let limits = row![
-            threshold("Boşluk ≤", &GAPS, self.arch_audit.max_gap, length, Event::Gap),
-            threshold("Küçük <", &AREAS, self.arch_audit.min_area, |v| format!("{v:.2} m²"), Event::Area),
-            threshold("Dar <", &WIDTHS, self.arch_audit.min_width, length, Event::Width),
-            self.arch_audit_profiles(),
-        ]
-        .spacing(12)
-        .align_y(Center);
-        let chosen = self
-            .arch_audit
-            .selected
-            .and_then(|i| audited?.findings.get(i));
-        let count = audited.map_or_else(String::new, |a| {
-            let n = a.findings.len();
-            let fixable = a.findings.iter().filter(|f| f.fix.is_some()).count();
-            if n == 0 {
-                "Bulgu yok".to_owned()
-            } else {
-                format!("{n} bulgu · {fixable} düzeltilebilir")
-            }
-        });
-        let fix_hint = chosen
-            .and_then(|f| f.fix.as_ref())
-            .map_or_else(
-                || "Seçili bulgunun açık bir düzeltmesi yok; Ne yapılır sütununa göre elle düzeltin.".to_owned(),
-                |f| format!("{}. Tek geri alma adımıdır; denetim kendiliğinden yinelenir.", f.label),
-            );
-        let fixable = chosen.is_some_and(|f| f.fix.is_some()) && !self.arch_audit_stale();
-        let fix_words = chosen
-            .and_then(|f| f.fix.as_ref())
-            .map_or(FIX.to_owned(), |f| format!("{FIX}: {}", f.label));
-        let fix = tip(
-            button(
-                row![icon(from_web(Some("topologyFix"))).size(14.0), label::body(fix_words)]
-                    .spacing(6)
-                    .align_y(Center),
-            )
-            .style(style::button::primary)
-            .padding([4, 10])
-            .on_press_maybe(fixable.then(|| msg(Event::Fix))),
-            Tip::new(FIX).body(fix_hint),
-            iced::widget::tooltip::Position::Top,
-        );
-        let mut end = row![label::muted(count)].spacing(10).align_y(Center);
-        if let Some(levels) = self.arch_audit_levels_button() {
-            end = end.push(levels);
-        }
-        let end = end.push(fix);
-        // Wide: one line. Narrow: the check, the group, the count and Düzelt first; the thresholds under them.
-        let bar: Element<'_, Message> = if width >= typography::from_default(BAR_WIDTH) {
-            row![start, limits, space::horizontal(), end]
-                .spacing(12)
-                .align_y(Center)
-                .into()
-        } else {
-            Column::new()
-                .spacing(6)
-                .push(row![start, space::horizontal(), end].spacing(10).align_y(Center))
-                .push(limits)
-                .into()
-        };
-        container(bar).padding([6, 10]).width(Fill).into()
     }
 }

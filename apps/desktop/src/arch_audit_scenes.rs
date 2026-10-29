@@ -31,7 +31,7 @@ fn setup() -> Value {
     file["setup"].clone()
 }
 
-fn open_flat(app: &mut App, edit: impl FnOnce(&mut Value)) {
+pub(crate) fn open_flat(app: &mut App, edit: impl FnOnce(&mut Value)) {
     let mut d = setup();
     edit(&mut d);
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(d).expect("the drawing reads");
@@ -54,7 +54,7 @@ fn event(app: &mut App, e: Event) {
 }
 
 /// The row of the first finding of `code`, by its place in the order shown.
-fn row_of(app: &App, code: &str) -> usize {
+pub(crate) fn row_of(app: &App, code: &str) -> usize {
     let shown = app.arch_audit_shown();
     let findings = &app.arch_audit.audited.as_ref().expect("audited").findings;
     shown

@@ -1,0 +1,90 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Denetim istisnaları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ],
+      "auditExceptions": [
+        {
+          "key": "arch_wall_short:0192f5a1-7320-7000-8000-000000000001",
+          "code": "arch_wall_short",
+          "uids": [
+            "0192f5a1-7320-7000-8000-000000000001"
+          ],
+          "digest": "0f3a91c27be45d68",
+          "note": "Pencere ayağı; bilerek kısa.\nMimar onayladı."
+        },
+        {
+          "key": "tag_empty:0192f5a1-7320-7000-8000-000000000002",
+          "code": "tag_empty",
+          "uids": [
+            "0192f5a1-7320-7000-8000-000000000002"
+          ],
+          "digest": "a1b2c3d4e5f60718"
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "P1"
+      },
+      "p": {
+        "x": 500001.25,
+        "y": 4400002.5
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e21"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

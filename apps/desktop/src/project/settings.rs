@@ -735,6 +735,12 @@ impl App {
         ).unwrap_or_default();
         // The phase view is Mimari › Evre's, not this form's (docs/adr/0346 §2): it stays as it was.
         arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
+        // So are Denetim's exceptions (docs/adr/0732 §3).
+        arch.audit_exceptions = s
+            .initial
+            .arch
+            .as_ref()
+            .map_or_else(Vec::new, |a| a.audit_exceptions.clone());
         // So are the level and view the drawing opens with (docs/adr/0720 §1), but not a level taken away here.
         if !arch.levels.is_empty() {
             let kept = |id: &String| arch.levels.iter().any(|l| l.id == *id);

@@ -1870,7 +1870,17 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.arch.audit",
-        refusals: &[&["not_finite", "invalid_arch_audit", "level_not_found"]],
+        refusals: &[&["not_finite", "invalid_arch_audit", "level_not_found", "entity_not_found"]],
+        warnings: &["exception_lapsed"],
+        targets: none,
+    },
+    // İstisna yap, İstisnayı kaldır, İstisnaları temizle (docs/adr/0732 §3): the audit's refusals come under `audit.`.
+    Entry {
+        id: "cad.arch.exceptions",
+        refusals: &[
+            &["invalid_input", "finding_not_found", "not_finite", "invalid_arch_audit", "level_not_found"],
+            REVISION,
+        ],
         warnings: &[],
         targets: none,
     },

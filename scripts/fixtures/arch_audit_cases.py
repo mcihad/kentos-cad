@@ -27,10 +27,21 @@ The rules, as ADR 0703 gives them:
   ends, or swapped with its arc turned over, within a nanometre) and no column is tied to it, else names it the next
   label after its own that no grid of the level has and no earlier fix gave.
 - A fix only when the object it writes is on an unlocked layer. Order: the groups, each group's codes, then x, then y.
+
+ADR 0732 adds, by the same hand: an open wall shorter than `minLength` (0.05 m; `arch_wall_short`, fix delete unless it
+holds an opening or is locked), two straight walls of a level along each other (`arch_wall_overlap`: their faces'
+middles parallel within a degree, nearer across than their half widths together, overlapping along for more than the
+wider; fix delete the later copy), two room separators of a level on one line (`arch_separator_overlap`), an empty tag
+(`tag_empty`), the stairs' and the ramps' own warnings (`arch_command_cases.py`'s; `stair_rise_level` fixed by the
+height from the level, `ramp_slope_mismatch` by the slope made), a broken kitchen run (`arch_casework_broken`, fix
+release). Each finding's key (`code:uids`, an end gap's `:start`/`:end`, `#2` for a second alike), the part asked
+(`within`), the project's exceptions (a digest of the canonical JSON of the finding's code, objects, words and place:
+the first eight bytes of its SHA-256) and `cad.arch.exceptions`'s cases, written to `cad.arch.exceptions.json`.
 """
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import sys
@@ -39,26 +50,37 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import wall_join_cases as wj  # noqa: E402  (the joins' reference: exact fractions, straight walls)
+import arch_command_cases as acmd  # noqa: E402  (the stairs' and the ramps' own warnings, ADR 0343)
 from arch_command_cases import next_label  # noqa: E402  (the grid labels' rule, ADR 0343)
+from protocol_cases import canonical  # noqa: E402  (canonical JSON, ADR 0253 §2)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1/cad.arch.audit.json"
+OUT_EXCEPTIONS = ROOT / "fixtures/commands/v1/cad.arch.exceptions.json"
 COMMAND = "cad.arch.audit"
 JOIN_TOLERANCE = 1e-3
-DEFAULTS = {"maxGap": 0.10, "minArea": 0.10, "minWidth": 0.15}
-GROUPS = ["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels"]
+DEFAULTS = {"maxGap": 0.10, "minArea": 0.10, "minWidth": 0.15, "minLength": 0.05}
+GROUPS = ["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels",
+          "accessibility", "stairs", "ramps", "casework"]
+RAMP_PROFILE = ["ramp_slope_over_profile", "ramp_long_run_slope", "ramp_landing_short", "ramp_turn_narrow"]
+STAIR_PROFILE = ["stair_riser_over_profile", "stair_tread_short", "stair_step_over_profile", "stair_width_narrow",
+                 "stair_landing_short", "stair_winder_narrow", "stair_railing_missing"]
 CODES = {
     "walls": ["wall_join_overlap", "wall_join_crowded", "wall_join_acute", "wall_join_unresolved", "arch_wall_end_gap",
-              "arch_wall_ends_apart"],
+              "arch_wall_ends_apart", "arch_wall_short", "arch_wall_overlap", "arch_separator_overlap"],
     "openings": ["arch_opening_broken", "tag_missing_type"],
     "spaces": ["arch_space_broken", "arch_space_small", "arch_space_narrow"],
     "numbers": ["tag_duplicate_number"],
-    "tags": ["tag_target_gone"],
+    "tags": ["tag_target_gone", "tag_empty"],
     "dimensions": ["arch_dimension_set_broken", "arch_dimension_broken"],
     "grids": ["arch_grid_label_duplicate"],
     "columns": ["arch_column_grid_gone"],
     "viewmarks": ["arch_viewmark_target_gone"],
     "levels": ["arch_level_missing"],
+    "accessibility": RAMP_PROFILE,
+    "stairs": ["stair_short", "stair_long", "stair_rise_level"] + STAIR_PROFILE,
+    "ramps": ["ramp_no_run", "ramp_slope_mismatch"],
+    "casework": ["arch_casework_broken"],
 }
 MODE_LABEL = {"auto": "Otomatik", "none": "Yok", "miter": "Gönye", "butt": "Alın", "through": "Geçen"}
 
@@ -291,6 +313,81 @@ def drawing():
     }
 
 
+def U2(n):
+    return f"0192f5a1-7320-7000-8000-{n:012x}"
+
+
+def extras():
+    """ADR 0732 §4's drawing (uids U2(id)): a wall and its copy, two walls along each other, a 3 cm wall, a 4 cm one on
+    the locked layer, a corner and a run's continuation (no finding), a copy on another level; separators along each
+    other, a reversed twin, a copy on another level; an opening without a number and its empty tag; stairs with too
+    short and too long a walking line and one whose risers miss its level's height; a ramp without a sloped run and
+    one whose slope its rise and run do not make."""
+    wa = wall(1, [(0, 0), (6, 0)], 0.2)
+    sep = lambda id, pts, level="zemin": {"kind": "polyline", **base(id, "mimari"), "lineType": "dashed",  # noqa: E731
+                                          "pts": [P(*q) for q in pts], "spaceSeparator": {"level": level}}
+    ents = [
+        wa,
+        wall(2, [(0, 0), (6, 0)], 0.2),
+        wall(3, [(0, 3), (6, 3)], 0.2),
+        wall(4, [(2, 3.05), (8, 3.05)], 0.2),
+        wall(5, [(10, 0), (10.03, 0)], 0.1),
+        {**wall(6, [(14, 0), (14.04, 0)], 0.1), "layerId": "kilitli"},
+        wall(7, [(30, 0), (34, 0)], 0.2),
+        wall(8, [(34, 0), (34, 4)], 0.2),
+        wall(9, [(40, 0), (44, 0)], 0.2),
+        wall(10, [(44, 0), (48, 0)], 0.2),
+        wall(11, [(0, 0), (6, 0)], 0.2, level="kat-1"),
+        sep(12, [(0, 10), (6, 10)]),
+        sep(13, [(2, 10), (8, 10)]),
+        sep(14, [(0, 12), (4, 12)]),
+        sep(15, [(4, 12), (0, 12)]),
+        sep(16, [(0, 14), (4, 14)], level="kat-1"),
+        sep(17, [(0, 14), (4, 14)]),
+        opening(18, wa, U2(1), 3.0, 0.9),
+        # An empty text is the KCAD writer's default: left out, as a saved drawing has it.
+        {"kind": "tag", **base(19, "mimari"), "of": U2(18), "at": P(3, -1)},
+        {"kind": "stair", **base(20, "mimari"), "pts": [P(50, 0), P(52, 0)], "width": 1.2, "risers": 16,
+         "riserHeight": 0.1875, "tread": 0.25, "arch": {"level": "zemin"}},
+        {"kind": "stair", **base(21, "mimari"), "pts": [P(50, 5), P(55, 5)], "width": 1.2, "risers": 16,
+         "riserHeight": 0.1875, "tread": 0.25, "arch": {"level": "kat-1"}},
+        {"kind": "stair", **base(22, "mimari"), "pts": [P(50, 10), P(53.75, 10)], "width": 1.2, "risers": 16,
+         "riserHeight": 0.175, "tread": 0.25, "arch": {"level": "zemin"}},
+        {"kind": "ramp", **base(23, "mimari"), "pts": [P(60, 0), P(70, 0)], "width": 1.5, "rise": 0.5, "slope": 8.0,
+         "arch": {"level": "zemin"}},
+        {"kind": "ramp", **base(24, "mimari"), "pts": [P(60, 10), P(60.5, 10), P(60.5, 10.5)], "width": 1.5,
+         "rise": 0.5, "arch": {"level": "zemin"}},
+    ]
+    uids = [U2(e["id"]) for e in ents]
+    for i, e in enumerate(ents):
+        e["id"] = i + 1
+    return {
+        "format": "kentos.document", "version": 2, "name": "Mimari denetim ekleri",
+        "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
+                     "plotScale": 50.0, "workspace": "cad", "arch": {"levels": LEVELS}},
+        "origin": {"x": 0.0, "y": 0.0},
+        "layers": [layer("duvar", "Duvar"), layer("mimari", "Mimari"), layer("olcu", "Ölçü"),
+                   layer("kilitli", "Kilitli", locked=True), layer("gizli", "Gizli", visible=False)],
+        "activeLayer": "duvar",
+        "entities": ents,
+        "uids": uids,
+        "styles": {"items": [], "categories": []},
+    }
+
+
+def kitchen():
+    """A kitchen run whose walls are gone (ADR 0727 §5): the KCAD sample's run, its walls taken out, broken."""
+    d = json.loads((ROOT / "fixtures/kcad/v2/casework.json").read_text())
+    walls = {u for u, e in zip(d["uids"], d["entities"]) if e["kind"] == "wall"}
+    kept = [(u, e) for u, e in zip(d["uids"], d["entities"]) if u not in walls]
+    d["uids"] = [u for u, _ in kept]
+    d["entities"] = [e for _, e in kept]
+    for i, e in enumerate(d["entities"]):
+        e["id"] = i + 1
+    d["casework"][0]["broken"] = "wallGone"
+    return d
+
+
 # ── Geometry (exact fractions where the walls are concerned) ────────────────────────────────────────────────────
 
 
@@ -409,13 +506,20 @@ def step(command, inp):
 
 
 def finding(check, code, message, repair, uids, at, fix=None):
-    f = {"check": check, "code": code, "message": message, "repair": repair, "uids": uids, "at": xy(at)}
+    f = {"key": f"{code}:{','.join(uids)}", "check": check, "code": code, "message": message, "repair": repair,
+         "uids": uids, "at": xy(at)}
     if fix:
         f["fix"] = fix
     return f
 
 
-def walls_findings(d, max_gap):
+def digest(f):
+    """The digest an exception binds a finding by (ADR 0732 §3)."""
+    text = canonical({"at": f["at"], "code": f["code"], "message": f["message"], "uids": f["uids"]})
+    return hashlib.sha256(text.encode()).digest()[:8].hex()
+
+
+def walls_findings(d, max_gap, min_length=DEFAULTS["minLength"]):
     walls = [e for e in d["entities"] if e["kind"] == "wall"]
     levels = []
     for w in walls:
@@ -424,11 +528,12 @@ def walls_findings(d, max_gap):
             levels.append(level)
     out = []
     for level in levels:
-        out += level_walls_findings(d, [w for w in walls if (w.get("arch") or {}).get("level") == level], max_gap)
-    return out
+        out += level_walls_findings(d, [w for w in walls if (w.get("arch") or {}).get("level") == level], max_gap,
+                                    min_length)
+    return out + separators_findings(d)
 
 
-def level_walls_findings(d, walls, max_gap):
+def level_walls_findings(d, walls, max_gap, min_length=DEFAULTS["minLength"]):
     """The findings of one level's walls (in the drawing's order)."""
     locked = locked_layers(d)
     uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
@@ -493,10 +598,12 @@ def level_walls_findings(d, walls, max_gap):
             fix = {"label": f"{'Başlangıç' if e == 0 else 'Bitiş'} ucunu öbür duvara uzat",
                    "step": step("cad.walls.edit", {"uids": [uid[w["id"]]],
                                                    "operation": {"kind": "extend", "to": uid[other["id"]], "end": end}})}
-        out.append(finding("walls", "arch_wall_end_gap",
-                           f"Duvarın {'başlangıç' if e == 0 else 'bitiş'} ucuyla öbür duvar arasında {float(g):.3f} m boşluk var; birleşmiyor.",
-                           "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
-                           [uid[w["id"]], uid[other["id"]]], at, fix))
+        f = finding("walls", "arch_wall_end_gap",
+                    f"Duvarın {'başlangıç' if e == 0 else 'bitiş'} ucuyla öbür duvar arasında {float(g):.3f} m boşluk var; birleşmiyor.",
+                    "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
+                    [uid[w["id"]], uid[other["id"]]], at, fix)
+        f["key"] += ":" + end
+        out.append(f)
     rest = [x for x in free if (x[0], x[1]) not in gapped]
     for a in range(len(rest)):
         for b in range(a + 1, len(rest)):
@@ -514,6 +621,153 @@ def level_walls_findings(d, walls, max_gap):
             out.append(finding("walls", "arch_wall_ends_apart", message,
                                "Bir ucu tutamaçla öbür uca taşıyın (Uç kenetiyle); uçlar buluşunca duvarlar birleşir.",
                                uids, mid))
+    return out + short_walls(d, walls, min_length) + overlapping_walls(d, walls)
+
+
+def hosts(d):
+    return {e["host"] for e in d["entities"] if e["kind"] == "opening"}
+
+
+def path_length(w):
+    """A straight path's length (the cases' walls are straight)."""
+    pts = [(p["x"], p["y"]) for p in w["pts"]]
+    n = len(pts)
+    count = n if w.get("closed") else n - 1
+    return sum(math.hypot(pts[(k + 1) % n][0] - pts[k][0], pts[(k + 1) % n][1] - pts[k][1]) for k in range(count))
+
+
+def short_walls(d, walls, min_length):
+    """Open walls shorter than the least length (ADR 0732 §4)."""
+    locked = locked_layers(d)
+    uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
+    held = hosts(d)
+    out = []
+    for w in walls:
+        if w.get("closed") or len(w["pts"]) < 2:
+            continue
+        length = path_length(w)
+        if length >= min_length:
+            continue
+        u = uid[w["id"]]
+        a, b = w["pts"][0], w["pts"][-1]
+        fix = None
+        if w["layerId"] not in locked and u not in held:
+            fix = {"label": "Kısa duvar parçasını sil", "step": step("cad.entities.delete", {"uids": [u]})}
+        out.append(finding("walls", "arch_wall_short", f"Duvar {length:.3f} m; çok kısa bir parça.",
+                           "Artık bir parçaysa silin; bilerek kısaysa istisna yapın.", [u],
+                           ((a["x"] + b["x"]) / 2.0, (a["y"] + b["y"]) / 2.0), fix))
+    return out
+
+
+SIN_DEGREE = math.sin(math.radians(1.0))
+
+
+def along_each_other(a, b):
+    """Two straight runs along each other, as the core measures them in floats: how long they overlap along the
+    first, the overlap's middle on it, how far apart across; None unless parallel within a degree."""
+    dx, dy = a[1][0] - a[0][0], a[1][1] - a[0][1]
+    ex, ey = b[1][0] - b[0][0], b[1][1] - b[0][1]
+    la, lb = math.hypot(dx, dy), math.hypot(ex, ey)
+    if la <= 1e-12 or lb <= 1e-12 or abs(dx * ey - dy * ex) > SIN_DEGREE * la * lb:
+        return None
+    ux, uy = dx / la, dy / la
+    along = lambda p: (p[0] - a[0][0]) * ux + (p[1] - a[0][1]) * uy  # noqa: E731
+    across = lambda p: abs((p[1] - a[0][1]) * ux - (p[0] - a[0][0]) * uy)  # noqa: E731
+    t0, t1 = along(b[0]), along(b[1])
+    lo, hi = max(min(t0, t1), 0.0), min(max(t0, t1), la)
+    mid = (lo + hi) / 2.0
+    return hi - lo, (a[0][0] + ux * mid, a[0][1] + uy * mid), (across(b[0]) + across(b[1])) / 2.0
+
+
+def center_runs(w):
+    """A straight wall's body's middle line, run by run: its raw faces' middles (the core's `wall::lines`)."""
+    ww = wj.from_json(w)
+    lines = [wj.offset_path(ww.pts, ww.closed, dd) for dd in ww.boundaries()]
+    left, right = lines[0], lines[-1]
+    mid = [((float(l[0]) + float(r[0])) / 2.0, (float(l[1]) + float(r[1])) / 2.0) for l, r in zip(left, right)]
+    runs = [(mid[k], mid[k + 1]) for k in range(len(mid) - 1)]
+    if w.get("closed") and len(mid) > 2:
+        runs.append((mid[-1], mid[0]))
+    return runs
+
+
+def same_wall(a, b):
+    if not (a["width"] == b["width"] and bool(a.get("closed")) == bool(b.get("closed")) and len(a["pts"]) == len(b["pts"])):
+        return False
+    forward = a.get("justify") == b.get("justify") and a.get("offset", 0.0) == b.get("offset", 0.0) and a["pts"] == b["pts"]
+    centred = lambda w: w.get("justify", "center") == "center" and w.get("offset", 0.0) == 0.0  # noqa: E731
+    backward = centred(a) and centred(b) and a["pts"] == list(reversed(b["pts"]))
+    return forward or backward
+
+
+def overlapping_walls(d, walls):
+    """Straight walls of one level along each other (ADR 0732 §4), once a pair where they overlap longest."""
+    locked = locked_layers(d)
+    uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
+    held = hosts(d)
+    runs = [center_runs(w) for w in walls]
+    out = []
+    for i in range(len(walls)):
+        for j in range(i + 1, len(walls)):
+            ta, tb = walls[i]["width"], walls[j]["width"]
+            best = None
+            for a in runs[i]:
+                for b in runs[j]:
+                    r = along_each_other(a, b)
+                    if r and r[0] > max(ta, tb) + JOIN_TOLERANCE and r[2] < (ta + tb) / 2.0 - JOIN_TOLERANCE:
+                        if best is None or r[0] > best[0]:
+                            best = r
+            if best is None:
+                continue
+            length, at, _ = best
+            ua, ub = uid[walls[i]["id"]], uid[walls[j]["id"]]
+            fix = None
+            if same_wall(walls[i], walls[j]):
+                for k, u in ((j, ub), (i, ua)):
+                    if walls[k]["layerId"] not in locked and u not in held:
+                        fix = {"label": "Yinelenen duvarı sil", "step": step("cad.entities.delete", {"uids": [u]})}
+                        break
+            out.append(finding("walls", "arch_wall_overlap", f"İki duvar {length:.3f} m boyunca üst üste çizilmiş.",
+                               "Fazla duvarı silin ya da kısaltın; mahal sınırında biri yok sayılabilir.", [ua, ub], at,
+                               fix))
+    return out
+
+
+def separators_findings(d):
+    """Room separators of one level on one line (ADR 0732 §4)."""
+    locked = locked_layers(d)
+    uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
+    seps = [e for e in d["entities"] if e["kind"] == "polyline" and "spaceSeparator" in e]
+
+    def edges(p):
+        pts = [(q["x"], q["y"]) for q in p["pts"]]
+        n = len(pts)
+        bulges = p.get("bulges") or []
+        count = n if p.get("closed") and n > 2 else n - 1
+        return [(pts[k], pts[(k + 1) % n]) for k in range(count) if (bulges[k] if k < len(bulges) else 0.0) == 0.0]
+
+    level = lambda p: (p.get("spaceSeparator") or {}).get("level")  # noqa: E731
+    out = []
+    for i in range(len(seps)):
+        for j in range(i + 1, len(seps)):
+            if level(seps[i]) != level(seps[j]):
+                continue
+            best = None
+            for a in edges(seps[i]):
+                for b in edges(seps[j]):
+                    r = along_each_other(a, b)
+                    if r and r[0] > 1e-3 and r[2] <= 1e-3 and (best is None or r[0] > best[0]):
+                        best = r
+            if best is None:
+                continue
+            length, at, _ = best
+            ua, ub = uid[seps[i]["id"]], uid[seps[j]["id"]]
+            twin = seps[i]["pts"] == seps[j]["pts"] or seps[i]["pts"] == list(reversed(seps[j]["pts"]))
+            fix = None
+            if twin and seps[j]["layerId"] not in locked:
+                fix = {"label": "Yinelenen ayırıcıyı sil", "step": step("cad.entities.delete", {"uids": [ub]})}
+            out.append(finding("walls", "arch_separator_overlap", f"İki mahal ayırıcı {length:.3f} m boyunca üst üste.",
+                               "Fazla ayırıcıyı silin; mahal sınırını bir ayırıcı çizer.", [ua, ub], at, fix))
     return out
 
 
@@ -617,6 +871,11 @@ def tags_findings(d):
     uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
     out = []
     for e in d["entities"]:
+        if e["kind"] == "tag" and e["of"] in uids and not e.get("text", "").strip():
+            out.append(finding("tags", "tag_empty", "Etiketin yazısı boş: nesnesinin şablondaki değerleri yok.",
+                               "Nesnenin değerlerini verin (numara, ad, tür) ya da etiketin şablonunu değiştirin.",
+                               [uid[e["id"]]], fx(e["at"])))
+            continue
         if e["kind"] != "tag" or e["of"] in uids:
             continue
         text = e.get("text", "")
@@ -791,17 +1050,167 @@ def levels_findings(d, inp):
     return out
 
 
-def audit(d, inp):
+def level_height(d, level):
+    for lv in (d["settings"].get("arch") or {}).get("levels") or []:
+        if lv["id"] == level:
+            return lv.get("height")
+    return None
+
+
+def stairs_findings(d):
+    """The stairs' own checks (ADR 0732 §4): the drawing reference's warnings but Blondel's (information), the level's
+    height by this drawing's levels."""
+    locked = locked_layers(d)
+    uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
+    out = []
+    for e in d["entities"]:
+        if e["kind"] != "stair":
+            continue
+        u = uid[e["id"]]
+        start = fx(e["pts"][0])
+        for w in acmd.stair_warnings(e, "stair"):
+            if w["code"] == "stair_short":
+                what, repair = split(w["message"])
+                out.append(finding("stairs", "stair_short", what, repair, [u], start))
+            elif w["code"] == "stair_long":
+                out.append(finding("stairs", "stair_long", w["message"],
+                                   "Yolu son rıhtta bitirin (Merdiven'in Sığdır'ı) ya da rıht sayısını artırın.", [u], start))
+        h = level_height(d, (e.get("arch") or {}).get("level"))
+        if h is not None:
+            rise = e["risers"] * e["riserHeight"]
+            if abs(rise - h) > 1e-3:
+                what = (f"{e['risers']} rıht × {acmd.fixed(e['riserHeight'], 3)} m = {acmd.fixed(rise, 3)} m; "
+                        f"katın yüksekliği {acmd.fixed(h, 3)} m.")
+                fix = None
+                if e["layerId"] not in locked:
+                    fix = {"label": "Yüksekliği kattan al",
+                           "step": step("cad.arch.edit", {"uids": [u], "operation": {"kind": "set", "heightFromLevel": True}})}
+                out.append(finding("stairs", "stair_rise_level", what,
+                                   "Rıht yüksekliğini katın yüksekliğinden alın ya da rıht sayısını değiştirin.", [u], start,
+                                   fix))
+    return out
+
+
+def ramp_made(r):
+    """The slope a ramp's rise and sloped run make, per cent; None without a run."""
+    pts = acmd.fpts(r["pts"])
+    land = F(r["landing"]) if r.get("landing") is not None else F(r["width"])
+    at = acmd.ac.walk(pts)
+    run = at[-1] - sum(b - a for a, b in acmd.ac.ramp_landings(pts, at, land))
+    return None if run <= F(1, 10**9) else r["rise"] / float(run) * 100
+
+
+def ramps_findings(d):
+    """The ramps' own checks (ADR 0732 §4)."""
+    locked = locked_layers(d)
+    uid = dict(zip([e["id"] for e in d["entities"]], d["uids"]))
+    out = []
+    for e in d["entities"]:
+        if e["kind"] != "ramp":
+            continue
+        u = uid[e["id"]]
+        start = fx(e["pts"][0])
+        for w in acmd.ramp_warnings(e, "ramp"):
+            if w["code"] == "ramp_no_run":
+                out.append(finding("ramps", "ramp_no_run", w["message"], "Yolu uzatın ya da sahanlığı kısaltın.", [u], start))
+            else:
+                made = ramp_made(e)
+                fix = None
+                if made is not None and e["layerId"] not in locked:
+                    fix = {"label": f"Eğimi %{acmd.fixed(made, 2)} yap",
+                           "step": step("cad.arch.edit", {"uids": [u], "operation": {"kind": "set", "slope": made}})}
+                out.append(finding("ramps", "ramp_slope_mismatch", w["message"],
+                                   "Eğimi yüksekliğin eğimli uzunluğa oranına eşitleyin ya da yüksekliği veya yolu değiştirin.",
+                                   [u], start, fix))
+    return out
+
+
+CASEWORK_WORDS = {
+    "wallGone": "Mutfak dizisinin duvarı çizimde yok; dolaplar son yerlerinde duruyor.",
+    "notBuilt": "Mutfak dizisi tarifinden kurulamıyor; dolaplar son yerlerinde duruyor.",
+}
+
+
+def casework_findings(d):
+    """Kitchen runs that no longer follow (ADR 0732 §4); a run none of whose objects is left is not said."""
+    locked = locked_layers(d)
+    present = set(d["uids"])
+    out = []
+    for run in d.get("casework") or []:
+        if not run.get("broken"):
+            continue
+        uids = [m["uid"] for m in run["members"] if m["uid"] in present]
+        if not uids:
+            continue
+        fix = None
+        if run["recipe"]["layerId"] not in locked:
+            fix = {"label": "Diziyi bırak",
+                   "step": step("cad.casework.edit", {"run": run["id"], "edit": {"kind": "release"}})}
+        out.append(finding("casework", "arch_casework_broken", CASEWORK_WORDS[run["broken"]],
+                           "Duvarı geri getirin ya da diziyi bırakın; bırakılan dizinin dolapları serbest nesneler olur.",
+                           uids, fx(run["recipe"]["from"]), fix))
+    return out
+
+
+def entity_level(d, e):
+    """An object's level as the level view reads it (ADR 0715 §1)."""
+    by_uid = dict(zip(d["uids"], d["entities"]))
+
+    def followed(x):
+        if x is None:
+            return None
+        if x["kind"] == "opening":
+            return own_level(by_uid[x["host"]]) if x["host"] in by_uid else None
+        return own_level(x) if x["kind"] in ("wall", "space", "slab", "grid", "column", "stair", "ramp", "polyline") else None
+
+    if e["kind"] == "opening":
+        return followed(e)
+    if e["kind"] == "tag":
+        return followed(by_uid.get(e["of"]))
+    if e["kind"] == "dimension":
+        refs = e.get("refs") or {}
+        level = None
+        for k in ("a", "b", "c"):
+            r = refs.get(k)
+            if not r:
+                continue
+            lv = followed(by_uid.get(r["uid"]))
+            if lv is None:
+                return None
+            if level is not None and lv != level:
+                return None
+            level = lv
+        return level
+    return followed(e)
+
+
+def in_scope(d, f, within):
+    if not within:
+        return True
+    by_uid = dict(zip(d["uids"], d["entities"]))
+    levels = within.get("levels")
+    if levels is not None and not any(entity_level(d, by_uid[u]) in levels for u in f["uids"] if u in by_uid):
+        return False
+    uids = within.get("uids")
+    return uids is None or any(u in uids for u in f["uids"])
+
+
+def found(d, inp):
+    """Every finding of the groups asked, keyed, and the codes those groups could find (a profile's only when asked;
+    these cases ask none)."""
     max_gap = inp.get("maxGap", DEFAULTS["maxGap"])
     min_area = inp.get("minArea", DEFAULTS["minArea"])
     min_width = inp.get("minWidth", DEFAULTS["minWidth"])
+    min_length = inp.get("minLength", DEFAULTS["minLength"])
     asked = set(inp.get("checks") or GROUPS)
-    found = []
+    out = []
+    run = set()
     for g in GROUPS:
         if g not in asked:
             continue
-        found += {
-            "walls": lambda: walls_findings(d, max_gap),
+        run |= {c for c in CODES[g] if c not in RAMP_PROFILE and c not in STAIR_PROFILE}
+        out += {
+            "walls": lambda: walls_findings(d, max_gap, min_length),
             "openings": lambda: openings_findings(d),
             "spaces": lambda: spaces_findings(d, min_area, min_width),
             "numbers": lambda: numbers_findings(d),
@@ -811,15 +1220,67 @@ def audit(d, inp):
             "columns": lambda: columns_findings(d),
             "viewmarks": lambda: viewmarks_findings(d),
             "levels": lambda: levels_findings(d, inp),
+            "accessibility": lambda: [],
+            "stairs": lambda: stairs_findings(d),
+            "ramps": lambda: ramps_findings(d),
+            "casework": lambda: casework_findings(d),
         }[g]()
     order = {g: i for i, g in enumerate(GROUPS)}
     code_order = {c: i for g in GROUPS for i, c in enumerate(CODES[g])}
-    found.sort(key=lambda f: (order[f["check"]], code_order[f["code"]], f["at"]["x"], f["at"]["y"]))
-    return {"findings": found, "revision": "$current"}
+    out.sort(key=lambda f: (order[f["check"]], code_order[f["code"]], f["at"]["x"], f["at"]["y"]))
+    seen = {}
+    for f in out:
+        seen[f["key"]] = seen.get(f["key"], 0) + 1
+        if seen[f["key"]] > 1:
+            f["key"] = f"{f['key']}#{seen[f['key']]}"
+    return out, run
+
+
+def answer(d, inp):
+    """The output and the warnings (ADR 0732 §2, §3)."""
+    every, run = found(d, inp)
+    exceptions = (d["settings"].get("arch") or {}).get("auditExceptions") or []
+    keys = {f["key"] for f in every}
+    stale = [x["key"] for x in exceptions if x["code"] in run and x["key"] not in keys]
+    view = inp.get("exceptions", "hide")
+    outside = excepted = lapsed = 0
+    listed = []
+    for f in every:
+        if not in_scope(d, f, inp.get("within")):
+            outside += 1
+            continue
+        x = next((x for x in exceptions if x["key"] == f["key"]), None)
+        if x is not None:
+            if x.get("note") is not None:
+                f["note"] = x["note"]
+            if x["digest"] == digest(f):
+                f["exception"] = True
+                excepted += 1
+            else:
+                f["lapsed"] = True
+                lapsed += 1
+        marked = f.get("exception") or f.get("lapsed")
+        if (view == "hide" and not f.get("exception")) or view == "show" or (view == "only" and marked):
+            listed.append(f)
+    out = {"findings": listed, "outside": outside, "excepted": excepted}
+    if stale:
+        out["stale"] = stale
+    out["revision"] = "$current"
+    warnings = []
+    if lapsed:
+        warnings.append({"code": "exception_lapsed",
+                         "message": f"{lapsed} istisnanın bulgusu verildiğinden beri değişti; bulgular yeniden açık. "
+                                    f"İstisnayı yeniden verin ya da kaldırın."})
+    return out, warnings
+
+
+def audit(d, inp):
+    return answer(d, inp)[0]
 
 
 def refused(inp, d=None):
-    for key, what in (("maxGap", "Boşluk eşiği"), ("minArea", "Küçük mahal eşiği"), ("minWidth", "Dar mahal eşiği")):
+    for key, what in (("maxGap", "Boşluk eşiği"), ("minArea", "Küçük mahal eşiği"), ("minWidth", "Dar mahal eşiği"),
+                      ("minLength", "Kısa duvar eşiği")):
         v = inp.get(key)
         if v is not None and v < 0:
             unit = "m²" if key == "minArea" else "m"
@@ -827,6 +1288,15 @@ def refused(inp, d=None):
     if d is not None and inp.get("level") is not None and fix_level(d, inp) is None:
         return refusal("level_not_found", f"Projede “{inp['level']}” kimlikli kat yok. Katı Proje ayarları › Mimari'de "
                                           f"ekleyin ya da var olan bir katı seçin.", "level")
+    within = inp.get("within") or {}
+    levels = [lv["id"] for lv in ((d or {}).get("settings", {}).get("arch") or {}).get("levels") or []]
+    for i, lv in enumerate(within.get("levels") or []):
+        if lv is not None and lv not in levels:
+            return refusal("level_not_found", f"Projede “{lv}” kimlikli kat yok. Katı Proje ayarları › Mimari'de "
+                                              f"ekleyin ya da var olan bir katı seçin.", f"within.levels[{i}]")
+    for i, u in enumerate(within.get("uids") or []):
+        if u not in (d or {}).get("uids", []):
+            return refusal("entity_not_found", f"“{u}” kimlikli nesne çizimde yok.", f"within.uids[{i}]")
     return None
 
 
@@ -836,9 +1306,13 @@ SAME = {"canUndo": False, "dirty": False, "revision": "same"}
 ANY = {"status": "completed", "output": "$any", "warnings": "$any"}
 
 
-def asked(d, inp, op="execute", expect=None):
-    return {"op": op, "input": inp, "result": completed(audit(d, inp)), "within": 1e-9,
-            "expect": dict(expect or SAME)}
+def asked(d, inp, op="execute", expect=None, command=None):
+    out, warnings = answer(d, inp)
+    st = {"op": op, "input": inp, "result": {"status": "completed", "output": out, "warnings": warnings},
+          "within": 1e-9, "expect": dict(expect or SAME)}
+    if command:
+        st = {"op": op, "command": command, **{k: v for k, v in st.items() if k != "op"}}
+    return st
 
 
 def fixed(d, f):
@@ -867,6 +1341,17 @@ def fixed(d, f):
             e["refs"].pop(p["point"])
     elif cmd == "cad.dimensionsets.edit":
         d["dimensionSets"] = [s for s in d["dimensionSets"] if s["id"] != inp["id"]]
+    elif cmd == "cad.arch.edit" and "heightFromLevel" in inp["operation"]:
+        # The stair's rise from its level (ADR 0724 §1): its risers kept, its riser height the level's over them.
+        e = ents[inp["uids"][0]]
+        e["heightFromLevel"] = True
+        e["riserHeight"] = level_height(d, (e.get("arch") or {}).get("level")) / e["risers"]
+    elif cmd == "cad.arch.edit" and "slope" in inp["operation"]:
+        ents[inp["uids"][0]]["slope"] = inp["operation"]["slope"]
+    elif cmd == "cad.casework.edit":
+        d["casework"] = [r for r in d["casework"] if r["id"] != inp["run"]]
+        if not d["casework"]:
+            d.pop("casework")
     elif cmd == "cad.arch.edit" and inp["operation"]["kind"] == "set":
         # A grid named again: a column tied to it takes its place from the new label (ADR 0343 §3).
         e = ents[inp["uids"][0]]
@@ -916,10 +1401,11 @@ def cases():
     case("Küçük mahal eşiği 0,3 m²: şerit artık küçük sayılır", [asked(d, {"checks": ["spaces"], "minArea": 0.3})])
     case("Dar mahal eşiği sıfır: dar bulgusu yok", [asked(d, {"checks": ["spaces"], "minWidth": 0.0})])
     case("Mahal eşikleri sıfır: yalnız kopuk mahal", [asked(d, {"checks": ["spaces"], "minArea": 0.0, "minWidth": 0.0})])
-    for key in ("maxGap", "minArea", "minWidth"):
+    for key in ("maxGap", "minArea", "minWidth", "minLength"):
         inp = {key: -0.01}
         case(f"Eksi {key} reddedilir", [{"op": "execute", "input": inp, "result": refused(inp), "expect": dict(SAME)}])
-    for key, what in (("maxGap", "Boşluk eşiği"), ("minArea", "Küçük mahal eşiği"), ("minWidth", "Dar mahal eşiği")):
+    for key, what in (("maxGap", "Boşluk eşiği"), ("minArea", "Küçük mahal eşiği"), ("minWidth", "Dar mahal eşiği"),
+                      ("minLength", "Kısa duvar eşiği")):
         case(f"Sonlu olmayan {key} reddedilir", [{
             "op": "execute", "input": {key: 0.1}, "nonFinite": {key: "NaN"},
             "result": refusal("not_finite", f"{what} sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.", key),
@@ -984,6 +1470,238 @@ def cases():
             {"op": "undo", "expect": {"canUndo": False, "canRedo": True}},
             asked(d, {"checks": [g]}, expect={"canUndo": False, "canRedo": True, "revision": "same"}),
         ])
+    out += new_checks_cases()
+    out += scope_cases(d)
+    out += exception_view_cases(d)
+    return out
+
+
+def fix_cases(name, x, group, f):
+    """A finding's fix by its own command, the drawing checked again, undo (ADR 0703 §3)."""
+    st = f["fix"]["step"]
+    return {"name": name, "setup": x, "steps": [
+        asked(x, {"checks": [group]}),
+        {"op": "execute", "command": st["command"], "input": st["input"], "result": ANY,
+         "expect": {"canUndo": True, "revision": "changed"}},
+        asked(fixed(x, f), {"checks": [group]}, expect={"canUndo": True, "revision": "same"}),
+        {"op": "undo", "expect": {"canUndo": False, "canRedo": True}},
+        asked(x, {"checks": [group]}, expect={"canUndo": False, "canRedo": True, "revision": "same"}),
+    ]}
+
+
+def new_checks_cases():
+    """ADR 0732 §4: the new findings and their fixes."""
+    x = extras()
+    out = [{"name": "Yeni denetimler: kısa ve üst üste duvar, ayırıcı, boş etiket, merdiven ve rampanın kendi uyarıları",
+            "setup": x, "steps": [asked(x, {})]}]
+    for g in ("walls", "tags", "stairs", "ramps"):
+        out.append({"name": f"Yeni denetimler, yalnız {g}", "setup": x, "steps": [asked(x, {"checks": [g]})]})
+    out.append({"name": "Kısa duvar eşiği 2 cm: 3 cm'lik duvar bulgu değil", "setup": x,
+                "steps": [asked(x, {"checks": ["walls"], "minLength": 0.02})]})
+    out.append({"name": "Kısa duvar eşiği sıfır: kısa duvar bulgusu yok", "setup": x,
+                "steps": [asked(x, {"checks": ["walls"], "minLength": 0.0})]})
+    every = audit(x, {})["findings"]
+    for code, name in (("arch_wall_short", "kısa duvar parçasını sil"), ("arch_wall_overlap", "yinelenen duvarı sil"),
+                       ("arch_separator_overlap", "yinelenen ayırıcıyı sil"),
+                       ("stair_rise_level", "merdivenin yüksekliğini kattan al"),
+                       ("ramp_slope_mismatch", "rampanın eğimini hesaplanana eşitle")):
+        f = next(f for f in every if f["code"] == code and "fix" in f)
+        out.append(fix_cases(f"Düzelt ve yeniden denetle: {name}", x, f["check"], f))
+    k = kitchen()
+    out.append({"name": "Duvarı silinen mutfak dizisi", "setup": k, "steps": [asked(k, {"checks": ["casework"]})]})
+    f = audit(k, {"checks": ["casework"]})["findings"][0]
+    out.append(fix_cases("Düzelt ve yeniden denetle: mutfak dizisini bırak", k, "casework", f))
+    return out
+
+
+def scope_cases(d):
+    """ADR 0732 §2: the part of the drawing reported on."""
+    out = []
+    for name, within in (("Kapsam: 1. kat", {"levels": ["kat-1"]}),
+                         ("Kapsam: zemin kat", {"levels": ["zemin"]}),
+                         ("Kapsam: katsız nesneler", {"levels": [None]}),
+                         ("Kapsam: zemin kat ve katsızlar", {"levels": ["zemin", None]}),
+                         ("Kapsam: seçili duvar", {"uids": [U(1)]}),
+                         ("Kapsam: seçili iki nesne", {"uids": [U(2), U(26)]}),
+                         ("Kapsam: zemin kattaki seçili duvar", {"levels": ["zemin"], "uids": [U(28)]}),
+                         ("Kapsam: boş kat listesi hiçbir bulguyu tutmaz", {"levels": []})):
+        out.append({"name": name, "steps": [asked(d, {"within": within})]})
+    for name, within in (("Kapsamın olmayan katı reddedilir", {"levels": ["zemin", "kat-9"]}),
+                         ("Kapsamın olmayan nesnesi reddedilir", {"uids": [U(0xdead)]})):
+        inp = {"within": within}
+        out.append({"name": name, "steps": [{"op": "execute", "input": inp, "result": refused(inp, d), "expect": dict(SAME)}]})
+    return out
+
+
+def excepted_drawing(d):
+    """The drawing with four exceptions: the gone tag's (as it is), the level-less wall's (its finding changed since:
+    lapsed), a gone short wall's (stale), a stair profile's (not stale: no profile asked)."""
+    x = copy.deepcopy(d)
+    every = audit(d, {})["findings"]
+    tag = next(f for f in every if f["code"] == "tag_target_gone" and f["uids"] == [U(19)])
+    wall28 = next(f for f in every if f["code"] == "arch_level_missing" and f["uids"] == [U(28)])
+    x["settings"]["arch"] = dict(x["settings"]["arch"], auditExceptions=[
+        {"key": tag["key"], "code": tag["code"], "uids": tag["uids"], "digest": digest(tag), "note": "Bilerek bırakıldı."},
+        {"key": wall28["key"], "code": wall28["code"], "uids": wall28["uids"], "digest": "0000000000000000"},
+        {"key": "arch_wall_short:" + U(0xdead), "code": "arch_wall_short", "uids": [U(0xdead)], "digest": "1111111111111111"},
+        {"key": "stair_riser_over_profile:" + U(26), "code": "stair_riser_over_profile", "uids": [U(26)],
+         "digest": "2222222222222222"},
+    ])
+    return x
+
+
+def exception_view_cases(d):
+    """ADR 0732 §3: the project's exceptions laid on the findings."""
+    x = excepted_drawing(d)
+    out = []
+    for name, inp in (("İstisnalar: varsayılan gizler, düşeni açar, bulgusu kalmayanı söyler", {}),
+                      ("İstisnalar gösterilir", {"exceptions": "show"}),
+                      ("Yalnız istisnalar", {"exceptions": "only"}),
+                      ("İstisnalar gizli, yalnız etiketler: başka grubun istisnası bayat sayılmaz", {"checks": ["tags"]}),
+                      ("İstisnalar ve kapsam: kapsam dışındaki istisna sayılmaz", {"within": {"levels": ["zemin"]}})):
+        out.append({"name": name, "setup": x, "steps": [asked(x, inp)]})
+    return out
+
+
+def exceptions_cases():
+    """`cad.arch.exceptions`' cases (ADR 0732 §3)."""
+    d = drawing()
+    every = audit(d, {})["findings"]
+    tag = next(f for f in every if f["code"] == "tag_target_gone" and f["uids"] == [U(19)])
+    level = next(f for f in every if f["code"] == "arch_level_missing" and f["uids"] == [U(28)])
+    gap = next(f for f in every if f["code"] == "arch_wall_end_gap")
+
+    def with_exceptions(base, items):
+        x = copy.deepcopy(base)
+        x["settings"]["arch"] = dict(x["settings"]["arch"], auditExceptions=items)
+        return x
+
+    def record(f, note=None):
+        r = {"key": f["key"], "code": f["code"], "uids": f["uids"], "digest": digest(f)}
+        if note is not None:
+            r["note"] = note
+        return r
+
+    def run(inp, changed, count, expect=None):
+        return {"op": "execute", "command": "cad.arch.exceptions", "input": inp,
+                "result": completed({"changed": changed, "exceptions": count, "revision": "$current"}),
+                "expect": dict(expect or {"canUndo": True, "revision": "changed", "dirty": True})}
+
+    def refuse(inp, code, message, path, base=None):
+        return {"op": "execute", "command": "cad.arch.exceptions", "input": inp,
+                "result": refusal(code, message, path), "expect": dict(SAME)}
+
+    out = []
+
+    def case(name, steps, setup=None):
+        c = {"name": name, "steps": steps}
+        if setup is not None:
+            c["setup"] = setup
+        out.append(c)
+
+    one = with_exceptions(d, [record(tag, "Bilerek bırakıldı.")])
+    case("İstisna yap: etiket bulgusu gizlenir, geri al döndürür", [
+        run({"operation": "mark", "keys": [tag["key"]], "note": "Bilerek bırakıldı."}, [tag["key"]], 1),
+        asked(one, {}, expect={"canUndo": True, "revision": "same"}, command="cad.arch.audit"),
+        {"op": "undo", "expect": {"canUndo": False, "canRedo": True}},
+        asked(d, {}, expect={"canUndo": False, "canRedo": True, "revision": "same"}, command="cad.arch.audit"),
+        {"op": "redo", "expect": {"canUndo": True, "canRedo": False}},
+        asked(one, {}, expect={"canUndo": True, "canRedo": False, "revision": "same"}, command="cad.arch.audit"),
+    ])
+    two = with_exceptions(d, [record(tag), record(gap)])
+    case("İki bulgu bir adımda istisna", [
+        run({"operation": "mark", "keys": [tag["key"], gap["key"]]}, [tag["key"], gap["key"]], 2),
+        asked(two, {"exceptions": "only"}, expect={"canUndo": True, "revision": "same"}, command="cad.arch.audit"),
+    ])
+    case("Zaten istisna olan bulgu değişmez, adım yazılmaz", [
+        run({"operation": "mark", "keys": [tag["key"]]}, [], 1, expect=SAME),
+    ], setup=with_exceptions(d, [record(tag)]))
+    case("Yeni not istisnayı değiştirir", [
+        run({"operation": "mark", "keys": [tag["key"]], "note": "Mimar onayladı."}, [tag["key"]], 1),
+        asked(with_exceptions(d, [record(tag, "Mimar onayladı.")]), {"exceptions": "show", "checks": ["tags"]},
+              expect={"canUndo": True, "revision": "same"}, command="cad.arch.audit"),
+    ], setup=with_exceptions(d, [record(tag, "Bilerek bırakıldı.")]))
+    lapsed = with_exceptions(d, [dict(record(level), digest="0000000000000000")])
+    case("Düşen istisna yeniden verilince bulguya bağlanır", [
+        asked(lapsed, {"checks": ["levels"]}, command="cad.arch.audit"),
+        run({"operation": "mark", "keys": [level["key"]]}, [level["key"]], 1),
+        asked(with_exceptions(d, [record(level)]), {"checks": ["levels"]}, expect={"canUndo": True, "revision": "same"},
+              command="cad.arch.audit"),
+    ], setup=lapsed)
+    case("İstisnayı kaldır: bulgu yeniden görünür", [
+        run({"operation": "unmark", "keys": [tag["key"]]}, [tag["key"]], 0),
+        asked(d, {}, expect={"canUndo": True, "revision": "same"}, command="cad.arch.audit"),
+        {"op": "undo", "expect": {"canUndo": False, "canRedo": True}},
+        asked(one, {}, expect={"canUndo": False, "canRedo": True, "revision": "same"}, command="cad.arch.audit"),
+    ], setup=one)
+    stale = with_exceptions(d, [record(tag), {"key": "arch_wall_short:" + U(0xdead), "code": "arch_wall_short",
+                                               "uids": [U(0xdead)], "digest": "1111111111111111"}])
+    case("İstisnaları temizle: bulgusu kalmayan silinir", [
+        run({"operation": "prune"}, ["arch_wall_short:" + U(0xdead)], 1),
+        asked(one if False else with_exceptions(d, [record(tag)]), {"exceptions": "show"},
+              expect={"canUndo": True, "revision": "same"}, command="cad.arch.audit"),
+    ], setup=stale)
+    case("Temizlenecek istisna yoksa adım yazılmaz", [
+        run({"operation": "prune"}, [], 1, expect=SAME),
+    ], setup=with_exceptions(d, [record(tag)]))
+    case("Temizleme yalnız sorulan grupların istisnasına bakar", [
+        run({"operation": "prune", "audit": {"checks": ["tags"]}}, [], 2, expect=SAME),
+    ], setup=stale)
+    case("Denetimin girdisiyle bulunan bulgu: yalnız etiketler", [
+        run({"operation": "mark", "keys": [tag["key"]], "audit": {"checks": ["tags"]}}, [tag["key"]], 1),
+    ])
+    case("Plan aynı cevabı verir, çizim değişmez", [
+        {"op": "plan", "command": "cad.arch.exceptions", "input": {"operation": "mark", "keys": [tag["key"]]},
+         "result": completed({"changed": [tag["key"]], "exceptions": 1, "revision": "$current"}), "expect": dict(SAME)},
+    ])
+    case("Doğrulama: girdi geçerli", [
+        {"op": "validate", "command": "cad.arch.exceptions", "input": {"operation": "unmark", "keys": [tag["key"]]},
+         "result": completed(None), "expect": dict(SAME)},
+    ], setup=one)
+    case("Anahtarsız istisna reddedilir", [refuse({"operation": "mark"}, "invalid_input",
+         "Bulgu anahtarı verilmedi; cad.arch.audit'in verdiği anahtarlardan en az birini verin.", "keys")])
+    case("Anahtarsız kaldırma reddedilir", [refuse({"operation": "unmark", "keys": []}, "invalid_input",
+         "Bulgu anahtarı verilmedi; cad.arch.audit'in verdiği anahtarlardan en az birini verin.", "keys")])
+    case("Yinelenen anahtar reddedilir", [refuse({"operation": "mark", "keys": [tag["key"], tag["key"]]}, "invalid_input",
+         f"“{tag['key']}” anahtarı birden çok kez verildi.", "keys[1]")])
+    case("1000 karakterden uzun not reddedilir", [refuse({"operation": "mark", "keys": [tag["key"]], "note": "a" * 1001},
+         "invalid_input", "Not en çok 1000 karakterdir, satır sonu dışında denetim karakteri olmaz.", "note")])
+    case("Denetim karakterli not reddedilir", [refuse({"operation": "mark", "keys": [tag["key"]], "note": "a\tb"},
+         "invalid_input", "Not en çok 1000 karakterdir, satır sonu dışında denetim karakteri olmaz.", "note")])
+    case("Olmayan bulgu istisna yapılamaz", [refuse({"operation": "mark", "keys": [tag["key"], "arch_wall_short:yok"]},
+         "finding_not_found", "Çizimin bugünkü denetiminde “arch_wall_short:yok” anahtarlı bulgu yok; önce "
+         "cad.arch.audit ile denetleyin.", "keys[1]")])
+    case("Olmayan istisna kaldırılamaz", [refuse({"operation": "unmark", "keys": [gap["key"]]}, "finding_not_found",
+         f"“{gap['key']}” anahtarlı istisna yok.", "keys[0]")], setup=one)
+    case("Denetimin reddi audit yoluyla", [refuse({"operation": "mark", "keys": [tag["key"]], "audit": {"maxGap": -1.0}},
+         "invalid_arch_audit", "Boşluk eşiği -1 m; sıfır ya da daha büyük olmalı.", "audit.maxGap")])
+    case("Denetimin olmayan düzeltme katı audit yoluyla reddedilir", [
+        refuse({"operation": "prune", "audit": {"level": "kat-9"}}, "level_not_found",
+               "Projede “kat-9” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+               "audit.level")])
+    case("Beklenen sürüm tutmazsa çakışma", [
+        {"op": "execute", "command": "cad.arch.exceptions",
+         "input": {"operation": "mark", "keys": [tag["key"]], "expectedRevision": "999"},
+         "result": {"status": "conflict", "error": {"code": "revision_conflict",
+                                                    "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+                                                    "path": "expectedRevision", "revision": "$current"}},
+         "expect": {"revision": "same"}},
+    ])
+    case("Geçersiz beklenen sürüm reddedilir", [refuse(
+        {"operation": "mark", "keys": [tag["key"]], "expectedRevision": "on iki"}, "invalid_revision",
+        "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da "
+        "komutun planından alın.", "expectedRevision")])
+    step = refuse({"operation": "mark", "keys": [tag["key"]], "audit": {"maxGap": 0.1}}, "not_finite",
+                  "Boşluk eşiği sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.", "audit.maxGap")
+    step["nonFinite"] = {"audit.maxGap": "NaN"}
+    case("Denetimin sonlu olmayan eşiği audit yoluyla reddedilir", [step])
+    case("Profil bulgusunun istisnası profilsiz denetimde bayat sayılmaz", [
+        asked(with_exceptions(d, [{"key": "stair_riser_over_profile:" + U(26), "code": "stair_riser_over_profile",
+                                   "uids": [U(26)], "digest": "2222222222222222"}]), {"checks": ["stairs"]},
+              command="cad.arch.audit"),
+        run({"operation": "prune"}, [], 1, expect=SAME),
+    ], setup=with_exceptions(d, [{"key": "stair_riser_over_profile:" + U(26), "code": "stair_riser_over_profile",
+                                  "uids": [U(26)], "digest": "2222222222222222"}]))
     return out
 
 
@@ -996,21 +1714,32 @@ def document():
             "setup": drawing(), "cases": cases()}
 
 
+def exceptions_document():
+    return {"format": "kentos.command-cases", "version": 1, "command": "cad.arch.exceptions", "commandVersion": 1,
+            "title": "Denetim istisnası: yap, kaldır, temizle; düşen istisna, not, retler ve geri alma",
+            "note": "ADR 0732 §3. Beklenenler scripts/fixtures/arch_audit_cases.py'nin ADR'den yazılmış kurallarından, KentOS "
+                    "kodu olmadan; özet bulgunun kodu, nesneleri, iletisi ve yerinin kanonik JSON'unun (protocol_cases.py) "
+                    "SHA-256'sının ilk sekiz baytı.",
+            "setup": drawing(), "cases": exceptions_cases()}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
-    doc = document()
-    text = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
-    if args.check:
-        if not OUT.exists() or OUT.read_text() != text:
-            print(f"{OUT.relative_to(ROOT)} başvurudan farklı; --check'siz yeniden yazın ve farkı okuyun.")
-            return 1
-        print(f"{COMMAND}: {len(doc['cases'])} durum başvuruyla aynı.")
-        return 0
-    OUT.write_text(text)
-    print(f"{OUT.relative_to(ROOT)}: {len(doc['cases'])} durum yazıldı.")
-    return 0
+    failed = 0
+    for path, doc in ((OUT, document()), (OUT_EXCEPTIONS, exceptions_document())):
+        text = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"
+        if args.check:
+            if not path.exists() or path.read_text() != text:
+                print(f"{path.relative_to(ROOT)} başvurudan farklı; --check'siz yeniden yazın ve farkı okuyun.")
+                failed = 1
+            else:
+                print(f"{doc['command']}: {len(doc['cases'])} durum başvuruyla aynı.")
+            continue
+        path.write_text(text)
+        print(f"{path.relative_to(ROOT)}: {len(doc['cases'])} durum yazıldı.")
+    return failed
 
 
 if __name__ == "__main__":

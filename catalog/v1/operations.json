@@ -1994,9 +1994,11 @@
     "arch.audit": {
       "level": "query",
       "via": [
-        "cad.arch.audit"
+        "cad.arch.audit",
+        "cad.arch.exceptions",
+        "cad.changeset.apply"
       ],
-      "note": "Bulgular cad.arch.audit'ten; satır nesnelere gider, Düzelt bulgunun fix.step'ini çalıştırır (ADR 0703)."
+      "note": "Bulgular cad.arch.audit'ten (kapsam within, istisnalar exceptions); satır nesnelere gider, Düzelt bulgunun fix.step'ini çalıştırır, Düzelt (n) seçili düzeltmeleri tek cad.changeset.apply ile yazar, İstisna yap/kaldır cad.arch.exceptions ile (ADR 0703, 0732)."
     },
     "tool.scheduleOpenings": {
       "level": "semantic",

@@ -6,7 +6,11 @@ import type { Vec2 } from "./Vec2";
 /**
  * One thing `cad.arch.audit` found.
  */
-export type ArchAuditFinding = { check: ArchAuditCheck, 
+export type ArchAuditFinding = { 
+/**
+ * Its lasting key (docs/adr/0732 §1): `code:uids`, a wall end's `:start` or `:end`, `#2` for a second alike.
+ */
+key: string, check: ArchAuditCheck, 
 /**
  * `wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,
  * `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
@@ -15,7 +19,9 @@ export type ArchAuditFinding = { check: ArchAuditCheck,
  * `arch_level_missing`,
  * `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,
  * `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
- * `stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.
+ * `stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,
+ * `arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,
+ * `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4).
  */
 code: string, 
 /**
@@ -37,4 +43,16 @@ at: Vec2,
 /**
  * The call that resolves it, when one plainly does and the object it writes is on an unlocked layer.
  */
-fix?: ArchAuditFix, };
+fix?: ArchAuditFix, 
+/**
+ * Marked as left on purpose, and the finding is as it was then (docs/adr/0732 §3).
+ */
+exception?: boolean, 
+/**
+ * Marked as left on purpose, but the finding changed since: open again.
+ */
+lapsed?: boolean, 
+/**
+ * The exception's note.
+ */
+note?: string, };

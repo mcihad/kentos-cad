@@ -20511,7 +20511,7 @@
       "id": "cad.arch.audit",
       "version": 1,
       "title": "Mimari denetim",
-      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15. Her bulgu iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
+      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -20527,7 +20527,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below\nzero, in the same order; a profile the catalog lacks, two with ramp or with stair rules), `level_not_found`\n(`level`).",
+        "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703, 0732): the checks asked (none: every one),\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`],\n[`ARCH_AUDIT_MIN_LENGTH`]), the part of the drawing (`within`) and the exceptions listed.\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`, `minLength`), `invalid_arch_audit` (a\nthreshold below zero, in the same order; a profile the catalog lacks, two with ramp or with stair rules),\n`level_not_found` (`level`, then `within.levels[i]`), `entity_not_found` (`within.uids[i]`). Warning:\n`exception_lapsed` (an exception whose finding changed: listed open again).",
         "properties": {
           "checks": {
             "description": "The groups to check; absent or empty: every group. The findings keep the groups' own order.",
@@ -20535,6 +20535,17 @@
               "$ref": "#/$defs/ArchAuditCheck"
             },
             "type": "array"
+          },
+          "exceptions": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArchAuditExceptionView"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The exceptions listed; absent: hidden and counted."
           },
           "level": {
             "description": "The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;\nabsent: the project's ground level (the one at elevation 0, else its first).",
@@ -20561,6 +20572,15 @@
             ],
             "x-unit": "area"
           },
+          "minLength": {
+            "description": "An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
           "minWidth": {
             "description": "A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0.",
             "format": "double",
@@ -20571,11 +20591,22 @@
             "x-unit": "length"
           },
           "profiles": {
-            "description": "The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids\n([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those groups find nothing.",
+            "description": "The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids\n([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those measures are not taken.",
             "items": {
               "type": "string"
             },
             "type": "array"
+          },
+          "within": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArchAuditWithin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The part of the drawing reported on; absent: all of it."
           }
         },
         "title": "ArchAudit",
@@ -20585,6 +20616,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.arch.audit` v1 (its plan's too).",
         "properties": {
+          "excepted": {
+            "description": "The findings in the part reported on that are exceptions, listed or not.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "findings": {
             "description": "By group, then by code within it, then along x and y.",
             "items": {
@@ -20592,13 +20630,29 @@
             },
             "type": "array"
           },
+          "outside": {
+            "description": "The findings `within` left out.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "stale": {
+            "description": "The keys of the project's exceptions whose finding the audit no longer finds (`cad.arch.exceptions`' prune).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
           "findings",
+          "outside",
+          "excepted",
           "revision"
         ],
         "title": "ArchAudited",
@@ -20608,6 +20662,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.arch.audit` v1 (its plan's too).",
         "properties": {
+          "excepted": {
+            "description": "The findings in the part reported on that are exceptions, listed or not.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "findings": {
             "description": "By group, then by code within it, then along x and y.",
             "items": {
@@ -20615,13 +20676,29 @@
             },
             "type": "array"
           },
+          "outside": {
+            "description": "The findings `within` left out.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "stale": {
+            "description": "The keys of the project's exceptions whose finding the audit no longer finds (`cad.arch.exceptions`' prune).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
           "findings",
+          "outside",
+          "excepted",
           "revision"
         ],
         "title": "ArchAudited",
@@ -20631,7 +20708,11 @@
         "refusals": [
           "not_finite",
           "invalid_arch_audit",
-          "level_not_found"
+          "level_not_found",
+          "entity_not_found"
+        ],
+        "warnings": [
+          "exception_lapsed"
         ]
       },
       "examples": [
@@ -20643,6 +20724,7 @@
             ]
           },
           "output": {
+            "excepted": 0,
             "findings": [
               {
                 "at": {
@@ -20667,6 +20749,7 @@
                     }
                   }
                 },
+                "key": "arch_wall_end_gap:0192f5a1-7030-7000-8000-000000000003,0192f5a1-7030-7000-8000-000000000002:end",
                 "message": "Duvarın bitiş ucuyla öbür duvar arasında 0.040 m boşluk var; birleşmiyor.",
                 "repair": "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
                 "uids": [
@@ -20675,7 +20758,170 @@
                 ]
               }
             ],
+            "outside": 0,
             "revision": "7"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.arch.exceptions",
+      "version": 1,
+      "title": "Denetim istisnası",
+      "summary": "Mimari denetimin bulgularını bilerek bırakılmış sayar ya da işareti kaldırır (docs/adr/0732 §3); tek geri alma adımı. operation: mark (İstisna yap: keys cad.arch.audit'in verdiği anahtarlar, note isteğe bağlı not; istisna bulgunun o anki kodu, nesneleri, iletisi ve yerinin özetine bağlanır, bulgu değişince düşer), unmark (İstisnayı kaldır: keys istisnaların anahtarları), prune (İstisnaları temizle: bulgusu artık olmayanlar). audit bulguları bulan denetimin girdisidir (yok: bütün gruplar, varsayılan eşikler, profilsiz); within ve exceptions okunmaz. İstisnalar projenin ayarıdır (arch.auditExceptions, KCAD 130). Retler: invalid_input (anahtar yok ya da yineleniyor, not 1000 karakterden uzun), denetimin retleri audit. yoluyla, finding_not_found (keys[i]: bulgu ya da istisna yok). Zaten öyle olanlar değişmez, değişen yoksa adım yazılmaz. Çıktı değişen anahtarlar (changed), istisna sayısı ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.arch.exceptions` v1: Mimari denetim's findings marked as left on purpose, or the marks taken away, as\none undo step (“İstisna”, “İstisnayı kaldır”, “İstisnaları temizle”). The findings are found by `audit` (absent: every\ngroup with the default thresholds and no profile); its `within` and `exceptions` are not read.\n\nRefusals, in this order: `invalid_input` (mark or unmark without a key, a key twice, a note of more than 1000\ncharacters), the audit's own (its paths under `audit.`), `finding_not_found` (`keys[i]`: no finding of the drawing as\nit is now has it, for mark; no exception has it, for unmark). Prune with nothing to drop, or marks already as asked,\nchange nothing and write no step. `expectedRevision` given and the drawing not at it: nothing is written, a conflict.",
+        "properties": {
+          "audit": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArchAudit"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "note": {
+            "description": "Why the findings are left, for mark.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/ArchExceptionOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "ArchExceptions",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arch.exceptions` v1, and its plan: the keys marked, unmarked or dropped (those already so are not\ncounted), how many exceptions the project keeps after it, and the revision after it (a plan: before it).",
+        "properties": {
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "ArchExceptionsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.arch.exceptions` v1, and its plan: the keys marked, unmarked or dropped (those already so are not\ncounted), how many exceptions the project keeps after it, and the revision after it (a plan: before it).",
+        "properties": {
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "exceptions": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "exceptions",
+          "revision"
+        ],
+        "title": "ArchExceptionsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "finding_not_found",
+          "not_finite",
+          "invalid_arch_audit",
+          "level_not_found",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bilerek kısa bırakılan duvar parçası istisna",
+          "input": {
+            "keys": [
+              "arch_wall_short:0192f5a1-7030-7000-8000-000000000009"
+            ],
+            "note": "Pencere ayağı; bilerek kısa.",
+            "operation": "mark"
+          },
+          "output": {
+            "changed": [
+              "arch_wall_short:0192f5a1-7030-7000-8000-000000000009"
+            ],
+            "exceptions": 1,
+            "revision": "8"
+          }
+        },
+        {
+          "title": "Bulgusu kalmayan istisnaları temizle",
+          "input": {
+            "operation": "prune"
+          },
+          "output": {
+            "changed": [],
+            "exceptions": 1,
+            "revision": "8"
           }
         }
       ]
@@ -65786,7 +66032,7 @@
       "code": "finding_not_found",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Çizimin bugünkü denetiminde bu anahtarla bulgu yok; önce cad.topology.check ile denetleyin."
+      "meaning": "Çizimin bugünkü denetiminde bu anahtarla bulgu ya da istisna yok; önce denetleyin (cad.topology.check, cad.arch.audit)."
     },
     {
       "code": "fix_unavailable",
@@ -65804,7 +66050,7 @@
       "code": "exception_lapsed",
       "kind": "warning",
       "retryable": false,
-      "meaning": "İstisnanın nesnelerinin geometrisi değişti; bulgu yeniden açık."
+      "meaning": "İstisna verildikten sonra bulgu değişti (nesnelerinin geometrisi ya da ölçüsü); bulgu yeniden açık."
     },
     {
       "code": "order_too_large",
@@ -67251,6 +67497,30 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Projede kat varken nesnenin katı yok ya da projede olmayan bir kat."
+    },
+    {
+      "code": "arch_wall_short",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Duvar denetimin en kısa boyundan kısa; artık bir parça olabilir."
+    },
+    {
+      "code": "arch_wall_overlap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İki duvar boyları boyunca üst üste çizilmiş; mahal sınırında biri yok sayılabilir."
+    },
+    {
+      "code": "arch_separator_overlap",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İki mahal ayırıcı aynı doğruda üst üste çizilmiş."
+    },
+    {
+      "code": "arch_casework_broken",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mutfak dizisinin duvarı yok ya da dizi kurulamıyor; nesneleri son yerlerinde."
     },
     {
       "code": "ramp_slope_over_profile",
@@ -69737,6 +70007,92 @@
       ],
       "type": "object"
     },
+    "ArchAudit": {
+      "additionalProperties": false,
+      "description": "Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703, 0732): the checks asked (none: every one),\nthe thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`],\n[`ARCH_AUDIT_MIN_LENGTH`]), the part of the drawing (`within`) and the exceptions listed.\n\nRefusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`, `minLength`), `invalid_arch_audit` (a\nthreshold below zero, in the same order; a profile the catalog lacks, two with ramp or with stair rules),\n`level_not_found` (`level`, then `within.levels[i]`), `entity_not_found` (`within.uids[i]`). Warning:\n`exception_lapsed` (an exception whose finding changed: listed open again).",
+      "properties": {
+        "checks": {
+          "description": "The groups to check; absent or empty: every group. The findings keep the groups' own order.",
+          "items": {
+            "$ref": "#/$defs/ArchAuditCheck"
+          },
+          "type": "array"
+        },
+        "exceptions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchAuditExceptionView"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The exceptions listed; absent: hidden and counted."
+        },
+        "level": {
+          "description": "The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;\nabsent: the project's ground level (the one at elevation 0, else its first).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "maxGap": {
+          "description": "A free wall end this near another wall's body, or another free end, is said; metres, at least 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "minArea": {
+          "description": "A space smaller than this is said; square metres, at least 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "minLength": {
+          "description": "An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "minWidth": {
+          "description": "A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "profiles": {
+          "description": "The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids\n([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those measures are not taken.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "within": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchAuditWithin"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The part of the drawing reported on; absent: all of it."
+        }
+      },
+      "type": "object"
+    },
     "ArchAuditCheck": {
       "description": "A group of the audit's checks, in the order its findings come.",
       "oneOf": [
@@ -69797,7 +70153,71 @@
         },
         {
           "const": "stairs",
-          "description": "Stairs measured against a stair profile (docs/adr/0724 §2); nothing unless one is given.",
+          "description": "Stairs measured against a stair profile (docs/adr/0724 §2), and their own checks (docs/adr/0732 §4).",
+          "type": "string"
+        },
+        {
+          "const": "ramps",
+          "description": "The ramps' own checks: no sloped run, a given slope its rise and run do not make (docs/adr/0732 §4).",
+          "type": "string"
+        },
+        {
+          "const": "casework",
+          "description": "Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).",
+          "type": "string"
+        }
+      ]
+    },
+    "ArchAuditException": {
+      "additionalProperties": false,
+      "description": "A finding of Mimari denetim left on purpose (docs/adr/0732 §3): its lasting key, its code and objects (persistent\nids, in the finding's order), the digest of the finding as it was marked (of its code, objects, words and place:\nsixteen lowercase hexadecimal digits) and the user's note. A finding whose digest no longer matches is open again.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "code",
+        "uids",
+        "digest"
+      ],
+      "type": "object"
+    },
+    "ArchAuditExceptionView": {
+      "description": "Which findings marked as exceptions `cad.arch.audit` lists (docs/adr/0732 §3).",
+      "oneOf": [
+        {
+          "const": "hide",
+          "description": "Left out and counted (`excepted`).",
+          "type": "string"
+        },
+        {
+          "const": "show",
+          "description": "Listed with the open ones, marked `exception`.",
+          "type": "string"
+        },
+        {
+          "const": "only",
+          "description": "Only they are listed.",
           "type": "string"
         }
       ]
@@ -69814,8 +70234,12 @@
           "$ref": "#/$defs/ArchAuditCheck"
         },
         "code": {
-          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.",
+          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4).",
           "type": "string"
+        },
+        "exception": {
+          "description": "Marked as left on purpose, and the finding is as it was then (docs/adr/0732 §3).",
+          "type": "boolean"
         },
         "fix": {
           "anyOf": [
@@ -69828,9 +70252,24 @@
           ],
           "description": "The call that resolves it, when one plainly does and the object it writes is on an unlocked layer."
         },
+        "key": {
+          "description": "Its lasting key (docs/adr/0732 §1): `code:uids`, a wall end's `:start` or `:end`, `#2` for a second alike.",
+          "type": "string"
+        },
+        "lapsed": {
+          "description": "Marked as left on purpose, but the finding changed since: open again.",
+          "type": "boolean"
+        },
         "message": {
           "description": "What is wrong.",
           "type": "string"
+        },
+        "note": {
+          "description": "The exception's note.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "repair": {
           "description": "What resolves it.",
@@ -69846,6 +70285,7 @@
         }
       },
       "required": [
+        "key",
         "check",
         "code",
         "message",
@@ -69872,6 +70312,37 @@
       ],
       "type": "object"
     },
+    "ArchAuditWithin": {
+      "additionalProperties": false,
+      "description": "The part of the drawing `cad.arch.audit` reports on (docs/adr/0732 §2): a finding is kept when one of its objects\nlies on one of `levels` and one of them is among `uids`; either absent: no bound.",
+      "properties": {
+        "levels": {
+          "description": "Levels by their ids; null, the objects on no level. An object's level is the level view's (docs/adr/0715): an\nopening's its wall's, a tag's its object's, a dimension's its bonds'.",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "uids": {
+          "description": "Objects by their persistent ids (Revit's Show Related Warnings).",
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "ArchDiscipline": {
       "description": "The discipline an architectural object belongs to.",
       "enum": [
@@ -69884,6 +70355,26 @@
         "interior"
       ],
       "type": "string"
+    },
+    "ArchExceptionOperation": {
+      "description": "What `cad.arch.exceptions` does (docs/adr/0732 §3).",
+      "oneOf": [
+        {
+          "const": "mark",
+          "description": "İstisna yap: the findings of `keys` left on purpose, bound to the findings as they are now (a lapsed exception is\nmarked again; a note given replaces the old one).",
+          "type": "string"
+        },
+        {
+          "const": "unmark",
+          "description": "İstisnayı kaldır: the exceptions of `keys` taken away.",
+          "type": "string"
+        },
+        {
+          "const": "prune",
+          "description": "İstisnaları temizle: the exceptions whose finding the audit no longer finds taken away.",
+          "type": "string"
+        }
+      ]
     },
     "ArchInfo": {
       "additionalProperties": false,
@@ -70335,6 +70826,13 @@
             "string",
             "null"
           ]
+        },
+        "auditExceptions": {
+          "description": "Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.",
+          "items": {
+            "$ref": "#/$defs/ArchAuditException"
+          },
+          "type": "array"
         },
         "detail": {
           "anyOf": [

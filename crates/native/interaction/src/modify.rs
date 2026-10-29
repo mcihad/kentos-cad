@@ -634,8 +634,8 @@ impl<S: Stages> Tool for Modify<S> {
 
 /// Ghost outlines as the geometry store gives them (`transform_outlines`,
 /// `stretch_outlines`): dashed lines and point marks, as the web's
-/// `strokePaths` draws the ghosts.
-pub(crate) fn ghosts(paths: &[f64]) -> (Vec<Stroke>, Vec<Vec2>) {
+/// `strokePaths` draws the ghosts. Mimari denetim's fix preview draws its objects so too (docs/adr/0732 §5).
+pub fn ghosts(paths: &[f64]) -> (Vec<Stroke>, Vec<Vec2>) {
     outlines::read(paths, |pts, closed| Stroke::dashed(pts, closed, GHOST_DASH))
 }
 

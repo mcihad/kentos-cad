@@ -8,4 +8,16 @@ export type ArchAudited = {
 /**
  * By group, then by code within it, then along x and y.
  */
-findings: Array<ArchAuditFinding>, revision: string, };
+findings: Array<ArchAuditFinding>, 
+/**
+ * The findings `within` left out.
+ */
+outside: number, 
+/**
+ * The findings in the part reported on that are exceptions, listed or not.
+ */
+excepted: number, 
+/**
+ * The keys of the project's exceptions whose finding the audit no longer finds (`cad.arch.exceptions`' prune).
+ */
+stale?: Array<string>, revision: string, };

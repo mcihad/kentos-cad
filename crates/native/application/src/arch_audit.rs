@@ -4,15 +4,21 @@
 //! wall's body, or of another free end, is said. The other groups read the followers' stored `broken` fields, the
 //! spaces' rings and the numbers. Given profiles, the ramps and the stairs are measured against them (docs/adr/0723 §4,
 //! 0724 §2).
-//! It writes nothing. The shared cases are `fixtures/commands/v1/cad.arch.audit.json` and
-//! `cad.arch.audit.accessibility.json` (`scripts/fixtures/arch_audit_cases.py`, `ramp_access_cases.py`).
+//! Since docs/adr/0732: short and overlapping walls, overlapping room separators, empty tags, the stairs' and the ramps'
+//! own checks and broken kitchen runs; each finding's lasting key; the part of the drawing reported on (`within`); the
+//! project's exceptions, bound to the findings as they were marked.
+//! It writes nothing. The shared cases are `fixtures/commands/v1/cad.arch.audit.json`,
+//! `cad.arch.audit.accessibility.json`, `cad.arch.audit.stairs.json` and `cad.arch.audit.scope.json`
+//! (`scripts/fixtures/arch_audit_cases.py`, `ramp_access_cases.py`, `stair_profile_cases.py`).
 
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
-    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_WIDTH, ArchAudit, ArchAuditCheck, ArchAuditFinding,
-    ArchAuditFix, ArchAudited, ArchLevel, ChangesetStep, CommandResult, Entity, Vec2,
+    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_LENGTH, ARCH_AUDIT_MIN_WIDTH, ArchAudit, ArchAuditCheck,
+    ArchAuditExceptionView, ArchAuditFinding, ArchAuditFix, ArchAudited, ArchLevel, ChangesetStep, CommandResult,
+    CommandWarning, Entity, Vec2,
 };
+use sha2::{Digest, Sha256};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as V;
 use kentos_geometry_core::entity::Shape;
@@ -30,7 +36,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 12] = [
+const CODES: [(ArchAuditCheck, &[&str]); 14] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -40,6 +46,9 @@ const CODES: [(ArchAuditCheck, &[&str]); 12] = [
             codes::WALL_JOIN_UNRESOLVED,
             codes::ARCH_WALL_END_GAP,
             codes::ARCH_WALL_ENDS_APART,
+            codes::ARCH_WALL_SHORT,
+            codes::ARCH_WALL_OVERLAP,
+            codes::ARCH_SEPARATOR_OVERLAP,
         ],
     ),
     (ArchAuditCheck::Openings, &[codes::ARCH_OPENING_BROKEN, codes::TAG_MISSING_TYPE]),
@@ -48,7 +57,7 @@ const CODES: [(ArchAuditCheck, &[&str]); 12] = [
         &[codes::ARCH_SPACE_BROKEN, codes::ARCH_SPACE_SMALL, codes::ARCH_SPACE_NARROW],
     ),
     (ArchAuditCheck::Numbers, &[codes::TAG_DUPLICATE_NUMBER]),
-    (ArchAuditCheck::Tags, &[codes::TAG_TARGET_GONE]),
+    (ArchAuditCheck::Tags, &[codes::TAG_TARGET_GONE, codes::TAG_EMPTY]),
     (
         ArchAuditCheck::Dimensions,
         &[codes::ARCH_DIMENSION_SET_BROKEN, codes::ARCH_DIMENSION_BROKEN],
@@ -64,6 +73,9 @@ const CODES: [(ArchAuditCheck, &[&str]); 12] = [
     (
         ArchAuditCheck::Stairs,
         &[
+            codes::STAIR_SHORT,
+            codes::STAIR_LONG,
+            codes::STAIR_RISE_LEVEL,
             codes::STAIR_RISER_OVER_PROFILE,
             codes::STAIR_TREAD_SHORT,
             codes::STAIR_STEP_OVER_PROFILE,
@@ -73,6 +85,26 @@ const CODES: [(ArchAuditCheck, &[&str]); 12] = [
             codes::STAIR_RAILING_MISSING,
         ],
     ),
+    (ArchAuditCheck::Ramps, &[codes::RAMP_NO_RUN, codes::RAMP_SLOPE_MISMATCH]),
+    (ArchAuditCheck::Casework, &[codes::ARCH_CASEWORK_BROKEN]),
+];
+
+/// The codes only a profile finds (docs/adr/0723 §4, 0724 §2): an exception of one is not stale while its profile is not
+/// asked.
+const RAMP_PROFILE_CODES: [&str; 4] = [
+    codes::RAMP_SLOPE_OVER_PROFILE,
+    codes::RAMP_LONG_RUN_SLOPE,
+    codes::RAMP_LANDING_SHORT,
+    codes::RAMP_TURN_NARROW,
+];
+const STAIR_PROFILE_CODES: [&str; 7] = [
+    codes::STAIR_RISER_OVER_PROFILE,
+    codes::STAIR_TREAD_SHORT,
+    codes::STAIR_STEP_OVER_PROFILE,
+    codes::STAIR_WIDTH_NARROW,
+    codes::STAIR_LANDING_SHORT,
+    codes::STAIR_WINDER_NARROW,
+    codes::STAIR_RAILING_MISSING,
 ];
 
 /// The thresholds, checked: finite, then at least zero.
@@ -80,6 +112,7 @@ struct Limits {
     max_gap: f64,
     min_area: f64,
     min_width: f64,
+    min_length: f64,
 }
 
 fn limits(input: &ArchAudit) -> Result<Limits, Stop> {
@@ -87,6 +120,7 @@ fn limits(input: &ArchAudit) -> Result<Limits, Stop> {
         (input.max_gap, "maxGap", "Boşluk eşiği", "m"),
         (input.min_area, "minArea", "Küçük mahal eşiği", "m²"),
         (input.min_width, "minWidth", "Dar mahal eşiği", "m"),
+        (input.min_length, "minLength", "Kısa duvar eşiği", "m"),
     ];
     for (v, path, what, _) in given {
         if let Some(v) = v {
@@ -106,6 +140,7 @@ fn limits(input: &ArchAudit) -> Result<Limits, Stop> {
         max_gap: input.max_gap.unwrap_or(ARCH_AUDIT_MAX_GAP),
         min_area: input.min_area.unwrap_or(ARCH_AUDIT_MIN_AREA),
         min_width: input.min_width.unwrap_or(ARCH_AUDIT_MIN_WIDTH),
+        min_length: input.min_length.unwrap_or(ARCH_AUDIT_MIN_LENGTH),
     })
 }
 
@@ -148,6 +183,7 @@ fn finding(
     fix: Option<ArchAuditFix>,
 ) -> ArchAuditFinding {
     ArchAuditFinding {
+        key: format!("{code}:{}", uids.join(",")),
         check,
         code: code.into(),
         message,
@@ -155,7 +191,51 @@ fn finding(
         uids,
         at: wire(at),
         fix,
+        exception: false,
+        lapsed: false,
+        note: None,
     }
+}
+
+/// The digest an exception binds a finding by (docs/adr/0732 §3): the SHA-256 of the canonical JSON of its code, its
+/// objects, its words and its place, its first eight bytes in lowercase hexadecimal.
+pub fn finding_digest(f: &ArchAuditFinding) -> String {
+    let value = json!({"at": {"x": f.at.x, "y": f.at.y}, "code": f.code, "message": f.message, "uids": f.uids});
+    let text = kentos_commands::canonical::canonical_json(&value);
+    Sha256::digest(text.as_bytes())[..8]
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
+/// A path's length: its edges', an arc's along it.
+fn path_length(pts: &[V], bulges: Option<&[f64]>, closed: bool) -> f64 {
+    bulge_path_edges(pts, bulges, closed)
+        .iter()
+        .map(|e| match *e {
+            Edge::Seg { a, b } => (b.x - a.x).hypot(b.y - a.y),
+            Edge::Arc { r, sweep, .. } => r * sweep.abs(),
+        })
+        .sum()
+}
+
+/// Two straight runs laid along each other (docs/adr/0732 §4): how long they overlap along the first, where the
+/// overlap's middle is on it, and how far apart they lie across it; none when they are not parallel within a degree.
+fn along_each_other(a: [V; 2], b: [V; 2]) -> Option<(f64, V, f64)> {
+    let (dx, dy) = (a[1].x - a[0].x, a[1].y - a[0].y);
+    let (ex, ey) = (b[1].x - b[0].x, b[1].y - b[0].y);
+    let (la, lb) = (dx.hypot(dy), ex.hypot(ey));
+    if la <= 1e-12 || lb <= 1e-12 || (dx * ey - dy * ex).abs() > 1f64.to_radians().sin() * la * lb {
+        return None;
+    }
+    let (ux, uy) = (dx / la, dy / la);
+    let along = |p: V| (p.x - a[0].x) * ux + (p.y - a[0].y) * uy;
+    let across = |p: V| ((p.y - a[0].y) * ux - (p.x - a[0].x) * uy).abs();
+    let (t0, t1) = (along(b[0]), along(b[1]));
+    let (lo, hi) = (t0.min(t1).max(0.0), t0.max(t1).min(la));
+    let length = hi - lo;
+    let mid = (lo + hi) / 2.0;
+    Some((length, V::new(a[0].x + ux * mid, a[0].y + uy * mid), (across(b[0]) + across(b[1])) / 2.0))
 }
 
 struct Audit<'a> {
@@ -415,7 +495,7 @@ impl Audit<'_> {
                     json!({"uids": [uid(e.wall)], "operation": {"kind": "extend", "to": uid(j), "end": key}}),
                 )
             });
-            out.push(finding(
+            let mut f = finding(
                 ArchAuditCheck::Walls,
                 codes::ARCH_WALL_END_GAP,
                 format!("Duvarın {lower} ucuyla öbür duvar arasında {gap:.3} m boşluk var; birleşmiyor."),
@@ -423,7 +503,11 @@ impl Audit<'_> {
                 vec![uid(e.wall), uid(j)],
                 e.at,
                 fix,
-            ));
+            );
+            // The end in its key: a wall's two ends may each stop short of one other wall (docs/adr/0732 §1).
+            f.key.push(':');
+            f.key.push_str(key);
+            out.push(f);
         }
         let rest: Vec<&EndAt> = free
             .iter()
@@ -462,8 +546,197 @@ impl Audit<'_> {
                 ));
             }
         }
+        out.extend(self.short_walls(&walls, limits));
+        out.extend(self.overlapping_walls(&walls));
         out
     }
+
+    /// The walls' openings' hosts, by the walls' persistent ids.
+    fn hosts(&self) -> HashSet<String> {
+        self.doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Opening(o) => Some(o.opening.host.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// Leftover pieces (docs/adr/0732 §4): open walls shorter than the least length, each removed by its fix unless it
+    /// holds an opening or is locked.
+    fn short_walls(&self, walls: &[WallAt<'_>], limits: &Limits) -> Vec<ArchAuditFinding> {
+        let hosts = self.hosts();
+        let mut out = Vec::new();
+        for w in walls {
+            if w.spec.closed || w.pts.len() < 2 {
+                continue;
+            }
+            let length = path_length(&w.pts, w.bulges.as_deref(), false);
+            if length >= limits.min_length {
+                continue;
+            }
+            let uid = self.uid_of(w.entity);
+            let (a, b) = (w.pts[0], w.pts[w.pts.len() - 1]);
+            let fix = (!self.locked(w.entity) && !hosts.contains(&uid)).then(|| {
+                fix("Kısa duvar parçasını sil", "cad.entities.delete", json!({"uids": [uid.clone()]}))
+            });
+            out.push(finding(
+                ArchAuditCheck::Walls,
+                codes::ARCH_WALL_SHORT,
+                format!("Duvar {length:.3} m; çok kısa bir parça."),
+                "Artık bir parçaysa silin; bilerek kısaysa istisna yapın.",
+                vec![uid],
+                V::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0),
+                fix,
+            ));
+        }
+        out
+    }
+
+    /// Straight walls of one level drawn over each other along their length (docs/adr/0732 §4): parallel within a
+    /// degree, nearer across than their half thicknesses together and overlapping along for more than the thicker one
+    /// (a join's corner is not). Said once a pair, where they overlap longest; a copy of the other (its path the same
+    /// way round, or the other way round when centred) is removed by its fix, the later one unless it holds an opening.
+    fn overlapping_walls(&self, walls: &[WallAt<'_>]) -> Vec<ArchAuditFinding> {
+        let runs: Vec<Option<Vec<[V; 2]>>> = walls.iter().map(center_runs).collect();
+        let hosts = self.hosts();
+        let mut out = Vec::new();
+        for i in 0..walls.len() {
+            for j in i + 1..walls.len() {
+                let (Some(ra), Some(rb)) = (&runs[i], &runs[j]) else { continue };
+                if walls[i].level != walls[j].level {
+                    continue;
+                }
+                let (ta, tb) = (walls[i].spec.width, walls[j].spec.width);
+                let best = ra
+                    .iter()
+                    .flat_map(|a| rb.iter().filter_map(move |b| along_each_other(*a, *b)))
+                    .filter(|(length, _, across)| {
+                        *length > ta.max(tb) + JOIN_TOLERANCE && *across < (ta + tb) / 2.0 - JOIN_TOLERANCE
+                    })
+                    .max_by(|x, y| x.0.total_cmp(&y.0));
+                let Some((length, at, _)) = best else { continue };
+                let (ua, ub) = (self.uid_of(walls[i].entity), self.uid_of(walls[j].entity));
+                let fix = same_wall(walls[i].entity, walls[j].entity)
+                    .then(|| {
+                        [(j, &ub), (i, &ua)]
+                            .into_iter()
+                            .find(|(k, u)| !self.locked(walls[*k].entity) && !hosts.contains(*u))
+                            .map(|(_, u)| fix("Yinelenen duvarı sil", "cad.entities.delete", json!({"uids": [u]})))
+                    })
+                    .flatten();
+                out.push(finding(
+                    ArchAuditCheck::Walls,
+                    codes::ARCH_WALL_OVERLAP,
+                    format!("İki duvar {length:.3} m boyunca üst üste çizilmiş."),
+                    "Fazla duvarı silin ya da kısaltın; mahal sınırında biri yok sayılabilir.",
+                    vec![ua, ub],
+                    at,
+                    fix,
+                ));
+            }
+        }
+        out
+    }
+
+    /// Room separators of one level over each other on one line (docs/adr/0732 §4; Revit's “Highlighted Room
+    /// Separation Lines Overlap”): straight edges within a millimetre across, overlapping for more than a millimetre.
+    /// A copy of the other (the same points, either way round) is removed by its fix, the later one.
+    fn separators(&self) -> Vec<ArchAuditFinding> {
+        let seps: Vec<(&Entity, &kentos_commands::PathEntity)> = self
+            .doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Polyline(p) if p.space_separator.is_some() => Some((e, p)),
+                _ => None,
+            })
+            .collect();
+        let edges: Vec<Vec<[V; 2]>> = seps.iter().map(|(_, p)| straight_edges(p)).collect();
+        let level = |p: &kentos_commands::PathEntity| p.space_separator.as_ref().and_then(|a| a.level.clone());
+        let mut out = Vec::new();
+        for i in 0..seps.len() {
+            for j in i + 1..seps.len() {
+                if level(seps[i].1) != level(seps[j].1) {
+                    continue;
+                }
+                let best = edges[i]
+                    .iter()
+                    .flat_map(|a| edges[j].iter().filter_map(move |b| along_each_other(*a, *b)))
+                    .filter(|(length, _, across)| *length > 1e-3 && *across <= 1e-3)
+                    .max_by(|x, y| x.0.total_cmp(&y.0));
+                let Some((length, at, _)) = best else { continue };
+                let (ua, ub) = (self.uid_of(seps[i].0), self.uid_of(seps[j].0));
+                let twin = same_points(&seps[i].1.pts, &seps[j].1.pts);
+                let fix = (twin && !self.locked(seps[j].0))
+                    .then(|| fix("Yinelenen ayırıcıyı sil", "cad.entities.delete", json!({"uids": [ub.clone()]})));
+                out.push(finding(
+                    ArchAuditCheck::Walls,
+                    codes::ARCH_SEPARATOR_OVERLAP,
+                    format!("İki mahal ayırıcı {length:.3} m boyunca üst üste."),
+                    "Fazla ayırıcıyı silin; mahal sınırını bir ayırıcı çizer.",
+                    vec![ua, ub],
+                    at,
+                    fix,
+                ));
+            }
+        }
+        out
+    }
+}
+
+/// A straight wall's body's middle line, run by run: the middle of its faces (none when an edge is an arc or it cannot
+/// be drawn).
+fn center_runs(w: &WallAt<'_>) -> Option<Vec<[V; 2]>> {
+    if w.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)) {
+        return None;
+    }
+    let lines = wall_geom::lines(&w.pts, None, &w.spec).ok()?;
+    let (left, right) = (lines.first()?, lines.last()?);
+    if left.pts.len() != right.pts.len() || left.pts.len() < 2 {
+        return None;
+    }
+    let mid: Vec<V> = left
+        .pts
+        .iter()
+        .zip(&right.pts)
+        .map(|(l, r)| V::new((l.x + r.x) / 2.0, (l.y + r.y) / 2.0))
+        .collect();
+    let mut runs: Vec<[V; 2]> = mid.windows(2).map(|p| [p[0], p[1]]).collect();
+    if w.spec.closed && mid.len() > 2 {
+        runs.push([mid[mid.len() - 1], mid[0]]);
+    }
+    Some(runs)
+}
+
+/// A path's straight edges (an arc's left out), its closing one too when closed.
+fn straight_edges(p: &kentos_commands::PathEntity) -> Vec<[V; 2]> {
+    let n = p.pts.len();
+    let bulge = |k: usize| p.bulges.as_ref().and_then(|b| b.get(k).copied()).unwrap_or(0.0);
+    let count = if p.closed && n > 2 { n } else { n.saturating_sub(1) };
+    (0..count)
+        .filter(|&k| bulge(k) == 0.0)
+        .map(|k| [core(p.pts[k]), core(p.pts[(k + 1) % n])])
+        .collect()
+}
+
+/// Whether two point lists are the same, either way round.
+fn same_points(a: &[Vec2], b: &[Vec2]) -> bool {
+    a.len() == b.len() && (a.iter().zip(b).all(|(p, q)| p == q) || a.iter().zip(b.iter().rev()).all(|(p, q)| p == q))
+}
+
+/// Whether wall `b` is a copy of wall `a`: the same path the same way round with the same width, justification,
+/// offset and closing, or the other way round when both are centred on their paths.
+fn same_wall(a: &Entity, b: &Entity) -> bool {
+    let (Entity::Wall(a), Entity::Wall(b)) = (a, b) else { return false };
+    let (a, b) = (&a.wall, &b.wall);
+    let straight = |w: &kentos_commands::WallFields| w.bulges.as_ref().is_none_or(|x| x.iter().all(|v| *v == 0.0));
+    if !(straight(a) && straight(b) && a.width == b.width && a.closed == b.closed && a.pts.len() == b.pts.len()) {
+        return false;
+    }
+    let forward = a.justify == b.justify && a.offset == b.offset && a.pts.iter().zip(&b.pts).all(|(p, q)| p == q);
+    let centred = |w: &kentos_commands::WallFields| w.justify == kentos_commands::WallJustify::Center && w.offset == 0.0;
+    let backward = centred(a) && centred(b) && a.pts.iter().zip(b.pts.iter().rev()).all(|(p, q)| p == q);
+    forward || backward
 }
 
 // ── Openings, spaces, numbers, tags ─────────────────────────────────────────────────────────────────────────────
@@ -684,6 +957,18 @@ impl Audit<'_> {
         for e in self.doc.entities() {
             let Entity::Tag(t) = e else { continue };
             if self.doc.tag_target(&t.tag.of).is_some() {
+                // Its words empty: its object has none of its template's values (docs/adr/0344's 27 October addendum).
+                if t.tag.text.trim().is_empty() {
+                    out.push(finding(
+                        ArchAuditCheck::Tags,
+                        codes::TAG_EMPTY,
+                        "Etiketin yazısı boş: nesnesinin şablondaki değerleri yok.".into(),
+                        "Nesnenin değerlerini verin (numara, ad, tür) ya da etiketin şablonunu değiştirin.",
+                        vec![self.uid_of(e)],
+                        core(t.tag.at),
+                        None,
+                    ));
+                }
                 continue;
             }
             let message = if t.tag.text.is_empty() {
@@ -1115,10 +1400,10 @@ impl Audit<'_> {
     /// stair's tread too narrow at its narrow end, a side without a railing. A flight's width, a landing and the
     /// railings are fixed by `cad.arch.edit` unless locked; the others need the stair designed again.
     fn stairs(&self, profile: Option<&(String, kentos_commands::StairRules)>) -> Vec<ArchAuditFinding> {
+        let mut out = self.stairs_own();
         let Some((profile_id, rules)) = profile else {
-            return Vec::new();
+            return out;
         };
-        let mut out = Vec::new();
         for e in self.doc.entities() {
             let Entity::Stair(st) = e else { continue };
             let x = &st.stair;
@@ -1242,6 +1527,145 @@ impl Audit<'_> {
     }
 }
 
+impl Audit<'_> {
+    /// The stairs' own checks (docs/adr/0343 §2, 0713; docs/adr/0732 §4): a walking line too short for the risers, one
+    /// longer than the stair, risers that do not make their level's height (fixed by taking the height from the level
+    /// unless locked). Blondel's rule is information, not a finding.
+    fn stairs_own(&self) -> Vec<ArchAuditFinding> {
+        let mut out = Vec::new();
+        for e in self.doc.entities() {
+            let Entity::Stair(st) = e else { continue };
+            let uid = self.uid_of(e);
+            let start = st.stair.pts.first().copied().map_or(V::new(0.0, 0.0), core);
+            for w in crate::arch_elements::stair_warnings(self.doc, &st.stair, "stair") {
+                let (message, repair, fix) = match w.code.as_str() {
+                    codes::STAIR_SHORT => {
+                        let (what, repair) = split(&w.message);
+                        (what, repair, None)
+                    }
+                    codes::STAIR_LONG => (
+                        w.message.clone(),
+                        "Yolu son rıhtta bitirin (Merdiven'in Sığdır'ı) ya da rıht sayısını artırın.".to_owned(),
+                        None,
+                    ),
+                    codes::STAIR_RISE_LEVEL => {
+                        let (what, _) = split(&w.message);
+                        let fix = (!self.locked(e)).then(|| {
+                            fix(
+                                "Yüksekliği kattan al",
+                                "cad.arch.edit",
+                                json!({"uids": [uid.clone()], "operation": {"kind": "set", "heightFromLevel": true}}),
+                            )
+                        });
+                        (
+                            what,
+                            "Rıht yüksekliğini katın yüksekliğinden alın ya da rıht sayısını değiştirin.".to_owned(),
+                            fix,
+                        )
+                    }
+                    _ => continue,
+                };
+                out.push(finding(ArchAuditCheck::Stairs, &w.code, message, repair, vec![uid.clone()], start, fix));
+            }
+        }
+        out
+    }
+
+    /// The ramps' own checks (docs/adr/0343 §2, 0732 §4): no sloped run left after the landings, a given slope its rise
+    /// and sloped run do not make (fixed by giving the slope they make unless locked).
+    fn ramps(&self) -> Vec<ArchAuditFinding> {
+        let mut out = Vec::new();
+        for e in self.doc.entities() {
+            let Entity::Ramp(r) = e else { continue };
+            let uid = self.uid_of(e);
+            let start = r.ramp.pts.first().copied().map_or(V::new(0.0, 0.0), core);
+            for w in crate::arch_elements::ramp_warnings(&r.ramp, "ramp") {
+                let (message, repair, fix) = match w.code.as_str() {
+                    codes::RAMP_NO_RUN => (
+                        w.message.clone(),
+                        "Yolu uzatın ya da sahanlığı kısaltın.".to_owned(),
+                        None,
+                    ),
+                    codes::RAMP_SLOPE_MISMATCH => {
+                        let shape = kentos_formats::arch_elements::core_ramp(&r.ramp);
+                        let made = match &shape {
+                            Shape::Ramp { pts, ramp } => {
+                                let run = arch::ramp_run(&arch::Walk::of(pts), ramp);
+                                (run > 1e-9).then(|| r.ramp.rise / run * 100.0)
+                            }
+                            _ => None,
+                        };
+                        let fix = made.filter(|_| !self.locked(e)).map(|slope| {
+                            fix(
+                                format!("Eğimi %{} yap", fixed(slope, 2)),
+                                "cad.arch.edit",
+                                json!({"uids": [uid.clone()], "operation": {"kind": "set", "slope": slope}}),
+                            )
+                        });
+                        (
+                            w.message.clone(),
+                            "Eğimi yüksekliğin eğimli uzunluğa oranına eşitleyin ya da yüksekliği veya yolu değiştirin."
+                                .to_owned(),
+                            fix,
+                        )
+                    }
+                    _ => continue,
+                };
+                out.push(finding(ArchAuditCheck::Ramps, &w.code, message, repair, vec![uid.clone()], start, fix));
+            }
+        }
+        out
+    }
+
+    /// Kitchen runs that no longer follow (docs/adr/0727 §5, 0732 §4): their wall gone or their recipe not laid; each
+    /// released by its fix unless its layer is locked. A run none of whose objects is left is not said.
+    fn casework(&self) -> Vec<ArchAuditFinding> {
+        let mut out = Vec::new();
+        for run in self.doc.casework() {
+            let Some(b) = run.broken else { continue };
+            let uids: Vec<String> = run
+                .members
+                .iter()
+                .map(|m| m.uid.to_text())
+                .filter(|u| {
+                    kentos_domain::Uuid::parse_str(u)
+                        .ok()
+                        .and_then(|u| self.doc.slot_of(u))
+                        .is_some()
+                })
+                .collect();
+            if uids.is_empty() {
+                continue;
+            }
+            let message = match b {
+                kentos_commands::CaseworkBreak::WallGone => {
+                    "Mutfak dizisinin duvarı çizimde yok; dolaplar son yerlerinde duruyor."
+                }
+                kentos_commands::CaseworkBreak::NotBuilt => {
+                    "Mutfak dizisi tarifinden kurulamıyor; dolaplar son yerlerinde duruyor."
+                }
+            };
+            let fix = (!self.doc.layers().is_locked(&run.recipe.layer_id)).then(|| {
+                fix(
+                    "Diziyi bırak",
+                    "cad.casework.edit",
+                    json!({"run": run.id.to_text(), "edit": {"kind": "release"}}),
+                )
+            });
+            out.push(finding(
+                ArchAuditCheck::Casework,
+                codes::ARCH_CASEWORK_BROKEN,
+                message.into(),
+                "Duvarı geri getirin ya da diziyi bırakın; bırakılan dizinin dolapları serbest nesneler olur.",
+                uids,
+                core(run.recipe.from),
+                fix,
+            ));
+        }
+        out
+    }
+}
+
 /// The profiles asked, from the catalog: the ramp rules and the stair rules with their profiles' ids
 /// (`invalid_arch_audit` for one the catalog lacks, or a second with ramp or with stair rules).
 type ProfileRules = (Option<(String, kentos_commands::RampRules)>, Option<(String, kentos_commands::StairRules)>);
@@ -1296,19 +1720,88 @@ fn fix_level<'a>(doc: &'a Document, input: &ArchAudit) -> Result<Option<&'a Arch
     }
 }
 
-fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
+/// The part of the drawing asked (docs/adr/0732 §2), checked: its levels the project's (`level_not_found`), its objects
+/// the drawing's (`entity_not_found`); the objects by their slots.
+struct Scope {
+    levels: Option<Vec<Option<String>>>,
+    uids: Option<HashSet<String>>,
+}
+
+fn scope_of(doc: &Document, input: &ArchAudit) -> Result<Scope, Stop> {
+    let Some(within) = &input.within else {
+        return Ok(Scope { levels: None, uids: None });
+    };
+    let levels = doc.settings().arch.as_ref().map(|a| a.levels.as_slice()).unwrap_or_default();
+    for (i, id) in within.levels.iter().flatten().enumerate() {
+        if let Some(id) = id
+            && !levels.iter().any(|l| &l.id == id)
+        {
+            return Err(Stop::failed(error(
+                codes::LEVEL_NOT_FOUND,
+                kentos_commands::level_problem(Some(id), levels)
+                    .unwrap_or_else(|| format!("Projede “{id}” kimlikli kat yok.")),
+                Some(format!("within.levels[{i}]")),
+            )));
+        }
+    }
+    for (i, u) in within.uids.iter().flatten().enumerate() {
+        if kentos_domain::Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).is_none() {
+            return Err(Stop::failed(error(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{u}” kimlikli nesne çizimde yok."),
+                Some(format!("within.uids[{i}]")),
+            )));
+        }
+    }
+    Ok(Scope {
+        levels: within.levels.clone(),
+        uids: within.uids.as_ref().map(|u| u.iter().cloned().collect()),
+    })
+}
+
+impl Scope {
+    /// Whether finding `f` is in the part asked: one of its objects on one of the levels, one of them among the objects.
+    fn holds(&self, doc: &Document, f: &ArchAuditFinding) -> bool {
+        let by_uid = |u: &str| {
+            kentos_domain::Uuid::parse_str(u)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+        };
+        let on_level = self.levels.as_ref().is_none_or(|levels| {
+            f.uids.iter().any(|u| {
+                let level = by_uid(u).and_then(|e| e.level(by_uid)).map(str::to_owned);
+                levels.contains(&level)
+            })
+        });
+        on_level && self.uids.as_ref().is_none_or(|set| f.uids.iter().any(|u| set.contains(u)))
+    }
+}
+
+/// Every finding of the groups asked, in their order, each with its lasting key (`#2`, `#3` for a second and a third
+/// alike, docs/adr/0732 §1); the codes those groups could find (a profile's only when it is asked).
+fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, HashSet<&'static str>), Stop> {
     let limits = limits(input)?;
     let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
     let audit = Audit { doc };
     let asked = |c: ArchAuditCheck| input.checks.is_empty() || input.checks.contains(&c);
     let mut findings = Vec::new();
+    let mut run: HashSet<&'static str> = HashSet::new();
     for (check, codes) in CODES {
         if !asked(check) {
             continue;
         }
+        run.extend(codes.iter().copied().filter(|c| {
+            (ramp_rules.is_some() || !RAMP_PROFILE_CODES.contains(c))
+                && (stair_rules.is_some() || !STAIR_PROFILE_CODES.contains(c))
+        }));
         let mut found = match check {
-            ArchAuditCheck::Walls => audit.walls(&limits),
+            ArchAuditCheck::Walls => {
+                let mut f = audit.walls(&limits);
+                f.extend(audit.separators());
+                f
+            }
             ArchAuditCheck::Openings => audit.openings(),
             ArchAuditCheck::Spaces => audit.spaces(&limits),
             ArchAuditCheck::Numbers => audit.numbers(),
@@ -1320,6 +1813,8 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
             ArchAuditCheck::Levels => audit.levels(level),
             ArchAuditCheck::Accessibility => audit.accessibility(ramp_rules.as_ref()),
             ArchAuditCheck::Stairs => audit.stairs(stair_rules.as_ref()),
+            ArchAuditCheck::Ramps => audit.ramps(),
+            ArchAuditCheck::Casework => audit.casework(),
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.
@@ -1331,16 +1826,92 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<ArchAudited, Stop> {
         });
         findings.extend(found);
     }
-    Ok(ArchAudited {
-        findings,
-        revision: doc.revision().to_string(),
-    })
+    let mut seen: BTreeMap<String, usize> = BTreeMap::new();
+    for f in &mut findings {
+        let n = seen.entry(f.key.clone()).or_insert(0);
+        *n += 1;
+        if *n > 1 {
+            f.key = format!("{}#{n}", f.key);
+        }
+    }
+    Ok((findings, run))
+}
+
+/// The answer and its warnings: the findings in the part asked, the project's exceptions laid on them (docs/adr/0732
+/// §3) and listed as asked.
+fn answer(doc: &Document, input: &ArchAudit) -> Result<(ArchAudited, Vec<CommandWarning>), Stop> {
+    let (all, run) = found(doc, input)?;
+    let scope = scope_of(doc, input)?;
+    let exceptions = doc.settings().arch.as_ref().map(|a| a.audit_exceptions.as_slice()).unwrap_or_default();
+    let stale: Vec<String> = exceptions
+        .iter()
+        .filter(|x| run.contains(x.code.as_str()) && !all.iter().any(|f| f.key == x.key))
+        .map(|x| x.key.clone())
+        .collect();
+    let view = input.exceptions.unwrap_or_default();
+    let (mut outside, mut excepted, mut lapsed) = (0u32, 0u32, 0u32);
+    let mut findings = Vec::new();
+    for mut f in all {
+        if !scope.holds(doc, &f) {
+            outside += 1;
+            continue;
+        }
+        if let Some(x) = exceptions.iter().find(|x| x.key == f.key) {
+            f.note = x.note.clone();
+            if x.digest == finding_digest(&f) {
+                f.exception = true;
+                excepted += 1;
+            } else {
+                f.lapsed = true;
+                lapsed += 1;
+            }
+        }
+        let marked = f.exception || f.lapsed;
+        let listed = match view {
+            ArchAuditExceptionView::Hide => !f.exception,
+            ArchAuditExceptionView::Show => true,
+            ArchAuditExceptionView::Only => marked,
+        };
+        if listed {
+            findings.push(f);
+        }
+    }
+    let warnings = (lapsed > 0)
+        .then(|| CommandWarning {
+            code: codes::EXCEPTION_LAPSED.into(),
+            message: format!(
+                "{lapsed} istisnanın bulgusu verildiğinden beri değişti; bulgular yeniden açık. İstisnayı yeniden verin ya da kaldırın."
+            ),
+            path: None,
+        })
+        .into_iter()
+        .collect();
+    Ok((
+        ArchAudited {
+            findings,
+            outside,
+            excepted,
+            stale,
+            revision: doc.revision().to_string(),
+        },
+        warnings,
+    ))
+}
+
+/// Every finding of `input`'s groups with its key, the part asked and the exceptions left aside (`cad.arch.exceptions`
+/// names findings by them), and the codes they could find.
+pub(crate) fn every_finding(
+    doc: &Document,
+    input: &ArchAudit,
+) -> Result<(Vec<ArchAuditFinding>, HashSet<&'static str>), Stop> {
+    found(doc, input)
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ArchAudit) -> CommandResult<()> {
     match limits(input)
         .and_then(|_| profiles_of(input).map(|_| ()))
         .and_then(|_| fix_level(cx.doc, input).map(|_| ()))
+        .and_then(|_| scope_of(cx.doc, input).map(|_| ()))
     {
         Ok(_) => CommandResult::Completed {
             output: (),
@@ -1358,10 +1929,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ArchAudit) -> CommandResult<ArchA
 /// The findings without a context, for a panel.
 pub fn plan_in(doc: &Document, input: &ArchAudit) -> CommandResult<ArchAudited> {
     match answer(doc, input) {
-        Ok(output) => CommandResult::Completed {
-            output,
-            warnings: Vec::new(),
-        },
+        Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
     }
 }

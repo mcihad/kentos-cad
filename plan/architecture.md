@@ -1171,7 +1171,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 - Kabul: duvar/kapı/mahal düzenleme, birim/yuvarlama, boş veri, çoklu kat,
   kilitli kaynak ve CSV/XLSX/PDF dışa verme.
 
-### ARCH-DOC-03 — Mimari proje denetimi [~]
+### ARCH-DOC-03 — Mimari proje denetimi [x]
 
 - [x] İlk dilim [ADR0703](../docs/adr/0703-architectural-project-audit.md):
   salt okunur `cad.arch.audit` ve alt panelin Denetim sekmesi; birleşmeyen
@@ -1181,7 +1181,16 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
   satıra bas-yakınlaş-Düzelt-yeniden denetle-Geri al gerçek GUI resimleriyle
   (`.run/shots/arac-denetim-*`), 35 ortak durum bağımsız başvurudan, aynı
   rapor Python/MCP'de. Revit Review Warnings ve Archicad Update Zones
-  araştırıldı. Kalıcı istisna, kat/seçim kapsamı ve merdiven denetimi açık.
+  araştırıldı.
+- [x] Kalan alt maddeler [ADR0732](../docs/adr/0732-architectural-audit-scope-exceptions-fixes.md):
+  bulgunun kalıcı anahtarı; kat ve seçim kapsamı (`within`, dışarıda kalan sayılır);
+  kalıcı istisna (`cad.arch.exceptions`, KCAD 130, notlu, tek geri alma adımı; nesne
+  değişince düşer ve bulgu yeniden açılır, bulgusu kalmayan temizlenir); yeni
+  denetimler (kısa artık duvar, üst üste duvar ve ayırıcı, boş etiket, merdiven ve
+  rampanın kendi uyarıları, kopuk mutfak dizisi); Ctrl/Shift ile çoklu seçim, düzeltmenin
+  çizimde önizlemesi ve tek adımda Düzelt (n); satırın sağ tık menüsü; Kapsam,
+  İstisnalar ve Eşikler menüleriyle 1100 px'e sığan çubuk. Navisworks'ün onaylı
+  çakışması ve Revit'in seçili öğe uyarıları araştırıldı.
 
 - Açık duvar sınırı, çakışan açıklık, kopuk host/ölçü/etiket, yinelenen numara,
   eksik tip/kat, sıfır alan ve çok küçük artık parça için odaklanılabilir liste.
@@ -1322,6 +1331,7 @@ veya ekran görüntüsü veri modeli, undo ya da dosya desteği kanıtı sayılm
 | 2026-10-28 | ARCH-LIB-02 / ADR0727 | Mutfak dizisi L ve U (kör/açık köşe), bulaşık makinesi, fırın, buzdolabı, modülün kendi eni ve kapısı, tezgâh kesimleri, Modül/Tür/Açılma; kalıcı dizi (KCAD 127) duvarı izler, kopar, nesneleriyle taşınır, sahiplik (`casework_owned`); `cad.casework.edit`/`query`, `casework_clash`, kör köşedeki cihaz `casework_blind_corner`; araçta Biçim (Otomatik kör modülü atlar), Öznitelikler'de Mutfak dizisi. 80 + 39 + 22 ortak durum (Rust, Python), KCAD, bulut meta ve göç 0035, araç ve masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-DIM-01 / ADR0729 | Cephe, duvar grubu ve mahal ölçü dizileri: tarifin `span`'ı (KCAD 128), sıralar Açıklıklar/Duvarlar/Akslar/Toplam, dış yüz/çekirdek, köşe duvarları ve saplanan bölmeler, cepheden görünürlük, mahalin dış halkası ve delikleri, dört yan, okunur doğrultu; üyelik aynı adımda (kapı, bölme, bölme/birleştirme, ters yön, silme), kimlik aynı çift ya da aynı aralık; sığmayan yazı söylenir; `Sources`, `reference`, sıra uzaklığı dış yüzden. 70 bağımsız ortak durum (Rust ve Python), çekirdek/uygulama/belge/araç/masaüstü/MCP testleri, clippy, wasm32, gerçek GUI (8 sahne). | [x] ADR0729 alt maddeleri; ADR0695/0696 kabul kapıları ve veritabanı projesi açık |
 | 2026-10-29 | ARCH-DIM-01 / ADR0730 | Ölçü dizisinin kalanı: pafta ölçekleri (`scales`, ölçekli temsiller tarifin hesabıyla), sığmayan yazının yeri (`tight: shift`, dört aday, elle taşınan korunur, `resetText`), yuvarlama uyarısı (`rounding`), bütünüyle seçilmiş tarifin kopya/dizi/pano/taşı/döndür/aynala ile gitmesi; KCAD 129. 86 bağımsız ortak durum (Rust ve Python), çekirdek/uygulama/araç/masaüstü/Python/MCP testleri, sunucu PostGIS'te (ADR0695 ekinin kuralı sunucuda eksikti, kapandı), PDF'te 1:50 ve 1:100 aynı kâğıt boyu, gerçek GUI (9 sahne). | [x] ADR0730 alt maddeleri; ADR0696'nın görünüş kabulü açık |
+| 2026-10-29 | ARCH-DOC-03 / ADR0732 | Mimari denetimin kalanı: kalıcı bulgu anahtarı, `within` kapsamı (kat, seçim; `outside`), kalıcı istisna (`arch.auditExceptions`, KCAD 130; `cad.arch.exceptions` mark/unmark/prune, tek adım, düşen istisna `exception_lapsed`, `stale`), yeni denetimler (kısa ve üst üste duvar, ayırıcı örtüşmesi, boş etiket, merdiven ve rampa uyarıları, kopuk mutfak dizisi), Ctrl/Shift ile seçim, okuma kopyasında düzeltme önizlemesi, Düzelt (n) tek `cad.changeset.apply`, satır menüsü, not sorusu, Kapsam/İstisnalar/Eşikler menüleri. 80 + 25 + 24 + 33 bağımsız ortak durum (Rust; Python özetleri aynı), KCAD (yeni örnek, altı bozuk, n+1 şeması, Python okuyucusu), yetenekler, 3+1 masaüstü testi, gerçek MCP sunucusunda istisna-kayıt-açma testi, gerçek GUI (9 sahne × 4). | [x] Bütün madde |
 | 2026-10-29 | ARCH-DIM-01 / ADR0696 eki | Bölünmüş görünümde görünüş başına duvar ayrıntısı: depo etkin görünümün açılımını tutar, öbür görünümler deponun birleşmiş duvarlarından kendi ayrıntısında (`Store::expanded_at`, stil çekirdeğinin `View.walls`'ı); %10 dönüş aralığı görünüş başına, etkinleşen görünüm ayrıntısını depoya taşır, Kaydırmalı karşılaştır etkinin ayrıntısı, açık proje ayrıntısı hepsinin. Taze PDF matrisi (Dış duvar 25, 1:20/1:50/1:100/1:200, masaüstü ve başsız kitap, `pdftoppm` 600 dpi): otomatikte ayrıntılı/uygulama/şematik/şematik, model 1:15'te değişmez; Uygulama/Ayrıntılı/Şematik bütün haritaların. Çekirdek, stil ve 4+1 masaüstü testi, gerçek GUI (2 sahne × 4), clippy, wasm32, 375 Python. | [x] ARCH-DIM-01 tamam; SVG düzenleyicisinin paralel yükte düşen testi ayrı iş |
 | 2026-10-28 | ARCH-LIB-01 / ADR0726 | Bloklar › Kitaplık (DWG/DXF/KCAD klasörleri, kategoriler, gerçek boy ve birim, birim bildirmeyen dosyada birim sorusu), `file.import.block`'un DWG/DXF okuması, `sourceUnit`, `category`, `sizes`, `unit`; Blok ekle'nin gerçek boy etiketi, taban işareti, görünür ayarları ve Varyant (V); Öznitelikler'de En × boy. 30 + 25 ortak durum, DWG ikizleri, başsız kabul matrisi (m/mm, iç içe, aynalı, kaydet/aç, DXF `--written`), etkileşim/masaüstü testleri, gerçek GUI. | [x] Bütün madde |
 | 2026-10-28 | ARCH-ELEM-03 / ADR0725 | Eğrisel aks ağı (`radial`: radyal akslar ve yaylar, kesişimlerde radyal yönde kolonlar), kesik aks (`ends`), kolonun dokuz noktalı hizası (`anchor`) ve L kolon (`lShape`, `legs`; KCAD 126), “L/n” ve Eşit böl, Kolon aracının ayarları ve Öznitelikler, Denetim'in Akslar grubu (`arch_grid_label_duplicate`), aksın ölçü yerleri; ölçü ve kolon çizelgesi aksı izler. 41+27+21+44 ortak durum, alt nesne/çekirdek başvuruları, KCAD, tümleşik test, masaüstü yürüyüşü, gerçek GUI. | [x] Bütün madde |

@@ -283,6 +283,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::FieldDomain>,
         after: Vec<kentos_contracts::FieldDomain>,
     },
+    /// Mimari denetim's exceptions (docs/adr/0732 §3), before and after: a setting, written as a step of its own so a
+    /// mark given by mistake is undone.
+    AuditExceptions {
+        before: Vec<kentos_contracts::ArchAuditException>,
+        after: Vec<kentos_contracts::ArchAuditException>,
+    },
     /// A binding to a source table and its reconciling base (docs/adr/0636 §5), before and after: written in the step
     /// that changed its key or its area, so undo gives the binding back with the objects (none: no binding).
     Source {
@@ -552,6 +558,10 @@ impl Op {
                 after: *before,
             },
             Op::Domains { before, after } => Op::Domains {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::AuditExceptions { before, after } => Op::AuditExceptions {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1176,6 +1186,7 @@ impl Document {
                 | Op::Sheets { .. }
                 | Op::Units { .. }
                 | Op::Domains { .. }
+                | Op::AuditExceptions { .. }
                 | Op::Source { .. }
                 | Op::Lineage { .. }
                 | Op::Constraints { .. } => false,
@@ -1444,6 +1455,13 @@ impl Document {
             }
             Op::Domains { after, .. } => {
                 self.settings.domains = after.clone();
+                return;
+            }
+            Op::AuditExceptions { after, .. } => {
+                let mut arch = self.settings.arch.take().unwrap_or_default();
+                arch.audit_exceptions = after.clone();
+                // No empty settings are kept (a file refuses them).
+                self.settings.arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::Source { id, after, .. } => {

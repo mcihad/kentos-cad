@@ -28,6 +28,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Mimari denetimin kalanı: kapsam, kalıcı istisna, yeni denetimler, toplu düzeltme (29 Ekim 2026; [ADR0732](docs/adr/0732-architectural-audit-scope-exceptions-fixes.md)).**
+  Bulgunun kalıcı `key`'i (`kod:kimlikler`, uç adı, `#n`); `cad.arch.audit`'in `within`'i (katlar, nesneler; açıklığın
+  katı duvarından), `minLength`, `exceptions` (hide/show/only), cevabın `outside`, `excepted`, `stale`'i. İstisna proje
+  ayarı `arch.auditExceptions` (KCAD 130 opt-in; anahtar, kod, nesneler, bulgunun kanonik JSON özeti, not), yazan
+  `cad.arch.exceptions` (mark/unmark/prune, tek geri alma adımı); bulgu değişince istisna düşer (`lapsed`,
+  `exception_lapsed`). Yeni denetimler: `arch_wall_short` ve `arch_wall_overlap` (aynısı silinir), `arch_separator_overlap`,
+  `tag_empty`, merdivenin ve rampanın kendi uyarıları (Rampalar grubu), `arch_casework_broken` (Mutfak dizileri).
+  Masaüstü: Ctrl/⌘ ve Shift ile satırlar, Düzelt (n) tek `cad.changeset.apply` (“Denetim düzeltmeleri”), düzeltme
+  okuma kopyasında çizimde önizlenir (silinen tehlike renginde), satırın sağ tık menüsü, not sorusu, Kapsam ▾,
+  İstisnalar ▾, Eşikler ▾. 80 + 25 ortak durum (`arch_audit_cases.py`), masaüstü testleri, gerçek GUI. ARCH-DOC-03 [x].
+
 - **Görünüş başına duvar ayrıntısı ve taze PDF matrisi (29 Ekim 2026; [ADR0696 eki](docs/adr/0696-model-wall-detail-and-dense-hairlines.md)).**
   Bölünmüş görünümün her görünümü duvarları kendi kamerasının ayrıntısıyla çizer (Revit'in görünüş Detail Level'ı,
   Archicad'in pencere başına yapı gösterimi): depo etkin görünümün açılımını tutar (seçme, kenet), öbürleri deponun

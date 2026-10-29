@@ -651,11 +651,14 @@ pub const SCHEMA_WITH_DIMENSION_SET_SPANS: u32 = 128;
 /// Schema 129 (docs/adr/0730): a dimension recipe's sheet scales (`scales`), its values shifted where they do not fit
 /// (`tight`) and a member's value place (`shift`), written only when a recipe has one.
 pub const SCHEMA_WITH_DIMENSION_SET_SCALES: u32 = 129;
+/// Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions in the project's architectural settings
+/// (`arch.auditExceptions`), written only when a project has one.
+pub const SCHEMA_WITH_AUDIT_EXCEPTIONS: u32 = 130;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 128] = [
+pub const SCHEMAS: [u32; 129] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -784,6 +787,7 @@ pub const SCHEMAS: [u32; 128] = [
     SCHEMA_WITH_CASEWORK,
     SCHEMA_WITH_DIMENSION_SET_SPANS,
     SCHEMA_WITH_DIMENSION_SET_SCALES,
+    SCHEMA_WITH_AUDIT_EXCEPTIONS,
 ];
 
 /// The file a drawing is saved as.

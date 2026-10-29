@@ -193,6 +193,8 @@ pub fn read(
                 (!prefix.is_empty()).then(|| (r.id.clone(), prefix.to_owned()))
             })
             .collect(),
+        // The audit's exceptions are Denetim's, not this form's (docs/adr/0732 §3).
+        audit_exceptions: Vec::new(),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

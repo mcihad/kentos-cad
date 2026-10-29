@@ -751,7 +751,7 @@ impl App {
                 let over = preview::layer(
                     &self.viewport.camera,
                     marks,
-                    self.session.preview(&format),
+                    self.session.preview(&format).or_else(|| self.arch_audit_preview()),
                     self.field.as_ref().map(|f| preview::FieldView {
                         text: f.text.as_str(),
                         at: f.at,
@@ -920,7 +920,7 @@ impl App {
         let over = preview::layer(
             &camera,
             marks,
-            self.session.preview(&format),
+            self.session.preview(&format).or_else(|| self.arch_audit_preview()),
             None,
             None,
             doc.model

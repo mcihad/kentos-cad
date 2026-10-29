@@ -122,11 +122,21 @@ class Case:
                 return block.id
             if value.startswith("$block:"):
                 return self.blocks[value[len("$block:"):]]
-            if value.startswith("$uidOf:"):
+            if value.startswith("$uidOf:") and value[len("$uidOf:"):].isdigit():
                 slot = int(value[len("$uidOf:"):])
                 record = self.slots().get(slot)
                 assert record is not None, f"{at}: no object in slot {slot}"
                 return record.uid
+            if "$uidOf:" in value:
+                # Inside a text (a finding's key names its objects, docs/adr/0732 §1): each `$uidOf:12` its slot's id.
+                slots = self.slots()
+
+                def uid_of(m: re.Match[str]) -> str:
+                    record = slots.get(int(m.group(1)))
+                    assert record is not None, f"{at}: no object in slot {m.group(1)}"
+                    return record.uid
+
+                return re.sub(r"\$uidOf:(\d+)", uid_of, value)
             if value.startswith("$constraint:"):
                 # The drawing's constraint at this place now (docs/adr/0335).
                 k = int(value[len("$constraint:"):])
@@ -442,7 +452,12 @@ class Case:
         parent, docs/adr/0405) and an external reference's source file (`$fixture:`, docs/adr/0348) filled in; nothing else
         is a placeholder."""
         if isinstance(value, str):
-            placeholder = value.startswith(("$blockOf:", "$block:", "$uidOf:", "$uid:", "$layer:", "$$")) or "$fixture:" in value or "$tmp:" in value
+            placeholder = (
+                value.startswith(("$blockOf:", "$block:", "$uidOf:", "$uid:", "$layer:", "$$"))
+                or "$fixture:" in value
+                or "$tmp:" in value
+                or "$uidOf:" in value
+            )
             return self.fill(value, at) if placeholder else value
         if isinstance(value, list):
             return [self.block_ids(v, at) for v in value]

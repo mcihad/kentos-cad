@@ -56,3 +56,31 @@ impl Document {
             .collect()
     }
 }
+
+impl Document {
+    /// Gives the project Mimari denetim's exceptions `next` (docs/adr/0732 §3) as one change named `label` (into the
+    /// open transaction, else an undo step of its own). Refused with nothing changed: exceptions with a problem
+    /// (`kentos_contracts::audit_exceptions_problem`). Whether anything changed.
+    pub fn set_audit_exceptions(
+        &mut self,
+        next: Vec<kentos_contracts::ArchAuditException>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        if let Some((_, problem)) = kentos_contracts::audit_exceptions_problem(&next) {
+            return Err(Refusal(problem));
+        }
+        let before = self
+            .settings
+            .arch
+            .as_ref()
+            .map(|a| a.audit_exceptions.clone())
+            .unwrap_or_default();
+        if before == next {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            doc.record(vec![Op::AuditExceptions { before, after: next }], label);
+            Ok(true)
+        })
+    }
+}

@@ -264,6 +264,8 @@ pub(super) struct Features {
     pub(super) dimension_set_spans: bool,
     /// Schema 129: a dimension recipe's sheet scales and its values' places (docs/adr/0730).
     pub(super) dimension_set_scales: bool,
+    /// Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
+    pub(super) audit_exceptions: bool,
     /// Schema 79: the grid, column, stair and ramp (docs/adr/0343).
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
@@ -476,6 +478,7 @@ impl Features {
             casework: schema >= crate::SCHEMA_WITH_CASEWORK,
             dimension_set_spans: schema >= crate::SCHEMA_WITH_DIMENSION_SET_SPANS,
             dimension_set_scales: schema >= crate::SCHEMA_WITH_DIMENSION_SET_SCALES,
+            audit_exceptions: schema >= crate::SCHEMA_WITH_AUDIT_EXCEPTIONS,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,

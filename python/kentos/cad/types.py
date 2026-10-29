@@ -243,7 +243,9 @@ class ArchAuditCheck(_StrEnum):
     - ``viewmarks``: View marks whose target is gone.
     - ``levels``: Walls, spaces, columns, stairs, ramps and room separators without a level while the project has levels.
     - ``accessibility``: Ramps measured against an accessibility profile (docs/adr/0723 §4); nothing unless one is given.
-    - ``stairs``: Stairs measured against a stair profile (docs/adr/0724 §2); nothing unless one is given.
+    - ``stairs``: Stairs measured against a stair profile (docs/adr/0724 §2), and their own checks (docs/adr/0732 §4).
+    - ``ramps``: The ramps' own checks: no sloped run, a given slope its rise and run do not make (docs/adr/0732 §4).
+    - ``casework``: Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).
     """
     WALLS = "walls"
     OPENINGS = "openings"
@@ -257,10 +259,28 @@ class ArchAuditCheck(_StrEnum):
     LEVELS = "levels"
     ACCESSIBILITY = "accessibility"
     STAIRS = "stairs"
+    RAMPS = "ramps"
+    CASEWORK = "casework"
 
 
-ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels", "accessibility", "stairs"]
+ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels", "accessibility", "stairs", "ramps", "casework"]
 """The names of :class:`ArchAuditCheck`, for a plain string."""
+
+
+class ArchAuditExceptionView(_StrEnum):
+    """Which findings marked as exceptions `cad.arch.audit` lists (docs/adr/0732 §3).
+
+    - ``hide``: Left out and counted (`excepted`).
+    - ``show``: Listed with the open ones, marked `exception`.
+    - ``only``: Only they are listed.
+    """
+    HIDE = "hide"
+    SHOW = "show"
+    ONLY = "only"
+
+
+ArchAuditExceptionViewName = Literal["hide", "show", "only"]
+"""The names of :class:`ArchAuditExceptionView`, for a plain string."""
 
 
 class ArchDiscipline(_StrEnum):
@@ -276,6 +296,22 @@ class ArchDiscipline(_StrEnum):
 
 ArchDisciplineName = Literal["architecture", "structure", "mechanical", "electrical", "plumbing", "landscape", "interior"]
 """The names of :class:`ArchDiscipline`, for a plain string."""
+
+
+class ArchExceptionOperation(_StrEnum):
+    """What `cad.arch.exceptions` does (docs/adr/0732 §3).
+
+    - ``mark``: İstisna yap: the findings of `keys` left on purpose, bound to the findings as they are now (a lapsed exception is
+    - ``unmark``: İstisnayı kaldır: the exceptions of `keys` taken away.
+    - ``prune``: İstisnaları temizle: the exceptions whose finding the audit no longer finds taken away.
+    """
+    MARK = "mark"
+    UNMARK = "unmark"
+    PRUNE = "prune"
+
+
+ArchExceptionOperationName = Literal["mark", "unmark", "prune"]
+"""The names of :class:`ArchExceptionOperation`, for a plain string."""
 
 
 class ArchPhase(_StrEnum):
@@ -10471,54 +10507,104 @@ class ArcPlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ArchAudit(_Model):
-    """Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703): the checks asked (none: every one) and
-    the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`]).
+    """Input of `cad.arch.audit` v1 (“Mimari denetim”, read-only, docs/adr/0703, 0732): the checks asked (none: every one),
+    the thresholds (absent: [`ARCH_AUDIT_MAX_GAP`], [`ARCH_AUDIT_MIN_AREA`], [`ARCH_AUDIT_MIN_WIDTH`],
+    [`ARCH_AUDIT_MIN_LENGTH`]), the part of the drawing (`within`) and the exceptions listed.
 
-    Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`), `invalid_arch_audit` (a threshold below
-    zero, in the same order; a profile the catalog lacks, two with ramp or with stair rules), `level_not_found`
-    (`level`).
+    Refusals, in this order: `not_finite` (`maxGap`, `minArea`, `minWidth`, `minLength`), `invalid_arch_audit` (a
+    threshold below zero, in the same order; a profile the catalog lacks, two with ramp or with stair rules),
+    `level_not_found` (`level`, then `within.levels[i]`), `entity_not_found` (`within.uids[i]`). Warning:
+    `exception_lapsed` (an exception whose finding changed: listed open again).
     Attributes:
         checks: The groups to check; absent or empty: every group. The findings keep the groups' own order.
+        exceptions: The exceptions listed; absent: hidden and counted.
         level: The level a level finding's fix gives (docs/adr/0717: a host's Etkin kat), by its id among the project's;
             absent: the project's ground level (the one at elevation 0, else its first).
         max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
         min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
+        min_length: An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4). Unit: length.
         min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
         profiles: The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
-            ([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those groups find nothing.
+            ([`ARCH_PROFILES`]): at most one with ramp rules and one with stair rules; none: those measures are not taken.
+        within: The part of the drawing reported on; absent: all of it.
     """
     checks: list[ArchAuditCheck | ArchAuditCheckName] | Unset = UNSET
+    exceptions: ArchAuditExceptionView | ArchAuditExceptionViewName | None | Unset = UNSET
     level: str | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
     min_area: float | None | Unset = UNSET
+    min_length: float | None | Unset = UNSET
     min_width: float | None | Unset = UNSET
     profiles: list[str] | Unset = UNSET
+    within: ArchAuditWithin | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.checks is not UNSET:
             out["checks"] = [_enum_out(e0) for e0 in self.checks]
+        if self.exceptions is not UNSET:
+            out["exceptions"] = None if self.exceptions is None else _enum_out(self.exceptions)
         if self.level is not UNSET:
             out["level"] = self.level
         if self.max_gap is not UNSET:
             out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
         if self.min_area is not UNSET:
             out["minArea"] = None if self.min_area is None else float(self.min_area)
+        if self.min_length is not UNSET:
+            out["minLength"] = None if self.min_length is None else float(self.min_length)
         if self.min_width is not UNSET:
             out["minWidth"] = None if self.min_width is None else float(self.min_width)
         if self.profiles is not UNSET:
             out["profiles"] = list(self.profiles)
+        if self.within is not UNSET:
+            out["within"] = None if self.within is None else self.within.to_json()
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ArchAudit:
         return cls(
             checks=[_enum_in(ArchAuditCheck, e0) for e0 in data["checks"]] if "checks" in data else UNSET,
+            exceptions=UNSET if "exceptions" not in data else None if data["exceptions"] is None else _enum_in(ArchAuditExceptionView, data["exceptions"]),
             level=data.get("level", UNSET),
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
             min_area=UNSET if "minArea" not in data else None if data["minArea"] is None else float(data["minArea"]),
+            min_length=UNSET if "minLength" not in data else None if data["minLength"] is None else float(data["minLength"]),
             min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
             profiles=list(data["profiles"]) if "profiles" in data else UNSET,
+            within=UNSET if "within" not in data else None if data["within"] is None else ArchAuditWithin.from_json(data["within"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchAuditException(_Model):
+    """A finding of Mimari denetim left on purpose (docs/adr/0732 §3): its lasting key, its code and objects (persistent
+    ids, in the finding's order), the digest of the finding as it was marked (of its code, objects, words and place:
+    sixteen lowercase hexadecimal digits) and the user's note. A finding whose digest no longer matches is open again.
+    """
+    key: str
+    code: str
+    uids: list[str]
+    digest: str
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["code"] = self.code
+        out["uids"] = list(self.uids)
+        out["digest"] = self.digest
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAuditException:
+        return cls(
+            key=data["key"],
+            code=data["code"],
+            uids=list(data["uids"]),
+            digest=data["digest"],
+            note=data.get("note", UNSET),
         )
 
 
@@ -10526,6 +10612,7 @@ class ArchAudit(_Model):
 class ArchAuditFinding(_Model):
     """One thing `cad.arch.audit` found.
     Attributes:
+        key: Its lasting key (docs/adr/0732 §1): `code:uids`, a wall end's `:start` or `:end`, `#2` for a second alike.
         code: `wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,
             `arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,
             `arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,
@@ -10533,43 +10620,63 @@ class ArchAuditFinding(_Model):
             `arch_level_missing`,
             `ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,
             `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
-            `stair_landing_short`, `stair_winder_narrow` or `stair_railing_missing`.
+            `stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,
+            `arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,
+            `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
         at: Where to look. Unit: length.
+        exception: Marked as left on purpose, and the finding is as it was then (docs/adr/0732 §3).
         fix: The call that resolves it, when one plainly does and the object it writes is on an unlocked layer.
+        lapsed: Marked as left on purpose, but the finding changed since: open again.
+        note: The exception's note.
     """
+    key: str
     check: ArchAuditCheck | ArchAuditCheckName
     code: str
     message: str
     repair: str
     uids: list[str]
     at: Vec2
+    exception: bool | Unset = UNSET
     fix: ArchAuditFix | None | Unset = UNSET
+    lapsed: bool | Unset = UNSET
+    note: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        out["key"] = self.key
         out["check"] = _enum_out(self.check)
         out["code"] = self.code
         out["message"] = self.message
         out["repair"] = self.repair
         out["uids"] = list(self.uids)
         out["at"] = _vec2_out(self.at)
+        if self.exception is not UNSET:
+            out["exception"] = self.exception
         if self.fix is not UNSET:
             out["fix"] = None if self.fix is None else self.fix.to_json()
+        if self.lapsed is not UNSET:
+            out["lapsed"] = self.lapsed
+        if self.note is not UNSET:
+            out["note"] = self.note
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ArchAuditFinding:
         return cls(
+            key=data["key"],
             check=_enum_in(ArchAuditCheck, data["check"]),
             code=data["code"],
             message=data["message"],
             repair=data["repair"],
             uids=list(data["uids"]),
             at=Vec2.from_json(data["at"]),
+            exception=data.get("exception", UNSET),
             fix=UNSET if "fix" not in data else None if data["fix"] is None else ArchAuditFix.from_json(data["fix"]),
+            lapsed=data.get("lapsed", UNSET),
+            note=data.get("note", UNSET),
         )
 
 
@@ -10598,25 +10705,66 @@ class ArchAuditFix(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArchAuditWithin(_Model):
+    """The part of the drawing `cad.arch.audit` reports on (docs/adr/0732 §2): a finding is kept when one of its objects
+    lies on one of `levels` and one of them is among `uids`; either absent: no bound.
+    Attributes:
+        levels: Levels by their ids; null, the objects on no level. An object's level is the level view's (docs/adr/0715): an
+            opening's its wall's, a tag's its object's, a dimension's its bonds'.
+        uids: Objects by their persistent ids (Revit's Show Related Warnings).
+    """
+    levels: list[str | None] | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.levels is not UNSET:
+            out["levels"] = None if self.levels is None else list(self.levels)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchAuditWithin:
+        return cls(
+            levels=UNSET if "levels" not in data else None if data["levels"] is None else list(data["levels"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ArchAudited(_Model):
     """Output of `cad.arch.audit` v1 (its plan's too).
     Attributes:
         findings: By group, then by code within it, then along x and y.
+        outside: The findings `within` left out. Unit: count.
+        excepted: The findings in the part reported on that are exceptions, listed or not. Unit: count.
+        stale: The keys of the project's exceptions whose finding the audit no longer finds (`cad.arch.exceptions`' prune).
     """
     findings: list[ArchAuditFinding]
+    outside: int
+    excepted: int
     revision: str
+    stale: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["outside"] = self.outside
+        out["excepted"] = self.excepted
         out["revision"] = self.revision
+        if self.stale is not UNSET:
+            out["stale"] = list(self.stale)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ArchAudited:
         return cls(
             findings=[ArchAuditFinding.from_json(e0) for e0 in data["findings"]],
+            outside=data["outside"],
+            excepted=data["excepted"],
             revision=data["revision"],
+            stale=list(data["stale"]) if "stale" in data else UNSET,
         )
 
 
@@ -10670,6 +10818,76 @@ class ArchEdited(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArchEdited:
         return cls(
             elements=[Entity.from_json(e0) for e0 in data["elements"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchExceptions(_Model):
+    """Input of `cad.arch.exceptions` v1: Mimari denetim's findings marked as left on purpose, or the marks taken away, as
+    one undo step (“İstisna”, “İstisnayı kaldır”, “İstisnaları temizle”). The findings are found by `audit` (absent: every
+    group with the default thresholds and no profile); its `within` and `exceptions` are not read.
+
+    Refusals, in this order: `invalid_input` (mark or unmark without a key, a key twice, a note of more than 1000
+    characters), the audit's own (its paths under `audit.`), `finding_not_found` (`keys[i]`: no finding of the drawing as
+    it is now has it, for mark; no exception has it, for unmark). Prune with nothing to drop, or marks already as asked,
+    change nothing and write no step. `expectedRevision` given and the drawing not at it: nothing is written, a conflict.
+    Attributes:
+        note: Why the findings are left, for mark.
+    """
+    operation: ArchExceptionOperation | ArchExceptionOperationName
+    audit: ArchAudit | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    keys: list[str] | Unset = UNSET
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = _enum_out(self.operation)
+        if self.audit is not UNSET:
+            out["audit"] = None if self.audit is None else self.audit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.keys is not UNSET:
+            out["keys"] = list(self.keys)
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchExceptions:
+        return cls(
+            operation=_enum_in(ArchExceptionOperation, data["operation"]),
+            audit=UNSET if "audit" not in data else None if data["audit"] is None else ArchAudit.from_json(data["audit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            keys=list(data["keys"]) if "keys" in data else UNSET,
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchExceptionsEdited(_Model):
+    """Output of `cad.arch.exceptions` v1, and its plan: the keys marked, unmarked or dropped (those already so are not
+    counted), how many exceptions the project keeps after it, and the revision after it (a plan: before it).
+    Attributes:
+        exceptions: Unit: count.
+    """
+    changed: list[str]
+    exceptions: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = list(self.changed)
+        out["exceptions"] = self.exceptions
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchExceptionsEdited:
+        return cls(
+            changed=list(data["changed"]),
+            exceptions=data["exceptions"],
             revision=data["revision"],
         )
 
@@ -10744,6 +10962,7 @@ class ArchSettings(_Model):
     Attributes:
         active_level: Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
             level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
+        audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
@@ -10752,6 +10971,7 @@ class ArchSettings(_Model):
         space_usages: Suggested room usages in project order, never a mandatory classification.
     """
     active_level: str | None | Unset = UNSET
+    audit_exceptions: list[ArchAuditException] | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
@@ -10765,6 +10985,8 @@ class ArchSettings(_Model):
         out: dict[str, Any] = {}
         if self.active_level is not UNSET:
             out["activeLevel"] = self.active_level
+        if self.audit_exceptions is not UNSET:
+            out["auditExceptions"] = [e0.to_json() for e0 in self.audit_exceptions]
         if self.detail is not UNSET:
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
         if self.level_view is not UNSET:
@@ -10787,6 +11009,7 @@ class ArchSettings(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ArchSettings:
         return cls(
             active_level=data.get("activeLevel", UNSET),
+            audit_exceptions=[ArchAuditException.from_json(e0) for e0 in data["auditExceptions"]] if "auditExceptions" in data else UNSET,
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
@@ -81826,13 +82049,21 @@ __all__ = [
     "ArchAudit",
     "ArchAuditCheck",
     "ArchAuditCheckName",
+    "ArchAuditException",
+    "ArchAuditExceptionView",
+    "ArchAuditExceptionViewName",
     "ArchAuditFinding",
     "ArchAuditFix",
+    "ArchAuditWithin",
     "ArchAudited",
     "ArchDiscipline",
     "ArchDisciplineName",
     "ArchEdit",
     "ArchEdited",
+    "ArchExceptionOperation",
+    "ArchExceptionOperationName",
+    "ArchExceptions",
+    "ArchExceptionsEdited",
     "ArchInfo",
     "ArchLevel",
     "ArchOperation",

@@ -101,6 +101,15 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `span`'lı tarifte sıra uzaklığı en dış yüzden. Duvar ölçüleri aracında Kaynak türü (Duvar, Cephe, Mahal), Doğrultu,
   Ölçülen çizgi, Yanlar, Duvarlar ve Akslar sıraları, sığmayan değerin tehlike rengi; Öznitelikler'de dizinin kaynağı,
   doğrultusu ve sıraları. `cad.dimensionsets.create.span.json` ve `cad.dimensionsets.edit.span.json` ile sınanmalı.
+- ARCH-DOC-03 / ADR0732: Mimari denetimin kalanı. Web'in belgesi proje ayarının `arch.auditExceptions`'ını (KCAD 130)
+  okuyup yazmalı ve `cad.arch.exceptions`'ı (mark, unmark, prune; tek geri alma adımı) WASM'deki ortak denetimle
+  çalıştırmalı; Denetim sekmesi bulgunun `key`'ini, `within` kapsamını (Bütün çizim, Etkin kat, Seçili nesneler),
+  `exceptions` görünümünü, `outside`, `excepted`, `stale`'i, yeni kodları (`arch_wall_short`, `arch_wall_overlap`,
+  `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`, `ramp_no_run`,
+  `ramp_slope_mismatch`, `arch_casework_broken`) ve Rampalar ile Mutfak dizileri gruplarını göstermeli; Ctrl ve Shift ile
+  satır seçimi, Düzelt (n) tek `cad.changeset.apply` ile, düzeltmenin çizimde önizlemesi (okuma kopyası; silinen tehlike
+  renginde), satırın sağ tık menüsü ve not sorusu, Kapsam, İstisnalar ve Eşikler menüleri. `cad.arch.audit.json` ve
+  `cad.arch.exceptions.json` ile sınanmalı.
 - ARCH-DIM-01 / ADR0730: Ölçü dizisinin kalanı. Web'in belgesi tarifin `scales`, `tight`'ını ve üyenin `shift`'ini (KCAD
   129) okuyup yazmalı; planlayıcı her pafta ölçeğinde sıraları başvuru çizgisinden `s/P` katı uzaklıkta kurup üyelerin
   `annotative`'ini yazmalı (ortak kural `ops::dimension_layout::scaled_offset`, `kentos_formats::dimension_spans::scales_agree`),

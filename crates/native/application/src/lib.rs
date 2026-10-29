@@ -275,6 +275,7 @@ pub mod column_distances;
 pub use column_distances::distances as columns_distances;
 // Mimari denetim (docs/adr/0703).
 pub mod arch_audit;
+pub mod arch_exceptions;
 pub use opening_distances::distances as openings_distances;
 pub use wall_distances::distances as walls_distances;
 pub mod spaces;
@@ -846,6 +847,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_ARCH_AUDIT,
         kentos_commands::CAD_ARCH_AUDIT_VERSION,
+    ),
+    // Denetim istisnası ([`arch_exceptions`], docs/adr/0732 §3).
+    (
+        kentos_commands::CAD_ARCH_EXCEPTIONS,
+        kentos_commands::CAD_ARCH_EXCEPTIONS_VERSION,
     ),
     // Mutfak dizisi ([`casework_run`], docs/adr/0706, 0727).
     (

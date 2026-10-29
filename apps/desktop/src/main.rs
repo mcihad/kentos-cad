@@ -87,6 +87,8 @@ mod casework_scenes;
 mod temporary_scenes;
 #[cfg(test)]
 mod arch_audit_scenes;
+#[cfg(test)]
+mod arch_audit_exception_scenes;
 mod block_editor;
 #[cfg(test)]
 mod block_scenes;
