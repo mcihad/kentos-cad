@@ -1093,20 +1093,20 @@ impl App {
         match self.bind_database(&c.address(), &[(table.to_owned(), geometry)], reproject, area) {
             Ok(done) => {
                 self.zoom_to(&done.slots);
+                // A warning is the toast's body: what is not drawn and why is not left to the log (docs/adr/0745 §3).
+                let body = if done.warnings.is_empty() {
+                    "Değişiklikleri Kaynağa yaz ile veritabanına yazın.".to_owned()
+                } else {
+                    done.warnings.join(" ")
+                };
                 self.announce(
                     if done.warnings.is_empty() {
                         kentos_interaction::Level::Success
                     } else {
                         kentos_interaction::Level::Warn
                     },
-                    format!(
-                        "“{table}” ({}) bağlı katman oldu, {} nesne. Değişiklikleri Kaynağa yaz ile veritabanına yazın.",
-                        c.name, done.objects
-                    ),
+                    format!("“{table}” ({}) bağlı katman oldu, {} nesne. {body}", c.name, done.objects),
                 );
-                for w in done.warnings {
-                    self.say(kentos_interaction::Level::Warn, w);
-                }
             }
             Err(why) => self.error(why),
         }

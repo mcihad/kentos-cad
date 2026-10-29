@@ -165,6 +165,18 @@ struct Shape {
     from: String,
     /// The schema whose `kentos_uids` keeps lasting ids; none for a query.
     schema: Option<String>,
+    /// The geometry column is PostGIS's `geography`: read through `::geometry`, not written (docs/adr/0745 §2).
+    geography: bool,
+}
+
+/// The geometry a select or a box condition reads: the column, a `geography` one as `geometry` (PostGIS's cast keeps
+/// the coordinates and the system; its `&&` would take a geography box).
+fn geom_of(s: &Shape, g: &gpkg::GeometryColumn) -> String {
+    if s.geography {
+        format!("{}::geometry", quote(&g.name))
+    } else {
+        quote(&g.name)
+    }
 }
 
 /// The integer columns a view or a query is keyed by, in the order looked for (QGIS's habits).
@@ -205,25 +217,31 @@ fn key_among(name: &str, attributes: &[(String, String)]) -> Result<String, Prov
         .ok_or_else(|| ProviderError::NoKey(name.to_owned()))
 }
 
-/// A geometry column's type and system from its declared type (`geometry(MultiPolygon,5256)`, `geometry`).
-fn geometry_decl(decl: &str) -> Option<(String, Option<u32>)> {
+/// A geometry column's type, system and whether it is a `geography` from its declared type
+/// (`geometry(MultiPolygon,5256)`, `geometry`, `geography(Point,4326)`, `geography`). A `geography` without a system is
+/// WGS 84's, as PostGIS takes it (docs/adr/0745 §2).
+fn geometry_decl(decl: &str) -> Option<(String, Option<u32>, bool)> {
     let d = decl.trim();
-    if !d.to_ascii_lowercase().starts_with("geometry") {
+    let lower = d.to_ascii_lowercase();
+    let geography = lower.starts_with("geography");
+    if !geography && !lower.starts_with("geometry") {
         return None;
     }
+    let fallback = geography.then_some(4326);
     let inner = d
         .split_once('(')
         .map(|(_, r)| r.trim_end_matches(')').to_owned());
     let Some(inner) = inner else {
-        return Some(("GEOMETRY".into(), None));
+        return Some(("GEOMETRY".into(), fallback, geography));
     };
     let mut parts = inner.split(',');
     let kind = parts.next().unwrap_or("Geometry").trim().to_ascii_uppercase();
     let srid = parts
         .next()
         .and_then(|s| s.trim().parse::<u32>().ok())
-        .filter(|&s| s > 0);
-    Some((kind, srid))
+        .filter(|&s| s > 0)
+        .or(fallback);
+    Some((kind, srid, geography))
 }
 
 /// The geometry column of a type and dimension as `geometry_columns` says it.
@@ -343,9 +361,14 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
             }
         }
     };
-    let geometry: Option<(String, String, i32, i32)> = sqlx::query_as(
-        "SELECT f_geometry_column::text, type::text, srid, coord_dimension FROM geometry_columns
-         WHERE f_table_schema = $1 AND f_table_name = $2 LIMIT 1",
+    // A `geometry` column first, else a `geography` one (docs/adr/0745 §2).
+    let geometry: Option<(String, String, i32, i32, bool)> = sqlx::query_as(
+        "SELECT f_geometry_column::text, type::text, srid, coord_dimension, false FROM geometry_columns
+          WHERE f_table_schema = $1 AND f_table_name = $2
+         UNION ALL
+         SELECT f_geography_column::text, type::text, srid, coord_dimension, true FROM geography_columns
+          WHERE f_table_schema = $1 AND f_table_name = $2
+         ORDER BY 5 LIMIT 1",
     )
     .bind(&schema)
     .bind(&name)
@@ -353,12 +376,14 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
     .await
     .map_err(unreachable)?;
     let gname = geometry.as_ref().map(|g| g.0.clone());
+    let geography = geometry.as_ref().is_some_and(|g| g.4);
     // An untyped `geometry` column takes any dimension: Z and M optional (docs/adr/0584 §2).
     let untyped = gname
         .as_ref()
         .is_some_and(|g| attributes.iter().any(|(n, d, ..)| n == g && !d.contains('(')));
     let columns = columns_of(attributes, &fid, gname.as_ref());
     let writable: bool = !view
+        && !geography
         && sqlx::query_scalar("SELECT has_table_privilege($1::regclass, 'INSERT,UPDATE,DELETE')")
             .bind(&sql_name)
             .fetch_one(&mut *conn)
@@ -368,7 +393,7 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
         .as_ref()
         .and_then(|g| u32::try_from(g.2).ok())
         .filter(|&s| s > 0);
-    let geometry = geometry.map(|(column, kind, _, dims)| {
+    let geometry = geometry.map(|(column, kind, _, dims, _)| {
         let mut g = geometry_column(column, &kind, dims);
         if untyped {
             (g.z, g.m) = (2, 2);
@@ -381,6 +406,7 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
         writable,
         from: sql_name,
         schema: Some(schema),
+        geography,
     })
 }
 
@@ -415,13 +441,13 @@ async fn query_shape(conn: &mut PgConnection, table: &str) -> Result<Shape, Prov
     let from = format!("({sql}) AS q");
     let geometry = attributes
         .iter()
-        .find_map(|(n, d, ..)| geometry_decl(d).map(|(kind, srid)| (n.clone(), kind, srid)));
+        .find_map(|(n, d, ..)| geometry_decl(d).map(|(kind, srid, geography)| (n.clone(), kind, srid, geography)));
     let srid = match &geometry {
         None => None,
-        Some((_, _, Some(s))) => Some(*s),
+        Some((_, _, Some(s), _)) => Some(*s),
         Some((g, ..)) => {
             let first: Option<i32> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
-                "SELECT ST_SRID({q}) FROM {from} WHERE {q} IS NOT NULL LIMIT 1",
+                "SELECT ST_SRID({q}::geometry) FROM {from} WHERE {q} IS NOT NULL LIMIT 1",
                 q = quote(g)
             )))
             .fetch_optional(&mut *conn)
@@ -431,14 +457,16 @@ async fn query_shape(conn: &mut PgConnection, table: &str) -> Result<Shape, Prov
         }
     };
     let gname = geometry.as_ref().map(|g| g.0.clone());
+    let geography = geometry.as_ref().is_some_and(|g| g.3);
     let columns = columns_of(attributes, &fid, gname.as_ref());
-    let geometry = geometry.map(|(column, kind, _)| geometry_column(column, &kind, 2));
+    let geometry = geometry.map(|(column, kind, ..)| geometry_column(column, &kind, 2));
     Ok(Shape {
         layer: layer_of(name, geometry, srid, fid, columns),
         srid,
         writable: false,
         from,
         schema: None,
+        geography,
     })
 }
 
@@ -446,7 +474,7 @@ async fn query_shape(conn: &mut PgConnection, table: &str) -> Result<Shape, Prov
 fn select_of(s: &Shape, columns: &[gpkg::Column], geometry: bool) -> String {
     let mut select = vec![format!("{}::bigint", quote(&s.layer.fid))];
     select.push(match (&s.layer.geometry, geometry) {
-        (Some(g), true) => format!("ST_AsBinary({})", quote(&g.name)),
+        (Some(g), true) => format!("ST_AsBinary({})", geom_of(s, g)),
         _ => "NULL::bytea".into(),
     });
     select.extend(columns.iter().map(read_as));
@@ -472,7 +500,7 @@ fn area_where(s: &Shape, area: Option<[f64; 4]>, first: usize) -> Option<String>
     let (g, _) = (s.layer.geometry.as_ref()?, area?);
     Some(format!(
         "{} && ST_MakeEnvelope(${}, ${}, ${}, ${}, {})",
-        quote(&g.name),
+        geom_of(s, g),
         first,
         first + 1,
         first + 2,
@@ -675,7 +703,7 @@ async fn scan(
     let key = quote(&s.layer.fid);
     let mut select = vec![format!("{key}::bigint")];
     select.push(match (&s.layer.geometry, q.geometry) {
-        (Some(g), true) => format!("ST_AsBinary({})", quote(&g.name)),
+        (Some(g), true) => format!("ST_AsBinary({})", geom_of(s, g)),
         _ => "NULL::bytea".into(),
     });
     select.extend(columns.iter().map(read_as));
@@ -690,7 +718,7 @@ async fn scan(
             let srid = s.srid.unwrap_or(0);
             wheres.push(format!(
                 "{} && ST_MakeEnvelope(${}, ${}, ${}, ${}, {srid})",
-                quote(&g.name),
+                geom_of(s, g),
                 next + 1,
                 next + 2,
                 next + 3,
@@ -1432,6 +1460,18 @@ impl TableProvider for PostGis {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn geometry_and_geography_columns_read_their_type_and_system() {
+        assert_eq!(geometry_decl("geometry(MultiPolygon,5256)"), Some(("MULTIPOLYGON".into(), Some(5256), false)));
+        assert_eq!(geometry_decl("geometry"), Some(("GEOMETRY".into(), None, false)));
+        assert_eq!(geometry_decl("geometry(PointZ)"), Some(("POINTZ".into(), None, false)));
+        assert_eq!(geometry_decl("geography(Point,4326)"), Some(("POINT".into(), Some(4326), true)));
+        assert_eq!(geometry_decl("geography(LineString)"), Some(("LINESTRING".into(), Some(4326), true)));
+        assert_eq!(geometry_decl("geography"), Some(("GEOMETRY".into(), Some(4326), true)));
+        assert_eq!(geometry_decl("geography(Polygon,4258)"), Some(("POLYGON".into(), Some(4258), true)));
+        assert_eq!(geometry_decl("text"), None);
+    }
 
     #[test]
     fn types_read_as_kinds_and_new_columns_get_types() {

@@ -2530,6 +2530,24 @@ fn link_table(
             (layer, out.objects, layers)
         }
     };
+    // A geometry column none of whose rows hold one (docs/adr/0745 §3): the rows came as records, so nothing is drawn;
+    // said before the layer looks empty for no reason. Some rows without geometry are ordinary (QGIS says nothing of
+    // them either): they are records in the attribute table.
+    if let Some(column) = &stored.layer.geometry {
+        let (all, bare) = doc
+            .by_layer(&layer)
+            .fold((0usize, 0usize), |(a, b), e| (a + 1, b + usize::from(!e.has_geometry())));
+        if all > 0 && bare == all {
+            let column = &column.name;
+            warnings.push(CommandWarning {
+                code: codes::ROWS_WITHOUT_GEOMETRY.into(),
+                message: format!(
+                    "“{table}” tablosunun {all} satırının hiçbirinde “{column}” sütununda geometri yok: çizimde görünecek bir şey yok, satırlar kayıt olarak Öznitelik tablosunda. Geometriyi veritabanında doldurun ya da başka bir geometri sütunu olan tabloyu bağlayın."
+                ),
+                path: Some("edit.table".into()),
+            });
+        }
+    }
     // The table's rows are in the drawing now: let them go before the layer is digested.
     let Stored {
         sha256: revision,

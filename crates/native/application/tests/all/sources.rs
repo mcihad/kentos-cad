@@ -52,6 +52,49 @@ fn state(doc: &mut Document) -> Value {
 }
 
 #[test]
+fn a_table_whose_rows_hold_no_geometry_says_so_when_bound() {
+    // docs/adr/0745 §3: QGIS's table with every geometry emptied binds as records, with the warning; its own copy, with
+    // one row's geometry empty, binds without it.
+    let tmp = std::env::temp_dir().join(format!("kentos-sources-bare-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
+    {
+        let mut g = kentos_geopackage::GeoPackage::open(&tmp, true).expect("opened");
+        let layer = g.layers().expect("layers").into_iter().find(|l| l.name == "parsel").expect("parsel");
+        let rows = g.rows(&layer, &kentos_geopackage::Query::default()).expect("rows");
+        let update = rows
+            .into_iter()
+            .map(|r| (r.fid, kentos_geopackage::NewRow { fid: Some(r.fid), geometry: None, values: r.values }))
+            .collect();
+        g.edit(&layer, &kentos_geopackage::Edits { update, ..Default::default() }).expect("emptied");
+    }
+    let path = tmp.display().to_string();
+    let mut d = doc();
+    let linked = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": path, "table": "parsel" } }),
+    );
+    assert_eq!(ok(&linked)["objects"], 3);
+    let warnings = linked["warnings"].as_array().expect("warnings");
+    let bare = warnings.iter().find(|w| w["code"] == "rows_without_geometry").expect("the warning");
+    assert!(bare["message"].as_str().is_some_and(|m| m.contains("3 satırının hiçbirinde")), "{bare}");
+    assert_eq!(bare["path"], "edit.table");
+    let layer = link_of(&d).layer;
+    assert!(d.by_layer(&layer).all(|e| !e.has_geometry()));
+    let _ = std::fs::remove_file(&tmp);
+
+    let mut d = doc();
+    let linked = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": dir().join("qgis.gpkg").display().to_string(), "table": "parsel" } }),
+    );
+    assert!(linked["warnings"].as_array().is_none_or(|w| w.iter().all(|w| w["code"] != "rows_without_geometry")));
+}
+
+#[test]
 fn a_layer_is_written_to_its_table_and_read_again() {
     let tmp = std::env::temp_dir().join(format!("kentos-sources-{}.gpkg", std::process::id()));
     std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");

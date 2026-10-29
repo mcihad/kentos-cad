@@ -408,13 +408,15 @@ async fn relations(conn: &mut PgConnection, postgis: bool) -> Result<Vec<Relatio
     )))
     .fetch_all(&mut *conn)
     .await?;
-    // The geometry columns, first by each table (`geometry_columns` is PostGIS's: none without it).
+    // The geometry and geography columns, first by each table (PostGIS's catalogs: none without it; docs/adr/0745).
     let mut columns: std::collections::HashMap<(String, String), (String, Option<u32>, usize)> =
         std::collections::HashMap::new();
     if postgis {
         let geometry: Vec<(String, String, String, i32)> = sqlx::query_as(
             "SELECT f_table_schema::text, f_table_name::text, type::text, srid FROM geometry_columns
-              ORDER BY f_table_schema, f_table_name, f_geometry_column",
+             UNION ALL
+             SELECT f_table_schema::text, f_table_name::text, type::text, srid FROM geography_columns
+              ORDER BY 1, 2",
         )
         .fetch_all(&mut *conn)
         .await?;

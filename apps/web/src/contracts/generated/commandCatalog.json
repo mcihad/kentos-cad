@@ -69130,6 +69130,12 @@
       "meaning": "Rasterin bazı değerleri 32 bitlik kayan noktalı karoya yuvarlanarak yazıldı."
     },
     {
+      "code": "rows_without_geometry",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tablonun geometri sütunu var ama hiçbir satırında geometri yok: çizimde görünecek bir şey yok, satırlar kayıt olarak gelir."
+    },
+    {
       "code": "network_share",
       "kind": "warning",
       "retryable": false,

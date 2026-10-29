@@ -358,18 +358,21 @@ impl App {
             Ok(done) => {
                 self.close_exchange();
                 self.zoom_to(&done.slots);
+                // A warning is the toast's body: what is not drawn and why is not left to the log (docs/adr/0745 §3).
+                let body = if done.warnings.is_empty() {
+                    "Tabloların değişikliklerini Kaynağa yaz ile veritabanına yazın; view ve sorgu salt okunurdur.".to_owned()
+                } else {
+                    done.warnings.join(" ")
+                };
                 self.announce(
                     if done.warnings.is_empty() { Level::Success } else { Level::Warn },
                     format!(
-                        "{} ({}) bağlı katman oldu, {} nesne. Tabloların değişikliklerini Kaynağa yaz ile veritabanına yazın; view ve sorgu salt okunurdur.",
+                        "{} ({}) bağlı katman oldu, {} nesne. {body}",
                         done.names.join(", "),
                         c.name,
                         done.objects
                     ),
                 );
-                for w in done.warnings {
-                    self.say(Level::Warn, w);
-                }
             }
             Err(why) => {
                 if let Some(Window::Postgis(s)) = &mut self.exchange {

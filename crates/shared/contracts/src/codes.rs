@@ -2090,6 +2090,8 @@ codes! {
     /// A coverage's value a 32-bit float tile rounds (docs/adr/0627 §2).
     PRECISION_LOST = "precision_lost", Warning, false, "Rasterin bazı değerleri 32 bitlik kayan noktalı karoya yuvarlanarak yazıldı.";
     /// A GeoPackage bound on a network share (docs/adr/0627 §8): SQLite's locks do not hold there.
+    /// A bound table with a geometry column whose rows hold no geometry: they come as records, nothing is drawn.
+    ROWS_WITHOUT_GEOMETRY = "rows_without_geometry", Warning, false, "Tablonun geometri sütunu var ama hiçbir satırında geometri yok: çizimde görünecek bir şey yok, satırlar kayıt olarak gelir.";
     NETWORK_SHARE = "network_share", Warning, false, "GeoPackage bir ağ paylaşımında; SQLite'ın kilitleri ağ dosya sistemlerinde güvenilir değildir: dosyaya aynı anda tek kişi yazmalı.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────

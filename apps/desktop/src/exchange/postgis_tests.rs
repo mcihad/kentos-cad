@@ -476,3 +476,70 @@ fn screens() {
         }
     }
 }
+
+/// Every kind of table a real database holds is drawn once bound from Kaynaklar › Veritabanları (Katman olarak ekle,
+/// the system's question answered): typed and untyped geometry columns, multi parts, Z, another system, no key,
+/// geography, a quoted name; a table whose geometry column is empty says so (docs/adr/0745). KENTOS_PG_TABLES names
+/// the tables (default: the `deneme` schema's). Pictures `postgis-cizim-*` of the whole window after each.
+#[test]
+#[ignore = "needs a real PostGIS (KENTOS_PG_URL)"]
+fn every_kind_of_table_is_drawn_once_bound() {
+    use crate::sources::{Browse, Event as S};
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut c = connections::parse(&url).expect("KENTOS_PG_URL").connection;
+    c.name = "Veritabanı".into();
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let catalog = Arc::new(kentos_postgis::probe::browse(&c, None).expect("the catalogue"));
+    let wanted = std::env::var("KENTOS_PG_TABLES").unwrap_or_default();
+    let tables: Vec<String> = catalog
+        .relations
+        .iter()
+        .map(|r| r.table())
+        .filter(|t| {
+            if wanted.is_empty() {
+                t.starts_with("deneme.")
+            } else {
+                wanted.split(',').any(|w| w == t)
+            }
+        })
+        .collect();
+    assert!(!tables.is_empty(), "no table to bind");
+    for table in tables {
+        let mut app = app_with_drawing();
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        // The window has its size before the bind, so the bind's zoom fits the bound objects to it.
+        snapshot.settle(&mut app, App::view, &mut update);
+        keep_connection(&app, &c);
+        let _ = app.browse_connection_in_sources(&c.name);
+        let _ = app.update(Message::Sources(S::Browsed(c.name.clone(), Ok(catalog.clone()), true)));
+        assert!(matches!(app.sources.catalogs.get(&c.name), Some(Browse::Ready(_))));
+        let _ = app.update(Message::Sources(S::AddTable(c.name.clone(), table.clone(), false)));
+        if app.sources.reproject.is_some() {
+            let _ = app.update(Message::Sources(S::Reproject(true)));
+        }
+        let doc = app.document.as_ref().expect("a drawing");
+        let bound = doc.settings().sources.iter().find(|l| l.table == table).cloned();
+        let (drawn, records) = bound.as_ref().map_or((0, 0), |l| {
+            doc.model
+                .by_layer(&l.layer)
+                .fold((0, 0), |(d, r), e| if e.has_geometry() { (d + 1, r) } else { (d, r + 1) })
+        });
+        let shown = app.spatial.store().len();
+        eprintln!("{table}: bound {} → {drawn} drawn, {records} records, store {shown}", bound.is_some());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let name = table.replace(['.', '"'], "-");
+        let file = out.join(format!("postgis-cizim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("a picture");
+        println!("{}", file.display());
+        let _ = app.db_store.remove(&c.name);
+    }
+}

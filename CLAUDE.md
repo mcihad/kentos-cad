@@ -28,6 +28,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **PostGIS'te geography ve geometrisiz tablo (29 Ekim 2026; [ADR0745](docs/adr/0745-postgis-geography-and-empty-geometry.md)).**
+  `geography` sütunu katalogda ve bağlamada okunur (`sütun::geometry`, sistemsiz 4326), salt okunur; bütün satırları
+  geometrisiz tablo `rows_without_geometry` uyarısıyla bağlanır, masaüstünün bildirimi uyarıyı gövdesinde yazar.
+
 - **Yaylı kaynak ve sınırla ölçülü bölme (29 Ekim 2026; [ADR0734](docs/adr/0734-measured-partitions-on-arc-edges.md)).**
   `cad.walls.partition` yaylı kenarı artık reddetmez: bölme kaynağın merkezinde aynı merkezli yaydır (Revit'in
   CreateOffset'i), `r_p = r − sgn(θ)·öteleme` (saat yönü tersine yayın solu merkeze doğru), net/eksen uzaklık radyal.
