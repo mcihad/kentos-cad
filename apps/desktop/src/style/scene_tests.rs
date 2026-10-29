@@ -319,6 +319,47 @@ fn one_edit_builds_its_part_again_and_the_others_stay() {
 }
 
 #[test]
+fn an_object_drawn_in_its_own_order_builds_its_layer_whole_and_back_in_parts() {
+    // docs/adr/0260 §5: a layer with such an object is drawn whole, in that order; docs/adr/0742: an edit asks only
+    // the parts it touched whether they hold one.
+    let library = kentos_native_style::system::library();
+    let n = PARTS_FROM + 2000;
+    let mut doc = drawing(n, None);
+    let mut spatial = Spatial::of(&doc.model);
+    let mut cache = StyledCache::default();
+    let runs = (n as u64).div_ceil(PART_PLACES) as usize;
+    assert_eq!(
+        parcel_parts(&scene_of(&mut cache, &doc, &mut spatial, &library)).len(),
+        runs
+    );
+    let slot = Slot(PART_PLACES as u32 + 100);
+    let with = |order: Option<i32>, doc: &mut Document| {
+        let mut e = doc.model.get(slot).cloned().expect("a parcel");
+        e.base_mut().look.order = order;
+        assert!(doc.model.update(slot, e));
+    };
+    with(Some(5), &mut doc);
+    let whole = scene_of(&mut cache, &doc, &mut spatial, &library);
+    assert_eq!(parcel_parts(&whole).len(), 1, "drawn whole");
+    // An edit in another part keeps it whole.
+    let other = Slot(10);
+    let mut e = doc.model.get(other).cloned().expect("a parcel");
+    e.base_mut().attrs.insert("Not".into(), "yeni".into());
+    assert!(doc.model.update(other, e));
+    assert_eq!(
+        parcel_parts(&scene_of(&mut cache, &doc, &mut spatial, &library)).len(),
+        1,
+        "still whole"
+    );
+    with(None, &mut doc);
+    assert_eq!(
+        parcel_parts(&scene_of(&mut cache, &doc, &mut spatial, &library)).len(),
+        runs,
+        "in parts again"
+    );
+}
+
+#[test]
 fn a_part_left_empty_goes() {
     let library = kentos_native_style::system::library();
     let n = 2 * PART_PLACES as usize + 100;

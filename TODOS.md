@@ -2835,6 +2835,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   [ADR 0652](docs/adr/0652-every-processing-tool-through-the-command.md).**
 - [ ] `CBS-41` doğal dil başarısının ayrı ölçümü (dilim): `kentos.gis_eval` (valid, scope, outcome, untrusted, hidden; `report` oranları; `python -m kentos.gis_eval`), `fixtures/gis-eval/v1` (üç görev, 15 elle yazılmış cevap), `test_gis_eval.py`. Kalan: gerçek bir modelin cevaplarının düzenli koşturulması, daha çok görev, açık seçenek hücreleri, modellerin ve uzun işin kalanı. — **26 Ekim,
   [ADR 0653](docs/adr/0653-gis-agent-eval.md).**
+- [ ] `CBS-42` tek düzenlemenin karesi (dilim): katmanın kendi sıralı nesneleri parça parça (`Layer.ordered`), Kırp'ın
+  çerçeveleri değişiklik günlüğüyle (`clip_frames.rs`), Bloklar panelinin sayımı kuşakla; silme 250 000'de 62 → 30 ms, 500 000'de
+  118 → 53 ms; `perf::frame::edit_parts`. Kalan: düzenlemeden sonra etiketlerin yeniden yerleşmesi, yoğun görünümde GPU'nun
+  tam yeniden çizimi (kaydırma 498 / 1 044 ms), çok nesneli seçimin işleri. — **29 Ekim,
+  [ADR 0742](docs/adr/0742-one-edit-on-a-large-drawing.md).**
 - [ ] `CBS-41` açık seçenek hücreleri ve yazmayan adımın değişmezi (dilim): İşlemler araçlarında 788 hücrenin 781'i bağımsız
   başvurulu durumla denenir (287 → 7); yeni `table_points_systems_cases.py` ve `reproject_systems_cases.py` (PROJ'un adlı EPSG
   yolları, 1 mm), on dokuz başvurunun genişlemesi; Rust ve Python ortak durum koşucuları plan, doğrulama, sorgu ve retten sonra

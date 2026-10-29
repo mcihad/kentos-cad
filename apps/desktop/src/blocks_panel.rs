@@ -41,6 +41,9 @@ const THUMB: f32 = 34.0;
 const CARD: f32 = 150.0;
 const CARD_THUMB: f32 = 84.0;
 
+/// Each block's placements, counted for a drawing's session and generation.
+type Counted = ((u64, u64), Vec<Placements>);
+
 /// What the panel keeps while the app runs.
 #[derive(Debug, Default)]
 pub struct PanelState {
@@ -62,6 +65,9 @@ pub struct PanelState {
     /// The device's block libraries rather than the drawing's blocks (docs/adr/0726 §1).
     pub(crate) library_shown: bool,
     pub(crate) library: crate::blocks_library::Library,
+    /// Each block's placements counted for a drawing and its generation: counting reads every object, so a frame
+    /// with the panel open counts once per change, not once per frame (docs/adr/0742).
+    placed: std::cell::RefCell<Option<Counted>>,
 }
 
 /// What a point shown on the drawing is for.
@@ -141,7 +147,18 @@ impl App {
             return Vec::new();
         };
         let model = &doc.model;
-        let placed = actions::placements_of(model);
+        let key = (doc.session, model.generation());
+        let placed = {
+            let mut kept = self.blocks_panel.placed.borrow_mut();
+            match kept.as_ref() {
+                Some((k, p)) if *k == key => p.clone(),
+                _ => {
+                    let p = actions::placements_of(model);
+                    *kept = Some((key, p.clone()));
+                    p
+                }
+            }
+        };
         let query = name_key(self.blocks_panel.query.trim());
         model
             .blocks()

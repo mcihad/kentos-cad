@@ -44,7 +44,7 @@ fn on_inserts(app: &mut App) {
 }
 
 /// The plan attached in place; its insert's persistent id.
-fn plan(app: &mut App) -> String {
+pub(crate) fn plan(app: &mut App) -> String {
     opened(app, crate::tools_scenes::Objects::new(), 50.0);
     app.tab = "insert";
     send(app, Event::Picked(Purpose::Attach, Some(fixture("xref/v1/plan.kcad"))));
@@ -61,7 +61,7 @@ fn plan(app: &mut App) -> String {
 }
 
 /// Kırp through its command, as the tool writes.
-fn clip(app: &mut App, uid: &str, operation: serde_json::Value) {
+pub(crate) fn clip(app: &mut App, uid: &str, operation: serde_json::Value) {
     if let Some(doc) = app.document.as_mut() {
         let answer = registry::run(
             &mut ExecutionContext::new(&mut doc.model),

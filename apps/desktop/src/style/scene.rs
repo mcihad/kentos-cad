@@ -67,6 +67,9 @@ struct Layer {
     time: Option<kentos_commands::LayerTime>,
     /// Its filter when built (docs/adr/0211 §3): another one lets other objects through.
     filter: Option<kentos_commands::LayerFilter>,
+    /// The parts (by run of places) holding an object with a drawing order or a mask of its own: such a layer is
+    /// drawn whole, in that order (docs/adr/0260 §5). Kept by part so an edit asks only its parts (docs/adr/0742).
+    ordered: std::collections::BTreeSet<u64>,
 }
 
 /// What of a shown layer is built again: all of it, or some of its parts.
@@ -524,6 +527,7 @@ impl StyledCache {
             reset: bool,
             split: bool,
             parts: Vec<(u64, Vec<&'d Entity>)>,
+            ordered: std::collections::BTreeSet<u64>,
         }
         let mut plans: Vec<Plan> = Vec::new();
         for node in &shown {
@@ -533,6 +537,30 @@ impl StyledCache {
             }
             let cached = self.layers.get(&node.id);
             let count = doc.count(&node.id);
+            // Which parts hold an object drawn in an order of its own: a layer built and still fresh asks only the
+            // parts that changed; one new, stale or of another look asks every object (it is built whole anyway).
+            let ordered = match cached {
+                Some(l) if !l.stale => {
+                    let mut set = l.ordered.clone();
+                    for &key in dirty.get(&node.id).map(|d| &d.parts).into_iter().flatten() {
+                        let places = key * PART_PLACES..(key + 1) * PART_PLACES;
+                        if doc
+                            .by_layer_placed(&node.id, places)
+                            .any(|(_, e)| own_order(e))
+                        {
+                            set.insert(key);
+                        } else {
+                            set.remove(&key);
+                        }
+                    }
+                    set
+                }
+                _ => doc
+                    .by_layer_placed(&node.id, 0..u64::MAX)
+                    .filter(|(_, e)| own_order(e))
+                    .map(|(place, _)| place / PART_PLACES)
+                    .collect(),
+            };
             let reads_index = cached.is_some_and(|l| l.reads_index && l.style == node.style);
             // A renderer drawing the layer's objects together builds it whole (docs/adr/0213 §3).
             let needs = kentos_native_style::renderer::needs_of(node.style.renderer.as_ref());
@@ -543,9 +571,7 @@ impl StyledCache {
                     _ => count >= PARTS_FROM,
                 }
                 // A layer with a drawing order of its own is drawn in that order, whole (docs/adr/0260 §5).
-                && !doc
-                    .by_layer(&node.id)
-                    .any(|e| e.base().look.order.is_some() || e.base().look.wipeout.is_some());
+                && ordered.is_empty();
             // A view-dependent one built for another view is built again.
             let for_view = needs.scale
                 || needs.frame == Some(kentos_native_style::renderer::ViewFrameKind::Heat);
@@ -626,6 +652,7 @@ impl StyledCache {
                 reset,
                 split,
                 parts,
+                ordered,
             });
         }
         // The view-dependent layers' builds (docs/adr/0213 §3): the view's scale step, a heat map's box and its
@@ -779,6 +806,7 @@ impl StyledCache {
                     stale: false,
                     time: plan.node.time.clone(),
                     filter: plan.node.filter.clone(),
+                    ordered: plan.ordered.clone(),
                 });
                 entry.parts.clear();
                 entry.parts.insert(0, new_part(layer, &entities, framed));
@@ -794,7 +822,9 @@ impl StyledCache {
                 stale: false,
                 time: plan.node.time.clone(),
                 filter: plan.node.filter.clone(),
+                ordered: plan.ordered.clone(),
             });
+            entry.ordered = plan.ordered.clone();
             if reset {
                 entry.style = plan.node.style.clone();
                 entry.name = plan.node.name.clone();
@@ -980,6 +1010,11 @@ impl StyledCache {
 
 /// A part of `layer` to build again; the layer's id is copied only when it
 /// is not listed yet.
+/// An object drawn in an order of its own, or a mask (docs/adr/0260 §5, 0310).
+fn own_order(e: &Entity) -> bool {
+    e.base().look.order.is_some() || e.base().look.wipeout.is_some()
+}
+
 fn dirty_part(dirty: &mut HashMap<String, Dirty>, layer: &str, part: u64) {
     match dirty.get_mut(layer) {
         Some(d) => {

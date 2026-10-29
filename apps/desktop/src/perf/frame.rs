@@ -801,3 +801,87 @@ fn view_parts() {
         median(wholes)
     );
 }
+
+/// One object deleted, the step undone and done again on a large drawing (CBS-42, docs/adr/0742): each frame's parts.
+/// `KENTOS_PERF_SIZES` sets the parcels (250 000).
+///
+/// `cargo test --release -p kentos-desktop perf::frame::edit_parts -- --ignored --nocapture --test-threads=1`
+#[test]
+#[ignore = "a measurement, run by hand in release mode"]
+fn edit_parts() {
+    let n: usize = std::env::var("KENTOS_PERF_SIZES")
+        .ok()
+        .and_then(|v| v.split(',').next().and_then(|s| s.trim().parse().ok()))
+        .unwrap_or(250_000);
+    let (mut app, mut h, _) = app_with(n);
+    let center = app.viewport.bounds.center();
+    for p in path(app.viewport.bounds, 10) {
+        h.frame(&mut app, &[moved(p)]);
+    }
+    h.frame(&mut app, &click(center));
+    let erase = h.frame_with(&mut app, &[], |app| {
+        let _ = app.run("tool.erase");
+    });
+    println!("{n} parsel, silme: {erase:?}");
+    for i in 0..6 {
+        let p = h.frame_with(&mut app, &[], |app| {
+            let _ = app.run(if i % 2 == 0 { "edit.undo" } else { "edit.redo" });
+        });
+        println!(
+            "{n} parsel, {}: {p:?}",
+            if i % 2 == 0 { "geri al" } else { "yinele" }
+        );
+    }
+    for _ in 0..3 {
+        let p = h.frame(&mut app, &[]);
+        println!("{n} parsel, boş kare: {p:?}");
+    }
+    // The view's two halves after an edit: the drawing's text, the drawing area's scene.
+    for i in 0..4 {
+        let _ = app.run(if i % 2 == 0 { "edit.undo" } else { "edit.redo" });
+        let doc = app.document.as_ref().expect("a drawing");
+        let format = kentos_interaction::Format::of(doc.settings());
+        let t = Instant::now();
+        let labels = crate::labels::layer(
+            &doc.model,
+            doc.session,
+            &app.spatial,
+            &app.label_spots,
+            &app.viewport.camera,
+            app.canvas(),
+            &crate::viewport::palette(app.canvas()),
+            &format,
+            None,
+            None,
+            app.color_mode(),
+            app.label_size(),
+            0.0,
+            app.label_engine(),
+            None,
+        );
+        let texts = ms(t);
+        drop(labels);
+        let t = Instant::now();
+        let area = app.viewport.view(
+            doc,
+            app.canvas(),
+            app.graphics(),
+            &app.selection,
+            crate::viewport::highlight_color("", kentos_render_wgpu::Rgba8([0, 120, 215, 255])),
+            app.session.cursor(),
+            Some(app.styles.styling(&app.spatial, &app.settings)),
+        );
+        let scene = ms(t);
+        drop(area);
+        let p = h.frame(&mut app, &[]);
+        println!(
+            "{n} parsel, düzenlemeden sonra: yazılar {texts:.2} ms, çizim alanı {scene:.2} ms; sonraki kare {p:?}"
+        );
+    }
+    // A camera move redraws the whole scene: the GPU's share of that.
+    for k in 0..3 {
+        app.viewport.camera.center.x += 2.0 + k as f64;
+        let p = h.frame(&mut app, &[]);
+        println!("{n} parsel, kamera kaydı: {p:?}");
+    }
+}
