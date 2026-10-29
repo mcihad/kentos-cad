@@ -40,6 +40,9 @@ pub const SERVER_JOB_LIST_MAX: usize = 100;
 /// How many jobs one organisation may have queued and running together, unless the server says otherwise
 /// (`KENTOS_JOB_LIMIT`), and the biggest artifact a job may stage, in bytes (`KENTOS_JOB_ARTIFACT_MAX_MB`).
 pub const SERVER_JOB_TENANT_ACTIVE_DEFAULT: u32 = 50;
+/// How many of them one user may have (`KENTOS_JOB_USER_LIMIT`, docs/adr/0739 §1): one user does not fill the
+/// organisation's queue.
+pub const SERVER_JOB_USER_ACTIVE_DEFAULT: u32 = 10;
 pub const SERVER_JOB_ARTIFACT_MAX_DEFAULT: u64 = 2 * 1024 * 1024 * 1024;
 /// How many days a finished job (and its artifact) is kept unless the server says otherwise
 /// (`KENTOS_JOB_RETENTION_DAYS`).
@@ -101,6 +104,11 @@ pub struct ServerJobCreate {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub timeout_seconds: Option<u32>,
+    /// Built again whatever was built before (docs/adr/0739 §2): an export, an atlas or a file-writing tool otherwise
+    /// takes the artifact of an earlier job built from the same project state, input, reach and software.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub fresh: bool,
 }
 
 /// `project.export`'s input: the export refused (`revision_conflict`) when the project is no longer at this data
@@ -527,7 +535,8 @@ pub struct ServerJobArtifact {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobError {
     /// `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` (the artifact could
-    /// not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`; a
+    /// not be written: no folder, no right), `storage_full` (the object store had no room left for it; nothing of it
+    /// is kept, docs/adr/0739 §3), `too_large` (the artifact is past the server's limit) or `failed`; a
     /// `project.processing` job also `cpu_limit`, `memory_limit` (stopped at its budget), `memory_estimate` (refused
     /// before it ran), `tool_failed`, `tool_unavailable`, `unsupported_change`, `too_many_changes` and `crashed`
     /// (docs/adr/0559); a `project.import` or `project.atlas` job also the refusal code of the command the worker ran
@@ -575,6 +584,11 @@ pub struct ServerJob {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub artifact: Option<ServerJobArtifact>,
+    /// The earlier job whose artifact this one took: the project's state, the input, the reach and the server's software
+    /// were the same (docs/adr/0739 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cached_from: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub error: Option<ServerJobError>,

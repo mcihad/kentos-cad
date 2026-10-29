@@ -12,4 +12,9 @@ requestId: string,
 /**
  * Seconds, 1–86 400; absent: 600.
  */
-timeoutSeconds?: number, };
+timeoutSeconds?: number, 
+/**
+ * Built again whatever was built before (docs/adr/0739 §2): an export, an atlas or a file-writing tool otherwise
+ * takes the artifact of an earlier job built from the same project state, input, reach and software.
+ */
+fresh?: boolean, };

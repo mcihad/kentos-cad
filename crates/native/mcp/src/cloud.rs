@@ -290,6 +290,7 @@ impl Account {
                 .get("timeoutSeconds")
                 .and_then(Value::as_u64)
                 .and_then(|s| u32::try_from(s).ok()),
+            fresh: args.get("fresh").and_then(Value::as_bool).unwrap_or(false),
         };
         let job = self.with(|c| block_on(c.create_server_job(tenant, project, asked.clone())))?;
         serde_json::to_value(&job).map_err(answer_failure)

@@ -87,6 +87,7 @@ fn ask(request: &str, input: ProcessingJobInput) -> ServerJobCreate {
         input: serde_json::to_value(input).unwrap(),
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -613,6 +614,7 @@ async fn a_worker_without_a_processor_leaves_the_job_and_a_request_is_checked_wh
                 input,
                 request_id: format!("x-{path}"),
                 timeout_seconds: None,
+                fresh: false,
             },
             &JobLimits::default(),
         )
@@ -745,6 +747,7 @@ fn ask_import(request: &str, upload: &str) -> ServerJobCreate {
         .unwrap(),
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -754,6 +757,7 @@ fn ask_atlas(request: &str, input: ProjectAtlasInput) -> ServerJobCreate {
         input: serde_json::to_value(input).unwrap(),
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -1281,6 +1285,19 @@ async fn an_atlas_is_staged_as_a_pdf_and_says_its_pages_and_the_state_it_was_mad
         .await
         .unwrap();
     assert_eq!(bytes, b"%PDF-1.7 ok");
+    // The same atlas asked again of the same state: the first one's PDF, the processor not called (docs/adr/0739 §2).
+    let taken = create(&db, &owner, ask_atlas("a1-yine", atlas_of("atlas-paftasi")))
+        .await
+        .unwrap();
+    work(&db, &store, &processor).await.unwrap();
+    let taken = jobs::get(&db.app, &owner, id_of(&taken)).await.unwrap();
+    assert_eq!(taken.state, ServerJobState::Succeeded);
+    assert_eq!(taken.cached_from, Some(atlas_id.to_string()));
+    assert_eq!(
+        taken.artifact.map(|a| a.sha256),
+        Some(artifact.sha256.clone())
+    );
+    assert_eq!(processor.calls(), 1);
     // The project did not change, and the pin the command refused is the job's code.
     assert_eq!(standing(&db, &owner).await, (1, 1));
     let refusing = Fake::new(|_, _| {
@@ -1289,9 +1306,17 @@ async fn an_atlas_is_staged_as_a_pdf_and_says_its_pages_and_the_state_it_was_mad
             "Çizim sabitlenen durumda değil.",
         ))
     });
-    let again = create(&db, &owner, ask_atlas("a2", atlas_of("atlas-paftasi")))
-        .await
-        .unwrap();
+    // (Asked fresh: the same atlas of the same state would be the first one's PDF, docs/adr/0739 §2.)
+    let again = create(
+        &db,
+        &owner,
+        ServerJobCreate {
+            fresh: true,
+            ..ask_atlas("a2", atlas_of("atlas-paftasi"))
+        },
+    )
+    .await
+    .unwrap();
     work(&db, &store, &refusing).await.unwrap();
     let again = jobs::get(&db.app, &owner, id_of(&again)).await.unwrap();
     assert_eq!(again.error.unwrap().code, "pin_mismatch");

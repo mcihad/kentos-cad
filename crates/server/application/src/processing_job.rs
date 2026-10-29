@@ -143,4 +143,10 @@ pub trait Processor: Send + Sync {
         task: &ProcessingTask,
         hooks: &ProcessHooks,
     ) -> Result<Processed, ProcessFailure>;
+
+    /// What runs the tools, for the result cache's key (docs/adr/0739 §2): a processor built again never takes the files
+    /// an earlier build made. None when the server's own program runs them (its mark is in the key already).
+    fn software(&self) -> Option<String> {
+        None
+    }
 }

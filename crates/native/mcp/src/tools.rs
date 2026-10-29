@@ -419,14 +419,16 @@ fn job_tools() -> Vec<Value> {
              atlas (input: sheet, fields, theme, time, crs, pin, expectedRevision). Hepsinde isteğe bağlı cpuSeconds ve memoryMb \
              sunucunun bütçesinden küçük olabilir. Aynı requestId aynı işi verir. Sonuç projeye tek commit olarak yazılır \
              (processing commit, import) ya da dosya olur (export, processing sink, atlas); proje işin okuduğu revizyondan \
-             ilerlemişse hiçbir şey yazılmaz (revision_conflict).",
+             ilerlemişse hiçbir şey yazılmaz (revision_conflict). Dosya olan işte projenin aynı durumundan aynı girdiyle \
+             yapılmış önceki işin dosyası alınır (cachedFrom o işi söyler); fresh: true dosyayı yeniden yaptırır.",
             scope(
                 json!({
                     "kind": { "type": "string", "enum": ["export", "checkpoint", "processing", "import", "atlas"] },
                     "input": { "type": "object", "description": "İşin girdisi (kind'a göre)." },
                     "file": { "type": "string", "description": "Yalnız import: içe aktarılacak dosyanın bu bilgisayardaki tam yolu." },
                     "requestId": { "type": "string", "description": "Aynı kimlikle yeniden istek aynı işi verir." },
-                    "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 86400 }
+                    "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 86400 },
+                    "fresh": { "type": "boolean", "description": "Önceki işin dosyası alınmasın, yeniden yapılsın." }
                 }),
                 &["kind"],
             ),

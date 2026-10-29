@@ -216,6 +216,12 @@ class ConnectionTests(unittest.TestCase):
             {"kind": "project.export", "input": {"expectedRevision": "7"}, "requestId": "istek-1", "timeoutSeconds": 60},
         )
         self.assertEqual(sent["headers"]["cookie"], "kentos_session=tok-123")
+        # Built again whatever an earlier job of the same state made (docs/adr/0739 §2): `fresh` only when asked.
+        project.export_job(request_id="istek-2", fresh=True)
+        self.assertEqual(
+            self.server.requests[-1]["body"],
+            {"kind": "project.export", "input": {}, "requestId": "istek-2", "fresh": True},
+        )
         self.assertEqual(project.wait_job("j1", every=0.01)["state"], "succeeded")
         self.assertEqual(project.cancel_job("j1")["state"], "cancelled")
         self.assertEqual(self.server.requests[-1]["path"], f"{base}/j1/cancel")

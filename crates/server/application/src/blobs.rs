@@ -49,6 +49,15 @@ impl From<io::Error> for WriteError {
     }
 }
 
+/// Whether a write failed because the store had no room left (docs/adr/0739 §3): the disk is full (`ENOSPC`), a
+/// quota is used up (`EDQUOT`) or a file may grow no more (`EFBIG`). The same request succeeds once room is made.
+pub fn is_full(e: &io::Error) -> bool {
+    matches!(
+        e.kind(),
+        io::ErrorKind::StorageFull | io::ErrorKind::QuotaExceeded | io::ErrorKind::FileTooLarge
+    ) || matches!(e.raw_os_error(), Some(28 | 122 | 27))
+}
+
 impl Blobs {
     pub fn new(root: impl Into<PathBuf>) -> Self {
         Self { root: root.into() }
@@ -137,7 +146,9 @@ impl Blobs {
 
     /// Adds `bytes` at the end of an object (made when there is none), flushed
     /// to the disk; returns its new length. The caller holds the upload's row
-    /// lock, so two parts never interleave (upload_parts.rs).
+    /// lock, so two parts never interleave (upload_parts.rs). A part is kept
+    /// whole or not at all: one that fails half written (a full disk) is cut
+    /// off again, so the upload resumes at the length it had (docs/adr/0739 §3).
     pub async fn append(&self, key: &str, bytes: &[u8]) -> io::Result<u64> {
         let path = self.path(key)?;
         if let Some(dir) = path.parent() {
@@ -148,8 +159,20 @@ impl Blobs {
             .create(true)
             .open(&path)
             .await?;
-        file.write_all(bytes).await?;
-        file.sync_data().await?;
+        let before = file.metadata().await?.len();
+        // `flush` before `sync_data`: tokio's file writes on a blocking thread and says that write's failure (a full
+        // disk) to the next write or flush only; `sync_data` waits for it and drops it.
+        let written = async {
+            file.write_all(bytes).await?;
+            file.flush().await?;
+            file.sync_data().await
+        }
+        .await;
+        if let Err(e) = written {
+            let _ = file.set_len(before).await;
+            let _ = file.sync_data().await;
+            return Err(e);
+        }
         Ok(file.metadata().await?.len())
     }
 
@@ -207,11 +230,16 @@ impl Blobs {
         Ok(())
     }
 
-    /// Gives an object a second key (a copied project's revision): the same
-    /// bytes under both, and neither ever changes. A hard link where the
-    /// file system allows it, else a copy written beside and renamed into
-    /// place; the new folder is flushed either way. An object already at
-    /// `to` is kept: a revision's key carries its content's hash.
+    /// Gives an object a second key (a copied project's revision, a job's
+    /// artifact taken from an earlier job): the same bytes under both, and
+    /// neither ever changes. A hard link where the file system allows it,
+    /// else a copy written beside and renamed into place; the new folder is
+    /// flushed either way. An object already at `to` is kept: a revision's
+    /// key carries its content's hash.
+    ///
+    /// The new key's change time is now (docs/adr/0739 §2): a link shares the
+    /// old object's, and the cleanup takes an object still for an hour whose
+    /// row is not written yet (it is, a moment after this) for an orphan.
     pub async fn share(&self, from: &str, to: &str) -> io::Result<()> {
         let (from, to) = (self.path(from)?, self.path(to)?);
         let Some(dir) = to.parent().map(Path::to_path_buf) else {
@@ -222,15 +250,26 @@ impl Blobs {
             Ok(()) => {}
             Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
             Err(_) => {
+                // A copy written beside, kept whole or not at all (a full disk leaves no half of it).
                 let part = to.with_extension("part");
-                tokio::fs::copy(&from, &part).await?;
-                tokio::fs::File::open(&part).await?.sync_all().await?;
-                tokio::fs::rename(&part, &to).await?;
+                let copied = async {
+                    tokio::fs::copy(&from, &part).await?;
+                    tokio::fs::File::open(&part).await?.sync_all().await?;
+                    tokio::fs::rename(&part, &to).await
+                }
+                .await;
+                if let Err(e) = copied {
+                    let _ = tokio::fs::remove_file(&part).await;
+                    return Err(e);
+                }
             }
         }
-        tokio::task::spawn_blocking(move || std::fs::File::open(dir)?.sync_all())
-            .await
-            .map_err(io::Error::other)??;
+        tokio::task::spawn_blocking(move || {
+            std::fs::File::open(&to)?.set_modified(SystemTime::now())?;
+            std::fs::File::open(dir)?.sync_all()
+        })
+        .await
+        .map_err(io::Error::other)??;
         Ok(())
     }
 
@@ -449,10 +488,18 @@ impl BlobWriter {
         Ok(())
     }
 
-    /// Flushes the bytes to disk; returns how many there were and their SHA-256 (hex).
+    /// Flushes the bytes to disk; returns how many there were and their SHA-256 (hex). An object that cannot be
+    /// flushed (a full disk can say so only here) is removed: nothing half written stays.
     pub async fn finish(mut self) -> io::Result<(u64, String)> {
-        self.file.flush().await?;
-        self.file.sync_all().await?;
+        let flushed = async {
+            self.file.flush().await?;
+            self.file.sync_all().await
+        }
+        .await;
+        if let Err(e) = flushed {
+            let _ = tokio::fs::remove_file(&self.path).await;
+            return Err(e);
+        }
         let digest = self.hasher.finalize();
         let hex = digest.iter().map(|b| format!("{b:02x}")).collect();
         Ok((self.written, hex))
@@ -471,6 +518,64 @@ mod tests {
     fn store() -> (Blobs, PathBuf) {
         let dir = std::env::temp_dir().join(format!("kentos-blobs-{}", Uuid::now_v7()));
         (Blobs::new(&dir), dir)
+    }
+
+    /// A key given to an old object is new to the cleanup (docs/adr/0739 §2): the link shares the object's change time,
+    /// which `share` makes now, so the cleanup's “still for an hour” rule cannot take it before its row is written.
+    #[tokio::test]
+    async fn a_shared_key_is_fresh_to_the_cleanup() {
+        let (blobs, dir) = store();
+        let (t, p) = (Uuid::now_v7(), Uuid::now_v7());
+        let old = Blobs::job_key(t, p, Uuid::now_v7(), &"a".repeat(64));
+        let mut w = blobs.create(&old, 3).await.unwrap();
+        w.write(b"abc").await.unwrap();
+        w.finish().await.unwrap();
+        let hours_ago = SystemTime::now() - Duration::from_secs(2 * 3600);
+        std::fs::File::open(blobs.path(&old).unwrap())
+            .unwrap()
+            .set_modified(hours_ago)
+            .unwrap();
+        let settled = Duration::from_secs(3600);
+        assert_eq!(blobs.job_objects(settled).await.unwrap().len(), 1);
+        let new = Blobs::job_key(t, p, Uuid::now_v7(), &"a".repeat(64));
+        blobs.share(&old, &new).await.unwrap();
+        let still: Vec<String> = blobs
+            .job_objects(settled)
+            .await
+            .unwrap()
+            .into_iter()
+            .map(|(_, k)| k)
+            .collect();
+        assert!(!still.contains(&new), "{still:?}");
+        assert_eq!(blobs.read(&new).await.unwrap(), b"abc");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    /// A write the disk refuses is said as a full disk (docs/adr/0739 §3), not lost in tokio's background write: Linux's
+    /// `/dev/full` answers every write with ENOSPC. An object whose key leads there is appended to, then written whole.
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn a_refused_write_says_the_disk_is_full() {
+        let (blobs, dir) = store();
+        let key = "uploads/dolu";
+        let path = blobs.path(key).unwrap();
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        std::os::unix::fs::symlink("/dev/full", &path).unwrap();
+        let e = blobs.append(key, &[7u8; 70_000]).await.unwrap_err();
+        assert!(is_full(&e), "{e:?}");
+        std::fs::remove_file(&path).unwrap();
+        std::os::unix::fs::symlink("/dev/full", &path).unwrap();
+        let mut w = blobs.create(key, 70_000).await.unwrap();
+        // The writer may take the bytes into tokio's buffer; the disk's refusal comes at the latest at the finish.
+        match w.write(&[7u8; 70_000]).await {
+            Err(WriteError::Io(e)) => assert!(is_full(&e), "{e:?}"),
+            Err(other) => panic!("{other:?}"),
+            Ok(()) => {
+                let e = w.finish().await.unwrap_err();
+                assert!(is_full(&e), "{e:?}");
+            }
+        }
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[tokio::test]

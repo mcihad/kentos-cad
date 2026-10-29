@@ -10,10 +10,13 @@
 //!   fence passes). A worker that dies loses the lease; the next claim takes the job again until its attempts run out.
 //! - **Staged:** the artifact is written to the object store before the finish; a finish that does not pass (a lost
 //!   lease, a cancel, a refused access) removes it, and the store's cleanup removes any that no job holds.
-//! - **Limits (docs/adr/0547):** an organisation has at most `JobLimits::tenant_active` jobs queued and running (a
-//!   request past it is refused with `quota_exceeded`), an artifact past `artifact_max` fails its job (`too_large`), an
-//!   artifact that cannot be written fails it with `storage` and leaves no object, and `expire` removes finished jobs
-//!   (and their artifacts) older than the retention.
+//! - **Limits (docs/adr/0547, 0739):** an organisation has at most `JobLimits::tenant_active` jobs queued and running,
+//!   one user of it at most `user_active` (a request past either is refused with `quota_exceeded`), an artifact past
+//!   `artifact_max` fails its job (`too_large`), an artifact that cannot be written fails it with `storage`
+//!   (`storage_full` when the store has no room) and leaves no object, and `expire` removes finished jobs (and their
+//!   artifacts) older than the retention.
+//! - **Cache (docs/adr/0739 §2):** an export, an atlas or a tool writing a file takes the artifact of an earlier job of
+//!   the project built from the same state, input and reach ([`crate::job_cache`]) unless it was asked `fresh`.
 //! - **Processing (docs/adr/0559):** `project.processing` runs an İşlemler tool through the host's [`Processor`] (the
 //!   tools are not the server's) on the project as of a revision. The worker writes its progress and words at its
 //!   beats; the tool has a CPU and memory budget. A result to commit is committed in the job's finish transaction,
@@ -35,8 +38,9 @@ use kentos_contracts::{
     ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
     SERVER_JOB_CPU_DEFAULT_SECONDS, SERVER_JOB_INPUT_MAX_DEFAULT, SERVER_JOB_KINDS,
     SERVER_JOB_LIST_MAX, SERVER_JOB_MEMORY_DEFAULT_MB, SERVER_JOB_TENANT_ACTIVE_DEFAULT,
-    SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, ServerJob, ServerJobArtifact,
-    ServerJobCreate, ServerJobError, ServerJobList, ServerJobState, SignInMethod,
+    SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, SERVER_JOB_USER_ACTIVE_DEFAULT, ServerJob,
+    ServerJobArtifact, ServerJobCreate, ServerJobError, ServerJobList, ServerJobState,
+    SignInMethod,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -53,11 +57,13 @@ use crate::processing_job::{
 use crate::projects::{rfc3339, storage_of};
 
 /// What the server lets jobs take (docs/adr/0547): the server sets them (`KENTOS_JOB_LIMIT`,
-/// `KENTOS_JOB_ARTIFACT_MAX_MB`), the defaults hold for tests and for a server that sets none.
+/// `KENTOS_JOB_USER_LIMIT`, `KENTOS_JOB_ARTIFACT_MAX_MB`), the defaults hold for tests and for a server that sets none.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct JobLimits {
     /// Queued and running jobs of one organisation together.
     pub tenant_active: u32,
+    /// Queued and running jobs one user asked for in one organisation (docs/adr/0739 §1).
+    pub user_active: u32,
     /// The biggest artifact a job may stage, in bytes.
     pub artifact_max: u64,
     /// What one `project.processing` job may take (docs/adr/0559 §4): CPU seconds of the process the tool runs in,
@@ -72,6 +78,7 @@ impl Default for JobLimits {
     fn default() -> Self {
         Self {
             tenant_active: SERVER_JOB_TENANT_ACTIVE_DEFAULT,
+            user_active: SERVER_JOB_USER_ACTIVE_DEFAULT,
             artifact_max: SERVER_JOB_ARTIFACT_MAX_DEFAULT,
             cpu_seconds: SERVER_JOB_CPU_DEFAULT_SECONDS,
             memory_mb: SERVER_JOB_MEMORY_DEFAULT_MB,
@@ -105,9 +112,10 @@ struct JobRow {
     artifact_sha256: Option<String>,
     error_code: Option<String>,
     error_message: Option<String>,
+    cached_from: Option<Uuid>,
 }
 
-const JOB_SELECT: &str = "select id, project_id, kind, input, input_sha256, base_revision, state, cancel_requested, attempts, max_attempts, timeout_seconds, progress, progress_text, created_by, created_at, started_at, finished_at, result, artifact_size, artifact_sha256, error_code, error_message
+const JOB_SELECT: &str = "select id, project_id, kind, input, input_sha256, base_revision, state, cancel_requested, attempts, max_attempts, timeout_seconds, progress, progress_text, created_by, created_at, started_at, finished_at, result, artifact_size, artifact_sha256, error_code, error_message, cached_from
    from kentos.server_job where tenant_id = $1 and project_id = $2";
 
 fn view(row: JobRow, project_name: &str) -> ServerJob {
@@ -134,6 +142,7 @@ fn view(row: JobRow, project_name: &str) -> ServerJob {
         artifact_sha256,
         error_code,
         error_message,
+        cached_from,
     } = row;
     let state = ServerJobState::of(&state).unwrap_or(ServerJobState::Failed);
     let artifact = match (artifact_size, artifact_sha256) {
@@ -164,6 +173,7 @@ fn view(row: JobRow, project_name: &str) -> ServerJob {
         finished_at: finished_at.map(rfc3339),
         result,
         artifact,
+        cached_from: cached_from.map(|id| id.to_string()),
         error: error_code.map(|code| ServerJobError {
             code,
             message: error_message.unwrap_or_default(),
@@ -436,22 +446,34 @@ pub async fn create(
     .fetch_optional(&mut *tx)
     .await?;
     if earlier.is_none() {
-        let room: bool = sqlx::query_scalar("select kentos.job_slot($1, $2)")
+        // The organisation's place and the user's share of it, counted under one lock (docs/adr/0739 §1).
+        let full: Option<String> = sqlx::query_scalar("select kentos.job_room($1, $2, $3, $4)")
             .bind(access.tenant)
+            .bind(access.actor.user_id)
             .bind(i32::try_from(limits.tenant_active).unwrap_or(i32::MAX))
+            .bind(i32::try_from(limits.user_active).unwrap_or(i32::MAX))
             .fetch_one(&mut *tx)
             .await?;
-        if !room {
-            return Err(AppError::Quota(format!(
-                "Kurumunuzun sırada ve çalışan iş sınırına ({}) ulaşıldı; bir iş bitince ya da durdurulunca yeniden isteyin.",
-                limits.tenant_active
-            )));
+        match full.as_deref() {
+            Some("tenant") => {
+                return Err(AppError::Quota(format!(
+                    "Kurumunuzun sırada ve çalışan iş sınırına ({}) ulaşıldı; bir iş bitince ya da durdurulunca yeniden isteyin.",
+                    limits.tenant_active
+                )));
+            }
+            Some(_) => {
+                return Err(AppError::Quota(format!(
+                    "Sırada ve çalışan işleriniz sınıra ({}) ulaştı; biri bitince ya da durdurulunca yeniden isteyin. Kurumun diğer kullanıcılarının işleri sürer.",
+                    limits.user_active
+                )));
+            }
+            None => {}
         }
     }
     let id = Uuid::now_v7();
     sqlx::query(
-        "insert into kentos.server_job (tenant_id, project_id, id, kind, input, input_sha256, base_revision, created_by, request_id, timeout_seconds)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        "insert into kentos.server_job (tenant_id, project_id, id, kind, input, input_sha256, base_revision, created_by, request_id, timeout_seconds, fresh)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
          on conflict (tenant_id, project_id, created_by, request_id) do nothing",
     )
     .bind(access.tenant)
@@ -464,6 +486,7 @@ pub async fn create(
     .bind(access.actor.user_id)
     .bind(request)
     .bind(i32::try_from(timeout).unwrap_or(600))
+    .bind(asked.fresh)
     .execute(&mut *tx)
     .await?;
     let row: JobRow = sqlx::query_as(sqlx::AssertSqlSafe(format!(
@@ -613,6 +636,8 @@ enum Outcome {
         reach: Option<String>,
         /// The result a `project.processing` job commits in its finish (docs/adr/0559 §2).
         commit: Option<Box<Staged>>,
+        /// The key the artifact is kept under for later jobs and the job it was taken from (docs/adr/0739 §2).
+        cache: Option<Cached>,
     },
     Failed {
         code: &'static str,
@@ -625,6 +650,49 @@ enum Outcome {
     },
     /// Asked to stop, or the lease lost: no finish.
     Stopped,
+}
+
+/// A cached kind's mark: the key of what its artifact was built from, and the earlier job it was taken from.
+struct Cached {
+    key: String,
+    from: Option<Uuid>,
+}
+
+/// What builds a kind's file, for its cache key: the server's program, and for a job the processor runs, the
+/// processor's own (docs/adr/0739 §2).
+fn software_for(kind: &str, processor: Option<&Arc<dyn Processor>>) -> String {
+    let own = crate::job_cache::software();
+    if kind == PROJECT_EXPORT_JOB {
+        return own.to_owned();
+    }
+    let theirs = processor.and_then(|p| p.software()).unwrap_or_default();
+    format!("{own}|{theirs}")
+}
+
+/// The cache mark of an artifact built for `claim` from the project at `revision` and `cursor`, cut by `reach` (the
+/// snapshot's), by `software`; none for a kind that is not cached.
+fn cache_of(
+    claim: &Claim,
+    revision: i64,
+    cursor: i64,
+    reach: Option<&str>,
+    software: &str,
+) -> Option<Cached> {
+    let user = claim.created_by.to_string();
+    let day = crate::job_cache::day_of(OffsetDateTime::now_utc());
+    crate::job_cache::key(
+        &claim.kind,
+        &claim.input,
+        &crate::job_cache::State {
+            revision,
+            cursor,
+            reach,
+            user: &user,
+            day: &day,
+            software,
+        },
+    )
+    .map(|key| Cached { key, from: None })
 }
 
 /// What a processing job commits: the delta and the data revision the tool read, which the project must still be at.
@@ -645,6 +713,7 @@ fn static_code(code: &str) -> &'static str {
         "too_many_changes" => "too_many_changes",
         "invalid" => "invalid",
         "crashed" => "crashed",
+        "storage_full" => "storage_full",
         _ => "failed",
     }
 }
@@ -657,6 +726,7 @@ fn failed_of(e: &AppError) -> (&'static str, String) {
         AppError::Deleted(_) => "gone",
         AppError::Archived(_) => "archived",
         AppError::Invalid { .. } => "invalid",
+        AppError::Storage(e) if crate::blobs::is_full(e) => "storage_full",
         AppError::Storage(_) => "storage",
         AppError::Conflict { .. } => "revision_conflict",
         _ => "failed",
@@ -814,6 +884,9 @@ async fn run(
             return Outcome::Failed { code, message };
         }
     };
+    if let Some(taken) = reuse(db, blobs, claim, &access, processor).await {
+        return taken;
+    }
     match claim.kind.as_str() {
         PROJECT_EXPORT_JOB => export(db, blobs, claim, &access, stop, limits).await,
         PROJECT_CHECKPOINT_JOB => checkpoint(db, blobs, claim, &access, stop).await,
@@ -825,6 +898,94 @@ async fn run(
             message: format!("“{other}” bu sunucunun bilmediği bir iş."),
         },
     }
+}
+
+/// A cached kind's artifact taken from an earlier job of the project built from the same state, input and reach
+/// (docs/adr/0739 §2): a second key of its object for this job, its result as it was, the reach asked again at the
+/// finish. None when the job was asked `fresh`, must refuse (`expectedRevision`), when there is no such job or its
+/// object is gone: the job is built.
+async fn reuse(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    claim: &Claim,
+    access: &ProjectAccess,
+    processor: Option<&Arc<dyn Processor>>,
+) -> Option<Outcome> {
+    if !crate::job_cache::cached(&claim.kind, &claim.input) {
+        return None;
+    }
+    // A job the caller may no longer run fails on its own path, with its own words.
+    access
+        .live()
+        .and_then(|()| access.require(ProjectPermission::JobsRun))
+        .and_then(|()| access.require(ProjectPermission::Download))
+        .ok()?;
+    let mut tx = db.snapshot(access.scope()).await.ok()?;
+    let (fresh, revision, cursor): (bool, i64, i64) = sqlx::query_as(
+        "select s.fresh, p.data_revision,
+                greatest(coalesce((select max(seq) from kentos.outbox_event o where o.tenant_id = p.tenant_id and o.project_id = p.id), 0),
+                         coalesce((select pruned_through from kentos.outbox_horizon h where h.tenant_id = p.tenant_id and h.project_id = p.id), 0))
+           from kentos.server_job s join kentos.project p on p.tenant_id = s.tenant_id and p.id = s.project_id
+          where s.tenant_id = $1 and s.project_id = $2 and s.id = $3",
+    )
+    .bind(claim.tenant)
+    .bind(claim.project)
+    .bind(claim.id)
+    .fetch_optional(&mut *tx)
+    .await
+    .ok()??;
+    if fresh {
+        return None;
+    }
+    if let Some(expected) = claim.input.get("expectedRevision").and_then(Value::as_str)
+        && expected != revision.to_string()
+    {
+        return None;
+    }
+    let stamp = crate::projects::reading_of(&mut tx, access)
+        .await
+        .ok()?
+        .reach
+        .stamp();
+    let Cached { key, .. } = cache_of(
+        claim,
+        revision,
+        cursor,
+        Some(&stamp),
+        &software_for(&claim.kind, processor),
+    )?;
+    type Earlier = (Uuid, Option<Value>, String, i64, String);
+    let earlier: Option<Earlier> = sqlx::query_as(
+        "select id, result, artifact_key, artifact_size, artifact_sha256 from kentos.server_job
+          where tenant_id = $1 and project_id = $2 and cache_key = $3 and state = 'succeeded'
+            and artifact_key is not null and artifact_size is not null and artifact_sha256 is not null and id <> $4
+          order by finished_at desc limit 1",
+    )
+    .bind(claim.tenant)
+    .bind(claim.project)
+    .bind(&key)
+    .bind(claim.id)
+    .fetch_optional(&mut *tx)
+    .await
+    .ok()?;
+    let _ = tx.rollback().await;
+    let (from, result, earlier_key, size, sha256) = earlier?;
+    // The object as its row says; one the retention removed meanwhile is built again.
+    if blobs.len(&earlier_key).await.ok()? != u64::try_from(size).ok()? {
+        return None;
+    }
+    let mine = Blobs::job_key(claim.tenant, claim.project, claim.id, &sha256);
+    blobs.share(&earlier_key, &mine).await.ok()?;
+    Some(Outcome::Done {
+        result: result.unwrap_or(Value::Null),
+        artifact: Some((mine, size, sha256)),
+        reach: Some(stamp),
+        commit: None,
+        cache: Some(Cached {
+            key,
+            from: Some(from),
+        }),
+    })
 }
 
 async fn actor_access(db: &kentos_postgres::Db, claim: &Claim) -> AppResult<ProjectAccess> {
@@ -892,7 +1053,14 @@ async fn export(
             "objects": snap.objects,
             "eventCursor": snap.event_cursor.to_string(),
         }),
-        artifact: Some((key, size, snap.sha256)),
+        artifact: Some((key, size, snap.sha256.clone())),
+        cache: cache_of(
+            claim,
+            snap.revision,
+            snap.event_cursor,
+            snap.reach.as_deref(),
+            &software_for(&claim.kind, None),
+        ),
         reach: snap.reach,
         commit: None,
     }
@@ -931,6 +1099,14 @@ async fn stage(
     .await;
     if let Err(e) = written {
         let _ = blobs.remove(&key).await;
+        if crate::blobs::is_full(&e) {
+            return Err(Outcome::Failed {
+                code: "storage_full",
+                message: format!(
+                    "Sunucunun dosya deposunda yer kalmadı: {what} ({size} bayt) saklanamadı, yarısı silindi. Yönetici yer açınca işi yeniden isteyin."
+                ),
+            });
+        }
         return Err(Outcome::Failed {
             code: "storage",
             message: format!("Sonuç nesne deposuna yazılamadı: {e}"),
@@ -1068,6 +1244,7 @@ async fn external(
             "Bu sunucu işçisi araçları, içe aktarmayı ve atlası çalıştıramıyor.".into(),
         );
     };
+    let software = software_for(&claim.kind, Some(processor));
     let work = match external_of(db, claim, access).await {
         Ok(w) => w,
         Err(outcome) => return outcome,
@@ -1246,6 +1423,7 @@ async fn external(
                     Outcome::Done {
                         result: serde_json::to_value(&result).unwrap_or(Value::Null),
                         artifact: None,
+                        cache: None,
                         reach: snap.reach,
                         commit: Some(Box::new(Staged {
                             delta,
@@ -1272,6 +1450,13 @@ async fn external(
                     Outcome::Done {
                         result: serde_json::to_value(&result).unwrap_or(Value::Null),
                         artifact: Some((key, size, sha256)),
+                        cache: cache_of(
+                            claim,
+                            snap.revision,
+                            snap.event_cursor,
+                            snap.reach.as_deref(),
+                            &software,
+                        ),
                         reach: snap.reach,
                         commit: None,
                     }
@@ -1307,6 +1492,7 @@ async fn external(
             Outcome::Done {
                 result: serde_json::to_value(&result).unwrap_or(Value::Null),
                 artifact: None,
+                cache: None,
                 reach: snap.reach,
                 commit: Some(Box::new(Staged {
                     delta,
@@ -1359,6 +1545,13 @@ async fn external(
             Outcome::Done {
                 result: serde_json::to_value(&result).unwrap_or(Value::Null),
                 artifact: Some((key, size, sha256)),
+                cache: cache_of(
+                    claim,
+                    snap.revision,
+                    snap.event_cursor,
+                    snap.reach.as_deref(),
+                    &software,
+                ),
                 reach: snap.reach,
                 commit: None,
             }
@@ -1401,6 +1594,7 @@ async fn checkpoint(
             artifact: None,
             reach: None,
             commit: None,
+            cache: None,
         },
         Err(e) => {
             let (code, message) = failed_of(&e);
@@ -1426,6 +1620,7 @@ async fn finish(
             artifact,
             reach,
             commit,
+            cache,
         } => {
             let mut result = result;
             let (key, size, sha256) = match artifact {
@@ -1530,6 +1725,20 @@ async fn finish(
                 drop(tx);
                 remove(&key).await;
                 return Ok(ServerJobState::Running);
+            }
+            // What the artifact was built from, for later jobs to take it (docs/adr/0739 §2).
+            if let Some(cache) = &cache {
+                sqlx::query(
+                    "update kentos.server_job set cache_key = $4, cached_from = $5
+                      where tenant_id = $1 and project_id = $2 and id = $3",
+                )
+                .bind(claim.tenant)
+                .bind(claim.project)
+                .bind(claim.id)
+                .bind(&cache.key)
+                .bind(cache.from)
+                .execute(&mut *tx)
+                .await?;
             }
             tx.commit().await?;
             Ok(ServerJobState::Succeeded)

@@ -96,6 +96,7 @@ fn job_of(mode: &str) -> ServerJob {
         result: None,
         artifact: None,
         error: None,
+        cached_from: None,
     }
 }
 

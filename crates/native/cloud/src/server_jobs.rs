@@ -36,6 +36,7 @@ pub fn export_request(request_id: &str, expected: Option<&str>) -> ServerJobCrea
         input: serde_json::to_value(input).unwrap_or_default(),
         request_id: request_id.to_owned(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -51,6 +52,7 @@ pub fn checkpoint_request(request_id: &str, name: &str, note: Option<&str>) -> S
         input: serde_json::to_value(input).unwrap_or_default(),
         request_id: request_id.to_owned(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -62,6 +64,7 @@ pub fn processing_request(request_id: &str, input: &ProcessingJobInput) -> Serve
         input: serde_json::to_value(input).unwrap_or_default(),
         request_id: request_id.to_owned(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -73,6 +76,7 @@ pub fn import_request(request_id: &str, input: &ProjectImportInput) -> ServerJob
         input: serde_json::to_value(input).unwrap_or_default(),
         request_id: request_id.to_owned(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -84,6 +88,7 @@ pub fn atlas_request(request_id: &str, input: &ProjectAtlasInput) -> ServerJobCr
         input: serde_json::to_value(input).unwrap_or_default(),
         request_id: request_id.to_owned(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -178,8 +183,9 @@ pub fn failure_text(job: &ServerJob) -> Option<String> {
         "too_large" => {
             " Sunucu yöneticisi dosya boyu sınırını yükseltmedikçe bu proje dışa aktarılamaz."
         }
-        // `cpu_limit`, `memory_limit`, `memory_estimate`, `unsupported_change` and `too_many_changes` come with their
-        // own advice in the server's message (docs/adr/0559); the words here add to the ones that do not.
+        // `cpu_limit`, `memory_limit`, `memory_estimate`, `unsupported_change`, `too_many_changes` (docs/adr/0559) and
+        // `storage_full` (docs/adr/0739 §3) come with their own advice in the server's message; the words here add to
+        // the ones that do not.
         "pin_mismatch" => {
             " Atlasın sabitlendiği durum ile proje artık aynı değil; atlas planını yeniden yapıp işi yeniden isteyin."
         }
@@ -389,8 +395,17 @@ pub fn download_name(job: &ServerJob) -> String {
     }
 }
 
-/// The line under a job: how big its file is and which data revision it shows, or what it made.
+/// The line under a job: how big its file is and which data revision it shows, or what it made; and when its file was
+/// an earlier job's of the same project state (docs/adr/0739 §2), that it was taken from it.
 pub fn result_text(job: &ServerJob) -> Option<String> {
+    let made = made_text(job)?;
+    Some(match job.cached_from {
+        Some(_) => format!("{made} · önceki işten alındı"),
+        None => made,
+    })
+}
+
+fn made_text(job: &ServerJob) -> Option<String> {
     if job.state != ServerJobState::Succeeded {
         return None;
     }
@@ -561,6 +576,7 @@ mod tests {
             result: None,
             artifact: None,
             error: None,
+            cached_from: None,
         }
     }
 
@@ -999,5 +1015,30 @@ mod tests {
             Some("“Teslim” kontrol noktası oluşturuldu")
         );
         assert_eq!(result_text(&job(ServerJobState::Failed)), None);
+    }
+
+    #[test]
+    fn a_taken_file_says_so_and_a_full_disk_says_what_to_do() {
+        let mut j = job(ServerJobState::Succeeded);
+        j.artifact = Some(ServerJobArtifact {
+            size: "1638".into(),
+            sha256: "0".repeat(64),
+            name: "Ada 3.kcad".into(),
+        });
+        j.result = Some(json!({ "revision": "4", "objects": 6 }));
+        j.cached_from = Some(Uuid::nil().to_string());
+        assert_eq!(
+            result_text(&j).as_deref(),
+            Some("1,6 KB · 6 nesne · veri revizyonu 4 · önceki işten alındı")
+        );
+        // A full store's words are the server's, its advice in them.
+        let mut f = job(ServerJobState::Failed);
+        let words = "Sunucunun dosya deposunda yer kalmadı: projenin dosyası (12 bayt) saklanamadı, yarısı silindi. \
+                     Yönetici yer açınca işi yeniden isteyin.";
+        f.error = Some(ServerJobError {
+            code: "storage_full".into(),
+            message: words.into(),
+        });
+        assert_eq!(failure_text(&f).as_deref(), Some(words));
     }
 }

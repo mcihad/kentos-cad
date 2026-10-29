@@ -279,11 +279,14 @@ class ProjectRef:
         self,
         *,
         expected_revision: str | None = None,
+        fresh: bool = False,
         request_id: str | None = None,
         timeout_seconds: int | None = None,
     ) -> dict[str, Any]:
         """Asks the server to write the project as one ``.kcad`` file (``project.export``). The same ``request_id``
-        sent again gives the same job; ``expected_revision`` refuses the export when the project has moved on."""
+        sent again gives the same job; ``expected_revision`` refuses the export when the project has moved on. When an
+        earlier job wrote the same project state for the same reach, its file is taken (the job's ``cachedFrom`` names
+        that job; docs/adr/0739); ``fresh=True`` writes it again."""
         body: dict[str, Any] = {
             "kind": "project.export",
             "input": {} if expected_revision is None else {"expectedRevision": expected_revision},
@@ -291,6 +294,8 @@ class ProjectRef:
         }
         if timeout_seconds is not None:
             body["timeoutSeconds"] = timeout_seconds
+        if fresh:
+            body["fresh"] = True
         answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
         return answer
 
@@ -330,6 +335,7 @@ class ProjectRef:
         label: str | None = None,
         cpu_seconds: int | None = None,
         memory_mb: int | None = None,
+        fresh: bool = False,
         request_id: str | None = None,
         timeout_seconds: int | None = None,
     ) -> dict[str, Any]:
@@ -344,7 +350,9 @@ class ProjectRef:
         project as it is and keeps the objects the tool made as a GeoPackage, ``job_artifact`` fetches it.
         ``cpu_seconds`` and ``memory_mb`` ask for less than the server's budget, never more. The same ``request_id``
         sent again gives the same job. The job's ``progress`` and ``progressText`` say how far a running one is; its
-        ``result`` holds the tool's summary, the counts, the new revision and what it took."""
+        ``result`` holds the tool's summary, the counts, the new revision and what it took. A ``mode="sink"`` job of
+        the same project state, input, reach, user and day takes the earlier job's file (``cachedFrom``; docs/adr/0739)
+        unless ``fresh=True``."""
         input_: dict[str, Any] = {"tool": tool, "mode": mode}
         if label:
             input_["label"] = label
@@ -367,6 +375,8 @@ class ProjectRef:
         }
         if timeout_seconds is not None:
             body["timeoutSeconds"] = timeout_seconds
+        if fresh:
+            body["fresh"] = True
         answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
         return answer
 
@@ -467,6 +477,7 @@ class ProjectRef:
         label: str | None = None,
         cpu_seconds: int | None = None,
         memory_mb: int | None = None,
+        fresh: bool = False,
         request_id: str | None = None,
         timeout_seconds: int | None = None,
     ) -> dict[str, Any]:
@@ -474,7 +485,8 @@ class ProjectRef:
         ``file.export.atlas`` as the desktop's, on a worker, the project at one revision. ``pin`` is the state a plan
         pinned (``cad.file.export.atlas.plan(...).pin``): a project that is not in that state refuses the job
         (``pin_mismatch``). ``job_artifact`` fetches the PDF; the job's ``result`` holds the pages, the pin's digest,
-        what the pages carry and what they withhold."""
+        what the pages carry and what they withhold. An atlas of the same project state, input, reach, user and day
+        takes the earlier job's PDF (``cachedFrom``; docs/adr/0739) unless ``fresh=True``."""
         input_: dict[str, Any] = {"sheet": sheet}
         if fields is not None:
             input_["fields"] = list(fields)
@@ -501,6 +513,8 @@ class ProjectRef:
         }
         if timeout_seconds is not None:
             body["timeoutSeconds"] = timeout_seconds
+        if fresh:
+            body["fresh"] = True
         answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
         return answer
 

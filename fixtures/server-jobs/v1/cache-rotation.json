@@ -1,0 +1,913 @@
+{
+  "about": "docs/adr/0739: the result cache's keys (§2) and rotated backups (§4); scripts/fixtures/job_cache_cases.py",
+  "keys": [
+    {
+      "name": "Dışa aktarma: girdisiz",
+      "kind": "project.export",
+      "input": null,
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "ad52a9fcff8381cb95f48daf5b272aee6f64e2c86908de34c995f3292993d61b"
+    },
+    {
+      "name": "Dışa aktarma: boş girdi aynı anahtar",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "ad52a9fcff8381cb95f48daf5b272aee6f64e2c86908de34c995f3292993d61b"
+    },
+    {
+      "name": "Dışa aktarma: expectedRevision anahtara girmez",
+      "kind": "project.export",
+      "input": {
+        "expectedRevision": "4"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "ad52a9fcff8381cb95f48daf5b272aee6f64e2c86908de34c995f3292993d61b"
+    },
+    {
+      "name": "Dışa aktarma: başka kullanıcı aynı anahtar",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-2",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "ad52a9fcff8381cb95f48daf5b272aee6f64e2c86908de34c995f3292993d61b"
+    },
+    {
+      "name": "Dışa aktarma: başka gün aynı anahtar",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-30",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "ad52a9fcff8381cb95f48daf5b272aee6f64e2c86908de34c995f3292993d61b"
+    },
+    {
+      "name": "Dışa aktarma: yeni revizyon",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 5,
+        "cursor": 10,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"10\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"5\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "efdcfde9c75dde259060fafa7890d6971d6110241f231dc934e72809912279bd"
+    },
+    {
+      "name": "Dışa aktarma: yalnız imleç ilerledi",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 11,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"11\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "01ce22486f5f3efd1f9d36199aff825149c1024c676c74d61315ed11f898ee72"
+    },
+    {
+      "name": "Dışa aktarma: başka erişim kapsamı",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r2",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r2\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "64813479593ab7efb6f1a78439a231f4a3b0410751a0a2348a3ceb95850e8555"
+    },
+    {
+      "name": "Dışa aktarma: kesilmeyen kopya",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": null,
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":null,\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "f691b4c314c9ce697b7cb53d9df39d9fe93c3ad64081dffe6750f9ea6f5fb8e7"
+    },
+    {
+      "name": "Dışa aktarma: sunucu yeniden derlendi",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739999000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739999000000000\",\"user\":null}",
+      "key": "c48449a1e433464527b9650598c7a2dfd6bdd1d9b12f0c6de52cac3c12d3943c"
+    },
+    {
+      "name": "Dışa aktarma: sunucunun başka sürümü",
+      "kind": "project.export",
+      "input": {},
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.2.0+48211736:1761739445000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":null,\"format\":\"kentos.job-cache/1\",\"input\":{},\"kind\":\"project.export\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.2.0+48211736:1761739445000000000\",\"user\":null}",
+      "key": "bedb855cd82661821f29beecfd9025ddfd9d7c52319e6da32fa919da2631d504"
+    },
+    {
+      "name": "Atlas",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada"
+        ],
+        "label": "Ada atlası"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\"],\"sheet\":\"pafta-1\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "931dc804e8886c32396ca659da384c7554b2f8ab83f2e5299a1fcea4ddf4009c"
+    },
+    {
+      "name": "Atlas: etiket ad, anahtara girmez",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada"
+        ]
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\"],\"sheet\":\"pafta-1\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "931dc804e8886c32396ca659da384c7554b2f8ab83f2e5299a1fcea4ddf4009c"
+    },
+    {
+      "name": "Atlas: bütçe anahtara girmez",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada"
+        ],
+        "label": "Ada atlası",
+        "cpuSeconds": 60,
+        "memoryMb": 256
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\"],\"sheet\":\"pafta-1\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "931dc804e8886c32396ca659da384c7554b2f8ab83f2e5299a1fcea4ddf4009c"
+    },
+    {
+      "name": "Atlas: başka kullanıcı başka anahtar",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada"
+        ],
+        "label": "Ada atlası"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-2",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\"],\"sheet\":\"pafta-1\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-2\"}",
+      "key": "0106c5afbde608bdcea203474e37de2b49893b6994532cf59eb0f5f072afb03c"
+    },
+    {
+      "name": "Atlas: ertesi gün başka anahtar",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada"
+        ],
+        "label": "Ada atlası"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-30",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-30\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\"],\"sheet\":\"pafta-1\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "4e54763ab0df5b5dfe65caf41de1578ce920e258bdca54057b53d4d3032f3dac"
+    },
+    {
+      "name": "Atlas: başka alanlar",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada",
+          "Parsel"
+        ],
+        "label": "Ada atlası"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\",\"Parsel\"],\"sheet\":\"pafta-1\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "1a0f8ac03b66f3d15b64542fe1bdfbc249c85a0e372ba2f38a3cdb9e96235d3f"
+    },
+    {
+      "name": "Atlas: başka zaman",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada"
+        ],
+        "label": "Ada atlası",
+        "time": "2020-01-01"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\"],\"sheet\":\"pafta-1\",\"time\":\"2020-01-01\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "70f35f85afc62b148fe1bb6f9691118668c8ae933b84a8cf28fb61532bb8dff3"
+    },
+    {
+      "name": "Atlas: araç programı yeniden derlendi",
+      "kind": "project.atlas",
+      "input": {
+        "sheet": "pafta-1",
+        "fields": [
+          "Ada"
+        ],
+        "label": "Ada atlası"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739999000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"fields\":[\"Ada\"],\"sheet\":\"pafta-1\"},\"kind\":\"project.atlas\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739999000000000\",\"user\":\"u-1\"}",
+      "key": "5bead00c4a4f6b65ffe0b3c3658c0fcc68dd0661a9458c9ae5e1ba203698a59e"
+    },
+    {
+      "name": "Araç dosyaya",
+      "kind": "project.processing",
+      "input": {
+        "tool": "geometry.buffer",
+        "mode": "sink",
+        "parameters": {
+          "distance": 5
+        }
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"mode\":\"sink\",\"parameters\":{\"distance\":5},\"tool\":\"geometry.buffer\"},\"kind\":\"project.processing\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "838a5d9b5a2222ade8e8bd8beaa14f65b312b192a20e09851ac2f8e96125b997"
+    },
+    {
+      "name": "Araç dosyaya: anahtarların sırası önemsiz",
+      "kind": "project.processing",
+      "input": {
+        "parameters": {
+          "distance": 5
+        },
+        "mode": "sink",
+        "tool": "geometry.buffer"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"mode\":\"sink\",\"parameters\":{\"distance\":5},\"tool\":\"geometry.buffer\"},\"kind\":\"project.processing\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "838a5d9b5a2222ade8e8bd8beaa14f65b312b192a20e09851ac2f8e96125b997"
+    },
+    {
+      "name": "Araç dosyaya: bütçe ve beklenen revizyon girmez",
+      "kind": "project.processing",
+      "input": {
+        "tool": "geometry.buffer",
+        "mode": "sink",
+        "parameters": {
+          "distance": 5
+        },
+        "cpuSeconds": 30,
+        "memoryMb": 512,
+        "expectedRevision": "4"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"mode\":\"sink\",\"parameters\":{\"distance\":5},\"tool\":\"geometry.buffer\"},\"kind\":\"project.processing\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "838a5d9b5a2222ade8e8bd8beaa14f65b312b192a20e09851ac2f8e96125b997"
+    },
+    {
+      "name": "Araç dosyaya: başka değer",
+      "kind": "project.processing",
+      "input": {
+        "tool": "geometry.buffer",
+        "mode": "sink",
+        "parameters": {
+          "distance": 6
+        }
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"mode\":\"sink\",\"parameters\":{\"distance\":6},\"tool\":\"geometry.buffer\"},\"kind\":\"project.processing\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "b3b53d0df820f75dd95183b270ebe5a98f635684ea230a83a88e0286f804600c"
+    },
+    {
+      "name": "Araç dosyaya: seçim",
+      "kind": "project.processing",
+      "input": {
+        "tool": "geometry.buffer",
+        "mode": "sink",
+        "parameters": {
+          "distance": 5
+        },
+        "selection": [
+          "0190-a",
+          "0190-b"
+        ]
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"mode\":\"sink\",\"parameters\":{\"distance\":5},\"selection\":[\"0190-a\",\"0190-b\"],\"tool\":\"geometry.buffer\"},\"kind\":\"project.processing\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "925b11de999dc9a1a86d792e5ae6b9d0edcb3a6a5861db29ede90301e0c8d869"
+    },
+    {
+      "name": "Araç dosyaya: Türkçe değer",
+      "kind": "project.processing",
+      "input": {
+        "tool": "geometry.buffer",
+        "mode": "sink",
+        "parameters": {
+          "field": "Malik adı",
+          "value": "Çağrı \"ŞİMŞEK\""
+        }
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000"
+      },
+      "record": "{\"cursor\":\"9\",\"day\":\"2026-10-29\",\"format\":\"kentos.job-cache/1\",\"input\":{\"mode\":\"sink\",\"parameters\":{\"field\":\"Malik adı\",\"value\":\"Çağrı \\\"ŞİMŞEK\\\"\"},\"tool\":\"geometry.buffer\"},\"kind\":\"project.processing\",\"reach\":\"r1\",\"revision\":\"4\",\"software\":\"0.1.0+48211736:1761739445000000000|kentos-jobrun+20971520:1761739400000000000\",\"user\":\"u-1\"}",
+      "key": "f1bb1735137af45646f49748f6b9b184c4a8df56a59c00177cbc4aab40a0d637"
+    },
+    {
+      "name": "Araç projeye yazar: önbellek yok",
+      "kind": "project.processing",
+      "input": {
+        "tool": "geometry.buffer",
+        "mode": "commit"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": null,
+      "key": null
+    },
+    {
+      "name": "Araç kipi yok (projeye yazar): önbellek yok",
+      "kind": "project.processing",
+      "input": {
+        "tool": "geometry.buffer"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": null,
+      "key": null
+    },
+    {
+      "name": "Kontrol noktası: önbellek yok",
+      "kind": "project.checkpoint",
+      "input": {
+        "name": "Teslim"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": null,
+      "key": null
+    },
+    {
+      "name": "İçe aktarma: önbellek yok",
+      "kind": "project.import",
+      "input": {
+        "upload": "0190-u"
+      },
+      "state": {
+        "revision": 4,
+        "cursor": 9,
+        "reach": "r1",
+        "user": "u-1",
+        "day": "2026-10-29",
+        "software": "0.1.0+48211736:1761739445000000000"
+      },
+      "record": null,
+      "key": null
+    }
+  ],
+  "rotations": [
+    {
+      "name": "Az yedek: hiçbiri silinmez",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 3,
+      "removed": []
+    },
+    {
+      "name": "Fazlası en eskiden silinir",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-22T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-23T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 2,
+      "removed": [
+        "2026-10-20T00-00-00Z",
+        "2026-10-21T00-00-00Z"
+      ]
+    },
+    {
+      "name": "Bir yedek saklanınca yalnız en yenisi kalır",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-22T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 1,
+      "removed": [
+        "2026-10-20T00-00-00Z",
+        "2026-10-21T00-00-00Z"
+      ]
+    },
+    {
+      "name": "Sıfır saklama bir sayılır",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 0,
+      "removed": [
+        "2026-10-20T00-00-00Z"
+      ]
+    },
+    {
+      "name": "Başarısız deneme en yeni tamdan eskiyse silinir",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-20T10-00-00Z",
+          false
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 5,
+      "removed": [
+        "2026-10-20T10-00-00Z"
+      ]
+    },
+    {
+      "name": "En yeni tamdan yeni yarım yedek sürüyor olabilir: kalır",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T06-00-00Z",
+          false
+        ]
+      ],
+      "keep": 5,
+      "removed": []
+    },
+    {
+      "name": "Hiç tam yedek yoksa yarımlar kalır",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          false
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          false
+        ]
+      ],
+      "keep": 2,
+      "removed": []
+    },
+    {
+      "name": "Aynı saniyenin ikinci yedeği sonra gelir",
+      "found": [
+        [
+          "2026-10-20T05-01-01Z",
+          true
+        ],
+        [
+          "2026-10-20T05-01-01Z-2",
+          true
+        ],
+        [
+          "2026-10-20T05-01-01Z-3",
+          true
+        ]
+      ],
+      "keep": 2,
+      "removed": [
+        "2026-10-20T05-01-01Z"
+      ]
+    },
+    {
+      "name": "On ikinci yedek ikinciden sonra gelir",
+      "found": [
+        [
+          "2026-10-20T05-01-01Z-12",
+          true
+        ],
+        [
+          "2026-10-20T05-01-01Z-2",
+          true
+        ],
+        [
+          "2026-10-20T05-01-01Z",
+          true
+        ]
+      ],
+      "keep": 1,
+      "removed": [
+        "2026-10-20T05-01-01Z",
+        "2026-10-20T05-01-01Z-2"
+      ]
+    },
+    {
+      "name": "Yedek adı olmayan klasörlere dokunulmaz",
+      "found": [
+        [
+          "notlar",
+          false
+        ],
+        [
+          "eski",
+          true
+        ],
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 1,
+      "removed": [
+        "2026-10-20T00-00-00Z"
+      ]
+    },
+    {
+      "name": "Sırasız verilen yedekler",
+      "found": [
+        [
+          "2026-10-23T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-22T00-00-00Z",
+          false
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 2,
+      "removed": [
+        "2026-10-20T00-00-00Z",
+        "2026-10-22T00-00-00Z"
+      ]
+    },
+    {
+      "name": "Tamlar arasında yarım: tamlar saklanır, yarım gider",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-20T12-00-00Z",
+          false
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T12-00-00Z",
+          false
+        ],
+        [
+          "2026-10-22T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 3,
+      "removed": [
+        "2026-10-20T12-00-00Z",
+        "2026-10-21T12-00-00Z"
+      ]
+    },
+    {
+      "name": "Yedi günlük döndürme",
+      "found": [
+        [
+          "2026-10-20T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-21T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-22T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-23T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-24T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-25T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-26T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-27T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-28T00-00-00Z",
+          true
+        ],
+        [
+          "2026-10-29T00-00-00Z",
+          true
+        ]
+      ],
+      "keep": 7,
+      "removed": [
+        "2026-10-20T00-00-00Z",
+        "2026-10-21T00-00-00Z",
+        "2026-10-22T00-00-00Z"
+      ]
+    }
+  ],
+  "names": [
+    {
+      "name": "2026-10-29T12-04-05Z",
+      "order": [
+        "2026-10-29T12-04-05Z",
+        1
+      ]
+    },
+    {
+      "name": "2026-10-29T12-04-05Z-2",
+      "order": [
+        "2026-10-29T12-04-05Z",
+        2
+      ]
+    },
+    {
+      "name": "2026-10-29T12-04-05Z-12",
+      "order": [
+        "2026-10-29T12-04-05Z",
+        12
+      ]
+    },
+    {
+      "name": "2026-10-29T12-04-05Z-1",
+      "order": null
+    },
+    {
+      "name": "2026-10-29T12-04-05Z-02",
+      "order": null
+    },
+    {
+      "name": "2026-10-29T12-04-05Z-",
+      "order": null
+    },
+    {
+      "name": "2026-10-29T12:04:05Z",
+      "order": null
+    },
+    {
+      "name": "2026-10-29 12-04-05Z",
+      "order": null
+    },
+    {
+      "name": "2026-10-29T12-04-05",
+      "order": null
+    },
+    {
+      "name": "yedek",
+      "order": null
+    },
+    {
+      "name": "2026-10-29T12-04-05Z.yarim",
+      "order": null
+    }
+  ]
+}

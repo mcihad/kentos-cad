@@ -54,6 +54,7 @@ fn job(id: &str, state: ServerJobState) -> ServerJob {
         result: None,
         artifact: None,
         error: None,
+        cached_from: None,
     }
 }
 
@@ -781,6 +782,82 @@ mod screens {
             &mut app,
             &format!("ice-aktar-atlas-isleri-{width}x{height}{suffix}"),
         );
+    }
+
+    /// The tab with jobs whose file was taken from an earlier job of the same project state (docs/adr/0739 §2) and one
+    /// the server's full store failed (§3).
+    #[test]
+    #[ignore = "pictures"]
+    fn the_tab_with_taken_and_full_disk_jobs() {
+        for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+            for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut app = jobs_of(ProjectStorage::Database);
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                answer(&mut app, Vec::new());
+                answer_more_shot(&mut app, taken_and_full_jobs());
+                shot(
+                    &mut snapshot,
+                    &mut app,
+                    &format!("onbellek-dolu-disk-{width}x{height}{suffix}"),
+                );
+            }
+        }
+    }
+
+    fn taken_and_full_jobs() -> Vec<ServerJob> {
+        let built = ServerJob {
+            created_at: "2026-10-29T09:10:00Z".into(),
+            finished_at: Some("2026-10-29T09:10:04Z".into()),
+            result: Some(json!({ "revision": "12", "objects": 48210, "eventCursor": "40" })),
+            artifact: Some(ServerJobArtifact {
+                size: "9437184".into(),
+                sha256: "c".repeat(64),
+                name: "Ada 1246 ölçü projesi.kcad".into(),
+            }),
+            ..done(&jid(4))
+        };
+        let full = ServerJob {
+            created_at: "2026-10-29T09:20:00Z".into(),
+            finished_at: Some("2026-10-29T09:20:03Z".into()),
+            error: Some(ServerJobError {
+                code: "storage_full".into(),
+                message: "Sunucunun dosya deposunda yer kalmadı: projenin dosyası (9437184 bayt) saklanamadı, yarısı silindi. Yönetici yer açınca işi yeniden isteyin.".into(),
+            }),
+            ..job(&jid(3), ServerJobState::Failed)
+        };
+        let atlas = ServerJob {
+            kind: "project.atlas".into(),
+            input: json!({ "sheet": "atlas-paftasi", "label": "Parsel atlası" }),
+            created_at: "2026-10-29T09:25:00Z".into(),
+            finished_at: Some("2026-10-29T09:25:01Z".into()),
+            cached_from: Some(jid(9)),
+            artifact: Some(ServerJobArtifact {
+                size: "3407872".into(),
+                sha256: "f".repeat(64),
+                name: "Ada 1246 - Parsel atlası.pdf".into(),
+            }),
+            result: Some(json!({
+                "sheet": "atlas-paftasi", "baseRevision": "12", "pages": 100, "first": "A1/1", "last": "A4/25",
+                "pinDigest": "ab".repeat(32), "bindings": { "srid": 5253 }, "fields": ["Ada", "Parsel"],
+                "withheld": ["Malik"], "usage": { "cpuSeconds": 0.0, "peakMemoryMb": 0.0 }
+            })),
+            ..done(&jid(2))
+        };
+        let taken = ServerJob {
+            created_at: "2026-10-29T09:31:00Z".into(),
+            finished_at: Some("2026-10-29T09:31:00Z".into()),
+            cached_from: Some(jid(4)),
+            ..built.clone()
+        };
+        let taken = ServerJob {
+            id: jid(1),
+            ..taken
+        };
+        vec![taken, atlas, full, built]
     }
 
     #[test]

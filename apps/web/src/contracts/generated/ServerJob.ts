@@ -18,4 +18,9 @@ progress: number,
 /**
  * What the worker says it is doing, a few Turkish words, while the job runs (docs/adr/0559 §3).
  */
-progressText?: string, attempts: number, maxAttempts: number, timeoutSeconds: number, cancelRequested: boolean, createdBy: string, createdAt: string, startedAt?: string, finishedAt?: string, result?: unknown, artifact?: ServerJobArtifact, error?: ServerJobError, };
+progressText?: string, attempts: number, maxAttempts: number, timeoutSeconds: number, cancelRequested: boolean, createdBy: string, createdAt: string, startedAt?: string, finishedAt?: string, result?: unknown, artifact?: ServerJobArtifact, 
+/**
+ * The earlier job whose artifact this one took: the project's state, the input, the reach and the server's software
+ * were the same (docs/adr/0739 §2).
+ */
+cachedFrom?: string, error?: ServerJobError, };

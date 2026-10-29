@@ -6,7 +6,8 @@
 export type ServerJobError = { 
 /**
  * `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` (the artifact could
- * not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`; a
+ * not be written: no folder, no right), `storage_full` (the object store had no room left for it; nothing of it
+ * is kept, docs/adr/0739 §3), `too_large` (the artifact is past the server's limit) or `failed`; a
  * `project.processing` job also `cpu_limit`, `memory_limit` (stopped at its budget), `memory_estimate` (refused
  * before it ran), `tool_failed`, `tool_unavailable`, `unsupported_change`, `too_many_changes` and `crashed`
  * (docs/adr/0559); a `project.import` or `project.atlas` job also the refusal code of the command the worker ran

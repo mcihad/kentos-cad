@@ -57,6 +57,7 @@ fn ask(request: &str, input: serde_json::Value) -> ServerJobCreate {
         input,
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -860,6 +861,7 @@ async fn a_checkpoint_can_be_made_as_a_job() {
         input,
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     };
 
     // Input is checked when asked: a name, a note within its limit, a revision number.

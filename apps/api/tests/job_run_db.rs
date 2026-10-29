@@ -62,6 +62,7 @@ fn ask(
         .unwrap(),
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -299,6 +300,7 @@ async fn a_tool_run_by_a_worker_in_a_child_commits_its_result_or_stages_its_file
         .unwrap(),
         request_id: "d".into(),
         timeout_seconds: None,
+        fresh: false,
     };
     let job = run_one(&db, &store, &access, pinned).await;
     assert_eq!(job.state, ServerJobState::Failed);
@@ -363,6 +365,7 @@ fn ask_import(request: &str, upload: &str, options: serde_json::Value) -> Server
         input: serde_json::json!({ "upload": upload, "options": options }),
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     }
 }
 
@@ -477,6 +480,7 @@ async fn the_atlas_of_a_sheet_is_drawn_by_the_child_and_downloaded_as_the_jobs_p
         input,
         request_id: request.into(),
         timeout_seconds: None,
+        fresh: false,
     };
     // The pin a plan of the same drawing made (here by the Python SDK, from the file): the project the server keeps is
     // the same state, so its pages are made.

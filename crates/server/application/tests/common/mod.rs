@@ -247,6 +247,36 @@ pub fn a_point(x: f64) -> ProjectChanges {
     }
 }
 
+/// `n` new points on `cizim` at scattered coordinates (an xorshift from `salt`), so the project's file does not pack
+/// small.
+pub fn scattered_points(n: usize, salt: u64) -> ProjectChanges {
+    let mut seed = salt.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1);
+    let mut next = move || {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed % 1_000_000) as f64 / 7.0
+    };
+    ProjectChanges {
+        blocks: Vec::new(),
+        features: (0..n)
+            .map(|_| {
+                let entity: Entity = serde_json::from_value(serde_json::json!({
+                    "kind": "point", "id": 1, "layerId": "cizim",
+                    "attrs": { "No": format!("{:.3}", next()) },
+                    "p": { "x": 480_000.0 + next(), "y": 4_420_000.0 + next() }
+                }))
+                .unwrap();
+                FeatureChange::Create {
+                    id: Uuid::new_v4().to_string(),
+                    entity,
+                }
+            })
+            .collect(),
+        project: None,
+    }
+}
+
 /// An object store of its own for a test (file projects, docs/adr/0031), in a
 /// temporary folder no other test uses.
 pub fn blobs() -> kentos_application::blobs::Blobs {

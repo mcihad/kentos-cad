@@ -4,10 +4,16 @@
 //! hands the same snapshot to `pg_dump` and copies each object those rows name, checking its SHA-256 on the way.
 //! A restored server is checked with [`check`]: every object its rows name is in its store with that size and
 //! SHA-256. An object the store has and no row names is said, never removed.
+//!
+//! Backups taken again and again (docs/adr/0739 §4) go into folders of one root, named by when they began
+//! ([`take_into`]): an object the newest complete backup there has with the same key, size and SHA-256 is linked
+//! from it (objects never change; it is read and checked all the same), every other one copied; then the oldest
+//! complete backups beyond `keep` and the failed attempts before the newest complete one are removed ([`rotation`]).
+//! A backup that fails removes its own folder and nothing else.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::io::{self, Read, Write};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -225,9 +231,28 @@ pub fn read_manifest(dir: &Path) -> Result<Manifest, String> {
     Ok(m)
 }
 
+/// How the objects of a backup came into it: linked from an earlier backup or copied from the store.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Carried {
+    pub linked: usize,
+    pub copied: usize,
+}
+
 /// Takes a backup of the database at `owner_url` (the owner role's address) and of the objects in `blobs` into
 /// `dir`, which must not exist or be empty. `pg_dump` is run with the snapshot the objects are read in.
 pub async fn take(owner_url: &str, blobs: &Blobs, dir: &Path) -> Result<Manifest, String> {
+    take_with(owner_url, blobs, dir, None).await.map(|(m, _)| m)
+}
+
+/// [`take`], an object an earlier backup's folder (`earlier`, with its record) has with the same key, size and SHA-256
+/// linked from there instead of copied; each linked object is read and checked as a copied one is, and one that does
+/// not read as its record says is copied from the store instead.
+pub async fn take_with(
+    owner_url: &str,
+    blobs: &Blobs,
+    dir: &Path,
+    earlier: Option<(PathBuf, Manifest)>,
+) -> Result<(Manifest, Carried), String> {
     if dir.exists()
         && std::fs::read_dir(dir)
             .map_err(|e| format!("{} okunamadı: {e}", dir.display()))?
@@ -292,17 +317,32 @@ pub async fn take(owner_url: &str, blobs: &Blobs, dir: &Path) -> Result<Manifest
             String::from_utf8_lossy(&status.stderr).trim()
         ));
     }
-    // The objects, while the snapshot is held: copied and checked against their rows.
+    // The objects, while the snapshot is held: linked or copied, and checked against their rows.
     let root = blobs.root().to_path_buf();
     let into = dir.join(OBJECTS);
     let copied = {
         let objects = objects.clone();
-        tokio::task::spawn_blocking(move || -> Result<(), String> {
+        tokio::task::spawn_blocking(move || -> Result<Carried, String> {
             let from = Blobs::new(&root);
             let to = Blobs::new(&into);
+            let had: BTreeMap<&str, &Named> = earlier
+                .as_ref()
+                .map(|(_, m)| m.objects.iter().map(|n| (n.key.as_str(), n)).collect())
+                .unwrap_or_default();
+            let mut carried = Carried::default();
             for n in &objects {
-                let src = from.local_path(&n.key).map_err(|e| e.to_string())?;
                 let dst = to.local_path(&n.key).map_err(|e| e.to_string())?;
+                if let Some((folder, _)) = &earlier
+                    && had
+                        .get(n.key.as_str())
+                        .is_some_and(|o| o.size == n.size && o.sha256 == n.sha256)
+                    && linked(&folder.join(OBJECTS), &n.key, &dst, n)
+                {
+                    carried.linked += 1;
+                    continue;
+                }
+                carried.copied += 1;
+                let src = from.local_path(&n.key).map_err(|e| e.to_string())?;
                 let (size, sha) = digest(&src, Some(&dst)).map_err(|e| {
                     if e.kind() == io::ErrorKind::NotFound {
                         format!(
@@ -321,14 +361,14 @@ pub async fn take(owner_url: &str, blobs: &Blobs, dir: &Path) -> Result<Manifest
                     ));
                 }
             }
-            Ok(())
+            Ok(carried)
         })
         .await
         .map_err(|e| e.to_string())?
     };
     tx.rollback().await.map_err(|e| e.to_string())?;
     pool.close().await;
-    copied?;
+    let carried = copied?;
     let (dump_size, dump_sha256) =
         digest(&dump, None).map_err(|e| format!("{DUMP} okunamadı: {e}"))?;
     let manifest = Manifest {
@@ -343,7 +383,205 @@ pub async fn take(owner_url: &str, blobs: &Blobs, dir: &Path) -> Result<Manifest
     let text = serde_json::to_string_pretty(&manifest).map_err(|e| e.to_string())?;
     write_synced(&dir.join(MANIFEST), text.as_bytes())
         .map_err(|e| format!("{MANIFEST} yazılamadı: {e}"))?;
-    Ok(manifest)
+    Ok((manifest, carried))
+}
+
+/// Links `key` from an earlier backup's objects (`folder`) to `dst` and checks it reads as `n` says; false (nothing
+/// left at `dst`) when it is not there, cannot be linked (another file system) or does not read so.
+fn linked(folder: &Path, key: &str, dst: &Path, n: &Named) -> bool {
+    let Ok(src) = Blobs::new(folder).local_path(key) else {
+        return false;
+    };
+    if let Some(dir) = dst.parent()
+        && std::fs::create_dir_all(dir).is_err()
+    {
+        return false;
+    }
+    if std::fs::hard_link(&src, dst).is_err() {
+        return false;
+    }
+    match digest(dst, None) {
+        Ok((size, sha)) if size as i64 == n.size && sha == n.sha256 => true,
+        _ => {
+            let _ = std::fs::remove_file(dst);
+            false
+        }
+    }
+}
+
+/// A backup folder's name under a root: when it began, UTC, in a form every file system takes
+/// (`2026-10-29T12-04-05Z`), with `-2`, `-3` … after it for a second one in the same second.
+pub fn folder_name(moment: time::OffsetDateTime, nth: u32) -> String {
+    let m = moment.to_offset(time::UtcOffset::UTC);
+    let base = format!(
+        "{:04}-{:02}-{:02}T{:02}-{:02}-{:02}Z",
+        m.year(),
+        u8::from(m.month()),
+        m.day(),
+        m.hour(),
+        m.minute(),
+        m.second()
+    );
+    if nth <= 1 {
+        base
+    } else {
+        format!("{base}-{nth}")
+    }
+}
+
+/// A folder name's order (its moment, then its number); none for a name that is not a backup's.
+pub fn folder_order(name: &str) -> Option<(String, u32)> {
+    let base = name.get(..20)?;
+    let shape = base.bytes().enumerate().all(|(i, b)| match i {
+        4 | 7 | 13 | 16 => b == b'-',
+        10 => b == b'T',
+        19 => b == b'Z',
+        _ => b.is_ascii_digit(),
+    });
+    if !shape {
+        return None;
+    }
+    let nth = match &name[20..] {
+        "" => 1,
+        rest => {
+            let digits = rest.strip_prefix('-')?;
+            if digits.is_empty()
+                || digits.starts_with('0')
+                || !digits.bytes().all(|b| b.is_ascii_digit())
+            {
+                return None;
+            }
+            digits.parse::<u32>().ok().filter(|n| *n >= 2)?
+        }
+    };
+    Some((base.to_owned(), nth))
+}
+
+/// A backup found under a root.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Found {
+    pub name: String,
+    pub path: PathBuf,
+    /// Its record, when it reads: a complete backup. None: an attempt that failed or one under way.
+    pub manifest: Option<Manifest>,
+}
+
+/// The backups under `root`, oldest first; folders not named as backups are not looked at.
+pub fn found_in(root: &Path) -> Result<Vec<Found>, String> {
+    let entries = match std::fs::read_dir(root) {
+        Ok(e) => e,
+        Err(e) if e.kind() == io::ErrorKind::NotFound => return Ok(Vec::new()),
+        Err(e) => return Err(format!("{} okunamadı: {e}", root.display())),
+    };
+    let mut found = Vec::new();
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("{} okunamadı: {e}", root.display()))?;
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if folder_order(&name).is_none() || !entry.path().is_dir() {
+            continue;
+        }
+        let path = entry.path();
+        let manifest = read_manifest(&path).ok();
+        found.push(Found {
+            name,
+            path,
+            manifest,
+        });
+    }
+    found.sort_by_key(|f| folder_order(&f.name));
+    Ok(found)
+}
+
+/// The backups a rotation removes, of `found` (name and whether it is complete), when `keep` complete ones are kept:
+/// the complete ones older than the newest `keep`, and the incomplete ones older than the newest complete one (an
+/// attempt that failed; one newer than every complete backup may be under way and stays). Names that are not
+/// backups' are never in it. `keep` is at least one.
+pub fn rotation(found: &[(String, bool)], keep: usize) -> Vec<String> {
+    let keep = keep.max(1);
+    // Newest first: (order, name, complete).
+    let mut named: Vec<_> = found
+        .iter()
+        .filter_map(|(name, complete)| folder_order(name).map(|order| (order, name, *complete)))
+        .collect();
+    named.sort_by(|a, b| b.0.cmp(&a.0));
+    let newest_complete = named.iter().find(|n| n.2).map(|n| n.0.clone());
+    let mut complete_seen = 0;
+    let mut out = Vec::new();
+    for (order, name, complete) in named {
+        if complete {
+            complete_seen += 1;
+            if complete_seen > keep {
+                out.push(name.clone());
+            }
+        } else if newest_complete.as_ref().is_some_and(|n| order < *n) {
+            out.push(name.clone());
+        }
+    }
+    out.sort_by_key(|n| folder_order(n));
+    out
+}
+
+/// What [`take_into`] did.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Rotated {
+    pub name: String,
+    pub manifest: Manifest,
+    pub carried: Carried,
+    /// The backups the rotation removed, oldest first.
+    pub removed: Vec<String>,
+}
+
+/// Takes a backup into a new folder under `root` (named by now), its unchanged objects linked from the newest
+/// complete backup there; then removes the backups the rotation says for `keep`. A backup that fails removes its own
+/// folder and nothing else, and says why.
+pub async fn take_into(
+    owner_url: &str,
+    blobs: &Blobs,
+    root: &Path,
+    keep: usize,
+) -> Result<Rotated, String> {
+    if keep == 0 {
+        return Err("En az bir yedek saklanır: --keep 1 ya da daha büyük olmalı.".into());
+    }
+    std::fs::create_dir_all(root).map_err(|e| format!("{} açılamadı: {e}", root.display()))?;
+    let before = found_in(root)?;
+    let earlier = before
+        .iter()
+        .rev()
+        .find_map(|f| f.manifest.clone().map(|m| (f.path.clone(), m)));
+    let now = time::OffsetDateTime::now_utc();
+    let mut nth = 1;
+    let (name, dir) = loop {
+        let name = folder_name(now, nth);
+        let dir = root.join(&name);
+        if !dir.exists() {
+            break (name, dir);
+        }
+        nth += 1;
+    };
+    let (manifest, carried) = match take_with(owner_url, blobs, &dir, earlier).await {
+        Ok(done) => done,
+        Err(why) => {
+            // Half a backup is none: its folder goes, so the disk it filled has room again.
+            let _ = std::fs::remove_dir_all(&dir);
+            return Err(why);
+        }
+    };
+    let now_found: Vec<(String, bool)> = found_in(root)?
+        .into_iter()
+        .map(|f| (f.name, f.manifest.is_some()))
+        .collect();
+    let removed = rotation(&now_found, keep);
+    for gone in &removed {
+        std::fs::remove_dir_all(root.join(gone))
+            .map_err(|e| format!("Eski yedek {gone} silinemedi: {e}"))?;
+    }
+    Ok(Rotated {
+        name,
+        manifest,
+        carried,
+        removed,
+    })
 }
 
 fn write_synced(path: &Path, bytes: &[u8]) -> io::Result<()> {

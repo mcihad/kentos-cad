@@ -50,6 +50,7 @@ pub fn status_of(error: &AppError) -> StatusCode {
         AppError::Conflict { .. } | AppError::Archived(_) => StatusCode::CONFLICT,
         AppError::Limited { .. } | AppError::Quota(_) => StatusCode::TOO_MANY_REQUESTS,
         AppError::Database(_) if error.code() == "unavailable" => StatusCode::SERVICE_UNAVAILABLE,
+        AppError::Storage(_) if error.code() == "storage_full" => StatusCode::INSUFFICIENT_STORAGE,
         AppError::Database(_) | AppError::Storage(_) => StatusCode::INTERNAL_SERVER_ERROR,
     }
 }

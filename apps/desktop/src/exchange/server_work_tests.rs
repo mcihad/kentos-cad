@@ -92,6 +92,7 @@ fn job_of(kind: &str, input: Value) -> ServerJob {
         result: None,
         artifact: None,
         error: None,
+        cached_from: None,
     }
 }
 

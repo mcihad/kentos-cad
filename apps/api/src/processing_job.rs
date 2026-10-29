@@ -260,6 +260,17 @@ fn read_errors(err: impl Read + Send + 'static) -> std::thread::JoinHandle<Strin
 }
 
 impl Processor for ChildProcessor {
+    /// The child program's size and change time (docs/adr/0739 §2): read at each job, so a program put in place while
+    /// the server runs is a new build to the result cache.
+    fn software(&self) -> Option<String> {
+        std::fs::metadata(&self.exe).ok().map(|m| {
+            format!(
+                "{CHILD_PROGRAM}+{}",
+                kentos_application::job_cache::file_mark(&m)
+            )
+        })
+    }
+
     fn process(
         &self,
         task: &ProcessingTask,

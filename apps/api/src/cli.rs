@@ -311,6 +311,57 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
                 .map_err(fail)?;
             print!("{}", jobs_report(&metrics));
         }
+        ["backup"] if args.value("into").is_some() => {
+            let url = config
+                .owner_url
+                .as_deref()
+                .ok_or("KENTOS_DATABASE_OWNER_URL yok: önce `kentosd db-setup` çalıştırın.")?;
+            let root = std::path::PathBuf::from(args.required("into")?);
+            let keep = match args.value("keep") {
+                None => 7,
+                Some(k) => k
+                    .trim()
+                    .parse::<usize>()
+                    .ok()
+                    .filter(|n| (1..=1000).contains(n))
+                    .ok_or_else(|| format!("--keep 1 ile 1000 arasında bir sayı olmalı: {k}"))?,
+            };
+            let blobs = kentos_application::blobs::Blobs::new(&config.blob_dir);
+            let r = kentos_application::backup::take_into(url, &blobs, &root, keep).await?;
+            println!(
+                "yedek alındı: {} ({}, göç {}, {} nesne: {} bağlandı, {} kopyalandı; döküm {} bayt)",
+                root.join(&r.name).display(),
+                r.manifest.taken,
+                r.manifest.migration,
+                r.manifest.objects.len(),
+                r.carried.linked,
+                r.carried.copied,
+                r.manifest.dump_size
+            );
+            for gone in &r.removed {
+                println!("eski yedek silindi: {gone}");
+            }
+        }
+        ["backup", "list"] => {
+            let root = std::path::PathBuf::from(args.required("into")?);
+            let found = kentos_application::backup::found_in(&root)?;
+            if found.is_empty() {
+                println!("{} altında yedek yok", root.display());
+            }
+            for f in &found {
+                match &f.manifest {
+                    Some(m) => println!(
+                        "{}\ttam\t{}\tgöç {}\t{} nesne\tdöküm {} bayt",
+                        f.name,
+                        m.taken,
+                        m.migration,
+                        m.objects.len(),
+                        m.dump_size
+                    ),
+                    None => println!("{}\tyarım\tkaydı yok: başarısız ya da sürüyor", f.name),
+                }
+            }
+        }
         ["backup"] => {
             let url = config
                 .owner_url
@@ -466,6 +517,8 @@ pub const USAGE: &str = "kullanım:
   kentosd jobs                                sunucu işlerinin sayıları: sırada, çalışan, son 24 saatte düşen, en eski bekleyen
   kentosd worker                              yalnız sunucu işi işçileri (KENTOS_WORKERS)
   kentosd backup --dir KLASÖR                 veritabanının dökümü ve başvurduğu nesneler tek anda, yedek.json ile
+  kentosd backup --into KÖK [--keep 7]        KÖK altında yeni bir yedek (değişmeyen nesneler öncekinden bağlanır), eskileri döndürür
+  kentosd backup list --into KÖK              KÖK altındaki yedekler: tam ya da yarım, ne zaman, kaç nesne
   kentosd backup check [--dir KLASÖR]         yedeğin klasörünü ya da çalışan sunucunun nesnelerini SHA-256'yla denetler
   kentosd dev-seed                            geliştirme kurumu ve üç hesap (ayse, mehmet, zeynep)";
 

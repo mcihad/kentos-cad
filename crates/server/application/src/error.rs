@@ -41,7 +41,8 @@ pub enum AppError {
     Quota(String),
     /// The database failed; the detail is logged, the client sees a generic message (500/503).
     Database(sqlx::Error),
-    /// The object store of file projects failed (docs/adr/0031); the detail is logged (500).
+    /// The object store of file projects failed (docs/adr/0031); the detail is logged (500). A store with no room
+    /// left is `storage_full` (507), worth the same request again once room is made (docs/adr/0739 §3).
     Storage(std::io::Error),
 }
 
@@ -87,6 +88,7 @@ impl AppError {
             Self::Quota(_) => "quota_exceeded",
             Self::Database(e) if is_unavailable(e) => "unavailable",
             Self::Database(_) => "internal",
+            Self::Storage(e) if crate::blobs::is_full(e) => "storage_full",
             Self::Storage(_) => "storage",
         }
     }
@@ -103,6 +105,8 @@ impl AppError {
             }
             Self::Quota(_) => (true, Some(30)),
             Self::Database(e) if is_unavailable(e) => (true, None),
+            // Room is made by the operator: the same request succeeds then, not in a moment.
+            Self::Storage(e) if crate::blobs::is_full(e) => (true, Some(300)),
             _ => (false, None),
         }
     }
@@ -154,6 +158,9 @@ impl fmt::Display for AppError {
             Self::Database(_) => {
                 f.write_str("Sunucuda beklenmeyen bir hata oldu; ayrıntı sunucu günlüğünde.")
             }
+            Self::Storage(e) if crate::blobs::is_full(e) => f.write_str(
+                "Sunucunun dosya deposunda yer kalmadı; dosya saklanmadı ve yarım kalan parçası silindi. Yönetici yer açınca aynı isteği yeniden gönderin.",
+            ),
             Self::Storage(_) => f.write_str(
                 "Sunucunun dosya deposunda bir hata oldu; ayrıntı sunucu günlüğünde. Sorun sürerse yöneticiye bildirin.",
             ),

@@ -50,8 +50,9 @@ pub struct Config {
     /// Absent: 1. `kentosd worker` runs workers alone.
     pub workers: u32,
     /// What server jobs may take (`KENTOS_JOB_LIMIT`: queued and running jobs of one organisation together,
-    /// 1–10 000, default 50; `KENTOS_JOB_ARTIFACT_MAX_MB`: the biggest artifact of a job, 1–1 048 576 MB, default
-    /// 2 048; docs/adr/0547; `KENTOS_JOB_INPUT_MAX_MB`: the biggest file staged for an import job, default 2 048).
+    /// 1–10 000, default 50; `KENTOS_JOB_USER_LIMIT`: of them, one user's, 1–10 000, default 10, docs/adr/0739 §1;
+    /// `KENTOS_JOB_ARTIFACT_MAX_MB`: the biggest artifact of a job, 1–1 048 576 MB, default 2 048; docs/adr/0547;
+    /// `KENTOS_JOB_INPUT_MAX_MB`: the biggest file staged for an import job, default 2 048).
     pub job_limits: kentos_application::jobs::JobLimits,
     /// How long a finished job and its artifact are kept (`KENTOS_JOB_RETENTION_DAYS`, 1–3650 days, default 14).
     pub job_retention: Duration,
@@ -126,11 +127,27 @@ pub fn job_limits(
     )?;
     Ok(kentos_application::jobs::JobLimits {
         tenant_active: u32::try_from(tenant_active).unwrap_or(u32::MAX),
+        user_active: defaults.user_active,
         artifact_max: mb * 1024 * 1024,
         cpu_seconds: u32::try_from(cpu).unwrap_or(u32::MAX),
         memory_mb: u32::try_from(memory).unwrap_or(u32::MAX),
         input_max: input * 1024 * 1024,
     })
+}
+
+/// `KENTOS_JOB_USER_LIMIT`: how many queued and running jobs one user may have in an organisation (docs/adr/0739 §1).
+pub fn job_user_limit(value: Option<&str>) -> Result<u32, String> {
+    match value {
+        None => Ok(kentos_contracts::SERVER_JOB_USER_ACTIVE_DEFAULT),
+        Some(v) => v
+            .trim()
+            .parse::<u32>()
+            .ok()
+            .filter(|n| (1..=10_000).contains(n))
+            .ok_or_else(|| {
+                format!("KENTOS_JOB_USER_LIMIT 1 ile 10000 arasında bir sayı olmalı: {v}")
+            }),
+    }
 }
 
 /// `KENTOS_EVENT_RETENTION_DAYS`: whole days, at least one (a client away longer reopens the project).
@@ -227,13 +244,16 @@ impl Config {
                         format!("KENTOS_WORKERS 0 ile 16 arasında bir sayı olmalı: {v}")
                     })?,
             },
-            job_limits: job_limits(
-                get("KENTOS_JOB_LIMIT").as_deref(),
-                get("KENTOS_JOB_ARTIFACT_MAX_MB").as_deref(),
-                get("KENTOS_JOB_CPU_SECONDS").as_deref(),
-                get("KENTOS_JOB_MEMORY_MB").as_deref(),
-                get("KENTOS_JOB_INPUT_MAX_MB").as_deref(),
-            )?,
+            job_limits: kentos_application::jobs::JobLimits {
+                user_active: job_user_limit(get("KENTOS_JOB_USER_LIMIT").as_deref())?,
+                ..job_limits(
+                    get("KENTOS_JOB_LIMIT").as_deref(),
+                    get("KENTOS_JOB_ARTIFACT_MAX_MB").as_deref(),
+                    get("KENTOS_JOB_CPU_SECONDS").as_deref(),
+                    get("KENTOS_JOB_MEMORY_MB").as_deref(),
+                    get("KENTOS_JOB_INPUT_MAX_MB").as_deref(),
+                )?
+            },
             job_retention: job_retention(get("KENTOS_JOB_RETENTION_DAYS").as_deref())?,
             env_file,
             vars,
@@ -311,7 +331,15 @@ mod tests {
                     .contains("KENTOS_JOB_LIMIT"),
                 "{bad}"
             );
+            assert!(
+                job_user_limit(Some(bad))
+                    .unwrap_err()
+                    .contains("KENTOS_JOB_USER_LIMIT"),
+                "{bad}"
+            );
         }
+        assert_eq!(job_user_limit(None), Ok(10));
+        assert_eq!(job_user_limit(Some(" 3 ")), Ok(3));
         assert!(
             job_limits(None, Some("0"), None, None, None)
                 .unwrap_err()

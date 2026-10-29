@@ -219,7 +219,7 @@ pub async fn create(
                     other => AppError::Storage(std::io::Error::other(format!("{other:?}"))),
                 });
             }
-            writer.finish().await?;
+            writer.finish().await.map_err(AppError::Storage)?;
             let source = Source::Snapshot {
                 id,
                 revision: snap.revision,
