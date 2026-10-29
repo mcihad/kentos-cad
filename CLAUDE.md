@@ -28,6 +28,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Öznitelikler'de kısalan ad ve değer, “Çeşitli” (29 Ekim 2026; [ADR0748](docs/adr/0748-inspector-cut-texts-and-mixed-values.md)).**
+  Satırın adı `Elided`; `EditCell` düzenlenmezken değerini alanına sığdırır (`elided::fit`, “…”), basış önce
+  gösterilen metne verilir (iced imleci önceki metinden bulur; Türkçe harfin ortası), “…”ya basmak imleci sona koyar.
+  `Tip::when_cut` ipucunu yalnız kısalan yazıda açar (`elided::Cut`, `Operation::custom`); ad, değer, liste ve hücre.
+  `property_grid::varies`: “Çeşitli” soluk, hücresi boş düzenlenir, boş bırakılan bir şey göndermez (AutoCAD'in
+  *VARIES*'ı). İpucu arayüzün saatini okur (`clock::now`). Sahibin çiziminde 1:81'de de harf başına 13 ms.
+
 - **Öznitelikler'in satırları ve hücreleri (29 Ekim 2026; [ADR0747](docs/adr/0747-inspector-rows-and-cells.md)).**
   KentOS UI'ın `SheetRow`'u satırı birim yapar: üzerine gelince bütün satır aydınlanır, değeri düzenlenirken solunda
   2 px vurgu çubuğu (satırın içindeki odaklı metin girişinden). Hücre ve liste değer sütununu doldurur (`VALUE_PAD` 3,

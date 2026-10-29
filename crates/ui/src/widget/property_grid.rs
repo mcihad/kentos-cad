@@ -31,7 +31,7 @@ use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::elided::Elided;
 use crate::widget::sheet_row::SheetRow;
-use crate::widget::{Menu, MenuButton, Responsive};
+use crate::widget::{Menu, MenuButton, Responsive, Tip, tip};
 
 const KEY_WIDTH: f32 = 112.0;
 /// A sheet's row and section header heights, 12 px body text (the web's `--row-h`, 30 px).
@@ -41,6 +41,28 @@ const SHEET_SECTION: f32 = 30.0;
 pub const CELL: f32 = 24.0;
 /// The label column's share of the width, in hundredths (the web's 42 %).
 const LABEL_SHARE: u16 = 42;
+
+/// What a row says when the selected objects' values differ.
+pub const VARIES: &str = "Çeşitli";
+
+/// Whether a shown value says the selection's values differ: “Çeşitli”, or “Çeşitli (2/3 nesnede)” of a common
+/// attribute. It is drawn in the muted tone, not as a value (docs/adr/0748).
+pub fn varies(text: &str) -> bool {
+    text.strip_prefix(VARIES)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with(" ("))
+}
+
+/// A row's name or value whole, under it, when it was cut to fit (docs/adr/0748).
+fn whole<'a, Message: 'a>(
+    content: impl Into<Element<'a, Message>>,
+    text: &str,
+) -> Element<'a, Message> {
+    tip(
+        content,
+        Tip::new(text).when_cut(),
+        iced::widget::tooltip::Position::Bottom,
+    )
+}
 
 /// Özellik ızgarası.
 pub struct PropertyGrid<'a, Message> {
@@ -244,15 +266,17 @@ fn sheet_row<'a, Message: 'a>(
     SheetRow::new(
         iced::widget::column![
             row![
-                container(
-                    label::muted(key)
+                // A long name ends in “…”, whole in its tip.
+                container(whole(
+                    Elided::new(key.to_string())
                         .font(style.ui())
                         .size(style.body())
-                        .wrapping(iced::widget::text::Wrapping::None)
-                )
+                        .style(style::text::muted)
+                        .width(Fill),
+                    &key,
+                ))
                 .width(Length::FillPortion(LABEL_SHARE))
-                .padding([0, 8])
-                .clip(true),
+                .padding([0, 8]),
                 container(value)
                     .width(Length::FillPortion(100 - LABEL_SHARE))
                     .padding([0.0, VALUE_PAD]),
@@ -319,8 +343,10 @@ pub fn value<'a, Message: 'a>(
     numeric: bool,
     unit: Option<String>,
 ) -> Element<'a, Message> {
-    // One line: a long value ends in “…” (the web's cell), never cut mid-letter.
-    let text = Elided::new(text.into_fragment())
+    // One line: a long value ends in “…” (the web's cell), never cut mid-letter, whole in its tip.
+    let text = text.into_fragment();
+    let all = text.to_string();
+    let mut shown = Elided::new(text)
         .size(typography::body())
         .font(if numeric {
             typography::mono()
@@ -328,13 +354,16 @@ pub fn value<'a, Message: 'a>(
             typography::ui()
         })
         .width(Fill);
-    let mut content = row![container(text).padding([0.0, VALUE_TEXT]).width(Fill)].align_y(Center);
+    if varies(&all) {
+        shown = shown.style(style::text::muted);
+    }
+    let mut content = row![container(shown).padding([0.0, VALUE_TEXT]).width(Fill)].align_y(Center);
     if let Some(unit) = unit {
         content = content.push(
             container(label::caption(unit).style(style::text::muted)).padding([0.0, UNIT_PAD]),
         );
     }
-    content.into()
+    whole(content, &all)
 }
 
 /// Açılır liste hücresi: renk örneği (varsa), seçili değerin adı ve ok;
@@ -366,16 +395,21 @@ fn choice_with<'a, Message: Clone + 'a>(
     if let Some(lead) = lead {
         face = face.push(lead);
     }
+    let text = text.into_fragment();
+    let all = text.to_string();
+    let mut shown = Elided::new(text)
+        .size(typography::body())
+        .font(typography::ui())
+        .width(Fill);
+    if varies(&all) {
+        shown = shown.style(style::text::muted);
+    }
     face = face
-        .push(
-            Elided::new(text.into_fragment())
-                .size(typography::body())
-                .font(typography::ui())
-                .width(Fill),
-        )
+        .push(shown)
         .push(icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted));
-    // The frame fills the cell (its text where a read-only value's is); the chevron at the cell's right edge.
-    MenuButton::new(
+    // The frame fills the cell (its text where a read-only value's is); the chevron at the cell's right edge. A long
+    // choice is whole in its tip; its menu, open, hides the tip.
+    let button = MenuButton::new(
         container(face)
             .padding(iced::Padding {
                 top: 0.0,
@@ -387,8 +421,8 @@ fn choice_with<'a, Message: Clone + 'a>(
             .align_y(Center)
             .width(Fill),
         menu,
-    )
-    .into()
+    );
+    whole(button, &all)
 }
 
 /// The line above a section header.
@@ -433,6 +467,105 @@ mod tests {
     use super::*;
     use iced::advanced::{layout, widget::Tree};
     use iced::Size;
+
+    /// How many texts in the window say `words`: a cut name or value once (it reports its whole text), twice with
+    /// its tip open.
+    fn count(
+        snapshot: &mut crate::snapshot::Snapshot,
+        view: Element<'_, ()>,
+        words: &'static str,
+    ) -> usize {
+        use iced::Rectangle;
+        use iced::advanced::widget::{Id, Operation};
+        use std::sync::{Arc, Mutex};
+        struct Find(&'static str, Arc<Mutex<usize>>);
+        impl Operation for Find {
+            fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+                operate(self);
+            }
+            fn text(&mut self, _: Option<&Id>, _: Rectangle, text: &str) {
+                if text == self.0 {
+                    *self.1.lock().expect("a lock") += 1;
+                }
+            }
+        }
+        let found = Arc::new(Mutex::new(0));
+        snapshot.operate(view, Box::new(Find(words, found.clone())));
+        found.lock().map_or(0, |n| *n)
+    }
+
+    #[test]
+    fn a_cut_name_or_value_is_whole_in_its_tip_and_one_that_fits_has_none() {
+        use crate::snapshot::{Input, Snapshot};
+        use crate::widget::EditCell;
+        use iced::Point;
+        use std::time::Duration;
+        const LONG: &str = "Kuzey cephesindeki çatlakların bir kısmı onarıldı";
+        const NOTE: &str = "Zemin katın doğu duvarında nem izi görüldü";
+        const NAME: &str = "Değerin yüksekliğinin uzunca adı";
+        fn view(_: &()) -> Element<'_, ()> {
+            PropertySheet::new()
+                .row("Açıklama", value(LONG, false, None))
+                .row("Kat", value("3", true, None))
+                .row(NAME, value("2", true, None))
+                .row("Not", EditCell::new(NOTE, |_| ()))
+                .into()
+        }
+        let mut snapshot = Snapshot::new(Size::new(300.0, 200.0)).expect("a renderer");
+        let mut update = |_: &mut (), _: ()| {};
+        // The pointer comes, rests past the tip's wait, moves a pixel.
+        let mut hover = |snapshot: &mut Snapshot, at: Point| {
+            snapshot.input(&mut (), view, &mut update, Input::Move(at));
+            snapshot.wait(Duration::from_millis(500));
+            snapshot.input(
+                &mut (),
+                view,
+                &mut update,
+                Input::Move(Point::new(at.x + 1.0, at.y)),
+            );
+        };
+        // Rows of 28 px and a 1 px line: their middles at 14, 43, 72 and 101; values from 42 % of the width.
+        assert_eq!(count(&mut snapshot, view(&()), LONG), 1);
+        hover(&mut snapshot, Point::new(220.0, 14.0));
+        assert_eq!(
+            count(&mut snapshot, view(&()), LONG),
+            2,
+            "the cut value's tip"
+        );
+        hover(&mut snapshot, Point::new(220.0, 43.0));
+        assert_eq!(
+            count(&mut snapshot, view(&()), LONG),
+            1,
+            "gone with the pointer"
+        );
+        assert_eq!(
+            count(&mut snapshot, view(&()), "3"),
+            1,
+            "a value that fits has none"
+        );
+        hover(&mut snapshot, Point::new(40.0, 72.0));
+        assert_eq!(
+            count(&mut snapshot, view(&()), NAME),
+            2,
+            "the cut name's tip"
+        );
+        let before = count(&mut snapshot, view(&()), NOTE);
+        hover(&mut snapshot, Point::new(220.0, 101.0));
+        assert_eq!(
+            count(&mut snapshot, view(&()), NOTE),
+            before + 1,
+            "the cut cell's tip"
+        );
+    }
+
+    #[test]
+    fn only_a_mixed_value_is_said_to_vary() {
+        assert!(varies("Çeşitli"));
+        assert!(varies("Çeşitli (2/3 nesnede)"));
+        assert!(!varies("Çeşitlik"));
+        assert!(!varies("Çeşitli renkler"));
+        assert!(!varies(""));
+    }
 
     #[test]
     fn responsive_measurement_grows_and_shrinks_without_overlapping_the_next_row() {

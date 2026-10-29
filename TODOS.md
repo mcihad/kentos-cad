@@ -51,6 +51,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0748: Öznitelikler'de sığmayan ad ve değer “…” ile biter (düzenlenebilir hücre de, düzenlenmezken), tamamı
+  yalnız kısalınca açılan ipucunda; “Çeşitli” soluk yazılır, hücresi boş düzenlenir ve yalnız yazılan seçime gider.
 - ADR 0747: Öznitelikler'in satırı üzerine gelince bütünüyle aydınlanır, değeri düzenlenirken solunda 2 px vurgu
   çubuğu; hücre ve liste değer sütununu doldurur, üç tür değerin yazısı aynı hizada, boş değer soluk “—”.
 - ADR 0746: pencereler kenarından ve köşesinden boyutlandırılır, başlıktaki düğme ya da çift tıkla tam ekran (arkadaki

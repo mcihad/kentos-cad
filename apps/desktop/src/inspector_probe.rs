@@ -35,6 +35,42 @@ fn times(snapshot: &mut Snapshot, app: &App, n: usize) -> (f64, f64, f64) {
     (median(view), median(layout), median(draw))
 }
 
+/// The Yazı row's cell pressed, then letters typed one at a time as the window gets them, each with the frame it
+/// asks for; Esc leaves the cell as it was. `at`: where the view is.
+fn typing(snapshot: &mut Snapshot, app: &mut App, at: &str) {
+    let mut update = |app: &mut App, message| {
+        let _ = app.update(message);
+    };
+    let Some(row) = crate::inspector_screens::text_at(snapshot, app, "Yazı") else {
+        println!("{at}: Yazı satırı yok");
+        return;
+    };
+    let cell = iced::Point::new(row.x + 190.0, row.y + row.height / 2.0);
+    snapshot.input(app, App::view, &mut update, Input::Click(cell));
+    let mut keys = Vec::new();
+    for c in "Ada 5 numaralı yapı".chars() {
+        let t = Instant::now();
+        snapshot.input(app, App::view, &mut update, Input::Type(c.to_string()));
+        let _ = snapshot.render(app.view(), &app.theme());
+        keys.push(t.elapsed());
+    }
+    snapshot.input(
+        app,
+        App::view,
+        &mut update,
+        Input::Key(iced::keyboard::key::Named::Escape),
+    );
+    let longest = keys.iter().max().copied().unwrap_or_default();
+    let (v, l, d) = times(snapshot, app, 3);
+    println!(
+        "{at} (1:{:.0}): {} harf, harf başına ortanca {:.1} ms, en uzun {:.1} ms; görünüm {v:.1}, yerleşim {l:.1}, çizim {d:.1} ms",
+        app.viewport.camera.screen_scale(),
+        keys.len(),
+        median(keys),
+        longest.as_secs_f64() * 1000.0
+    );
+}
+
 #[test]
 #[ignore = "a probe on a file of one's own, run by hand"]
 fn inspector_probe() {
@@ -100,26 +136,27 @@ fn inspector_probe() {
     snapshot.settle(&mut app, App::view, &mut update);
     let (v, l, d) = times(&mut snapshot, &app, 5);
     println!("bir ölçü seçili: görünüm {v:.1} ms, yerleşim {l:.1} ms, çizim {d:.1} ms");
-    // The Yazı row's cell pressed, then letters typed one at a time as the window gets them.
+    // Typed at the whole drawing, where most text is a faint band; at the dimension, where its text and its
+    // neighbours' read; and a little out from it, where the most text is read at once.
+    typing(&mut snapshot, &mut app, "bütün çizim");
+    let _ = app.update(crate::app::Message::Run("view.zoomSelection"));
+    snapshot.settle(&mut app, App::view, &mut update);
+    typing(&mut snapshot, &mut app, "ölçüye yakın");
+    let (w, h) = (app.viewport.camera.width, app.viewport.camera.height);
+    app.viewport.camera.zoom_at(0.2, w / 2.0, h / 2.0);
+    snapshot.settle(&mut app, App::view, &mut update);
+    typing(&mut snapshot, &mut app, "ölçünün beş katı dışı");
+    // The Yazı row's cell pressed again, the letters typed for the Enter below.
     let Some(row) = crate::inspector_screens::text_at(&mut snapshot, &app, "Yazı") else {
-        println!("Yazı satırı yok");
         return;
     };
     let cell = iced::Point::new(row.x + 190.0, row.y + row.height / 2.0);
     snapshot.input(&mut app, App::view, &mut update, Input::Click(cell));
-    let mut keys = Vec::new();
-    for c in "Ada 5 numaralı yapı".chars() {
-        let t = Instant::now();
-        snapshot.input(&mut app, App::view, &mut update, Input::Type(c.to_string()));
-        let _ = snapshot.render(app.view(), &app.theme());
-        keys.push(t.elapsed());
-    }
-    let longest = keys.iter().max().copied().unwrap_or_default();
-    println!(
-        "Yazı hücresine {} harf: harf başına ortanca {:.1} ms, en uzun {:.1} ms (olay, durulma ve çizim)",
-        keys.len(),
-        median(keys),
-        longest.as_secs_f64() * 1000.0
+    snapshot.input(
+        &mut app,
+        App::view,
+        &mut update,
+        Input::Type("Ada 5 numaralı yapı".into()),
     );
     // Enter writes it: the command, the drawing following it and the next two frames.
     let t = Instant::now();

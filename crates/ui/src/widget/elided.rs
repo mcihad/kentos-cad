@@ -86,54 +86,78 @@ impl<'a> Elided<'a> {
     }
 }
 
-/// Son ölçüm: neyin, hangi genişlikte ve boyda ölçüldüğü ve dizilen metin.
+/// What an [`Elided`] tells an operation besides its text (`Operation::custom`): whether the text was cut to fit. A
+/// tip that shows the whole text only then asks for it ([`Tip::when_cut`](crate::widget::Tip::when_cut), docs/adr/0748).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Cut(pub bool);
+
+/// Son ölçüm: neyin, hangi genişlikte ve boyda ölçüldüğü, dizilen metin ve kesilip kesilmediği.
 #[derive(Default)]
 struct State {
     key: Option<(String, u32, u32, Font)>,
     paragraph: Paragraph,
+    cut: bool,
 }
 
 impl Elided<'_> {
+    #[cfg(test)]
     fn shaped(&self, content: &str, size: f32, font: Font) -> Paragraph {
-        Paragraph::with_text(text_core::Text {
-            content,
-            bounds: Size::INFINITE,
-            size: Pixels(size),
-            line_height: self.line_height,
-            font,
-            align_x: text_core::Alignment::Default,
-            align_y: Vertical::Top,
-            shaping: text_core::Shaping::Advanced,
-            wrapping: Wrapping::None,
-        })
+        shaped(content, size, font, self.line_height)
     }
 
-    /// Metin `room` genişliğine sığacak biçimde: olduğu gibi ya da kesilip “…” ile.
-    fn fit(&self, room: f32, size: f32, font: Font) -> Paragraph {
-        let full = self.shaped(&self.content, size, font);
-        if full.min_width() <= room {
-            return full;
-        }
-        let ellipsis = self.shaped("…", size, font).min_width();
-        let target = (room - ellipsis).max(0.0);
-        let middle = full.min_height() / 2.0;
-        // The character at the cut, then back a character at a time while
-        // the cut text and its ellipsis do not fit.
-        let mut cut = full
-            .hit_test(Point::new(target, middle))
-            .map_or(0, text_core::Hit::cursor)
-            .min(self.content.len());
-        loop {
-            while cut > 0 && !self.content.is_char_boundary(cut) {
-                cut -= 1;
-            }
-            let kept = format!("{}…", self.content[..cut].trim_end());
-            let shaped = self.shaped(&kept, size, font);
-            if shaped.min_width() <= room || cut == 0 {
-                return shaped;
-            }
+    /// Metin `room` genişliğine sığacak biçimde: olduğu gibi ya da kesilip “…” ile; kesildi mi.
+    fn fit(&self, room: f32, size: f32, font: Font) -> (Paragraph, bool) {
+        let (paragraph, cut) = fit(&self.content, room, size, font, self.line_height);
+        (paragraph, cut.is_some())
+    }
+}
+
+fn shaped(content: &str, size: f32, font: Font, line_height: LineHeight) -> Paragraph {
+    Paragraph::with_text(text_core::Text {
+        content,
+        bounds: Size::INFINITE,
+        size: Pixels(size),
+        line_height,
+        font,
+        align_x: text_core::Alignment::Default,
+        align_y: Vertical::Top,
+        shaping: text_core::Shaping::Advanced,
+        wrapping: Wrapping::None,
+    })
+}
+
+/// `content` as it fits in `room`: shaped as it is, or cut at a character and ended in “…”, with the shortened text
+/// (an [`EditCell`](crate::widget::EditCell) at rest shows it, docs/adr/0748).
+pub(crate) fn fit(
+    content: &str,
+    room: f32,
+    size: f32,
+    font: Font,
+    line_height: LineHeight,
+) -> (Paragraph, Option<String>) {
+    let full = shaped(content, size, font, line_height);
+    if full.min_width() <= room {
+        return (full, None);
+    }
+    let ellipsis = shaped("…", size, font, line_height).min_width();
+    let target = (room - ellipsis).max(0.0);
+    let middle = full.min_height() / 2.0;
+    // The character at the cut, then back a character at a time while
+    // the cut text and its ellipsis do not fit.
+    let mut cut = full
+        .hit_test(Point::new(target, middle))
+        .map_or(0, text_core::Hit::cursor)
+        .min(content.len());
+    loop {
+        while cut > 0 && !content.is_char_boundary(cut) {
             cut -= 1;
         }
+        let kept = format!("{}…", content[..cut].trim_end());
+        let shaped = shaped(&kept, size, font, line_height);
+        if shaped.min_width() <= room || cut == 0 {
+            return (shaped, Some(kept));
+        }
+        cut -= 1;
     }
 }
 
@@ -168,7 +192,7 @@ impl<Message> Widget<Message, Theme, Renderer> for Elided<'_> {
             font,
         );
         if state.key.as_ref() != Some(&key) {
-            state.paragraph = self.fit(room, size, font);
+            (state.paragraph, state.cut) = self.fit(room, size, font);
             state.key = Some(key);
         }
         let bounds = state.paragraph.min_bounds();
@@ -181,15 +205,17 @@ impl<Message> Widget<Message, Theme, Renderer> for Elided<'_> {
     }
 
     /// The whole text, not the shortened one: what it says, for finding it
-    /// (tests, a screen reader).
+    /// (tests, a screen reader); and whether it was cut ([`Cut`]).
     fn operate(
         &mut self,
-        _tree: &mut Tree,
+        tree: &mut Tree,
         layout: Layout<'_>,
         _renderer: &Renderer,
         operation: &mut dyn widget::Operation,
     ) {
         operation.text(None, layout.bounds(), &self.content);
+        let mut cut = Cut(tree.state.downcast_ref::<State>().cut);
+        operation.custom(None, layout.bounds(), &mut cut);
     }
 
     fn draw(
@@ -232,19 +258,21 @@ mod tests {
             Elided::new("“yollar.shp” içinde alınmayanlar: Kısa halka: 1, üçten az köşesi var");
         let whole = long.shaped(&long.content, 13.0, font).min_width();
         let room = (whole / 2.0).round();
-        let cut = long.fit(room, 13.0, font);
+        let (cut, was_cut) = long.fit(room, 13.0, font);
+        assert!(was_cut);
         assert!(cut.min_width() <= room, "{} > {room}", cut.min_width());
         // Not cut much shorter than the room allows: within two letters of it.
         assert!(cut.min_width() > room - 2.0 * 13.0, "{}", cut.min_width());
 
         let short = Elided::new("Kaydedildi.");
-        let kept = short.fit(400.0, 13.0, font);
+        let (kept, was_cut) = short.fit(400.0, 13.0, font);
+        assert!(!was_cut);
         assert_eq!(
             kept.min_width(),
             short.shaped("Kaydedildi.", 13.0, font).min_width()
         );
         // No room at all: the ellipsis alone.
-        let none = long.fit(0.0, 13.0, font);
+        let (none, _) = long.fit(0.0, 13.0, font);
         assert_eq!(none.min_width(), long.shaped("…", 13.0, font).min_width());
     }
 }

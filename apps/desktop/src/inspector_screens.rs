@@ -1,5 +1,6 @@
-//! Öznitelikler's look (docs/adr/0747): a dimension selected, a row under the pointer, its text being typed, and a
-//! layer's fields: the window and the panel cut out of it, in `.run/shots/oznitelik-*`.
+//! Öznitelikler's look (docs/adr/0747, 0748): a dimension selected, a row under the pointer, its text being typed;
+//! two dimensions whose rows say “Çeşitli”; a layer's fields, a long note cut and whole in its tip: the window and
+//! the panel cut out of it, in `.run/shots/oznitelik-*`.
 //!
 //! ```text
 //! cargo test -p kentos-desktop --bin kentos-cad inspector_screens -- --ignored --nocapture
@@ -78,6 +79,11 @@ pub(crate) fn text_at(snapshot: &mut Snapshot, app: &App, words: &str) -> Option
 }
 
 fn dimension(layer: &str) -> Entity {
+    dimension_at(layer, 0.0, 2.5, None)
+}
+
+/// A dimension `dy` above the first, its text `height` high and `text`.
+fn dimension_at(layer: &str, dy: f64, height: f64, text: Option<&str>) -> Entity {
     Entity::Dimension(DimensionEntity {
         annotative: None,
         text_shift: None,
@@ -94,11 +100,14 @@ fn dimension(layer: &str) -> Entity {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        a: Vec2 { x: E, y: N },
-        b: Vec2 { x: E + 10.0, y: N },
+        a: Vec2 { x: E, y: N + dy },
+        b: Vec2 {
+            x: E + 10.0,
+            y: N + dy,
+        },
         offset: 2.0,
-        height: 2.5,
-        text: None,
+        height,
+        text: text.map(str::to_owned),
         style: None,
         angle: None,
         c: None,
@@ -202,6 +211,62 @@ fn inspector_screens() {
             "Enter writes what was typed"
         );
     }
+    // The narrow window (1100 × 650): long names end in “…”; the pointer resting on one shows the whole of it.
+    let mut narrow = Snapshot::new(Size::new(1100.0, 650.0)).expect("a renderer");
+    narrow.settle(&mut app, App::view, &mut update);
+    let image = narrow.render(app.view(), &app.theme());
+    image
+        .save(out.join("oznitelik-dar.png"))
+        .expect("a picture");
+    if let Some(row) = text_at(&mut narrow, &app, "Ölçülen uzunluk") {
+        let at = Point::new(row.x + 20.0, row.y + row.height / 2.0);
+        narrow.input(&mut app, App::view, &mut update, Input::Move(at));
+        narrow.wait(std::time::Duration::from_millis(500));
+        narrow.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Move(Point::new(at.x + 1.0, at.y)),
+        );
+        let image = narrow.render(app.view(), &app.theme());
+        image
+            .save(out.join("oznitelik-dar-ipucu.png"))
+            .expect("a picture");
+    }
+    // Two dimensions, one with its value's background and their notes apart: Zemin and Not say “Çeşitli”, faint;
+    // pressed, the cell is empty.
+    let mut app = objects();
+    let slots: Vec<Slot> = [(0.0, true, "Kapı boşluğu"), (6.0, false, "Pencere boşluğu")]
+        .into_iter()
+        .filter_map(|(dy, mask, note)| {
+            let mut e = dimension_at(&layer, dy, 2.5, None);
+            if let Entity::Dimension(d) = &mut e {
+                d.mask = mask;
+                d.base.attrs.insert("Not".into(), note.into());
+            }
+            app.document.as_mut().and_then(|d| d.model.add(e).ok())
+        })
+        .collect();
+    app.selection.set(slots);
+    roomy(&mut app);
+    app.props_closed.insert("scales");
+    let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+    snapshot.settle(&mut app, App::view, &mut update);
+    save(&mut snapshot, &app, "olcu-5-cesitli");
+    // Ölçü closed, Ortak öznitelikler comes up: its Not pressed.
+    app.props_closed.insert("dimensions");
+    snapshot.settle(&mut app, App::view, &mut update);
+    if let Some(row) = text_at(&mut snapshot, &app, "Not") {
+        let cell = Point::new(row.x + 190.0, row.y + row.height / 2.0);
+        snapshot.input(&mut app, App::view, &mut update, Input::Click(cell));
+        save(&mut snapshot, &app, "olcu-6-cesitli-duzenlenirken");
+        snapshot.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Key(iced::keyboard::key::Named::Escape),
+        );
+    }
     // A layer's fields with a form (docs/adr/0199 §5): lists and cells.
     let (mut app, _) = App::boot(None);
     crate::form_scenes::buildings(&mut app, true);
@@ -212,4 +277,25 @@ fn inspector_screens() {
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
     snapshot.settle(&mut app, App::view, &mut update);
     save(&mut snapshot, &app, "alanlar");
+    // A long note: it rests cut with “…”; the pointer resting on it shows the whole of it.
+    if let Some(doc) = app.document.as_mut()
+        && let Some(mut building) = doc.model.get(Slot(1)).cloned()
+    {
+        building.base_mut().attrs.insert(
+            "Açıklama".into(),
+            "Kuzey cephesinde sıva dökülmüş, çatı oluğu yer yer tıkalı; bodrumda nem izi var."
+                .into(),
+        );
+        doc.model.update(Slot(1), building);
+    }
+    snapshot.settle(&mut app, App::view, &mut update);
+    save(&mut snapshot, &app, "alanlar-2-uzun");
+    if let Some(row) = text_at(&mut snapshot, &app, "Açıklama") {
+        let cell = Point::new(row.x + 190.0, row.y + row.height / 2.0);
+        snapshot.input(&mut app, App::view, &mut update, Input::Move(cell));
+        snapshot.wait(std::time::Duration::from_millis(500));
+        let rested = Point::new(cell.x + 1.0, cell.y);
+        snapshot.input(&mut app, App::view, &mut update, Input::Move(rested));
+        save(&mut snapshot, &app, "alanlar-3-ipucu");
+    }
 }

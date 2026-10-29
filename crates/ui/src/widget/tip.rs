@@ -37,6 +37,7 @@ pub struct Tip {
     title: String,
     body: Option<String>,
     detail: Option<String>,
+    when_cut: bool,
 }
 
 impl Tip {
@@ -45,7 +46,15 @@ impl Tip {
             title: title.into(),
             body: None,
             detail: None,
+            when_cut: false,
         }
+    }
+
+    /// Shown only when the element's text was cut to fit (an [`Elided`](crate::widget::elided::Elided) or an
+    /// [`EditCell`](crate::widget::EditCell) in it says so): a long value's or name's whole text (docs/adr/0748).
+    pub fn when_cut(mut self) -> Self {
+        self.when_cut = true;
+        self
     }
 
     /// Ne yaptığını anlatan açıklama.
@@ -115,10 +124,12 @@ pub fn tip<'a, Message: 'a>(
     tip: Tip,
     position: tooltip::Position,
 ) -> Element<'a, Message> {
+    let when_cut = tip.when_cut;
     Element::new(Hint {
         content: content.into(),
         tip: tip.view(),
         position,
+        when_cut,
     })
 }
 
@@ -195,6 +206,38 @@ struct Hint<'a, Message> {
     content: Element<'a, Message>,
     tip: Element<'a, Message>,
     position: Position,
+    /// Only when the content's text was cut ([`Tip::when_cut`]).
+    when_cut: bool,
+}
+
+/// Whether a text in `content` was cut to fit ([`Cut`](crate::widget::elided::Cut)).
+fn cut<Message>(
+    content: &mut Element<'_, Message>,
+    tree: &mut Tree,
+    layout: Layout<'_>,
+    renderer: &Renderer,
+) -> bool {
+    struct Find(bool);
+    impl Operation for Find {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn custom(
+            &mut self,
+            _id: Option<&iced::advanced::widget::Id>,
+            _bounds: Rectangle,
+            state: &mut dyn std::any::Any,
+        ) {
+            self.0 |= state
+                .downcast_ref::<crate::widget::elided::Cut>()
+                .is_some_and(|cut| cut.0);
+        }
+    }
+    let mut find = Find(false);
+    content
+        .as_widget_mut()
+        .operate(tree, layout, renderer, &mut find);
+    find.0
 }
 
 impl<Message> Widget<Message, Theme, Renderer> for Hint<'_, Message> {
@@ -245,11 +288,21 @@ impl<Message> Widget<Message, Theme, Renderer> for Hint<'_, Message> {
         viewport: &Rectangle,
     ) {
         if let Event::Mouse(_) | Event::Window(window::Event::RedrawRequested(_)) = event {
-            let state = tree.state.downcast_mut::<State>();
-            let now = Instant::now();
+            // The UI's clock: the system's, a snapshot's own moment in tests.
+            let now = crate::clock::now();
             let over = cursor.position_over(layout.bounds()).is_some();
             let pressed = matches!(event, Event::Mouse(mouse::Event::ButtonPressed(_)));
-            let (next, recheck, was_closed) = step(*state, over, pressed, now, warm(now));
+            let current = *tree.state.downcast_ref::<State>();
+            let (mut next, recheck, was_closed) = step(current, over, pressed, now, warm(now));
+            // A text that fits needs no tip: quiet until the pointer leaves, as after a press.
+            if self.when_cut
+                && next == State::Open
+                && current != State::Open
+                && !cut(&mut self.content, &mut tree.children[0], layout, renderer)
+            {
+                next = State::Pressed;
+            }
+            let state = tree.state.downcast_mut::<State>();
             if was_closed {
                 closed(now);
             }
@@ -444,6 +497,15 @@ impl<Message> overlay::Overlay<Message, Theme, Renderer> for Bubble<'_, '_, Mess
             cursor,
             &Rectangle::with_size(Size::INFINITE),
         );
+    }
+
+    /// The open tip's text, for finding it (tests, a screen reader).
+    fn operate(&mut self, layout: Layout<'_>, renderer: &Renderer, operation: &mut dyn Operation) {
+        if let Some(bubble) = layout.children().next() {
+            self.tip
+                .as_widget_mut()
+                .operate(self.tree, bubble, renderer, operation);
+        }
     }
 }
 
