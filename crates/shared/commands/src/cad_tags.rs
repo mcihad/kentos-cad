@@ -25,6 +25,8 @@ pub const CAD_SCHEDULES_CREATE: &str = "cad.schedules.create";
 pub const CAD_SCHEDULES_CREATE_VERSION: u32 = 1;
 pub const CAD_SCHEDULES_EDIT: &str = "cad.schedules.edit";
 pub const CAD_SCHEDULES_EDIT_VERSION: u32 = 1;
+pub const CAD_SCHEDULES_QUERY: &str = "cad.schedules.query";
+pub const CAD_SCHEDULES_QUERY_VERSION: u32 = 1;
 /// The most tags one call writes.
 pub const MAX_TAGS: usize = 10_000;
 
@@ -474,8 +476,8 @@ pub enum ScheduleOperation {
 /// Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.
 ///
 /// Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,
-/// `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`, `invalid_revision`,
-/// `revision_conflict`, `layer_locked`.
+/// `schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,
+/// `invalid_revision`, `revision_conflict`, `layer_locked`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -502,6 +504,87 @@ pub struct SchedulesEdited {
     pub table: Entity,
     /// The objects a cell was written to, in the drawing's order.
     pub edited: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
+/// Input of `cad.schedules.query` v1 (docs/adr/0733 §6), read-only: a schedule's columns and rows as they stand.
+///
+/// Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SchedulesQuery {
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+    pub uid: String,
+}
+
+/// A schedule's column as `cad.schedules.query` reads it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ScheduleColumnInfo {
+    /// Its heading, with its unit when it has one.
+    pub heading: String,
+    pub field: crate::ScheduleField,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub attr: Option<String>,
+    /// A cell of it is written to its row's objects (`cad.schedules.edit`'s `cell`); otherwise it is worked out.
+    pub editable: bool,
+    /// A grouped row, a subtotal and the total add it up.
+    pub summed: bool,
+}
+
+/// What a schedule's row is (docs/adr/0733 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ScheduleRowRole {
+    /// The columns' headings (row 0).
+    Heading,
+    /// Objects' row.
+    Data,
+    /// A group's value before it.
+    Header,
+    /// A group's subtotal after it.
+    Footer,
+    Total,
+}
+
+/// A schedule's row as `cad.schedules.query` reads it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ScheduleRowInfo {
+    /// The table's own row index (`cad.schedules.edit`'s `row`).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub row: u32,
+    pub role: ScheduleRowRole,
+    pub cells: Vec<String>,
+    /// A data row's objects, by their persistent ids, in the drawing's order: what a cell of an editable column is
+    /// written to; none for the other rows.
+    pub members: Vec<String>,
+}
+
+/// Output of `cad.schedules.query` v1.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SchedulesQueried {
+    pub of: ScheduleOf,
+    pub columns: Vec<ScheduleColumnInfo>,
+    pub rows: Vec<ScheduleRowInfo>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

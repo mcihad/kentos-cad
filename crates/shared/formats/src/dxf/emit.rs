@@ -3023,6 +3023,7 @@ impl<'l> Emitter<'l> {
         let mut base = base(layer, self.color_of(e, ctx), self.weight_of(e, ctx));
         base.attrs = attrs;
         self.push(Entity::Insert(InsertEntity {
+            arch: Default::default(),
             clipping: None,
             parameters: Default::default(),
             attribute_places: Default::default(),

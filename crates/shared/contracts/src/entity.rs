@@ -1096,6 +1096,12 @@ pub struct InsertEntity {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub clipping: Option<crate::InsertClip>,
+    /// Its level and phase (docs/adr/0733 §1): a fixture's (furniture, a sanitary fixture, a kitchen module), as a
+    /// level view, a sheet's map and a phase view read them; absent: on no level, shown on every one (`.kcad` schema
+    /// 131).
+    #[serde(default, skip_serializing_if = "crate::ArchInfo::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::ArchInfo>", optional))]
+    pub arch: crate::ArchInfo,
 }
 
 /// A block definition (docs/adr/0144): objects drawn once, placed many
@@ -1917,7 +1923,8 @@ impl Entity {
     }
 
     /// The `kind` tag as written in files and on the wire.
-    /// Its own phase (docs/adr/0346 §2): a wall's, a space's, a grid's, a column's, a stair's or a ramp's.
+    /// Its own phase (docs/adr/0346 §2): a wall's, a space's, a grid's, a column's, a stair's, a ramp's or a block
+    /// insert's (docs/adr/0733 §1).
     pub fn own_phase(&self) -> Option<crate::ArchPhase> {
         match self {
             Entity::Wall(x) => x.wall.arch.phase,
@@ -1926,6 +1933,7 @@ impl Entity {
             Entity::Column(x) => x.column.arch.phase,
             Entity::Stair(x) => x.stair.arch.phase,
             Entity::Ramp(x) => x.ramp.arch.phase,
+            Entity::Insert(x) => x.arch.phase,
             _ => None,
         }
     }
@@ -1943,10 +1951,11 @@ impl Entity {
         }
     }
 
-    /// Its own level (docs/adr/0715): a wall's, a space's, a grid's, a column's, a stair's, a ramp's or a room
-    /// separator's.
+    /// Its own level (docs/adr/0715): a wall's, a space's, a grid's, a column's, a stair's, a ramp's, a room
+    /// separator's or a block insert's (docs/adr/0733 §1).
     pub fn own_level(&self) -> Option<&str> {
         match self {
+            Entity::Insert(x) => x.arch.level.as_deref(),
             Entity::Wall(x) => x.wall.arch.level.as_deref(),
             Entity::Space(x) => x.space.arch.level.as_deref(),
             Entity::Slab(x) => x.slab.arch.level.as_deref(),

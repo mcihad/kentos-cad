@@ -917,7 +917,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 linear_events = list;
             }
-            // Schema 131 (docs/adr/0735): the data profiles and mappings the project carries, each its document as text;
+            // Schema 132 (docs/adr/0735): the data profiles and mappings the project carries, each its document as text;
             // the text is the profile commands' to judge.
             "profileFiles" if has.profile_files => {
                 let at = r.position();

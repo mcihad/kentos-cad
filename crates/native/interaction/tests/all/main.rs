@@ -116,6 +116,7 @@ mod tagged_spaces;
 mod active_level;
 mod opening_numbers;
 mod recesses;
+mod partition_arc;
 mod partition_side;
 mod casework;
 mod grid_system;

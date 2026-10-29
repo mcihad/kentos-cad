@@ -94,6 +94,8 @@ impl App {
             Dialog::WallStyles => crate::wall_styles::TITLE.to_owned(),
             Dialog::WallJoins => crate::wall_joins::TITLE.to_owned(),
             Dialog::TagsCheck => crate::tags_check::TITLE.to_owned(),
+            Dialog::Schedule => crate::schedule_window::TITLE.to_owned(),
+            Dialog::ScheduleExport => crate::schedule_window::EXPORT_TITLE.to_owned(),
             Dialog::ViewRefs => crate::viewmark_refs::TITLE.to_owned(),
             Dialog::SheetSet => crate::sheet_set::TITLE.to_owned(),
             Dialog::Xrefs => crate::xrefs_window::TITLE.to_owned(),

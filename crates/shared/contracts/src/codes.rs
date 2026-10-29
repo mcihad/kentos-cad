@@ -1774,6 +1774,7 @@ codes! {
     SCHEDULE_CELL = "schedule_cell", Failed, false, "Çizelgenin hücreleri tablo olarak düzenlenmez; Çizelgeyi düzenle onları nesnelere yazar.";
     /// A number given to a grouped row of several objects.
     SCHEDULE_GROUP_NUMBER = "schedule_group_number", Failed, false, "Gruplu satır birden çok nesnedir; aynı numara hepsine yazılmaz. Grubu kaldırıp tek tek numaralayın.";
+    SCHEDULE_SUMMARY_ROW = "schedule_summary_row", Failed, false, "Çizelgenin grup başlığı ya da ara toplam satırı nesnelerin değil; düzenlenmez.";
     /// A value a field does not take.
     INVALID_CELL_VALUE = "invalid_cell_value", Failed, false, "Değer bu alana yazılmaz: uzunluk sıfırdan büyük bir sayı, metin tek satırdır.";
     /// Two openings or spaces with one number (Etiketleri denetle).

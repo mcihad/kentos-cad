@@ -81,6 +81,7 @@ fn check(doc: &Document, input: &NorthCreate, fresh: impl FnOnce() -> BlockId) -
         )));
     };
     let insert = Entity::Insert(InsertEntity {
+        arch: Default::default(),
         clipping: None,
         parameters: Default::default(),
         attribute_places: Default::default(),

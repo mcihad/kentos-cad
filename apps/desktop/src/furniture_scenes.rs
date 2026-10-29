@@ -27,12 +27,12 @@ use crate::tools_screens::Scene;
 
 const LIBRARY: &str = include_str!("../../../catalog/v1/blocks/kentos-temel.kblok");
 
-fn library() -> Value {
+pub(crate) fn library() -> Value {
     let file: Value = serde_json::from_str(LIBRARY).expect("the library");
     file["blocks"].clone()
 }
 
-fn id_of(name: &str) -> String {
+pub(crate) fn id_of(name: &str) -> String {
     library()
         .as_array()
         .expect("blocks")
@@ -43,11 +43,11 @@ fn id_of(name: &str) -> String {
         .to_owned()
 }
 
-fn xy(x: f64, y: f64) -> Value {
+pub(crate) fn xy(x: f64, y: f64) -> Value {
     json!({ "x": E + x, "y": N + y })
 }
 
-fn wall(o: &mut Objects, pts: &[(f64, f64)], width: f64, closed: bool) {
+pub(crate) fn wall(o: &mut Objects, pts: &[(f64, f64)], width: f64, closed: bool) {
     let mut fields = json!({
         "kind": "wall", "pts": pts.iter().map(|&(x, y)| xy(x, y)).collect::<Vec<_>>(),
         "width": width, "justify": "center",
@@ -60,7 +60,7 @@ fn wall(o: &mut Objects, pts: &[(f64, f64)], width: f64, closed: bool) {
 
 /// The flat: the outer wall's inner faces at 0–9 × 0–6, the bedroom's wall at y = 3 to x = 4, the bathroom's from
 /// (6, 6) down to y = 3.5 and on to the outer wall; its furniture, turned onto their walls.
-fn flat(app: &mut App) {
+pub(crate) fn flat(app: &mut App) {
     let mut o = Objects::new();
     wall(
         &mut o,

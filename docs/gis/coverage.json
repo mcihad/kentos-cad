@@ -1641,12 +1641,47 @@
     "mcp": true,
     "server": false
    },
-   "cases": 48,
+   "cases": 49,
    "files": [
     "fixtures/commands/v1/cad.blocks.insert.json",
     "fixtures/commands/v1/cad.gis.derivation.json"
    ],
    "options": [
+    {
+     "key": "discipline",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "electrical",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "interior",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "landscape",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "mechanical",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "plumbing",
+     "covered": false
+    },
+    {
+     "key": "discipline",
+     "value": "structure",
+     "covered": false
+    },
     {
      "key": "mirror",
      "value": true,
@@ -1655,6 +1690,46 @@
     {
      "key": "parameters",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolish",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "new",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "temporary",
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "approved",
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "built",
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "proposed",
+     "covered": false
+    },
+    {
+     "key": "status",
+     "value": "underConstruction",
      "covered": false
     }
    ],
@@ -4582,7 +4657,32 @@
     },
     {
      "key": "field",
+     "value": "baseFinish",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "baseboard",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "category",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "ceilingFinish",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "count",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "floorFinish",
      "covered": false
     },
     {
@@ -4642,6 +4742,11 @@
     },
     {
      "key": "field",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "tag",
      "covered": false
     },
@@ -4668,6 +4773,11 @@
     {
      "key": "field",
      "value": "wall",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "wallFinish",
      "covered": false
     },
     {
@@ -4718,6 +4828,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "footer",
+     "value": true,
      "covered": false
     },
     {
@@ -5043,6 +5158,11 @@
     {
      "key": "of",
      "value": "columns",
+     "covered": false
+    },
+    {
+     "key": "of",
+     "value": "fixtures",
      "covered": false
     },
     {
@@ -5985,7 +6105,32 @@
     },
     {
      "key": "field",
+     "value": "baseFinish",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "baseboard",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "category",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "ceilingFinish",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "count",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "floorFinish",
      "covered": false
     },
     {
@@ -6045,6 +6190,11 @@
     },
     {
      "key": "field",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "tag",
      "covered": false
     },
@@ -6071,6 +6221,11 @@
     {
      "key": "field",
      "value": "wall",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "wallFinish",
      "covered": false
     },
     {
@@ -6121,6 +6276,11 @@
     {
      "key": "font",
      "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "footer",
+     "value": true,
      "covered": false
     },
     {
@@ -6451,6 +6611,11 @@
     {
      "key": "of",
      "value": "columns",
+     "covered": false
+    },
+    {
+     "key": "of",
+     "value": "fixtures",
      "covered": false
     },
     {
@@ -14298,6 +14463,10 @@
      "covered": false
     },
     {
+     "kind": "insert",
+     "covered": false
+    },
+    {
      "kind": "polyline",
      "covered": false
     },
@@ -17766,10 +17935,13 @@
     "mcp": true,
     "server": false
    },
-   "cases": 72,
+   "cases": 135,
    "files": [
+    "fixtures/commands/v1/cad.schedules.create.extras.json",
     "fixtures/commands/v1/cad.schedules.create.json",
+    "fixtures/commands/v1/cad.schedules.edit.extras.json",
     "fixtures/commands/v1/cad.schedules.edit.json",
+    "fixtures/commands/v1/cad.schedules.query.json",
     "fixtures/commands/v1/cad.tags.check.json"
    ],
    "options": [
@@ -17790,7 +17962,32 @@
     },
     {
      "key": "field",
+     "value": "baseFinish",
+     "covered": true
+    },
+    {
+     "key": "field",
+     "value": "baseboard",
+     "covered": true
+    },
+    {
+     "key": "field",
+     "value": "category",
+     "covered": true
+    },
+    {
+     "key": "field",
+     "value": "ceilingFinish",
+     "covered": true
+    },
+    {
+     "key": "field",
      "value": "count",
+     "covered": true
+    },
+    {
+     "key": "field",
+     "value": "floorFinish",
      "covered": true
     },
     {
@@ -17850,6 +18047,11 @@
     },
     {
      "key": "field",
+     "value": "space",
+     "covered": true
+    },
+    {
+     "key": "field",
      "value": "tag",
      "covered": false
     },
@@ -17866,7 +18068,7 @@
     {
      "key": "field",
      "value": "usage",
-     "covered": false
+     "covered": true
     },
     {
      "key": "field",
@@ -17880,7 +18082,17 @@
     },
     {
      "key": "field",
+     "value": "wallFinish",
+     "covered": true
+    },
+    {
+     "key": "field",
      "value": "width",
+     "covered": true
+    },
+    {
+     "key": "footer",
+     "value": true,
      "covered": true
     },
     {
@@ -17914,8 +18126,18 @@
      "covered": true
     },
     {
+     "key": "header",
+     "value": true,
+     "covered": true
+    },
+    {
      "key": "of",
      "value": "columns",
+     "covered": true
+    },
+    {
+     "key": "of",
+     "value": "fixtures",
      "covered": true
     },
     {
@@ -17972,8 +18194,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 37,
+   "cases": 58,
    "files": [
+    "fixtures/commands/v1/cad.schedules.edit.extras.json",
     "fixtures/commands/v1/cad.schedules.edit.json",
     "fixtures/commands/v1/cad.tags.check.json"
    ],
@@ -17995,8 +18218,33 @@
     },
     {
      "key": "field",
+     "value": "baseFinish",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "baseboard",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "category",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "ceilingFinish",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "count",
      "covered": true
+    },
+    {
+     "key": "field",
+     "value": "floorFinish",
+     "covered": false
     },
     {
      "key": "field",
@@ -18055,6 +18303,11 @@
     },
     {
      "key": "field",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "tag",
      "covered": false
     },
@@ -18085,7 +18338,17 @@
     },
     {
      "key": "field",
+     "value": "wallFinish",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "width",
+     "covered": false
+    },
+    {
+     "key": "footer",
+     "value": true,
      "covered": false
     },
     {
@@ -18117,6 +18380,11 @@
      "key": "group",
      "value": true,
      "covered": true
+    },
+    {
+     "key": "header",
+     "value": true,
+     "covered": false
     },
     {
      "key": "kind",
@@ -18154,6 +18422,30 @@
      "covered": true
     }
    ],
+   "kinds": [
+    {
+     "kind": "table",
+     "covered": false
+    }
+   ]
+  },
+  {
+   "id": "cad.schedules.query",
+   "title": "Çizelgeyi oku",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 34,
+   "files": [
+    "fixtures/commands/v1/cad.schedules.edit.extras.json",
+    "fixtures/commands/v1/cad.schedules.query.json"
+   ],
+   "options": [],
    "kinds": [
     {
      "kind": "table",
@@ -26262,8 +26554,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 108,
+   "cases": 140,
    "files": [
+    "fixtures/commands/v1/cad.walls.partition.arcs.json",
     "fixtures/commands/v1/cad.walls.partition.json"
    ],
    "options": [
@@ -26285,12 +26578,12 @@
     {
      "key": "direction",
      "value": "backward",
-     "covered": false
+     "covered": true
     },
     {
      "key": "direction",
      "value": "both",
-     "covered": false
+     "covered": true
     },
     {
      "key": "direction",
@@ -26350,17 +26643,17 @@
     {
      "key": "kind",
      "value": "between",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kind",
      "value": "length",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kind",
      "value": "source",
-     "covered": false
+     "covered": true
     },
     {
      "key": "lineType",
@@ -27254,6 +27547,43 @@
    "cases": 0,
    "files": [],
    "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.export.table",
+   "title": "Tabloyu dosyaya yaz",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "groups",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "numbers",
+     "value": "exact",
+     "covered": false
+    },
+    {
+     "key": "numbers",
+     "value": "shown",
+     "covered": false
+    },
     {
      "key": "overwrite",
      "value": true,

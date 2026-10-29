@@ -10,7 +10,8 @@
   - ADR 0251 (pafta kitabının projenin dosyasında opak taşınması);
   - ADR 0265 §2 (yeni şema eklemenin kuralı).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
-- **`.kcad`:** şema 131 (opt-in; yalnız profil ya da eşleme taşıyan projede).
+- **`.kcad`:** şema 132 (opt-in; yalnız profil ya da eşleme taşıyan projede). Ana dalda şema 131 donatı çizelgesine
+  (ADR 0733) gitti; bu dilim birleştirmede 132'ye geçti.
 - **Bağımlılık:** yeni üçüncü taraf kitaplık yok.
 - **Sonraya kalan:**
   - adres kodunun UAVT gibi bir dış kayıtla karşılaştırılması;
@@ -132,14 +133,14 @@ Profil çıkıyorsa ve klasörde aynı adlı dosyası yoksa, onu adlandıran her
 Retler `unknown_profile`, `unknown_mapping`, `invalid_revision`, `revision_conflict`. Komut geri alma adımı değildir,
 proje ayarıdır. MCP'de yıkıcı araçtır.
 
-### §5 `.kcad` şema 131
+### §5 `.kcad` şema 132
 
 Ayarlar `profileFiles`'ı `linearEvents`'ten sonra, kanonik anahtar sırasıyla, sözleşmenin JSON'u olarak yazar.
 
-- Yazıcı 131'i yalnız liste boş değilken seçer; öteki bütün dosyaların baytları değişmez.
+- Yazıcı 132'yi yalnız liste boş değilken seçer; öteki bütün dosyaların baytları değişmez.
 - Okuyucu listeyi sözleşmenin kurallarıyla denetler. Boş liste `bad_value` olur.
-- Şema 130 ve öncesinde `profileFiles` bilinmeyen alandır (`unknown_field`).
-- Desteklenmeyen sürüm örneği `broken/schema-version-132.kcad` oldu.
+- Şema 131 ve öncesinde `profileFiles` bilinmeyen alandır (`unknown_field`).
+- Desteklenmeyen sürüm örneği `broken/schema-version-133.kcad` oldu.
 
 Bağımsız okuyucu `tools/kcad/kcad.py` aynı kuralı KentOS kodu olmadan okur. Boşluğun tanımı orada Unicode White_Space
 kümesiyle açıkça yazılıdır.
@@ -178,8 +179,8 @@ bayt bayt kopyalanır.
 - **`.kcad`:**
   - `scripts/fixtures/kcad_v2_reference.py` `profile-files.kcad`'i yazar: bir profil, aynı adda bir eşleme ve bir başka
     eşleme;
-  - on bozuk örnek: şema 130, boş liste, bilinmeyen alan, tür, ad, uzun ad, boş metin, iki kez, ters sıra, eşleme önce;
-  - `--check` 1343 dosyanın hepsini bağımsız okuyucuyla aynı bulur;
+  - on bozuk örnek: şema 131, boş liste, bilinmeyen alan, tür, ad, uzun ad, boş metin, iki kez, ters sıra, eşleme önce;
+  - `--check` 1349 dosyanın hepsini bağımsız okuyucuyla aynı bulur;
   - `cargo test -p kentos-kcad` 234 testle geçer: taşıma matrisi, örnekler ve şemaların kuralı.
 - **Ortak durumlar:** `scripts/fixtures/profile_files_cases.py` KentOS kodu olmadan yazar:
   - `cad.profiles.import` 64 durum: 24'ü çizimin içine, gölge uyarıları, beklenen sürüm, 256 sınırı;

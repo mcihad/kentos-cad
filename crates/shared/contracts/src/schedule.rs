@@ -1,7 +1,8 @@
-//! Schedules (docs/adr/0344 §3): a table whose rows are the drawing's openings, spaces, columns or walls, one row each
-//! (or one row for those alike when grouped), written again by the document at every step. A column reads one field of
-//! them; one that is the objects' own field (a number, a type, a sill …) is edited in the schedule and written to the
-//! objects, one that is worked out (a count, an area, a height …) is not.
+//! Schedules (docs/adr/0344 §3): a table whose rows are the drawing's openings, spaces, columns, walls or fixtures (block
+//! inserts, docs/adr/0733 §2), one row each (or one row for those alike when grouped), written again by the document at
+//! every step. A column reads one field of them; one that is the objects' own field (a number, a type, a sill, a
+//! finish …) is edited in the schedule and written to the objects, one that is worked out (a count, an area, a height
+//! …) is not. A sort key may put a heading before its groups and a subtotal after them (docs/adr/0733 §4).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -24,14 +25,17 @@ pub enum ScheduleOf {
     Spaces,
     Columns,
     Walls,
+    /// The drawing's block inserts: furniture, sanitary fixtures, kitchen modules (docs/adr/0733 §2).
+    Fixtures,
 }
 
 impl ScheduleOf {
-    pub const ALL: [ScheduleOf; 4] = [
+    pub const ALL: [ScheduleOf; 5] = [
         ScheduleOf::Openings,
         ScheduleOf::Spaces,
         ScheduleOf::Columns,
         ScheduleOf::Walls,
+        ScheduleOf::Fixtures,
     ];
 
     pub fn label(self) -> &'static str {
@@ -40,6 +44,7 @@ impl ScheduleOf {
             ScheduleOf::Spaces => "Mahal çizelgesi",
             ScheduleOf::Columns => "Kolon çizelgesi",
             ScheduleOf::Walls => "Duvar çizelgesi",
+            ScheduleOf::Fixtures => "Donatı çizelgesi",
         }
     }
 
@@ -50,6 +55,7 @@ impl ScheduleOf {
             ScheduleOf::Spaces => "space",
             ScheduleOf::Columns => "column",
             ScheduleOf::Walls => "wall",
+            ScheduleOf::Fixtures => "insert",
         }
     }
 
@@ -61,6 +67,7 @@ impl ScheduleOf {
             ScheduleOf::Spaces => &[Number, Name, Usage, Level, Area, Perimeter, Height],
             ScheduleOf::Columns => &[Tag, Place, Type, Width, Level],
             ScheduleOf::Walls => &[Type, Thickness, Length, Height, Area, Volume],
+            ScheduleOf::Fixtures => &[Type, Category, Space, Level, Count],
         };
         fields
             .iter()
@@ -103,10 +110,21 @@ pub enum ScheduleField {
     Thickness,
     /// The attribute the column's `attr` names.
     Attr,
+    /// A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
+    FloorFinish,
+    BaseFinish,
+    WallFinish,
+    CeilingFinish,
+    /// A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
+    Baseboard,
+    /// A fixture's block's category path (docs/adr/0317 §4).
+    Category,
+    /// The space a fixture stands in, on its level: its number and name.
+    Space,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 21] = [
+    pub const ALL: [ScheduleField; 28] = [
         ScheduleField::Number,
         ScheduleField::Type,
         ScheduleField::Form,
@@ -128,6 +146,13 @@ impl ScheduleField {
         ScheduleField::Length,
         ScheduleField::Thickness,
         ScheduleField::Attr,
+        ScheduleField::FloorFinish,
+        ScheduleField::BaseFinish,
+        ScheduleField::WallFinish,
+        ScheduleField::CeilingFinish,
+        ScheduleField::Baseboard,
+        ScheduleField::Category,
+        ScheduleField::Space,
     ];
 
     /// Its heading when the column gives none.
@@ -154,6 +179,13 @@ impl ScheduleField {
             ScheduleField::Length => "Uzunluk",
             ScheduleField::Thickness => "Kalınlık",
             ScheduleField::Attr => "Öznitelik",
+            ScheduleField::FloorFinish => "Döşeme",
+            ScheduleField::BaseFinish => "Süpürgelik",
+            ScheduleField::WallFinish => "Duvar kaplaması",
+            ScheduleField::CeilingFinish => "Tavan",
+            ScheduleField::Baseboard => "Süpürgelik boyu",
+            ScheduleField::Category => "Kategori",
+            ScheduleField::Space => "Mahal",
         }
     }
 
@@ -180,6 +212,13 @@ impl ScheduleField {
             ScheduleField::Length => "length",
             ScheduleField::Thickness => "thickness",
             ScheduleField::Attr => "attr",
+            ScheduleField::FloorFinish => "floorFinish",
+            ScheduleField::BaseFinish => "baseFinish",
+            ScheduleField::WallFinish => "wallFinish",
+            ScheduleField::CeilingFinish => "ceilingFinish",
+            ScheduleField::Baseboard => "baseboard",
+            ScheduleField::Category => "category",
+            ScheduleField::Space => "space",
         }
     }
 
@@ -191,7 +230,7 @@ impl ScheduleField {
             Number => matches!(of, ScheduleOf::Openings | ScheduleOf::Spaces),
             Type => matches!(
                 of,
-                ScheduleOf::Openings | ScheduleOf::Columns | ScheduleOf::Walls
+                ScheduleOf::Openings | ScheduleOf::Columns | ScheduleOf::Walls | ScheduleOf::Fixtures
             ),
             Width => matches!(of, ScheduleOf::Openings | ScheduleOf::Columns),
             Height => matches!(
@@ -205,9 +244,12 @@ impl ScheduleField {
                 ) && !(self == Volume && of == ScheduleOf::Openings)
             }
             Form | Sill | Head | Wall => of == ScheduleOf::Openings,
-            Name | Usage | Perimeter => of == ScheduleOf::Spaces,
+            Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard => {
+                of == ScheduleOf::Spaces
+            }
             Tag | Place => of == ScheduleOf::Columns,
             Length | Thickness => of == ScheduleOf::Walls,
+            Category | Space => of == ScheduleOf::Fixtures,
         }
     }
 
@@ -216,14 +258,33 @@ impl ScheduleField {
         use ScheduleField::*;
         matches!(
             self,
-            Number | Type | Width | Sill | Head | Name | Usage | Tag | Thickness | Attr
+            Number
+                | Type
+                | Width
+                | Sill
+                | Head
+                | Name
+                | Usage
+                | Tag
+                | Thickness
+                | Attr
+                | FloorFinish
+                | BaseFinish
+                | WallFinish
+                | CeilingFinish
         )
+    }
+
+    /// Whether a schedule of `of` edits it: an editable field, but a fixture's type is its block's name (Bloğu
+    /// değiştir, not a cell, changes it; docs/adr/0733 §2).
+    pub fn edits_in(self, of: ScheduleOf) -> bool {
+        self.editable() && !(of == ScheduleOf::Fixtures && self == ScheduleField::Type)
     }
 
     /// Whether a grouped row and the total add it up rather than share it.
     pub fn summed(self) -> bool {
         use ScheduleField::*;
-        matches!(self, Count | Area | Perimeter | Volume | Length)
+        matches!(self, Count | Area | Perimeter | Volume | Length | Baseboard)
     }
 
     /// Whether it is a length the project's unit writes.
@@ -231,7 +292,16 @@ impl ScheduleField {
         use ScheduleField::*;
         matches!(
             self,
-            Width | Height | Sill | Head | Perimeter | Length | Thickness
+            Width | Height | Sill | Head | Perimeter | Length | Thickness | Baseboard
+        )
+    }
+
+    /// Whether it is one of the fields docs/adr/0733 added (`.kcad` schema 131).
+    pub fn is_extra(self) -> bool {
+        use ScheduleField::*;
+        matches!(
+            self,
+            FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard | Category | Space
         )
     }
 }
@@ -287,6 +357,11 @@ pub struct ScheduleFilter {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<Vec<String>>,
+    /// Their types (docs/adr/0733 §4): an opening's type, a wall's style, a column's kind, a space's usage, a fixture's
+    /// block name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub types: Option<Vec<String>>,
 }
 
 impl ScheduleFilter {
@@ -295,6 +370,7 @@ impl ScheduleFilter {
             && self.phases.is_none()
             && self.forms.is_none()
             && self.layers.is_none()
+            && self.types.is_none()
     }
 }
 
@@ -310,6 +386,28 @@ pub struct ScheduleSort {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub descending: bool,
+    /// A heading row before each group of rows alike in this column: its value, across the row (docs/adr/0733 §4).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub header: bool,
+    /// A subtotal row after each such group: “‹value› toplamı” and the summed columns' sums.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub footer: bool,
+}
+
+/// Whether a schedule uses what docs/adr/0733 added (`.kcad` schema 131): the fixtures, a new field, a type filter, a
+/// heading or a subtotal.
+pub fn schedule_extras(
+    of: ScheduleOf,
+    columns: &[ScheduleColumn],
+    filter: Option<&ScheduleFilter>,
+    sort: &[ScheduleSort],
+) -> bool {
+    of == ScheduleOf::Fixtures
+        || columns.iter().any(|c| c.field.is_extra())
+        || filter.is_some_and(|f| f.types.is_some())
+        || sort.iter().any(|k| k.header || k.footer)
 }
 
 /// What is wrong with a schedule's spec: the field and the words; none: it holds.
@@ -389,6 +487,16 @@ pub fn schedule_problem(
             "filter.forms".into(),
             "Biçim süzgeci yalnız kapı ve pencere çizelgesindedir.".into(),
         ));
+    }
+    if let Some(types) = filter.and_then(|f| f.types.as_ref()) {
+        for (i, t) in types.iter().enumerate() {
+            if t.trim().is_empty() || t.chars().any(char::is_control) || t.chars().count() > 200 {
+                return Some((
+                    format!("filter.types[{i}]"),
+                    "Tür süzgecinin her adı boş olmayan tek satırdır, en çok 200 harftir.".into(),
+                ));
+            }
+        }
     }
     None
 }

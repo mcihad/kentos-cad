@@ -1786,7 +1786,7 @@
       "title": "Ölçülü bölme duvar",
       "short": "Ölçülü bölme",
       "icon": "wall",
-      "description": "Bir düz duvarın yüzünden net uzaklıkla veya eksen aralığıyla paralel bölme çizer. Kaynak uçlarını, iki sınır duvarını veya boy ve yönü seçin; önizlemeyi kontrol edip yerleştirin. Kaynak duvar korunur.",
+      "description": "Düz ya da yaylı bir duvarın yüzünden net uzaklıkla veya eksen aralığıyla bölme çizer: düz kenara paralel, yaylı kenara aynı merkezli yay. Kaynak uçlarını, iki sınır duvarını veya boy ve yönü seçin; önizlemeyi kontrol edip yerleştirin. Kaynak duvar korunur.",
       "aliases": [
         "BOLMEDUVAR",
         "PARTITION"
@@ -2447,6 +2447,34 @@
       "aliases": [
         "MAHALCIZELGESI",
         "ROOMSCHEDULE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.scheduleFinishes",
+      "title": "Mahal kaplama çizelgesi",
+      "short": "Kaplama",
+      "icon": "scheduleFinishes",
+      "description": "Mahallerin kaplama çizelgesini imleçten yerleştirir: numara, ad, döşeme, süpürgelik, duvar ve tavan kaplaması, alan, süpürgelik boyu (Metraj'ın kuralıyla). Kaplama hücreleri mahallere yazılır. Kat, Grup, Toplam, Ara toplam, Sırala görünür ayarlardır.",
+      "aliases": [
+        "KAPLAMACIZELGESI",
+        "FINISHSCHEDULE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.scheduleFixtures",
+      "title": "Donatı çizelgesi",
+      "short": "Donatı",
+      "icon": "scheduleFixtures",
+      "description": "Mobilya, vitrifiye ve mutfak modüllerinin (blok yerleştirmeleri) çizelgesini imleçten yerleştirir: tür, kategori, mahal, kat, adet; aynı türler bir satırda. Kat, Grup, Toplam, Ara toplam, Sırala görünür ayarlardır.",
+      "aliases": [
+        "DONATICIZELGESI",
+        "FURNITURESCHEDULE"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3566,6 +3594,8 @@
     "tagAll": "<path d=\"M1.5 6.5 3.7 2.8H8l2.2 3.7L8 10.2H3.7z\"/><path d=\"M9.8 13.5 12 9.8h4.3l2.2 3.7-2.2 3.7H12z\"/><path d=\"M1.5 14.5h5M4 12v5\" stroke-width=\"1.1\"/>",
     "tagsCheck": "<path d=\"M1.5 9 4.6 3.8h6l3.1 5.2-3.1 5.2h-6z\"/><path d=\"M10.8 15.2l2.4 2.3 4.8-5.3\" stroke-width=\"1.5\"/>",
     "scheduleOpenings": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M3 5.5V1.5M3 1.5a4 4 0 0 1 4 4\" stroke-width=\"1\"/>",
+    "scheduleFinishes": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M2.5 4.5l2-3h11l2 3\" stroke-width=\"1\"/>",
+    "scheduleFixtures": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M3 4.8v-2.6h4.5v2.6M3 3.6h4.5\" stroke-width=\"1\"/>",
     "scheduleSpaces": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><rect x=\"2.5\" y=\"1.5\" width=\"5.5\" height=\"3.5\" stroke-width=\"1\"/><path d=\"M4 3.3h2.5\" stroke-width=\"0.8\"/>",
     "viewSection": "<path d=\"M2.5 12.5h15\" stroke-dasharray=\"3.2 1.4 0.8 1.4\"/><circle cx=\"4\" cy=\"7\" r=\"2.3\"/><circle cx=\"16\" cy=\"7\" r=\"2.3\"/><path d=\"M1.7 7h4.6M13.7 7h4.6\" stroke-width=\"0.9\"/><path d=\"M4 9.3v3.2M16 9.3v3.2\" stroke-width=\"1.6\"/>",
     "viewElevation": "<circle cx=\"9\" cy=\"11\" r=\"4.2\"/><path d=\"M4.8 11h8.4\" stroke-width=\"0.9\"/><path d=\"m13 7.8 4.7-1.6-1.6 4.7z\" fill=\"currentColor\" stroke=\"none\"/>",

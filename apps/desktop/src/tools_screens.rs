@@ -581,6 +581,7 @@ fn scenes() -> Vec<Scene> {
     all.extend(crate::temporary_scenes::scenes());
     all.extend(crate::arch_audit_scenes::scenes());
     all.extend(crate::arch_audit_exception_scenes::scenes());
+    all.extend(crate::schedule_extras_scenes::scenes());
     all.extend(crate::dimension_follow_scenes::scenes());
     all.extend(crate::dimension_option_scenes::scenes());
     all.extend(crate::dimension_mark_scenes::scenes());

@@ -34,6 +34,7 @@ mod annotative;
 mod annotation_styles;
 mod wall_joins;
 mod tags_check;
+mod schedule_window;
 mod arch_audit;
 mod viewmark_refs;
 mod sheet_set;
@@ -89,6 +90,8 @@ mod temporary_scenes;
 mod arch_audit_scenes;
 #[cfg(test)]
 mod arch_audit_exception_scenes;
+#[cfg(test)]
+mod schedule_extras_scenes;
 mod block_editor;
 #[cfg(test)]
 mod block_scenes;

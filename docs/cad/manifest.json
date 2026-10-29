@@ -12017,6 +12017,38 @@
    "tests": 2
   },
   {
+   "id": "tool.scheduleFinishes",
+   "kind": "command",
+   "title": "Mahal kaplama çizelgesi",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Mahal kaplama çizelgesi: kaplama sütunları, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §3, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.scheduleFixtures",
+   "kind": "command",
+   "title": "Donatı çizelgesi",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Donatı çizelgesi: blok yerleştirmeleri, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §2, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.scheduleOpenings",
    "kind": "command",
    "title": "Kapı ve pencere çizelgesi",

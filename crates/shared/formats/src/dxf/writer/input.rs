@@ -436,6 +436,7 @@ impl Fields {
                 annotative: None,
             }),
             "insert" => Entity::Insert(InsertEntity {
+                arch: Default::default(),
                 clipping: None,
                 parameters: Default::default(),
                 attribute_places: Default::default(),

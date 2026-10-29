@@ -104,6 +104,7 @@ pub fn item_insert(
     like: Option<&InsertEntity>,
 ) -> InsertEntity {
     let mut insert = like.cloned().unwrap_or_else(|| InsertEntity {
+        arch: Default::default(),
         clipping: None,
         parameters: Default::default(),
         attribute_places: Default::default(),

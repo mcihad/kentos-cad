@@ -450,6 +450,7 @@ pub(crate) fn replaced(
         .map(|(_, slot, _, uid)| (*slot, (*uid).clone()))
         .collect();
     let insert = Entity::Insert(InsertEntity {
+        arch: Default::default(),
         clipping: None,
         parameters: Default::default(),
         attribute_places: Default::default(),

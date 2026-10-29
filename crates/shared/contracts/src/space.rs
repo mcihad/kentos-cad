@@ -151,7 +151,7 @@ pub struct SpacePart {
     pub holes: Vec<SpaceRing>,
 }
 
-/// A space's finishes: its floor's, walls' and ceiling's.
+/// A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -167,6 +167,10 @@ pub struct SpaceFinishes {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ceiling: Option<String>,
+    /// The skirting's finish (`.kcad` schema 131).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub base: Option<String>,
 }
 
 impl SpaceFinishes {

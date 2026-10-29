@@ -448,6 +448,8 @@ impl BlockInsert {
             attrs: cx.template_attrs(None),
             label: cx.template_label(),
             symbol: cx.template_symbol(),
+            // Etkin kat: a fixture's level (docs/adr/0733 §1).
+            arch: cx.level_arch().unwrap_or_default(),
             expected_revision: None,
         }
     }

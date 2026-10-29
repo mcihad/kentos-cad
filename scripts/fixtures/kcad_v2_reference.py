@@ -1722,7 +1722,9 @@ KINDS = {
                # Schema 59 (docs/adr/0318 §3): its parameter values, none written empty.
                "parameters": (lambda m: cmap({k: param_value(v) for k, v in m.items()}), False),
                # Schema 85 (docs/adr/0351 §1): its clipping, as its JSON.
-               "clipping": (opaque, False)},
+               "clipping": (opaque, False),
+               # Schema 131 (docs/adr/0733 §1): its level and phase, as their JSON; none written empty.
+               "arch": (lambda a: opaque(a) if a else None, False)},
     # Schema 22 (docs/adr/0184): one-line cells row by row, merged ranges, alignments, a heading row only when true, lines
     # by name, a frame's width, a text's face, a source; only in the drawing.
     "table": {
@@ -2164,6 +2166,28 @@ def requests(rs):
     return array([request(r) for r in rs])
 
 
+# The schedule fields docs/adr/0733 added.
+SCHEDULE_FIELDS_131 = ("floorFinish", "wallFinish", "ceilingFinish", "baseFinish", "baseboard", "category", "space")
+
+
+def fixtures_of(es):
+    """Whether objects use what docs/adr/0733 added: an insert's level or phase, a space's baseboard finish, a
+    schedule of fixtures, one of the new fields, a type filter, a heading or subtotal row."""
+    for e in es:
+        if e["kind"] == "insert" and e.get("arch"):
+            return True
+        if e["kind"] == "space" and "base" in (e.get("finishes") or {}):
+            return True
+        src = (e.get("source") or {}) if e["kind"] == "table" else {}
+        if src.get("kind") != "schedule":
+            continue
+        if (src.get("of") == "fixtures" or any(c["field"] in SCHEDULE_FIELDS_131 for c in src.get("columns", []))
+                or "types" in (src.get("filter") or {})
+                or any(o.get("header") or o.get("footer") for o in src.get("sort", []))):
+            return True
+    return False
+
+
 def document(d):
     """The payload of a drawing given in the contract's JSON form (`DocumentSnapshotV2`)."""
     assert d["format"] == "kentos.document" and d["version"] == 2
@@ -2214,9 +2238,13 @@ def document(d):
     if ((d["settings"].get("arch") or {}).get("auditExceptions")):
         # Mimari denetim's exceptions (docs/adr/0732 §3).
         schema = max(schema, 130)
+    if fixtures_of(d["entities"]) or any(fixtures_of(b["entities"]) for b in d.get("blocks") or []):
+        # A fixture's level, a baseboard's finish, a schedule's fixtures, new fields, type filter or subtotals
+        # (docs/adr/0733 §8).
+        schema = max(schema, 131)
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
-        schema = max(schema, 131)
+        schema = max(schema, 132)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2930,7 +2958,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-132.kcad"] = container(root(cmap(parts), version=uint(132)))
+    files["schema-version-133.kcad"] = container(root(cmap(parts), version=uint(133)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5084,13 +5112,28 @@ def build():
     exception_bad("no-objects", lambda xs: xs[0].update(uids=[]))
     exception_bad("code", lambda xs: xs[0].update(code="Kısa duvar"))
     exception_bad("uid", lambda xs: xs[0].update(uids=["kısa"]))
-    # Schema 131 (docs/adr/0735): a profile, a mapping of the same name after it and another mapping, their documents
-    # as the folder's files hold them; schema 130 refuses them.
+    # Schema 131 (docs/adr/0733): two fixtures with their level, one without, a bathroom with its baseboard's
+    # finish, a fixtures schedule with a type filter, a heading and a subtotal; schema 130 refuses them.
+    fixtures = load("schedules-fixtures.json")
+    fx = document(fixtures)
+    assert fx.count(b"\x67version\x18\x83") == 1
+    out["schedules-fixtures.kcad"] = container(fx)
+    out["broken/schedules-fixtures-in-schema-130.kcad"] = container(fx.replace(b"\x67version\x18\x83", b"\x67version\x18\x82"))
+    def fixture_bad(name, index, change):
+        d = copy.deepcopy(fixtures)
+        change(d["entities"][index])
+        out["broken/schedules-fixtures-" + name + ".kcad"] = container(document(d))
+    fixture_bad("type-empty", 4, lambda e: e["source"]["filter"].update(types=["Lavabo", " "]))
+    fixture_bad("phase", 1, lambda e: e["arch"].update(phase="sonra"))
+    fixture_bad("field", 4, lambda e: e["source"]["columns"].append({"field": "brand"}))
+    fixture_bad("of", 4, lambda e: e["source"].update(of="furniture"))
+    # Schema 132 (docs/adr/0735): a profile, a mapping of the same name after it and another mapping, their documents
+    # as the folder's files hold them; schema 131 refuses them.
     carried = load("profile-files.json")
     pf = document(carried)
-    assert pf.count(b"\x67version\x18\x83") == 1
+    assert pf.count(b"\x67version\x18\x84") == 1
     out["profile-files.kcad"] = container(pf)
-    out["broken/profile-files-in-schema-130.kcad"] = container(pf.replace(b"\x67version\x18\x83", b"\x67version\x18\x82"))
+    out["broken/profile-files-in-schema-131.kcad"] = container(pf.replace(b"\x67version\x18\x84", b"\x67version\x18\x83"))
     def carried_bad(name, change):
         d = copy.deepcopy(carried)
         change(d["settings"])

@@ -655,6 +655,7 @@ mod tests {
 
     fn insert(block: u8, scale: f64) -> Entity {
         Entity::Insert(InsertEntity {
+            arch: Default::default(),
             clipping: None,
             parameters: Default::default(),
             attribute_places: Default::default(),

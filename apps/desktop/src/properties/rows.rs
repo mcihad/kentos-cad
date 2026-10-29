@@ -5,7 +5,7 @@
 
 use std::borrow::Cow;
 
-use kentos_commands::{DimensionStyle, Entity, GradientShape, HatchPatternType};
+use kentos_commands::{DimensionStyle, Entity, GradientShape, HatchPatternType, TableSource};
 use kentos_domain::{LayerTree, Slot};
 use kentos_interaction::elevation::{self, Summary as Elevations};
 use kentos_interaction::{
@@ -2106,6 +2106,28 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 len("Konum Y", t.p.x),
                 len("Konum X", t.p.y),
             ]);
+            // A schedule's settings and file (docs/adr/0733 §5, §7).
+            if let (Some(TableSource::Schedule { of, .. }), Some(uid)) = (&t.source, doc.model.uid(slot)) {
+                let uid = uid.to_string();
+                let items = vec![
+                    Choice::Action {
+                        label: "Çizelge ayarları…",
+                        icon: "settings",
+                        message: (!locked).then(|| Message::Schedule(crate::schedule_window::Event::Open(uid.clone()))),
+                    },
+                    Choice::Action {
+                        label: "Dosyaya yaz…",
+                        icon: "tableFile",
+                        message: Some(Message::Schedule(crate::schedule_window::Event::Export(uid.clone()))),
+                    },
+                ];
+                geo.push(Row::text("Çizelge", of.label()).editor(edit(Editor::Select {
+                    text: of.label().to_owned(),
+                    swatch: None,
+                    icon: None,
+                    items,
+                })));
+            }
         }
         // The block, its place, scale, turn and mirroring, through
         // `cad.entities.edit`'s properties (docs/adr/0144 §6), as the web's.
@@ -2151,6 +2173,33 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     })
                     .collect(),
             };
+            // Its level (docs/adr/0733 §1): a level chosen goes to it as Kat ver writes it.
+            let levels = doc.model.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+            if !levels.is_empty() {
+                let shown = i
+                    .arch
+                    .level
+                    .as_deref()
+                    .map_or_else(|| "Yok".to_owned(), |id| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone()));
+                let items = levels
+                    .iter()
+                    .map(|l| Choice::Pick {
+                        label: l.name.clone(),
+                        swatch: None,
+                        icon: None,
+                        wide: false,
+                        chosen: i.arch.level.as_deref() == Some(l.id.as_str()),
+                        enabled: !locked,
+                        message: Message::Properties(Event::Levels(vec![slot], l.id.clone())),
+                    })
+                    .collect();
+                geo.push(Row::text("Kat", shown.clone()).editor(edit(Editor::Select {
+                    text: shown,
+                    swatch: None,
+                    icon: None,
+                    items,
+                })));
+            }
             geo.extend([
                 Row::text("Blok", name).editor(edit(blocks)),
                 len("Konum Y", i.p.x).editor(number(Field::InsertX(slot))),

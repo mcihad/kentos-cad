@@ -25,9 +25,12 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
     use kentos_contracts::ScheduleOf;
     match of {
         ScheduleOf::Openings => &["opening", "wall"],
-        ScheduleOf::Spaces => &["space"],
+        // A baseboard reads the doorways (docs/adr/0733 §3).
+        ScheduleOf::Spaces => &["space", "opening"],
         ScheduleOf::Columns => &["column", "grid"],
         ScheduleOf::Walls => &["wall", "opening"],
+        // A fixture's space (docs/adr/0733 §2).
+        ScheduleOf::Fixtures => &["insert", "space"],
     }
 }
 
@@ -191,6 +194,8 @@ impl Document {
             out.aligns = Some(written.aligns);
             out.header = true;
             out.styles = written.styles;
+            // Its headings across their rows (docs/adr/0733 §4); a schedule has no merge of its own.
+            out.merges = written.merges;
             out.formulas.clear();
             out.fields.clear();
             if let Some(TableSource::Schedule { members, .. }) = &mut out.source {

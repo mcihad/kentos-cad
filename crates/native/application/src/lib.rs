@@ -285,6 +285,7 @@ pub mod slabs;
 pub mod slabs_create;
 pub mod slabs_edit;
 pub mod slab_quantities;
+pub mod table_export;
 pub mod spaces_discover;
 pub mod spaces_separators;
 pub mod spaces_number;
@@ -302,7 +303,7 @@ pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_creat
 pub mod tags;
 pub mod schedules;
 pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edit};
-pub use schedules::{create as schedules_create, edit as schedules_edit};
+pub use schedules::{create as schedules_create, edit as schedules_edit, query as schedules_query};
 pub mod viewmarks;
 pub mod spaces_finish;
 pub mod sheets_set;
@@ -665,6 +666,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_SCHEDULES_EDIT,
         kentos_commands::CAD_SCHEDULES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SCHEDULES_QUERY,
+        kentos_commands::CAD_SCHEDULES_QUERY_VERSION,
     ),
     // Görünüm işareti, Görünüm işaretini düzenle, Başvurular and Döşeme ve tavan ([`viewmarks`], [`spaces_finish`],
     // docs/adr/0345).

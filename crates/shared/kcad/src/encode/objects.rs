@@ -1006,6 +1006,10 @@ impl<'d> Encoder<'d> {
                     }
                     f.push(("clipping", Val::Json(serde_json::to_value(c).unwrap_or_default())));
                 }
+                // Its level and phase (docs/adr/0733 §1): no field when none.
+                if !e.arch.is_empty() {
+                    f.push(("arch", Val::Json(serde_json::to_value(&e.arch).unwrap_or_default())));
+                }
             }
             Entity::Table(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {

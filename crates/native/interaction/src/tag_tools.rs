@@ -38,6 +38,9 @@ pub const TAG_ID: &str = "tag";
 pub const TAG_ALL_ID: &str = "tagAll";
 pub const SCHEDULE_ID: &str = "scheduleOpenings";
 pub const SCHEDULE_SPACES_ID: &str = "scheduleSpaces";
+/// Mahal kaplama çizelgesi and Donatı çizelgesi (docs/adr/0733 §2, §3).
+pub const SCHEDULE_FINISHES_ID: &str = "scheduleFinishes";
+pub const SCHEDULE_FIXTURES_ID: &str = "scheduleFixtures";
 
 /// The object a tag can be put on under the cursor.
 fn taggable_at(at: Vec2, cx: &Context<'_>) -> Option<Slot> {
@@ -748,15 +751,95 @@ fn said_after(
 
 // ── Çizelge ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/// Çizelge: a schedule placed from the cursor.
+/// What the tool places (docs/adr/0733 §5): a schedule's kind, Mahal kaplama a spaces schedule of the finishes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SchedulePreset {
+    Openings,
+    Spaces,
+    Finishes,
+    Columns,
+    Walls,
+    Fixtures,
+}
+
+impl SchedulePreset {
+    pub const ALL: [SchedulePreset; 6] = [
+        SchedulePreset::Openings,
+        SchedulePreset::Spaces,
+        SchedulePreset::Finishes,
+        SchedulePreset::Columns,
+        SchedulePreset::Walls,
+        SchedulePreset::Fixtures,
+    ];
+
+    pub fn of(self) -> ScheduleOf {
+        match self {
+            SchedulePreset::Openings => ScheduleOf::Openings,
+            SchedulePreset::Spaces | SchedulePreset::Finishes => ScheduleOf::Spaces,
+            SchedulePreset::Columns => ScheduleOf::Columns,
+            SchedulePreset::Walls => ScheduleOf::Walls,
+            SchedulePreset::Fixtures => ScheduleOf::Fixtures,
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        match self {
+            SchedulePreset::Finishes => "Mahal kaplama çizelgesi",
+            other => other.of().label(),
+        }
+    }
+
+    fn typed(self) -> &'static str {
+        match self {
+            SchedulePreset::Openings => "openings",
+            SchedulePreset::Spaces => "spaces",
+            SchedulePreset::Finishes => "finishes",
+            SchedulePreset::Columns => "columns",
+            SchedulePreset::Walls => "walls",
+            SchedulePreset::Fixtures => "fixtures",
+        }
+    }
+
+    /// Its columns: a finishes schedule's (docs/adr/0733 §3), else the kind's or a grouped one's.
+    fn columns(self, group: bool) -> Option<Vec<kentos_commands::ScheduleColumn>> {
+        use kentos_commands::ScheduleField::*;
+        let fields: &[kentos_commands::ScheduleField] = match (self, group) {
+            (SchedulePreset::Finishes, _) => {
+                &[Number, Name, FloorFinish, BaseFinish, WallFinish, CeilingFinish, Area, Baseboard]
+            }
+            (_, false) => return None,
+            (SchedulePreset::Openings, true) => &[Type, Form, Width, Height, Count],
+            (SchedulePreset::Spaces, true) => &[Usage, Count, Area],
+            (SchedulePreset::Columns, true) => &[Type, Width, Count],
+            (SchedulePreset::Walls, true) => &[Type, Thickness, Count, Length, Area],
+            (SchedulePreset::Fixtures, true) => &[Type, Category, Count],
+        };
+        Some(
+            fields
+                .iter()
+                .map(|&field| kentos_commands::ScheduleColumn {
+                    field,
+                    title: None,
+                    attr: None,
+                })
+                .collect(),
+        )
+    }
+}
+
+/// Çizelge: a schedule placed from the cursor; its settings visible (docs/adr/0733 §5).
 #[derive(Clone, Debug)]
 pub struct ScheduleTool {
     /// What it was started for (its id).
-    start: ScheduleOf,
-    of: ScheduleOf,
+    start: SchedulePreset,
+    preset: SchedulePreset,
     group: bool,
     total: bool,
     sorted: bool,
+    /// A subtotal after each group of the first column (docs/adr/0733 §4).
+    subtotals: bool,
+    /// Etkin kat's objects alone.
+    active_level: bool,
     /// The plan's table at the origin, made again when an option changes.
     table: Option<kentos_commands::TableEntity>,
     problem: Option<String>,
@@ -768,12 +851,25 @@ pub struct ScheduleTool {
 
 impl ScheduleTool {
     pub fn new(of: ScheduleOf) -> Self {
+        Self::of_preset(match of {
+            ScheduleOf::Openings => SchedulePreset::Openings,
+            ScheduleOf::Spaces => SchedulePreset::Spaces,
+            ScheduleOf::Columns => SchedulePreset::Columns,
+            ScheduleOf::Walls => SchedulePreset::Walls,
+            ScheduleOf::Fixtures => SchedulePreset::Fixtures,
+        })
+    }
+
+    pub fn of_preset(preset: SchedulePreset) -> Self {
         Self {
-            start: of,
-            of,
-            group: false,
-            total: of != ScheduleOf::Openings,
+            start: preset,
+            preset,
+            // A fixtures schedule counts alike ones on one row.
+            group: preset == SchedulePreset::Fixtures,
+            total: preset != SchedulePreset::Openings,
             sorted: true,
+            subtotals: false,
+            active_level: false,
             table: None,
             problem: None,
             hover: None,
@@ -783,16 +879,22 @@ impl ScheduleTool {
     }
 
     fn input_at(&self, at: Vec2, cx: &Context<'_>) -> SchedulesCreate {
+        let level = cx.level.filter(|_| self.active_level);
         SchedulesCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             at: points::wire(at),
-            of: self.of,
-            columns: self.group.then(|| grouped_columns(self.of)),
-            filter: None,
-            sort: if self.sorted {
+            of: self.preset.of(),
+            columns: self.preset.columns(self.group),
+            filter: level.map(|l| kentos_commands::ScheduleFilter {
+                levels: Some(vec![l.to_owned()]),
+                ..Default::default()
+            }),
+            sort: if self.sorted || self.subtotals {
                 vec![ScheduleSort {
                     column: 0,
                     descending: false,
+                    header: false,
+                    footer: self.subtotals,
                 }]
             } else {
                 Vec::new()
@@ -879,33 +981,12 @@ impl ScheduleTool {
                 Level::Success,
                 format!(
                     "{}: {} satır. Kaynakları değişince satırları da değişir.",
-                    self.of.label(),
+                    self.preset.label(),
                     out.rows
                 ),
             );
         }
     }
-}
-
-const KINDS_OF: [ScheduleOf; 4] = ScheduleOf::ALL;
-
-/// A grouped schedule's columns: the fields the objects share, then how many and how much.
-fn grouped_columns(of: ScheduleOf) -> Vec<kentos_commands::ScheduleColumn> {
-    use kentos_commands::ScheduleField::*;
-    let fields: &[kentos_commands::ScheduleField] = match of {
-        ScheduleOf::Openings => &[Type, Form, Width, Height, Count],
-        ScheduleOf::Spaces => &[Usage, Count, Area],
-        ScheduleOf::Columns => &[Type, Width, Count],
-        ScheduleOf::Walls => &[Type, Thickness, Count, Length, Area],
-    };
-    fields
-        .iter()
-        .map(|&field| kentos_commands::ScheduleColumn {
-            field,
-            title: None,
-            attr: None,
-        })
-        .collect()
 }
 
 impl Tool for ScheduleTool {
@@ -918,15 +999,57 @@ impl Tool for ScheduleTool {
     }
 
     fn id(&self) -> &'static str {
-        if self.start == ScheduleOf::Spaces {
-            SCHEDULE_SPACES_ID
-        } else {
-            SCHEDULE_ID
+        match self.start {
+            SchedulePreset::Spaces => SCHEDULE_SPACES_ID,
+            SchedulePreset::Finishes => SCHEDULE_FINISHES_ID,
+            SchedulePreset::Fixtures => SCHEDULE_FIXTURES_ID,
+            _ => SCHEDULE_ID,
         }
     }
 
     fn label(&self) -> &'static str {
-        self.of.label()
+        self.preset.label()
+    }
+
+    fn settings(&self, _: &Format) -> Vec<Setting> {
+        let kinds: Vec<(&str, &str)> = SchedulePreset::ALL.iter().map(|p| (p.typed(), p.label())).collect();
+        vec![
+            Setting::choice("kind", "Tür", crate::tool_settings::choices(&kinds, self.preset.typed())),
+            Setting::choice(
+                "level",
+                "Kat",
+                crate::tool_settings::choices(
+                    &[("all", "Bütün katlar"), ("active", "Etkin kat")],
+                    if self.active_level { "active" } else { "all" },
+                ),
+            ),
+            Setting::toggle("group", "Aynı satırları birleştir", self.group),
+            Setting::toggle("total", "Genel toplam", self.total),
+            Setting::toggle("subtotals", "Ara toplam", self.subtotals),
+            Setting::toggle("sorted", "Sırala", self.sorted),
+        ]
+    }
+
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        let on = value == "yes";
+        match key {
+            "kind" => match SchedulePreset::ALL.iter().find(|p| p.typed() == value) {
+                Some(p) => self.preset = *p,
+                None => return false,
+            },
+            "level" => self.active_level = value == "active",
+            "group" => {
+                self.group = on;
+                self.total = self.total || on;
+            }
+            "total" => self.total = on,
+            "subtotals" => self.subtotals = on,
+            "sorted" => self.sorted = on,
+            _ => return false,
+        }
+        self.plan(cx);
+        self.place_ghost(cx);
+        true
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
@@ -945,8 +1068,8 @@ impl Tool for ScheduleTool {
 
     fn prompt(&self) -> Prompt {
         let on = |b: bool| if b { "Açık" } else { "Kapalı" }.to_owned();
-        Prompt::new(self.of.label(), "çizelgenin sol üst köşesine tıklayın")
-            .option_with("Tür", "T", self.of.label().to_owned())
+        Prompt::new(self.preset.label(), "çizelgenin sol üst köşesine tıklayın")
+            .option_with("Tür", "T", self.preset.label().to_owned())
             .option_with("Grup", "G", on(self.group))
             .option_with("Toplam", "O", on(self.total))
             .option_with("Sırala", "S", on(self.sorted))
@@ -964,8 +1087,9 @@ impl Tool for ScheduleTool {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         match upper_tr(js_trim(text)).as_str() {
             "T" => {
-                let i = KINDS_OF.iter().position(|k| *k == self.of).unwrap_or(0);
-                self.of = KINDS_OF[(i + 1) % KINDS_OF.len()];
+                let all = SchedulePreset::ALL;
+                let i = all.iter().position(|k| *k == self.preset).unwrap_or(0);
+                self.preset = all[(i + 1) % all.len()];
             }
             "G" => {
                 self.group = !self.group;

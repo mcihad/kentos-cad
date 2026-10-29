@@ -2,7 +2,7 @@
 //! remainder). Beside the `profiller` folder next to the drawing's file (docs/adr/0558), the project's settings keep
 //! `profileFiles`: each a profile or a mapping by its name and its document as text, the same text a folder file holds.
 //! The text is the institution's document, read by the profile commands as they read a file; the drawing file's
-//! schema does not follow the profile's (`.kcad` schema 131 says only that the list is there and holds these rules).
+//! schema does not follow the profile's (`.kcad` schema 132 says only that the list is there and holds these rules).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]

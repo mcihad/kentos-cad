@@ -136,6 +136,7 @@ fn check(
         attrs.insert(kentos_commands::REVISION_DESCRIPTION.to_owned(), d.clone());
     }
     let tag = Entity::Insert(InsertEntity {
+        arch: Default::default(),
         clipping: None,
         parameters: Default::default(),
         attribute_places: Default::default(),

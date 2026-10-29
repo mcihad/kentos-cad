@@ -1362,6 +1362,7 @@ mod tests {
 
     fn insert(layer: &str, n: u8) -> Entity {
         Entity::Insert(kentos_commands::InsertEntity {
+            arch: Default::default(),
             parameters: Default::default(),
             attribute_places: Default::default(),
             base: base(layer),

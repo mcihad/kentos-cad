@@ -17,4 +17,9 @@ forms?: Array<OpeningForm>,
 /**
  * Their layers' ids.
  */
-layers?: Array<string>, };
+layers?: Array<string>, 
+/**
+ * Their types (docs/adr/0733 §4): an opening's type, a wall's style, a column's kind, a space's usage, a fixture's
+ * block name.
+ */
+types?: Array<string>, };

@@ -8,6 +8,9 @@
 //! - Grouped: rows alike in every column that is not summed (count, area, perimeter, volume, length) become the first
 //!   one's place, their summed columns added up (an empty value adds nothing; none at all stays empty).
 //! - Its heading: each column's title, else its field's with its unit (`Genişlik (m)`, `Alan (m²)`, `Hacim (m³)`).
+//! - Its headings and subtotals (docs/adr/0733 §4): a sort key with `header` puts its value before each group of rows
+//!   alike in its column, across the row; one with `footer` puts “‹value› toplamı” and the group's sums after it (an
+//!   inner key's before an outer one's). Their `members` are empty.
 //! - Its total: the summed columns added up over its rows, `Toplam` in its first column unless that column is summed.
 //! - Its look: the heading row, numbers to the right, a worked-out column's data cells in grey, the total in bold.
 //!
@@ -27,6 +30,8 @@ use crate::identity::Slot;
 
 /// The words of a schedule's total row's first cell.
 pub const SCHEDULE_TOTAL: &str = "Toplam";
+/// What a heading or a subtotal says for rows with no value in its column.
+pub const SCHEDULE_EMPTY: &str = "(boş)";
 /// A worked-out column's data cells' colour.
 pub const COMPUTED_COLOR: &str = "#7f8790";
 
@@ -39,6 +44,11 @@ pub struct ScheduleRows {
     pub members: Vec<Vec<String>>,
     pub aligns: Vec<TableAlign>,
     pub styles: Vec<CellStyle>,
+    /// Its headings, each across its row.
+    pub merges: Vec<CellRange>,
+    /// Each row's numbers in the unit shown, before they are rounded to the project's decimals (`file.export.table`'s
+    /// exact numbers, docs/adr/0733 §7); none for words.
+    pub numbers: Vec<Vec<Option<f64>>>,
 }
 
 /// Whether a field's cells are numbers, written to the right.
@@ -78,9 +88,16 @@ impl Document {
             Entity::Space(s) => Some(s.space.arch.clone()),
             Entity::Column(c) => Some(c.column.arch.clone()),
             Entity::Wall(w) => Some(w.wall.arch.clone()),
+            Entity::Insert(i) => Some(i.arch.clone()),
             _ => None,
         }
         .unwrap_or_default();
+        // Its type (docs/adr/0733 §4): an opening's type, a wall's style, a column's kind, a space's usage, a fixture's
+        // block name, as the schedule writes them.
+        let kind_of = |e: &Entity| -> Option<String> {
+            let place = if matches!(e, Entity::Space(_)) { "usage" } else { "type" };
+            self.arch_value(e, place, None).map(|v| self.arch_value_text(&v, false))
+        };
         f.layers
             .as_ref()
             .is_none_or(|ls| ls.contains(&e.base().layer_id))
@@ -94,6 +111,21 @@ impl Document {
                 Entity::Opening(o) => fs.contains(&o.opening.form),
                 _ => false,
             })
+            && f.types
+                .as_ref()
+                .is_none_or(|ts| kind_of(e).is_some_and(|k| ts.contains(&k)))
+    }
+
+    /// Whether an insert is a fixture a schedule lists: not an external reference's or an underlay's.
+    fn fixture(&self, e: &Entity) -> bool {
+        match e {
+            Entity::Insert(i) => self
+                .blocks()
+                .iter()
+                .find(|b| b.id == i.block)
+                .is_some_and(|b| b.xref.is_none()),
+            _ => true,
+        }
     }
 
     /// A column's heading: its title, else its field's with its unit.
@@ -135,7 +167,7 @@ impl Document {
     ) -> ScheduleRows {
         let mut rows: Vec<Row> = Vec::new();
         for e in self.entities() {
-            if e.kind() != of.kind() || !self.schedule_takes(e, filter) {
+            if e.kind() != of.kind() || !self.fixture(e) || !self.schedule_takes(e, filter) {
                 continue;
             }
             let values: Vec<Option<ArchValue>> = columns
@@ -211,11 +243,11 @@ impl Document {
             }
             rows = merged;
         }
-        let n = rows.len();
+        let width = columns.len();
         let heading: Vec<String> = columns.iter().map(|c| self.schedule_heading(c)).collect();
         let mut out = ScheduleRows {
             rows: vec![heading],
-            members: Vec::with_capacity(n),
+            members: Vec::with_capacity(rows.len()),
             aligns: columns
                 .iter()
                 .map(|c| {
@@ -227,32 +259,149 @@ impl Document {
                 })
                 .collect(),
             styles: Vec::new(),
+            merges: Vec::new(),
+            numbers: vec![vec![None; width]],
         };
-        let mut sums: Vec<Option<ArchValue>> = vec![None; columns.len()];
-        for r in rows {
-            for j in 0..columns.len() {
-                if summed[j] {
-                    sums[j] = add(&sums[j], &r.values[j]);
+        let numbers = |values: &[Option<ArchValue>]| -> Vec<Option<f64>> {
+            values.iter().map(|v| v.as_ref().and_then(|v| self.arch_value_number(v))).collect()
+        };
+        let bold = |row: usize| CellStyle {
+            range: CellRange {
+                row: row as u32,
+                col: 0,
+                rows: 1,
+                cols: width as u32,
+            },
+            align: None,
+            bold: Some(true),
+            color: None,
+            fill: None,
+            decimals: None,
+        };
+        // The sort keys that put a heading or a subtotal, outermost first (docs/adr/0733 §4).
+        let marked: Vec<&ScheduleSort> = sort.iter().filter(|k| k.header || k.footer).collect();
+        let footer = |d: usize, sums: &[Option<ArchValue>], value: &str| -> Vec<String> {
+            let mut cells: Vec<String> = sums
+                .iter()
+                .zip(&summed)
+                .map(|(v, s)| match (s, v) {
+                    (true, Some(v)) => self.arch_value_text(v, false),
+                    _ => String::new(),
+                })
+                .collect();
+            for (j, c) in columns.iter().enumerate() {
+                if c.field == ScheduleField::Count && cells[j].is_empty() {
+                    cells[j] = "0".into();
                 }
             }
+            let k = marked[d].column as usize;
+            let label = if summed[k] { (0..width).find(|j| !summed[*j]) } else { Some(k) };
+            if let Some(j) = label {
+                let v = if value.is_empty() { SCHEDULE_EMPTY } else { value };
+                cells[j] = format!("{v} toplamı");
+            }
+            cells
+        };
+        let mut sums: Vec<Option<ArchValue>> = vec![None; width];
+        let mut group_sums: Vec<Vec<Option<ArchValue>>> = vec![vec![None; width]; marked.len()];
+        let mut group_values: Vec<String> = vec![String::new(); marked.len()];
+        let mut prev: Option<Vec<String>> = None;
+        // The runs of data rows: their first row and how many (a computed column's grey covers them alone).
+        let mut runs: Vec<(usize, usize)> = Vec::new();
+        for r in rows {
+            let keys: Vec<String> = marked
+                .iter()
+                .map(|k| r.texts[k.column as usize].clone())
+                .collect();
+            // The outermost key whose value changes: its group and those inside it close, then open.
+            let from = prev.as_ref().map_or(0, |p| {
+                p.iter()
+                    .zip(&keys)
+                    .position(|(a, b)| a != b)
+                    .unwrap_or(marked.len())
+            });
+            if prev.is_some() {
+                for d in (from..marked.len()).rev() {
+                    if marked[d].footer {
+                        let cells = footer(d, &group_sums[d], &group_values[d]);
+                        out.styles.push(bold(out.rows.len()));
+                        out.rows.push(cells);
+                        out.members.push(Vec::new());
+                        out.numbers.push(numbers(&group_sums[d]));
+                    }
+                }
+            }
+            for d in from..marked.len() {
+                group_sums[d] = vec![None; width];
+                group_values[d] = keys[d].clone();
+                if marked[d].header {
+                    let at = out.rows.len();
+                    let mut cells = vec![String::new(); width];
+                    cells[0] = if keys[d].is_empty() {
+                        SCHEDULE_EMPTY.to_owned()
+                    } else {
+                        keys[d].clone()
+                    };
+                    if width > 1 {
+                        out.merges.push(CellRange {
+                            row: at as u32,
+                            col: 0,
+                            rows: 1,
+                            cols: width as u32,
+                        });
+                    }
+                    out.styles.push(bold(at));
+                    out.rows.push(cells);
+                    out.members.push(Vec::new());
+                    out.numbers.push(vec![None; width]);
+                }
+            }
+            for j in 0..width {
+                if summed[j] {
+                    sums[j] = add(&sums[j], &r.values[j]);
+                    for g in &mut group_sums {
+                        g[j] = add(&g[j], &r.values[j]);
+                    }
+                }
+            }
+            let at = out.rows.len();
+            match runs.last_mut() {
+                Some((first, n)) if *first + *n == at => *n += 1,
+                _ => runs.push((at, 1)),
+            }
+            out.numbers.push(numbers(&r.values));
             out.rows.push(r.texts);
             out.members.push(r.uids);
+            prev = Some(keys);
         }
-        for (j, c) in columns.iter().enumerate() {
-            if !c.field.editable() && n > 0 {
-                out.styles.push(CellStyle {
-                    range: CellRange {
-                        row: 1,
-                        col: j as u32,
-                        rows: n as u32,
-                        cols: 1,
-                    },
-                    align: None,
-                    bold: None,
-                    color: Some(COMPUTED_COLOR.to_owned()),
-                    fill: None,
-                    decimals: None,
-                });
+        if prev.is_some() {
+            for d in (0..marked.len()).rev() {
+                if marked[d].footer {
+                    let cells = footer(d, &group_sums[d], &group_values[d]);
+                    out.styles.push(bold(out.rows.len()));
+                    out.rows.push(cells);
+                    out.members.push(Vec::new());
+                    out.numbers.push(numbers(&group_sums[d]));
+                }
+            }
+        }
+        for &(first, n) in &runs {
+            for (j, c) in columns.iter().enumerate() {
+                if !c.field.edits_in(of) {
+                    out.styles.push(CellStyle {
+                        range: CellRange {
+                            row: first as u32,
+                            col: j as u32,
+                            rows: n as u32,
+                            cols: 1,
+                        },
+                        align: None,
+                        bold: None,
+                        color: Some(COMPUTED_COLOR.to_owned()),
+                        fill: None,
+                        decimals: None,
+                    });
+                }
             }
         }
         if total {
@@ -272,20 +421,9 @@ impl Document {
             if !summed[0] {
                 last[0] = SCHEDULE_TOTAL.to_owned();
             }
+            out.styles.push(bold(out.rows.len()));
             out.rows.push(last);
-            out.styles.push(CellStyle {
-                range: CellRange {
-                    row: (n + 1) as u32,
-                    col: 0,
-                    rows: 1,
-                    cols: columns.len() as u32,
-                },
-                align: None,
-                bold: Some(true),
-                color: None,
-                fill: None,
-                decimals: None,
-            });
+            out.numbers.push(numbers(&sums));
         }
         out
     }

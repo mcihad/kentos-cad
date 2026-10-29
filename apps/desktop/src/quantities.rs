@@ -66,6 +66,8 @@ pub struct Window {
     /// The level shown; none: all.
     pub level: Option<String>,
     pub answer: Result<SpacesQuantified, String>,
+    /// Sayılar: the worked-out numbers to 15 significant digits (Tam) rather than as shown (docs/adr/0733 §7).
+    pub exact: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -75,6 +77,8 @@ pub enum Event {
     Level(usize),
     Copy,
     Export(WorkbookFormat),
+    /// Sayılar: Tam or Görünen basamakla.
+    Exact(bool),
     Close,
 }
 
@@ -155,6 +159,7 @@ impl App {
             tab: Tab::Spaces,
             level: None,
             answer,
+            exact: false,
         });
         self.dialog = Some(Dialog::Quantities);
     }
@@ -637,20 +642,49 @@ impl App {
     }
 
     /// CSV has one table: the one shown. Workbooks keep all seven sheets,
-    /// including empty headings, under the same selected level filter.
+    /// including empty headings, under the same selected level filter. A number column's cells as the window shows
+    /// them (the project's decimals), or with Sayılar: Tam to 15 significant digits (docs/adr/0733 §7); the words as
+    /// they are.
     fn quantities_sheets(&self, q: &SpacesQuantified, tab: Tab, format: WorkbookFormat) -> Vec<WorkbookSheet> {
+        let exact = self.quantities.as_ref().is_some_and(|w| w.exact);
         self.quantities_tables(q)
             .into_iter()
             .enumerate()
             .filter(|(i, _)| format != WorkbookFormat::Csv || *i == tab as usize)
-            .map(|(_, t)| WorkbookSheet {
-                name: t.name.to_owned(),
-                columns: t.heading.iter().zip(&t.numbers).map(|(h, &n)| WorkbookColumn {
-                    name: (*h).to_owned(),
-                    kind: if n { CellKind::Number } else { CellKind::Text },
-                    decimals: None,
-                }).collect(),
-                rows: t.cells,
+            .map(|(_, t)| {
+                let rows = t
+                    .cells
+                    .iter()
+                    .zip(&t.shown)
+                    .map(|(raw, shown)| {
+                        raw.iter()
+                            .enumerate()
+                            .map(|(j, cell)| {
+                                if !t.numbers.get(j).copied().unwrap_or(false) || cell.is_empty() {
+                                    return cell.clone();
+                                }
+                                if exact {
+                                    return cell
+                                        .parse::<f64>()
+                                        .map_or_else(|_| cell.clone(), kentos_native_application::table_export::fifteen);
+                                }
+                                // The number the window shows, without its unit.
+                                let token = shown.get(j).and_then(|s| s.split_whitespace().next()).unwrap_or("");
+                                let token = token.replace(',', ".");
+                                if token.parse::<f64>().is_ok() { token } else { cell.clone() }
+                            })
+                            .collect()
+                    })
+                    .collect();
+                WorkbookSheet {
+                    name: t.name.to_owned(),
+                    columns: t.heading.iter().zip(&t.numbers).map(|(h, &n)| WorkbookColumn {
+                        name: (*h).to_owned(),
+                        kind: if n { CellKind::Number } else { CellKind::Text },
+                        decimals: None,
+                    }).collect(),
+                    rows,
+                }
             })
             .collect()
     }
@@ -689,6 +723,12 @@ impl App {
                     format!("Metrajın {n} satırı panoya kopyalandı."),
                 );
                 return iced::clipboard::write(lines.join("\n"));
+            }
+            Event::Exact(on) => {
+                if let Some(w) = self.quantities.as_mut() {
+                    w.exact = on;
+                }
+                return Task::none();
             }
             Event::Export(format) => {
                 let Ok(q) = &w.answer else {
@@ -925,6 +965,15 @@ impl App {
         let export: Element<'_, Message> = kentos_ui::widget::MenuButton::new(face, || {
             crate::table_write::items(Menu::new(), |f| msg(Event::Export(f)))
         })
+        .into();
+        // Sayılar (docs/adr/0733 §7): the worked-out numbers as shown, or to 15 significant digits.
+        let exact = self.quantities.as_ref().is_some_and(|w| w.exact);
+        let export: Element<'_, Message> = row![
+            export,
+            crate::exchange::words::check(exact, "Tam sayılar (15 basamak)", Some(msg(Event::Exact(!exact)))),
+        ]
+        .spacing(10)
+        .align_y(Center)
         .into();
         let body = Column::new()
             .spacing(12)

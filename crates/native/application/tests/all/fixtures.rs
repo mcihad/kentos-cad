@@ -124,7 +124,7 @@ use kentos_native_application::{
     processing_batch, processing_run, processing_tools, subnetworks, subnetworks_update,
 };
 use kentos_native_application::{
-    schedules_create, schedules_edit, tags_check, tags_create, tags_edit,
+    schedules_create, schedules_edit, schedules_query, tags_check, tags_create, tags_edit,
 };
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
 use kentos_native_application::{topology_check, topology_exceptions};
@@ -1367,6 +1367,12 @@ impl Input for kentos_commands::SchedulesCreate {
             "lineWeight" => self.line_weight.as_mut(),
             _ => None,
         }
+    }
+}
+
+impl Input for kentos_commands::SchedulesQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
     }
 }
 
@@ -4354,6 +4360,9 @@ fn run_op(
         }
         kentos_commands::CAD_SCHEDULES_EDIT => {
             run!(schedules_edit, kentos_commands::SchedulesEdit)
+        }
+        kentos_commands::CAD_SCHEDULES_QUERY => {
+            run!(schedules_query, kentos_commands::SchedulesQuery)
         }
         kentos_commands::CAD_SPACES_EDIT => {
             run!(spaces_edit, kentos_commands::SpacesEdit)

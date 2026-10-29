@@ -1231,6 +1231,7 @@ mod tests {
             vec![
                 object(r#"{"kind":"point","id":1,"layerId":"","attrs":{},"p":{"x":1,"y":3}}"#),
                 Entity::Insert(InsertEntity {
+                    arch: Default::default(),
                     clipping: None,
                     parameters: Default::default(),
                     attribute_places: Default::default(),
@@ -1250,6 +1251,7 @@ mod tests {
         );
         let placing = Placing::new(&[outer, inner]);
         let i = InsertEntity {
+            arch: Default::default(),
             clipping: None,
             parameters: Default::default(),
             attribute_places: Default::default(),

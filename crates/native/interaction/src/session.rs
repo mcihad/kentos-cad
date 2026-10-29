@@ -122,6 +122,8 @@ pub const TOOLS: &[&str] = &[
     tag_tools::TAG_ALL_ID,
     tag_tools::SCHEDULE_ID,
     tag_tools::SCHEDULE_SPACES_ID,
+    tag_tools::SCHEDULE_FINISHES_ID,
+    tag_tools::SCHEDULE_FIXTURES_ID,
     viewmark_tools::SECTION_ID,
     viewmark_tools::ELEVATION_ID,
     viewmark_tools::DETAIL_ID,
@@ -515,6 +517,10 @@ impl Session {
             tag_tools::TAG_ALL_ID => Box::new(tag_tools::TagAllTool::new()),
             tag_tools::SCHEDULE_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Openings)),
             tag_tools::SCHEDULE_SPACES_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Spaces)),
+            tag_tools::SCHEDULE_FINISHES_ID => {
+                Box::new(tag_tools::ScheduleTool::of_preset(tag_tools::SchedulePreset::Finishes))
+            }
+            tag_tools::SCHEDULE_FIXTURES_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Fixtures)),
             viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Section)),
             viewmark_tools::ELEVATION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Elevation)),
             viewmark_tools::DETAIL_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Detail)),

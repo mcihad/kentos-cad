@@ -539,6 +539,12 @@ impl App {
             }
             Event::Words(t) => e.words = t,
             Event::Commit => {
+                // A schedule's cell that is not its objects' own field is read only (docs/adr/0733 §6).
+                if let Some(Err(why)) = self.document.as_ref().and_then(|d| schedule_cell(&d.model, &e.saved, e.active)) {
+                    e.problem = Some(why);
+                    e.words = e.words_at(e.active);
+                    return Task::none();
+                }
                 group.extend(commit_edits(e));
                 e.step(1, 0, false);
                 task = iced::widget::operation::focus(Id::new("table-grid"));
@@ -1335,9 +1341,12 @@ impl App {
         // The status line.
         let width: f64 = e.draft.columns.iter().sum();
         let depth: f64 = e.draft.rows.iter().sum();
-        let status: Element<'_, Message> = match &e.problem {
-            Some(p) => words::text_line(words::Kind::Error, p.clone()),
-            None => label::caption(format!(
+        let cell = self.document.as_ref().and_then(|d| schedule_cell(&d.model, &e.saved, e.active));
+        let status: Element<'_, Message> = match (&e.problem, cell) {
+            (Some(p), _) => words::text_line(words::Kind::Error, p.clone()),
+            (None, Some(Ok(says))) => words::text_line(words::Kind::Ok, says),
+            (None, Some(Err(why))) => words::text_line(words::Kind::Warn, why),
+            (None, None) => label::caption(format!(
                 "{n} satır × {m} sütun; {} × {}. Çift tık, Enter ya da F2 hücreyi yazar, Shift ile alan seçilir.",
                 format.length(width),
                 format.length(depth)
@@ -1464,6 +1473,54 @@ fn tool_by_words(words: &str) -> Option<Tool> {
 }
 
 /// The bar's words written to the active cell (a formula when they begin with `=`), the column widened as they ask.
+/// What a schedule's cell at `at` is (docs/adr/0733 §6): written to its row's objects (the words say which), or read
+/// only and why; none for another table.
+pub(crate) fn schedule_cell(
+    doc: &kentos_domain::Document,
+    t: &kentos_commands::TableEntity,
+    at: (usize, usize),
+) -> Option<Result<String, String>> {
+    let Some(kentos_commands::TableSource::Schedule { of, columns, total, members, .. }) = &t.source else {
+        return None;
+    };
+    let (r, c) = at;
+    let column = columns.get(c)?;
+    if r == 0 {
+        return Some(Err("Başlık satırı: sütunun adı belgenin yazdığıdır; düzenlenmez.".into()));
+    }
+    let objects = members.get(r - 1).filter(|m| !m.is_empty());
+    let Some(objects) = objects else {
+        let what = if *total && r + 1 == t.cells.len() { "Genel toplam" } else { "Grup başlığı ya da ara toplam" };
+        return Some(Err(format!("{what}: nesnelerin satırı değil; düzenlenmez.")));
+    };
+    if !kentos_native_application::schedules::editable(*of, column.field) {
+        return Some(Err(format!(
+            "Hesaplanır: “{}” çizimden okunur; düzenlenmez. Kaynağın kendi alanını değiştirin.",
+            doc.schedule_heading(column)
+        )));
+    }
+    let names: Vec<String> = objects
+        .iter()
+        .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)))
+        .filter_map(|e| {
+            ["number", "tag", "name", "type"]
+                .iter()
+                .find_map(|p| doc.arch_value(e, p, None).map(|v| doc.arch_value_text(&v, false)))
+                .filter(|w| !w.is_empty())
+        })
+        .take(6)
+        .collect();
+    let more = objects.len().saturating_sub(names.len());
+    let mut words = format!("Yazılır: {} nesne", objects.len());
+    if !names.is_empty() {
+        words.push_str(&format!(" — {}", names.join(", ")));
+        if more > 0 {
+            words.push_str(&format!(" ve {more} nesne daha"));
+        }
+    }
+    Some(Ok(format!("{words}. Kaydet hepsine tek adımda yazar.")))
+}
+
 fn commit_edits(e: &Editor) -> Vec<TableEdit> {
     let at = e.owner(e.active);
     if e.words == e.words_at(at) {

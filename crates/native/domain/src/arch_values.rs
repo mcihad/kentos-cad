@@ -254,6 +254,19 @@ impl Document {
                         .map(|(floor, height)| Length(floor + height)),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
+                    // Its finishes (docs/adr/0733 §3).
+                    "floorFinish" => text(&x.finishes.floor),
+                    "baseFinish" => text(&x.finishes.base),
+                    "wallFinish" => text(&x.finishes.wall),
+                    "ceilingFinish" => text(&x.finishes.ceiling),
+                    // Its baseboard: Metraj's rule (docs/adr/0722 §5); a void has none.
+                    "baseboard" => (!x.void).then(|| {
+                        Length(crate::passages::baseboard(
+                            &x.parts,
+                            x.arch.level.as_deref(),
+                            &crate::passages::passages(self),
+                        ))
+                    }),
                     _ => None,
                 }
             }
@@ -332,9 +345,112 @@ impl Document {
                     .iter()
                     .find(|b| b.id == i.block)
                     .map(|b| Text(b.name.clone())),
+                // A fixture's (docs/adr/0733 §2): its block's card category, its level and phase, the space it stands in.
+                "category" => self
+                    .blocks()
+                    .iter()
+                    .find(|b| b.id == i.block)
+                    .and_then(|b| b.card.as_ref()?.category.clone())
+                    .filter(|c| !c.is_empty())
+                    .map(Text),
+                "level" => self.level_name(&i.arch).map(Text),
+                "phase" => i.arch.phase.map(|p| Text(p.label().to_owned())),
+                "space" => {
+                    let level = i.arch.level.as_deref();
+                    self.space_at(self.fixture_middle(i), level)
+                        .or_else(|| self.space_at(i.p, level))
+                        .map(Text)
+                }
                 _ => None,
             },
             _ => None,
+        }
+    }
+
+    /// Where a fixture stands (docs/adr/0733 §2): the middle of its block's drawing as the insert places it, so that a
+    /// cabinet whose point is on the wall's face stands in its room; its point when its block draws nothing.
+    pub fn fixture_middle(&self, i: &kentos_contracts::InsertEntity) -> kentos_contracts::Vec2 {
+        use kentos_geometry_core::api::json::{FromJson, Json};
+        use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
+        let Some(b) = self.blocks().iter().find(|b| b.id == i.block) else {
+            return i.p;
+        };
+        let mut seen: Option<[f64; 4]> = None;
+        for e in &b.entities {
+            let Some(core) = serde_json::to_string(e)
+                .ok()
+                .and_then(|t| Json::parse(&t).ok())
+                .and_then(|j| CoreEntity::from_json(&j).ok())
+            else {
+                continue;
+            };
+            let r = entity_bounds(&core.shape);
+            if ![r.min_x, r.min_y, r.max_x, r.max_y].iter().all(|v| v.is_finite()) {
+                continue;
+            }
+            seen = Some(match seen {
+                None => [r.min_x, r.min_y, r.max_x, r.max_y],
+                Some(o) => [o[0].min(r.min_x), o[1].min(r.min_y), o[2].max(r.max_x), o[3].max(r.max_y)],
+            });
+        }
+        let Some([x0, y0, x1, y1]) = seen else {
+            return i.p;
+        };
+        let (x, y) = ((x0 + x1) / 2.0 - b.base.x, (y0 + y1) / 2.0 - b.base.y);
+        let m = kentos_geometry_core::block::placement_xy(
+            kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
+            i.scale,
+            i.y_scale.unwrap_or(i.scale),
+            i.rotation,
+            i.mirror,
+        );
+        kentos_contracts::Vec2 {
+            x: m[0] * x + m[2] * y + m[4],
+            y: m[1] * x + m[3] * y + m[5],
+        }
+    }
+
+    /// The space `p` stands in on `level` (none: among the spaces without a level), by its number and name; the first
+    /// one in the drawing's order that holds it, a void none (docs/adr/0733 §2).
+    pub fn space_at(&self, p: kentos_contracts::Vec2, level: Option<&str>) -> Option<String> {
+        let at = kentos_geometry_core::Vec2::new(p.x, p.y);
+        self.entities().find_map(|e| {
+            let Entity::Space(s) = e else { return None };
+            let x = &s.space;
+            if x.void || x.arch.level.as_deref() != level {
+                return None;
+            }
+            core_areas(&x.parts)
+                .iter()
+                .any(|a| kentos_geometry_core::geom::region::inside_area(a, at))
+                .then(|| {
+                    [x.number.as_deref(), x.name.as_deref()]
+                        .into_iter()
+                        .flatten()
+                        .filter(|w| !w.is_empty())
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .filter(|w| !w.is_empty())
+        })
+    }
+
+    /// A value's number in the unit its words show (a length in the drawing's unit, an area in the project's), not
+    /// rounded; none for words.
+    pub fn arch_value_number(&self, v: &ArchValue) -> Option<f64> {
+        let s = self.settings();
+        match v {
+            ArchValue::Text(_) | ArchValue::Percent(_) => None,
+            ArchValue::Length(m) => Some(m * s.drawing_unit.unwrap_or_default().per_metre()),
+            ArchValue::Area(m) => Some(
+                m / match s.area_unit {
+                    AreaUnit::M2 => 1.0,
+                    AreaUnit::Donum => 1000.0,
+                    AreaUnit::Ha => 10_000.0,
+                },
+            ),
+            ArchValue::Volume(m) => Some(*m),
+            ArchValue::Count(n) => Some(*n as f64),
         }
     }
 

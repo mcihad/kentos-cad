@@ -878,6 +878,7 @@ impl Document {
             let mut base = base.clone();
             base.attrs = attrs;
             Entity::Insert(InsertEntity {
+                arch: Default::default(),
                 base,
                 block: b.id,
                 p,
@@ -1132,6 +1133,20 @@ impl Document {
             let Some(tie) = tie else { continue };
             legs[j].wall = Some(tie.wall.to_text());
             warnings.extend(self.casework_clashes(tie.wall, &frames[j], j, n));
+        }
+        // Its modules stand on their wall's level (docs/adr/0733 §1): the first wall's.
+        let level = ties.iter().flatten().find_map(|t| {
+            let slot = crate::identity::Uuid::parse_str(&t.wall.to_text())
+                .ok()
+                .and_then(|u| self.slot_of(u))?;
+            self.get(slot)?.own_level().map(str::to_owned)
+        });
+        if let Some(level) = level {
+            for m in &mut members {
+                if let Entity::Insert(i) = &mut m.entity {
+                    i.arch.level = Some(level.clone());
+                }
+            }
         }
         Ok(Laid {
             members,

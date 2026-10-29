@@ -1,4 +1,4 @@
-//! Measured straight partition: source and limits are explicit persistent wall edges.
+//! Measured partition: source and limits are explicit persistent wall edges, straight or arc (docs/adr/0734).
 use crate::{Vec2, WallsCreate, WallsPlan};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -93,6 +93,12 @@ pub struct WallPartitionPlan {
     pub wall: WallsPlan,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub source_face: [Vec2; 2],
+    /// The source face's arc between its two points on an arc source edge (tan of a quarter of its sweep,
+    /// counter-clockwise positive); absent on a straight one (docs/adr/0734).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub source_face_bulge: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub dimension: [Vec2; 2],
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

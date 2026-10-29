@@ -1402,6 +1402,8 @@ const ENTRIES: &[Entry] = &[
                 "derived_parameter",
                 "invalid_parameter_value",
                 "slots_exhausted",
+                // Its level (docs/adr/0733 §1).
+                "level_not_found",
             ],
             LAYER,
             REVISION,
@@ -1892,7 +1894,7 @@ const ENTRIES: &[Entry] = &[
         targets: || {
             vec![target(
                 None,
-                &["wall", "space", "grid", "column", "stair", "ramp", "slab", "polyline"],
+                &["wall", "space", "grid", "column", "stair", "ramp", "slab", "polyline", "insert"],
                 &[],
                 Some("not_levelled"),
                 Some("Çoklu çizgi yalnız mahal ayırıcıysa kat alır."),
@@ -2183,6 +2185,7 @@ const ENTRIES: &[Entry] = &[
                 "not_schedule",
                 "cell_out_of_range",
                 "cell_computed",
+                "schedule_summary_row",
                 "schedule_group_number",
                 "invalid_cell_value",
                 "invalid_schedule",
@@ -2191,6 +2194,13 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             &["layer_locked"],
         ],
+        warnings: &[],
+        targets: || vec![target(None, &["table"], &[], Some("not_schedule"), None)],
+    },
+    // A schedule read back (docs/adr/0733 §6).
+    Entry {
+        id: "cad.schedules.query",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_schedule"]],
         warnings: &[],
         targets: || vec![target(None, &["table"], &[], Some("not_schedule"), None)],
     },
@@ -5211,6 +5221,19 @@ const ENTRIES: &[Entry] = &[
             ],
         ],
         warnings: &["crs_undeclared", "import_losses", "rows_rejected"],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.table",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_table",
+            "file_unwritable",
+        ]],
+        warnings: &[],
         targets: none,
     },
     Entry {

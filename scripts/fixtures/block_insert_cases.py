@@ -380,6 +380,12 @@ add("çizimde olmayan blok, kimliğiyle", [
      "result": failed("unknown_block", f"“{MISSING_BLOCK}” kimlikli blok çizimde tanımlı değil. Bloklar panelindeki "
                                        "bir bloğun adını ya da kimliğini verin.", "block"), "expect": NOTHING},
 ])
+# A fixture's level (docs/adr/0733 §1): one the project has, else refused before the block is looked up.
+add("projede olmayan kat reddedilir", [
+    {"op": "execute", "input": {"block": PENCERE, "at": AT, "layerId": "kapilar", "arch": {"level": "kat-9"}},
+     "result": failed("level_not_found", "Projede “kat-9” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var "
+                                         "olan bir katı seçin.", "arch.level"), "expect": NOTHING},
+])
 add("blok bilinmeden etiketler denetlenmez, etiketler katmandan önce", [
     {"op": "execute", "input": {"name": "Yok", "at": AT, "layerId": "yok", "attributes": {"X": "1"}},
      "result": failed("unknown_block", "“Yok” adlı blok çizimde tanımlı değil. Bloklar panelindeki bir bloğun adını "

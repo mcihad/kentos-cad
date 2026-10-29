@@ -195,6 +195,12 @@
       ]
     },
     {
+      "name": "projede olmayan kat reddedilir",
+      "steps": [
+        {"op": "execute", "input": {"block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3103", "at": {"x": 3, "y": 0}, "layerId": "kapilar", "arch": {"level": "kat-9"}}, "result": {"status": "failed", "error": {"code": "level_not_found", "message": "Projede “kat-9” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.", "path": "arch.level"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
       "name": "blok bilinmeden etiketler denetlenmez, etiketler katmandan önce",
       "steps": [
         {"op": "execute", "input": {"name": "Yok", "at": {"x": 3, "y": 0}, "layerId": "yok", "attributes": {"X": "1"}}, "result": {"status": "failed", "error": {"code": "unknown_block", "message": "“Yok” adlı blok çizimde tanımlı değil. Bloklar panelindeki bir bloğun adını ya da kimliğini verin.", "path": "name"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}},
