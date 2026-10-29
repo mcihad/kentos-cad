@@ -37,6 +37,7 @@
 //! [iced]: https://github.com/iced-rs/iced
 
 pub mod attribute;
+pub mod clock;
 pub mod focus;
 pub mod icon;
 pub mod label;

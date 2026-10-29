@@ -10,6 +10,11 @@
 //! arayüz durulana kadar yeniden kurulur. Böylece bağlam menüsü gibi
 //! durumunu kendi tutan bileşenler de gerçek etkileşimle açılır.
 //!
+//! Bileşenlerin saati ([`clock`](crate::clock)) olaylar verilirken görüntünün
+//! saatidir ve yalnız [`Snapshot::wait`] ile ilerler: art arda iki tık, makine
+//! ne kadar meşgul olursa olsun çift tıktır; araya bekleme girince iki ayrı
+//! basıştır.
+//!
 //! ```ignore
 //! let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0))?;
 //! let mut app = App::new();
@@ -32,6 +37,7 @@ use std::fmt;
 use std::fs::File;
 use std::io::{self, BufWriter};
 use std::path::Path;
+use std::time::Duration;
 
 use iced::advanced::renderer::{self, Headless};
 use iced::advanced::{clipboard, widget};
@@ -113,6 +119,8 @@ pub struct Snapshot {
     scale: f32,
     cache: user_interface::Cache,
     cursor: mouse::Cursor,
+    /// Bileşenlerin saati olaylar verilirken bu andadır.
+    clock: Instant,
 }
 
 impl Snapshot {
@@ -153,6 +161,7 @@ impl Snapshot {
             scale: 1.0,
             cache: user_interface::Cache::default(),
             cursor: mouse::Cursor::Unavailable,
+            clock: Instant::now(),
         })
     }
 
@@ -160,6 +169,13 @@ impl Snapshot {
     pub fn scale(mut self, scale: f32) -> Self {
         self.scale = scale;
         self
+    }
+
+    /// Zaman geçer: sonraki olaylar `time` sonra gelir (ör. bir sürüklemeden
+    /// sonraki tık çift tık sayılmasın). Bileşenlerin saati yalnız böyle
+    /// ilerler.
+    pub fn wait(&mut self, time: Duration) {
+        self.clock += time;
     }
 
     /// Çizici: bir bileşeni pencere kurmadan yerleştirmek için (ör. ölçüm testleri).
@@ -178,6 +194,7 @@ impl Snapshot {
         view: Element<'a, Message>,
         events: &[Event],
     ) -> Vec<Message> {
+        let _clock = crate::clock::freeze(self.clock);
         let mut ui = UserInterface::build(
             view,
             self.size,
@@ -237,6 +254,7 @@ impl Snapshot {
         view: Element<'a, Message>,
         event: &Event,
     ) -> (Vec<Message>, event::Status) {
+        let _clock = crate::clock::freeze(self.clock);
         if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
             self.cursor = mouse::Cursor::Available(*position);
         }
@@ -325,6 +343,7 @@ impl Snapshot {
 
     /// Arayüzü çizer.
     pub fn render<Message>(&mut self, view: Element<'_, Message>, theme: &Theme) -> Image {
+        let _clock = crate::clock::freeze(self.clock);
         let mut ui = UserInterface::build(
             view,
             self.size,

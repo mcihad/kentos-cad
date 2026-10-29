@@ -165,7 +165,8 @@ struct Drag {
 struct State {
     drag: Option<Drag>,
     hovered: bool,
-    /// Son basışın zamanı; çift tıkı tanımak için.
+    /// Son basışın anı, arayüzün saatiyle ([`clock`](crate::clock)); çift
+    /// tıkı tanımak için.
     last_press: Option<Instant>,
 }
 
@@ -240,7 +241,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Sash<'a, Mess
                     return;
                 };
 
-                let now = Instant::now();
+                let now = crate::clock::now();
                 let double = state
                     .last_press
                     .is_some_and(|last| now.duration_since(last) <= DOUBLE_CLICK);

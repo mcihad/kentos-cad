@@ -663,6 +663,8 @@ fn the_sources_top_edge_is_dragged_and_a_double_click_gives_the_first_share() {
     use iced::{Point, Size};
     use kentos_ui::snapshot::{Input as Gesture, Snapshot};
 
+    // The head's place is measured: no other test's text size meanwhile.
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
     let (mut app, _dir) = open("kaynak-pay");
     send(
         &mut app,
@@ -672,6 +674,7 @@ fn the_sources_top_edge_is_dragged_and_a_double_click_gives_the_first_share() {
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
+    let height = |app: &App| ed(app).files.source.as_ref().expect("open").height;
     // Twice: the canvas tells its size, the edge knows the source's height.
     snapshot.settle(&mut app, App::view, &mut update);
     snapshot.settle(&mut app, App::view, &mut update);
@@ -688,15 +691,8 @@ fn the_sources_top_edge_is_dragged_and_a_double_click_gives_the_first_share() {
     let up = Point::new(edge.x, edge.y - 120.0);
     snapshot.input(&mut app, App::view, &mut update, Gesture::Drag(edge, up));
     snapshot.settle(&mut app, App::view, &mut update);
-    assert!(
-        ed(&app)
-            .files
-            .source
-            .as_ref()
-            .expect("open")
-            .height
-            .is_some()
-    );
+    let dragged = height(&app);
+    assert!(dragged.is_some());
     // The panel grew by the drag, from where it was: the head went up with the edge.
     let grown = head(&mut snapshot, &app);
     assert!(
@@ -705,11 +701,15 @@ fn the_sources_top_edge_is_dragged_and_a_double_click_gives_the_first_share() {
     );
     // Nothing of the drawing changed: no undo step.
     assert!(!ed(&app).can_undo());
-    // A double click on the edge gives the first share back.
+    // A moment later a click alone keeps that height; a second one at once is a
+    // double click however long the machine takes between them (the snapshot's
+    // clock), and gives the first share back.
+    snapshot.wait(std::time::Duration::from_secs(1));
     snapshot.input(&mut app, App::view, &mut update, Gesture::Click(up));
+    assert_eq!(height(&app), dragged, "one click");
     snapshot.input(&mut app, App::view, &mut update, Gesture::Click(up));
     snapshot.settle(&mut app, App::view, &mut update);
-    assert_eq!(ed(&app).files.source.as_ref().expect("open").height, None);
+    assert_eq!(height(&app), None);
     let back = head(&mut snapshot, &app);
     assert!((back.y - first.y).abs() <= 1.0, "{first:?} → {back:?}");
 }
