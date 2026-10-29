@@ -1041,14 +1041,18 @@ fn an_agent_reads_no_value_of_a_field_the_drawing_withholds() {
         .as_ref()
         .map(|d| d.model.layers().active().to_owned())
         .expect("a layer");
-    let fields = ask_agent(
-        &mut app,
-        &answers,
-        "run",
-        json!({ "command": "cad.layers.edit", "op": "execute", "input": { "operation": "fields", "layer": layer,
-            "fields": [{ "name": "Ada", "kind": "text" }, { "name": "TC", "kind": "text", "withheld": true }] } }),
-    );
-    assert_eq!(fields["result"]["status"], "completed", "{fields}");
+    // The value is written first, the field withheld after: an agent writes no hidden field (docs/adr/0743 §1).
+    let fields = |app: &mut App, withheld: bool| {
+        let fields = ask_agent(
+            app,
+            &answers,
+            "run",
+            json!({ "command": "cad.layers.edit", "op": "execute", "input": { "operation": "fields", "layer": layer,
+                "fields": [{ "name": "Ada", "kind": "text" }, { "name": "TC", "kind": "text", "withheld": withheld }] } }),
+        );
+        assert_eq!(fields["result"]["status"], "completed", "{fields}");
+    };
+    fields(&mut app, false);
     let pts: Value = serde_json::from_str(SQUARE).expect("points");
     let written = ask_agent(
         &mut app,
@@ -1058,6 +1062,17 @@ fn an_agent_reads_no_value_of_a_field_the_drawing_withholds() {
             "input": { "layerId": layer, "pts": pts, "attrs": { "Ada": "101", "TC": "12345678901" } } }),
     );
     assert_eq!(written["result"]["status"], "completed", "{written}");
+    fields(&mut app, true);
+    // A call that reads the field is refused before it runs (docs/adr/0743 §1).
+    let read = ask_agent(
+        &mut app,
+        &answers,
+        "call",
+        json!({ "command": "cad.fields.write", "op": "execute",
+            "input": { "layer": layer, "write": { "kind": "calculate", "field": "Ada", "expression": "TC" } } }),
+    );
+    assert_eq!(read["result"]["status"], "failed", "{read}");
+    assert_eq!(read["result"]["error"]["code"], "hidden_field", "{read}");
     let page = ask_agent(&mut app, &answers, "entities", json!({ "layer": layer }));
     let text = page.to_string();
     assert!(!text.contains("12345678901"), "{text}");

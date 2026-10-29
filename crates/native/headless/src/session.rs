@@ -228,6 +228,25 @@ impl Session {
         ))
     }
 
+    /// [`Session::call`] for an agent (docs/adr/0743): refused when it names a field the drawing hides from
+    /// agents or sends a processing result to a file; a file it writes holds none of those fields.
+    pub fn call_for_agent(&mut self, envelope: Value) -> Result<Value, HeadlessError> {
+        let mut envelope = crate::rpc::envelope(&envelope)?;
+        dispatch::with_own_file(&envelope.command, &mut envelope.input, self.path.as_deref());
+        to_json(&crate::dispatch::call_envelope_for_agent(
+            &mut self.doc,
+            None,
+            envelope,
+        ))
+    }
+
+    /// [`Session::start`] for an agent: as [`Session::call_for_agent`] rules.
+    pub fn start_for_agent(&mut self, envelope: Value) -> Result<Value, HeadlessError> {
+        let mut envelope = crate::rpc::envelope(&envelope)?;
+        dispatch::with_own_file(&envelope.command, &mut envelope.input, self.path.as_deref());
+        to_json(&self.jobs.start_for_agent(&self.doc, envelope)?)
+    }
+
     /// Starts a command as a job (docs/adr/0253 §9): computed on a copy of
     /// the drawing on another thread; its `JobStatus`.
     pub fn start(&mut self, envelope: Value) -> Result<Value, HeadlessError> {

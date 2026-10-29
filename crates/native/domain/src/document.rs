@@ -282,6 +282,52 @@ impl Document {
         }
     }
 
+    /// A [`Document::reading_copy`] without the fields `names` (docs/adr/0743 §2): their values gone from every
+    /// object and their definitions from every layer. What a file an agent writes is made from; the objects
+    /// that hold none of them stay shared.
+    pub fn reading_copy_without(&self, names: &[String]) -> Document {
+        let mut copy = self.reading_copy();
+        if names.is_empty() {
+            return copy;
+        }
+        let hidden = |k: &str| names.iter().any(|n| n == k);
+        let cut: Vec<crate::store::Stored> = copy
+            .store
+            .iter()
+            .filter(|s| s.entity.base().attrs.keys().any(|k| hidden(k)))
+            .map(|s| {
+                let mut entity = (*s.entity).clone();
+                entity.base_mut().attrs.retain(|k, _| !hidden(k));
+                crate::store::Stored {
+                    uid: s.uid,
+                    entity: Arc::new(entity),
+                }
+            })
+            .collect();
+        for stored in cut {
+            copy.store.put(stored);
+        }
+        let kept: Vec<(String, Vec<kentos_contracts::LayerField>)> = copy
+            .layers
+            .leaves()
+            .into_iter()
+            .filter(|l| l.fields.iter().any(|f| hidden(&f.name) || hidden(f.key())))
+            .map(|l| {
+                let fields = l
+                    .fields
+                    .iter()
+                    .filter(|f| !hidden(&f.name) && !hidden(f.key()))
+                    .cloned()
+                    .collect();
+                (l.id.clone(), fields)
+            })
+            .collect();
+        for (id, fields) in kept {
+            copy.layers.replace_fields(&id, &fields);
+        }
+        copy
+    }
+
     // ── Saving ───────────────────────────────────────────────────────────
 
     /// The dimensions with a broken reference, in slot order: what the drawing marks (docs/adr/0249 §3).

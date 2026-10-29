@@ -66640,6 +66640,18 @@
       "meaning": "Komut sunucuda çalışır, açık çizimde değil; bir sunucu bağlantısıyla çağırın."
     },
     {
+      "code": "hidden_field",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çağrı, çizimin ajandan gizlediği bir alanı anıyor; o alanla süzme, sıralama ve hesap çizimin sahibinindir."
+    },
+    {
+      "code": "hidden_field_sink",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizim ajandan alan gizliyor; ajan işlem sonucunu dosyaya yazamaz, sonucu çizime yazın."
+    },
+    {
       "code": "unknown_version",
       "kind": "failed",
       "retryable": false,

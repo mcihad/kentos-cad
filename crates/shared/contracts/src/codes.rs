@@ -1241,6 +1241,10 @@ codes! {
     UNKNOWN_COMMAND = "unknown_command", Failed, false, "Bu komut burada çalışmıyor ya da katalogda yok.";
     /// A command only the server runs, called on an open drawing.
     SERVER_COMMAND = "server_command", Failed, false, "Komut sunucuda çalışır, açık çizimde değil; bir sunucu bağlantısıyla çağırın.";
+    /// An agent's call that names a field the drawing hides from agents (docs/adr/0743 §1).
+    HIDDEN_FIELD = "hidden_field", Failed, false, "Çağrı, çizimin ajandan gizlediği bir alanı anıyor; o alanla süzme, sıralama ve hesap çizimin sahibinindir.";
+    /// An agent's processing result to a file while the drawing hides fields from agents (docs/adr/0743 §3).
+    HIDDEN_FIELD_SINK = "hidden_field_sink", Failed, false, "Çizim ajandan alan gizliyor; ajan işlem sonucunu dosyaya yazamaz, sonucu çizime yazın.";
     /// A command's version this host does not run.
     UNKNOWN_VERSION = "unknown_version", Failed, false, "Komutun bu sürümü burada çalışmıyor.";
     /// Input that does not read as the command's type.

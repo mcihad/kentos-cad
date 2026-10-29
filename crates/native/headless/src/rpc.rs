@@ -45,6 +45,34 @@ pub struct Jobs {
 impl Jobs {
     /// Starts `envelope` as a job on a reading copy of `doc`; its status.
     pub fn start(&mut self, doc: &Document, envelope: CallEnvelope) -> JobStatus {
+        self.start_without(doc, envelope, Vec::new())
+    }
+
+    /// [`Jobs::start`] for an agent (docs/adr/0743): refused when the call names a field the drawing hides or
+    /// sends a processing result to a file; a file is made without the hidden fields.
+    pub fn start_for_agent(
+        &mut self,
+        doc: &Document,
+        envelope: CallEnvelope,
+    ) -> Result<JobStatus, HeadlessError> {
+        let Some(veil) = crate::Veil::of(doc) else {
+            return Ok(self.start(doc, envelope));
+        };
+        if let Some(e) = crate::dispatch::agent_refusal(&veil, &envelope.command, &envelope.input) {
+            return Err(HeadlessError::new(
+                kentos_commands::codes::info(&e.code).map_or("invalid_input", |c| c.code),
+                e.message,
+            ));
+        }
+        Ok(self.start_without(doc, envelope, veil.names().to_vec()))
+    }
+
+    fn start_without(
+        &mut self,
+        doc: &Document,
+        envelope: CallEnvelope,
+        hidden: Vec<String>,
+    ) -> JobStatus {
         self.given += 1;
         let id = format!("is-{}", self.given);
         let job = if file_commands::is_file_command(&envelope.command) {
@@ -54,7 +82,7 @@ impl Jobs {
                 command,
                 request,
                 doc,
-                file_commands::job_work(envelope),
+                file_commands::job_work(envelope, hidden),
             )
         } else {
             Job::start(id.clone(), doc, envelope)
@@ -124,7 +152,45 @@ pub fn call_for_agent(
     let Some(veil) = crate::Veil::of(doc) else {
         return call_from(doc, jobs, drawing, method, params);
     };
-    match call_from(doc, jobs, drawing, method, params) {
+    // A call that reads a hidden field is refused, a file it writes holds none (docs/adr/0743).
+    let answer = match method {
+        "call" => {
+            let mut e = envelope(params)?;
+            crate::dispatch::with_own_file(&e.command, &mut e.input, drawing);
+            to_value(&crate::dispatch::call_envelope_for_agent(doc, None, e))
+        }
+        "start" => {
+            let jobs = jobs.ok_or_else(|| {
+                HeadlessError::new(
+                    "unknown_method",
+                    "Bu bağlantı iş tutmuyor; komutu call ile çağırın.",
+                )
+            })?;
+            let mut e = envelope(params)?;
+            crate::dispatch::with_own_file(&e.command, &mut e.input, drawing);
+            jobs.start_for_agent(doc, e)
+                .and_then(|status| to_value(&status))
+        }
+        "run" => {
+            let command = text(params, "command")?;
+            let mut input = params.get("input").cloned().unwrap_or(Value::Null);
+            crate::dispatch::with_own_file(command, &mut input, drawing);
+            match crate::dispatch::agent_refusal(&veil, command, &input) {
+                Some(e) => Err(HeadlessError::new(
+                    kentos_commands::codes::info(&e.code).map_or("invalid_input", |c| c.code),
+                    e.message,
+                )),
+                None if file_commands::is_file_command(command) => {
+                    let op = Op::parse(text(params, "op")?)?;
+                    file_commands::run_without(doc, command, op.call_op(), input, veil.names())
+                        .map_err(|message| HeadlessError::new("invalid_input", message))
+                }
+                None => call_from(doc, jobs, drawing, method, params),
+            }
+        }
+        _ => call_from(doc, jobs, drawing, method, params),
+    };
+    match answer {
         Ok(answer) => Ok(match method {
             "summary" => veil.summary(answer),
             "journal" => veil.journal(answer),

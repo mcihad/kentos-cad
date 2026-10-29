@@ -1,0 +1,437 @@
+{
+  "format": "kentos.agent-oracle/1",
+  "note": "Written by scripts/fixtures/agent_oracle_cases.py from docs/adr/0743 §1 without KentOS code.",
+  "cases": [
+    {
+      "name": "Gizli alan anmayan sorgu",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "layer": "bina",
+        "filter": "Ada = '101' ve Parsel > 3"
+      },
+      "named": null
+    },
+    {
+      "name": "Süzgeç gizli alanı okuyor",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "layer": "bina",
+        "filter": "Malik = 'Ali'"
+      },
+      "named": {
+        "path": "filter",
+        "field": "Malik"
+      }
+    },
+    {
+      "name": "İşlevin içinde",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "write": {
+          "kind": "calculate",
+          "field": "Ada",
+          "expression": "upper(Malik)"
+        }
+      },
+      "named": {
+        "path": "write.expression",
+        "field": "Malik"
+      }
+    },
+    {
+      "name": "Köşeli adla",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "write": {
+          "kind": "calculate",
+          "field": "Ada",
+          "expression": "[ TC ] || ''"
+        }
+      },
+      "named": {
+        "path": "write.expression",
+        "field": "TC"
+      }
+    },
+    {
+      "name": "Tırnaktaki ad bir metindir",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "write": {
+          "kind": "calculate",
+          "field": "Ada",
+          "expression": "'Malik'"
+        }
+      },
+      "named": null
+    },
+    {
+      "name": "Çift tırnaktaki ad da metindir",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "\"TC\" || Ada"
+      },
+      "named": null
+    },
+    {
+      "name": "Çağrılan sözcük işlevdir",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "Malik(1)"
+      },
+      "named": null
+    },
+    {
+      "name": "Daha uzun bir sözcük başka alandır",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "Malik_eski || TCK"
+      },
+      "named": null
+    },
+    {
+      "name": "Anahtar sözcükler alan değildir",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "boş veya doğru ve değil yanlış"
+      },
+      "named": null
+    },
+    {
+      "name": "Değişkenler alan değildir",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "$alan > 10 ve @proje_adi = 'x'"
+      },
+      "named": null
+    },
+    {
+      "name": "Açıklamadaki ad okunmaz",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "Ada // Malik\n|| '/' /* TC */"
+      },
+      "named": null
+    },
+    {
+      "name": "Sıralama alanı adıyla",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "order": [
+          {
+            "field": "Ada"
+          },
+          {
+            "field": "TC",
+            "descending": true
+          }
+        ]
+      },
+      "named": {
+        "path": "order[1].field",
+        "field": "TC"
+      }
+    },
+    {
+      "name": "Alan listesi",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "fields": [
+          "Ada",
+          "Malik"
+        ]
+      },
+      "named": {
+        "path": "fields[1]",
+        "field": "Malik"
+      }
+    },
+    {
+      "name": "Boşluklu ad yalnız tam yazılışıyla",
+      "names": [
+        "Tapu No",
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "fields": [
+          "Tapu No"
+        ]
+      },
+      "named": {
+        "path": "fields[0]",
+        "field": "Tapu No"
+      }
+    },
+    {
+      "name": "Boşluklu ad köşeli ifadede",
+      "names": [
+        "Tapu No",
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "filter": "[Tapu No] gibi '12%'"
+      },
+      "named": {
+        "path": "filter",
+        "field": "Tapu No"
+      }
+    },
+    {
+      "name": "Boşluklu adın sözcükleri ayrı alanlardır",
+      "names": [
+        "Tapu No",
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "filter": "Tapu = 1 ve No = 2"
+      },
+      "named": null
+    },
+    {
+      "name": "Şablonun ifadesi",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "labels": {
+          "template": "Ada {Ada} sahibi {Malik}"
+        }
+      },
+      "named": {
+        "path": "labels.template",
+        "field": "Malik"
+      }
+    },
+    {
+      "name": "Şablonun düz yazısı",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "labels": {
+          "template": "{Ada}"
+        }
+      },
+      "named": null
+    },
+    {
+      "name": "Özniteliğin değeri içerik",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "attrs": {
+          "Ada": "Malik bilgisi yok"
+        }
+      },
+      "named": null
+    },
+    {
+      "name": "Özniteliğin anahtarı gizli alan",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "layerId": "bina",
+        "attrs": {
+          "Ada": "103",
+          "TC": "1"
+        }
+      },
+      "named": {
+        "path": "attrs.TC",
+        "field": "TC"
+      }
+    },
+    {
+      "name": "Yazının içeriği okunmaz",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "text": "Malik ve TC",
+        "content": {
+          "runs": [
+            {
+              "text": "TC"
+            }
+          ]
+        }
+      },
+      "named": null
+    },
+    {
+      "name": "Not ve yol içerik",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "note": "Malik",
+        "path": "/tmp/Malik.csv",
+        "comment": "TC"
+      },
+      "named": null
+    },
+    {
+      "name": "İçerik altında anahtar yine sayılır",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "values": [
+          {
+            "Malik": "x"
+          }
+        ]
+      },
+      "named": {
+        "path": "values[0].Malik",
+        "field": "Malik"
+      }
+    },
+    {
+      "name": "Dizinin ikinci öğesi",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "steps": [
+          {
+            "expression": "Ada"
+          },
+          {
+            "expression": "TC * 2"
+          }
+        ]
+      },
+      "named": {
+        "path": "steps[1].expression",
+        "field": "TC"
+      }
+    },
+    {
+      "name": "Anahtarlar bayt sırasıyla: ilk bulunan",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "zeta": "Malik",
+        "alfa": "TC"
+      },
+      "named": {
+        "path": "alfa",
+        "field": "TC"
+      }
+    },
+    {
+      "name": "Adların sırası: ilk gizli ad",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "TC || Malik"
+      },
+      "named": {
+        "path": "expression",
+        "field": "Malik"
+      }
+    },
+    {
+      "name": "Türkçe büyük harfle anahtar sözcük",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "expression": "Ada VEYA Parsel DEĞİL boş"
+      },
+      "named": null
+    },
+    {
+      "name": "Kök bir metin",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": "Malik",
+      "named": {
+        "path": "",
+        "field": "Malik"
+      }
+    },
+    {
+      "name": "Sayılar ve mantık değerleri",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "input": {
+        "limit": 10,
+        "on": true,
+        "ratio": 0.5,
+        "none": null
+      },
+      "named": null
+    },
+    {
+      "name": "Gizli alan yok",
+      "names": [],
+      "input": {
+        "filter": "Malik = 'Ali'"
+      },
+      "named": null
+    }
+  ]
+}

@@ -14,6 +14,7 @@ publish.workspace = true
 # The catalog with its JSON Schemas (the `schema` feature): discovery for Python and AI.
 kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
+kentos-expression = { path = "../../shared/expression" }
 kentos-native-application = { path = "../application" }
 kentos-project = { path = "../project" }
 kentos-kcad = { path = "../../shared/kcad" }

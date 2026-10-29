@@ -15,6 +15,12 @@ use kentos_domain::Document;
 use kentos_native_application::python_call::{HIDDEN, redacted, redacted_names};
 use serde_json::{Map, Value};
 
+/// The keys under which a call's texts are what it writes (an object's attribute values, a text's words, a
+/// note, a file's path), not what it reads (docs/adr/0743 §1).
+pub const WRITTEN: [&str; 9] = [
+    "attrs", "values", "value", "text", "content", "note", "notes", "comment", "path",
+];
+
 /// The drawing's hidden fields and the values they hold.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Veil {
@@ -55,6 +61,77 @@ impl Veil {
 
     fn hides(&self, name: &str) -> bool {
         self.names.iter().any(|n| n == name)
+    }
+
+    /// Where an agent's call input names a hidden field (docs/adr/0743 §1): the first place in the input's own
+    /// order (keys sorted, `a.b[2]`) and the field. A key that is the field's name names it, wherever it is; a
+    /// text names it when it is the name, or an expression or a template (`{…}`) that reads the field. The texts
+    /// a call writes ([`WRITTEN`]) are content, not read: only their keys are looked at.
+    pub fn named_in(&self, input: &Value) -> Option<(String, String)> {
+        let mut path = String::new();
+        self.named_at(input, &mut path, false)
+    }
+
+    fn named_at(&self, v: &Value, path: &mut String, content: bool) -> Option<(String, String)> {
+        match v {
+            Value::String(s) if !content => self.named_by(s).map(|f| (path.clone(), f)),
+            Value::Array(items) => items.iter().enumerate().find_map(|(i, item)| {
+                let len = path.len();
+                path.push_str(&format!("[{i}]"));
+                let found = self.named_at(item, path, content);
+                path.truncate(len);
+                found
+            }),
+            Value::Object(map) => map.iter().find_map(|(k, item)| {
+                let len = path.len();
+                if !path.is_empty() {
+                    path.push('.');
+                }
+                path.push_str(k);
+                let found = if self.hides(k) {
+                    Some((path.clone(), k.clone()))
+                } else {
+                    self.named_at(item, path, content || WRITTEN.contains(&k.as_str()))
+                };
+                path.truncate(len);
+                found
+            }),
+            _ => None,
+        }
+    }
+
+    fn named_by(&self, s: &str) -> Option<String> {
+        if let Some(n) = self.names.iter().find(|n| *n == s) {
+            return Some(n.clone());
+        }
+        if s.contains('{')
+            && let Some(n) = self
+                .names
+                .iter()
+                .find(|n| kentos_expression::editor::template_names_field(s, n))
+        {
+            return Some(n.clone());
+        }
+        let fields = kentos_expression::editor::fields_of(s);
+        self.names.iter().find(|n| fields.contains(n)).cloned()
+    }
+
+    /// An agent's call refused because it names a hidden field ([`Veil::named_in`]), as the protocol answers.
+    pub fn refusal(&self, input: &Value) -> Option<kentos_commands::CommandError> {
+        let (at, field) = self.named_in(input)?;
+        Some(kentos_commands::CommandError {
+            code: kentos_commands::codes::HIDDEN_FIELD.into(),
+            message: format!(
+                "“{field}” alanı çizimde ajandan gizli ({at}): o alanla süzme, sıralama, hesap ve yazma çizimin \
+                 sahibinindir. Çağrıyı bu alanı anmadan yeniden yapın."
+            ),
+            path: Some(if at.is_empty() {
+                "input".into()
+            } else {
+                format!("input.{at}")
+            }),
+            ..kentos_commands::CommandError::default()
+        })
     }
 
     /// `answer` as an agent may read it.
@@ -279,6 +356,27 @@ mod tests {
                 "{}",
                 case["name"]
             );
+        }
+    }
+
+    /// fixtures/agent-veil/v1/oracle.json, written by scripts/fixtures/agent_oracle_cases.py from docs/adr/0743 §1
+    /// without KentOS code.
+    #[test]
+    fn the_shared_cases_name_a_hidden_field_alike() {
+        let data: Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/agent-veil/v1/oracle.json"
+        ))
+        .expect("the cases");
+        let cases = data["cases"].as_array().expect("cases");
+        assert!(cases.len() >= 20);
+        for case in cases {
+            let names: Vec<String> =
+                serde_json::from_value(case["names"].clone()).expect("the names");
+            let got = Veil::new(names, Vec::new())
+                .named_in(&case["input"])
+                .map(|(path, field)| json!({ "path": path, "field": field }))
+                .unwrap_or(Value::Null);
+            assert_eq!(got, case["named"], "{}", case["name"]);
         }
     }
 

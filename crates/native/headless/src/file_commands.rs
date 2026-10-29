@@ -1784,6 +1784,12 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
 /// A file command by the protocol (docs/adr/0253 §4, §10): its call's
 /// faults, its request, its answer; an execute's write in the journal.
 pub fn call(doc: &mut Document, envelope: CallEnvelope) -> CallAnswer {
+    call_without(doc, envelope, &[])
+}
+
+/// [`call`] for an agent (docs/adr/0743 §2): the file made from the drawing without the fields `hidden`, its call
+/// checked against and recorded in the drawing itself.
+pub fn call_without(doc: &mut Document, envelope: CallEnvelope, hidden: &[String]) -> CallAnswer {
     let command = envelope.command.clone();
     let version = version_of(&command);
     let failed = |code: &str, message: String, path: &str| {
@@ -1804,7 +1810,7 @@ pub fn call(doc: &mut Document, envelope: CallEnvelope) -> CallAnswer {
         Ok(state) => state,
         Err(answer) => return crate::delivery_integrity::checked_replay(&command,*answer),
     };
-    let mut answer = run_answer(doc, &command, version, envelope.op, &input, &state);
+    let mut answer = run_answer(doc, &command, version, envelope.op, &input, &state, hidden);
     call::complete(&mut answer, &input);
     answer
 }
@@ -1816,8 +1822,19 @@ fn run_answer(
     op: CallOp,
     input: &Value,
     state: &CallState,
+    hidden: &[String],
 ) -> CallAnswer {
-    match run_typed(doc, command, op, input.clone()) {
+    let made = if hidden.is_empty() {
+        run_typed(doc, command, op, input.clone())
+    } else {
+        run_typed(
+            &doc.reading_copy_without(hidden),
+            command,
+            op,
+            input.clone(),
+        )
+    };
+    match made {
         Ok((result, effect)) => {
             let mut answer = CallAnswer::of(result);
             if let Some(effect) = effect {
@@ -1847,6 +1864,7 @@ fn run_answer(
 /// document when the job is looked at.
 pub fn job_work(
     envelope: CallEnvelope,
+    hidden: Vec<String>,
 ) -> impl FnOnce(
     Document,
     &kentos_native_application::jobs::Progress,
@@ -1884,7 +1902,21 @@ pub fn job_work(
                 };
             }
         };
-        match run_typed_with_progress(&copy, &command, envelope.op, input.clone(),Some(progress)) {
+        // An agent's file is made without the fields the drawing hides (docs/adr/0743 §2); the call is checked
+        // against the drawing as it is.
+        let made = if hidden.is_empty() {
+            run_typed_with_progress(&copy, &command, envelope.op, input.clone(), Some(progress))
+        } else {
+            let without = copy.reading_copy_without(&hidden);
+            run_typed_with_progress(
+                &without,
+                &command,
+                envelope.op,
+                input.clone(),
+                Some(progress),
+            )
+        };
+        match made {
             Ok((result, effect)) => {
                 let mut answer = CallAnswer::of(result);
                 call::complete(&mut answer, &input);
@@ -1920,9 +1952,28 @@ pub fn job_work(
 /// A file command's plain answer (`Session::run`, the `run` request): the
 /// `CommandResult` as the catalog writes it; an execute's write in the journal.
 pub fn run(doc: &mut Document, command: &str, op: CallOp, input: Value) -> Result<Value, String> {
+    run_without(doc, command, op, input, &[])
+}
+
+/// [`run`] for an agent: the file made without the fields `hidden` (docs/adr/0743 §2).
+pub fn run_without(
+    doc: &mut Document,
+    command: &str,
+    op: CallOp,
+    input: Value,
+    hidden: &[String],
+) -> Result<Value, String> {
     let normalized = normalize(command, &input)?;
     let state = CallState::default();
-    let answer = run_answer(doc, command, version_of(command), op, &normalized, &state);
+    let answer = run_answer(
+        doc,
+        command,
+        version_of(command),
+        op,
+        &normalized,
+        &state,
+        hidden,
+    );
     serde_json::to_value(&answer.result).map_err(|e| e.to_string())
 }
 

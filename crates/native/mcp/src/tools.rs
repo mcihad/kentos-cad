@@ -1420,7 +1420,7 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         }
         "drawing.job.start" => {
             let (s, _) = session(server, args)?;
-            let status = match s.start(job_envelope(args)) {
+            let status = match s.start_for_agent(job_envelope(args)) {
                 Ok(status) => veiled(s, status),
                 Err(e) => return Err(veiled_host(s, e)),
             };
@@ -1462,8 +1462,9 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
             let (s, _) = session(server, args)?;
             // The call's way is checked as before; the protocol answers.
             Op::parse(text(args, "op").unwrap_or("execute")).map_err(host)?;
-            // An agent reads no value of a field the drawing hides (docs/adr/0738 §1).
-            let result = match s.call(envelope_of(command, args)) {
+            // An agent reads no value of a field the drawing hides (docs/adr/0738 §1), filters, sorts and
+            // computes with none, and writes no file holding one (docs/adr/0743).
+            let result = match s.call_for_agent(envelope_of(command, args)) {
                 Ok(result) => veiled(s, result),
                 Err(e) => return Err(veiled_host(s, e)),
             };

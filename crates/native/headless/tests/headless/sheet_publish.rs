@@ -189,7 +189,7 @@ fn a_file_plan_job_never_executes_publication() {
         FILE_PUBLISH_SHEETS.into(),
         None,
         &doc,
-        kentos_headless::file_commands::job_work(env),
+        kentos_headless::file_commands::job_work(env, Vec::new()),
     );
     let status = job.wait(&mut doc);
     assert!(matches!(

@@ -140,6 +140,55 @@ pub fn call_envelope(
     call::call(doc, store, envelope)
 }
 
+/// An agent's call by the protocol (docs/adr/0743): [`call_envelope`] when the drawing hides no field from
+/// agents; else refused when it names a hidden field or sends a processing result to a file
+/// ([`agent_refusal`]), and a file it writes is made without the hidden fields. The answer is the caller's to
+/// cut ([`crate::Veil::cut`]).
+pub fn call_envelope_for_agent(
+    doc: &mut Document,
+    store: Option<&Store>,
+    envelope: CallEnvelope,
+) -> CallAnswer {
+    let Some(veil) = crate::Veil::of(doc) else {
+        return call_envelope(doc, store, envelope);
+    };
+    if let Some(error) = agent_refusal(&veil, &envelope.command, &envelope.input) {
+        return CallAnswer::of(kentos_commands::CommandResult::Failed { error });
+    }
+    if file_commands::is_file_command(&envelope.command) {
+        return file_commands::call_without(doc, envelope, veil.names());
+    }
+    call_envelope(doc, store, envelope)
+}
+
+/// Why an agent's call is refused on a drawing that hides fields (docs/adr/0743 §1, §3): it names a hidden
+/// field, or it writes a processing result to a file (`sink`), which would carry the inputs' attributes.
+pub fn agent_refusal(
+    veil: &crate::Veil,
+    command: &str,
+    input: &serde_json::Value,
+) -> Option<kentos_commands::CommandError> {
+    if let Some(error) = veil.refusal(input) {
+        return Some(error);
+    }
+    let sink = matches!(command, "cad.processing.run" | "cad.processing.batch")
+        && input.get("sink").is_some_and(|s| !s.is_null());
+    sink.then(|| kentos_commands::CommandError {
+        code: kentos_commands::codes::HIDDEN_FIELD_SINK.into(),
+        message: format!(
+            "Çizim ajandan alan gizliyor ({}); ajan işlem sonucunu dosyaya yazamaz. sink'i kaldırıp sonucu \
+             çizime yazın, dosyayı Dışa aktar komutlarıyla verin.",
+            veil.names()
+                .iter()
+                .map(|n| format!("“{n}”"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+        path: Some("input.sink".into()),
+        ..kentos_commands::CommandError::default()
+    })
+}
+
 /// Why a command is not run here: the server's, or unknown.
 fn refusal(command: &str) -> HeadlessError {
     let listed = kentos_commands::catalog::catalog()

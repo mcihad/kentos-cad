@@ -333,7 +333,7 @@ impl App {
                     command.into(),
                     None,
                     &doc.model,
-                    kentos_headless::file_commands::job_work(envelope),
+                    kentos_headless::file_commands::job_work(envelope, Vec::new()),
                 ));
             }
             Event::Stop => {

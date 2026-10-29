@@ -2827,6 +2827,7 @@ dependencies = [
  "kentos-commands",
  "kentos-domain",
  "kentos-dwg",
+ "kentos-expression",
  "kentos-formats",
  "kentos-geometry-core",
  "kentos-geopackage",
