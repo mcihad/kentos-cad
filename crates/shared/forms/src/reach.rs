@@ -28,7 +28,7 @@ use kentos_contracts::{FormItem, LayerField, ProjectForm};
 use kentos_expression::{Unit, Variable};
 
 use crate::record::{Attrs, Object};
-use crate::scope::Scopes;
+use crate::scope::{ScopeReads, Scopes};
 
 /// How far a field reaches a caller.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -344,6 +344,31 @@ impl Reach {
             return Some(crate::scope::ScopeSql::Nothing);
         }
         self.scopes.sql_of(layer, column, dialect, taken)
+    }
+
+    /// What `layer`'s binding reads of a record to tell whether a Veri girişi reaches it (docs/adr/0738 §3), for any
+    /// caller: a closed layer reads nothing (it reaches no record).
+    pub fn scope_reads(&self, layer: &str) -> ScopeReads {
+        match self.layers.get(layer) {
+            Some(Binding::Closed) => ScopeReads::Fields(BTreeSet::new()),
+            _ => self.scopes.reads(layer),
+        }
+    }
+
+    /// Whether the caller reached a record of `layer` that held `attrs`, from an earlier copy that kept the
+    /// attributes `kept` names (docs/adr/0738 §3): none when the copy cannot tell (the scopes read more than
+    /// attributes, or one the copy did not keep).
+    pub fn reached(&self, layer: &str, attrs: &Attrs, kept: &BTreeSet<String>) -> Option<bool> {
+        if !self.caller.through_forms {
+            return Some(true);
+        }
+        match self.scope_reads(layer) {
+            ScopeReads::Unscoped => Some(true),
+            ScopeReads::More => None,
+            ScopeReads::Fields(read) => read
+                .is_subset(kept)
+                .then(|| self.sees(layer, attrs, &Object::default())),
+        }
     }
 
     /// Whether any layer's records are narrowed for the caller.
@@ -698,5 +723,75 @@ mod tests {
         let mut renamed = base();
         renamed.name = "Başka ad".into();
         assert_eq!(a, reach(&[renamed], Caller::reader()).stamp());
+    }
+
+    /// docs/adr/0738 §3: whether an earlier copy of a record, with only the attributes its layer's scopes read,
+    /// was within a Veri girişi's reach.
+    #[test]
+    fn an_earlier_copy_tells_whether_a_veri_girisi_reached_it() {
+        let kept = |names: &[&str]| -> BTreeSet<String> {
+            names.iter().map(|n| (*n).to_owned()).collect()
+        };
+        let scoped = [form(
+            "f1",
+            "bina",
+            &[item("Sorumlu", false)],
+            Some("Sorumlu = @kullanici_eposta"),
+            true,
+            false,
+        )];
+        let entry = reach(&scoped, Caller::through_forms());
+        let mine = attrs(&[("Sorumlu", "ali@k.test")]);
+        let theirs = attrs(&[("Sorumlu", "ayse@k.test")]);
+        assert_eq!(
+            entry.reached("bina", &mine, &kept(&["Sorumlu"])),
+            Some(true)
+        );
+        assert_eq!(
+            entry.reached("bina", &theirs, &kept(&["Sorumlu"])),
+            Some(false)
+        );
+        // An empty value was kept as not there: not reached.
+        assert_eq!(
+            entry.reached("bina", &attrs(&[]), &kept(&["Sorumlu"])),
+            Some(false)
+        );
+        // The copy did not keep what the scope reads now: it cannot tell.
+        assert_eq!(entry.reached("bina", &mine, &kept(&["Kat"])), None);
+        // A layer no form scopes: every record was reached.
+        assert_eq!(entry.reached("yol", &theirs, &kept(&[])), Some(true));
+        // Anyone but a Veri girişi reaches every record.
+        assert_eq!(
+            reach(&scoped, Caller::reader()).reached("bina", &theirs, &kept(&[])),
+            Some(true)
+        );
+        // A closed layer reached nothing, whatever the copy kept.
+        let closed = [form(
+            "f1",
+            "bina",
+            &[item("Sorumlu", false)],
+            None,
+            true,
+            true,
+        )];
+        let entry = reach(&closed, Caller::through_forms());
+        assert_eq!(
+            entry.scope_reads("bina"),
+            ScopeReads::Fields(BTreeSet::new())
+        );
+        assert_eq!(entry.reached("bina", &mine, &kept(&[])), Some(false));
+        // A scope that reads the shape: only the whole record tells.
+        let shape = [form(
+            "f1",
+            "bina",
+            &[item("Sorumlu", false)],
+            Some("$alan > 100"),
+            true,
+            false,
+        )];
+        assert_eq!(
+            reach(&shape, Caller::through_forms()).reached("bina", &mine, &kept(&["Sorumlu"])),
+            None
+        );
     }
 }

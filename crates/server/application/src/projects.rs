@@ -1080,29 +1080,99 @@ pub async fn features(
     if after.is_none() {
         opened(&mut tx, access.tenant, access.project, access.actor.user_id).await?;
     }
-    let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
-        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and id > $3 order by id limit $4"
-    )))
-    .bind(access.tenant)
-    .bind(access.project)
-    .bind(after.unwrap_or(Uuid::nil()))
-    .bind(limit + 1)
-    .fetch_all(&mut *tx)
-    .await?;
     let reading = reading_for(&mut tx, access).await?;
+    let (features, next) = match reading.as_ref().filter(|r| r.narrows()) {
+        Some(reading) => reached_page(&mut tx, access, reading, after, limit).await?,
+        None => {
+            let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+                "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and id > $3 order by id limit $4"
+            )))
+            .bind(access.tenant)
+            .bind(access.project)
+            .bind(after.unwrap_or(Uuid::nil()))
+            .bind(limit + 1)
+            .fetch_all(&mut *tx)
+            .await?;
+            let more = rows.len() as i64 > limit;
+            let features: Vec<FeatureRecord> = rows
+                .into_iter()
+                .take(limit as usize)
+                .map(record)
+                .collect::<AppResult<_>>()?;
+            let next = more
+                .then(|| features.last().map(|f| f.id.clone()))
+                .flatten();
+            (features, next)
+        }
+    };
     tx.commit().await?;
-    let more = rows.len() as i64 > limit;
-    let features: Vec<FeatureRecord> = rows
-        .into_iter()
-        .take(limit as usize)
-        .map(record)
-        .collect::<AppResult<_>>()?;
-    // The cursor is the page's last row read, in reach or not: the next page starts after it.
-    let next = more
-        .then(|| features.last().map(|f| f.id.clone()))
-        .flatten();
     let features = as_read(features, reading.as_ref());
     Ok(FeaturePage { features, next })
+}
+
+/// A page of a Veri girişi whose forms narrow its records (docs/adr/0738 §2): in id order after `after`, the
+/// rows of the layers it reads whole and those its scopes keep in the database (docs/adr/0649 §1), each judged
+/// with the scopes, read on until `limit` are within reach or none is left. The page is full but for the last;
+/// its cursor is the last record given, never one out of reach, and is given only when one within reach follows.
+async fn reached_page(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    reading: &Reading,
+    after: Option<Uuid>,
+    limit: i64,
+) -> AppResult<(Vec<FeatureRecord>, Option<String>)> {
+    let (condition, params) = reached_condition(reading);
+    let scoped = reading.scoped_layers();
+    // The condition binds `$3` on; the narrowed layers, the cursor and the size come after it.
+    let at = 3 + params.len();
+    let narrowed = if condition.is_empty() {
+        "false".to_owned()
+    } else {
+        condition
+    };
+    let text = format!(
+        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 \
+         and (layer_id <> all(${at}) or ({narrowed})) and id > ${} order by id limit ${}",
+        at + 1,
+        at + 2
+    );
+    let mut given: Vec<FeatureRecord> = Vec::new();
+    let mut from = after.unwrap_or(Uuid::nil());
+    loop {
+        let mut query = sqlx::query_as::<_, FeatureRow>(sqlx::AssertSqlSafe(text.clone()))
+            .bind(access.tenant)
+            .bind(access.project);
+        for p in &params {
+            query = match p {
+                ScopeParam::Layers(l) => query.bind(l.clone()),
+                ScopeParam::Pushed(Param::Text(t)) => query.bind(t.clone()),
+                ScopeParam::Pushed(Param::Number(x)) => query.bind(*x),
+            };
+        }
+        let rows = query
+            .bind(scoped.clone())
+            .bind(from)
+            .bind(limit + 1)
+            .fetch_all(&mut **tx)
+            .await?;
+        let read = rows.len() as i64;
+        for row in rows {
+            let r = record(row)?;
+            from = Uuid::parse_str(&r.id).expect("stored ids are UUIDs");
+            if reading.sees(&r) {
+                given.push(r);
+                if given.len() as i64 > limit {
+                    break;
+                }
+            }
+        }
+        if given.len() as i64 > limit || read <= limit {
+            break;
+        }
+    }
+    let next = (given.len() as i64 > limit).then(|| given[limit as usize - 1].id.clone());
+    given.truncate(limit as usize);
+    Ok((given, next))
 }
 
 /// The current copies of some objects (after an event says they changed); missing ones are left out.

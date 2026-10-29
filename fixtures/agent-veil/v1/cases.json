@@ -1,0 +1,973 @@
+{
+  "format": "kentos.agent-veil/1",
+  "note": "Written by scripts/fixtures/agent_veil_cases.py from docs/adr/0738 §1 without KentOS code.",
+  "hidden": "‹gizli›",
+  "cases": [
+    {
+      "name": "Bir nesnenin öznitelikleri",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "uid": "u1",
+        "entity": {
+          "kind": "polygon",
+          "id": 3,
+          "layerId": "bina",
+          "attrs": {
+            "Ada": "101",
+            "Malik": "Ali Yılmaz",
+            "TC": "12345678901"
+          },
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 8.0
+            }
+          ]
+        }
+      },
+      "cut": {
+        "uid": "u1",
+        "entity": {
+          "kind": "polygon",
+          "id": 3,
+          "layerId": "bina",
+          "attrs": {
+            "Ada": "101",
+            "Malik": "‹gizli›",
+            "TC": "‹gizli›"
+          },
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 8.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Nesnelerin sayfası",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "entities": [
+          {
+            "uid": "u1",
+            "entity": {
+              "kind": "polygon",
+              "id": 3,
+              "layerId": "bina",
+              "attrs": {
+                "Malik": "Ali Yılmaz"
+              },
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 8.0
+                }
+              ]
+            }
+          },
+          {
+            "uid": "u2",
+            "entity": {
+              "kind": "polygon",
+              "id": 3,
+              "layerId": "bina",
+              "attrs": {
+                "Ada": "102"
+              },
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 8.0
+                }
+              ]
+            }
+          }
+        ],
+        "next": null
+      },
+      "cut": {
+        "entities": [
+          {
+            "uid": "u1",
+            "entity": {
+              "kind": "polygon",
+              "id": 3,
+              "layerId": "bina",
+              "attrs": {
+                "Malik": "‹gizli›"
+              },
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 8.0
+                }
+              ]
+            }
+          },
+          {
+            "uid": "u2",
+            "entity": {
+              "kind": "polygon",
+              "id": 3,
+              "layerId": "bina",
+              "attrs": {
+                "Ada": "102"
+              },
+              "pts": [
+                {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 8.0
+                }
+              ]
+            }
+          }
+        ],
+        "next": null
+      }
+    },
+    {
+      "name": "Gizli alanı olmayan nesne",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "uid": "u2",
+        "entity": {
+          "kind": "polygon",
+          "id": 3,
+          "layerId": "bina",
+          "attrs": {
+            "Ada": "102",
+            "Parsel": "5"
+          },
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 8.0
+            }
+          ]
+        }
+      },
+      "cut": {
+        "uid": "u2",
+        "entity": {
+          "kind": "polygon",
+          "id": 3,
+          "layerId": "bina",
+          "attrs": {
+            "Ada": "102",
+            "Parsel": "5"
+          },
+          "pts": [
+            {
+              "x": 0.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 0.0
+            },
+            {
+              "x": 10.0,
+              "y": 8.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Boş değer de gizlenir",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "attrs": {
+          "Malik": "",
+          "Ada": "1"
+        }
+      },
+      "cut": {
+        "attrs": {
+          "Malik": "‹gizli›",
+          "Ada": "1"
+        }
+      }
+    },
+    {
+      "name": "Null değer kalır",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "attrs": {
+          "Malik": null
+        }
+      },
+      "cut": {
+        "attrs": {
+          "Malik": null
+        }
+      }
+    },
+    {
+      "name": "Kaynağın satırı",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "rows": [
+          {
+            "uid": "u1",
+            "key": 7,
+            "attrs": {
+              "Malik": "Ayşe Kaya",
+              "Ada": "103"
+            },
+            "wkt": "POINT (1 2)"
+          }
+        ]
+      },
+      "cut": {
+        "rows": [
+          {
+            "uid": "u1",
+            "key": 7,
+            "attrs": {
+              "Malik": "‹gizli›",
+              "Ada": "103"
+            },
+            "wkt": "POINT (1 2)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Formun değerleri",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "uid": "u1",
+        "values": {
+          "Malik": "Ali Yılmaz",
+          "Kat": "3"
+        },
+        "defaults": true
+      },
+      "cut": {
+        "uid": "u1",
+        "values": {
+          "Malik": "‹gizli›",
+          "Kat": "3"
+        },
+        "defaults": true
+      }
+    },
+    {
+      "name": "İç içe kayıtlar",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "children": [
+          {
+            "values": {
+              "TC": "12345678901"
+            }
+          },
+          {
+            "attrs": {
+              "TC": "x"
+            }
+          }
+        ]
+      },
+      "cut": {
+        "children": [
+          {
+            "values": {
+              "TC": "‹gizli›"
+            }
+          },
+          {
+            "attrs": {
+              "TC": "‹gizli›"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Aynı adlı yapısal anahtar kalır",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "name": "Malik",
+        "kind": "text",
+        "values": [
+          "Ali Yılmaz",
+          "Veli"
+        ]
+      },
+      "cut": {
+        "name": "Malik",
+        "kind": "text",
+        "values": [
+          "Ali Yılmaz",
+          "Veli"
+        ]
+      }
+    },
+    {
+      "name": "Katman adı gizli alanla aynıysa kalır",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "layers": [
+          {
+            "id": "l1",
+            "name": "TC",
+            "type": "layer"
+          }
+        ]
+      },
+      "cut": {
+        "layers": [
+          {
+            "id": "l1",
+            "name": "TC",
+            "type": "layer"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Tırnak içindeki gizli değer",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "error": {
+          "code": "not_unique",
+          "message": "“TC” katmanda tekil olmalı; “12345678901” başka bir nesnede var."
+        }
+      },
+      "cut": {
+        "error": {
+          "code": "not_unique",
+          "message": "“TC” katmanda tekil olmalı; “‹gizli›” başka bir nesnede var."
+        }
+      }
+    },
+    {
+      "name": "Tırnak içindeki açık değer kalır",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "message": "“Ada” için “101” listede yok; listeden seçin."
+      },
+      "cut": {
+        "message": "“Ada” için “101” listede yok; listeden seçin."
+      }
+    },
+    {
+      "name": "Kapanmayan tırnak",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "message": "“Ali Yılmaz” ve “Ayşe Kaya"
+      },
+      "cut": {
+        "message": "“‹gizli›” ve “Ayşe Kaya"
+      }
+    },
+    {
+      "name": "Tırnaksız değer kalır",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "message": "Ali Yılmaz kaydı"
+      },
+      "cut": {
+        "message": "Ali Yılmaz kaydı"
+      }
+    },
+    {
+      "name": "Uyarı listesi",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "warnings": [
+          {
+            "code": "x",
+            "message": "“Ayşe Kaya” uymuyor"
+          },
+          {
+            "code": "y",
+            "message": "tamam"
+          }
+        ]
+      },
+      "cut": {
+        "warnings": [
+          {
+            "code": "x",
+            "message": "“‹gizli›” uymuyor"
+          },
+          {
+            "code": "y",
+            "message": "tamam"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Birleşik görünüm",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "name": "Görünüm",
+        "columns": [
+          {
+            "name": "Ada",
+            "side": "left",
+            "field": "Ada",
+            "editable": true
+          },
+          {
+            "name": "Malik",
+            "side": "right",
+            "field": "Malik",
+            "editable": false
+          }
+        ],
+        "rows": [
+          {
+            "id": "a/b",
+            "left": "a",
+            "right": "b",
+            "cells": [
+              "101",
+              "Ali Yılmaz"
+            ]
+          },
+          {
+            "id": "c/",
+            "left": "c",
+            "cells": [
+              "102",
+              null
+            ]
+          }
+        ],
+        "totals": [
+          {
+            "column": 1,
+            "sum": "3",
+            "count": 2,
+            "skipped": 1
+          },
+          {
+            "column": 0,
+            "sum": "203",
+            "count": 2
+          }
+        ],
+        "report": {
+          "records": 2
+        },
+        "revision": "4"
+      },
+      "cut": {
+        "name": "Görünüm",
+        "columns": [
+          {
+            "name": "Ada",
+            "side": "left",
+            "field": "Ada",
+            "editable": true
+          },
+          {
+            "name": "Malik",
+            "side": "right",
+            "field": "Malik",
+            "editable": false
+          }
+        ],
+        "rows": [
+          {
+            "id": "a/b",
+            "left": "a",
+            "right": "b",
+            "cells": [
+              "101",
+              "‹gizli›"
+            ]
+          },
+          {
+            "id": "c/",
+            "left": "c",
+            "cells": [
+              "102",
+              null
+            ]
+          }
+        ],
+        "totals": [
+          {
+            "column": 1,
+            "sum": "‹gizli›",
+            "count": "‹gizli›",
+            "skipped": "‹gizli›"
+          },
+          {
+            "column": 0,
+            "sum": "203",
+            "count": 2
+          }
+        ],
+        "report": {
+          "records": 2
+        },
+        "revision": "4"
+      }
+    },
+    {
+      "name": "Gizli sütunu olmayan görünüm",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "columns": [
+          {
+            "name": "Ada",
+            "field": "Ada"
+          }
+        ],
+        "rows": [
+          {
+            "cells": [
+              "101"
+            ]
+          }
+        ]
+      },
+      "cut": {
+        "columns": [
+          {
+            "name": "Ada",
+            "field": "Ada"
+          }
+        ],
+        "rows": [
+          {
+            "cells": [
+              "101"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Uzlaştırmanın alanı",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "conflicts": [
+          {
+            "object": "u1",
+            "kind": "changed",
+            "geometry": false,
+            "fields": [
+              {
+                "name": "Malik",
+                "layer": "Ali Yılmaz",
+                "table": "Ayşe Kaya"
+              },
+              {
+                "name": "Ada",
+                "layer": "101",
+                "table": "102"
+              }
+            ]
+          }
+        ]
+      },
+      "cut": {
+        "conflicts": [
+          {
+            "object": "u1",
+            "kind": "changed",
+            "geometry": false,
+            "fields": [
+              {
+                "name": "Malik",
+                "layer": "‹gizli›",
+                "table": "‹gizli›"
+              },
+              {
+                "name": "Ada",
+                "layer": "101",
+                "table": "102"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "Uzlaştırmada bir yan yok",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "name": "TC",
+        "table": "12345678901"
+      },
+      "cut": {
+        "name": "TC",
+        "table": "‹gizli›"
+      }
+    },
+    {
+      "name": "Gizli alanın istatistiği",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "statistics": [
+          {
+            "field": "TC",
+            "read": 2,
+            "skipped": 0,
+            "sum": "3",
+            "mean": "1.5",
+            "min": "1",
+            "max": "2",
+            "std": "0.7"
+          },
+          {
+            "field": "Kat",
+            "read": 2,
+            "skipped": 0,
+            "sum": "5"
+          }
+        ]
+      },
+      "cut": {
+        "statistics": [
+          {
+            "field": "TC",
+            "read": "‹gizli›",
+            "skipped": "‹gizli›",
+            "sum": "‹gizli›",
+            "mean": "‹gizli›",
+            "min": "‹gizli›",
+            "max": "‹gizli›",
+            "std": "‹gizli›"
+          },
+          {
+            "field": "Kat",
+            "read": 2,
+            "skipped": 0,
+            "sum": "5"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Komutun cevabı",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "status": "completed",
+        "output": {
+          "uid": "u1",
+          "attrs": {
+            "Malik": "Ali Yılmaz"
+          }
+        },
+        "summary": {
+          "added": [
+            "u1"
+          ]
+        },
+        "planId": "p"
+      },
+      "cut": {
+        "status": "completed",
+        "output": {
+          "uid": "u1",
+          "attrs": {
+            "Malik": "‹gizli›"
+          }
+        },
+        "summary": {
+          "added": [
+            "u1"
+          ]
+        },
+        "planId": "p"
+      }
+    },
+    {
+      "name": "Kaydın girdisi",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "calls": [
+          {
+            "command": "cad.entities.set",
+            "input": {
+              "attrs": {
+                "TC": "12345678901"
+              }
+            }
+          }
+        ]
+      },
+      "cut": {
+        "calls": [
+          {
+            "command": "cad.entities.set",
+            "input": {
+              "attrs": {
+                "TC": "‹gizli›"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Sayılar ve mantıksal değerler",
+      "names": [
+        "Malik",
+        "TC"
+      ],
+      "values": [
+        "Ali Yılmaz",
+        "12345678901",
+        "Ayşe Kaya"
+      ],
+      "answer": {
+        "attrs": {
+          "TC": 5,
+          "Malik": true,
+          "Kat": 3
+        }
+      },
+      "cut": {
+        "attrs": {
+          "TC": "‹gizli›",
+          "Malik": "‹gizli›",
+          "Kat": 3
+        }
+      }
+    }
+  ]
+}

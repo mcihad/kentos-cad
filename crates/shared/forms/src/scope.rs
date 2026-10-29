@@ -51,6 +51,18 @@ pub struct Scopes {
     texts: BTreeMap<String, BTreeSet<String>>,
 }
 
+/// What a layer's scopes read of a record (docs/adr/0738 §3): what a change's earlier copy must keep for a
+/// Veri girişi's reach of it to be told later.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ScopeReads {
+    /// The layer is not scoped: every record is within reach.
+    Unscoped,
+    /// These attributes alone: a record is judged by their values.
+    Fields(BTreeSet<String>),
+    /// More than its attributes (its shape, kind, label, other layers): only the whole record tells.
+    More,
+}
+
 /// What a source is sent of a layer's scope (docs/adr/0649 §1). The records it hands over are judged
 /// again with the scope, so the SQL only has to keep every record within reach.
 #[derive(Clone, Debug, PartialEq)]
@@ -143,6 +155,27 @@ impl Scopes {
                 exact,
             }),
         })
+    }
+
+    /// What `layer`'s scopes read of a record (docs/adr/0738 §3): a scope that does not compile reads nothing (it
+    /// reaches no record).
+    pub fn reads(&self, layer: &str) -> ScopeReads {
+        let Some(reaches) = self.layers.get(layer) else {
+            return ScopeReads::Unscoped;
+        };
+        if reaches.iter().any(|r| matches!(r, Reach::All)) {
+            return ScopeReads::Unscoped;
+        }
+        let mut fields = BTreeSet::new();
+        for r in reaches {
+            if let Reach::Where(e) = r {
+                if e.needs != kentos_expression::Needs::default() || !e.world.is_empty() {
+                    return ScopeReads::More;
+                }
+                fields.extend(e.fields.iter().cloned());
+            }
+        }
+        ScopeReads::Fields(fields)
     }
 
     /// Whether any layer is narrowed (a layer every form of which reaches all is not).
@@ -275,6 +308,41 @@ mod tests {
         assert!(two.sees("bina", &attrs(&[("Kat", "9")]), &o));
         assert!(two.sees("bina", &attrs(&[("Kat", "1"), ("Sorumlu", "ali@k.test")]), &o));
         assert!(!two.sees("bina", &attrs(&[("Kat", "1"), ("Sorumlu", "x")]), &o));
+    }
+
+    /// docs/adr/0738 §3: what a layer's scopes read, for a change's earlier copy to keep.
+    #[test]
+    fn a_scope_says_what_it_reads() {
+        let set = |names: &[&str]| -> BTreeSet<String> {
+            names.iter().map(|n| (*n).to_owned()).collect()
+        };
+        let two = scopes(
+            &[
+                form("bina", Some("Kat > 3"), false),
+                form("bina", Some("Sorumlu = @kullanici_eposta"), false),
+            ],
+            "ali@k.test",
+        );
+        assert_eq!(
+            two.reads("bina"),
+            ScopeReads::Fields(set(&["Kat", "Sorumlu"]))
+        );
+        // A layer no form scopes, and one a form without a scope reaches whole, are not scoped.
+        assert_eq!(two.reads("yol"), ScopeReads::Unscoped);
+        let all = scopes(
+            &[
+                form("bina", Some("Kat > 3"), false),
+                form("bina", None, false),
+            ],
+            "a",
+        );
+        assert_eq!(all.reads("bina"), ScopeReads::Unscoped);
+        // The shape read: only the whole record tells.
+        let shape = scopes(&[form("bina", Some("$alan > 100"), false)], "a");
+        assert_eq!(shape.reads("bina"), ScopeReads::More);
+        // A scope that does not compile reaches nothing and reads nothing.
+        let broken = scopes(&[form("bina", Some("Yok = 1"), false)], "a");
+        assert_eq!(broken.reads("bina"), ScopeReads::Fields(BTreeSet::new()));
     }
 
     #[test]

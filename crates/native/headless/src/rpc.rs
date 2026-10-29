@@ -111,6 +111,29 @@ pub fn call_with(
     call_from(doc, jobs, None, method, params)
 }
 
+/// [`call_from`] for an agent (docs/adr/0738 §1): the answer, and a refusal's words, with the values of the
+/// fields the drawing hides cut ([`crate::Veil`]); the summary names those fields. The console's Python asks
+/// with [`call_from`] and reads the drawing whole: it is its owner's.
+pub fn call_for_agent(
+    doc: &mut Document,
+    jobs: Option<&mut Jobs>,
+    drawing: Option<&std::path::Path>,
+    method: &str,
+    params: &Value,
+) -> Result<Value, HeadlessError> {
+    let Some(veil) = crate::Veil::of(doc) else {
+        return call_from(doc, jobs, drawing, method, params);
+    };
+    match call_from(doc, jobs, drawing, method, params) {
+        Ok(answer) => Ok(match method {
+            "summary" => veil.summary(answer),
+            "journal" => veil.journal(answer),
+            _ => veil.cut(answer),
+        }),
+        Err(e) => Err(HeadlessError::new(e.code, veil.text(&e.message))),
+    }
+}
+
 /// [`call_with`] for a drawing read from `drawing`: a command that takes the open drawing's file is given it
 /// (`dispatch::with_own_file`).
 pub fn call_from(

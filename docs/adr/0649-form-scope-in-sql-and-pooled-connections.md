@@ -1,6 +1,9 @@
 # ADR 0649: Veri girişinin satır kapsamı SQL'de ve havuzdaki bağlantının kapsamı
 
 - **Durum:** kabul edildi (2026-10-26). `plan/gis.md` CBS-38'in üçüncü dilimi. Kapsamı ben belirledim.
+- **Ek (2026-10-29):** sayfaların (`GET …/features`) kapsamla SQL'de süzülmesi
+  [ADR 0738](0738-agent-veil-entry-pages-and-unreached-events.md) §2'de yapıldı: sayfa doludur, imleci Veri girişinin kendi
+  kaydıdır.
 - **Kalan işler:** [ADR 0550](0550-one-reach-resolver.md)'nin "Sonraya kalan"ı:
   - satır kapsamının ifadesinin sunucuda SQL'e çevrilip veritabanında süzülmesi;
   - "RLS owner/BYPASSRLS ve pool scope davranışı test edilir" (plan).

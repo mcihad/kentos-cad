@@ -47,6 +47,7 @@ pub mod selection;
 pub mod maplibre_export;
 pub mod shp_export;
 pub mod sprite;
+pub mod veil;
 
 pub use dispatch::{Op, call_envelope, commands, with_own_file};
 pub use error::HeadlessError;
@@ -55,6 +56,7 @@ pub use query::{
     conventions, units,
 };
 pub use session::{NewDrawing, Session, new_drawing};
+pub use veil::Veil;
 
 /// The command catalog as JSON: every product command, its version, title,
 /// summary, hosts, permissions, input and output schemas and examples

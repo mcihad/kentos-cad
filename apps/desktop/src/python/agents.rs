@@ -164,7 +164,8 @@ impl App {
             | "journal" | "replay" | "start" | "job" | "wait" | "cancel" => {
                 // The desktop does not wait for a job on its interface thread: `wait` says how it is.
                 let method = if method == "wait" { "job" } else { method };
-                let mut answer = kentos_headless::rpc::call_from(
+                // An agent reads no value of a field the drawing hides (docs/adr/0738 §1).
+                let mut answer = kentos_headless::rpc::call_for_agent(
                     &mut doc.model,
                     Some(&mut self.python.jobs),
                     doc.path.as_deref(),

@@ -156,6 +156,76 @@ async fn current_copies(
         .collect()
 }
 
+/// The earlier copies of the records `plan` changes or removes, as far as a Veri girişi's reach needs them
+/// (docs/adr/0738 §3), by id: each on a layer whose forms narrow its records, with the attributes its scopes
+/// read under the forms as the commit leaves them. A layer whose scopes read more than attributes, or none
+/// narrows, keeps none: a Veri girişi then hears of the record's change as before.
+async fn earlier_copies(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    settings: &ProjectSettings,
+    tree: &[LayerNode],
+    plan: &[Planned],
+    existing: &HashMap<Uuid, (i64, String)>,
+) -> AppResult<BTreeMap<String, crate::events::Earlier>> {
+    if settings.forms.is_empty() {
+        return Ok(BTreeMap::new());
+    }
+    let reach = crate::form_guard::reach_with(
+        settings,
+        tree,
+        &[],
+        kentos_forms::reach::Caller::through_forms(),
+    );
+    let mut wanted = Vec::new();
+    for p in plan.iter().filter(|p| p.op != FeatureOp::Create) {
+        let Some((_, layer)) = existing.get(&p.id) else {
+            continue;
+        };
+        if let kentos_forms::scope::ScopeReads::Fields(fields) = reach.scope_reads(layer) {
+            wanted.push((p.id, layer.clone(), fields));
+        }
+    }
+    let ids: Vec<Uuid> = wanted
+        .iter()
+        .filter(|(_, _, fields)| !fields.is_empty())
+        .map(|(id, _, _)| *id)
+        .collect();
+    let properties: HashMap<Uuid, Value> = if ids.is_empty() {
+        HashMap::new()
+    } else {
+        sqlx::query_as::<_, (Uuid, Value)>(
+            "select id, properties from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3)",
+        )
+        .bind(access.tenant)
+        .bind(access.project)
+        .bind(&ids)
+        .fetch_all(&mut **tx)
+        .await?
+        .into_iter()
+        .collect()
+    };
+    Ok(wanted
+        .into_iter()
+        .map(|(id, layer, fields)| {
+            let stored = properties.get(&id).and_then(Value::as_object);
+            let attrs = fields
+                .iter()
+                .filter_map(|f| {
+                    let v = stored?.get(f)?.as_str()?;
+                    Some((f.clone(), v.to_owned()))
+                })
+                .collect();
+            let copy = crate::events::Earlier {
+                layer,
+                fields: fields.into_iter().collect(),
+                attrs,
+            };
+            (id.to_string(), copy)
+        })
+        .collect())
+}
+
 /// The forms' guard over the commit's object changes (docs/adr/0411 §2, §4): a Veri girişi's
 /// (`entry`) change is its record's attributes through its layer's published form; a write to a
 /// layer whose form enforces its rules keeps them. The forms judge with the project's variables (the
@@ -1648,6 +1718,9 @@ pub(crate) async fn commit_in(
         entry,
     )
     .await?;
+    // What a Veri girişi will need of each changed record's earlier copy to tell whether it had reached it
+    // (docs/adr/0738 §3): kept with the event, never sent.
+    let earlier = earlier_copies(tx, access, settings_after, &tree, &plan, &existing).await?;
 
     // 5. Write.
     let actor = access.actor.user_id;
@@ -1970,7 +2043,13 @@ pub(crate) async fn commit_in(
     .bind(project)
     .bind(new_revision)
     .bind(PROJECT_CHANGES)
-    .bind(serde_json::to_value(&event).expect("event serializes"))
+    .bind({
+        let mut payload = serde_json::to_value(&event).expect("event serializes");
+        if !earlier.is_empty() {
+            payload["earlier"] = serde_json::to_value(&earlier).expect("copies serialize");
+        }
+        payload
+    })
     .fetch_one(&mut **tx)
     .await?;
     event.seq = seq.to_string();

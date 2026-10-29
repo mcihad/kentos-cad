@@ -1020,6 +1020,61 @@ fn an_agent_reads_and_writes_the_open_drawing_each_write_its_own_step() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// docs/adr/0738 §1: an agent on the desktop's link reads no value of a field the drawing withholds; the
+/// console's Python, the drawing's owner, reads it.
+#[cfg(unix)]
+#[test]
+fn an_agent_reads_no_value_of_a_field_the_drawing_withholds() {
+    let mut app = app_with_drawing();
+    let dir = crate::files_testing::scratch("ajan-perde");
+    let (open, _task) = super::link::Link::open(&dir.join("m.sock"), |heard| {
+        Message::Python(Event::Agent(heard))
+    })
+    .expect("the link");
+    app.python.link = Some(open);
+    let (answerer, answers) = super::link::Answerer::testing();
+    let _ = app.update(Message::Python(Event::Agent(
+        super::link::Heard::Connected(7, answerer),
+    )));
+    let layer = app
+        .document
+        .as_ref()
+        .map(|d| d.model.layers().active().to_owned())
+        .expect("a layer");
+    let fields = ask_agent(
+        &mut app,
+        &answers,
+        "run",
+        json!({ "command": "cad.layers.edit", "op": "execute", "input": { "operation": "fields", "layer": layer,
+            "fields": [{ "name": "Ada", "kind": "text" }, { "name": "TC", "kind": "text", "withheld": true }] } }),
+    );
+    assert_eq!(fields["result"]["status"], "completed", "{fields}");
+    let pts: Value = serde_json::from_str(SQUARE).expect("points");
+    let written = ask_agent(
+        &mut app,
+        &answers,
+        "run",
+        json!({ "command": "cad.polygon.create", "op": "execute",
+            "input": { "layerId": layer, "pts": pts, "attrs": { "Ada": "101", "TC": "12345678901" } } }),
+    );
+    assert_eq!(written["result"]["status"], "completed", "{written}");
+    let page = ask_agent(&mut app, &answers, "entities", json!({ "layer": layer }));
+    let text = page.to_string();
+    assert!(!text.contains("12345678901"), "{text}");
+    assert!(
+        text.contains("\"Ada\":\"101\"") && text.contains("‹gizli›"),
+        "{text}"
+    );
+    let summary = ask_agent(&mut app, &answers, "summary", json!({}));
+    assert_eq!(summary["result"]["hidden"], json!(["TC"]));
+    // The console's Python reads the drawing whole.
+    let model = &mut app.document.as_mut().expect("open").model;
+    let whole =
+        kentos_headless::rpc::call(model, "entities", &json!({ "layer": layer })).expect("a page");
+    assert!(whole.to_string().contains("12345678901"));
+    let _ = std::fs::remove_dir_all(dir);
+}
+
 #[cfg(unix)]
 #[test]
 fn the_link_is_this_users_alone_and_goes_with_its_socket() {

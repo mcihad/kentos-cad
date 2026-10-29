@@ -887,6 +887,23 @@ fn host(e: HeadlessError) -> Value {
     refused(e.code, e.message)
 }
 
+/// What an agent may read of `value`, an answer about a local drawing (docs/adr/0738 §1): the values of the fields
+/// the drawing hides cut (`kentos_headless::Veil`).
+fn veiled(s: &Session, value: Value) -> Value {
+    match kentos_headless::Veil::of(s.document()) {
+        Some(veil) => veil.cut(value),
+        None => value,
+    }
+}
+
+/// A refusal about a local drawing as an agent may read it: a hidden value its words quote, cut.
+fn veiled_host(s: &Session, e: HeadlessError) -> Value {
+    match kentos_headless::Veil::of(s.document()) {
+        Some(veil) => refused(e.code, veil.text(&e.message)),
+        None => host(e),
+    }
+}
+
 fn text<'a>(args: &'a Value, name: &str) -> Option<&'a str> {
     args.get(name).and_then(Value::as_str)
 }
@@ -1018,6 +1035,11 @@ fn opened(server: &mut Server, session: Session) -> Result<Value, Value> {
     }
     let handle = Uuid::new_v4().to_string();
     let summary = session.summary();
+    // The fields the drawing hides from an agent are named (docs/adr/0738 §1).
+    let summary = match kentos_headless::Veil::of(session.document()) {
+        Some(veil) => veil.summary(summary),
+        None => summary,
+    };
     server.drawings.insert(handle.clone(), session);
     Ok(answer(
         json!({ "drawing": handle, "summary": summary }),
@@ -1235,7 +1257,12 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         }
         "drawing.summary" => {
             let (s, _) = session(server, args)?;
-            Ok(answer(s.summary(), false))
+            let summary = s.summary();
+            let summary = match kentos_headless::Veil::of(s.document()) {
+                Some(veil) => veil.summary(summary),
+                None => summary,
+            };
+            Ok(answer(summary, false))
         }
         "drawing.toWorld" | "drawing.toUcs" => {
             let (s, _) = session(server, args)?;
@@ -1285,15 +1312,14 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                     usize::try_from(limit).ok(),
                 )
                 .map_err(host)?;
-            Ok(answer(
-                serde_json::to_value(&page).unwrap_or(Value::Null),
-                false,
-            ))
+            let page = serde_json::to_value(&page).unwrap_or(Value::Null);
+            Ok(answer(veiled(s, page), false))
         }
         "drawing.entity" => {
             let (s, _) = session(server, args)?;
             let uid = text(args, "uid").ok_or_else(|| refused("invalid_input", "uid gerekli."))?;
-            Ok(answer(s.entity(uid).map_err(host)?, false))
+            let entity = s.entity(uid).map_err(host)?;
+            Ok(answer(veiled(s, entity), false))
         }
         "drawing.measure" => {
             let (s, _) = session(server, args)?;
@@ -1392,34 +1418,53 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         }
         "drawing.job.start" => {
             let (s, _) = session(server, args)?;
-            Ok(answer(s.start(job_envelope(args)).map_err(host)?, false))
+            let status = match s.start(job_envelope(args)) {
+                Ok(status) => veiled(s, status),
+                Err(e) => return Err(veiled_host(s, e)),
+            };
+            Ok(answer(status, false))
         }
         "drawing.job.status" | "drawing.job.wait" | "drawing.job.cancel" => {
             let (s, _) = session(server, args)?;
             let id = text(args, "id").ok_or_else(|| refused("invalid_input", "id gerekli."))?;
-            let status = match name {
+            let status = match match name {
                 "drawing.job.status" => s.job(id),
                 "drawing.job.wait" => s.wait(id),
                 _ => s.cancel(id),
-            }
-            .map_err(host)?;
+            } {
+                Ok(status) => veiled(s, status),
+                Err(e) => return Err(veiled_host(s, e)),
+            };
             let failed = matches!(status["phase"].as_str(), Some("failed" | "conflict"));
             Ok(answer(status, failed))
         }
         "drawing.journal" => {
             let (s, _) = session(server, args)?;
-            Ok(answer(s.journal(), false))
+            let journal = s.journal();
+            let journal = match kentos_headless::Veil::of(s.document()) {
+                Some(veil) => veil.journal(journal),
+                None => journal,
+            };
+            Ok(answer(journal, false))
         }
         "drawing.replay" => {
             let (s, _) = session(server, args)?;
             let journal = args.get("journal").cloned().unwrap_or(Value::Null);
-            Ok(answer(s.replay(journal).map_err(host)?, false))
+            let report = match s.replay(journal) {
+                Ok(report) => veiled(s, report),
+                Err(e) => return Err(veiled_host(s, e)),
+            };
+            Ok(answer(report, false))
         }
         command => {
             let (s, _) = session(server, args)?;
             // The call's way is checked as before; the protocol answers.
             Op::parse(text(args, "op").unwrap_or("execute")).map_err(host)?;
-            let result = s.call(envelope_of(command, args)).map_err(host)?;
+            // An agent reads no value of a field the drawing hides (docs/adr/0738 §1).
+            let result = match s.call(envelope_of(command, args)) {
+                Ok(result) => veiled(s, result),
+                Err(e) => return Err(veiled_host(s, e)),
+            };
             let failed = result["status"] != "completed";
             Ok(answer(result, failed))
         }
@@ -1494,7 +1539,11 @@ pub fn read(server: &Server, params: &Value) -> Result<Value, Fault> {
     } else if let Some(handle) = uri.strip_prefix("kentos://drawing/")
         && let Some(s) = server.drawings.get(handle)
     {
-        json!({ "summary": s.summary(), "layers": s.layers() })
+        let summary = match kentos_headless::Veil::of(s.document()) {
+            Some(veil) => veil.summary(s.summary()),
+            None => s.summary(),
+        };
+        json!({ "summary": summary, "layers": s.layers() })
     } else {
         return Err(Fault::new(-32602, format!("Resource not found: {uri}")));
     };

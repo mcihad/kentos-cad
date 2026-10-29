@@ -319,18 +319,25 @@ async fn a_veri_girisi_is_told_nothing_of_the_records_out_of_its_reach() {
         "2"
     );
 
-    // The event of the commit: Ayşe's record reaches Ali only as a removal, without its version.
+    // The event of the commit: Ayşe's record, which Ali never reached, is not told of at all (docs/adr/0738 §3;
+    // it was told as a removal before).
     let page = events::after(&db.app, &w.ali, 0, 100).await.unwrap();
     let created = page
         .events
         .iter()
-        .find(|e| e.features.len() == 3)
+        .find(|e| e.features.iter().any(|f| f.id == w.ids[0]))
         .expect("the commit's event");
-    let by_id = |id: &str| created.features.iter().find(|f| f.id == id).unwrap();
-    assert_eq!(by_id(&w.ids[0]).op, FeatureOp::Create);
-    assert!(by_id(&w.ids[0]).version.is_some());
-    assert_eq!(by_id(&w.ids[2]).op, FeatureOp::Delete);
-    assert!(by_id(&w.ids[2]).version.is_none());
+    let by_id = |id: &str| created.features.iter().find(|f| f.id == id);
+    assert_eq!(by_id(&w.ids[0]).unwrap().op, FeatureOp::Create);
+    assert!(by_id(&w.ids[0]).unwrap().version.is_some());
+    assert_eq!(created.features.len(), 2, "{:?}", created.features);
+    assert!(by_id(&w.ids[2]).is_none(), "Ayşe's record is not told of");
+    assert!(
+        page.events
+            .iter()
+            .flat_map(|e| e.features.iter())
+            .all(|f| f.id != w.ids[2])
+    );
     let seen = events::after(&db.app, &w.editor, 0, 100).await.unwrap();
     let all = seen.events.iter().find(|e| e.features.len() == 3).unwrap();
     assert!(

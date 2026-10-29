@@ -1,6 +1,9 @@
 # ADR 0550: Kim hangi kayıtları ve alanları okur ve dışarı alır: tek çözücü
 
 - **Durum:** kabul edildi (2026-10-20). `plan/gis.md` CBS-38 ("mevcut yetki modelini yeni dataset/satır/alan/iş kapsamına uygula"). Kapsamı ben belirledim.
+- **Ek (2026-10-29):** §6'nın olay günlüğü ve sayfa imleci sınırları ile ajanın cevabında `redact` alan
+  [ADR 0738](0738-agent-veil-entry-pages-and-unreached-events.md)'de kapandı: hiç erişilmemiş kaydın olayı gitmez,
+  sayfanın imleci Veri girişinin kendi kaydıdır, MCP ve masaüstünün ajan bağlantısı gizli değeri vermez.
 - **Bağlam belgesi:**
   - ADR 0411 (`forms.design`, `forms.publish`, `forms.use`, Veri girişi rolü, sunucunun yazma bekçisi `form_guard.rs`);
   - 0443 (alanın `redact`'ı: "Örneklerde gizle");

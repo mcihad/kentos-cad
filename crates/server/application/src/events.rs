@@ -12,9 +12,11 @@
 //! project's scope and only while the reader has a role in it (migration
 //! 0004), so a grant taken away stops the reading at once.
 
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::time::Duration;
 
 use kentos_contracts::{EventPage, EventRecord, FeatureOp, ProjectPermission};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::{Postgres, Transaction};
 use uuid::Uuid;
@@ -23,6 +25,26 @@ use crate::access::{ProjectAccess, not_found};
 use crate::error::{AppError, AppResult};
 
 pub const PAGE_MAX: i64 = 500;
+
+/// A changed record's earlier copy as far as a Veri girişi's reach needs it (docs/adr/0738 §3): its layer, the
+/// attributes the layer's scopes read and their values. Kept beside the event in the log (`earlier`, by the record's
+/// id) and never sent: with it a Veri girişi hears nothing of a record it never reached.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub(crate) struct Earlier {
+    pub layer: String,
+    pub fields: Vec<String>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub attrs: BTreeMap<String, String>,
+}
+
+/// The earlier copies an event's payload keeps (none when it keeps none, or they cannot be read).
+fn earlier_of(payload: &Value) -> HashMap<String, Earlier> {
+    payload
+        .get("earlier")
+        .cloned()
+        .and_then(|v| serde_json::from_value(v).ok())
+        .unwrap_or_default()
+}
 
 pub fn record(seq: i64, payload: Value) -> AppResult<EventRecord> {
     let mut e: EventRecord = serde_json::from_value(payload)
@@ -102,12 +124,12 @@ pub async fn after(
     .bind(limit.clamp(1, PAGE_MAX))
     .fetch_all(&mut *tx)
     .await?;
-    // A Veri girişi hears of a record out of its reach only as a removal (docs/adr/0550 §2): the
-    // record's version and kind of change stay with those who read it.
+    // A Veri girişi hears of a record out of its reach only as a removal, and only when it had reached
+    // it (docs/adr/0550 §2, 0738 §3): the record's version and kind of change stay with those who read it.
     let narrowed = if access.through_forms() && !rows.is_empty() {
         let parsed = rows
             .iter()
-            .map(|(s, p)| record(*s, p.clone()))
+            .map(|(s, p)| Ok((record(*s, p.clone())?, earlier_of(p))))
             .collect::<AppResult<Vec<_>>>()?;
         Some(hide_out_of_reach(&mut tx, access, parsed).await?)
     } else {
@@ -151,46 +173,75 @@ pub async fn after(
     })
 }
 
-/// `events` with the changes of records the caller does not reach turned into removals, without their
-/// versions: a record that is there but out of reach is, to the caller, one that is gone.
+/// `events` as a Veri girişi hears them when forms narrow its records (docs/adr/0550 §2, 0738 §3). A change
+/// to a record within its reach now is told as it is. A change to one out of its reach now, or removed since,
+/// is told as a removal, without its version, when the caller may hold it: when its earlier copy was within
+/// reach, or cannot tell. A record it never reached is not told of at all: its creation, its changes out of
+/// reach, its removal. An event left with no change of a record, of the project or of a block is not told.
 async fn hide_out_of_reach(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
-    mut events: Vec<EventRecord>,
+    events: Vec<(EventRecord, HashMap<String, Earlier>)>,
 ) -> AppResult<Vec<EventRecord>> {
+    let reading = crate::projects::reading_of(tx, access).await?;
+    if !reading.narrows() {
+        return Ok(events.into_iter().map(|(e, _)| e).collect());
+    }
     let ids: Vec<Uuid> = events
         .iter()
-        .flat_map(|e| e.features.iter())
+        .flat_map(|(e, _)| e.features.iter())
         .filter(|f| f.op != FeatureOp::Delete)
         .filter_map(|f| Uuid::parse_str(&f.id).ok())
         .collect();
-    if ids.is_empty() {
-        return Ok(events);
-    }
-    let reading = crate::projects::reading_of(tx, access).await?;
-    let stored: Vec<crate::projects::FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
-        "select {} from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3)",
-        crate::projects::FEATURE_COLUMNS
-    )))
-    .bind(access.tenant)
-    .bind(access.project)
-    .bind(&ids)
-    .fetch_all(&mut **tx)
-    .await?;
-    let mut hidden = std::collections::HashSet::new();
+    let stored: Vec<crate::projects::FeatureRow> = if ids.is_empty() {
+        Vec::new()
+    } else {
+        sqlx::query_as(sqlx::AssertSqlSafe(format!(
+            "select {} from kentos.feature where tenant_id = $1 and project_id = $2 and id = any($3)",
+            crate::projects::FEATURE_COLUMNS
+        )))
+        .bind(access.tenant)
+        .bind(access.project)
+        .bind(&ids)
+        .fetch_all(&mut **tx)
+        .await?
+    };
+    // Whether each record still there is within reach now.
+    let mut now = HashMap::new();
     for row in stored {
         let r = crate::projects::record(row)?;
-        if !reading.sees(&r) {
-            hidden.insert(r.id);
-        }
+        now.insert(r.id.clone(), reading.sees(&r));
     }
-    for f in events.iter_mut().flat_map(|e| e.features.iter_mut()) {
-        if f.op != FeatureOp::Delete && hidden.contains(&f.id) {
-            f.op = FeatureOp::Delete;
-            f.version = None;
+    let reached = |earlier: &HashMap<String, Earlier>, id: &str| -> Option<bool> {
+        let copy = earlier.get(id)?;
+        let kept: BTreeSet<String> = copy.fields.iter().cloned().collect();
+        reading.reach.reached(&copy.layer, &copy.attrs, &kept)
+    };
+    let mut out = Vec::with_capacity(events.len());
+    for (mut event, earlier) in events {
+        let had = !event.features.is_empty();
+        event.features.retain_mut(|f| match f.op {
+            FeatureOp::Create => now.get(&f.id) == Some(&true),
+            FeatureOp::Update => {
+                if now.get(&f.id) == Some(&true) {
+                    return true;
+                }
+                // Out of reach now, or removed since: removed for a caller that may hold it.
+                if reached(&earlier, &f.id) == Some(false) {
+                    return false;
+                }
+                f.op = FeatureOp::Delete;
+                f.version = None;
+                true
+            }
+            FeatureOp::Delete => reached(&earlier, &f.id) != Some(false),
+        });
+        if had && event.features.is_empty() && !event.meta && event.blocks.is_empty() {
+            continue;
         }
+        out.push(event);
     }
-    Ok(events)
+    Ok(out)
 }
 
 /// The newest cursor and the horizon of a project's log (a subscription checks its cursor against both).
