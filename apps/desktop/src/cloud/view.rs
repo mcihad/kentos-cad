@@ -318,9 +318,10 @@ impl App {
                 )))
                 .push(container(scrollable(rows).direction(style::field::body_scrollbar())).max_height(300))
                 .push(label::caption(
-                    "“Sunucudakini al” sizin değişikliklerinizi bırakır. “Benimkini kaydet” başkasının değişikliğinin üzerine sizinkini yazar.",
+                    "“Sunucudakini al” sizin değişikliklerinizi bırakır. “Benimkini kaydet” başkasının değişikliğinin üzerine sizinkini yazar. “Kopyasını dosyaya yaz” çizimi değişikliklerinizle yerel bir dosyaya yazar; proje ve bu soru olduğu gibi kalır.",
                 ))
                 .aside(secondary("Sonra", Some(cloud(Event::Close))))
+                .aside(secondary("Kopyasını dosyaya yaz…", Some(cloud(Event::DraftCopy))))
                 .action(secondary("Benimkini kaydet", Some(cloud(Event::KeepMine))))
                 .action(primary("Sunucudakini al", Some(cloud(Event::TakeTheirs))))
                 .width(600.0),

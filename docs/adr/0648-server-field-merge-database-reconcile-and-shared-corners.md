@@ -1,6 +1,8 @@
 # ADR 0648: Sunucuda alan alan birleştirme, veritabanında birlikte uzlaştırma ve çok köşeli nesnenin bağı
 
 - **Durum:** kabul edildi (2026-10-26). `plan/gis.md` CBS-37'nin üçüncü dilimi. Kapsamı ben belirledim.
+- **Ek (2026-10-29):** Veri girişinin birleştirilmesi (§1'in son maddesi) ve katmanlar arası çok köşeli bağ (§4'ün
+  son paragrafı) [ADR 0737](0737-entry-merge-cross-layer-corners-and-draft-copy.md)'de yapıldı.
 - **Kalan işler:** [ADR 0553](0553-field-merge-groups-and-layers.md)'ün "Sonraya kalan"ı:
   - sunucuda `project.changes`'in istemcinin tabanıyla alan alan birleştirmesi;
   - PostGIS katmanlarının birlikte (`with`) uzlaştırılması;

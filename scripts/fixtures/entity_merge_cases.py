@@ -6,6 +6,10 @@ that changed it; `attrs` are merged one attribute at a time by the same rule; a 
 absent field is a value too (removing is a change). The clashes are listed in the order of the fields' names (an
 attribute at `attrs`, by its name).
 
+A Veri girişi reads only some attributes (docs/adr/0737 §1): its base and its copy are as it read them, so before the merge
+both take the attributes it does not read (a case's `hidden`) from the stored copy (theirs) and drop their own of those
+names; those stay as stored and are neither a clash nor named among theirs.
+
     python3 scripts/fixtures/entity_merge_cases.py           # writes fixtures/cloud/v1/merge.json
     python3 scripts/fixtures/entity_merge_cases.py --check   # compares
 """
@@ -68,6 +72,18 @@ def merge(base, mine, theirs):
     if clashes:
         return {"clashes": clashes}
     return {"merged": out, "fromMine": from_mine, "fromTheirs": from_theirs}
+
+
+def merge_reading(base, mine, theirs, hidden):
+    def read(e):
+        e = copy.deepcopy(e)
+        attrs = {k: v for k, v in e.get("attrs", {}).items() if k not in hidden}
+        for k, v in theirs.get("attrs", {}).items():
+            if k in hidden:
+                attrs[k] = v
+        e["attrs"] = attrs
+        return e
+    return merge(read(base), read(mine), theirs)
 
 
 def point(x=487000.0, y=4420000.0, **extra):
@@ -140,6 +156,41 @@ def cases():
         line(b={"x": 487051.0, "y": 4420000.0}))
     add("çizgi: öznitelik yokken ikisi de ekledi farklı", lb, with_attrs(lb, ad="X"), with_attrs(lb, ad="Y"))
     add("çizgi: öznitelik yokken yalnız onlar ekledi", lb, lb, with_attrs(lb, ad="Y"))
+
+    # A Veri girişi (docs/adr/0737 §1): the stored copy has the hidden `not`; the entry's copies lack it.
+    def entry(name, base, mine, theirs, hidden=("not",)):
+        hidden = list(hidden)
+        out.append({"name": name, "hidden": hidden, "base": base, "mine": mine, "theirs": theirs,
+                    **merge_reading(base, mine, theirs, hidden)})
+
+    full = with_attrs(polygon(), durum="iyi", kat="2", **{"not": "Yalnız ofis görür."})
+    seen = with_attrs(full, **{"not": None})
+    entry("Veri girişi: ben görünen alanı, onlar gizli alanı: ikisi de, gizli adı söylenmez", seen,
+          with_attrs(seen, durum="kotu"), with_attrs(full, **{"not": "Ofis notu 2"}))
+    entry("Veri girişi: onlar köşe taşıdı, ben görünen alanı", seen, with_attrs(seen, kat="3"),
+          with_attrs(polygon([[0, 0], [12, 0], [10, 10], [0, 10]]), durum="iyi", kat="2", **{"not": "Yalnız ofis görür."}))
+    entry("Veri girişi: aynı görünen alanı farklı: çatışma", seen, with_attrs(seen, kat="3"),
+          with_attrs(full, kat="4"))
+    entry("Veri girişi: aynı görünen alanı aynı değere", seen, with_attrs(seen, kat="3"), with_attrs(full, kat="3"))
+    entry("Veri girişi: onlar başka görünen alanı, ben birini", seen, with_attrs(seen, durum="kotu"),
+          with_attrs(full, kat="5"))
+    entry("Veri girişi: onlar gizli alanı sildi, ben görünen alanı", seen, with_attrs(seen, durum="kotu"),
+          with_attrs(full, **{"not": None}))
+    entry("Veri girişi: kopyasında gizli alan gönderse de saklı kopyanınki kalır", seen,
+          with_attrs(seen, durum="kotu", **{"not": "uydurma"}), full)
+    entry("Veri girişi: tabanında gizli alanın eski değeri olsa da onlarınki kalır",
+          with_attrs(full, **{"not": "eski"}), with_attrs(seen, durum="kotu"), with_attrs(full, **{"not": "yeni"}))
+    entry("Veri girişi: şekli yalnız ben değiştirdim: benimki (sunucunun denetimi sonra reddeder)", seen,
+          with_attrs(polygon([[0, 0], [11, 0], [10, 10], [0, 10]]), durum="iyi", kat="2"), full)
+    entry("Veri girişi: ikimiz şekli farklı değiştirdik: çatışma", seen,
+          with_attrs(polygon([[0, 0], [11, 0], [10, 10], [0, 10]]), durum="iyi", kat="2"),
+          with_attrs(polygon([[0, 0], [12, 0], [10, 10], [0, 10]]), durum="iyi", kat="2", **{"not": "Yalnız ofis görür."}))
+    entry("Veri girişi: gizli alan yokken düz birleştirme gibi", seen, with_attrs(seen, durum="kotu"),
+          with_attrs(seen, kat="5"), hidden=())
+    entry("Veri girişi: bütün öznitelikleri gizli: yalnız onlarınki kalır", seen,
+          with_attrs(seen, durum="kotu", kat="9"), with_attrs(full, kat="6"), hidden=("durum", "kat", "malik", "not", "parsel_no"))
+    entry("Veri girişi: ben görünen alanı sildim, onlar değiştirmedi", seen, with_attrs(seen, kat=None), full)
+    entry("Veri girişi: ben sildim, onlar değiştirdi: çatışma", seen, with_attrs(seen, kat=None), with_attrs(full, kat="4"))
     return out
 
 

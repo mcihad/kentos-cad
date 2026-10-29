@@ -463,3 +463,101 @@ fn a_many_cornered_parcel_still_groups_with_its_neighbour() {
     assert_eq!(groups[0]["reasons"], json!(["sharedVertex"]), "{plan}");
     let _ = std::fs::remove_file(&tmp);
 }
+
+/// docs/adr/0737 §2: a parcel of more corners than a base record keeps ties to a building of another layer of the same file
+/// through the corner only the two share: both sides moved it, the parcel and the building are one group.
+#[test]
+fn a_many_cornered_parcel_groups_with_a_building_of_another_layer() {
+    let tmp = std::env::temp_dir().join(format!(
+        "kentos-uzlas-katmanlar-arasi-{}.gpkg",
+        std::process::id()
+    ));
+    std::fs::copy(dir().join("uzlas-komsu.gpkg"), &tmp).expect("copied");
+    let path = tmp.display().to_string();
+    let (k, b) = ("import-komsu", "import-bina");
+    let link = |d: &mut Document| {
+        for table in ["komsu", "bina"] {
+            ok(&run(
+                d,
+                "cad.sources.edit",
+                CallOp::Execute,
+                json!({ "edit": { "kind": "link", "path": path, "table": table } }),
+            ));
+        }
+    };
+    let (x0, y0) = (487000.0, 4420000.0);
+    let p = |x: f64, y: f64| json!({ "x": x0 + x, "y": y0 + y });
+    // K2 with 200 corners on its bottom edge and one more on its top edge, (30, 20): the building's corner, which no
+    // other parcel has.
+    let dense = |corner: (f64, f64)| {
+        let mut pts: Vec<Value> = (0..200)
+            .map(|i| p(20.0 + 0.1 * f64::from(i), 0.0))
+            .collect();
+        pts.push(p(40.0, 0.0));
+        pts.push(p(40.0, 20.0));
+        pts.push(p(corner.0, corner.1));
+        pts.push(p(20.0, 20.0));
+        Value::Array(pts)
+    };
+    let house = |corner: (f64, f64)| {
+        json!([
+            p(25.0, 10.0),
+            p(30.0, 10.0),
+            p(corner.0, corner.1),
+            p(25.0, 20.0)
+        ])
+    };
+    let grip = |d: &mut Document, uid: String, pts: Value| {
+        ok(&run(
+            d,
+            "cad.entities.edit",
+            CallOp::Execute,
+            json!({ "operation": "grip", "changes": [{ "kind": "update", "uid": uid,
+                "geometry": { "kind": "polygon", "pts": pts } }] }),
+        ));
+    };
+    let parcel = |d: &Document| uid_by(d, k, "ad", "K2");
+    let building = |d: &Document| uid_by(d, b, "komsu", &uid_by(d, k, "ad", "K2"));
+    let mut d = doc();
+    link(&mut d);
+    let (u, h) = (parcel(&d), building(&d));
+    grip(&mut d, u, dense((30.0, 20.0)));
+    grip(&mut d, h, house((30.0, 20.0)));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": k, "with": [b], "direction": "write" }),
+    ));
+    // The table: someone moves K2's corner only.
+    let mut other = doc();
+    link(&mut other);
+    let u = parcel(&other);
+    grip(&mut other, u, dense((31.0, 21.0)));
+    ok(&run(
+        &mut other,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": k, "direction": "write" }),
+    ));
+    // The layer: the corner moves in both.
+    let (u, h) = (parcel(&d), building(&d));
+    grip(&mut d, u, dense((32.0, 22.0)));
+    grip(&mut d, h, house((32.0, 22.0)));
+    let plan = ok(&run(
+        &mut d,
+        "cad.sources.reconcile",
+        CallOp::Plan,
+        json!({ "layer": k, "with": [b] }),
+    ))
+    .clone();
+    let groups = plan["groups"].as_array().cloned().unwrap_or_default();
+    assert_eq!(groups.len(), 1, "{plan}");
+    assert_eq!(
+        groups[0]["objects"].as_array().map(Vec::len),
+        Some(2),
+        "{plan}"
+    );
+    assert_eq!(groups[0]["reasons"], json!(["sharedVertex"]), "{plan}");
+    let _ = std::fs::remove_file(&tmp);
+}

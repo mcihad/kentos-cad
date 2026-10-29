@@ -35,6 +35,15 @@ pub(crate) fn hash_of(e: &Entity) -> u64 {
 /// (right after a link or a reload). A layer of more than `MAX_BASE_ROWS` objects keeps none.
 pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid, Entity)]>) {
     let layer: Vec<(Uuid, &Entity)> = doc.by_layer_with_uids(&link.layer).collect();
+    // The objects of the other layers bound to the same source (one GeoPackage file, one database): a reconcile takes
+    // them together (docs/adr/0648 §3), so a corner shared with one of them ties too (docs/adr/0737 §2).
+    let others: Vec<&Entity> = doc
+        .settings()
+        .sources
+        .iter()
+        .filter(|l| l.layer != link.layer && l.kind == link.kind && l.path == link.path)
+        .flat_map(|l| doc.by_layer_with_uids(&l.layer).map(|(_, e)| e))
+        .collect();
     let base = (layer.len() <= MAX_BASE_ROWS).then(|| {
         let table: Option<HashMap<Uuid, &Entity>> =
             table.map(|t| t.iter().map(|(u, e)| (*u, e)).collect());
@@ -52,7 +61,7 @@ pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid,
                 ((*u.as_bytes(), lh, th), detail)
             })
             .collect();
-        shared_corners(&layer, &mut kept);
+        shared_corners(&layer, &others, &mut kept);
         kept.sort_by_key(|(row, _)| row.0);
         let details: Vec<BaseDetail> = kept.iter().map(|(_, d)| d.clone()).collect();
         let rows: Vec<BaseRow> = kept.into_iter().map(|(r, _)| r).collect();
@@ -71,9 +80,14 @@ pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid,
 }
 
 /// docs/adr/0648 §4: an object of more vertices than a record keeps (a many-cornered or many-part one) keeps the
-/// vertices it shares with another object of the layer, when they are few enough: its neighbours whose shared corner both
-/// sides moved are still one group. `kept` is in `layer`'s order.
-fn shared_corners(layer: &[(Uuid, &Entity)], kept: &mut [(BaseRow, BaseDetail)]) {
+/// vertices it shares with another object of the layer or of the source's other bound layers (`others`, docs/adr/0737
+/// §2), when they are few enough: its neighbours whose shared corner both sides moved are still one group. `kept` is in
+/// `layer`'s order.
+fn shared_corners(
+    layer: &[(Uuid, &Entity)],
+    others: &[&Entity],
+    kept: &mut [(BaseRow, BaseDetail)],
+) {
     let big: Vec<usize> = kept
         .iter()
         .enumerate()
@@ -91,6 +105,11 @@ fn shared_corners(layer: &[(Uuid, &Entity)], kept: &mut [(BaseRow, BaseDetail)])
     for set in &all {
         for q in set {
             *count.entry(*q).or_default() += 1;
+        }
+    }
+    for e in others {
+        for q in merge::vertex_set_all(e) {
+            *count.entry(q).or_default() += 1;
         }
     }
     for i in big {

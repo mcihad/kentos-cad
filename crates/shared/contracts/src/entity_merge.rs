@@ -141,6 +141,29 @@ pub fn merge_entities(
     })
 }
 
+/// The merge of a caller that reads only some attributes (a Veri girişi, docs/adr/0737 §1): `base` and `mine` are copies
+/// as it read them, so the attributes it does not read (`reads` false) are taken from `theirs` for both before the
+/// merge. They stay as stored, and their changes are neither a clash nor named in `from_theirs`.
+pub fn merge_reading(
+    base: &Entity,
+    mine: &Entity,
+    theirs: &Entity,
+    reads: &dyn Fn(&str) -> bool,
+) -> Result<EntityMerge, Vec<String>> {
+    let read = |e: &Entity| {
+        let mut e = e.clone();
+        let attrs = &mut e.base_mut().attrs;
+        attrs.retain(|k, _| reads(k));
+        for (k, v) in &theirs.base().attrs {
+            if !reads(k) {
+                attrs.insert(k.clone(), v.clone());
+            }
+        }
+        e
+    };
+    merge_entities(&read(base), &read(mine), theirs)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -194,11 +217,19 @@ mod tests {
         assert!(cases.len() >= 20);
         for case in cases {
             let name = case["name"].as_str().expect("name");
-            let got = merge_entities(
-                &entity(&case["base"]),
-                &entity(&case["mine"]),
-                &entity(&case["theirs"]),
+            let (base, mine, theirs) = (
+                entity(&case["base"]),
+                entity(&case["mine"]),
+                entity(&case["theirs"]),
             );
+            // A Veri girişi's case names the attributes it does not read (docs/adr/0737 §1).
+            let got = match case.get("hidden").and_then(Value::as_array) {
+                Some(hidden) => {
+                    let hidden: Vec<&str> = hidden.iter().filter_map(Value::as_str).collect();
+                    merge_reading(&base, &mine, &theirs, &|k| !hidden.contains(&k))
+                }
+                None => merge_entities(&base, &mine, &theirs),
+            };
             match (&case["merged"], got) {
                 (Value::Null, Err(clashes)) => {
                     let want: Vec<String> =

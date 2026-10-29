@@ -340,6 +340,8 @@ fn not_the_same() -> std::io::Error {
 pub enum Event {
     /// The save dialog answered: where to write, or nothing (cancelled).
     Picked(Option<PathBuf>),
+    /// The copy's dialog answered (docs/adr/0737 §3): where to write the drawing's copy, or nothing.
+    PickedCopy(Option<PathBuf>),
     /// How far the save `id` is.
     Progress { id: u64, stage: Stage },
     /// The save `id` ended.
@@ -361,6 +363,9 @@ pub enum Event {
 pub enum Target {
     /// A `.kcad` file on this computer.
     File(PathBuf),
+    /// A copy of the drawing in a `.kcad` file on this computer (docs/adr/0737 §3): the drawing stays what it is, a cloud
+    /// project with its draft, and keeps its own state.
+    Copy(PathBuf),
     /// A file project's next revision on the server (cloud/file.rs, docs/adr/0041),
     /// based on the revision the drawing stands on (0 before the first).
     Cloud {
@@ -394,7 +399,7 @@ impl Saving {
     /// What is being saved, as the messages name it.
     pub fn name(&self) -> String {
         match &self.target {
-            Target::File(path) => path.display().to_string(),
+            Target::File(path) | Target::Copy(path) => path.display().to_string(),
             Target::Cloud { name, .. } => format!("“{name}”"),
         }
     }
@@ -419,6 +424,46 @@ impl App {
             return Task::none();
         }
         self.start_save(Target::File(path))
+    }
+
+    /// Writes a copy of the drawing to `path` (docs/adr/0737 §3) the way a save writes it; the drawing keeps its file,
+    /// its cloud project and its unsaved state.
+    pub(crate) fn start_copy(&mut self, path: PathBuf) -> Task<Message> {
+        if kentos_native_application::cad_open::Format::of(&path).is_some() {
+            self.error(
+                "Kopya yalnız KentOS (.kcad) biçiminde yazılır; .kcad uzantılı bir dosya seçin.",
+            );
+            return Task::none();
+        }
+        self.start_save(Target::Copy(path))
+    }
+
+    /// Kopyasını dosyaya yaz (docs/adr/0737 §3): asks where the drawing's copy goes, its name's “(taslak)” suggested.
+    pub(crate) fn ask_copy(&mut self) -> Task<Message> {
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
+        let suggested = format!("{} (taslak)", doc.name().trim_end_matches(".kcad"));
+        if let crate::app::Picker::File(path) = &self.picker {
+            return self.start_copy(path.clone());
+        }
+        Task::perform(
+            async move {
+                let file = rfd::AsyncFileDialog::new()
+                    .set_title("Kopyasını dosyaya yaz")
+                    .add_filter("KentOS çizimi (.kcad)", &["kcad"])
+                    .set_file_name(format!("{suggested}.kcad"))
+                    .save_file()
+                    .await?;
+                let path = file.path().to_path_buf();
+                Some(if path.extension().is_some_and(|e| e == "kcad") {
+                    path
+                } else {
+                    path.with_extension("kcad")
+                })
+            },
+            |path| Message::Saving(Event::PickedCopy(path)),
+        )
     }
 
     /// Starts a save to `target`: a file is written as above; a cloud save's
@@ -465,7 +510,7 @@ impl App {
             drop(model);
             crate::active_level::with_level_state(&mut snapshot.settings, &level.0, level.1);
             // Bound GeoPackages and external references get their path from the file's folder (docs/adr/0506, 0348).
-            if let Target::File(path) = &target {
+            if let Target::File(path) | Target::Copy(path) = &target {
                 kentos_native_application::source_places::with_relative(
                     &mut snapshot.settings,
                     path,
@@ -473,7 +518,7 @@ impl App {
                 kentos_native_application::xrefs::with_relative(&mut snapshot.blocks, path);
             }
             let done = match &target {
-                Target::File(path) => Event::Done {
+                Target::File(path) | Target::Copy(path) => Event::Done {
                     id,
                     result: write_shared(&snapshot, &objects, path, &stop, &mut tell, &faults),
                 },
@@ -494,7 +539,8 @@ impl App {
     pub(crate) fn saving_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Picked(Some(path)) => return self.start_saving(path),
-            Event::Picked(None) => {}
+            Event::Picked(None) | Event::PickedCopy(None) => {}
+            Event::PickedCopy(Some(path)) => return self.start_copy(path),
             Event::Progress { id, stage } => {
                 if let Some(s) = self.saving.as_mut().filter(|s| s.id == id) {
                     (s.stage, s.fraction) = stage.describe();
@@ -552,6 +598,17 @@ impl App {
                             path,
                             revision: s.revision,
                         })))),
+                        // The drawing stays what it was (docs/adr/0737 §3): neither its file nor its state changes.
+                        Target::Copy(path) => {
+                            self.say(
+                                Level::Success,
+                                format!(
+                                    "Kopyası yazıldı: {}. Çizim olduğu gibi kalır; bulut projesindeki değişiklikleriniz gönderilene ya da siz seçene kadar bu cihazda.",
+                                    path.display()
+                                ),
+                            );
+                            Task::none()
+                        }
                         Target::Cloud { .. } => Task::none(),
                     },
                     Err(SaveError::Stopped) => {
@@ -580,7 +637,7 @@ impl App {
             .as_ref()
             .filter(|s| s.started.elapsed() >= QUIET)?;
         let name = match &s.target {
-            Target::File(path) => path.file_name().map_or_else(
+            Target::File(path) | Target::Copy(path) => path.file_name().map_or_else(
                 || path.display().to_string(),
                 |n| n.to_string_lossy().into_owned(),
             ),

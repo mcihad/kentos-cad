@@ -279,3 +279,255 @@ async fn the_forms_are_designed_published_and_guarded_on_the_server() {
     .await;
     assert!(matches!(designed, Err(AppError::Forbidden(_))));
 }
+
+/// docs/adr/0737 §1: a Veri girişi's `edit` from a copy someone has changed since is merged on the server over the
+/// fields it reads: the hidden field and the shape the editor changed stay theirs, the Veri girişi's field is its own; the
+/// merged answer comes as it reads it; the same field changed differently, a plain update and a shape change are refused
+/// as before.
+#[tokio::test]
+async fn a_veri_girisi_edit_is_merged_over_the_fields_it_reads() {
+    let Some(db) = TestDb::create().await else {
+        return;
+    };
+    admin::create_tenant(&db.owner, "buro", "Büro", 5)
+        .await
+        .unwrap();
+    let pm = member(&db, "buro", "yonetici", TenantRole::ProjectManager).await;
+    let editor = member(&db, "buro", "duzenleyici", TenantRole::Viewer).await;
+    let clerk = member(&db, "buro", "veri", TenantRole::Viewer).await;
+    let project = new_project(&db, &pm, "Hasar tespiti").await;
+    let owner = open(&db, &pm, project).await;
+    share(&db, &owner, &editor.actor, GrantRole::Editor).await;
+    share(&db, &owner, &clerk.actor, GrantRole::Entry).await;
+    let (ed, entry) = (
+        open(&db, &editor, project).await,
+        open(&db, &clerk, project).await,
+    );
+    let meta: i64 = sqlx::query_scalar("select meta_version from kentos.project where id = $1")
+        .bind(project)
+        .fetch_one(&db.owner)
+        .await
+        .unwrap();
+    let meta = meta.to_string();
+    // Published, its rules not enforced on the editor: the editor writes the note the form does not show.
+    let mut published = patch(true);
+    if let Some(settings) = published.settings.as_mut() {
+        for form in &mut settings.forms {
+            form.enforce = false;
+        }
+    }
+    changes::commit(
+        &db.app,
+        &owner,
+        envelope(
+            &pm,
+            project,
+            ProjectChanges {
+                project: Some(published),
+                ..features(Vec::new())
+            },
+            &[("@project", meta.as_str())],
+        ),
+    )
+    .await
+    .unwrap();
+    let id = Uuid::new_v4().to_string();
+    let uid = Uuid::parse_str(&id).unwrap();
+    let made = changes::commit(
+        &db.app,
+        &ed,
+        envelope(
+            &editor,
+            project,
+            features(vec![FeatureChange::Create {
+                id: id.clone(),
+                entity: building(
+                    json!({ "Durum": "iyi", "Kat": "2", "Not": "Yalnız ofis görür." }),
+                    10.0,
+                ),
+            }]),
+            &[],
+        ),
+    )
+    .await
+    .unwrap();
+    let v1 = made.versions[&id].clone();
+    // The Veri girişi's copy, as it reads it: no `Not`.
+    let base = kentos_application::projects::features_by_id(&db.app, &entry, &[uid])
+        .await
+        .unwrap()[0]
+        .entity
+        .clone();
+    assert!(!base.base().attrs.contains_key("Not"));
+    let seen = |attrs: serde_json::Value| -> Entity {
+        let mut e = base.clone();
+        e.base_mut().attrs = serde_json::from_value(attrs).unwrap();
+        e
+    };
+    // The editor widens the building and changes the hidden note.
+    let edited = changes::commit(
+        &db.app,
+        &ed,
+        envelope(
+            &editor,
+            project,
+            features(vec![FeatureChange::Update {
+                id: id.clone(),
+                entity: building(
+                    json!({ "Durum": "iyi", "Kat": "2", "Not": "Ofis notu 2" }),
+                    14.0,
+                ),
+            }]),
+            &[(id.as_str(), v1.as_str())],
+        ),
+    )
+    .await
+    .unwrap();
+    let v2 = edited.versions[&id].clone();
+    // A plain update from the old copy is still a conflict, shown as the Veri girişi reads it.
+    let plain = changes::commit(
+        &db.app,
+        &entry,
+        envelope(
+            &clerk,
+            project,
+            features(vec![FeatureChange::Update {
+                id: id.clone(),
+                entity: seen(json!({ "Durum": "kotu", "Kat": "2" })),
+            }]),
+            &[(id.as_str(), v1.as_str())],
+        ),
+    )
+    .await;
+    match plain {
+        Err(AppError::Conflict { conflicts, .. }) => {
+            let current = conflicts[0].current.as_ref().expect("the server's copy");
+            assert!(!current.entity.base().attrs.contains_key("Not"));
+        }
+        other => panic!("expected a conflict, got {other:?}"),
+    }
+    // The same change as an edit from its copy: merged.
+    let edit = envelope(
+        &clerk,
+        project,
+        features(vec![FeatureChange::Edit {
+            id: id.clone(),
+            entity: seen(json!({ "Durum": "kotu", "Kat": "2" })),
+            base: Box::new(base.clone()),
+        }]),
+        &[(id.as_str(), v1.as_str())],
+    );
+    let done = changes::commit(&db.app, &entry, edit.clone())
+        .await
+        .unwrap();
+    let v3 = done.versions[&id].clone();
+    assert_ne!(v3, v2);
+    let stored: serde_json::Value =
+        sqlx::query_scalar("select properties from kentos.feature where id = $1")
+            .bind(uid)
+            .fetch_one(&db.owner)
+            .await
+            .unwrap();
+    assert_eq!(
+        stored,
+        json!({ "Durum": "kotu", "Kat": "2", "Not": "Ofis notu 2" }),
+        "the Veri girişi's field, the hidden note as stored"
+    );
+    let shape = kentos_application::projects::features_by_id(&db.app, &ed, &[uid])
+        .await
+        .unwrap()[0]
+        .entity
+        .clone();
+    assert_eq!(
+        serde_json::to_value(&shape).unwrap()["pts"],
+        serde_json::to_value(building(json!({}), 14.0)).unwrap()["pts"],
+        "the editor's shape kept"
+    );
+    // The answer is the merge as the Veri girişi reads it.
+    assert_eq!(done.merged.len(), 1);
+    assert!(!done.merged[0].entity.base().attrs.contains_key("Not"));
+    assert_eq!(
+        done.merged[0]
+            .entity
+            .base()
+            .attrs
+            .get("Durum")
+            .map(String::as_str),
+        Some("kotu")
+    );
+    // The same request again: the same answer.
+    let again = changes::commit(&db.app, &entry, edit).await.unwrap();
+    assert!(again.replayed && again.merged == done.merged);
+    // The editor changes Kat; the Veri girişi changes it otherwise from v2's copy: a conflict.
+    let base2 = kentos_application::projects::features_by_id(&db.app, &entry, &[uid])
+        .await
+        .unwrap()[0]
+        .entity
+        .clone();
+    changes::commit(
+        &db.app,
+        &ed,
+        envelope(
+            &editor,
+            project,
+            features(vec![FeatureChange::Update {
+                id: id.clone(),
+                entity: building(
+                    json!({ "Durum": "kotu", "Kat": "4", "Not": "Ofis notu 2" }),
+                    14.0,
+                ),
+            }]),
+            &[(id.as_str(), v3.as_str())],
+        ),
+    )
+    .await
+    .unwrap();
+    let mut clash = base2.clone();
+    clash.base_mut().attrs.insert("Kat".into(), "3".into());
+    let refused = changes::commit(
+        &db.app,
+        &entry,
+        envelope(
+            &clerk,
+            project,
+            features(vec![FeatureChange::Edit {
+                id: id.clone(),
+                entity: clash,
+                base: Box::new(base2.clone()),
+            }]),
+            &[(id.as_str(), v3.as_str())],
+        ),
+    )
+    .await;
+    assert!(
+        matches!(&refused, Err(AppError::Conflict { conflicts, .. }) if conflicts[0].current.as_ref().is_some_and(|c| !c.entity.base().attrs.contains_key("Not"))),
+        "{refused:?}"
+    );
+    // A shape change merges onto the stored copy but stays the Veri girişi's: refused as its write is.
+    let now = kentos_application::projects::features_by_id(&db.app, &entry, &[uid])
+        .await
+        .unwrap()[0]
+        .clone();
+    let mut moved = building(json!({}), 16.0);
+    moved.base_mut().attrs = base2.base().attrs.clone();
+    let reshaped = changes::commit(
+        &db.app,
+        &entry,
+        envelope(
+            &clerk,
+            project,
+            features(vec![FeatureChange::Edit {
+                id: id.clone(),
+                entity: moved,
+                base: Box::new(base2),
+            }]),
+            &[(id.as_str(), v3.as_str())],
+        ),
+    )
+    .await;
+    assert!(
+        matches!(&reshaped, Err(AppError::Forbidden(m)) if m.contains("şekli")),
+        "{reshaped:?}"
+    );
+    assert_ne!(now.version, v3, "the editor's version stands");
+}

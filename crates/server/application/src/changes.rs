@@ -1472,12 +1472,10 @@ pub(crate) async fn commit_in(
                 })?;
                 match actual {
                     None => Some(ConflictReason::Deleted),
-                    // Someone saved a newer version of an object edited from a known copy: merged below, if it can be.
+                    // Someone saved a newer version of an object edited from a known copy: merged below, if it can be;
+                    // a Veri girişi's too, over the fields it reads (docs/adr/0737 §1).
                     Some(v)
-                        if v != want
-                            && p.op == FeatureOp::Update
-                            && !entry
-                            && bases.contains_key(&p.id) =>
+                        if v != want && p.op == FeatureOp::Update && bases.contains_key(&p.id) =>
                     {
                         to_merge.push(p.id);
                         None
@@ -1509,7 +1507,9 @@ pub(crate) async fn commit_in(
         }
     }
     // The merges (docs/adr/0648 §1): the stored copy and the client's, field by field against its base; a clean merge is
-    // what this command writes, fields both changed differently stay a conflict.
+    // what this command writes, fields both changed differently stay a conflict. A Veri girişi's base and copy are as it
+    // reads them: the fields its forms hide come from the stored copy for both (docs/adr/0737 §1); the forms' guard below
+    // judges the merge as it judges its write.
     let mut merged_ids: HashSet<Uuid> = HashSet::new();
     if !to_merge.is_empty() {
         let stored_copies = current_copies(tx, access, &to_merge).await?;
@@ -1520,7 +1520,16 @@ pub(crate) async fn commit_in(
             };
             let merge = match (stored_copies.get(id), bases.get(id), &input.features[i]) {
                 (Some(theirs), Some(base), FeatureChange::Update { entity, .. }) => {
-                    kentos_contracts::merge_entities(base, entity, &theirs.entity).ok()
+                    match reading.as_ref().filter(|_| entry) {
+                        Some(reading) => {
+                            let layer = theirs.entity.base().layer_id.clone();
+                            kentos_contracts::merge_reading(base, entity, &theirs.entity, &|k| {
+                                reading.reach.level(&layer, k).readable()
+                            })
+                            .ok()
+                        }
+                        None => kentos_contracts::merge_entities(base, entity, &theirs.entity).ok(),
+                    }
                 }
                 _ => None,
             };
@@ -1976,7 +1985,13 @@ pub(crate) async fn commit_in(
                 Some(kentos_contracts::FeatureRecord {
                     id: id.clone(),
                     version: versions.get(id)?.clone(),
-                    entity: entity.clone(),
+                    // A Veri girişi gets the merge as it reads it (docs/adr/0411 §6, 0737 §1).
+                    entity: match &reading {
+                        Some(reading) => {
+                            crate::form_guard::projected(entity.clone(), &reading.reach)
+                        }
+                        None => entity.clone(),
+                    },
                 })
             }
             _ => None,

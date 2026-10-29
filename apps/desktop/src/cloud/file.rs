@@ -205,7 +205,7 @@ impl App {
         };
         let name = match &s.target {
             Target::Cloud { name, .. } => name.clone(),
-            Target::File(_) => return Task::none(),
+            Target::File(_) | Target::Copy(_) => return Task::none(),
         };
         let same = self
             .document
@@ -267,7 +267,7 @@ impl App {
                     s.bytes.take(),
                     match &s.target {
                         Target::Cloud { based_on, .. } => *based_on,
-                        Target::File(_) => 0,
+                        Target::File(_) | Target::Copy(_) => 0,
                     },
                 ),
                 None => (None, 0),

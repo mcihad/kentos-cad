@@ -899,7 +899,7 @@ fn the_status_words_are_the_brief_s() {
 
 // ── Conflicts ───────────────────────────────────────────────────────────
 
-fn conflict_on(app: &mut App, uid: Uuid) {
+pub(crate) fn conflict_on(app: &mut App, uid: Uuid) {
     let mut server = server_drawing().get(Slot(1)).expect("an object").clone();
     if let Entity::Point(PointEntity { p, .. }) = &mut server {
         p.y += 5.0;
@@ -980,6 +980,49 @@ fn a_conflict_stops_sending_and_the_window_offers_both_choices() {
     }
     assert!(!doc.dirty());
     assert_eq!(last_said(&app), "Sunucudaki hâller alındı.");
+}
+
+/// docs/adr/0737 §3: Kopyasını dosyaya yaz in the conflict writes the drawing with the draft to a file of its own; the
+/// drawing stays the cloud project with its unsent work, and the question stays to be answered.
+#[test]
+fn the_conflict_writes_a_copy_of_the_draft_and_leaves_the_question() {
+    let mut app = signed_in();
+    database(&mut app);
+    let uid = edit(&mut app, 3.0);
+    app.cloud_after(Instant::now());
+    let _ = app.run("file.save");
+    conflict_on(&mut app, uid);
+    let _ = app.run("cloud.conflicts");
+    assert_eq!(app.dialog, Some(Dialog::Conflicts));
+    let path = scratch("taslak").join("Proje (taslak).kcad");
+    app.picker = crate::app::Picker::File(path.clone());
+    let task = app.update(crate::cloud::msg(Event::DraftCopy));
+    drive(&mut app, task);
+    // The copy holds my move.
+    let bytes = std::fs::read(&path).expect("the copy is written");
+    let copy = kentos_kcad::decode(&bytes).expect("a KCAD v2 file");
+    let mine = app.document.as_ref().expect("open");
+    let moved = mine
+        .model
+        .get(mine.model.slot_of(uid).expect("there"))
+        .cloned();
+    let written = copy
+        .entities
+        .iter()
+        .zip(copy.uids.iter())
+        .find(|(_, u)| u.0 == *uid.as_bytes())
+        .map(|(e, _)| e.clone());
+    assert_eq!(written, moved, "the copy holds the drawing as it is");
+    // The drawing is still the project, with its draft and the question.
+    let doc = app.document.as_ref().expect("open");
+    assert!(doc.cloud_source().is_some() && doc.path.is_none());
+    assert_eq!(state(&app), SaveState::Conflict);
+    assert_eq!(app.dialog, Some(Dialog::Conflicts));
+    assert!(
+        last_said(&app).starts_with("Kopyası yazıldı:"),
+        "{}",
+        last_said(&app)
+    );
 }
 
 // ── Others' changes ─────────────────────────────────────────────────────

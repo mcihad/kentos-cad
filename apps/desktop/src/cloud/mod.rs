@@ -431,6 +431,9 @@ pub enum Event {
     Close,
     /// “Yerel kopya kaydet…” on an ended project's notice: Farklı kaydet.
     SaveLocal,
+    /// The conflict's Kopyasını dosyaya yaz (docs/adr/0737 §3): the drawing with the draft written to a file of its own,
+    /// the project and its question left as they are.
+    DraftCopy,
     /// Projeyi paylaş (share.rs).
     Share(share::Event),
     /// The catalog's project forms (catalog_forms.rs).
@@ -724,6 +727,7 @@ impl App {
                 self.close_dialog();
                 self.run("file.saveAs")
             }
+            Event::DraftCopy => self.ask_copy(),
         }
     }
 

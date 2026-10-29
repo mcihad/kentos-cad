@@ -7,7 +7,9 @@ use kentos_commands::{CONTRACTS_VERSION, Health, ProjectState, ProjectStorage};
 use crate::app::{App, Message};
 use crate::cloud::cells::{Lamp, Shade};
 use crate::cloud::cells_plan::{AccountRow, ServerState};
-use crate::cloud::tests::{cell_text, database, edit, file_project, info, open, said, signed_in};
+use crate::cloud::tests::{
+    cell_text, conflict_on, database, edit, file_project, info, open, said, signed_in,
+};
 use crate::saving::Stage;
 
 fn health(contracts: u32) -> Health {
@@ -194,6 +196,7 @@ fn screens() {
                 "dosya-yukleniyor",
                 "sunucu-yok",
                 "hesap-menusu",
+                "cakisma",
             ] {
                 let mut app = signed_in();
                 let _ = app
@@ -225,6 +228,15 @@ fn screens() {
                                 },
                             }));
                         }
+                    }
+                    // The conflict's question with Kopyasını dosyaya yaz (docs/adr/0737 §3).
+                    "cakisma" => {
+                        database(&mut app);
+                        let uid = edit(&mut app, 3.0);
+                        app.cloud_after(std::time::Instant::now());
+                        let _ = app.run("file.save");
+                        conflict_on(&mut app, uid);
+                        let _ = app.run("cloud.conflicts");
                     }
                     "sunucu-yok" => {
                         database(&mut app);

@@ -1593,6 +1593,1704 @@
    "fromTheirs": [
     "attrs.ad"
    ]
+  },
+  {
+   "name": "Veri girişi: ben görünen alanı, onlar gizli alanı: ikisi de, gizli adı söylenmez",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "kotu",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "Ofis notu 2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "kotu",
+     "kat": "2",
+     "malik": "Ali",
+     "not": "Ofis notu 2",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.durum"
+   ],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: onlar köşe taşıdı, ben görünen alanı",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "3"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487012,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "iyi",
+     "kat": "3",
+     "malik": "Ali",
+     "not": "Yalnız ofis görür.",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487012,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.kat"
+   ],
+   "fromTheirs": [
+    "pts"
+   ]
+  },
+  {
+   "name": "Veri girişi: aynı görünen alanı farklı: çatışma",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "3"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "4",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "clashes": [
+    "attrs.kat"
+   ]
+  },
+  {
+   "name": "Veri girişi: aynı görünen alanı aynı değere",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "3"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "3",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "iyi",
+     "kat": "3",
+     "malik": "Ali",
+     "not": "Yalnız ofis görür.",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: onlar başka görünen alanı, ben birini",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "kotu",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "5",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "kotu",
+     "kat": "5",
+     "malik": "Ali",
+     "not": "Yalnız ofis görür.",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.durum"
+   ],
+   "fromTheirs": [
+    "attrs.kat"
+   ]
+  },
+  {
+   "name": "Veri girişi: onlar gizli alanı sildi, ben görünen alanı",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "kotu",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "kotu",
+     "kat": "2",
+     "malik": "Ali",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.durum"
+   ],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: kopyasında gizli alan gönderse de saklı kopyanınki kalır",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "kotu",
+     "kat": "2",
+     "not": "uydurma"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "kotu",
+     "kat": "2",
+     "malik": "Ali",
+     "not": "Yalnız ofis görür.",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.durum"
+   ],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: tabanında gizli alanın eski değeri olsa da onlarınki kalır",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "eski"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "kotu",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "yeni"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "kotu",
+     "kat": "2",
+     "malik": "Ali",
+     "not": "yeni",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.durum"
+   ],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: şekli yalnız ben değiştirdim: benimki (sunucunun denetimi sonra reddeder)",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487011,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "iyi",
+     "kat": "2",
+     "malik": "Ali",
+     "not": "Yalnız ofis görür.",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487011,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "pts"
+   ],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: ikimiz şekli farklı değiştirdik: çatışma",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487011,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487012,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "clashes": [
+    "pts"
+   ]
+  },
+  {
+   "name": "Veri girişi: gizli alan yokken düz birleştirme gibi",
+   "hidden": [],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "kotu",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "5"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "kotu",
+     "kat": "5",
+     "malik": "Ali",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.durum"
+   ],
+   "fromTheirs": [
+    "attrs.kat"
+   ]
+  },
+  {
+   "name": "Veri girişi: bütün öznitelikleri gizli: yalnız onlarınki kalır",
+   "hidden": [
+    "durum",
+    "kat",
+    "malik",
+    "not",
+    "parsel_no"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "kotu",
+     "kat": "9"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "6",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "iyi",
+     "kat": "6",
+     "malik": "Ali",
+     "not": "Yalnız ofis görür.",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: ben görünen alanı sildim, onlar değiştirmedi",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "merged": {
+    "attrs": {
+     "durum": "iyi",
+     "malik": "Ali",
+     "not": "Yalnız ofis görür.",
+     "parsel_no": "5"
+    },
+    "id": 4,
+    "kind": "polygon",
+    "layerId": "parsel",
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "fromMine": [
+    "attrs.kat"
+   ],
+   "fromTheirs": []
+  },
+  {
+   "name": "Veri girişi: ben sildim, onlar değiştirdi: çatışma",
+   "hidden": [
+    "not"
+   ],
+   "base": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "mine": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "theirs": {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "5",
+     "malik": "Ali",
+     "durum": "iyi",
+     "kat": "4",
+     "not": "Yalnız ofis görür."
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420000
+     },
+     {
+      "x": 487010,
+      "y": 4420010
+     },
+     {
+      "x": 487000,
+      "y": 4420010
+     }
+    ]
+   },
+   "clashes": [
+    "attrs.kat"
+   ]
   }
  ]
 }
