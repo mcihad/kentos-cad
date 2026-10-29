@@ -262,11 +262,60 @@ fn districts(app: &mut App) {
     });
 }
 
-/// A form made from the owner's district layer with Yeni form: the designer, then the form on the district
-/// (docs/adr/0750). Pictures in `.run/shots/form-ilce-*`.
+/// Where the text `words` is drawn first.
+fn text_at(snapshot: &mut Snapshot, app: &App, words: &str) -> Option<iced::Rectangle> {
+    use iced::Rectangle;
+    use iced::advanced::widget::{Id, Operation};
+    use std::sync::{Arc, Mutex};
+    struct Find(String, Arc<Mutex<Option<Rectangle>>>);
+    impl Operation for Find {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn text(&mut self, _: Option<&Id>, bounds: Rectangle, text: &str) {
+            let mut found = self.1.lock().expect("a lock");
+            if found.is_none() && text == self.0 {
+                *found = Some(bounds);
+            }
+        }
+    }
+    let found = Arc::new(Mutex::new(None));
+    snapshot.operate(app.view(), Box::new(Find(words.to_owned(), found.clone())));
+    *found.lock().expect("a lock")
+}
+
+/// Where the text input of `id` is.
+fn input_at(snapshot: &mut Snapshot, app: &App, id: &str) -> Option<iced::Rectangle> {
+    use iced::Rectangle;
+    use iced::advanced::widget::operation::TextInput;
+    use iced::advanced::widget::{Id, Operation};
+    use std::sync::{Arc, Mutex};
+    struct Find(Id, Arc<Mutex<Option<Rectangle>>>);
+    impl Operation for Find {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn text_input(&mut self, id: Option<&Id>, bounds: Rectangle, _: &mut dyn TextInput) {
+            if id == Some(&self.0) {
+                *self.1.lock().expect("a lock") = Some(bounds);
+            }
+        }
+    }
+    let found = Arc::new(Mutex::new(None));
+    snapshot.operate(
+        app.view(),
+        Box::new(Find(Id::from(id.to_owned()), found.clone())),
+    );
+    *found.lock().expect("a lock")
+}
+
+/// A form made from the owner's district layer with Yeni form: the designer, the widget's choices, then the form
+/// on the district in its own size, made large and with its instant's picker open (docs/adr/0750, 0751). Pictures
+/// in `.run/shots/form-ilce-*`.
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn district_form_screens() {
+    use kentos_ui::snapshot::Input;
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder");
     for (w, h) in [(1100.0, 650.0), (1440.0, 900.0)] {
@@ -281,6 +330,7 @@ fn district_form_screens() {
         designer(&mut app, Event::NewLayer("ilceler".into()));
         designer(&mut app, Event::NewName("İlçe".into()));
         designer(&mut app, Event::Create);
+        designer(&mut app, Event::SelectItem("olusturma-tarihi".into()));
         snapshot.settle(&mut app, App::view, &mut update);
         let shot = |snapshot: &mut Snapshot, app: &App, step: &str| {
             let file = out.join(format!("form-ilce-{step}-{w}x{h}.png"));
@@ -291,6 +341,23 @@ fn district_form_screens() {
             println!("{}", file.display());
         };
         shot(&mut snapshot, &app, "1-tasarim");
+        // The widgets a yes-or-no field takes, each with its icon (docs/adr/0751).
+        designer(&mut app, Event::SelectItem("merkez-mi".into()));
+        snapshot.settle(&mut app, App::view, &mut update);
+        if let Some(caption) = text_at(&mut snapshot, &app, "Öğe türü") {
+            let at = iced::Point::new(
+                caption.x + 60.0,
+                caption.y + caption.height + 4.0 + typography_control() / 2.0,
+            );
+            snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+            shot(&mut snapshot, &app, "1b-oge-turu");
+            snapshot.input(
+                &mut app,
+                App::view,
+                &mut update,
+                Input::Key(iced::keyboard::key::Named::Escape),
+            );
+        }
         designer(&mut app, Event::Preview(true));
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "2-onizleme");
@@ -301,6 +368,31 @@ fn district_form_screens() {
         run(&mut app, "data.formEdit");
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "3-formla-duzenle");
+        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        snapshot.settle(&mut app, App::view, &mut update);
+        // The same form made full screen (docs/adr/0746): the fields in two columns (docs/adr/0751).
+        sizes::set(
+            "Formla düzenle · İlçe",
+            sizes::Kept {
+                width: 1040.0,
+                height: 600.0,
+                maximized: true,
+            },
+        );
+        run(&mut app, "data.formEdit");
+        snapshot.settle(&mut app, App::view, &mut update);
+        shot(&mut snapshot, &app, "4-tam-ekran");
+        // The instant's picker, opened by its button beside the field (docs/adr/0751).
+        if let Some(field) = input_at(&mut snapshot, &app, "form-entry-olusturma_tarihi") {
+            let at = iced::Point::new(field.x + field.width + 14.0, field.y + field.height / 2.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+            shot(&mut snapshot, &app, "5-zaman-secici");
+        }
     }
     sizes::load(Default::default());
+}
+
+/// A control's height at the owner's text size (a select, a field).
+fn typography_control() -> f32 {
+    kentos_ui::theme::metrics::control()
 }

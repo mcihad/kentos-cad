@@ -121,9 +121,60 @@ fn item_face(item: &FormItem, fields: &[LayerField]) -> (Icon, String, bool) {
             if f.required || layer.is_some_and(|l| l.required) {
                 words.push_str(" *");
             }
-            (Icon::Type, words, ruled)
+            let glyph = layer.map_or(Icon::Type, |l| {
+                widget_glyph(kentos_forms::widget_of(f, l), l.kind)
+            });
+            (glyph, words, ruled)
         }
     }
+}
+
+/// A field's widget as an icon, in the tree and in the widget's choices (docs/adr/0751): what the record shows,
+/// the kind telling a date from a time, a big number from a text, JSON and bytes from text.
+fn widget_glyph(widget: FormWidget, kind: kentos_commands::LayerFieldKind) -> Icon {
+    use kentos_commands::LayerFieldKind as K;
+    match (widget, kind) {
+        (_, K::Json) => Icon::Svg(glyphs::JSON),
+        (_, K::Binary) => Icon::Document,
+        (FormWidget::Date, K::Time) => Icon::Clock,
+        (FormWidget::Text, K::BigInt) | (FormWidget::Number, _) => Icon::Hash,
+        (FormWidget::Text, K::Instant) | (FormWidget::Date, _) => Icon::Calendar,
+        (FormWidget::Text, _) => Icon::Type,
+        (FormWidget::TextArea, _) => crate::icons::from_web(Some("mtext")),
+        (FormWidget::Slider, _) => Icon::Slider,
+        (FormWidget::Check, _) => Icon::Svg(glyphs::CHECK),
+        (FormWidget::Switch, _) => Icon::Svg(glyphs::SWITCH),
+        (FormWidget::List, _) => Icon::Svg(glyphs::LIST),
+        (FormWidget::Radio, _) => Icon::Svg(glyphs::RADIO),
+        (FormWidget::Segmented, _) => Icon::Svg(glyphs::SEGMENTED),
+        (FormWidget::Color, _) => crate::icons::from_web(Some("color")),
+        (FormWidget::CheckList, _) => Icon::Svg(glyphs::CHECK_LIST),
+        (FormWidget::Search, _) => Icon::Search,
+        (FormWidget::Chips, _) => Icon::Svg(glyphs::CHIPS),
+        (FormWidget::Tree, _) => Icon::Svg(glyphs::TREE),
+    }
+}
+
+/// The widgets' own icons, on the web set's 20 × 20 grid (docs/adr/0751).
+mod glyphs {
+    /// A box ticked: one yes or no.
+    pub(super) const CHECK: &str = r#"<rect x="3.5" y="3.5" width="13" height="13" rx="2"/><path d="m6.6 10.2 2.3 2.3 4.5-4.9"/>"#;
+    /// A switch on.
+    pub(super) const SWITCH: &str = r#"<rect x="2" y="6" width="16" height="8" rx="4"/><circle cx="14" cy="10" r="2.3" fill="currentColor" stroke="none"/>"#;
+    /// A field with its drop-down's arrow.
+    pub(super) const LIST: &str = r#"<rect x="2.5" y="5.5" width="15" height="9" rx="1.5"/><path d="M5.2 10h4.3M12 9l1.6 1.6L15.2 9"/>"#;
+    /// A radio button chosen.
+    pub(super) const RADIO: &str = r#"<circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="2.7" fill="currentColor" stroke="none"/>"#;
+    /// Three parts, the first chosen.
+    pub(super) const SEGMENTED: &str = r#"<rect x="2.5" y="6" width="15" height="8" rx="1.5"/><path d="M7.5 6v8M12.5 6v8"/><rect x="2.5" y="6" width="5" height="8" rx="1.5" fill="currentColor" fill-opacity=".35" stroke="none"/>"#;
+    /// Two values ticked in a list.
+    pub(super) const CHECK_LIST: &str = r#"<rect x="2.5" y="3.5" width="5" height="5" rx="1"/><path d="m3.8 6 .9.9 1.6-1.8M10 6h7.5"/><rect x="2.5" y="11.5" width="5" height="5" rx="1"/><path d="m3.8 14 .9.9 1.6-1.8M10 14h7.5"/>"#;
+    /// Two tags: the codes held as chips.
+    pub(super) const CHIPS: &str = r#"<path d="M7 7.6V4.5h7.3l3.2 3.2-3.2 3.2h-1.2"/><path d="M2.5 8.5h8.3l3.2 3.5-3.2 3.5H2.5z"/><circle cx="5" cy="12" r=".85" fill="currentColor" stroke="none"/>"#;
+    /// A branch and its two leaves.
+    pub(super) const TREE: &str = r#"<rect x="2.5" y="2.5" width="5.5" height="4" rx="1"/><path d="M5.2 6.5V15h4.3M5.2 10h4.3"/><rect x="9.5" y="8" width="8" height="4" rx="1"/><rect x="9.5" y="13" width="8" height="4" rx="1"/>"#;
+    /// Braces: a JSON value.
+    pub(super) const JSON: &str = r#"<path d="M7.5 3C5.6 3 5.6 4.4 5.6 6.4S4.6 10 3 10c1.6 0 2.6 1 2.6 3.6S5.6 17 7.5 17M12.5 3c1.9 0 1.9 1.4 1.9 3.4S15.4 10 17 10c-1.6 0-2.6 1-2.6 3.6s0 3.4-1.9 3.4"/>"#;
 }
 
 impl App {
@@ -1625,8 +1676,22 @@ impl App {
                         .filter(|w| kentos_forms::widget_fits(*w, l).is_ok())
                         .collect()
                 });
-                let mut choices = vec![Choice::new("Alanın türüne göre")];
-                choices.extend(fits.iter().map(|w| Choice::new(w.label())));
+                // Each with its widget's icon, the field's kind's first (docs/adr/0751).
+                let own = layer.map(|l| {
+                    let by_kind = kentos_commands::FormField {
+                        widget: None,
+                        ..f.clone()
+                    };
+                    widget_glyph(kentos_forms::widget_of(&by_kind, l), l.kind)
+                });
+                let mut choices = vec![match own {
+                    Some(glyph) => Choice::new("Alanın türüne göre").icon(glyph),
+                    None => Choice::new("Alanın türüne göre"),
+                }];
+                choices.extend(fits.iter().map(|w| {
+                    let kind = layer.map_or(kentos_commands::LayerFieldKind::Text, |l| l.kind);
+                    Choice::new(w.label()).icon(widget_glyph(*w, kind))
+                }));
                 let at = match f.widget {
                     None => Some(0),
                     Some(w) => fits.iter().position(|x| *x == w).map(|i| i + 1),

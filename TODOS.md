@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0751: form tasarımcısının ağacında ve Öğe türü listesinde bileşenin ikonu; Formla düzenle'de geniş sayfada
+  alanlar iki sütunda (yazı boyuyla büyüyen 880 piksel, önizleme ve alt panel tek sütun); saat dilimli tarihin
+  seçicisi değerin dilimini korur, boşsa cihazınkini alır; seçicilerin “Şimdi”si ve bugünü UTC değil, değerin ya da
+  cihazın saatiyle.
 - ADR 0750: bağlı tablonun NOT NULL ve varsayılansız sütunu zorunlu alan, sabit varsayılanı alanın varsayılanı;
   yeni kaydın boş değeri varsayılanlı sütunda tablonun, döndürdüğü değer aynı adımda nesnede; NOT NULL'u boş bırakan
   yazma `source_not_null` (web'in kaynak yazması geldiğinde aynı kural).

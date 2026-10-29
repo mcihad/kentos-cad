@@ -303,6 +303,9 @@ pub(crate) const MOST_NESTED: usize = 4;
 const SEARCH_PAGE: usize = 12;
 /// A list longer than this is searched rather than laid out.
 const LONG_LIST: usize = 200;
+/// The least width (at 12 px text) the fields of a form take in two columns (docs/adr/0751): two of a label and a
+/// field at their ease.
+const TWO_COLUMNS: f32 = 880.0;
 
 fn msg(event: Event) -> Message {
     Message::FormEntry(event)
@@ -2703,8 +2706,28 @@ impl App {
             if run.is_empty() {
                 return out;
             }
-            let form = self.entry_form(e, run, locked);
-            run.clear();
+            let items: Vec<&'a FormItem> = std::mem::take(run);
+            // A wide window (a big form made larger, docs/adr/0746) takes the fields in two columns, down then across:
+            // the form's order is Tab's; the designer's narrow preview and the docked editor keep one (docs/adr/0751).
+            let form: Element<'a, Message> = if items.len() > 1 && !e.preview && !e.docked {
+                let wide = typography::scaled(TWO_COLUMNS);
+                kentos_ui::widget::Responsive::new(move |size| {
+                    if size.width < wide {
+                        return self.entry_form(e, &items, locked);
+                    }
+                    let half = items.len().div_ceil(2);
+                    row![
+                        container(self.entry_form(e, &items[..half], locked)).width(Fill),
+                        container(self.entry_form(e, &items[half..], locked)).width(Fill),
+                    ]
+                    .spacing(24)
+                    .into()
+                })
+                .height(iced::Length::Shrink)
+                .into()
+            } else {
+                self.entry_form(e, &items, locked)
+            };
             out.push(form)
         };
         for item in items {
@@ -3950,6 +3973,29 @@ fn entry_control<'a>(
             .into()
         }
         // A date and time, and a time of day, by their pickers (docs/adr/0412 §2).
+        // An instant (docs/adr/0629 §2): its date and time in the picker, its offset from UTC kept; an empty one
+        // takes the device's (docs/adr/0751).
+        FormWidget::Text | FormWidget::Date
+            if !read_only && field.kind == LayerFieldKind::Instant =>
+        {
+            let (at, offset) = instant_parts(&code);
+            let set_at = set.clone();
+            let written = offset.clone();
+            DatePicker::date_time(at, move |d: Option<DateTime>| {
+                set_at(d.map_or_else(String::new, |d| instant_text(&d, &written)))
+            })
+            .anchor(focus_ring(
+                text_input("YYYY-AA-GGTSS:DD:SS+03:00", &value)
+                    .size(typography::body())
+                    .id(input_id(&key))
+                    .on_input(set)
+                    .padding([5, 8])
+                    .style(style::field::input),
+            ))
+            .clearable(!field.required)
+            .now(now_at(&offset))
+            .into()
+        }
         FormWidget::Date if !read_only && field.kind == LayerFieldKind::DateTime => {
             let at = code
                 .split_once('T')
@@ -3977,6 +4023,7 @@ fn entry_control<'a>(
                     .style(style::field::input),
             ))
             .clearable(!field.required)
+            .now(device_now())
             .into()
         }
         FormWidget::Date if !read_only && field.kind == LayerFieldKind::Time => {
@@ -3995,6 +4042,7 @@ fn entry_control<'a>(
                     .style(style::field::input),
             ))
             .clearable(!field.required)
+            .now(device_now())
             .into()
         }
         FormWidget::Date if !read_only => {
@@ -4014,6 +4062,7 @@ fn entry_control<'a>(
                     .style(style::field::input),
             ))
             .clearable(!field.required)
+            .now(device_now())
             .into()
         }
         // A slider between the field's least and most (docs/adr/0406 §2); the value beside it.
@@ -4173,6 +4222,82 @@ fn colour_control<'a>(
         .spacing(8)
         .align_y(Center)
         .into()
+}
+
+/// An instant's date and time of day and its offset from UTC (`Z`, `+03:00`): the offset an empty one takes is the
+/// device's (docs/adr/0751).
+fn instant_parts(code: &str) -> (Option<DateTime>, String) {
+    let local = || {
+        let east = kentos_interaction::time_version::LOCAL_OFFSET
+            .load(std::sync::atomic::Ordering::Relaxed);
+        offset_text(east)
+    };
+    let Some((date, rest)) = code.split_once('T') else {
+        return (None, local());
+    };
+    // The time of day, a fraction dropped, then the offset.
+    let clock: String = rest.chars().take(8).collect();
+    let mut tail = &rest[clock.len().min(rest.len())..];
+    if let Some(after) = tail.strip_prefix('.') {
+        tail = after.trim_start_matches(|c: char| c.is_ascii_digit());
+    }
+    let offset = if tail.is_empty() {
+        local()
+    } else {
+        tail.to_owned()
+    };
+    let at = parse_date(date).and_then(|d| Some(DateTime::new(d, Time::parse(&clock)?)));
+    (at, offset)
+}
+
+/// Now on the device's clock: a date's or a time's Şimdi and today, they have no zone (docs/adr/0751; the picker's
+/// own is UTC's).
+fn device_now() -> DateTime {
+    let east =
+        kentos_interaction::time_version::LOCAL_OFFSET.load(std::sync::atomic::Ordering::Relaxed);
+    DateTime::now(east / 60)
+}
+
+/// Now at an instant's offset (`Z`, `+03:00`): the moment Şimdi writes is the present one.
+fn now_at(offset: &str) -> DateTime {
+    DateTime::now(offset_minutes(offset).unwrap_or(0))
+}
+
+/// An instant's offset (`Z`, `±SS:DD`) in minutes east of UTC.
+fn offset_minutes(offset: &str) -> Option<i32> {
+    if offset == "Z" {
+        return Some(0);
+    }
+    let sign = match offset.as_bytes().first()? {
+        b'+' => 1,
+        b'-' => -1,
+        _ => return None,
+    };
+    let (h, m) = offset[1..].split_once(':')?;
+    Some(sign * (h.parse::<i32>().ok()? * 60 + m.parse::<i32>().ok()?))
+}
+
+/// Seconds east of UTC as an instant's offset: `Z` at none, else `±SS:DD`.
+fn offset_text(east: i32) -> String {
+    if east == 0 {
+        return "Z".into();
+    }
+    let sign = if east < 0 { '-' } else { '+' };
+    let m = east.unsigned_abs() / 60;
+    format!("{sign}{:02}:{:02}", m / 60, m % 60)
+}
+
+/// An instant's text from a picked date and time and `offset`.
+fn instant_text(d: &DateTime, offset: &str) -> String {
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}{offset}",
+        d.date.year(),
+        d.date.month(),
+        d.date.day(),
+        d.time.hour(),
+        d.time.minute(),
+        d.time.second()
+    )
 }
 
 fn parse_date(text: &str) -> Option<Date> {
@@ -4514,5 +4639,71 @@ pub(crate) fn language_name(tag: Option<&str>) -> String {
         name.to_owned()
     } else {
         format!("{name} ({tag})")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{instant_parts, instant_text, offset_minutes, offset_text};
+    use kentos_ui::attribute::{Date, DateTime, Time};
+
+    #[test]
+    fn an_instant_parts_its_date_and_time_and_keeps_its_offset() {
+        let at = |y, m, d, h, mi, s| {
+            Some(DateTime::new(
+                Date::new(y, m, d).expect("a date"),
+                Time::new(h, mi, s).expect("a time"),
+            ))
+        };
+        // Canonical texts (docs/adr/0629 §2): seconds always, a zero offset `Z`, a fraction's trailing zeros dropped.
+        assert_eq!(
+            instant_parts("2026-10-28T16:05:12+03:00"),
+            (at(2026, 10, 28, 16, 5, 12), "+03:00".into())
+        );
+        assert_eq!(
+            instant_parts("2026-03-14T09:30:00Z"),
+            (at(2026, 3, 14, 9, 30, 0), "Z".into())
+        );
+        assert_eq!(
+            instant_parts("2026-03-14T09:30:00.125-05:30"),
+            (at(2026, 3, 14, 9, 30, 0), "-05:30".into()),
+            "the fraction dropped"
+        );
+        // What the picker writes back keeps the offset the value had.
+        let (picked, offset) = instant_parts("2026-10-28T16:05:12+03:00");
+        assert_eq!(
+            instant_text(&picked.expect("a moment"), &offset),
+            "2026-10-28T16:05:12+03:00"
+        );
+        assert_eq!(
+            instant_text(
+                &DateTime::new(
+                    Date::new(1869, 1, 1).expect("a date"),
+                    Time::new(0, 0, 0).expect("a time")
+                ),
+                "Z"
+            ),
+            "1869-01-01T00:00:00Z"
+        );
+    }
+
+    #[test]
+    fn an_empty_or_unread_instant_takes_the_devices_offset() {
+        let east = kentos_interaction::time_version::LOCAL_OFFSET
+            .load(std::sync::atomic::Ordering::Relaxed);
+        assert_eq!(instant_parts(""), (None, offset_text(east)));
+        assert_eq!(instant_parts("2026-13-01Tsabah"), (None, offset_text(east)));
+        assert_eq!(offset_text(0), "Z");
+        assert_eq!(offset_text(3 * 3600), "+03:00");
+        assert_eq!(offset_text(-(5 * 3600 + 30 * 60)), "-05:30");
+        assert_eq!(offset_text(5 * 3600 + 45 * 60), "+05:45");
+        // Şimdi at the value's own offset: the offsets read back as minutes.
+        assert_eq!(offset_minutes("Z"), Some(0));
+        assert_eq!(offset_minutes("+03:00"), Some(180));
+        assert_eq!(offset_minutes("-05:30"), Some(-330));
+        assert_eq!(offset_minutes("03:00"), None);
+        for east in [0, 3 * 3600, -(5 * 3600 + 30 * 60), 14 * 3600] {
+            assert_eq!(offset_minutes(&offset_text(east)), Some(east / 60));
+        }
     }
 }

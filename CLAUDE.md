@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Formda bileşenin ikonu, iki sütun, saat dilimli tarihin seçicisi (30 Ekim 2026; [ADR0751](docs/adr/0751-forms-widget-icons-columns-and-instants.md)).**
+  Tasarımcının ağacında ve Öğe türü listesinde her alan kaydın göstereceği bileşenin ikonuyla (`widget_glyph`; tür
+  tarihi saatten, büyük sayıyı metinden, JSON'u ve baytları ayırır; yeni ikonlar `designer_view::glyphs`). Formla
+  düzenle'de ardışık alanlar sayfa yazı boyuyla büyüyen 880 pikseli geçince iki sütuna akar (`TWO_COLUMNS`, KentOS UI
+  `Responsive`; sıra ve Tab aynı, önizleme ve alt panel tek sütun). Saat dilimli tarih (`instant`) tarih ve saat
+  seçicisiyle, değerin dilimi korunur, boşsa cihazınki (`instant_parts`, `instant_text`); seçicilerin “Şimdi”si
+  değerin diliminde ya da cihazın saatinde (`now_at`, `device_now`; önceden UTC). Resimler `district_form_screens`.
+
 - **Bağlı tablonun zorunlu ve varsayılanlı sütunları (30 Ekim 2026; [ADR0750](docs/adr/0750-bound-table-not-null-and-defaults.md)).**
   Sütun alan olurken (`geopackage::field_of`) NOT NULL ve varsayılansız sütun zorunlu, sabit varsayılan
   (`literal_default`: tırnaklı metin, sayı, true/false, SQLite'ın 0/1'i) alanın varsayılanı; hesaplanan (`now()`,
