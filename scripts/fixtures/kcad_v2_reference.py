@@ -842,6 +842,17 @@ FIELD_KINDS = ("text", "integer", "decimal", "date", "boolean", "datetime", "tim
 WIDE_KINDS = ("bigint", "instant", "uuid", "json", "binary")
 
 
+def field_column(c):
+    """A layer field's bound column (schema 133, docs/adr/0753): `made`, `refers` or both; never empty."""
+    assert c, "column boş yazılmaz"
+    refers = {"table": (text, True), "column": (text, True), "label": (text, False)}
+    table = {
+        "made": (text, False),
+        "refers": (lambda r: cmap(fields(r, refers, "column.refers")), False),
+    }
+    return cmap(fields(c, table, "column"))
+
+
 def layer_field(f):
     """A layer's field (schema 26, docs/adr/0199 §1): its name and kind, then what it has; `required` only when true."""
     assert f.get("required", True) is True, f"alan {f.get('name')}: required yalnız true yazılır"
@@ -877,6 +888,8 @@ def layer_field(f):
         "unit": (text, False),
         # Schema 107 (docs/adr/0638 §5): its values do not leave the drawing; only `true` is written.
         "withheld": (boolean, False),
+        # Schema 133 (docs/adr/0753): the bound table's column, what the table makes and what it refers to.
+        "column": (field_column, False),
     }
     for flag in ("unique", "minExclusive", "maxExclusive"):
         assert f.get(flag, True) is True, f"alan {f.get('name')}: {flag} yalnız true yazılır"
@@ -2245,6 +2258,13 @@ def document(d):
     if "profileFiles" in d["settings"]:
         # The profiles and mappings the project carries inside its file (docs/adr/0735).
         schema = max(schema, 132)
+
+    def bound_columns(nodes):
+        return any(any("column" in f for f in n.get("fields", [])) or bound_columns(n.get("children", [])) for n in nodes)
+
+    if bound_columns(d.get("layers", [])):
+        # A layer field's bound column (docs/adr/0753).
+        schema = max(schema, 133)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2958,7 +2978,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-133.kcad"] = container(root(cmap(parts), version=uint(133)))
+    files["schema-version-134.kcad"] = container(root(cmap(parts), version=uint(134)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5147,6 +5167,23 @@ def build():
     carried_bad("twice", lambda s: s["profileFiles"].insert(1, dict(s["profileFiles"][0])))
     carried_bad("unsorted", lambda s: s["profileFiles"].reverse())
     carried_bad("mapping-first", lambda s: s["profileFiles"].insert(0, s["profileFiles"].pop(1)))
+    # Schema 133 (docs/adr/0753): a bound layer's fields with what the table makes (a UUID, a time) and what they refer
+    # to (a province by its name, the layer's own table without a label); schema 132 refuses them.
+    columns = load("field-columns.json")
+    fc = document(columns)
+    assert fc.count(b"\x67version\x18\x85") == 1, "the bound columns are schema 133"
+    out["field-columns.kcad"] = container(fc)
+    out["broken/field-columns-in-schema-132.kcad"] = container(fc.replace(b"\x67version\x18\x85", b"\x67version\x18\x84"))
+    def column_bad(name, index, change):
+        d = copy.deepcopy(columns)
+        change(d["layers"][0]["fields"][index])
+        out["broken/field-columns-" + name + ".kcad"] = container(document(d))
+    column_bad("made-blank", 0, lambda f: f["column"].update(made=" "))
+    # A refers without its table (the writer would not write one): the valid file's map with the pair taken out.
+    whole = cmap({"table": text("kbs.ilceler"), "column": text("id")})
+    assert fc.count(whole) == 1
+    out["broken/field-columns-refers-no-table.kcad"] = container(fc.replace(whole, cmap({"column": text("id")})))
+    column_bad("refers-blank-label", 2, lambda f: f["column"]["refers"].update(label=""))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

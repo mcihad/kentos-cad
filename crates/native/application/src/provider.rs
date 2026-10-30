@@ -72,6 +72,48 @@ pub enum ProviderError {
     Exists(String),
 }
 
+/// A single-column foreign key of a bound table with the referenced table's rows (docs/adr/0753 §2): the table's column,
+/// the referenced table (`schema.table`) and column, the column its labels come from, and its rows as their key's text and
+/// their label's; none when the referenced table has more rows than were asked for.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Reference {
+    pub column: String,
+    pub table: String,
+    pub to: String,
+    pub label: Option<String>,
+    pub rows: Option<Vec<(String, Option<String>)>>,
+}
+
+/// The column a referenced table's rows are named by (docs/adr/0753 §2): the first of its text columns (in their order)
+/// whose name, folded, is one a name is given in (`ad`, `adi`, `isim`, `name`, `baslik`, `unvan`, `title`, `label`,
+/// `tanim`), else its first text column; none without one.
+pub fn label_column(texts: &[String]) -> Option<String> {
+    const NAMES: [&str; 9] = [
+        "ad", "adi", "isim", "name", "baslik", "unvan", "title", "label", "tanim",
+    ];
+    let plain = |s: &str| -> String {
+        s.chars()
+            .flat_map(char::to_lowercase)
+            .filter_map(|c| match c {
+                'ı' => Some('i'),
+                'ş' => Some('s'),
+                'ğ' => Some('g'),
+                'ü' => Some('u'),
+                'ö' => Some('o'),
+                'ç' => Some('c'),
+                // İ lowers to i and a combining dot.
+                '\u{307}' => None,
+                c => Some(c),
+            })
+            .collect()
+    };
+    texts
+        .iter()
+        .find(|t| NAMES.contains(&plain(t).as_str()))
+        .or_else(|| texts.first())
+        .cloned()
+}
+
 /// How a database holds a many-to-many reference between two of its tables (docs/adr/0590 §1).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum DbRelation {
@@ -240,6 +282,16 @@ pub trait TableProvider: Send + Sync {
             items.len(),
             ProviderError::Refused("bu sağlayıcı bağlantı tablosu yazamaz".into()),
         ))
+    }
+    /// `table`'s single-column foreign keys with the referenced tables' rows (docs/adr/0753 §2), at most `most` rows
+    /// each (more: none); a provider that reads none says there are none.
+    fn references(
+        &self,
+        _address: &str,
+        _table: &str,
+        _most: usize,
+    ) -> Result<Vec<Reference>, ProviderError> {
+        Ok(Vec::new())
     }
     /// How the database holds a many-to-many reference from `child`'s rows to `parent`'s (docs/adr/0590 §1).
     fn relation(

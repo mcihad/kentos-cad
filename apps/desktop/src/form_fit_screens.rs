@@ -199,15 +199,26 @@ fn every_forms_window_keeps_its_buttons_in_a_low_window() {
 
 /// The fields of the owner's `kbs.ilceler` table bound from PostGIS (docs/adr/0629's kinds), in its order, with the
 /// table's rules (docs/adr/0750): `id` is the key and no field; `il_id` and `ad` NOT NULL without a default, required;
-/// the literal defaults the fields'; `genel_id` and the times the database's (`uuidv7()`, `now()`).
+/// the literal defaults the fields'; `genel_id` and the times the database's (`uuidv7()`, `now()`, docs/adr/0753's
+/// `column.made`); `il_id` and `ust_id` the provinces' and the districts' rows by their foreign keys (docs/adr/0753).
 fn district_fields() -> serde_json::Value {
+    let list = |rows: &[(&str, &str)]| {
+        rows.iter()
+            .map(|(code, label)| serde_json::json!({ "code": code, "label": label }))
+            .collect::<Vec<_>>()
+    };
     serde_json::json!([
-        { "name": "genel_id", "kind": "uuid" },
+        { "name": "genel_id", "kind": "uuid", "column": { "made": "uuidv7()" } },
         { "name": "ek_veri", "kind": "json", "default": "{}" },
-        { "name": "olusturma_tarihi", "kind": "instant" },
-        { "name": "guncelleme_tarihi", "kind": "instant" },
-        { "name": "il_id", "kind": "bigint", "required": true },
-        { "name": "ust_id", "kind": "bigint" },
+        { "name": "olusturma_tarihi", "kind": "instant", "column": { "made": "now()" } },
+        { "name": "guncelleme_tarihi", "kind": "instant", "column": { "made": "now()" } },
+        { "name": "il_id", "kind": "bigint", "required": true,
+          "values": list(&[("1", "Adana"), ("6", "Ankara"), ("34", "İstanbul"), ("35", "İzmir"), ("58", "Sivas"),
+                           ("60", "Tokat")]),
+          "column": { "refers": { "table": "kbs.iller", "column": "id", "label": "ad" } } },
+        { "name": "ust_id", "kind": "bigint",
+          "values": list(&[("1", "Merkez (1)"), ("12", "Merkez (12)"), ("2", "Suşehri")]),
+          "column": { "refers": { "table": "kbs.ilceler", "column": "id", "label": "ad" } } },
         { "name": "ad", "kind": "text", "required": true },
         { "name": "kisa_ad", "kind": "text" },
         { "name": "tur", "kind": "text", "default": "İlçe" },
@@ -239,7 +250,7 @@ fn districts(app: &mut App) {
             ("olusturma_tarihi", "2026-03-14T09:30:00+03:00"),
             ("guncelleme_tarihi", "2026-10-28T16:05:12+03:00"),
             ("il_id", "58"),
-            ("ust_id", "58"),
+            ("ust_id", "1"),
             ("ad", "Suşehri"),
             ("kisa_ad", "Suşehri"),
             ("tur", "ilçe"),
@@ -276,6 +287,27 @@ fn text_at(snapshot: &mut Snapshot, app: &App, words: &str) -> Option<iced::Rect
             let mut found = self.1.lock().expect("a lock");
             if found.is_none() && text == self.0 {
                 *found = Some(bounds);
+            }
+        }
+    }
+    let found = Arc::new(Mutex::new(None));
+    snapshot.operate(app.view(), Box::new(Find(words.to_owned(), found.clone())));
+    *found.lock().expect("a lock")
+}
+
+/// Where the text `words` is drawn last (on top: a window's over the panels behind it).
+fn text_last_at(snapshot: &mut Snapshot, app: &App, words: &str) -> Option<iced::Rectangle> {
+    use iced::Rectangle;
+    use iced::advanced::widget::{Id, Operation};
+    use std::sync::{Arc, Mutex};
+    struct Find(String, Arc<Mutex<Option<Rectangle>>>);
+    impl Operation for Find {
+        fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
+            operate(self);
+        }
+        fn text(&mut self, _: Option<&Id>, bounds: Rectangle, text: &str) {
+            if text == self.0 {
+                *self.1.lock().expect("a lock") = Some(bounds);
             }
         }
     }
@@ -374,6 +406,18 @@ fn district_form_screens() {
         run(&mut app, "data.formEdit");
         snapshot.settle(&mut app, App::view, &mut update);
         shot(&mut snapshot, &app, "3-formla-duzenle");
+        // The province field's list: the provinces' rows by their names (docs/adr/0753).
+        if let Some(at) = text_last_at(&mut snapshot, &app, "Sivas") {
+            let at = iced::Point::new(at.x + at.width / 2.0, at.y + at.height / 2.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
+            shot(&mut snapshot, &app, "3b-il-listesi");
+            snapshot.input(
+                &mut app,
+                App::view,
+                &mut update,
+                Input::Key(iced::keyboard::key::Named::Escape),
+            );
+        }
         let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
         snapshot.settle(&mut app, App::view, &mut update);
         // The same form made full screen (docs/adr/0746): the fields in two columns (docs/adr/0751).
@@ -394,6 +438,17 @@ fn district_form_screens() {
             snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
             shot(&mut snapshot, &app, "5-zaman-secici");
         }
+        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Alanlar on the province field and on a made one: what their columns say (docs/adr/0753).
+        run(&mut app, "layer.fields");
+        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(4)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        shot(&mut snapshot, &app, "6-alanlar-baglanti");
+        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(0)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        shot(&mut snapshot, &app, "6b-alanlar-veritabani");
+        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Cancel));
     }
     sizes::load(Default::default());
 }

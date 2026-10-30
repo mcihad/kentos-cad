@@ -16,8 +16,9 @@ use std::time::Duration;
 use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
-    Created, DbRelation, Edited, MapWrite, NewTable, Param, ProviderError, ProviderRead, ProviderScan, ProviderShape, ProviderTable,
-    RowCheck, TableClash, TableEdit, TableProvider, register_postgis,
+    Created, DbRelation, Edited, MapWrite, NewTable, Param, ProviderError, ProviderRead,
+    ProviderScan, ProviderShape, ProviderTable, Reference, RowCheck, TableClash, TableEdit,
+    TableProvider, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
@@ -26,6 +27,7 @@ pub mod connections;
 mod create;
 mod junctions;
 pub mod probe;
+mod references;
 
 /// How long a connection may take before the database counts as unreachable.
 const CONNECT: Duration = Duration::from_secs(15);
@@ -1393,6 +1395,20 @@ impl TableProvider for PostGis {
             tx.commit().await.map_err(|e| (0, refused(e)))?;
             let _ = conn.close().await;
             Ok(out)
+        })
+    }
+
+    fn references(
+        &self,
+        address: &str,
+        table: &str,
+        most: usize,
+    ) -> Result<Vec<Reference>, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let found = references::read(&mut conn, table, most).await;
+            let _ = conn.close().await;
+            found
         })
     }
 

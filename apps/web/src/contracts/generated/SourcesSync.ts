@@ -5,7 +5,10 @@ import type { SyncTopology } from "./SyncTopology";
 /**
  * Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
  * `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a
- * database's rows the account may not change: privilege or row security, docs/adr/0585 §2); conflicts:
+ * database's rows the account may not change: privilege or row security, docs/adr/0585 §2), `source_not_null` (a column
+ * the table keeps NOT NULL a write would leave empty: a new row's without a default, any changed row's; a new row's
+ * empty value of a column with a default is the table's, and what the table gave comes back to the object in the
+ * same step, docs/adr/0750); conflicts:
  * `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
  * the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
  * for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
@@ -13,7 +16,8 @@ import type { SyncTopology } from "./SyncTopology";
  * of the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row
  * is outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given
  * back to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the
- * pins of those rows are not followed).
+ * pins of those rows are not followed), `reference_values_missing` (a read whose foreign key's table has more rows
+ * than a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753).
  *
  * `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
  * together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,

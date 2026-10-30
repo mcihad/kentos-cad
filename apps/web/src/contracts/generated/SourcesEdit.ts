@@ -9,6 +9,8 @@ import type { SourcesEditOp } from "./SourcesEditOp";
  * that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
  * not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
  * layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,
- * `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in).
+ * `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),
+ * `reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key
+ * does not fit the field, or keys that could not be read; docs/adr/0753).
  */
 export type SourcesEdit = { edit: SourcesEditOp, };

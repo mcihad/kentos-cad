@@ -385,6 +385,83 @@ pub struct LayerField {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub withheld: bool,
+    /// What the bound table's column says beyond the rules above (docs/adr/0753): the value the table makes for a new
+    /// row itself and the table its values come from. Binding and reading the table write it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub column: Option<FieldColumn>,
+}
+
+/// The most characters of a column's default kept as its text (docs/adr/0753 §2); a longer one is shortened.
+pub const MAX_MADE: usize = 1000;
+/// The most characters of a referenced table's and its columns' names (docs/adr/0753 §1).
+pub const MAX_REFERS_NAME: usize = 256;
+
+/// A bound table's column as its field keeps it (docs/adr/0753).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldColumn {
+    /// The default the table works out for a new row itself, as its SQL text (`now()`, `uuidv7()`, `nextval('…')`): a
+    /// new object leaves the field empty for it and the form says the database gives it (docs/adr/0753 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub made: Option<String>,
+    /// The table the column's foreign key refers to (docs/adr/0753 §1): the field's values are that table's rows, read
+    /// again with every reading of the table.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub refers: Option<ColumnRefers>,
+}
+
+/// A foreign key's other end (docs/adr/0753 §1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ColumnRefers {
+    /// The table as its source names it (`kbs.iller`; a GeoPackage's table).
+    pub table: String,
+    /// Its column whose value the field holds (`id`).
+    pub column: String,
+    /// Its column whose value names a row in the list (`ad`); none: the codes themselves.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+}
+
+/// What is wrong with a field's column (docs/adr/0753), said in Turkish; none when it holds.
+fn column_problem(name: &str, c: &FieldColumn) -> Option<String> {
+    let bad = |t: &str, most: usize| {
+        js_trim(t).is_empty()
+            || js_trim(t) != t
+            || t.chars().count() > most
+            || t.chars().any(char::is_control)
+    };
+    if c.made.is_none() && c.refers.is_none() {
+        return Some(format!(
+            "“{name}” alanının sütun bilgisi boş; veritabanının verdiği değeri ya da başvurulan tabloyu yazın ya da bilgiyi kaldırın."
+        ));
+    }
+    if let Some(m) = &c.made
+        && bad(m, MAX_MADE)
+    {
+        return Some(format!(
+            "“{name}” alanında veritabanının verdiği değerin metni boş olamaz, en çok {MAX_MADE} karakterdir, boşlukla başlayıp bitmez ve denetim karakteri içermez."
+        ));
+    }
+    if let Some(r) = &c.refers {
+        let names = [Some(&r.table), Some(&r.column), r.label.as_ref()];
+        if names.into_iter().flatten().any(|t| bad(t, MAX_REFERS_NAME)) {
+            return Some(format!(
+                "“{name}” alanının başvurduğu tablonun ve sütunlarının adları boş olamaz, en çok {MAX_REFERS_NAME} karakterdir, boşlukla başlayıp bitmez ve denetim karakteri içermez."
+            ));
+        }
+    }
+    None
 }
 
 /// A field's value in the pieces of a split object (docs/adr/0419).
@@ -470,6 +547,7 @@ impl LayerField {
     pub fn new(name: impl Into<String>, kind: LayerFieldKind) -> LayerField {
         LayerField {
             withheld: false,
+            column: None,
             id: None,
             name: name.into(),
             alias: None,
@@ -1639,7 +1717,11 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
                 "“{name}” alanının değer listesi boş; listeyi kaldırın ya da değer ekleyin."
             ));
         }
-        for (i, v) in values.iter().enumerate() {
+        // The codes and the folded labels met before, so a long list (a foreign key's rows, docs/adr/0753) is checked
+        // in one pass.
+        let mut codes = std::collections::HashSet::with_capacity(values.len());
+        let mut labels = std::collections::HashSet::with_capacity(values.len());
+        for v in values {
             let (code, label) = (&v.code, &v.label);
             if code.is_empty() {
                 return Some(format!("“{name}” alanının değer listesinde boş kod var."));
@@ -1654,13 +1736,12 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
                     "“{name}” alanının değer listesinde “{code}” kodunun etiketi boş."
                 ));
             }
-            if values[..i].iter().any(|w| w.code == *code) {
+            if !codes.insert(code.as_str()) {
                 return Some(format!(
                     "“{name}” alanının değer listesinde “{code}” kodu iki kez var."
                 ));
             }
-            let key = fold(js_trim(label));
-            if values[..i].iter().any(|w| fold(js_trim(&w.label)) == key) {
+            if !labels.insert(fold(js_trim(label))) {
                 return Some(format!(
                     "“{name}” alanının değer listesinde “{label}” etiketi iki kez var."
                 ));
@@ -1733,6 +1814,11 @@ pub fn field_problem(field: &LayerField) -> Option<String> {
     }
     if field.unique && field.multiple {
         return Some(format!("“{name}” çok değerli; tekil olamaz."));
+    }
+    if let Some(c) = &field.column
+        && let Some(why) = column_problem(name, c)
+    {
+        return Some(why);
     }
     for v in field.values.iter().flatten() {
         let code = &v.code;

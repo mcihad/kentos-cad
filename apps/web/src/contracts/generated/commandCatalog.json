@@ -44273,7 +44273,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is\nnot a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the\nlayer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,\n`label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in).",
+        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is\nnot a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the\nlayer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,\n`label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),\n`reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key\ndoes not fit the field, or keys that could not be read; docs/adr/0753).",
         "properties": {
           "edit": {
             "$ref": "#/$defs/SourcesEditOp"
@@ -44418,7 +44418,8 @@
           "label_pins_parked",
           "label_pins_restored",
           "key_not_unique",
-          "network_share"
+          "network_share",
+          "reference_values_missing"
         ]
       },
       "examples": [
@@ -45470,7 +45471,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a\ndatabase's rows the account may not change: privilege or row security, docs/adr/0585 §2), `source_not_null` (a column\nthe table keeps NOT NULL a write would leave empty: a new row's without a default, any changed row's; a new row's\nempty value of a column with a default is the table's, and what the table gave comes back to the object in the\nsame step, docs/adr/0750); conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
+        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a\ndatabase's rows the account may not change: privilege or row security, docs/adr/0585 §2), `source_not_null` (a column\nthe table keeps NOT NULL a write would leave empty: a new row's without a default, any changed row's; a new row's\nempty value of a column with a default is the table's, and what the table gave comes back to the object in the\nsame step, docs/adr/0750); conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed), `reference_values_missing` (a read whose foreign key's table has more rows\nthan a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
         "properties": {
           "direction": {
             "$ref": "#/$defs/SyncDirection"
@@ -45728,7 +45729,8 @@
           "relation_unmapped",
           "source_others",
           "source_columns_renamed",
-          "library_symbol_field"
+          "library_symbol_field",
+          "reference_values_missing"
         ]
       },
       "examples": [
@@ -69144,6 +69146,12 @@
       "meaning": "Tablonun geometri sütunu var ama hiçbir satırında geometri yok: çizimde görünecek bir şey yok, satırlar kayıt olarak gelir."
     },
     {
+      "code": "reference_values_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alanın değer listesi başvurduğu tablodan kurulamadı ya da eksik: tabloda çok satır var ya da okunamadı (alan serbest kalır), ya da bazı satırların anahtarı alanın türüne uymuyor (listeye girmez)."
+    },
+    {
       "code": "network_share",
       "kind": "warning",
       "retryable": false,
@@ -77926,6 +77934,32 @@
       "required": [
         "uid",
         "sides"
+      ],
+      "type": "object"
+    },
+    "ColumnRefers": {
+      "additionalProperties": false,
+      "description": "A foreign key's other end (docs/adr/0753 §1).",
+      "properties": {
+        "column": {
+          "description": "Its column whose value the field holds (`id`).",
+          "type": "string"
+        },
+        "label": {
+          "description": "Its column whose value names a row in the list (`ad`); none: the codes themselves.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "description": "The table as its source names it (`kbs.iller`; a GeoPackage's table).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "table",
+        "column"
       ],
       "type": "object"
     },
@@ -88196,6 +88230,31 @@
       ],
       "type": "object"
     },
+    "FieldColumn": {
+      "additionalProperties": false,
+      "description": "A bound table's column as its field keeps it (docs/adr/0753).",
+      "properties": {
+        "made": {
+          "description": "The default the table works out for a new row itself, as its SQL text (`now()`, `uuidv7()`, `nextval('…')`): a\nnew object leaves the field empty for it and the form says the database gives it (docs/adr/0753 §2).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "refers": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ColumnRefers"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The table the column's foreign key refers to (docs/adr/0753 §1): the field's values are that table's rows, read\nagain with every reading of the table."
+        }
+      },
+      "type": "object"
+    },
     "FieldCount": {
       "description": "A field and how many records.",
       "properties": {
@@ -95866,6 +95925,17 @@
             "string",
             "null"
           ]
+        },
+        "column": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FieldColumn"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What the bound table's column says beyond the rules above (docs/adr/0753): the value the table makes for a new\nrow itself and the table its values come from. Binding and reading the table write it."
         },
         "default": {
           "description": "The value a new object takes, in its canonical text.",

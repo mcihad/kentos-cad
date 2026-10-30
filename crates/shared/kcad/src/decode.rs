@@ -26,13 +26,13 @@ mod variables;
 mod views;
 
 use kentos_contracts::{
-    AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, DOCUMENT_FORMAT,
+    AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, ColumnRefers, DOCUMENT_FORMAT,
     DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit,
-    FieldChoice, GeoidModel, HeightKind, HeightReference, LayerField, LayerFieldKind, LayerNode,
-    LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LengthStyle, LineType,
-    MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId, ProjectSettings,
-    ProjectStyles, SurveySettings, TopologyException, TopologyRule, TopologyRuleKind,
-    TopologySettings, Vec2, Workspace, annotation_mm_holds, layer_fields_problem,
+    FieldChoice, FieldColumn, GeoidModel, HeightKind, HeightReference, LayerField, LayerFieldKind,
+    LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LengthStyle,
+    LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId,
+    ProjectSettings, ProjectStyles, SurveySettings, TopologyException, TopologyRule,
+    TopologyRuleKind, TopologySettings, Vec2, Workspace, annotation_mm_holds, layer_fields_problem,
     layer_states_problem,
 };
 
@@ -1957,6 +1957,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                     has.forms,
                     has.field_kinds,
                     has.withheld_fields,
+                    has.field_columns,
                 )?)
             }
             "service" if has.services => service = Some(services::service_layer(r)?),
@@ -2184,9 +2185,10 @@ fn layer_fields(
     ids: bool,
     wide: bool,
     withheld: bool,
+    columns: bool,
 ) -> Result<Vec<LayerField>, KcadError> {
     let at = r.position();
-    let all = list(r, |r, _| layer_field(r, ids, wide, withheld))?;
+    let all = list(r, |r, _| layer_field(r, ids, wide, withheld, columns))?;
     match layer_fields_problem(&all) {
         Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
         None => Ok(all),
@@ -2199,9 +2201,11 @@ fn layer_field(
     ids: bool,
     wide: bool,
     withholds: bool,
+    columns: bool,
 ) -> Result<LayerField, KcadError> {
     let mut id = None;
     let mut withheld = None;
+    let mut column = None;
     let (mut name, mut kind, mut alias, mut length, mut scale) = (None, None, None, None, None);
     let (mut min, mut max, mut values, mut default, mut must) = (None, None, None, None, None);
     let mut many = None;
@@ -2244,6 +2248,8 @@ fn layer_field(
             "unit" if ids => unit = Some(text(r)?),
             // Schema 107 (docs/adr/0638 §5): its values do not leave the drawing.
             "withheld" if withholds => withheld = Some(r.bool()?),
+            // Schema 133 (docs/adr/0753): the bound table's column, what the table makes and what it refers to.
+            "column" if columns => column = Some(field_column(r)?),
             // Schema 72 (docs/adr/0419): the split and merge policies.
             "split" if ids => {
                 let all: Vec<(&str, kentos_contracts::SplitPolicy)> =
@@ -2304,7 +2310,45 @@ fn layer_field(
         min_exclusive: min_out == Some(true),
         max_exclusive: max_out == Some(true),
         unit,
+        column,
     })
+}
+
+/// A field's bound column (schema 133, docs/adr/0753): `made` and `refers`, at least one; their texts are checked with
+/// the field's (`field_problem`).
+fn field_column(r: &mut Reader<'_>) -> Result<FieldColumn, KcadError> {
+    let (mut made, mut refers) = (None, None);
+    map(r, |r, key| {
+        match key {
+            "made" => made = Some(text(r)?),
+            "refers" => {
+                let (mut table, mut column, mut label) = (None, None, None);
+                map(r, |r, key| {
+                    match key {
+                        "table" => table = Some(text(r)?),
+                        "column" => column = Some(text(r)?),
+                        "label" => label = Some(text(r)?),
+                        _ => return Err(unknown(r)),
+                    }
+                    Ok(())
+                })?;
+                refers = Some(ColumnRefers {
+                    table: required(r, table, "table")?,
+                    column: required(r, column, "column")?,
+                    label,
+                });
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    if made.is_none() && refers.is_none() {
+        return Err(r.fail(
+            Code::BadValue,
+            "column boş olamaz: made ya da refers yazılır; ikisi de yoksa column yazılmaz",
+        ));
+    }
+    Ok(FieldColumn { made, refers })
 }
 
 /// A value of a field's list; `later`: schema 72's `retired` is read (docs/adr/0418).

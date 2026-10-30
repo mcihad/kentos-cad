@@ -85,6 +85,8 @@ pub struct FieldRow {
     pub unit: String,
     /// Dışarı verilmez (docs/adr/0638 §5): its values stay in the drawing.
     pub withheld: bool,
+    /// What the bound table's column says (docs/adr/0753): kept as it is, the table writes it.
+    pub column: Option<kentos_commands::FieldColumn>,
 }
 
 /// A field as the window shows it (the web's `rowOf`).
@@ -114,7 +116,28 @@ pub fn row_of(f: &LayerField) -> FieldRow {
         max_exclusive: f.max_exclusive,
         unit: f.unit.clone().unwrap_or_default(),
         withheld: f.withheld,
+        column: f.column.clone(),
     }
+}
+
+/// What a bound table's column says of its field (docs/adr/0753), in a sentence or two; none without it.
+pub fn column_said(column: Option<&kentos_commands::FieldColumn>) -> Option<String> {
+    let c = column?;
+    let mut said = Vec::new();
+    if let Some(m) = &c.made {
+        said.push(format!("Yeni satırda değerini veritabanı verir: {m}."));
+    }
+    if let Some(t) = &c.refers {
+        let named = match &t.label {
+            Some(l) => format!("kodu “{}”, etiketi “{l}” sütunundan", t.column),
+            None => format!("kodu ve etiketi “{}” sütunundan", t.column),
+        };
+        said.push(format!(
+            "Değer listesi “{}” tablosunun satırları ({named}); tablo her okunduğunda yenilenir.",
+            t.table
+        ));
+    }
+    (!said.is_empty()).then(|| said.join(" "))
 }
 
 /// A size as typed: none blank, else its number; a text that is no number is
@@ -185,6 +208,7 @@ pub fn field_of(r: &FieldRow) -> LayerField {
     f.merge = r.merge;
     f.domain = r.domain.clone();
     f.withheld = r.withheld;
+    f.column = r.column.clone();
     f
 }
 
@@ -456,6 +480,7 @@ impl App {
                     max_exclusive: false,
                     unit: String::new(),
                     withheld: false,
+                    column: None,
                 });
                 w.chosen = Some(w.rows.len() - 1);
             }
@@ -1011,7 +1036,13 @@ impl App {
                         .width(Length::Fixed(typography::scaled(90.0))),
                     );
                 }
-                line.into()
+                // What the bound table's column says (docs/adr/0753): written by binding and reading, shown here.
+                match column_said(r.column.as_ref()) {
+                    Some(said) => iced::widget::column![line, label::muted(said)]
+                        .spacing(6)
+                        .into(),
+                    None => line.into(),
+                }
             }
             None => label::caption("Tekil, hariç uçlar, birim ve dışarı verilmez için bir alan seçin.").into(),
         };
@@ -1039,9 +1070,10 @@ impl App {
         };
         let path = doc.model.layers().path(&w.layer);
         let ready = problem.is_none() && w.changed();
+        // The body scrolls in a low window, the buttons stay in sight (docs/adr/0749, 0753).
         let main = overlay::modal(
             Frame::new(FIELDS_TITLE)
-                .push(
+                .scroll(
                     Column::new()
                         .spacing(10)
                         .push(label::muted(format!("Katman: {path}")))

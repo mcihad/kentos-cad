@@ -2442,6 +2442,132 @@ fn a_page_lost_with_its_table_or_its_server_goes_on_from_its_cursor() {
     sql(&["DROP TABLE sira.sorun"]);
 }
 
+/// The owner's tables (`kbs.iller`, `kbs.ilceler`: identity keys, a province key and an upper district key, a UUID and a
+/// time stamp the database makes; docs/adr/0753): bound, the province field lists the provinces by their names and the
+/// upper district field the districts, the made columns say what makes them; a province added in the database comes with
+/// the next reading; a value the list lacks is refused before it is written, one it holds goes into the table.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_tables_foreign_keys_list_their_rows() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    let Ok(password) = std::env::var("PGPASSWORD") else {
+        return;
+    };
+    kentos_postgis::register();
+    let sql = |statements: &[&'static str]| {
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("runtime");
+        runtime.block_on(async {
+            use sqlx::{Connection, Executor};
+            use std::str::FromStr;
+            let options = sqlx::postgres::PgConnectOptions::from_str(&url)
+                .expect("url")
+                .password(&password);
+            let mut conn = sqlx::postgres::PgConnection::connect_with(&options)
+                .await
+                .expect("owner");
+            for s in statements {
+                conn.execute(*s).await.expect(s);
+            }
+        });
+    };
+    let mut d = doc();
+    let (layer, _) = bind(&mut d, &url, "kbs.ilceler");
+    let field = |d: &Document, name: &str| {
+        let fields = serde_json::to_value(&d.layers().get(&layer).expect("the layer").fields)
+            .expect("fields");
+        fields
+            .as_array()
+            .and_then(|a| a.iter().find(|f| f["name"] == name))
+            .cloned()
+            .unwrap_or(Value::Null)
+    };
+    let labels = |f: &Value| -> Vec<String> {
+        f["values"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .map(|v| {
+                format!(
+                    "{}={}",
+                    v["code"].as_str().unwrap_or("?"),
+                    v["label"].as_str().unwrap_or("?")
+                )
+            })
+            .collect()
+    };
+    let il = field(&d, "il_id");
+    assert_eq!(
+        il["column"],
+        json!({ "refers": { "table": "kbs.iller", "column": "id", "label": "ad" } }),
+        "{il}"
+    );
+    assert_eq!(
+        labels(&il),
+        ["1=Ankara", "3=İstanbul", "2=Sivas", "4=Tokat"],
+        "{il}"
+    );
+    let ust = field(&d, "ust_id");
+    assert_eq!(ust["column"]["refers"]["table"], "kbs.ilceler", "{ust}");
+    assert_eq!(
+        labels(&ust),
+        ["1=Merkez (1)", "3=Merkez (3)", "2=Suşehri"],
+        "{ust}"
+    );
+    assert_eq!(
+        field(&d, "genel_id")["column"],
+        json!({ "made": "uuidv7()" })
+    );
+    assert_eq!(
+        field(&d, "olusturma_tarihi")["column"],
+        json!({ "made": "now()" })
+    );
+    assert!(field(&d, "ad")["column"].is_null());
+    // A province added in the database: the next reading lists it.
+    sql(&["INSERT INTO kbs.iller (ad, plaka) VALUES ('Adana', '01')"]);
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "read" }),
+    ));
+    assert_eq!(
+        labels(&field(&d, "il_id")),
+        ["5=Adana", "1=Ankara", "3=İstanbul", "2=Sivas", "4=Tokat"]
+    );
+    // A value the list lacks is refused; one it holds is written, the key kept by the table.
+    let uid = d
+        .by_layer_with_uids(&layer)
+        .map(|(u, _)| u.to_string())
+        .next()
+        .expect("a district");
+    let refused = run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "il_id": "99" }, "operation": "attributes" }),
+    );
+    assert_eq!(refused["error"]["code"], "invalid_attribute", "{refused}");
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid], "attrs": { "il_id": "5" }, "operation": "attributes" }),
+    ));
+    let written = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    ))
+    .clone();
+    assert_eq!(written["modified"], 1, "{written}");
+}
+
 /// A table like a municipality's (`kurallar.ilce`: an identity key, NOT NULL columns, a UUID, a time stamp, JSON and
 /// literal defaults; docs/adr/0750): bound, its fields take the table's rules; a new district written with only its
 /// name gets what the database works out back on its object in the write's step, a read after it changes nothing; a

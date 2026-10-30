@@ -361,7 +361,9 @@ pub enum SourcesEditOp {
 /// that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
 /// not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
 /// layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,
-/// `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in).
+/// `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),
+/// `reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key
+/// does not fit the field, or keys that could not be read; docs/adr/0753).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -543,7 +545,8 @@ pub enum SyncTopology {
 /// of the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row
 /// is outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given
 /// back to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the
-/// pins of those rows are not followed).
+/// pins of those rows are not followed), `reference_values_missing` (a read whose foreign key's table has more rows
+/// than a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753).
 ///
 /// `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
 /// together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,

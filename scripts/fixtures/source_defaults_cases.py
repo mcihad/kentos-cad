@@ -146,6 +146,9 @@ def fields():
         value = as_kind(kind, lit) if lit is not None else None
         if value is not None:
             f["default"] = value
+        # docs/adr/0753 §1: a default the table works out is the field's `column.made`, as the table gives it.
+        if default is not None and lit is None and default.strip().upper() != "NULL":
+            f["column"] = {"made": default.strip()}
         out.append(f)
     return out
 
@@ -337,8 +340,9 @@ def cases():
 
 NOTE = ("ADR 0750. Tablonun kuralları sqlite3 ile PRAGMA table_info'dan okunur, KentOS kodu olmadan; satırlar ve bağ "
         "bound_sources_cases.py'nin bağlamasından (GDAL'ın OGR'ı). NOT NULL ve varsayılansız sütun zorunlu alan, sabit "
-        "varsayılan alanın varsayılanı; yeni nesnenin boş değeri varsayılanlı sütunda tablonundur ve aynı adımda nesneye "
-        "döner; NOT NULL sütunu boş bırakan yazma reddedilir, hiçbir şey yazılmaz.")
+        "varsayılan alanın varsayılanı, hesaplanan varsayılan alanın column.made'i (ADR 0753); yeni nesnenin boş değeri "
+        "varsayılanlı sütunda tablonundur ve aynı adımda nesneye döner; NOT NULL sütunu boş bırakan yazma reddedilir, "
+        "hiçbir şey yazılmaz.")
 
 
 def build():

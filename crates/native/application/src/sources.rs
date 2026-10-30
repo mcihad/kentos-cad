@@ -36,6 +36,7 @@ mod base;
 mod database;
 mod merge;
 pub mod reconcile;
+mod references;
 pub mod relate;
 mod relations;
 mod together;
@@ -2592,6 +2593,15 @@ fn link_table(
             (id.to_owned(), 0, Vec::new())
         }
         None if matches!(at, Origin::Database(_)) => {
+            // The columns' made defaults and foreign keys come with the fields (docs/adr/0753).
+            let refs = references::of_database(path, table);
+            warnings.extend(references::table_fields(
+                &mut stored.fields,
+                &stored.layer.columns,
+                &refs,
+                table,
+                "edit.table",
+            ));
             let (layer, objects, layers, w) =
                 link_database_layer(doc, path, &stored, mover.as_ref())?;
             warnings.extend(w);
@@ -2618,6 +2628,27 @@ fn link_table(
                 .first()
                 .map(|t| t.layer.clone())
                 .unwrap_or_default();
+            // The columns' made defaults and foreign keys on the fields the import made (docs/adr/0753).
+            if let Origin::File(p) = at {
+                let refs = references::of_file(p, table);
+                let mut fields = doc
+                    .layers()
+                    .get(&layer)
+                    .map(|n| n.fields.clone())
+                    .unwrap_or_default();
+                let before = fields.clone();
+                warnings.extend(references::table_fields(
+                    &mut fields,
+                    &stored.layer.columns,
+                    &refs,
+                    table,
+                    "edit.table",
+                ));
+                if fields != before {
+                    doc.set_layer_fields(&layer, fields, &[])
+                        .map_err(|e| refuse(codes::IMPORT_UNREADABLE, e.0, "edit.table"))?;
+                }
+            }
             let layers: Vec<ImportedLayer> = out.layers;
             (layer, out.objects, layers)
         }
@@ -3344,6 +3375,19 @@ fn sync_run(
             }
             // A mapped many-to-many reference is read from its mapping table, not from a column (docs/adr/0532 §2).
             together::patch_read(doc, &link, &mut stored)?;
+            // The columns' made defaults and foreign keys, read again with the rows (docs/adr/0753).
+            let refs = match source {
+                Origin::File(p) => references::of_file(p, &link.table),
+                Origin::Database(a) => references::of_database(a, &link.table),
+            };
+            let known = refs.is_ok();
+            let referred = references::table_fields(
+                &mut stored.fields,
+                &stored.layer.columns,
+                &refs,
+                &link.table,
+                "layer",
+            );
             // Columns renamed in the source: the layer's fields follow, and every place that names them
             // (docs/adr/0635 §1).
             let fields_now = doc
@@ -3416,6 +3460,7 @@ fn sync_run(
                     .collect(),
             };
             let mut warnings = pins.warnings.clone();
+            warnings.extend(referred);
             if !renames.is_empty() {
                 warnings.push(CommandWarning {
                     code: codes::SOURCE_COLUMNS_RENAMED.into(),
@@ -3436,7 +3481,8 @@ fn sync_run(
             }
             let label = read_step(&link.table);
             // The table's rules come with its rows (docs/adr/0750): a field of a NOT NULL column without a default is
-            // required, a literal default is the field's when it has none; nothing the layer asks for is taken away.
+            // required, a literal default is the field's when it has none; nothing the layer asks for is taken away. Its
+            // made defaults and foreign keys' lists follow the table (docs/adr/0753).
             let ruled: Vec<kentos_commands::LayerField> = fields_now
                 .iter()
                 .map(|f| {
@@ -3449,6 +3495,7 @@ fn sync_run(
                         if f.default.is_none() {
                             f.default.clone_from(&t.default);
                         }
+                        references::follow(&mut f, t, known);
                     }
                     f
                 })

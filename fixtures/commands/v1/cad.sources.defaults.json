@@ -4,7 +4,7 @@
  "command": "cad.sources.sync",
  "commandVersion": 1,
  "title": "Bağlı tablonun zorunlu ve varsayılanlı sütunları",
- "note": "ADR 0750. Tablonun kuralları sqlite3 ile PRAGMA table_info'dan okunur, KentOS kodu olmadan; satırlar ve bağ bound_sources_cases.py'nin bağlamasından (GDAL'ın OGR'ı). NOT NULL ve varsayılansız sütun zorunlu alan, sabit varsayılan alanın varsayılanı; yeni nesnenin boş değeri varsayılanlı sütunda tablonundur ve aynı adımda nesneye döner; NOT NULL sütunu boş bırakan yazma reddedilir, hiçbir şey yazılmaz.",
+ "note": "ADR 0750. Tablonun kuralları sqlite3 ile PRAGMA table_info'dan okunur, KentOS kodu olmadan; satırlar ve bağ bound_sources_cases.py'nin bağlamasından (GDAL'ın OGR'ı). NOT NULL ve varsayılansız sütun zorunlu alan, sabit varsayılan alanın varsayılanı, hesaplanan varsayılan alanın column.made'i (ADR 0753); yeni nesnenin boş değeri varsayılanlı sütunda tablonundur ve aynı adımda nesneye döner; NOT NULL sütunu boş bırakan yazma reddedilir, hiçbir şey yazılmaz.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -248,11 +248,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -439,11 +445,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -630,11 +642,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -821,11 +839,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -1012,11 +1036,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -1203,11 +1233,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -1394,11 +1430,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -1585,11 +1627,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -1776,11 +1824,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -1967,11 +2021,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -2158,11 +2218,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -2420,11 +2486,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -2684,11 +2756,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -2953,11 +3031,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -3216,11 +3300,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -3527,11 +3617,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -3810,11 +3906,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -4055,11 +4157,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -4300,11 +4408,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -4579,11 +4693,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",
@@ -4881,11 +5001,17 @@
          },
          {
           "name": "etiket",
-          "kind": "text"
+          "kind": "text",
+          "column": {
+           "made": "upper('ilce')"
+          }
          },
          {
           "name": "zaman",
-          "kind": "datetime"
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
          },
          {
           "name": "kat",

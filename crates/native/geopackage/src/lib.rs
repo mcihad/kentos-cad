@@ -9,6 +9,7 @@
 //! are not touched. SQLite is compiled in (rusqlite's `bundled`).
 
 pub mod fgb;
+pub mod foreign;
 pub mod geom;
 pub mod relations;
 pub mod styles;

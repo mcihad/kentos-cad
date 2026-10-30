@@ -170,7 +170,7 @@ fn the_readers_errors_name_their_places() {
             Code::MissingField,
             "twist",
         ),
-        ("broken/schema-version-133.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-134.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

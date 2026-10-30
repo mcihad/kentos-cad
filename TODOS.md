@@ -51,6 +51,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0753: alanın `column`'u (`.kcad` şema 133; veritabanının verdiği değer `made`, yabancı anahtarın tablosu
+  `refers`); bağlı tablonun tek sütunlu yabancı anahtarı alanın değer listesi (başvurulan satırlar, etiketi adı
+  tanınan ya da ilk metin sütunu, aynı etiket koduyla ayrılır), her okumada yenilenir; formun yeni kaydında
+  “Veritabanı verir: …”; Alanlar penceresinde sütunun sözü (web'in formu ve Alanlar penceresi gelince aynısı).
 - ADR 0752: yeni kaydın varsayılanları her yolda aynı sırayla (verilen değer, formun düz varsayılanı, alt türün ve
   alanın varsayılanı, formun ifadesi, ifade boşsa alanınki); formun yeni kaydı ve önizlemesi katman alanının
   varsayılanını gösterir; çizim komutu kuralları uygulanan formun düz varsayılanını kendisi yazar (web'in formu ve

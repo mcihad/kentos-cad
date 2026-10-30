@@ -28,6 +28,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Bağlı tablonun yabancı anahtarları ve veritabanının verdiği değerler (30 Ekim 2026; [ADR0753](docs/adr/0753-bound-table-foreign-keys-and-made-defaults.md)).**
+  Alanın `column`'u (KCAD 133 opt-in): `made` (tablonun yeni satıra verdiği değerin SQL'i, `now()`, `uuidv7()`) ve `refers`
+  (yabancı anahtarın tablosu, sütunu, etiket sütunu). Bağlama ve okuma (`sources::references`) tek sütunlu anahtarı
+  (`PRAGMA foreign_key_list`, `pg_constraint`) alanın değer listesi yapar: başvurulan satırlar, en çok 10 000, etiket adı
+  tanınan (`ad`, `adi`, `name` …) ya da ilk metin sütunu (`provider::label_column`), aynı etiket “(kod)” ile ayrılır, doğal
+  sırada; her okuma yeniler, anahtar kalkınca liste kalkar, alanın kendi listesi kalır; eksik liste `reference_values_missing`.
+  Formun yeni kaydında “Veritabanı verir: …”, Alanlar'da sütunun sözü, gövdesi alçak pencerede kayar. `field_problem`'in tekrar
+  denetimi doğrusal. 24 ortak durum (`source_references_cases.py`), PostGIS'te sahibinkine benzeyen tablolar.
+
 - **Yeni kaydın varsayılanları her yolda aynı sırayla (30 Ekim 2026; [ADR0752](docs/adr/0752-new-record-defaults-everywhere.md)).**
   Verilen değer, formun düz varsayılanı, alt türün ve alanın varsayılanı (formda olmayan alanlar da; formun seçtiği alt
   türle), formun ifadesi (önce dolanları okur), ifade boş ya da bekliyorsa alanınki. Kural tek yerde

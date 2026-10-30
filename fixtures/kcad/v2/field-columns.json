@@ -1,0 +1,124 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Bağlı sütunlar",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis"
+ },
+ "origin": {
+  "x": 500000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "ilceler",
+   "name": "ilceler",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "genel_id",
+     "kind": "uuid",
+     "column": {
+      "made": "uuidv7()"
+     }
+    },
+    {
+     "name": "olusturma_tarihi",
+     "kind": "instant",
+     "column": {
+      "made": "now()"
+     }
+    },
+    {
+     "name": "il_id",
+     "kind": "bigint",
+     "required": true,
+     "values": [
+      {
+       "code": "6",
+       "label": "Ankara"
+      },
+      {
+       "code": "34",
+       "label": "İstanbul"
+      },
+      {
+       "code": "58",
+       "label": "Sivas"
+      }
+     ],
+     "column": {
+      "refers": {
+       "table": "kbs.iller",
+       "column": "id",
+       "label": "ad"
+      }
+     }
+    },
+    {
+     "name": "ust_id",
+     "kind": "bigint",
+     "column": {
+      "refers": {
+       "table": "kbs.ilceler",
+       "column": "id"
+      }
+     }
+    },
+    {
+     "name": "ad",
+     "kind": "text",
+     "length": 100,
+     "required": true
+    },
+    {
+     "name": "tur",
+     "kind": "text",
+     "length": 30,
+     "default": "İlçe"
+    }
+   ]
+  }
+ ],
+ "activeLayer": "ilceler",
+ "entities": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "ilceler",
+   "attrs": {
+    "genel_id": "0193f1a2-7b3c-7d4e-8f5a-6b7c8d9e0f1a",
+    "olusturma_tarihi": "2026-10-28T16:05:12+03:00",
+    "il_id": "58",
+    "ad": "Merkez",
+    "tur": "İlçe"
+   },
+   "p": {
+    "x": 500100.0,
+    "y": 4400200.0
+   }
+  }
+ ],
+ "uids": [
+  "0193f1c2-7a00-7000-8000-000000000133"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

@@ -2095,6 +2095,9 @@ codes! {
     /// A GeoPackage bound on a network share (docs/adr/0627 §8): SQLite's locks do not hold there.
     /// A bound table with a geometry column whose rows hold no geometry: they come as records, nothing is drawn.
     ROWS_WITHOUT_GEOMETRY = "rows_without_geometry", Warning, false, "Tablonun geometri sütunu var ama hiçbir satırında geometri yok: çizimde görünecek bir şey yok, satırlar kayıt olarak gelir.";
+    /// A bound table's foreign key whose referenced rows its field's value list lacks (docs/adr/0753 §2): too many rows
+    /// to list, rows whose key does not fit the field, or a referenced table that could not be read.
+    REFERENCE_VALUES_MISSING = "reference_values_missing", Warning, false, "Alanın değer listesi başvurduğu tablodan kurulamadı ya da eksik: tabloda çok satır var ya da okunamadı (alan serbest kalır), ya da bazı satırların anahtarı alanın türüne uymuyor (listeye girmez).";
     NETWORK_SHARE = "network_share", Warning, false, "GeoPackage bir ağ paylaşımında; SQLite'ın kilitleri ağ dosya sistemlerinde güvenilir değildir: dosyaya aynı anda tek kişi yazmalı.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────

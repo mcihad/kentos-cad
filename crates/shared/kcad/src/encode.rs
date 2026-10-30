@@ -210,6 +210,33 @@ impl<'d> Encoder<'d> {
     }
 
     /// A key of a map whose keys are fixed; the caller writes them in order.
+    /// A field's bound column (schema 133, docs/adr/0753): `made`, then `refers` (`label`, `table`, `column`).
+    fn field_column(&mut self, c: &kentos_contracts::FieldColumn) -> Result<(), KcadError> {
+        self.open(
+            usize::from(c.made.is_some()) + usize::from(c.refers.is_some()),
+            true,
+        )?;
+        if let Some(made) = &c.made {
+            self.key("made");
+            self.at(Seg::Name("made"), |e| e.text(made))?;
+        }
+        if let Some(r) = &c.refers {
+            self.key("refers");
+            self.at(Seg::Name("refers"), |e| {
+                e.open(2 + usize::from(r.label.is_some()), true)?;
+                if let Some(label) = &r.label {
+                    e.key("label");
+                    e.at(Seg::Name("label"), |e| e.text(label))?;
+                }
+                e.key("table");
+                e.at(Seg::Name("table"), |e| e.text(&r.table))?;
+                e.key("column");
+                e.at(Seg::Name("column"), |e| e.text(&r.column))
+            })?;
+        }
+        Ok(())
+    }
+
     fn key(&mut self, k: &'static str) {
         self.w.text(k);
     }
@@ -1639,7 +1666,8 @@ impl<'d> Encoder<'d> {
             + usize::from(f.min_exclusive)
             + usize::from(f.max_exclusive)
             + usize::from(f.unit.is_some())
-            + usize::from(f.withheld);
+            + usize::from(f.withheld)
+            + usize::from(f.column.is_some());
         self.open(n, true)?;
         if let Some(id) = &f.id {
             self.key("id");
@@ -1678,6 +1706,11 @@ impl<'d> Encoder<'d> {
         if let Some(split) = f.split {
             self.key("split");
             self.w.text(split_name(split));
+        }
+        // Schema 133 (docs/adr/0753): the bound table's column, what the table makes and what it refers to.
+        if let Some(c) = &f.column {
+            self.key("column");
+            self.at(Seg::Name("column"), |e| e.field_column(c))?;
         }
         // Schema 72 (docs/adr/0430): the value list it links.
         if let Some(domain) = &f.domain {
@@ -2003,6 +2036,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 133 (docs/adr/0753): a layer field's bound column, what the table makes and refers to.
+    fn columns(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| n.fields.iter().any(|f| f.column.is_some()) || columns(&n.children))
+    }
+    if columns(&doc.layers) {
+        return crate::SCHEMA_WITH_FIELD_COLUMNS;
+    }
     // Schema 132 (docs/adr/0735): the data profiles and mappings the project carries.
     if !doc.settings.profile_files.is_empty() {
         return crate::SCHEMA_WITH_PROFILE_FILES;

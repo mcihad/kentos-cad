@@ -4354,6 +4354,8 @@ const ENTRIES: &[Entry] = &[
             "key_not_unique",
             // docs/adr/0627 §8: a GeoPackage bound on a network share.
             "network_share",
+            // docs/adr/0753 §2: a foreign key's rows a field's list lacks.
+            "reference_values_missing",
         ],
         targets: none,
     },
@@ -4490,6 +4492,8 @@ const ENTRIES: &[Entry] = &[
             "source_others",
             "source_columns_renamed",
             "library_symbol_field",
+            // docs/adr/0753 §2: a foreign key's rows a field's list lacks.
+            "reference_values_missing",
         ],
         targets: none,
     },

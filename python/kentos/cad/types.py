@@ -16275,6 +16275,35 @@ class ColumnGaps(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ColumnRefers(_Model):
+    """A foreign key's other end (docs/adr/0753 §1).
+    Attributes:
+        table: The table as its source names it (`kbs.iller`; a GeoPackage's table).
+        column: Its column whose value the field holds (`id`).
+        label: Its column whose value names a row in the list (`ad`); none: the codes themselves.
+    """
+    table: str
+    column: str
+    label: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["column"] = self.column
+        if self.label is not UNSET:
+            out["label"] = self.label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ColumnRefers:
+        return cls(
+            table=data["table"],
+            column=data["column"],
+            label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ColumnsCreate(_Model):
     """Input of `cad.columns.create` v1 (“Kolon”): `columns`, then those at the `crossings`, on a named layer, as one undo
     step. A column with grids stands at their crossing and the document keeps it there (docs/adr/0343 §3).
@@ -25039,6 +25068,34 @@ class FieldChoice(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldColumn(_Model):
+    """A bound table's column as its field keeps it (docs/adr/0753).
+    Attributes:
+        made: The default the table works out for a new row itself, as its SQL text (`now()`, `uuidv7()`, `nextval('…')`): a
+            new object leaves the field empty for it and the form says the database gives it (docs/adr/0753 §2).
+        refers: The table the column's foreign key refers to (docs/adr/0753 §1): the field's values are that table's rows, read
+            again with every reading of the table.
+    """
+    made: str | None | Unset = UNSET
+    refers: ColumnRefers | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.made is not UNSET:
+            out["made"] = self.made
+        if self.refers is not UNSET:
+            out["refers"] = None if self.refers is None else self.refers.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldColumn:
+        return cls(
+            made=data.get("made", UNSET),
+            refers=UNSET if "refers" not in data else None if data["refers"] is None else ColumnRefers.from_json(data["refers"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldCount(_Model):
     """A field and how many records.
     Attributes:
@@ -32753,6 +32810,8 @@ class LayerField(_Model):
     """A field of a layer (docs/adr/0199 §1): its name is the attribute's key.
     Attributes:
         alias: The name the table and the form show.
+        column: What the bound table's column says beyond the rules above (docs/adr/0753): the value the table makes for a new
+            row itself and the table its values come from. Binding and reading the table write it.
         default: The value a new object takes, in its canonical text.
         domain: The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that
             list's copy, written anew whenever the list changes. None: its own.
@@ -32784,6 +32843,7 @@ class LayerField(_Model):
     name: str
     kind: LayerFieldKind | LayerFieldKindName
     alias: str | None | Unset = UNSET
+    column: FieldColumn | None | Unset = UNSET
     default: str | None | Unset = UNSET
     domain: str | None | Unset = UNSET
     id: str | None | Unset = UNSET
@@ -32808,6 +32868,8 @@ class LayerField(_Model):
         out["kind"] = _enum_out(self.kind)
         if self.alias is not UNSET:
             out["alias"] = self.alias
+        if self.column is not UNSET:
+            out["column"] = None if self.column is None else self.column.to_json()
         if self.default is not UNSET:
             out["default"] = self.default
         if self.domain is not UNSET:
@@ -32850,6 +32912,7 @@ class LayerField(_Model):
             name=data["name"],
             kind=_enum_in(LayerFieldKind, data["kind"]),
             alias=data.get("alias", UNSET),
+            column=UNSET if "column" not in data else None if data["column"] is None else FieldColumn.from_json(data["column"]),
             default=data.get("default", UNSET),
             domain=data.get("domain", UNSET),
             id=data.get("id", UNSET),
@@ -55969,7 +56032,9 @@ class SourcesEdit(_Model):
     that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
     not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
     layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,
-    `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in).
+    `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),
+    `reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key
+    does not fit the field, or keys that could not be read; docs/adr/0753).
     """
     edit: SourcesEditOp
 
@@ -56394,7 +56459,8 @@ class SourcesSync(_Model):
     of the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row
     is outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given
     back to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the
-    pins of those rows are not followed).
+    pins of those rows are not followed), `reference_values_missing` (a read whose foreign key's table has more rows
+    than a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753).
 
     `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
     together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,
@@ -83158,6 +83224,7 @@ __all__ = [
     "ColumnGapTarget",
     "ColumnGapTargetName",
     "ColumnGaps",
+    "ColumnRefers",
     "ColumnShape",
     "ColumnShapeName",
     "ColumnWidthTableEdit",
@@ -83541,6 +83608,7 @@ __all__ = [
     "FieldBrokenName",
     "FieldChange",
     "FieldChoice",
+    "FieldColumn",
     "FieldCount",
     "FieldDomain",
     "FieldEdit",

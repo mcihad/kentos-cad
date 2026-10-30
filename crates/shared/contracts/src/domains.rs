@@ -81,6 +81,7 @@ impl FieldDomain {
     fn probe(&self) -> LayerField {
         LayerField {
             withheld: false,
+            column: None,
             id: None,
             name: self.name.clone(),
             alias: None,

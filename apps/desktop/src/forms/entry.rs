@@ -3548,6 +3548,15 @@ fn said_note(e: &Entry, key: &str) -> Option<String> {
     map.get(key).cloned()
 }
 
+/// The item's placeholder (a made value said, docs/adr/0753 §2), else how the value is written.
+fn or_shape<'a>(placeholder: &'a str, shape: &'a str) -> &'a str {
+    if placeholder.is_empty() {
+        shape
+    } else {
+        placeholder
+    }
+}
+
 fn entry_control<'a>(
     e: &'a Entry,
     item: &'a kentos_commands::FormField,
@@ -3580,6 +3589,13 @@ fn entry_control<'a>(
         e.said(&item.id)
             .and_then(|w| w.placeholder.clone())
             .or_else(|| item.placeholder.clone())
+            // A new record's value its table works out (docs/adr/0753 §2): left empty, said.
+            .or_else(|| {
+                e.new_record
+                    .then(|| field.column.as_ref().and_then(|c| c.made.as_ref()))
+                    .flatten()
+                    .map(|m| format!("Veritabanı verir: {m}"))
+            })
             .unwrap_or_default()
     };
     // What the item's choice filter offers for the record; every listed value without one.
@@ -3985,7 +4001,7 @@ fn entry_control<'a>(
                 set_at(d.map_or_else(String::new, |d| instant_text(&d, &written)))
             })
             .anchor(focus_ring(
-                text_input("YYYY-AA-GGTSS:DD+03:00", &value)
+                text_input(or_shape(&placeholder, "YYYY-AA-GGTSS:DD+03:00"), &value)
                     .size(typography::body())
                     .id(input_id(&key))
                     .on_input(set)
@@ -4015,7 +4031,7 @@ fn entry_control<'a>(
                 }))
             })
             .anchor(focus_ring(
-                text_input("GG.AA.YYYY SS:DD", &value)
+                text_input(or_shape(&placeholder, "GG.AA.YYYY SS:DD"), &value)
                     .size(typography::body())
                     .id(input_id(&key))
                     .on_input(set)
@@ -4034,7 +4050,7 @@ fn entry_control<'a>(
                 }))
             })
             .anchor(focus_ring(
-                text_input("SS:DD", &value)
+                text_input(or_shape(&placeholder, "SS:DD"), &value)
                     .size(typography::body())
                     .id(input_id(&key))
                     .on_input(set)
@@ -4054,7 +4070,7 @@ fn entry_control<'a>(
                 }))
             })
             .anchor(focus_ring(
-                text_input("YYYY-AA-GG", &value)
+                text_input(or_shape(&placeholder, "YYYY-AA-GG"), &value)
                     .size(typography::body())
                     .id(input_id(&key))
                     .on_input(set)

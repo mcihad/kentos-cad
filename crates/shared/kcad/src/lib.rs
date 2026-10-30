@@ -660,11 +660,15 @@ pub const SCHEMA_WITH_FIXTURES: u32 = 131;
 /// Schema 132 (docs/adr/0735): the data profiles and mappings a project carries inside its file (the settings'
 /// `profileFiles`), written only when a project carries one.
 pub const SCHEMA_WITH_PROFILE_FILES: u32 = 132;
+/// Schema 133 (docs/adr/0753): a layer field's bound column (`column`): the default the table makes for a new row
+/// itself (`made`) and the table its foreign key refers to (`refers`), whose rows are the field's values; written only
+/// when a field has one.
+pub const SCHEMA_WITH_FIELD_COLUMNS: u32 = 133;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 131] = [
+pub const SCHEMAS: [u32; 132] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -796,6 +800,7 @@ pub const SCHEMAS: [u32; 131] = [
     SCHEMA_WITH_AUDIT_EXCEPTIONS,
     SCHEMA_WITH_FIXTURES,
     SCHEMA_WITH_PROFILE_FILES,
+    SCHEMA_WITH_FIELD_COLUMNS,
 ];
 
 /// The file a drawing is saved as.
