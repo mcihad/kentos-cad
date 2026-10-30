@@ -1,0 +1,13 @@
+[package]
+name = "kentos-launch"
+description = "What KentOS Launcher and the programs it starts share (docs/adr/0800, 0801): the KentOS modules' ids, the command line that starts one, and the recent files the programs keep"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure Rust over serde alone (scripts/arch/deps.mjs, group `launch`): the launcher and the desktop
+# program both use it, so it knows neither a drawing, a window nor a runtime.
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

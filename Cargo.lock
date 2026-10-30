@@ -2682,6 +2682,7 @@ dependencies = [
  "kentos-headless",
  "kentos-interaction",
  "kentos-kcad",
+ "kentos-launch",
  "kentos-native-application",
  "kentos-native-style",
  "kentos-ncz",
@@ -2877,6 +2878,14 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2 0.10.9",
+]
+
+[[package]]
+name = "kentos-launch"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

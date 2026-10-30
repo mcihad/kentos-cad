@@ -54,6 +54,9 @@ const GROUPS = [
   // sqlx with TLS (the owner's choice, 17 Oct 2026), on a runtime of its own. The hosts register it (desktop, Python,
   // MCP); the product commands stay pure. Listed before `native`.
   { name: 'postgis', path: 'crates/native/postgis/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'project', 'stylelib', 'geopackage'], forbid: ['axum*', 'hyper*', 'tower*', 'reqwest', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
+  // What KentOS Launcher and the programs it starts share (docs/adr/0800, 0801): module ids, the command line, the
+  // recent files. serde alone: no drawing, window, runtime or browser. Listed before `native`.
+  { name: 'launch', path: 'crates/native/launch/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'stylelib', path: 'crates/native/style-library/', targets: [HOST], uses: ['shared'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   { name: 'application', path: 'crates/native/application/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'project', 'stylelib', 'geopackage'], forbid: [...RUNTIMES, ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The native tool session (docs/adr/0021): tools, prompts and typed input over the document;
@@ -113,7 +116,10 @@ const GROUPS = [
   // Desktop programs: Iced's executor may be tokio; no server framework, no browser bindings.
   // The desktop's Python console (docs/adr/0132) answers its script's requests through the
   // headless host's `rpc`; the Python itself runs in a process of its own, never in the app.
-  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  { name: 'desktop', path: 'apps/desktop/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'native', 'ui', 'render', 'style', 'sheet-ui', 'plot', 'stylelib', 'geopackage', 'postgis', 'launch'], forbid: ['axum*', 'pyo3*', ...BROWSER] },
+  // KentOS Launcher (docs/adr/0800): starts KentOS's programs and others from their manifests. The UI library and the
+  // shared launch contract only: no drawing, KentOS renderer, server runtime or browser; a program it starts is a process of its own.
+  { name: 'launcher', path: 'apps/launcher/', targets: [HOST], uses: ['ui', 'launch'], forbid: ['axum*', 'sqlx*', 'pyo3*', ...BROWSER] },
   { name: 'desktop', path: 'apps/ui-showcase/', targets: [HOST], uses: ['cad-codec', 'shared', 'domain', 'application', 'interaction', 'native', 'ui', 'render', 'style', 'stylelib'], forbid: ['axum*', ...BROWSER] },
 ];
 

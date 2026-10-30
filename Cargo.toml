@@ -78,6 +78,8 @@ members = [
     # The style library and its .kstil file (docs/adr/0314 §3), under the product commands and the style page.
     "crates/native/style-library",
     "crates/native/plot",
+    # What KentOS Launcher and the programs it starts share (docs/adr/0800, 0801).
+    "crates/native/launch",
     # Server-only libraries: PostgreSQL/PostGIS and the use cases.
     "crates/server/postgres",
     "crates/server/application",
@@ -136,6 +138,7 @@ default-members = [
     "crates/native/cloud",
     "crates/native/style",
     "crates/native/style-library",
+    "crates/native/launch",
     "crates/server/postgres",
     "crates/server/application",
     "apps/api",
