@@ -1,10 +1,13 @@
 //! The rules over areas (docs/adr/0202 §2): overlaps, gaps, slivers, the
 //! vertices a neighbour misses, and what lies outside another layer's areas.
 
-use super::{Finding, MeasureKind, Spot, Taken, dist, middle_of, pairs, written};
+use super::{
+    Boxes, Finding, MeasureKind, Pace, Spot, Taken, below, box_dist, dist, middle_of, pairs,
+    written,
+};
 use crate::entity::{Shape, area_parts};
 use crate::geom::arrangement::WindingIndex;
-use crate::geom::arrangement::{Area, Ring, Rule, edge_len};
+use crate::geom::arrangement::{Area, Ring, Rule, edge_box, edge_len};
 use crate::geom::centroid::areas_centroid;
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geom::overlay::overlay;
@@ -13,9 +16,8 @@ use crate::geometry::Bounds;
 use crate::jsmath::{js_cmp, stable_sort};
 use crate::ops::areas::area_of_entity;
 use crate::ops::geoprocess::clip::within;
-use crate::ops::geoprocess::{
-    Class, Place, Region, boundary_edges, intersect_all, subtract_all, union_all,
-};
+use crate::ops::geoprocess::{Class, Place, Region, boundary_edges, intersect_all, subtract_all};
+use crate::store::rtree::{Nearer, NearestQueue, PackedTree};
 use crate::vec2::Vec2;
 
 /// A region the rules measure: its area, perimeter and centroid.
@@ -83,6 +85,7 @@ pub(super) fn overlaps(
     idx: &[usize],
     with: Option<&[usize]>,
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let boxes: Vec<Bounds> = idx.iter().map(|&i| taken[i].bounds).collect();
     // Boxes that overlap by no more than `t` across hold no piece wider than
@@ -103,7 +106,11 @@ pub(super) fn overlaps(
         }
     };
     let mut out = Vec::new();
-    for (i, j) in found {
+    let n = found.len();
+    for (k, (i, j)) in found.into_iter().enumerate() {
+        if !pace.go(k, n) {
+            break;
+        }
         let (ai, aj) = (areas_of(taken, i), areas_of(taken, j));
         let both = intersect_all(ai, aj);
         let whole: f64 = both.iter().map(net_area).sum();
@@ -172,21 +179,25 @@ fn ring_vertices(areas: &[Area]) -> Vec<Vec2> {
 }
 
 /// The areas sharing a region's boundary, the longest shared first (the
-/// first in order of equal ones): what Komşuya kat merges into.
+/// first in order of equal ones): what Komşuya kat merges into. `near` holds
+/// the boxes of `idx`, in its order.
 fn neighbours(
     taken: &[Taken],
     region: &Area,
     idx: &[usize],
+    near: &Boxes,
     skip: Option<usize>,
     t: f64,
 ) -> Vec<usize> {
     let boundary = boundary_edges(std::slice::from_ref(region));
     let mut b = crate::geometry::empty_bounds();
     for e in &boundary {
-        super::grow(&mut b, &crate::geom::arrangement::edge_box(e));
+        super::grow(&mut b, &edge_box(e));
     }
     let mut found: Vec<(usize, f64)> = Vec::new();
-    for &k in idx {
+    let mut hits = Vec::new();
+    near.near(&b, t, &mut hits);
+    for k in hits.into_iter().map(|h| idx[h as usize]) {
         if Some(k) == skip {
             continue;
         }
@@ -266,26 +277,48 @@ pub(super) fn gap_pieces(taken: &[Taken], idx: &[usize], t: f64) -> Vec<Piece> {
     pieces
 }
 
-/// Boşluk olmamalı.
-pub(super) fn gaps(taken: &[Taken], rule: usize, idx: &[usize], t: f64) -> Vec<Finding> {
-    gap_pieces(taken, idx, t)
-        .into_iter()
-        .map(|g| {
-            let around = neighbours(taken, &g.area, idx, None, t);
-            let fixes: &[&'static str] = if around.is_empty() {
-                &[]
-            } else {
-                &["mergeNeighbour"]
-            };
-            let into = around.first().copied();
-            let mut f = Finding::new(rule, "gap", around, g.c)
-                .measured(MeasureKind::Area, g.a)
-                .fixes(fixes)
-                .shown(vec![g.area], Vec::new());
-            f.subject = into;
-            f
-        })
-        .collect()
+/// Boşluk olmamalı: the gaps from one overlay (its share of the rule's pace said before and after it), then each
+/// gap's neighbours.
+pub(super) fn gaps(
+    taken: &[Taken],
+    rule: usize,
+    idx: &[usize],
+    t: f64,
+    pace: Pace<'_>,
+) -> Vec<Finding> {
+    // The overlay of the whole layer, its time guessed from its vertices (about 5 µs each, docs/adr/0756).
+    let vertices: usize = idx
+        .iter()
+        .flat_map(|&i| areas_of(taken, i))
+        .map(|a| a.outer.pts.len() + a.holes.iter().map(|h| h.pts.len()).sum::<usize>())
+        .sum();
+    if !pace.stretch(0.0, 0.8, vertices as f64 * 5e-6) {
+        return Vec::new();
+    }
+    let pieces = gap_pieces(taken, idx, t);
+    let pace = pace.within(0.8, 1.0);
+    let near = Boxes::new(idx.iter().map(|&i| taken[i].bounds));
+    let n = pieces.len();
+    let mut out = Vec::new();
+    for (k, g) in pieces.into_iter().enumerate() {
+        if !pace.go(k, n) {
+            break;
+        }
+        let around = neighbours(taken, &g.area, idx, &near, None, t);
+        let fixes: &[&'static str] = if around.is_empty() {
+            &[]
+        } else {
+            &["mergeNeighbour"]
+        };
+        let into = around.first().copied();
+        let mut f = Finding::new(rule, "gap", around, g.c)
+            .measured(MeasureKind::Area, g.a)
+            .fixes(fixes)
+            .shown(vec![g.area], Vec::new());
+        f.subject = into;
+        out.push(f);
+    }
+    out
 }
 
 /// İnce alan olmamalı: every part of every area, by its mean width.
@@ -295,9 +328,15 @@ pub(super) fn slivers(
     idx: &[usize],
     least: f64,
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let mut out = Vec::new();
-    for &i in idx {
+    // The areas' boxes, when a sliver first asks for its neighbours.
+    let mut near: Option<Boxes> = None;
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         for (k, area) in areas_of(taken, i).iter().enumerate() {
             let Some(p) = Piece::of(area.clone()) else {
                 continue;
@@ -306,7 +345,8 @@ pub(super) fn slivers(
             if w >= least {
                 continue;
             }
-            let around = neighbours(taken, area, idx, Some(i), t);
+            let near = near.get_or_insert_with(|| Boxes::new(idx.iter().map(|&j| taken[j].bounds)));
+            let around = neighbours(taken, area, idx, near, Some(i), t);
             let mut fixes = Vec::new();
             if !around.is_empty() {
                 fixes.push("mergeNeighbour");
@@ -337,6 +377,7 @@ pub(super) fn missing_vertices(
     rule: usize,
     idx: &[usize],
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let boxes: Vec<Bounds> = idx.iter().map(|&i| taken[i].bounds).collect();
     let mut near: Vec<Vec<usize>> = vec![Vec::new(); idx.len()];
@@ -347,6 +388,9 @@ pub(super) fn missing_vertices(
     let rings: Vec<Vec<super::Written>> = idx.iter().map(|&i| written(&shapes[i])).collect();
     let mut out = Vec::new();
     for (a, &i) in idx.iter().enumerate() {
+        if !pace.go(a, idx.len()) {
+            break;
+        }
         let mut others = near[a].clone();
         others.sort_unstable();
         for b in others {
@@ -393,31 +437,88 @@ pub(super) fn missing_vertices(
     out
 }
 
-/// … içinde kalmalı: what of each object lies outside the other layer's areas.
+/// The box of an area: its outer ring's.
+fn area_box(a: &Area) -> Bounds {
+    let mut b = crate::geometry::empty_bounds();
+    for e in crate::geom::region::ring_edges(&a.outer) {
+        super::grow(&mut b, &edge_box(&e));
+    }
+    b
+}
+
+/// The distance from `p` to the nearest of `edges`, their boxes in `tree` (docs/adr/0756): what a walk over every edge
+/// finds; infinite when none is measured.
+fn nearest_edge(tree: &PackedTree, queue: &mut NearestQueue, edges: &[Edge], p: Vec2) -> f64 {
+    struct Near<'a> {
+        edges: &'a [Edge],
+        p: Vec2,
+        best: f64,
+    }
+    impl Nearer for Near<'_> {
+        fn gap(&self, b: &Bounds) -> f64 {
+            below(box_dist(b, self.p), self.p)
+        }
+        fn measure(&mut self, item: u32) -> Option<(f64, u32, u32)> {
+            Some((
+                closest_on_edge(&self.edges[item as usize], self.p).d,
+                item,
+                item,
+            ))
+        }
+        fn take(&mut self, token: u32) -> bool {
+            self.best = closest_on_edge(&self.edges[token as usize], self.p).d;
+            false
+        }
+    }
+    let mut near = Near {
+        edges,
+        p,
+        best: f64::INFINITY,
+    };
+    tree.nearest(queue, f64::INFINITY, &mut near);
+    near.best
+}
+
+/// … içinde kalmalı: what of each object lies outside the other layer's areas (docs/adr/0756). What lies outside their
+/// union lies outside those of them whose boxes meet the object's, so each object is set against these alone, never
+/// against a union of the whole layer (at least one of them, so the overlay is the one a union makes); a point outside
+/// them is as far from the union as from the nearest of all their edges.
 pub(super) fn covered_by(
     taken: &[Taken],
     rule: usize,
     idx: &[usize],
     by: &[usize],
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
-    let cover: Vec<Area> = by
-        .iter()
-        .flat_map(|&j| areas_of(taken, j).iter().cloned())
-        .collect();
-    let union = union_all(&cover);
-    let region = (!union.is_empty()).then(|| Region::of(&union));
+    let cover: Vec<&Area> = by.iter().flat_map(|&j| areas_of(taken, j)).collect();
+    let boxes = Boxes::new(cover.iter().map(|a| area_box(a)));
+    let mut hits = Vec::new();
+    let mut near_cover = |b: &Bounds, grow: f64| -> Vec<Area> {
+        boxes.near(b, grow, &mut hits);
+        if hits.is_empty() && !cover.is_empty() {
+            hits.push(0);
+        }
+        hits.iter().map(|&k| cover[k as usize].clone()).collect()
+    };
+    // Every edge of the cover in a tree, for a point's distance to the nearest: made when a point first asks.
+    let mut edges: Option<(Vec<Edge>, PackedTree, Vec<usize>)> = None;
+    let mut queue = NearestQueue::default();
     let mut out = Vec::new();
-    for &i in idx {
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         match &taken[i].class {
             Class::Areas(areas) => {
-                let pieces = counted(subtract_all(areas, &union), t);
+                let near = near_cover(&taken[i].bounds, 0.0);
+                let pieces = counted(subtract_all(areas, &near), t);
                 if pieces.is_empty() {
                     continue;
                 }
                 let at = largest(&pieces).c;
                 let total = pieces.iter().map(|p| p.a).sum();
-                let inside: f64 = intersect_all(areas, &union).iter().map(net_area).sum();
+                let inside: f64 = intersect_all(areas, &near).iter().map(net_area).sum();
                 let fixes: &[&'static str] = if inside > t * t {
                     &["clipOutside"]
                 } else {
@@ -431,7 +532,8 @@ pub(super) fn covered_by(
                 );
             }
             Class::Paths(paths) => {
-                let Class::Paths(runs) = within(&taken[i].class, &union, false) else {
+                let near = near_cover(&taken[i].bounds, 0.0);
+                let Class::Paths(runs) = within(&taken[i].class, &near, false) else {
                     continue;
                 };
                 let runs: Vec<Vec<Edge>> = runs
@@ -464,19 +566,45 @@ pub(super) fn covered_by(
                 );
             }
             Class::Points(points) => {
-                let index = region.as_ref().map(|r| WindingIndex::new(r.edges()));
                 for &p in points {
-                    let d = match (&region, &index) {
-                        (Some(r), Some(ix)) => {
-                            if r.place(ix, p) != Place::Outside {
-                                continue;
-                            }
-                            r.edges()
-                                .iter()
-                                .map(|e| closest_on_edge(e, p).d)
-                                .fold(f64::INFINITY, crate::jsmath::js_min)
+                    let d = if cover.is_empty() {
+                        f64::INFINITY
+                    } else {
+                        let spot = Bounds {
+                            min_x: p.x,
+                            min_y: p.y,
+                            max_x: p.x,
+                            max_y: p.y,
+                        };
+                        let near = near_cover(&spot, crate::geom::arrangement::TOL);
+                        let region = Region::of(&near);
+                        if region.place(&WindingIndex::new(region.edges()), p) != Place::Outside {
+                            continue;
                         }
-                        _ => f64::INFINITY,
+                        let (all, tree, odd) = edges.get_or_insert_with(|| {
+                            let all = boundary_edges(
+                                &cover.iter().map(|a| (*a).clone()).collect::<Vec<_>>(),
+                            );
+                            let mut entries = Vec::new();
+                            let mut odd = Vec::new();
+                            for (k, e) in all.iter().enumerate() {
+                                let b = edge_box(e);
+                                if [b.min_x, b.min_y, b.max_x, b.max_y]
+                                    .iter()
+                                    .all(|v| v.is_finite())
+                                {
+                                    entries.push((k as u32, b));
+                                } else {
+                                    odd.push(k);
+                                }
+                            }
+                            let tree = PackedTree::build(&entries);
+                            (all, tree, odd)
+                        });
+                        odd.iter().map(|&k| closest_on_edge(&all[k], p).d).fold(
+                            nearest_edge(tree, &mut queue, all, p),
+                            crate::jsmath::js_min,
+                        )
                     };
                     if d <= t {
                         continue;

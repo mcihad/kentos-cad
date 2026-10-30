@@ -3,17 +3,18 @@
 //! another layer's line work, and points off its line ends.
 
 use super::{
-    Finding, MeasureKind, Spot, Taken, dist, middle_of, near_all, pairs, sub_edge, within_all,
-    written,
+    Boxes, Finding, MeasureKind, Pace, Spot, Taken, below, box_dist, dist, middle_of, near_all,
+    pairs, sub_edge, within_all, written,
 };
 use crate::entity::Shape;
 use crate::geom::arrangement::{edge_box, edge_len};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
-use crate::jsmath::{atan2, cos, js_hypot, js_max, js_sign, sin, stable_sort};
+use crate::jsmath::{atan2, cos, js_max, js_sign, sin, stable_sort};
 use crate::ops::edges::entity_edges;
 use crate::ops::geoprocess::validity::{Kind as Problem, problems, repair};
 use crate::ops::geoprocess::{Class, boundary_edges};
+use crate::store::rtree::{Nearer, NearestQueue, PackedTree};
 use crate::vec2::Vec2;
 
 fn paths_of(taken: &[Taken], i: usize) -> &[Vec<Edge>] {
@@ -38,10 +39,16 @@ pub(super) fn duplicates(
     rule: usize,
     idx: &[usize],
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let boxes: Vec<Bounds> = idx.iter().map(|&i| taken[i].bounds).collect();
     let mut out = Vec::new();
-    for (a, b) in pairs(&boxes, None, t) {
+    let found = pairs(&boxes, None, t);
+    let n = found.len();
+    for (k, (a, b)) in found.into_iter().enumerate() {
+        if !pace.go(k, n) {
+            break;
+        }
         let (i, j) = (idx[a], idx[b]);
         match (&taken[i].class, &taken[j].class) {
             (Class::Paths(pa), Class::Paths(pb)) => {
@@ -127,11 +134,67 @@ pub(super) fn duplicates(
 /// A connector's edges, each with its path's part and its place in it (none: an area's ring).
 type Tagged = Vec<(Edge, Option<(usize, usize)>)>;
 
-/// The distance from `p` to a box (0 inside).
-fn box_dist(b: &Bounds, p: Vec2) -> f64 {
-    let dx = js_max(js_max(b.min_x - p.x, p.x - b.max_x), 0.0);
-    let dy = js_max(js_max(b.min_y - p.y, p.y - b.max_y), 0.0);
-    js_hypot(dx, dy)
+/// Whether a box is finite and not empty.
+fn finite_box(b: &Bounds) -> bool {
+    b.min_x.is_finite()
+        && b.min_y.is_finite()
+        && b.max_x.is_finite()
+        && b.max_y.is_finite()
+        && b.min_x <= b.max_x
+        && b.min_y <= b.max_y
+}
+
+/// The nearest place to a line end on the connectors (docs/adr/0756): their boxes in a tree, searched best first; each
+/// connector measured by the first of its nearest edges, equal connectors by their order. What the walk over the
+/// connectors by their boxes' distance finds.
+struct Connector<'a> {
+    edges: &'a [Tagged],
+    all: &'a [usize],
+    /// The end's line, its part, and the part's edges at the end, which it does not meet.
+    line: usize,
+    part: usize,
+    own: [usize; 2],
+    p: Vec2,
+    measured: Vec<(f64, usize, Vec2)>,
+    best: Option<(f64, usize, Vec2)>,
+}
+
+impl Connector<'_> {
+    /// The first of `o`'s edges nearest the end, and how near.
+    fn nearest(&self, o: usize) -> Option<(f64, Vec2)> {
+        let j = self.all[o];
+        let mut best: Option<(f64, Vec2)> = None;
+        for (e, tag) in &self.edges[o] {
+            if j == self.line
+                && tag.is_some_and(|(pk, pe)| pk == self.part && self.own.contains(&pe))
+            {
+                continue;
+            }
+            let q = closest_on_edge(e, self.p);
+            if best.is_none_or(|(bd, _)| q.d < bd) {
+                best = Some((q.d, q.p));
+            }
+        }
+        best
+    }
+}
+
+impl Nearer for Connector<'_> {
+    fn gap(&self, b: &Bounds) -> f64 {
+        below(box_dist(b, self.p), self.p)
+    }
+
+    fn measure(&mut self, item: u32) -> Option<(f64, u32, u32)> {
+        let o = item as usize;
+        let (d, q) = self.nearest(o)?;
+        self.measured.push((d, o, q));
+        Some((d, item, (self.measured.len() - 1) as u32))
+    }
+
+    fn take(&mut self, token: u32) -> bool {
+        self.best = self.measured.get(token as usize).copied();
+        false
+    }
 }
 
 /// Sarkan uç olmamalı: line ends that meet nothing within `t` (docs/adr/0202 §2.5).
@@ -142,6 +205,7 @@ pub(super) fn dangles(
     idx: &[usize],
     areas: &[usize],
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     // Every connector object of the layer, in the objects' order: its edges, each with its part and place.
     let mut all: Vec<usize> = idx.iter().chain(areas).copied().collect();
@@ -162,8 +226,26 @@ pub(super) fn dangles(
         }
     };
     let edges: Vec<Tagged> = all.iter().map(|&j| edges_of(j)).collect();
+    // The connectors' boxes in a tree (docs/adr/0756), when they are all finite; else the walk over them by distance.
+    let tree = all
+        .iter()
+        .zip(&edges)
+        .all(|(&j, e)| e.is_empty() || finite_box(&taken[j].bounds))
+        .then(|| {
+            let entries: Vec<(u32, Bounds)> = all
+                .iter()
+                .enumerate()
+                .filter(|(o, _)| !edges[*o].is_empty())
+                .map(|(o, &j)| (o as u32, taken[j].bounds))
+                .collect();
+            PackedTree::build(&entries)
+        });
+    let mut queue = NearestQueue::default();
     let mut out = Vec::new();
-    for &i in idx {
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         let movable = matches!(shapes[i], Shape::Line { .. } | Shape::Polyline { .. });
         for (k, path) in paths_of(taken, i).iter().enumerate() {
             let (Some(first), Some(last)) = (path.first(), path.last()) else {
@@ -179,35 +261,23 @@ pub(super) fn dangles(
                 (end, 1, [n - 1, n.saturating_sub(2)]),
             ];
             for (p, which, own) in ends {
-                // The nearest place on a connector: objects by how near their box is, the first of equal ones.
-                let mut order: Vec<usize> = (0..all.len()).collect();
-                stable_sort(&mut order, &mut |&a, &b| {
-                    box_dist(&taken[all[a]].bounds, p)
-                        .total_cmp(&box_dist(&taken[all[b]].bounds, p))
-                        .then(a.cmp(&b))
-                });
-                let mut best: Option<(f64, usize, Vec2)> = None;
-                for &o in &order {
-                    if let Some((bd, _, _)) = best
-                        && box_dist(&taken[all[o]].bounds, p) > bd
-                    {
-                        break;
-                    }
-                    let j = all[o];
-                    for (e, tag) in &edges[o] {
-                        if j == i && tag.is_some_and(|(pk, pe)| pk == k && own.contains(&pe)) {
-                            continue;
-                        }
-                        let q = closest_on_edge(e, p);
-                        let better = match best {
-                            None => true,
-                            Some((bd, bo, _)) => q.d < bd || (q.d == bd && o < bo),
+                let best = match &tree {
+                    Some(tree) if p.x.is_finite() && p.y.is_finite() => {
+                        let mut search = Connector {
+                            edges: &edges,
+                            all: &all,
+                            line: i,
+                            part: k,
+                            own,
+                            p,
+                            measured: Vec::new(),
+                            best: None,
                         };
-                        if better {
-                            best = Some((q.d, o, q.p));
-                        }
+                        tree.nearest(&mut queue, f64::INFINITY, &mut search);
+                        search.best
                     }
-                }
+                    _ => walk_connectors(taken, &all, &edges, i, k, own, p),
+                };
                 if best.is_some_and(|(d, _, _)| d <= t) {
                     continue;
                 }
@@ -234,15 +304,61 @@ pub(super) fn dangles(
     out
 }
 
+/// The nearest place to a line end on the connectors, walking them by how near their boxes are (the first of equal
+/// ones): for connectors or an end whose places are not all finite.
+fn walk_connectors(
+    taken: &[Taken],
+    all: &[usize],
+    edges: &[Tagged],
+    i: usize,
+    k: usize,
+    own: [usize; 2],
+    p: Vec2,
+) -> Option<(f64, usize, Vec2)> {
+    let mut order: Vec<usize> = (0..all.len()).collect();
+    stable_sort(&mut order, &mut |&a, &b| {
+        box_dist(&taken[all[a]].bounds, p)
+            .total_cmp(&box_dist(&taken[all[b]].bounds, p))
+            .then(a.cmp(&b))
+    });
+    let mut best: Option<(f64, usize, Vec2)> = None;
+    for &o in &order {
+        if let Some((bd, _, _)) = best
+            && box_dist(&taken[all[o]].bounds, p) > bd
+        {
+            break;
+        }
+        let j = all[o];
+        for (e, tag) in &edges[o] {
+            if j == i && tag.is_some_and(|(pk, pe)| pk == k && own.contains(&pe)) {
+                continue;
+            }
+            let q = closest_on_edge(e, p);
+            let better = match best {
+                None => true,
+                Some((bd, bo, _)) => q.d < bd || (q.d == bd && o < bo),
+            };
+            if better {
+                best = Some((q.d, o, q.p));
+            }
+        }
+    }
+    best
+}
+
 /// Kısa kenar olmamalı: edges as written shorter than `least`.
 pub(super) fn short_edges(
     shapes: &[Shape],
     rule: usize,
     idx: &[usize],
     least: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let mut out = Vec::new();
-    for &i in idx {
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         if let Shape::Arc { .. } = shapes[i] {
             for e in entity_edges(&shapes[i]) {
                 let l = edge_len(&e);
@@ -326,10 +442,14 @@ pub(super) fn small_angles(
     idx: &[usize],
     least: f64,
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let tiny = crate::geom::arrangement::TOL;
     let mut out = Vec::new();
-    for &i in idx {
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         for w in written(&shapes[i]) {
             let n = w.pts.len();
             if n < 3 {
@@ -374,9 +494,17 @@ pub(super) fn small_angles(
 }
 
 /// Geçerli olmalı: ADR 0201 §6's problems, object by object.
-pub(super) fn validity(shapes: &[Shape], rule: usize, idx: &[usize]) -> Vec<Finding> {
+pub(super) fn validity(
+    shapes: &[Shape],
+    rule: usize,
+    idx: &[usize],
+    pace: Pace<'_>,
+) -> Vec<Finding> {
     let mut out = Vec::new();
-    for &i in idx {
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         let found = problems(&shapes[i]);
         if found.is_empty() {
             continue;
@@ -406,6 +534,7 @@ pub(super) fn boundary_covered(
     idx: &[usize],
     by: &[usize],
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let mut cover: Vec<Edge> = Vec::new();
     for &j in by {
@@ -416,8 +545,14 @@ pub(super) fn boundary_covered(
         }
     }
     let boxes: Vec<Bounds> = cover.iter().map(edge_box).collect();
+    // The cover's edges near an edge from a tree of their boxes (docs/adr/0756), then the test itself, in their order.
+    let index = Boxes::new(boxes.iter().copied());
+    let mut hits = Vec::new();
     let mut out = Vec::new();
-    for &i in idx {
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         let Class::Areas(areas) = &taken[i].class else {
             continue;
         };
@@ -429,18 +564,19 @@ pub(super) fn boundary_covered(
                 let mut pieces: Vec<(usize, f64, f64)> = Vec::new();
                 for (k, e) in edges.iter().enumerate() {
                     let b = edge_box(e);
+                    index.near(&b, t, &mut hits);
                     let near = near_all(
                         e,
-                        cover
-                            .iter()
-                            .zip(&boxes)
-                            .filter(|(_, fb)| {
+                        hits.iter()
+                            .map(|&h| h as usize)
+                            .filter(|&h| {
+                                let fb = &boxes[h];
                                 fb.min_x <= b.max_x + t
                                     && b.min_x <= fb.max_x + t
                                     && fb.min_y <= b.max_y + t
                                     && b.min_y <= fb.max_y + t
                             })
-                            .map(|(f, _)| f),
+                            .map(|h| &cover[h]),
                         t,
                     );
                     let mut s = 0.0;
@@ -518,6 +654,30 @@ pub(super) fn boundary_covered(
     out
 }
 
+/// The nearest of the line ends to a point (docs/adr/0756): the ends in a tree, searched best first, equal ones by their
+/// order: what the walk over every end finds.
+struct End<'a> {
+    ends: &'a [Vec2],
+    p: Vec2,
+    best: Option<(f64, Vec2)>,
+}
+
+impl Nearer for End<'_> {
+    fn gap(&self, b: &Bounds) -> f64 {
+        below(box_dist(b, self.p), self.p)
+    }
+
+    fn measure(&mut self, item: u32) -> Option<(f64, u32, u32)> {
+        Some((dist(self.p, self.ends[item as usize]), item, item))
+    }
+
+    fn take(&mut self, token: u32) -> bool {
+        let q = self.ends[token as usize];
+        self.best = Some((dist(self.p, q), q));
+        false
+    }
+}
+
 /// … çizgilerinin ucunda olmalı: points farther than `t` from every line end of the other layer.
 pub(super) fn on_end_of(
     taken: &[Taken],
@@ -525,6 +685,7 @@ pub(super) fn on_end_of(
     idx: &[usize],
     by: &[usize],
     t: f64,
+    pace: Pace<'_>,
 ) -> Vec<Finding> {
     let mut ends: Vec<Vec2> = Vec::new();
     for &j in by {
@@ -539,16 +700,56 @@ pub(super) fn on_end_of(
             }
         }
     }
+    // The ends in a tree (docs/adr/0756), when they are all finite; else the walk over them.
+    let tree = ends
+        .iter()
+        .all(|q| q.x.is_finite() && q.y.is_finite())
+        .then(|| {
+            let entries: Vec<(u32, Bounds)> = ends
+                .iter()
+                .enumerate()
+                .map(|(k, q)| {
+                    (
+                        k as u32,
+                        Bounds {
+                            min_x: q.x,
+                            min_y: q.y,
+                            max_x: q.x,
+                            max_y: q.y,
+                        },
+                    )
+                })
+                .collect();
+            PackedTree::build(&entries)
+        });
+    let mut queue = NearestQueue::default();
     let mut out = Vec::new();
-    for &i in idx {
+    for (at, &i) in idx.iter().enumerate() {
+        if !pace.go(at, idx.len()) {
+            break;
+        }
         for (k, &p) in points_of(taken, i).iter().enumerate() {
-            let mut best: Option<(f64, Vec2)> = None;
-            for &q in &ends {
-                let d = dist(p, q);
-                if best.is_none_or(|(bd, _)| d < bd) {
-                    best = Some((d, q));
+            let best = match &tree {
+                Some(tree) if p.x.is_finite() && p.y.is_finite() => {
+                    let mut search = End {
+                        ends: &ends,
+                        p,
+                        best: None,
+                    };
+                    tree.nearest(&mut queue, f64::INFINITY, &mut search);
+                    search.best
                 }
-            }
+                _ => {
+                    let mut best: Option<(f64, Vec2)> = None;
+                    for &q in &ends {
+                        let d = dist(p, q);
+                        if best.is_none_or(|(bd, _)| d < bd) {
+                            best = Some((d, q));
+                        }
+                    }
+                    best
+                }
+            };
             if best.is_some_and(|(d, _)| d <= t) {
                 continue;
             }

@@ -40,8 +40,12 @@ pub mod reconcile;
 mod references;
 pub mod relate;
 mod relations;
+mod steps;
 mod together;
 pub mod trouble;
+
+use steps::Steps;
+pub use steps::{BIND_STEPS, bind_step, edit_job};
 
 /// Coordinates of an object and its row agree within this (m): the geometry kernel's tolerance.
 const SAME: f64 = 1e-6;
@@ -293,6 +297,18 @@ impl Stored {
             }
             ok
         });
+    }
+
+    /// The table's objects in the project's system (those that reach it), taken out of it: a new layer's objects
+    /// (docs/adr/0757 §2: not copied).
+    fn take_in_project(&mut self, mover: Option<&Mover>) -> Vec<(Uuid, kentos_commands::Entity)> {
+        let mut out = std::mem::take(&mut self.objects);
+        if let Some(m) = mover {
+            out.retain_mut(|(_, e)| {
+                kentos_formats::reproject::move_entity(e, &m.source, &m.project, &m.choices).is_ok()
+            });
+        }
+        out
     }
 
     /// The table's objects in the project's system (those that reach it).
@@ -608,10 +624,22 @@ fn load_database(
     at: At<'_>,
     area: Option<[f64; 4]>,
 ) -> Result<Stored, Stop> {
+    load_database_in(address, table, at, area, Steps::default())
+}
+
+/// [`load_database`] as a step of a bind (docs/adr/0757 §1): the rows read, the next step is making them objects.
+fn load_database_in(
+    address: &str,
+    table: &str,
+    at: At<'_>,
+    area: Option<[f64; 4]>,
+    steps: Steps<'_>,
+) -> Result<Stored, Stop> {
     let p = database_provider(at.address)?;
     let r = p
         .read(address, table, area)
         .map_err(|e| provider_stop(e, address, at))?;
+    steps.at(1)?;
     let database = database_name(address).to_owned();
     let name = r.layer.name.clone();
     let t = gp::table_of_rows(&r.layer, &r.rows, &r.uids, &|pk| {
@@ -2442,6 +2470,7 @@ fn existing_layer(doc: &Document, id: &str, at: &str) -> Result<(), Stop> {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn link_table(
     doc: &mut Document,
     path: &str,
@@ -2450,6 +2479,7 @@ fn link_table(
     reproject: bool,
     extent: Option<[f64; 4]>,
     key: Option<&str>,
+    steps: Steps<'_>,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     let at = origin(path, "edit.path")?;
     if let Some(k) = key
@@ -2513,11 +2543,22 @@ fn link_table(
         _ => None,
     };
     // Onto a new layer from a file the import reads the rows; the table's own rows are read only to compare a layer.
+    steps.at(0)?;
     let mut stored = match at {
         Origin::File(p) if layer.is_none() => {
             refused_load(p, table, "edit.table", load_meta(p, table))?
         }
-        _ => load_at(
+        Origin::Database(address) => load_database_in(
+            address,
+            table,
+            At {
+                address: "edit.path",
+                table: "edit.table",
+            },
+            db_area,
+            steps,
+        )?,
+        Origin::File(_) => load_at(
             at,
             table,
             At {
@@ -2601,6 +2642,7 @@ fn link_table(
         uniques: table_uniques,
     } = held.unwrap_or_default();
     let dialect = kentos_forms::Dialect::of(at.kind());
+    steps.at(2)?;
     let (layer, objects, layers) = match layer {
         Some(id) => {
             existing_layer(doc, id, "edit.layer")?;
@@ -2645,7 +2687,7 @@ fn link_table(
                 "edit.table",
             ));
             let (layer, objects, layers, w) =
-                link_database_layer(doc, path, &stored, mover.as_ref())?;
+                link_database_layer(doc, path, &mut stored, mover.as_ref())?;
             warnings.extend(w);
             (layer, objects, layers)
         }
@@ -2715,6 +2757,7 @@ fn link_table(
             });
         }
     }
+    steps.at(3)?;
     // The table's rows are in the drawing now: let them go before the layer is digested.
     let Stored {
         sha256: revision,
@@ -2739,6 +2782,7 @@ fn link_table(
         uniques: table_uniques,
         writable,
     };
+    steps.at(4)?;
     set_link(doc, Some(link.clone()), None);
     // The layer holds the table's rows as a reload reads them (docs/adr/0538 §1).
     base::take(doc, &link, None);
@@ -2759,7 +2803,7 @@ fn link_table(
 fn link_database_layer(
     doc: &mut Document,
     address: &str,
-    stored: &Stored,
+    stored: &mut Stored,
     mover: Option<&Mover>,
 ) -> Result<(String, u32, Vec<ImportedLayer>, Vec<CommandWarning>), Stop> {
     let source = stored.layer.name.clone();
@@ -2767,7 +2811,7 @@ fn link_database_layer(
         .rsplit_once('.')
         .map_or(source.as_str(), |(_, t)| t)
         .to_owned();
-    let objects = stored.in_project(mover);
+    let objects = stored.take_in_project(mover);
     let count = objects.len() as u32;
     let plan = crate::import_apply::ImportPlan {
         source_srid: stored.srid,
@@ -2828,6 +2872,7 @@ fn link_database_layer(
 fn edit_run(
     doc: &mut Document,
     input: &SourcesEdit,
+    steps: Steps<'_>,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     match &input.edit {
         SourcesEditOp::Link {
@@ -2845,6 +2890,7 @@ fn edit_run(
             *reproject,
             *extent,
             key.as_deref(),
+            steps,
         ),
         SourcesEditOp::Key { id, key } => {
             let Some(mut link) = link_of(doc, id).cloned() else {
@@ -3055,7 +3101,7 @@ fn change_extent(
 
 pub fn edit_validate(cx: &ExecutionContext<'_>, input: &SourcesEdit) -> CommandResult<()> {
     let mut copy = cx.doc.clone();
-    match edit_run(&mut copy, input) {
+    match edit_run(&mut copy, input, Steps::default()) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -3066,10 +3112,12 @@ pub fn edit_validate(cx: &ExecutionContext<'_>, input: &SourcesEdit) -> CommandR
 
 pub fn edit_plan(cx: &ExecutionContext<'_>, input: &SourcesEdit) -> CommandResult<SourcesEdited> {
     let mut copy = cx.doc.clone();
-    completed(edit_run(&mut copy, input).map(|(mut out, w)| {
-        out.revision = cx.doc.revision().to_string();
-        (out, w)
-    }))
+    completed(
+        edit_run(&mut copy, input, Steps::default()).map(|(mut out, w)| {
+            out.revision = cx.doc.revision().to_string();
+            (out, w)
+        }),
+    )
 }
 
 pub fn edit_execute(
@@ -3091,7 +3139,9 @@ fn written_edit_execute(
     cx: &mut ExecutionContext<'_>,
     input: SourcesEdit,
 ) -> CommandResult<SourcesEdited> {
-    completed(edit_run(cx.doc, &input))
+    // A bind run as a job says its steps and stops when asked (docs/adr/0757 §1).
+    let job = cx.job;
+    completed(edit_run(cx.doc, &input, Steps(job)))
 }
 
 // ── cad.sources.sync ───────────────────────────────────────────────────────

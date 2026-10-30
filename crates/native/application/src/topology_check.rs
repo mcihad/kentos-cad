@@ -216,21 +216,30 @@ pub fn gather(doc: &Document, only: Option<&[String]>) -> Gathered {
     }
     g.exceptions = exceptions;
     g.lapsed = lapsed;
-    let rules_digest = {
-        let v = serde_json::json!({
-            "rules": rules,
-            "tolerance": g.tolerance,
-            "exceptions": settings.exceptions,
-        });
-        sixteen(kentos_commands::canonical::canonical_json(&v).as_bytes())
-    };
     g.rules = rules;
     g.stamp = TopologyStamp {
         revision: doc.revision().to_string(),
-        rules: rules_digest,
+        rules: rules_digest(doc, only),
         sources,
     };
     g
+}
+
+/// The digest of the rules a check runs (`only`: those of these ids; none: all), the tolerance and the exceptions:
+/// the stamp's `rules`, which another check with the same rules has too.
+pub fn rules_digest(doc: &Document, only: Option<&[String]>) -> String {
+    let settings = doc.settings().topology.clone().unwrap_or_default();
+    let rules: Vec<&kentos_commands::TopologyRule> = settings
+        .rules
+        .iter()
+        .filter(|r| only.is_none_or(|ids| ids.contains(&r.id)))
+        .collect();
+    let v = serde_json::json!({
+        "rules": rules,
+        "tolerance": settings.tolerance(),
+        "exceptions": settings.exceptions,
+    });
+    sixteen(kentos_commands::canonical::canonical_json(&v).as_bytes())
 }
 
 /// The rows round `link`'s part taken as neighbours; the digest of what was read; a gap when they could not all be.
@@ -291,11 +300,35 @@ fn band_of(doc: &Document, link: &SourceLink, g: &mut Gathered) -> Option<String
 
 /// The rules over what was gathered; the findings of rows outside the parts alone left out.
 pub fn run(g: &Gathered) -> Checked {
-    let mut found = core::check(&g.objects(), &g.core_rules, g.tolerance, &g.exceptions);
+    run_watched(g, &core::Unwatched).unwrap_or_default()
+}
+
+/// `run` watched (docs/adr/0756): how far it has come said as it goes; none when it was asked to stop.
+pub fn run_watched(g: &Gathered, watch: &dyn core::Watch) -> Option<Checked> {
+    let mut found = core::check_watched(
+        &g.objects(),
+        &g.core_rules,
+        g.tolerance,
+        &g.exceptions,
+        watch,
+    )?;
     found
         .findings
         .retain(|f| f.objects.is_empty() || f.objects.iter().any(|&k| !g.outside(k)));
-    found
+    Some(found)
+}
+
+/// A command's check watched by its job (docs/adr/0756): the job's stop, its progress in thousandths.
+struct JobWatch<'a, 'b>(&'a ExecutionContext<'b>);
+
+impl core::Watch for JobWatch<'_, '_> {
+    fn progress(&self, done: f64) {
+        self.0.progress((done * 1000.0) as u64, 1000);
+    }
+
+    fn stopped(&self) -> bool {
+        self.0.stopped()
+    }
 }
 
 fn count(n: usize) -> u32 {
@@ -410,6 +443,7 @@ pub fn preview(
 fn check_in(
     doc: &Document,
     input: &TopologyCheck,
+    watch: &dyn core::Watch,
 ) -> Result<(TopologyChecked, Vec<CommandWarning>), Stop> {
     let limit = input.limit.unwrap_or(TOPOLOGY_CHECK_LIMIT);
     if limit == 0 || limit > TOPOLOGY_CHECK_LIMIT_MAX {
@@ -437,7 +471,7 @@ fn check_in(
         }
     }
     let g = gather(doc, input.rules.as_deref());
-    let found = run(&g);
+    let found = run_watched(&g, watch).ok_or(Stop::Cancelled)?;
     let preview = match &input.preview {
         None => None,
         Some(ask) => {
@@ -513,7 +547,7 @@ fn check_in(
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &TopologyCheck) -> CommandResult<()> {
-    match check_in(cx.doc, input) {
+    match check_in(cx.doc, input, &JobWatch(cx)) {
         Ok(_) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -523,7 +557,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &TopologyCheck) -> CommandResu
 }
 
 pub fn plan(cx: &ExecutionContext<'_>, input: &TopologyCheck) -> CommandResult<TopologyChecked> {
-    match check_in(cx.doc, input) {
+    match check_in(cx.doc, input, &JobWatch(cx)) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
     }
@@ -558,4 +592,58 @@ pub fn exception_of(g: &Gathered, f: &Finding) -> Option<TopologyException> {
         },
         digest: Some(g.digest(&f.objects)),
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::jobs::Progress;
+
+    fn drawing() -> Document {
+        let path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../../fixtures/commands/v1/cad.topology.check.json"
+        );
+        let fixture: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).expect("case file"))
+                .expect("case json");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(fixture["setup"].clone()).expect("setup");
+        Document::from_snapshot_v2(snapshot).expect("setup")
+    }
+
+    /// docs/adr/0756 §2: a check running as a job stops when its job is asked to, and answers `cancelled`, not a part of
+    /// its findings; unasked it answers in full, its progress said to the end.
+    #[test]
+    fn a_job_asked_to_stop_answers_cancelled() {
+        let mut doc = drawing();
+        let progress = Progress::default();
+        progress.stop();
+        let cx = ExecutionContext {
+            doc: &mut doc,
+            store: None,
+            call: None,
+            job: Some(&progress),
+        };
+        assert!(
+            matches!(
+                plan(&cx, &TopologyCheck::default()),
+                CommandResult::Cancelled
+            ),
+            "a stopped job's check answers cancelled"
+        );
+
+        let progress = Progress::default();
+        let cx = ExecutionContext {
+            doc: &mut doc,
+            store: None,
+            call: None,
+            job: Some(&progress),
+        };
+        match plan(&cx, &TopologyCheck::default()) {
+            CommandResult::Completed { output, .. } => assert_eq!(output.total, 3),
+            other => panic!("the check answered {other:?}"),
+        }
+        assert_eq!(progress.fraction(), Some(1.0));
+    }
 }

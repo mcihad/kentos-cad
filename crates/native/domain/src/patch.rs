@@ -159,6 +159,10 @@ impl Document {
         let mut step = Step::named(&label);
         for op in &ops {
             self.apply_op(op);
+            // The copy's new objects keep its slots: what is drawn next comes after them.
+            if let Op::Add(stored) = op {
+                self.next_slot = self.next_slot.max(u64::from(stored.slot().0) + 1);
+            }
         }
         step.ops = ops;
         if !unchanged {

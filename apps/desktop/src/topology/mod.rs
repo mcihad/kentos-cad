@@ -13,9 +13,13 @@
 //! (and a fix) checks again only what the change can touch
 //! (`topology_rules::incremental::recheck`): the same findings as checking all.
 //! A finding keeps its lasting key across checks; the chosen rows follow it.
+//!
+//! A check of many objects goes to its own thread (docs/adr/0756, `running.rs`): the bar under the tab's bar moves on
+//! smoothly as it goes and Durdur ends it; the drawing is not held meanwhile.
 
 mod plan;
 pub(crate) mod rules;
+mod running;
 mod view;
 
 #[cfg(test)]
@@ -23,16 +27,17 @@ mod tests;
 
 pub(crate) use plan::{Filter, texts};
 
+use std::sync::Arc;
+
 use iced::Task;
 use kentos_commands::{
     CommandResult, EditOperation, EntitiesEdit, EntityEdit, TopologyExceptionOperation,
     TopologyExceptions, TopologySettings,
 };
 use kentos_domain::Slot;
-use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::intersect::Edge;
-use kentos_geometry_core::ops::topology_rules::{self as core, Finding, fix, incremental};
+use kentos_geometry_core::ops::topology_rules::{self as core, Finding, fix};
 use kentos_interaction::{Level, Vec2, ViewChange};
 use kentos_native_application::geometry::edit_geometry;
 use kentos_native_application::topology_check::{self, Gathered};
@@ -41,6 +46,7 @@ use kentos_native_application::{ExecutionContext, edit, topology_exceptions};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 use crate::traces::Control;
+use running::{Ran, Reply, Running, Work};
 
 /// A finding shown over the drawing: its regions filled, its edges bold, its
 /// place marked with the problem's name (marks.rs).
@@ -56,8 +62,8 @@ pub(crate) struct ProblemMark {
 /// parts, docs/adr/0589), when.
 #[derive(Clone, Debug)]
 pub(crate) struct Checked {
-    pub findings: Vec<Finding>,
-    pub g: Gathered,
+    pub findings: Arc<Vec<Finding>>,
+    pub g: Arc<Gathered>,
     /// The drawing (its session) and the state of it the check saw.
     pub session: u64,
     pub generation: u64,
@@ -91,6 +97,31 @@ pub(crate) struct TopologyPanel {
     anchor: Option<usize>,
     /// The one chosen finding's fixes, previewed (docs/adr/0589 §4): their words in Düzelt ▾.
     pub previews: Vec<(&'static str, Result<String, String>)>,
+    /// A check going on its own thread (docs/adr/0756), and the next one's id.
+    pub running: Option<Running>,
+    next: u64,
+}
+
+/// What follows a check's answer.
+#[derive(Clone, Debug)]
+pub(crate) enum Then {
+    /// Denetle: the rows unchosen; what it found said unless quiet.
+    Check { quiet: bool },
+    /// Değişenleri denetle: the chosen rows follow their keys; said unless quiet.
+    Recheck { quiet: bool, chosen: Vec<String> },
+    /// After a fix: the row at the fixed one's place chosen.
+    Fixed { at: usize },
+    /// After İstisna yap: the chosen rows follow their keys, and what was marked said.
+    Marked { keys: Vec<String>, said: String },
+}
+
+impl Then {
+    fn quiet(&self) -> bool {
+        match self {
+            Then::Check { quiet } | Then::Recheck { quiet, .. } => *quiet,
+            Then::Fixed { .. } | Then::Marked { .. } => true,
+        }
+    }
 }
 
 /// The tab's messages.
@@ -109,6 +140,12 @@ pub enum Event {
     Fix(&'static str),
     /// İstisna yap (true) or İstisnayı kaldır (false) on the chosen rows.
     Exception(bool),
+    /// What a check on its own thread said, by its id.
+    Ran(u64, Reply),
+    /// Durdur: the check going on ends.
+    Stop,
+    /// A frame while a check goes on: the bar moves.
+    Frame,
 }
 
 impl App {
@@ -138,81 +175,25 @@ impl App {
 
     /// Denetle: every rule over the objects of the layers the rules name and the rows round their bound parts
     /// (docs/adr/0589); what it found said unless `quiet`.
-    pub(crate) fn topology_check(&mut self, quiet: bool) {
-        let Some(doc) = self.document.as_ref() else {
-            return;
-        };
-        let model = &doc.model;
-        let g = topology_check::gather(model, None);
-        let found = topology_check::run(&g);
-        let n_rules = g.rules.len();
-        let n_objects = g.drawn;
-        let missing = g.missing;
-        let incomplete = g.incomplete.clone();
-        let checked = Checked {
-            findings: found.findings,
-            g,
-            session: doc.session,
-            generation: model.generation(),
-            revision: model.revision(),
-            incremental: None,
-        };
-        let total = checked.findings.len();
-        let open = checked.findings.iter().filter(|f| !f.exception).count();
-        let lapsed = checked
-            .findings
-            .iter()
-            .filter(|f| !f.exception && checked.g.lapsed(f))
-            .count();
-        self.topology.checked = Some(checked);
-        self.topology.selected.clear();
-        self.topology.anchor = None;
-        self.topology.previews.clear();
-        if quiet {
-            return;
-        }
-        if missing > 0 {
-            self.warn(plan::missing_layers(missing));
-        }
-        for gap in &incomplete {
-            self.warn(plan::incomplete_text(&self.topology_layer_name(&gap.layer), &gap.reason));
-        }
-        if lapsed > 0 {
-            self.warn(plan::lapsed_text(lapsed));
-        }
-        if total == 0 {
-            if incomplete.is_empty() {
-                self.say(Level::Success, plan::no_findings(n_rules, n_objects));
-            }
-        } else {
-            self.say(
-                Level::Info,
-                format!(
-                    "Topoloji denetlendi: {n_rules} kural, {total} bulgu (açık {open}, istisna {}).",
-                    total - open
-                ),
-            );
-        }
+    pub(crate) fn topology_check(&mut self, quiet: bool) -> Task<Message> {
+        self.topology_run(Work::Check, Then::Check { quiet })
     }
 
     /// Değişenleri denetle (docs/adr/0524): the rules over what changed since the check, its neighbours and the
     /// clusters a gap can span; the rest of the findings kept. Checked whole when there was no check, or the rules,
     /// the tolerance or the exceptions changed. The chosen rows follow their findings' keys.
-    pub(crate) fn topology_recheck(&mut self, quiet: bool) {
+    pub(crate) fn topology_recheck(&mut self, quiet: bool) -> Task<Message> {
         let Some(doc) = self.document.as_ref() else {
-            return;
+            return Task::none();
         };
-        let model = &doc.model;
-        let g = topology_check::gather(model, None);
-        let Some(old) = self
-            .topology_checked()
-            .filter(|c| c.g.stamp.rules == g.stamp.rules && c.g.lapsed == g.lapsed)
-            .cloned()
-        else {
+        let Some(old) = self.topology_checked().cloned() else {
             return self.topology_check(quiet);
         };
-        if !self.topology_stale() {
-            return;
+        // Nothing changed since the check: the same rules over the same drawing find the same.
+        if !self.topology_stale()
+            && old.g.stamp.rules == topology_check::rules_digest(&doc.model, None)
+        {
+            return Task::none();
         }
         let chosen: Vec<String> = self
             .topology
@@ -220,83 +201,204 @@ impl App {
             .iter()
             .filter_map(|&i| old.findings.get(i).map(|f| old.key(f)))
             .collect();
-        // What changed: an object added, removed, moved or put on another layer; where it was and is.
-        let was: std::collections::HashMap<&str, (&Shape, &str)> = old
-            .g
-            .uids
-            .iter()
-            .zip(old.g.shapes.iter().zip(&old.g.layers))
-            .map(|(u, (s, l))| (u.as_str(), (s, l.as_str())))
-            .collect();
-        let mut changed: std::collections::HashSet<&str> = std::collections::HashSet::new();
-        let mut touched = Vec::new();
-        for (i, u) in g.uids.iter().enumerate() {
-            match was.get(u.as_str()) {
-                Some((s, l)) if **s == g.shapes[i] && *l == g.layers[i] => {}
-                Some((s, _)) => {
-                    changed.insert(u);
-                    touched.push(incremental::shape_bounds(s));
-                    touched.push(incremental::shape_bounds(&g.shapes[i]));
-                }
-                None => {
-                    changed.insert(u);
-                    touched.push(incremental::shape_bounds(&g.shapes[i]));
-                }
-            }
+        self.topology_run(
+            Work::Recheck(Box::new(old)),
+            Then::Recheck { quiet, chosen },
+        )
+    }
+
+    /// A check: at once when the rules' layers hold few objects, else on its own thread with the bar (docs/adr/0756),
+    /// a check going on stopped for it.
+    fn topology_run(&mut self, work: Work, then: Then) -> Task<Message> {
+        if let Some(r) = self.topology.running.take() {
+            r.stop();
         }
-        let now: std::collections::HashSet<&str> = g.uids.iter().map(String::as_str).collect();
-        for (u, (s, _)) in &was {
-            if !now.contains(u) {
-                changed.insert(u);
-                touched.push(incremental::shape_bounds(s));
-            }
-        }
-        let n_changed = changed.len();
-        let mut found = incremental::recheck(
-            &g.objects(),
-            &g.core_rules,
-            g.tolerance,
-            &g.exceptions,
-            &incremental::Previous {
-                findings: &old.findings,
-                uids: &old.g.uids,
-            },
-            &changed,
-            &touched,
-        );
-        // A part's rows alone are not its findings (docs/adr/0589 §1).
-        found
-            .findings
-            .retain(|f| f.objects.is_empty() || f.objects.iter().any(|&k| !g.outside(k)));
-        let checked = Checked {
-            findings: found.findings,
-            g,
-            session: doc.session,
-            generation: model.generation(),
-            revision: model.revision(),
-            incremental: Some(n_changed),
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
         };
-        let total = checked.findings.len();
-        let open = checked.findings.iter().filter(|f| !f.exception).count();
-        let selected: Vec<usize> = checked
-            .findings
-            .iter()
-            .enumerate()
-            .filter(|(_, f)| chosen.contains(&checked.key(f)))
-            .map(|(i, _)| i)
-            .collect();
-        self.topology.checked = Some(checked);
-        self.topology.selected = selected;
-        self.topology.anchor = None;
-        self.topology_previews();
-        if !quiet {
-            self.say(
-                Level::Info,
-                format!(
-                    "Değişenler denetlendi: {n_changed} nesne değişti; {total} bulgu (açık {open}, istisna {}).",
-                    total - open
-                ),
-            );
+        let state = (doc.session, doc.model.generation(), doc.model.revision());
+        let mut layers: Vec<&str> = Vec::new();
+        for r in self.topology_settings().map_or(&[][..], |t| &t.rules[..]) {
+            for l in std::iter::once(r.layer.as_str()).chain(r.other.as_deref()) {
+                if !layers.contains(&l) {
+                    layers.push(l);
+                }
+            }
+        }
+        let objects: usize = layers.iter().map(|l| doc.model.count(l)).sum();
+        if objects < running::THREAD_FROM {
+            if let Some(ran) = running::compute(&work, &doc.model, &core::Unwatched) {
+                self.topology_found(ran, then, state);
+            }
+            return Task::none();
+        }
+        let id = self.topology.next;
+        self.topology.next += 1;
+        let copy = doc.model.reading_copy();
+        let (running, task) = running::start(id, work, copy, objects, then, state, |id, reply| {
+            Message::Topology(Event::Ran(id, reply))
+        });
+        self.topology.running = Some(running);
+        task
+    }
+
+    /// What a check's thread said: its progress, or its answer, which applies to the drawing it was started on.
+    fn topology_heard(&mut self, id: u64, reply: Reply) {
+        let Some(r) = self.topology.running.as_mut().filter(|r| r.id == id) else {
+            // A check stopped or replaced: its words are not waited for.
+            return;
+        };
+        match reply {
+            Reply::Progress(..) | Reply::Stretch(..) => r.heard(&reply),
+            Reply::Done => {
+                let Some(r) = self.topology.running.take() else {
+                    return;
+                };
+                let open = self.document.as_ref().map(|d| d.session);
+                if let Some(ran) = r.answer().filter(|_| open == Some(r.session)) {
+                    self.topology_found(ran, r.then, (r.session, r.generation, r.revision));
+                }
+            }
+            Reply::Failed(why) => {
+                self.topology.running = None;
+                self.warn(format!("Topoloji denetimi yapılamadı: {why}"));
+            }
+        }
+    }
+
+    /// Durdur: the check going on ends; the last check's findings stay.
+    fn topology_stop(&mut self) {
+        if let Some(r) = self.topology.running.take() {
+            r.stop();
+            self.say(Level::Info, "Topoloji denetimi durduruldu.");
+        }
+    }
+
+    /// A check's answer kept, for the drawing's state it saw (`session`, `generation`, `revision`), and what follows.
+    fn topology_found(
+        &mut self,
+        ran: Ran,
+        then: Then,
+        (session, generation, revision): (u64, u64, u64),
+    ) {
+        let quiet = then.quiet();
+        match ran {
+            Ran::Checked { g, found } => {
+                let n_rules = g.rules.len();
+                let n_objects = g.drawn;
+                let missing = g.missing;
+                let incomplete = g.incomplete.clone();
+                let checked = Checked {
+                    findings: Arc::new(found.findings),
+                    g: Arc::new(g),
+                    session,
+                    generation,
+                    revision,
+                    incremental: None,
+                };
+                let total = checked.findings.len();
+                let open = checked.findings.iter().filter(|f| !f.exception).count();
+                let lapsed = checked
+                    .findings
+                    .iter()
+                    .filter(|f| !f.exception && checked.g.lapsed(f))
+                    .count();
+                self.topology.checked = Some(checked);
+                self.topology.selected.clear();
+                self.topology.anchor = None;
+                self.topology.previews.clear();
+                if !quiet {
+                    if missing > 0 {
+                        self.warn(plan::missing_layers(missing));
+                    }
+                    for gap in &incomplete {
+                        self.warn(plan::incomplete_text(
+                            &self.topology_layer_name(&gap.layer),
+                            &gap.reason,
+                        ));
+                    }
+                    if lapsed > 0 {
+                        self.warn(plan::lapsed_text(lapsed));
+                    }
+                    if total == 0 {
+                        if incomplete.is_empty() {
+                            self.say(Level::Success, plan::no_findings(n_rules, n_objects));
+                        }
+                    } else {
+                        self.say(
+                            Level::Info,
+                            format!(
+                                "Topoloji denetlendi: {n_rules} kural, {total} bulgu (açık {open}, istisna {}).",
+                                total - open
+                            ),
+                        );
+                    }
+                }
+            }
+            Ran::Rechecked { g, found, changed } => {
+                let checked = Checked {
+                    findings: Arc::new(found.findings),
+                    g: Arc::new(g),
+                    session,
+                    generation,
+                    revision,
+                    incremental: Some(changed),
+                };
+                let total = checked.findings.len();
+                let open = checked.findings.iter().filter(|f| !f.exception).count();
+                let chosen: &[String] = match &then {
+                    Then::Recheck { chosen, .. } => chosen,
+                    _ => &[],
+                };
+                let selected: Vec<usize> = checked
+                    .findings
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, f)| chosen.contains(&checked.key(f)))
+                    .map(|(i, _)| i)
+                    .collect();
+                self.topology.checked = Some(checked);
+                self.topology.selected = selected;
+                self.topology.anchor = None;
+                self.topology_previews();
+                if !quiet {
+                    self.say(
+                        Level::Info,
+                        format!(
+                            "Değişenler denetlendi: {changed} nesne değişti; {total} bulgu (açık {open}, istisna {}).",
+                            total - open
+                        ),
+                    );
+                }
+            }
+        }
+        match then {
+            Then::Check { .. } | Then::Recheck { .. } => {}
+            // The row at the same place, if any: the next finding of the list.
+            Then::Fixed { at } => {
+                if let Some(n) = self
+                    .topology_checked()
+                    .map(|c| c.findings.len())
+                    .filter(|n| *n > 0)
+                {
+                    self.topology.selected = vec![at.min(n - 1)];
+                    self.topology_previews();
+                }
+            }
+            // The chosen rows follow their keys.
+            Then::Marked { keys, said } => {
+                if let Some(c) = self.topology_checked() {
+                    self.topology.selected = c
+                        .findings
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, f)| keys.contains(&c.key(f)))
+                        .map(|(i, _)| i)
+                        .collect();
+                }
+                self.topology_previews();
+                self.say(Level::Info, said);
+            }
         }
     }
 
@@ -318,10 +420,9 @@ impl App {
             .topology_settings()
             .is_some_and(|t| !t.rules.is_empty())
         {
-            self.topology_check(false);
-        } else {
-            self.warn("Projede topoloji kuralı yok; Topoloji kuralları ile ekleyin.");
+            return self.topology_check(false);
         }
+        self.warn("Projede topoloji kuralı yok; Topoloji kuralları ile ekleyin.");
         Task::none()
     }
 
@@ -352,8 +453,15 @@ impl App {
 
     pub(crate) fn topology_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Check => self.topology_check(false),
-            Event::Recheck => self.topology_recheck(false),
+            Event::Check => return self.topology_check(false),
+            Event::Recheck => return self.topology_recheck(false),
+            Event::Ran(id, reply) => self.topology_heard(id, reply),
+            Event::Stop => self.topology_stop(),
+            Event::Frame => {
+                if let Some(r) = self.topology.running.as_mut() {
+                    r.frame(std::time::Instant::now());
+                }
+            }
             Event::Rules => return self.open_topology_rules(),
             Event::Filter(f) => {
                 self.topology.filter = f;
@@ -366,8 +474,8 @@ impl App {
                 self.topology.anchor = None;
             }
             Event::Press(at) => self.topology_press(at),
-            Event::Fix(key) => self.topology_fix(key),
-            Event::Exception(on) => self.topology_exceptions(on),
+            Event::Fix(key) => return self.topology_fix(key),
+            Event::Exception(on) => return self.topology_exceptions(on),
         }
         Task::none()
     }
@@ -433,30 +541,30 @@ impl App {
     /// Düzelt: the fix `key` of the one chosen finding in one undo step; the
     /// check run again. Refused (and said) when the drawing changed since
     /// the check, the fix has no answer, it would change a row outside a bound part or the command refuses it.
-    fn topology_fix(&mut self, key: &'static str) {
+    fn topology_fix(&mut self, key: &'static str) -> Task<Message> {
         if self.topology_stale() {
             self.warn("Çizim denetimden sonra değişti; önce Denetle ile yenileyin.");
-            return;
+            return Task::none();
         }
         let [at] = self.topology.selected[..] else {
-            return;
+            return Task::none();
         };
         let Some(c) = self.topology_checked() else {
-            return;
+            return Task::none();
         };
         let Some(f) = c.findings.get(at) else {
-            return;
+            return Task::none();
         };
         let changes = match fix(&c.g.objects(), &c.g.core_rules, f, key) {
             Ok(changes) => changes,
             Err(why) => {
                 self.warn(why);
-                return;
+                return Task::none();
             }
         };
         if changes.iter().any(|ch| c.g.outside(ch.object)) {
             self.warn("Bu düzeltme alanın dışındaki bir satırı değiştirir; alanı genişletip satırı çalışma kopyasına alın.");
-            return;
+            return Task::none();
         }
         let edits: Vec<EntityEdit> = changes
             .into_iter()
@@ -477,7 +585,7 @@ impl App {
             core::fix_label(key)
         );
         let Some(doc) = self.document.as_mut() else {
-            return;
+            return Task::none();
         };
         let input = EntitiesEdit {
             operation: EditOperation::TopologyFix,
@@ -495,20 +603,15 @@ impl App {
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => {
                 self.warn(error.message);
-                return;
+                return Task::none();
             }
-            CommandResult::Queued { .. } | CommandResult::Cancelled => return,
+            CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
         }
-        self.topology_recheck(true);
-        // The row at the same place, if any: the next finding of the list.
-        if let Some(n) = self
-            .topology_checked()
-            .map(|c| c.findings.len())
-            .filter(|n| *n > 0)
-        {
-            self.topology.selected = vec![at.min(n - 1)];
-            self.topology_previews();
-        }
+        // Checked again over what the fix changed; then the row at the same place, if any: the next finding.
+        let Some(old) = self.topology_checked().cloned() else {
+            return self.topology_check(true);
+        };
+        self.topology_run(Work::Recheck(Box::new(old)), Then::Fixed { at })
     }
 
     /// Each fix of the one chosen finding previewed (docs/adr/0589 §4): its words in Düzelt ▾, with the measures it
@@ -539,10 +642,10 @@ impl App {
 
     /// İstisna yap or İstisnayı kaldır on the chosen findings through `cad.topology.exceptions` (docs/adr/0589 §3):
     /// the project's settings (not an undo step), each exception bound to its objects' geometry; checked again.
-    fn topology_exceptions(&mut self, on: bool) {
+    fn topology_exceptions(&mut self, on: bool) -> Task<Message> {
         let chosen = self.topology.selected.clone();
         let Some(c) = self.topology_checked() else {
-            return;
+            return Task::none();
         };
         let keys: Vec<String> = chosen
             .iter()
@@ -557,10 +660,10 @@ impl App {
             .map(|f| c.key(f))
             .collect();
         if keys.is_empty() {
-            return;
+            return Task::none();
         }
         let Some(doc) = self.document.as_mut() else {
-            return;
+            return Task::none();
         };
         let input = TopologyExceptions {
             operation: if on {
@@ -578,9 +681,9 @@ impl App {
                 | CommandResult::Conflict { error }
                 | CommandResult::NeedsInput { error } => {
                     self.warn(error.message);
-                    return;
+                    return Task::none();
                 }
-                CommandResult::Queued { .. } | CommandResult::Cancelled => return,
+                CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
             };
         let keys: Vec<String> = chosen
             .iter()
@@ -589,26 +692,13 @@ impl App {
                     .and_then(|c| c.findings.get(at).map(|f| c.key(f)))
             })
             .collect();
-        self.topology_check(true);
-        // The chosen rows follow their keys.
-        if let Some(c) = self.topology_checked() {
-            self.topology.selected = c
-                .findings
-                .iter()
-                .enumerate()
-                .filter(|(_, f)| keys.contains(&c.key(f)))
-                .map(|(i, _)| i)
-                .collect();
-        }
-        self.topology_previews();
-        self.say(
-            Level::Info,
-            if on {
-                format!("{n} bulgu istisna yapıldı.")
-            } else {
-                format!("{n} bulgunun istisnası kaldırıldı.")
-            },
-        );
+        let said = if on {
+            format!("{n} bulgu istisna yapıldı.")
+        } else {
+            format!("{n} bulgunun istisnası kaldırıldı.")
+        };
+        // Checked again (the exceptions are part of the rules' stamp); the chosen rows follow their keys.
+        self.topology_run(Work::Check, Then::Marked { keys, said })
     }
 
     /// Whether İstisna yap marks (some chosen row is open) or unmarks.

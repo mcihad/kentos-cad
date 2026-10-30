@@ -11,11 +11,7 @@ use std::sync::Arc;
 
 use iced::widget::{Column, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{
-    CommandResult, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
-};
-use kentos_domain::Slot;
-use kentos_interaction::Level;
+use kentos_commands::{CommandResult, SourceTable, SourcesDescribe, SourcesDescribed};
 use kentos_native_application::ExecutionContext;
 use kentos_postgis::connections;
 #[cfg(test)]
@@ -24,6 +20,7 @@ use kentos_postgis::probe::{self, Catalog, Diagnosis, Problem, Relation};
 use kentos_ui::widget::{Choice, Dialog, InputField, Select, overlay};
 use kentos_ui::label;
 
+use super::binding::{Ask, Started, Table};
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message};
 use crate::app::{App, Message};
@@ -106,21 +103,13 @@ fn event(e: Event) -> Message {
 }
 
 /// How a bound source is said: a table's or a view's name, a query as “Sorgu katmanı”.
-fn shown_name(table: &str) -> String {
+pub(crate) fn shown_name(table: &str) -> String {
     let first = table.split_whitespace().next().unwrap_or_default();
     if first.eq_ignore_ascii_case("select") || first.eq_ignore_ascii_case("with") {
         "Sorgu katmanı".to_owned()
     } else {
         table.to_owned()
     }
-}
-
-/// What a bind did: the sources bound, their objects, the commands' warnings and the new objects.
-pub(crate) struct Bound {
-    pub(crate) names: Vec<String>,
-    pub(crate) objects: u32,
-    pub(crate) warnings: Vec<String>,
-    pub(crate) slots: Vec<Slot>,
 }
 
 /// Whether a relation is shown for `filter` (its schema, name or comment, Turkish case aside).
@@ -263,74 +252,8 @@ impl App {
         Task::none()
     }
 
-    /// Binds `tables` (each `schema.name` or a query, and whether it has geometry) of the database at `address`, one
-    /// `cad.sources.edit` each; the first refusal stops, with what was bound before it said.
-    pub(crate) fn bind_database(
-        &mut self,
-        address: &str,
-        tables: &[(String, bool)],
-        reproject: bool,
-        area: Option<[f64; 4]>,
-    ) -> Result<Bound, String> {
-        let Some(doc) = &mut self.document else {
-            return Err("Açık çizim yok. Önce bir çizim açın (Ctrl+O) ya da yeni proje oluşturun.".to_owned());
-        };
-        let first = doc.model.next_slot();
-        let (mut names, mut objects, mut warnings) = (Vec::new(), 0u32, Vec::new());
-        for (table, geometry) in tables {
-            let input = SourcesEdit {
-                edit: SourcesEditOp::Link {
-                    extent: area.filter(|_| *geometry),
-                    path: address.to_owned(),
-                    table: table.clone(),
-                    layer: None,
-                    reproject,
-                    key: None,
-                },
-            };
-            match kentos_native_application::sources::edit::execute(
-                &mut ExecutionContext::new(&mut doc.model),
-                input,
-            ) {
-                CommandResult::Completed {
-                    output,
-                    warnings: w,
-                } => {
-                    objects += output.objects;
-                    names.push(shown_name(table));
-                    warnings.extend(w.into_iter().map(|w| w.message));
-                }
-                CommandResult::Failed { error }
-                | CommandResult::Conflict { error }
-                | CommandResult::NeedsInput { error } => {
-                    return Err(if names.is_empty() {
-                        error.message
-                    } else {
-                        format!(
-                            "{} bağlandı; “{}” bağlanamadı: {}",
-                            names.join(", "),
-                            shown_name(table),
-                            error.message
-                        )
-                    });
-                }
-                _ => return Err("Bağlanamadı.".to_owned()),
-            }
-        }
-        let last = doc.model.next_slot();
-        let slots: Vec<Slot> = (first..last)
-            .filter_map(|n| u32::try_from(n).ok())
-            .map(Slot)
-            .filter(|s| doc.model.get(*s).is_some())
-            .collect();
-        Ok(Bound {
-            names,
-            objects,
-            warnings,
-            slots,
-        })
-    }
-
+    /// Bağla: the chosen tables and the query layer bound to new layers on threads of their own while the window closes
+    /// (exchange/binding.rs); a refusal at once is said in the window.
     fn postgis_bind(&mut self) {
         let Some(Window::Postgis(s)) = &self.exchange else {
             return;
@@ -338,43 +261,43 @@ impl App {
         let Some(c) = s.connection.as_deref().and_then(|n| self.db_store.get(n)) else {
             return;
         };
-        let reproject = s.reproject;
         // The view's area, for what has geometry (a query: whatever it holds; docs/adr/0582 §1).
         let area = s.area.then(|| {
             let b = self.viewport.camera.visible_bounds();
             [b.min_x, b.min_y, b.max_x, b.max_y]
         });
-        let mut tables: Vec<(String, bool)> = s
+        let mut tables: Vec<Table> = s
             .catalog
             .iter()
             .flat_map(|catalog| catalog.relations.iter())
             .filter(|r| s.chosen.contains(&r.table()))
-            .map(|r| (r.table(), r.geometry.is_some()))
+            .map(|r| Table {
+                name: r.table(),
+                geometry: r.geometry.is_some(),
+                rows: r.estimate,
+            })
             .collect();
         if !s.query.trim().is_empty() {
-            tables.push((s.query.trim().to_owned(), true));
+            tables.push(Table {
+                name: s.query.trim().to_owned(),
+                geometry: true,
+                rows: None,
+            });
         }
-        match self.bind_database(&c.address(), &tables, reproject, area) {
-            Ok(done) => {
-                self.close_exchange();
-                self.zoom_to(&done.slots);
-                // A warning is the toast's body: what is not drawn and why is not left to the log (docs/adr/0745 §3).
-                let body = if done.warnings.is_empty() {
-                    "Tabloların değişikliklerini Kaynağa yaz ile veritabanına yazın; view ve sorgu salt okunurdur.".to_owned()
-                } else {
-                    done.warnings.join(" ")
-                };
-                self.announce(
-                    if done.warnings.is_empty() { Level::Success } else { Level::Warn },
-                    format!(
-                        "{} ({}) bağlı katman oldu, {} nesne. {body}",
-                        done.names.join(", "),
-                        c.name,
-                        done.objects
-                    ),
-                );
-            }
-            Err(why) => {
+        let ask = Ask {
+            source: c.address(),
+            shown: c.name.clone(),
+            tables,
+            reproject: s.reproject,
+            area,
+            key: None,
+            file: false,
+            then: "Tabloların değişikliklerini Kaynağa yaz ile veritabanına yazın; view ve sorgu salt okunurdur."
+                .to_owned(),
+        };
+        match self.start_binding(ask) {
+            Started::Done | Started::Going => self.close_exchange(),
+            Started::Failed(why) => {
                 if let Some(Window::Postgis(s)) = &mut self.exchange {
                     s.status = Some((true, why));
                 }

@@ -1158,19 +1158,41 @@ impl App {
 
     /// The tree's count column: its usual width, or the widest “geçen / bütün” a filter makes (docs/adr/0211 §4).
     pub(crate) fn layer_count_width(&self, doc: &crate::document::Document) -> iced::Length {
-        let layers = doc.model.layers();
-        let filtered = layers
-            .leaves()
-            .iter()
-            .any(|l| l.filter.is_some() && l.service.is_none());
-        if !filtered {
-            return iced::Length::Fixed(44.0);
+        // The badges a row puts before its count (funnel, snowflake, clock, link; `layer_node`), the most one row
+        // has, and whether a count reads “geçen / bütün”: a bound layer's “50000” was cut at the edge once.
+        fn walk(
+            nodes: &[LayerNode],
+            linked: &dyn Fn(&str) -> bool,
+            badges: &mut usize,
+            filtered: &mut bool,
+        ) {
+            for n in nodes {
+                let layer = n.kind == LayerNodeType::Layer;
+                let funnel = layer && n.filter.is_some() && n.service.is_none();
+                *filtered |= funnel;
+                let here = usize::from(funnel)
+                    + usize::from(n.frozen == Some(true))
+                    + usize::from(layer && n.time.is_some())
+                    + usize::from(linked(&n.id));
+                *badges = (*badges).max(here);
+                walk(&n.children, linked, badges, filtered);
+            }
         }
-        // The funnel and the widest text the drawing's object count can make.
-        let total = doc.model.len().to_string().len();
-        let chars = 2 * total + 3;
+        let sources = &doc.model.settings().sources;
+        let linked = |id: &str| sources.iter().any(|s| s.layer == id);
+        let (mut badges, mut filtered) = (0, false);
+        walk(
+            doc.model.layers().nodes(),
+            &linked,
+            &mut badges,
+            &mut filtered,
+        );
+        // The widest count the drawing's objects can make.
+        let digits = doc.model.len().to_string().len();
+        let chars = if filtered { 2 * digits + 3 } else { digits };
         iced::Length::Fixed(
-            kentos_ui::theme::typography::scaled(20.0 + 6.4 * chars as f32).max(44.0),
+            kentos_ui::theme::typography::scaled(4.0 + 16.0 * badges as f32 + 6.4 * chars as f32)
+                .max(44.0),
         )
     }
 

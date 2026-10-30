@@ -37,13 +37,21 @@ pub mod texts {
     pub const STALE: &str =
         "Çizim son denetimden sonra değişti; sonuçlar eski olabilir. Değişenleri denetle ya da Denetle ile yenileyin.";
     pub const RECHECK: &str = "Değişenleri denetle";
-    pub const RECHECK_HINT: &str = "Yalnız son denetimden sonra değişen nesneleri, komşularını ve boşluk kuralında bağlı alan kümelerini yeniden denetler; öbür bulgular kalır. Sonuç bütün çizimi denetlemekle aynıdır.";
+    pub const RECHECK_HINT: &str = "Yalnız son denetimden sonra değişen nesneleri, komşularını ve boşluk kuralında bağlı alan kümelerini yeniden denetler; diğer bulgular kalır. Sonuç bütün çizimi denetlemekle aynıdır.";
+    pub const RUNNING: &str = "Topoloji denetleniyor…";
+    pub const STOP: &str = "Durdur";
+    pub const STOP_HINT: &str = "Denetimi durdurur; çizim değişmez, son denetimin bulguları kalır.";
     pub const NONE_SHOWN: &str = "Bu süzgeçte bulgu yok.";
 }
 
 /// Before a check: how many rules a check runs.
 pub fn not_checked(rules: usize) -> String {
     format!("Denetle'ye basın: {rules} kural denetlenecek.")
+}
+
+/// While the first check runs: what it checks and where its findings come.
+pub fn checking(rules: usize) -> String {
+    format!("{rules} kural denetleniyor; bulgular denetim bitince burada.")
 }
 
 /// After a check without findings: how many rules and objects it looked at.

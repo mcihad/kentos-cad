@@ -30,6 +30,152 @@ fn ev(app: &mut App, e: Event) {
     let _ = app.update(Message::Topology(e));
 }
 
+/// The drawing with a block of 2 500 parcels beside its own, one of them overlapping its neighbour: enough objects
+/// for the check to go to its own thread (docs/adr/0756).
+fn big() -> App {
+    let mut v: serde_json::Value = serde_json::from_str(DRAWING).expect("the drawing's JSON");
+    let entities = v["entities"].as_array_mut().expect("entities");
+    let mut id = entities
+        .iter()
+        .filter_map(|e| e["id"].as_u64())
+        .max()
+        .expect("ids")
+        + 1;
+    for i in 0..50 {
+        for j in 0..50 {
+            let (x, y) = (
+                490_000.0 + f64::from(i) * 10.0,
+                4_420_000.0 + f64::from(j) * 10.0,
+            );
+            let w = if (i, j) == (7, 7) { 10.5 } else { 10.0 };
+            entities.push(serde_json::json!({
+                "kind": "polygon", "id": id, "layerId": "parsel", "attrs": {},
+                "pts": [{"x": x, "y": y}, {"x": x + w, "y": y}, {"x": x + w, "y": y + 10.0}, {"x": x, "y": y + 10.0}]
+            }));
+            id += 1;
+        }
+    }
+    let (mut app, _) = App::boot(None);
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&v.to_string()).expect("the drawing reads");
+    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+#[test]
+fn a_large_check_goes_on_its_own_thread_and_finds_what_the_core_finds() {
+    let mut app = big();
+    let task = app.update(Message::Run("topology.check"));
+    assert!(app.topology.running.is_some(), "on its own thread");
+    assert!(app.topology_checked().is_none(), "not found yet");
+    crate::files_testing::drive(&mut app, task);
+    assert!(app.topology.running.is_none());
+    let c = app.topology_checked().expect("checked");
+    let g = kentos_native_application::topology_check::gather(
+        &app.document.as_ref().expect("open").model,
+        None,
+    );
+    let want = kentos_native_application::topology_check::run(&g);
+    assert!(
+        want.findings.len() > 4,
+        "the block's overlap and the drawing's own"
+    );
+    assert_eq!(c.findings.as_slice(), want.findings.as_slice());
+    assert!(
+        crate::files_testing::last_said(&app).starts_with("Topoloji denetlendi"),
+        "{}",
+        crate::files_testing::last_said(&app)
+    );
+    // A fix: checked again over what changed, on the thread too; the row at its place chosen.
+    let at = c
+        .findings
+        .iter()
+        .position(|f| f.problem == "overlap" && f.at.x > 489_000.0)
+        .expect("the block's overlap");
+    let row = app
+        .topology_shown()
+        .iter()
+        .position(|&i| i == at)
+        .expect("shown");
+    ev(&mut app, Event::Press(row));
+    let task = app.update(Message::Topology(Event::Fix("subtractFirst")));
+    assert!(app.topology.running.is_some(), "the recheck on its thread");
+    crate::files_testing::drive(&mut app, task);
+    let c = app.topology_checked().expect("rechecked");
+    assert!(c.incremental.is_some(), "over what changed");
+    assert!(
+        !c.findings
+            .iter()
+            .any(|f| f.problem == "overlap" && f.at.x > 489_000.0),
+        "the block's overlap fixed"
+    );
+    let g = kentos_native_application::topology_check::gather(
+        &app.document.as_ref().expect("open").model,
+        None,
+    );
+    let all = kentos_native_application::topology_check::run(&g);
+    assert_eq!(
+        c.findings.len(),
+        all.findings.len(),
+        "what checking all finds"
+    );
+}
+
+#[test]
+fn durdur_ends_a_check_and_keeps_what_was_found() {
+    let mut app = big();
+    let task = app.update(Message::Run("topology.check"));
+    crate::files_testing::drive(&mut app, task);
+    let before = app.topology_checked().expect("checked").findings.clone();
+    let task = app.update(Message::Topology(Event::Check));
+    assert!(app.topology.running.is_some());
+    ev(&mut app, Event::Stop);
+    assert!(app.topology.running.is_none(), "ended at once");
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Topoloji denetimi durduruldu."
+    );
+    // The thread's later words are not waited for: the last check stays.
+    crate::files_testing::drive(&mut app, task);
+    assert!(app.topology.running.is_none());
+    assert_eq!(app.topology_checked().expect("kept").findings, before);
+}
+
+#[test]
+fn the_bar_moves_on_smoothly_and_through_a_stretch_by_the_time() {
+    use super::running::Reply;
+    let mut app = big();
+    let task = app.update(Message::Run("topology.check"));
+    let id = app.topology.running.as_ref().expect("running").id;
+    let mut r = app.topology.running.take().expect("running");
+    let t0 = std::time::Instant::now();
+    r.heard(&Reply::Progress(0.5));
+    r.frame(t0 + std::time::Duration::from_millis(16));
+    let first = r.shown;
+    assert!(first > 0.0 && first < 0.5, "eased, not jumped: {first}");
+    for k in 2..60 {
+        r.frame(t0 + std::time::Duration::from_millis(16 * k));
+    }
+    assert!(
+        (r.shown - 0.5).abs() < 0.01,
+        "at what was said: {}",
+        r.shown
+    );
+    // An overlay expected to take a second: on by the time, never to its end.
+    r.heard(&Reply::Stretch(0.5, 0.9, 1.0));
+    let mut last = r.shown;
+    for k in 60..400 {
+        r.frame(t0 + std::time::Duration::from_millis(16 * k));
+        assert!(r.shown >= last, "never back");
+        last = r.shown;
+    }
+    assert!(r.shown > 0.8 && r.shown < 0.9, "{}", r.shown);
+    r.stop();
+    drop(task);
+    assert_eq!(id, r.id);
+}
+
 fn checked() -> App {
     let mut app = app();
     let _ = app.update(Message::Run("topology.check"));
@@ -303,8 +449,18 @@ fn screens() {
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in [
-                "bulgular", "bosluk", "duzelt", "kurallar", "serit", "degisti", "yeniden", "dustu", "parca",
-                "parca-duzelt", "eksik",
+                "bulgular",
+                "bosluk",
+                "duzelt",
+                "kurallar",
+                "serit",
+                "degisti",
+                "yeniden",
+                "dustu",
+                "parca",
+                "parca-duzelt",
+                "eksik",
+                "suruyor",
             ] {
                 if only
                     .as_deref()
@@ -315,6 +471,7 @@ fn screens() {
                 let mut app = match name {
                     "parca" | "parca-duzelt" => part(AREA),
                     "eksik" => part(NARROW),
+                    "suruyor" => big(),
                     _ => app(),
                 };
                 let _ = app
@@ -327,7 +484,25 @@ fn screens() {
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
                 let _ = app.update(Message::Run("view.zoomExtents"));
-                let _ = app.update(Message::Run("topology.check"));
+                let task = app.update(Message::Run("topology.check"));
+                if name == "suruyor" {
+                    // A check on its own thread, its bar at 42 % (docs/adr/0756): drawn as it goes.
+                    if let Some(r) = app.topology.running.as_mut() {
+                        r.shown = 0.42;
+                    }
+                    snapshot.settle(&mut app, App::view, &mut update);
+                    let file = out.join(format!("topoloji-{name}-{width}x{height}{suffix}.png"));
+                    snapshot
+                        .render(app.view(), &app.theme())
+                        .save(&file)
+                        .expect("writes the picture");
+                    println!("{}", file.display());
+                    if let Some(r) = app.topology.running.take() {
+                        r.stop();
+                    }
+                    continue;
+                }
+                crate::files_testing::drive(&mut app, task);
                 snapshot.settle(&mut app, App::view, &mut update);
                 if name == "dustu" {
                     // An exception whose objects' geometry changed (docs/adr/0589 §3).

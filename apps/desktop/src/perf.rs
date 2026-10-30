@@ -37,6 +37,8 @@ use serde_json::{Value, json};
 use crate::document::Document;
 
 mod architecture;
+// Binding a large database table (docs/adr/0757).
+mod bind;
 mod clouds;
 mod file;
 mod frame;

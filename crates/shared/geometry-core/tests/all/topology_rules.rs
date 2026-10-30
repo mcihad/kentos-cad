@@ -275,9 +275,14 @@ fn timing() {
     use kentos_geometry_core::ops::topology_rules::{Kind, Objects, Rule, check};
     use kentos_geometry_core::vec2::Vec2;
     let (e0, n0) = (487_000.0, 4_420_000.0);
+    // The block's side; `KENTOS_PERF_GRID=316` for about 100 000 parcels.
+    let n: i32 = std::env::var("KENTOS_PERF_GRID")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(100);
     let mut shapes = Vec::new();
-    for i in 0..100 {
-        for j in 0..100 {
+    for i in 0..n {
+        for j in 0..n {
             if (i, j) == (50, 50) {
                 continue;
             }
@@ -300,27 +305,69 @@ fn timing() {
             });
         }
     }
-    let layers = vec!["parsel".to_owned(); shapes.len()];
+    let mut layers = vec!["parsel".to_owned(); shapes.len()];
+    // A building in each parcel (each fiftieth sticking out of it), the roads on the parcels' sides, a point on each
+    // road's end (each seventh a metre off it).
+    let mut k = 0usize;
+    for i in 0..n {
+        for j in 0..n {
+            let (x, y) = (e0 + f64::from(i) * 20.0, n0 + f64::from(j) * 20.0);
+            let off = if k.is_multiple_of(50) { 12.0 } else { 0.0 };
+            k += 1;
+            shapes.push(Shape::Polygon {
+                pts: vec![
+                    Vec2::new(x + 5.0 + off, y + 5.0),
+                    Vec2::new(x + 15.0 + off, y + 5.0),
+                    Vec2::new(x + 15.0 + off, y + 15.0),
+                    Vec2::new(x + 5.0 + off, y + 15.0),
+                ],
+                bulges: None,
+                holes: None,
+                parts: None,
+            });
+            layers.push("bina".to_owned());
+            for (dx, dy) in [(20.0, 0.0), (0.0, 20.0)] {
+                shapes.push(Shape::Line {
+                    a: Vec2::new(x, y),
+                    b: Vec2::new(x + dx, y + dy),
+                });
+                layers.push("yol".to_owned());
+            }
+            let shift = if k.is_multiple_of(7) { 1.0 } else { 0.0 };
+            shapes.push(Shape::Point {
+                p: Vec2::new(x + shift, y),
+                z: None,
+                parts: None,
+            });
+            layers.push("nokta".to_owned());
+        }
+    }
     let uids: Vec<String> = (0..shapes.len()).map(|k| format!("u{k}")).collect();
     let objects = Objects {
         shapes: &shapes,
         layers: &layers,
         uids: &uids,
     };
-    for kind in [
-        Kind::MustNotOverlap,
-        Kind::MustNotHaveGaps,
-        Kind::MustNotHaveMissingVertices,
-        Kind::MustNotHaveSlivers,
-        Kind::MustNotHaveShortEdges,
-        Kind::MustNotHaveSmallAngles,
-        Kind::MustBeValid,
+    for (kind, layer, other) in [
+        (Kind::MustNotOverlap, "parsel", None),
+        (Kind::MustNotHaveGaps, "parsel", None),
+        (Kind::MustNotHaveMissingVertices, "parsel", None),
+        (Kind::MustNotHaveSlivers, "parsel", None),
+        (Kind::MustNotHaveShortEdges, "parsel", None),
+        (Kind::MustNotHaveSmallAngles, "parsel", None),
+        (Kind::MustBeValid, "parsel", None),
+        (Kind::MustBeCoveredBy, "bina", Some("parsel")),
+        (Kind::MustNotOverlapWith, "bina", Some("parsel")),
+        (Kind::BoundaryMustBeCoveredBy, "parsel", Some("yol")),
+        (Kind::MustNotHaveDuplicates, "yol", None),
+        (Kind::MustNotHaveDangles, "yol", None),
+        (Kind::MustBeOnEndOf, "nokta", Some("yol")),
     ] {
         let rules = [Rule {
             id: "r".into(),
             kind,
-            layer: "parsel".into(),
-            other: None,
+            layer: layer.into(),
+            other: other.map(Into::into),
             value: None,
         }];
         let t0 = std::time::Instant::now();

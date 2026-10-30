@@ -1081,41 +1081,35 @@ impl App {
         self.bind_from_sources(&name, &table, false, area)
     }
 
+    /// A database's table bound to a new layer on a thread of its own (exchange/binding.rs, docs/adr/0757).
     fn bind_from_sources(&mut self, name: &str, table: &str, reproject: bool, area: bool) -> Task<Message> {
         let Some(c) = self.db_store.get(name) else {
             return Task::none();
         };
-        let geometry = match self.sources.catalogs.get(name) {
-            Some(Browse::Ready(catalog)) => catalog
-                .relations
-                .iter()
-                .find(|r| r.table() == table)
-                .is_some_and(|r| r.geometry.is_some()),
-            _ => true,
+        let relation = match self.sources.catalogs.get(name) {
+            Some(Browse::Ready(catalog)) => catalog.relations.iter().find(|r| r.table() == table),
+            _ => None,
         };
         let area = area.then(|| {
             let b = self.viewport.camera.visible_bounds();
             [b.min_x, b.min_y, b.max_x, b.max_y]
         });
-        match self.bind_database(&c.address(), &[(table.to_owned(), geometry)], reproject, area) {
-            Ok(done) => {
-                self.zoom_to(&done.slots);
-                // A warning is the toast's body: what is not drawn and why is not left to the log (docs/adr/0745 §3).
-                let body = if done.warnings.is_empty() {
-                    "Değişiklikleri Kaynağa yaz ile veritabanına yazın.".to_owned()
-                } else {
-                    done.warnings.join(" ")
-                };
-                self.announce(
-                    if done.warnings.is_empty() {
-                        kentos_interaction::Level::Success
-                    } else {
-                        kentos_interaction::Level::Warn
-                    },
-                    format!("“{table}” ({}) bağlı katman oldu, {} nesne. {body}", c.name, done.objects),
-                );
-            }
-            Err(why) => self.error(why),
+        let ask = crate::exchange::binding::Ask {
+            source: c.address(),
+            shown: c.name.clone(),
+            tables: vec![crate::exchange::binding::Table {
+                name: table.to_owned(),
+                geometry: relation.is_none_or(|r| r.geometry.is_some()),
+                rows: relation.and_then(|r| r.estimate),
+            }],
+            reproject,
+            area,
+            key: None,
+            file: false,
+            then: "Değişiklikleri Kaynağa yaz ile veritabanına yazın.".to_owned(),
+        };
+        if let crate::exchange::binding::Started::Failed(why) = self.start_binding(ask) {
+            self.error(why);
         }
         Task::none()
     }

@@ -16,6 +16,18 @@ use crate::files_testing::app_with_drawing;
 use kentos_postgis::connections::{self, DbConnection, Key, SslMode};
 use kentos_postgis::probe::{Catalog, Diagnosis, Problem, Relation, RelationKind, ServerFacts};
 
+/// A bind on its thread followed to its end, its job looked at as each frame would.
+pub(crate) fn finish_binding(app: &mut App) {
+    let began = std::time::Instant::now();
+    while app.binding_now() {
+        assert!(began.elapsed().as_secs() < 120, "the bind did not end");
+        let _ = app.update(Message::Exchange(Box::new(Event::Binding(
+            crate::exchange::binding::Event::Frame,
+        ))));
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+}
+
 fn window(app: &App) -> &State {
     match &app.exchange {
         Some(Window::Postgis(s)) => s,
@@ -336,6 +348,7 @@ fn a_real_database_is_listed_and_bound() {
     assert!(window(&app).catalog.is_some(), "{:?}", window(&app).status);
     send(&mut app, Event::Postgis(P::Toggle("kadastro.parsel".into())));
     send(&mut app, Event::Postgis(P::Run));
+    finish_binding(&mut app);
     assert!(
         app.exchange.is_none(),
         "{:?}",
@@ -456,6 +469,7 @@ fn screens() {
             picture(&mut app, &format!("postgis-{mode}-5-sorgu"));
             if real.is_some() {
                 send(&mut app, Event::Postgis(P::Run));
+                finish_binding(&mut app);
                 picture(&mut app, &format!("postgis-{mode}-4-bagli"));
             }
             // Kaynaklar: the connection open into its schemas and tables.
@@ -526,6 +540,7 @@ fn every_kind_of_table_is_drawn_once_bound() {
         if app.sources.reproject.is_some() {
             let _ = app.update(Message::Sources(S::Reproject(true)));
         }
+        finish_binding(&mut app);
         let doc = app.document.as_ref().expect("a drawing");
         let bound = doc.settings().sources.iter().find(|l| l.table == table).cloned();
         let (drawn, records) = bound.as_ref().map_or((0, 0), |l| {

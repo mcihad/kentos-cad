@@ -874,6 +874,21 @@ pub fn read_in(
     })
 }
 
+/// Rows worth another thread when made into objects (docs/adr/0757 §2).
+const ROWS_SPLIT: usize = 1 << 11;
+
+/// A table's row made into an object: its lasting id, the object, its row's fid and whether it is a record; or its
+/// fid and why it was left out. Nearly every row is an object, moved on as it is: boxing it would allocate once more
+/// for each.
+#[allow(clippy::large_enum_variant)]
+enum Made {
+    Object(Uuid, Entity, i64, bool),
+    Skipped(i64, String),
+}
+
+/// A part of the rows made into objects, with the losses said on the way; or the first refusal.
+type Part = Result<(Vec<Made>, BTreeSet<String>), String>;
+
 /// A table's rows as the drawing's objects (docs/adr/0502 §3; a PostGIS table's too, docs/adr/0505): each row an
 /// object or a record with its lasting id (`uids`, else `uid_of` its fid), the columns as fields, what does not come
 /// over said.
@@ -881,7 +896,7 @@ pub fn table_of_rows(
     layer: &gpkg::Layer,
     rows: &[gpkg::Row],
     uids: &std::collections::HashMap<i64, String>,
-    uid_of: &dyn Fn(i64) -> Uuid,
+    uid_of: &(dyn Fn(i64) -> Uuid + Sync),
 ) -> Result<TableRead, String> {
     table_of_rows_hinted(layer, rows, uids, uid_of, &BTreeMap::new())
 }
@@ -892,7 +907,7 @@ pub fn table_of_rows_hinted(
     layer: &gpkg::Layer,
     rows: &[gpkg::Row],
     uids: &std::collections::HashMap<i64, String>,
-    uid_of: &dyn Fn(i64) -> Uuid,
+    uid_of: &(dyn Fn(i64) -> Uuid + Sync),
     hints: &BTreeMap<String, LayerFieldKind>,
 ) -> Result<TableRead, String> {
     let mut losses = BTreeSet::new();
@@ -911,14 +926,11 @@ pub fn table_of_rows_hinted(
             }
         }
     }
-    let mut objects = Vec::with_capacity(rows.len());
-    let mut fids = Vec::with_capacity(rows.len());
-    let mut skipped = Vec::new();
-    let mut records = 0;
-    for row in rows {
+    // A row as an object, or why it is left out; the losses it had said into `losses`.
+    let convert = |row: &gpkg::Row, losses: &mut BTreeSet<String>| -> Result<Made, String> {
         let mut attrs = serde_json::Map::new();
         for ((c, v), w) in layer.columns.iter().zip(&row.values).zip(&wide) {
-            if let Some(t) = value_text(v, &c.kind, *w, &mut losses, &c.name) {
+            if let Some(t) = value_text(v, &c.kind, *w, losses, &c.name) {
                 attrs.insert(c.name.clone(), J::String(t));
             }
         }
@@ -929,28 +941,26 @@ pub fn table_of_rows_hinted(
         let kind = match &row.geometry {
             None => "record",
             Some(Err(why)) => {
-                skipped.push((row.fid, format!("geometrisi okunamadı: {why}")));
-                continue;
+                return Ok(Made::Skipped(
+                    row.fid,
+                    format!("geometrisi okunamadı: {why}"),
+                ));
             }
             Some(Ok(g)) if g.is_empty() => "record",
-            Some(Ok(g)) => match geometry_json(g, &mut losses) {
+            Some(Ok(g)) => match geometry_json(g, losses) {
                 Some((kind, fields)) => {
                     e.extend(fields);
                     kind
                 }
                 None => {
-                    skipped.push((
+                    return Ok(Made::Skipped(
                         row.fid,
                         format!("{} geometrisinin çizimde karşılığı yok", g.type_name()),
                     ));
-                    continue;
                 }
             },
         };
         e.insert("kind".into(), J::String(kind.into()));
-        if kind == "record" {
-            records += 1;
-        }
         let entity: Entity = serde_json::from_value(J::Object(e)).map_err(|why| {
             format!(
                 "“{}” tablosunun {} numaralı satırı: {why}",
@@ -961,8 +971,61 @@ pub fn table_of_rows_hinted(
             .get(&row.fid)
             .and_then(|u| Uuid::parse_str(u).ok())
             .unwrap_or_else(|| uid_of(row.fid));
-        objects.push((uid, entity));
-        fids.push(row.fid);
+        Ok(Made::Object(uid, entity, row.fid, kind == "record"))
+    };
+    // The rows split across the machine's threads (docs/adr/0757 §2: a bound table's 50 000 rows of 28 columns took
+    // 0,66 s on one), each part's objects in the rows' order and the first refusal in that order.
+    let threads = std::thread::available_parallelism().map_or(1, |n| n.get().min(8));
+    let parts: Vec<Part> = if threads < 2 || rows.len() < ROWS_SPLIT {
+        let mut part_losses = BTreeSet::new();
+        vec![
+            rows.iter()
+                .map(|row| convert(row, &mut part_losses))
+                .collect::<Result<Vec<_>, _>>()
+                .map(|made| (made, part_losses)),
+        ]
+    } else {
+        let piece = rows.len().div_ceil(threads);
+        let convert = &convert;
+        std::thread::scope(|scope| {
+            let handles: Vec<_> = rows
+                .chunks(piece)
+                .map(|part| {
+                    scope.spawn(move || {
+                        let mut part_losses = BTreeSet::new();
+                        part.iter()
+                            .map(|row| convert(row, &mut part_losses))
+                            .collect::<Result<Vec<_>, _>>()
+                            .map(|made| (made, part_losses))
+                    })
+                })
+                .collect();
+            handles
+                .into_iter()
+                .map(|h| {
+                    h.join()
+                        .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+                })
+                .collect()
+        })
+    };
+    let mut objects = Vec::with_capacity(rows.len());
+    let mut fids = Vec::with_capacity(rows.len());
+    let mut skipped = Vec::new();
+    let mut records = 0;
+    for part in parts {
+        let (made, part_losses) = part?;
+        losses.extend(part_losses);
+        for m in made {
+            match m {
+                Made::Object(uid, entity, fid, record) => {
+                    records += u32::from(record);
+                    objects.push((uid, entity));
+                    fids.push(fid);
+                }
+                Made::Skipped(fid, why) => skipped.push((fid, why)),
+            }
+        }
     }
     Ok(TableRead {
         title: layer.identifier.clone().filter(|i| i != &layer.name),

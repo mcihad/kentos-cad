@@ -10,9 +10,7 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, text_input};
 use iced::{Element, Fill, Task};
-use kentos_commands::{
-    CallOp, CommandResult, ExportGpkg, GpkgImported, MergeReport, SourcesEdit, SourcesEditOp,
-};
+use kentos_commands::{CallOp, CommandResult, ExportGpkg, GpkgImported, MergeReport};
 use kentos_domain::Slot;
 use kentos_geopackage::{DataType, GeoPackage};
 use kentos_interaction::Level;
@@ -20,6 +18,7 @@ use kentos_native_application::ExecutionContext;
 use kentos_ui::widget::{Dialog, focus_ring, overlay};
 use serde_json::json;
 
+use super::binding::{Ask, Started, Table as ToBind};
 use super::merge_form::{self, MergeEvent, MergeForm};
 use super::server_work;
 use super::words::{self, Kind as Line};
@@ -430,98 +429,46 @@ impl App {
         }
     }
 
-    /// Bağlı katman olarak aç: each chosen table onto a new layer bound to it, one `cad.sources.edit` each.
+    /// Bağlı katman olarak aç: each chosen table onto a new layer bound to it, one `cad.sources.edit` each, at once when
+    /// small, else on threads of their own while the window closes (exchange/binding.rs, docs/adr/0757); a refusal at
+    /// once is said in the window.
     fn gpkg_bind(&mut self) {
         let Some(Window::Gpkg(s)) = &self.exchange else {
             return;
         };
-        let path = s.path.display().to_string();
-        let file = s.file.clone();
-        let reproject = s.reproject;
-        let key = Some(s.key.trim().to_owned()).filter(|k| !k.is_empty());
         // The view's area, for the tables with geometry (docs/adr/0510): a table without one is bound whole.
         let area = s.area.then(|| {
             let b = self.viewport.camera.visible_bounds();
             [b.min_x, b.min_y, b.max_x, b.max_y]
         });
-        let tables: Vec<(String, bool)> = s
+        let tables: Vec<ToBind> = s
             .tables
             .iter()
             .zip(&s.chosen)
             .filter(|(_, c)| **c)
-            .map(|(t, _)| (t.name.clone(), t.geometry.is_some()))
+            .map(|(t, _)| ToBind {
+                name: t.name.clone(),
+                geometry: t.geometry.is_some(),
+                rows: Some(t.rows),
+            })
             .collect();
-        let Some(doc) = &mut self.document else {
-            return;
+        let ask = Ask {
+            source: s.path.display().to_string(),
+            shown: s.file.clone(),
+            tables,
+            reproject: s.reproject,
+            area,
+            key: Some(s.key.trim().to_owned()).filter(|k| !k.is_empty()),
+            file: true,
+            then: "Değişiklikleri Kaynağa yaz ile dosyaya yazın.".to_owned(),
         };
-        let first = doc.model.next_slot();
-        let (mut bound, mut objects, mut warnings) = (Vec::new(), 0u32, Vec::new());
-        for (table, geometry) in &tables {
-            let input = SourcesEdit {
-                edit: SourcesEditOp::Link {
-                    extent: area.filter(|_| *geometry),
-                    path: path.clone(),
-                    table: table.clone(),
-                    layer: None,
-                    reproject,
-                    key: key.clone(),
-                },
-            };
-            match kentos_native_application::sources::edit::execute(
-                &mut ExecutionContext::new(&mut doc.model),
-                input,
-            ) {
-                CommandResult::Completed {
-                    output,
-                    warnings: w,
-                } => {
-                    objects += output.objects;
-                    bound.push(table.clone());
-                    warnings.extend(w);
+        match self.start_binding(ask) {
+            Started::Done | Started::Going => self.close_exchange(),
+            Started::Failed(why) => {
+                if let Some(Window::Gpkg(s)) = &mut self.exchange {
+                    s.status = Some((true, why));
                 }
-                CommandResult::Failed { error }
-                | CommandResult::Conflict { error }
-                | CommandResult::NeedsInput { error } => {
-                    if let Some(Window::Gpkg(s)) = &mut self.exchange {
-                        s.status = Some((
-                            true,
-                            if bound.is_empty() {
-                                error.message
-                            } else {
-                                format!(
-                                    "{} bağlandı; “{table}” bağlanamadı: {}",
-                                    bound.join(", "),
-                                    error.message
-                                )
-                            },
-                        ));
-                    }
-                    return;
-                }
-                _ => return,
             }
-        }
-        let last = doc.model.next_slot();
-        let slots: Vec<Slot> = (first..last)
-            .filter_map(|n| u32::try_from(n).ok())
-            .map(Slot)
-            .filter(|s| doc.model.get(*s).is_some())
-            .collect();
-        self.close_exchange();
-        self.zoom_to(&slots);
-        self.announce(
-            if warnings.is_empty() {
-                Level::Success
-            } else {
-                Level::Warn
-            },
-            format!(
-                "“{file}” bağlandı: {} tablo bağlı katman oldu, {objects} nesne. Değişiklikleri Kaynağa yaz ile dosyaya yazın.",
-                bound.len()
-            ),
-        );
-        for w in warnings {
-            self.say(Level::Warn, w.message);
         }
     }
 

@@ -9,8 +9,8 @@
 use std::collections::{HashMap, HashSet};
 
 use super::{
-    Checked, Exception, Finding, Kind, Objects, Rule, Taken, check, is_areas, is_paths, is_points,
-    taken,
+    Checked, Exception, Finding, Kind, Objects, Rule, Taken, Unwatched, Watch, check_watched,
+    is_areas, is_paths, is_points, taken,
 };
 use crate::geometry::Bounds;
 use crate::jsmath::{js_hypot, js_max, js_min, js_round};
@@ -133,6 +133,25 @@ pub fn recheck(
     changed: &HashSet<&str>,
     touched: &[Bounds],
 ) -> Checked {
+    recheck_watched(
+        objects, rules, tolerance, exceptions, previous, changed, touched, &Unwatched,
+    )
+    .unwrap_or_default()
+}
+
+/// `recheck` watched (docs/adr/0756): the rules' run over the affected objects says how far it has come; none when it
+/// was asked to stop.
+#[allow(clippy::too_many_arguments)]
+pub fn recheck_watched(
+    objects: &Objects<'_>,
+    rules: &[Rule],
+    tolerance: f64,
+    exceptions: &[Exception],
+    previous: &Previous<'_>,
+    changed: &HashSet<&str>,
+    touched: &[Bounds],
+    watch: &dyn Watch,
+) -> Option<Checked> {
     let t = tolerance;
     let n = objects.shapes.len();
     let taken: Vec<Taken> = objects.shapes.iter().map(taken).collect();
@@ -317,7 +336,7 @@ pub fn recheck(
     let shapes: Vec<_> = places.iter().map(|&i| objects.shapes[i].clone()).collect();
     let layers: Vec<String> = places.iter().map(|&i| objects.layers[i].clone()).collect();
     let uids: Vec<String> = places.iter().map(|&i| objects.uids[i].clone()).collect();
-    let found = check(
+    let found = check_watched(
         &Objects {
             shapes: &shapes,
             layers: &layers,
@@ -326,7 +345,8 @@ pub fn recheck(
         rules,
         t,
         exceptions,
-    );
+        watch,
+    )?;
     let back = |k: usize| places[k];
     let mut findings: Vec<Finding> = found
         .findings
@@ -370,11 +390,11 @@ pub fn recheck(
     }
     // The rules' order, as the full check gives them.
     findings.sort_by_key(|f| f.rule);
-    Checked {
+    Some(Checked {
         findings,
         looked: rules
             .iter()
             .map(|r| looked_at(objects, &taken, r))
             .collect(),
-    }
+    })
 }

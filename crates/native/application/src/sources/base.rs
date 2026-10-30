@@ -47,24 +47,10 @@ pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid,
     let base = (layer.len() <= MAX_BASE_ROWS).then(|| {
         let table: Option<HashMap<Uuid, &Entity>> =
             table.map(|t| t.iter().map(|(u, e)| (*u, e)).collect());
-        let mut kept: Vec<(BaseRow, BaseDetail)> = layer
-            .iter()
-            .map(|&(u, e)| {
-                let lh = hash_of(e);
-                let (th, detail) = match &table {
-                    None => (lh, merge::detail_of(e, Table::Same)),
-                    Some(t) => match t.get(&u) {
-                        None => (ABSENT, merge::detail_of(e, Table::Absent)),
-                        Some(te) => (hash_of(te), merge::detail_of(e, Table::Is(te))),
-                    },
-                };
-                ((*u.as_bytes(), lh, th), detail)
-            })
-            .collect();
+        let mut kept = kept_of(&layer, table.as_ref());
         shared_corners(&layer, &others, &mut kept);
         kept.sort_by_key(|(row, _)| row.0);
-        let details: Vec<BaseDetail> = kept.iter().map(|(_, d)| d.clone()).collect();
-        let rows: Vec<BaseRow> = kept.into_iter().map(|(r, _)| r).collect();
+        let (rows, details): (Vec<BaseRow>, Vec<BaseDetail>) = kept.into_iter().unzip();
         SourceBase {
             source: link.id.clone(),
             revision: link.revision.clone(),
@@ -77,6 +63,47 @@ pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid,
     settings.source_bases.retain(|b| b.source != link.id);
     settings.source_bases.extend(base);
     doc.set_settings(settings);
+}
+
+/// Objects whose hashes are worth another thread (docs/adr/0757 §2, as the layer's digest's).
+const SPLIT: usize = 1 << 11;
+
+/// Each object's row and record of the base, in `layer`'s order: the objects split across the machine's threads (a
+/// bound table's 50 000 rows took 0,76 s on one), the rows the same as one thread's.
+fn kept_of(
+    layer: &[(Uuid, &Entity)],
+    table: Option<&HashMap<Uuid, &Entity>>,
+) -> Vec<(BaseRow, BaseDetail)> {
+    let one = |&(u, e): &(Uuid, &Entity)| {
+        let lh = hash_of(e);
+        let (th, detail) = match table {
+            None => (lh, merge::detail_of(e, Table::Same)),
+            Some(t) => match t.get(&u) {
+                None => (ABSENT, merge::detail_of(e, Table::Absent)),
+                Some(te) => (hash_of(te), merge::detail_of(e, Table::Is(te))),
+            },
+        };
+        ((*u.as_bytes(), lh, th), detail)
+    };
+    let threads = std::thread::available_parallelism().map_or(1, |n| n.get().min(8));
+    if threads < 2 || layer.len() < SPLIT {
+        return layer.iter().map(one).collect();
+    }
+    let piece = layer.len().div_ceil(threads);
+    let one = &one;
+    std::thread::scope(|scope| {
+        let handles: Vec<_> = layer
+            .chunks(piece)
+            .map(|part| scope.spawn(move || part.iter().map(one).collect::<Vec<_>>()))
+            .collect();
+        handles
+            .into_iter()
+            .flat_map(|h| {
+                h.join()
+                    .unwrap_or_else(|panic| std::panic::resume_unwind(panic))
+            })
+            .collect()
+    })
 }
 
 /// docs/adr/0648 §4: an object of more vertices than a record keeps (a many-cornered or many-part one) keeps the

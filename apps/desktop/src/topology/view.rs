@@ -9,6 +9,7 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::progress;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
@@ -128,7 +129,7 @@ impl App {
                     "topologyCheck",
                     texts::RECHECK,
                     texts::RECHECK_HINT,
-                    Some(msg(Event::Recheck)),
+                    self.topology.running.is_none().then(|| msg(Event::Recheck)),
                 )
             });
             container(notes.into_iter().fold(Column::new().spacing(2), |col, n| {
@@ -173,6 +174,7 @@ impl App {
             texts::NO_RULES.to_owned()
         } else {
             match checked {
+                None if self.topology.running.is_some() => plan::checking(rules),
                 None => plan::not_checked(rules),
                 Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() => {
                     plan::no_findings(c.g.rules.len(), c.g.drawn)
@@ -240,7 +242,34 @@ impl App {
             })
             .reveal(first)
             .empty(empty);
+        // A check going on (docs/adr/0756): what it does, how far it has come, Durdur.
+        let running = self.topology.running.as_ref().map(|r| {
+            let share = r.shown.clamp(0.0, 1.0);
+            container(
+                row![
+                    progress::spinner(),
+                    label::body(texts::RUNNING),
+                    label::muted(format!("%{}", (share * 100.0).floor() as u32)),
+                    container(progress::bar(Some(share as f32)).height(6.0))
+                        .width(Fill)
+                        .center_y(Length::Shrink),
+                    bar_button(
+                        "close",
+                        texts::STOP,
+                        texts::STOP_HINT,
+                        Some(msg(Event::Stop))
+                    ),
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .padding([4, 10])
+            .width(Fill)
+        });
         let mut out = Column::new().push(bar);
+        if let Some(running) = running {
+            out = out.push(running);
+        }
         if let Some(banner) = banner {
             out = out.push(banner);
         }
@@ -378,7 +407,7 @@ impl App {
                 "topologyCheck",
                 texts::CHECK,
                 texts::CHECK_HINT,
-                (rules > 0).then(|| msg(Event::Check))
+                (rules > 0 && self.topology.running.is_none()).then(|| msg(Event::Check))
             ),
             bar_button(
                 "topologyRules",

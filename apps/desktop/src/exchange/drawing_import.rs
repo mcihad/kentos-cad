@@ -1035,23 +1035,29 @@ impl App {
     }
 
     /// While an import goes in, the drawing takes no edit, command, key or
-    /// click: they would join its undo step. The view moves; Esc stops it.
+    /// click: they would join its undo step. Nor while a table is bound on its
+    /// thread: the job's write would be refused (exchange/binding.rs). The view
+    /// moves; Esc stops it.
     pub(crate) fn while_importing(&mut self, message: &Message) -> Option<Task<Message>> {
-        self.importing.as_ref()?;
+        if self.importing.is_none() && self.binding.is_none() {
+            return None;
+        }
         use crate::viewport::Event as V;
         match message {
             Message::Exchange(e) => match &**e {
-                Exchange::DrawingImport(Event::Frame | Event::Stop) => None,
+                Exchange::DrawingImport(Event::Frame | Event::Stop) | Exchange::Binding(_) => None,
                 _ => Some(Task::none()),
             },
             Message::Key(press) => {
                 if press.named() == Some(iced::keyboard::key::Named::Escape) {
                     self.stop_importing();
+                    self.stop_binding();
                 }
                 Some(Task::none())
             }
             Message::CloseRequested(_) => {
                 self.stop_importing();
+                self.stop_binding();
                 None
             }
             Message::Viewport(V::Pressed(_) | V::RightClick(_)) => Some(Task::none()),

@@ -3088,3 +3088,79 @@ fn a_tables_constraints_come_from_it() {
     assert_eq!(written["modified"], 1, "{written}");
     record(json!({ "constraints": { "uid": first } }));
 }
+
+#[test]
+#[ignore = "a measurement on a throwaway PostGIS with a large table (docs/adr/0757)"]
+fn a_whole_table_binds_in_time() {
+    let (Ok(url), Ok(table)) = (
+        std::env::var("KENTOS_PG_URL"),
+        std::env::var("KENTOS_PG_BIND"),
+    ) else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let t = std::time::Instant::now();
+    let linked = ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": url, "table": table } }),
+    ))
+    .clone();
+    println!(
+        "{:<56} {:>10.1} ms",
+        format!("bütün tablonun bağlanması ({} nesne)", linked["objects"]),
+        t.elapsed().as_secs_f64() * 1000.0
+    );
+    // The same bind as a job (the desktop's way, docs/adr/0757 §1): each step's time, from when the job says it begins.
+    let mut d = doc();
+    let input: kentos_commands::SourcesEdit =
+        serde_json::from_value(json!({ "edit": { "kind": "link", "path": url, "table": table } }))
+            .expect("the bind's input");
+    let began = std::time::Instant::now();
+    let mut job = kentos_native_application::sources::edit_job("olcum".into(), &d, input);
+    let mut marks: Vec<(f64, std::time::Duration)> = vec![(0.0, std::time::Duration::ZERO)];
+    // The look that writes the job's patch into the drawing is the interface's frame's share of it.
+    let (status, written) = loop {
+        let looked = std::time::Instant::now();
+        let status = job.status(&mut d);
+        if let Some(share) = status.progress
+            && marks.last().is_some_and(|(last, _)| share > *last)
+        {
+            marks.push((share, began.elapsed()));
+        }
+        if status.phase.finished() {
+            break (status, looked.elapsed());
+        }
+        std::thread::sleep(std::time::Duration::from_micros(200));
+    };
+    let done = began.elapsed();
+    assert!(
+        status
+            .answer
+            .as_ref()
+            .is_some_and(|a| matches!(a.result, kentos_contracts::CommandResult::Completed { .. })),
+        "{:?}",
+        status.answer.map(|a| a.result)
+    );
+    marks.push((1.0, done));
+    for w in marks.windows(2) {
+        let (step, _) = kentos_native_application::sources::bind_step(w[0].0);
+        println!(
+            "  {:<54} {:>10.1} ms",
+            kentos_native_application::sources::BIND_STEPS[step].1,
+            (w[1].1 - w[0].1).as_secs_f64() * 1000.0
+        );
+    }
+    println!(
+        "{:<56} {:>10.1} ms",
+        "iş olarak, çizime yazılana dek",
+        done.as_secs_f64() * 1000.0
+    );
+    println!(
+        "{:<56} {:>10.1} ms",
+        "  bunun çizime yazma payı (arayüzün karesinde)",
+        written.as_secs_f64() * 1000.0
+    );
+}

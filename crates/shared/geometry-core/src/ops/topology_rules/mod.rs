@@ -22,6 +22,7 @@ use crate::geom::intersect::{Edge, closest_on_edge, intersect_edges, point_at};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
 use crate::jsmath::{PI, js_hypot, js_max, js_min, stable_sort};
 use crate::ops::geoprocess::{Class, class_of};
+use crate::store::rtree::PackedTree;
 use crate::vec2::Vec2;
 
 /// The thirteen kinds (the contract's `TopologyRuleKind`).
@@ -373,6 +374,146 @@ pub struct Checked {
     pub looked: Vec<usize>,
 }
 
+/// What a long check tells and asks whoever watches it (docs/adr/0756): how far it has come, and whether to stop. The
+/// desktop's Topoloji tab watches it on its own thread, a command run as a job through its progress; a check no one
+/// watches is [`Unwatched`].
+pub trait Watch {
+    /// The share of the check done, 0–1, said now and then.
+    fn progress(&self, done: f64);
+    /// A stretch whose progress is not measured (one overlay of a whole layer) from the share `from` to `until`,
+    /// expected to take about `seconds`: a bar may move on by the time that went by.
+    fn stretch(&self, from: f64, until: f64, seconds: f64) {
+        let _ = (until, seconds);
+        self.progress(from);
+    }
+    /// Whether the check is to stop: it then gives up and answers nothing.
+    fn stopped(&self) -> bool;
+}
+
+/// A check no one watches: it never stops and says nothing.
+pub struct Unwatched;
+
+impl Watch for Unwatched {
+    fn progress(&self, _: f64) {}
+
+    fn stopped(&self) -> bool {
+        false
+    }
+}
+
+/// A stretch of a watched check, a rule's or a part of it: where in the whole it starts and how much of it it is.
+#[derive(Clone, Copy)]
+pub(crate) struct Pace<'a> {
+    watch: &'a dyn Watch,
+    from: f64,
+    share: f64,
+}
+
+impl<'a> Pace<'a> {
+    /// A stretch within this one, from `a` to `b` of it (0–1).
+    pub(crate) fn within(self, a: f64, b: f64) -> Pace<'a> {
+        Pace {
+            watch: self.watch,
+            from: self.from + self.share * a,
+            share: self.share * (b - a),
+        }
+    }
+
+    /// A stretch not measured from `a` to `b` of this one, expected to take about `seconds`; whether to go on.
+    pub(crate) fn stretch(&self, a: f64, b: f64, seconds: f64) -> bool {
+        if self.watch.stopped() {
+            return false;
+        }
+        self.watch.stretch(
+            self.from + self.share * a,
+            self.from + self.share * b,
+            seconds,
+        );
+        true
+    }
+
+    /// Whether to go on, `done` of `of` gone by: the stop is asked and the share said at the first and every
+    /// sixteenth after it.
+    pub(crate) fn go(&self, done: usize, of: usize) -> bool {
+        if !done.is_multiple_of(16) {
+            return true;
+        }
+        if self.watch.stopped() {
+            return false;
+        }
+        let part = if of == 0 {
+            1.0
+        } else {
+            js_min(done as f64 / of as f64, 1.0)
+        };
+        self.watch.progress(self.from + self.share * part);
+        true
+    }
+}
+
+/// Boxes asked which of them may meet another (docs/adr/0756): the finite ones in a packed tree, those that are not set
+/// apart and always asked, the empty ones never (they meet nothing). It only narrows: each caller applies its own
+/// exact test after it, so what it keeps is what a walk over every box keeps, in the boxes' order.
+pub(crate) struct Boxes {
+    tree: PackedTree,
+    odd: Vec<u32>,
+}
+
+impl Boxes {
+    pub(crate) fn new(boxes: impl IntoIterator<Item = Bounds>) -> Boxes {
+        let mut entries = Vec::new();
+        let mut odd = Vec::new();
+        for (i, b) in boxes.into_iter().enumerate() {
+            let finite = b.min_x.is_finite()
+                && b.min_y.is_finite()
+                && b.max_x.is_finite()
+                && b.max_y.is_finite();
+            if finite && b.min_x <= b.max_x && b.min_y <= b.max_y {
+                entries.push((i as u32, b));
+            } else if !(b.min_x > b.max_x || b.min_y > b.max_y) {
+                odd.push(i as u32);
+            }
+        }
+        Boxes {
+            tree: PackedTree::build(&entries),
+            odd,
+        }
+    }
+
+    /// The places of the boxes that may meet `b` grown by `t`, in order: never fewer than meet, a few more (the
+    /// query grows by a margin over the rounding of a test that grows the other box instead).
+    pub(crate) fn near(&self, b: &Bounds, t: f64, out: &mut Vec<u32>) {
+        out.clear();
+        let m = js_max(
+            js_max(b.min_x.abs(), b.max_x.abs()),
+            js_max(b.min_y.abs(), b.max_y.abs()),
+        );
+        let grown = t + (m + t.abs()) * 1e-12;
+        let q = Bounds {
+            min_x: b.min_x - grown,
+            min_y: b.min_y - grown,
+            max_x: b.max_x + grown,
+            max_y: b.max_y + grown,
+        };
+        self.tree.search(&q, out);
+        out.extend_from_slice(&self.odd);
+        out.sort_unstable();
+    }
+}
+
+/// The distance from `p` to a box (0 inside).
+pub(crate) fn box_dist(b: &Bounds, p: Vec2) -> f64 {
+    let dx = js_max(js_max(b.min_x - p.x, p.x - b.max_x), 0.0);
+    let dy = js_max(js_max(b.min_y - p.y, p.y - b.max_y), 0.0);
+    js_hypot(dx, dy)
+}
+
+/// A distance's lower bound with room for its rounding: what a best-first search may order a box by when what it
+/// holds is measured by another computation (`closest_on_edge`, `dist`).
+pub(crate) fn below(d: f64, p: Vec2) -> f64 {
+    js_max(d - (p.x.abs() + p.y.abs() + d) * 1e-12, 0.0)
+}
+
 // ── Shared helpers ─────────────────────────────────────────────────────
 
 fn grow(b: &mut Bounds, by: &Bounds) {
@@ -645,25 +786,19 @@ fn pairs(a: &[Bounds], b: Option<&[Bounds]>, t: f64) -> Vec<(usize, usize)> {
             && q.min_y <= p.max_y + t
     };
     let other = b.unwrap_or(a);
-    // A sweep over x: each box of `other` by its least x.
-    let mut order: Vec<usize> = (0..other.len()).collect();
-    stable_sort(&mut order, &mut |&i, &j| {
-        other[i].min_x.total_cmp(&other[j].min_x)
-    });
+    // The boxes of `other` near each of `a` from a tree (docs/adr/0756), then the test itself.
+    let near = Boxes::new(other.iter().copied());
+    let mut found = Vec::new();
     let mut out = Vec::new();
     for (i, p) in a.iter().enumerate() {
-        let mut found: Vec<usize> = Vec::new();
-        for &j in &order {
-            let q = &other[j];
-            if q.min_x > p.max_x + t {
-                break;
-            }
-            if (b.is_some() || j > i) && meet(p, q) {
-                found.push(j);
-            }
-        }
-        found.sort_unstable();
-        out.extend(found.into_iter().map(|j| (i, j)));
+        near.near(p, t, &mut found);
+        out.extend(
+            found
+                .iter()
+                .map(|&j| j as usize)
+                .filter(|&j| (b.is_some() || j > i) && meet(p, &other[j]))
+                .map(|j| (i, j)),
+        );
     }
     out
 }
@@ -712,90 +847,115 @@ pub fn check(
     tolerance: f64,
     exceptions: &[Exception],
 ) -> Checked {
+    check_watched(objects, rules, tolerance, exceptions, &Unwatched).unwrap_or_default()
+}
+
+/// What a rule looks at: its layer's objects of the classes it takes, and those of the other layer (or, for Sarkan uç
+/// olmamalı, its layer's areas the ends may meet).
+fn looks(objects: &Objects<'_>, taken: &[Taken], rule: &Rule) -> (Vec<usize>, Vec<usize>) {
+    let layer = rule.layer.as_str();
+    let other = rule.other.as_deref().unwrap_or("");
+    let of = |l: &str, want: &[fn(&Class) -> bool]| of_layer(objects, taken, l, want);
+    match rule.kind {
+        Kind::MustNotOverlap | Kind::MustNotHaveGaps | Kind::MustNotHaveSlivers => {
+            (of(layer, &[is_areas]), Vec::new())
+        }
+        Kind::MustNotOverlapWith => (of(layer, &[is_areas]), of(other, &[is_areas])),
+        Kind::MustNotHaveMissingVertices => (
+            of(layer, &[is_areas])
+                .into_iter()
+                .filter(|&i| matches!(objects.shapes[i], Shape::Polygon { .. }))
+                .collect(),
+            Vec::new(),
+        ),
+        Kind::MustBeCoveredBy => (
+            of(layer, &[is_areas, is_paths, is_points]),
+            of(other, &[is_areas]),
+        ),
+        Kind::MustNotHaveDuplicates => (of(layer, &[is_paths, is_points]), Vec::new()),
+        Kind::MustNotHaveDangles => (of(layer, &[is_paths]), of(layer, &[is_areas])),
+        Kind::MustNotHaveShortEdges | Kind::MustNotHaveSmallAngles | Kind::MustBeValid => {
+            (of(layer, &[is_paths, is_areas]), Vec::new())
+        }
+        Kind::BoundaryMustBeCoveredBy => (of(layer, &[is_areas]), of(other, &[is_areas, is_paths])),
+        Kind::MustBeOnEndOf => (of(layer, &[is_points]), of(other, &[is_paths])),
+    }
+}
+
+/// How much of a check a rule is, by what it looks at and the time its kind takes for each (docs/adr/0756: about that
+/// many microseconds an object at 100 000 parcels): Boşluk olmamalı's overlay of the whole layer the most.
+fn weight(kind: Kind, looked: usize, with: usize) -> f64 {
+    let each = match kind {
+        Kind::MustNotHaveGaps => 20.0,
+        Kind::MustNotHaveDangles => 8.0,
+        Kind::MustNotOverlapWith
+        | Kind::MustNotHaveMissingVertices
+        | Kind::MustBeCoveredBy
+        | Kind::BoundaryMustBeCoveredBy => 5.0,
+        Kind::MustNotHaveDuplicates => 4.0,
+        Kind::MustNotOverlap | Kind::MustBeOnEndOf => 2.0,
+        Kind::MustNotHaveSlivers
+        | Kind::MustNotHaveShortEdges
+        | Kind::MustNotHaveSmallAngles
+        | Kind::MustBeValid => 1.0,
+    };
+    1.0 + each * (looked + with) as f64
+}
+
+/// `check` watched (docs/adr/0756): how far it has come said as the rules go, each its share by its [`weight`];
+/// none when it was asked to stop.
+pub fn check_watched(
+    objects: &Objects<'_>,
+    rules: &[Rule],
+    tolerance: f64,
+    exceptions: &[Exception],
+    watch: &dyn Watch,
+) -> Option<Checked> {
     let taken: Vec<Taken> = objects.shapes.iter().map(taken).collect();
     let t = tolerance;
+    let lists: Vec<(Vec<usize>, Vec<usize>)> =
+        rules.iter().map(|r| looks(objects, &taken, r)).collect();
+    let weights: Vec<f64> = rules
+        .iter()
+        .zip(&lists)
+        .map(|(r, (idx, with))| weight(r.kind, idx.len(), with.len()))
+        .collect();
+    let whole: f64 = weights.iter().sum();
+    let mut from = 0.0;
     let mut out = Checked::default();
-    for (r, rule) in rules.iter().enumerate() {
-        let layer = rule.layer.as_str();
-        let other = rule.other.as_deref().unwrap_or("");
-        let (found, looked) = match rule.kind {
-            Kind::MustNotOverlap => {
-                let idx = of_layer(objects, &taken, layer, &[is_areas]);
-                (areas::overlaps(&taken, r, &idx, None, t), idx.len())
-            }
-            Kind::MustNotOverlapWith => {
-                let idx = of_layer(objects, &taken, layer, &[is_areas]);
-                let with = of_layer(objects, &taken, other, &[is_areas]);
-                (areas::overlaps(&taken, r, &idx, Some(&with), t), idx.len())
-            }
-            Kind::MustNotHaveGaps => {
-                let idx = of_layer(objects, &taken, layer, &[is_areas]);
-                (areas::gaps(&taken, r, &idx, t), idx.len())
-            }
-            Kind::MustNotHaveSlivers => {
-                let idx = of_layer(objects, &taken, layer, &[is_areas]);
-                (areas::slivers(&taken, r, &idx, rule.value(), t), idx.len())
-            }
+    for (r, (rule, (idx, with))) in rules.iter().zip(&lists).enumerate() {
+        if watch.stopped() {
+            return None;
+        }
+        let share = if whole > 0.0 { weights[r] / whole } else { 0.0 };
+        let pace = Pace { watch, from, share };
+        from += share;
+        let found = match rule.kind {
+            Kind::MustNotOverlap => areas::overlaps(&taken, r, idx, None, t, pace),
+            Kind::MustNotOverlapWith => areas::overlaps(&taken, r, idx, Some(with), t, pace),
+            Kind::MustNotHaveGaps => areas::gaps(&taken, r, idx, t, pace),
+            Kind::MustNotHaveSlivers => areas::slivers(&taken, r, idx, rule.value(), t, pace),
             Kind::MustNotHaveMissingVertices => {
-                let idx: Vec<usize> = of_layer(objects, &taken, layer, &[is_areas])
-                    .into_iter()
-                    .filter(|&i| matches!(objects.shapes[i], Shape::Polygon { .. }))
-                    .collect();
-                (
-                    areas::missing_vertices(objects.shapes, &taken, r, &idx, t),
-                    idx.len(),
-                )
+                areas::missing_vertices(objects.shapes, &taken, r, idx, t, pace)
             }
-            Kind::MustBeCoveredBy => {
-                let idx = of_layer(objects, &taken, layer, &[is_areas, is_paths, is_points]);
-                let by = of_layer(objects, &taken, other, &[is_areas]);
-                (areas::covered_by(&taken, r, &idx, &by, t), idx.len())
-            }
+            Kind::MustBeCoveredBy => areas::covered_by(&taken, r, idx, with, t, pace),
             Kind::MustNotHaveDuplicates => {
-                let idx = of_layer(objects, &taken, layer, &[is_paths, is_points]);
-                (
-                    lines::duplicates(objects.shapes, &taken, r, &idx, t),
-                    idx.len(),
-                )
+                lines::duplicates(objects.shapes, &taken, r, idx, t, pace)
             }
             Kind::MustNotHaveDangles => {
-                let idx = of_layer(objects, &taken, layer, &[is_paths]);
-                let areas = of_layer(objects, &taken, layer, &[is_areas]);
-                (
-                    lines::dangles(objects.shapes, &taken, r, &idx, &areas, t),
-                    idx.len(),
-                )
+                lines::dangles(objects.shapes, &taken, r, idx, with, t, pace)
             }
             Kind::MustNotHaveShortEdges => {
-                let idx = of_layer(objects, &taken, layer, &[is_paths, is_areas]);
-                (
-                    lines::short_edges(objects.shapes, r, &idx, rule.value()),
-                    idx.len(),
-                )
+                lines::short_edges(objects.shapes, r, idx, rule.value(), pace)
             }
             Kind::MustNotHaveSmallAngles => {
-                let idx = of_layer(objects, &taken, layer, &[is_paths, is_areas]);
-                (
-                    lines::small_angles(objects.shapes, r, &idx, rule.value(), t),
-                    idx.len(),
-                )
+                lines::small_angles(objects.shapes, r, idx, rule.value(), t, pace)
             }
-            Kind::MustBeValid => {
-                let idx = of_layer(objects, &taken, layer, &[is_paths, is_areas]);
-                (lines::validity(objects.shapes, r, &idx), idx.len())
-            }
-            Kind::BoundaryMustBeCoveredBy => {
-                let idx = of_layer(objects, &taken, layer, &[is_areas]);
-                let by = of_layer(objects, &taken, other, &[is_areas, is_paths]);
-                (lines::boundary_covered(&taken, r, &idx, &by, t), idx.len())
-            }
-            Kind::MustBeOnEndOf => {
-                let idx = of_layer(objects, &taken, layer, &[is_points]);
-                let by = of_layer(objects, &taken, other, &[is_paths]);
-                (lines::on_end_of(&taken, r, &idx, &by, t), idx.len())
-            }
+            Kind::MustBeValid => lines::validity(objects.shapes, r, idx, pace),
+            Kind::BoundaryMustBeCoveredBy => lines::boundary_covered(&taken, r, idx, with, t, pace),
+            Kind::MustBeOnEndOf => lines::on_end_of(&taken, r, idx, with, t, pace),
         };
-        out.looked.push(looked);
+        out.looked.push(idx.len());
         for mut f in found {
             f.exception = exceptions.iter().any(|x| {
                 x.rule == rule.id
@@ -809,5 +969,9 @@ pub fn check(
             out.findings.push(f);
         }
     }
-    out
+    if watch.stopped() {
+        return None;
+    }
+    watch.progress(1.0);
+    Some(out)
 }

@@ -1206,6 +1206,8 @@ pub struct App {
     pub opening: Option<opening::Opening>,
     /// A large import going into the drawing a frame at a time (exchange/drawing_import.rs).
     pub importing: Option<crate::exchange::drawing_import::Importing>,
+    /// Tables binding on a thread of their own (exchange/binding.rs, docs/adr/0757).
+    pub binding: Option<crate::exchange::binding::Binding>,
     /// The save under way, if any (saving.rs).
     pub saving: Option<saving::Saving>,
     /// Where tests make the disk fail during a save (none in the app).
@@ -1554,6 +1556,7 @@ impl App {
             picker: Picker::Dialog,
             opening: None,
             importing: None,
+            binding: None,
             saving: None,
             save_faults: saving::Faults::NONE,
             recovery,
@@ -1747,6 +1750,22 @@ impl App {
                         crate::exchange::drawing_import::Event::Frame,
                     )))
                 })
+            } else {
+                Subscription::none()
+            },
+            // A bind on its own thread: its job looked at and its bar moved each frame (exchange/binding.rs, docs/adr/0757).
+            if self.binding.is_some() {
+                window::frames().map(|_| {
+                    Message::Exchange(Box::new(crate::exchange::Event::Binding(
+                        crate::exchange::binding::Event::Frame,
+                    )))
+                })
+            } else {
+                Subscription::none()
+            },
+            // A topology check on its own thread: its bar moves each frame (topology/running.rs, docs/adr/0756).
+            if self.topology.running.is_some() {
+                window::frames().map(|_| Message::Topology(crate::topology::Event::Frame))
             } else {
                 Subscription::none()
             },

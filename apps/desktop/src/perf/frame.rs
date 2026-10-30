@@ -54,7 +54,7 @@ pub(super) struct Parts {
 
 impl Parts {
     /// The UI thread's share: everything but the GPU's.
-    fn cpu(&self) -> f64 {
+    pub(super) fn cpu(&self) -> f64 {
         self.event + self.app + self.view + self.layout + self.draw
     }
 

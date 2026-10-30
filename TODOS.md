@@ -61,6 +61,14 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (modül başına galeri ve öntanımlı pafta) web'de de kullanılabilir; web'in pafta kipi bugünkü gibi türe göre çalışır.
   Modül programları (tek `kentos-cad` dosyası, modül adlarıyla; ADR 0802 §1) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
   karşılığı yoktur.
+- ADR 0757: tablo bağlamak arayüzü kilitlemez. Web PostGIS'e bağlanmaz (sunucunun vekiliyle ayrı karar); web'in GeoPackage
+  bağlaması gelince bağlama işçide `cad.sources.edit`'in iş olarak adımlarını (`sources::BIND_STEPS`) söylemeli: pencere hemen
+  kapanır, köşede tablo, adım, yaklaşık satır, yumuşak çubuk ve Durdur; sürerken çizim düzenleme almaz (masaüstünün
+  `exchange/binding.rs`'i gibi).
+- ADR 0756: topoloji denetimi büyük çizimde donmaz. Çekirdeğin kural hızlandırmaları (R-ağacından adaylar, en yakın
+  arama, birleşimsiz “içinde kalmalı”) web'in WASM'ına derlenince kendiliğinden gelir; web'in Topoloji sekmesi denetimi
+  işçide `check_watched`'ın ilerlemesiyle koşmalı: yumuşak ilerleme çubuğu, yüzde ve Durdur, sürerken Denetle kapalı,
+  cevap yalnız başladığı çizime (masaüstünün `topology/running.rs`'i gibi).
 - ADR 0755: bağlı tablonun CHECK ve tekil kısıtları bağın `checks` ve `uniques`'inde (`.kcad` şema 134), alanın
   `column.check`'i; CHECK SQL'in kendi anlamıyla formda ve komutta sorulur, tek sütunlu IN listesi açılır liste,
   birden çok sütunlu tekil kısıt `not_unique`, tablonun reddi `source_check` ve benzerleriyle; Alanlar'da “Tablonun
@@ -2838,6 +2846,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   parola projeye yazılmaz (`.kcad` okuyucuları da reddeder); masaüstünde PostGIS'e bağlan; geçici PostGIS'te ogr2ogr ve
   psycopg2'yle uçtan uca (`postgis_cases.py`). Kalan: sorguyu kaynağa itmek, sayfa sayfa ilk harita, view ve SQL katmanı,
   değişiklik izleme, milyon satır ölçümü. — **17 Ekim, [ADR 0505](docs/adr/0505-postgis-bound-layers.md).**
+  Tablo bağlamak arayüzü kilitlemez: `cad.sources.edit`'in bağlaması masaüstünde iş olarak okuma kopyasında (`sources::edit_job`,
+  adımları `BIND_STEPS`, durdurulursa `cancelled`), pencere hemen kapanır, köşede panel ve Durdur, sürerken çizim düzenleme almaz;
+  taban ve satırların nesneye çevrilmesi iş parçacıklarında. Sahibinkine benzeyen 50 000 satırlık tablo 3,05 s arayüzde → 1,41 s
+  arka planda, arayüzün payı 22 ms, masaüstünün en uzun karesi 1,43 s → 0,18 s. Resimlerde bulunan yamanın sıradaki yuvası
+  düzeldi. Kalan: GeoPackage bağlamasında tablonun iki kez okunması, zarflı işin özetinin (Python, MCP) büyük bağlamada
+  yavaşlığı, nesneleri alan karenin 0,18 s'si (50 000 nesnenin seçme ve kenet deposuna ve çizime girmesi). — **30 Ekim,
+  [ADR 0757](docs/adr/0757-binding-without-freezing.md).**
 - [ ] `CBS-36` taşınabilir proje (ikinci dilim): kaynağın göreli yolu (`SourceLink.relative`; kaydetmede yazılır, açılışta
   aynı içerikteki dosya bulunur, `source_places`), Kaynak ▸ Yeniden bağla (`source.relink`), Paketle (`file.package`: proje
   ve `veri/` altında bağlı GeoPackage, resim, raster dünya dosyalarıyla, bulut, tablo ve ek kopyaları; bütün ya da hiç,
@@ -3276,6 +3291,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   önizlemesi), istisnanın geometri özeti (`.kcad` şema 99, düşen istisna söylenir), `cad.topology.exceptions`; Python, MCP,
   masaüstünün sekmesi aynı çekirdekle. Kalan: yazmanın denetimin damgasını istemesi, kaynaklar arası kuralda bandın komşuları. —
   **22 Ekim, [ADR 0589](docs/adr/0589-topology-check-bound-to-sources.md).**
+  Büyük çizimde donmayan denetim: kuralların adayları R-ağacından (bulgular bit bit aynı), Sarkan uç ve … ucunda olmalı en yakın
+  aramayla, … içinde kalmalı birleşimsiz (10 000 parselde Sarkan uç 185 s → 0,15 s); `Watch` ile ilerleme ve durma; masaüstünde
+  2 000 nesneden çoğu kendi iş parçacığında, yumuşak çubuk, yüzde ve Durdur. Kalan: Boşluk olmamalı'nın tek bindirmesi
+  ölçülemez (çubuk geçen zamanla ilerler, durma adımın sonunda). — **30 Ekim, [ADR 0756](docs/adr/0756-topology-check-without-freezing.md).**
 - [x] `CBS-19` bağlı görünümler ve tema (dilim): görünümün teması projenin katman durumu (görünürlük, dondurma, stiller ağacın
   kopyasında, çizim ve revizyon değişmez; `layer_states::themed`), stilli çizim görünümün önbelleğinde temayla
   (`scene_themed`), etkin görünümün teması seçme ve kenet (`Spatial::set_theme`), etiketler görünümün temasıyla

@@ -15,6 +15,7 @@ mod hatch_texts;
 mod identity;
 mod layer_fields;
 mod layer_rules;
+mod patches;
 mod related;
 mod snapshot_v2;
 mod steps;

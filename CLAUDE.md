@@ -28,6 +28,28 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Tablo bağlamak arayüzü kilitlemez (30 Ekim 2026; [ADR 0757](docs/adr/0757-binding-without-freezing.md)).**
+  Sahibin sözü: “50.000 satırı olan bir tablom var … 3 4 belki de 10 saniye kadar sistemi kilitliyor … qgis içinde bu
+  problemlerin hiçbiri yok”. `cad.sources.edit`'in bağlaması masaüstünde iş olarak okuma kopyasında (`sources::edit_job`:
+  zarfsız, protokolün özeti yok; adımları `BIND_STEPS`, `Steps::at` durmayı sorar, durdurulan `cancelled`), yaması tek geri
+  alma adımı. Pencere hemen kapanır; köşede tablo, adım, yaklaşık satır, yumuşak çubuk ve Durdur (`exchange/binding.rs`,
+  panel 0,15 s'den sonra); sürerken çizim düzenleme almaz, Esc durdurur. Veritabanı tabloları hep iş parçacığında (kataloğun
+  tahmini eski olabilir), GeoPackage'ın 2 000 satırdan az tabloları hemen. Taban (`base::kept_of`) ve satırların nesneye
+  çevrilmesi (`table_of_rows`) iş parçacıklarında, nesneler taşınır (`take_in_project`). 50 000 satırda 3,05 s arayüzde → 1,41 s
+  arka planda, arayüzün payı 22 ms (`a_whole_table_binds_in_time`, `perf::bind`). Resimlerde bulunan: işin yaması çizime
+  nesne ekleyince sıradaki yuva ilerlemiyordu (`Document::apply_patch`; görünüm yeni nesnelere gitmiyor, sonra çizilen nesne
+  işinkinin yuvasını alırdı); Katmanlar'ın Öğe sütunu rozetleri ve en uzun sayıyı sayar (“50000” kesiliyordu).
+
+- **Topoloji denetimi büyük çizimde donmaz (30 Ekim 2026; [ADR 0756](docs/adr/0756-topology-check-without-freezing.md)).**
+  Sahibin sözü: “kilitlenme yerine yumuşak bir ilerleme çubuğu … iptal edilebilir şekilde”. Kuralların adayları paketli
+  R-ağacından (`topology_rules::Boxes`: kutu sorgusu, sonra eski kesin test; bulgular bit bit aynı), Sarkan uç ve …
+  ucunda olmalı en yakın aramayla, … içinde kalmalı örtünün birleşimini kurmadan: 10 000 parselde Sarkan uç 185 s → 0,15 s,
+  içinde kalmalı 4,0 s → 0,09 s; 100 000 parselde her kural 2 s'nin altında (`topology_rules::timing`, `KENTOS_PERF_GRID`).
+  `Watch` (ilerleme, ölçülemeyen adımın `stretch`'i, durma): `check_watched`, `recheck_watched`, `run_watched`, komutun işi
+  (`JobWatch`). Masaüstünde kuralların katmanlarında 2 000 nesneden çoğu okuma kopyasında `kentos-topoloji` iş
+  parçacığında (`topology/running.rs`): dönen gösterge, yüzde, her karede yumuşayan çubuk, Durdur (hemen; son bulgular
+  kalır); Düzelt, İstisna yap ve Değişenleri denetle aynı yoldan, cevap yalnız başladığı çizime.
+
 - **Bağlı tablonun CHECK ve tekil kısıtları (30 Ekim 2026; [ADR0755](docs/adr/0755-bound-table-check-and-unique-constraints.md)).**
   Bağın `checks`'i (ad, SQL metni, sütunlar, `tableOnly`) ve `uniques`'i (sütunlar, `nullsEqual`), alanın `column.check`'i
   (KCAD 134 opt-in); bağlamada ve her okumada tablodan (GeoPackage `CREATE TABLE` metni ve `PRAGMA index_list`,

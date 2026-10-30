@@ -25,6 +25,8 @@ mod atlas_export;
 pub(crate) mod sheet_publish;
 #[cfg(test)]
 mod atlas_tests;
+// Tables bound on a thread of their own (docs/adr/0757).
+pub(crate) mod binding;
 pub(crate) mod coord_export;
 mod csv_exchange;
 #[cfg(test)]
@@ -195,6 +197,7 @@ pub enum Event {
     /// Files picked together (a Shapefile's parts, or its archive).
     PickedMany(Kind, Option<Result<Vec<Picked>, String>>),
     DrawingImport(drawing_import::Event),
+    Binding(binding::Event),
     CoordImport(coord_import::Event),
     DxfExport(dxf_export::Event),
     CoordExport(coord_export::Event),
@@ -571,6 +574,10 @@ impl App {
                 _ => Task::none(),
             },
             Event::DrawingImport(e) => self.drawing_import_event(e),
+            Event::Binding(e) => {
+                self.binding_event(e);
+                Task::none()
+            }
             Event::CoordImport(e) => self.coord_import_event(e),
             Event::DxfExport(e) => self.dxf_export_event(e),
             Event::CoordExport(e) => self.coord_export_event(e),

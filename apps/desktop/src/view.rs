@@ -165,6 +165,8 @@ impl App {
         layers.extend(self.saving_view());
         // A large import's panel: the objects as they go in, and Durdur (exchange/drawing_import.rs).
         layers.extend(self.importing_view());
+        // A bind's panel: the table, its step, the bar and Durdur (exchange/binding.rs).
+        layers.extend(self.binding_view());
         // The rasters' pyramids and Raster oturt's resampling, with Durdur (rasters/jobs.rs).
         layers.extend(self.rasters_jobs_view());
         layers.extend(self.opening_view());
