@@ -719,6 +719,16 @@ mod tests {
 
     #[test]
     fn sonra_keeps_a_copy_for_next_time_and_sil_deletes_it() {
+        // Three apps live at once here: a test thread's 2 MiB stack is at its edge in a debug build.
+        std::thread::Builder::new()
+            .stack_size(8 << 20)
+            .spawn(later_and_delete)
+            .expect("a thread")
+            .join()
+            .expect("the answers");
+    }
+
+    fn later_and_delete() {
         let root = scratch("recovery-answers");
         let mut crashed = editing(&root);
         write_copy(&mut crashed);

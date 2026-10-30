@@ -746,6 +746,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.layers.subtypes"
             | "cad.layers.contingents"
             | "cad.layers.rules"
+            | "cad.layers.indexes"
             // Its unmark takes the project's topology exceptions away (docs/adr/0589 §3).
             | "cad.topology.exceptions"
             // Its unmark and prune take Mimari denetim's exceptions away (docs/adr/0732 §3).

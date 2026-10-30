@@ -34178,6 +34178,144 @@
       ]
     },
     {
+      "id": "cad.layers.indexes",
+      "version": 1,
+      "title": "Dizinler",
+      "summary": "Katmanın dizinlerini yazar (ArcGIS'in öznitelik dizini, veritabanının CREATE INDEX'i): her dizin (name) 1–32 alanı (fields, anahtarlarıyla, sırayla) tutar; tekil olanı (unique) katmanın anahtarıdır: alanlarında başka bir kaydın değerlerini veren yazma, kaynağı ne olursa olsun (form, tablo, komut, içe aktarma, Python, ajan) reddedilir (not_unique). Boş değer değer sayılmaz; nullsEqual boşları aynı sayar (PostgreSQL'in NULLS NOT DISTINCT'i). Kayıtların zaten bozduğu yeni tekil dizin reddedilir (index_not_unique, kayıtların kimlikleriyle). GeoPackage'a yazılan katmanın tablosu dizinlerini alır, okunan tablonun dizinleri katmana gelir. Boş liste kaldırır; tek geri alma adımı “Dizinler”.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.layers.indexes` v1: a layer's indexes written as one undo step “Dizinler”; none takes them away. A\nlayer that already has them is left as it is. A unique index is the layer's key: every later write that would give\ntwo records the same values in its fields is refused `not_unique`; a new one the records already break is refused.\n\nRefusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`,\n`not_a_layer`, `service_layer`; then `invalid_indexes` (indexes that do not fit the layer, `layer_indexes_problem`,\npath `indexes/<where>`), `index_not_unique` (a new or newly unique index two records already break, its records'\nids in `uids`). Warning: `index_not_in_source` (a bound layer: KentOS keeps the key, the table does not get it).",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "indexes": {
+            "default": [],
+            "description": "The indexes, in their order.",
+            "items": {
+              "$ref": "#/$defs/LayerIndex"
+            },
+            "type": "array"
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "LayersIndexes",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.layers.compose` v1.",
+        "properties": {
+          "changed": {
+            "description": "Whether it differed (an undo step was written).",
+            "type": "boolean"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "layer",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersComposed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.layers.compose` would write (plan mode); nothing is written.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "node": {
+            "$ref": "#/$defs/LayerNode",
+            "description": "The layer as execute would leave it."
+          },
+          "revision": {
+            "description": "The document revision the plan was made against.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "node",
+          "changed",
+          "revision"
+        ],
+        "title": "LayersComposePlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "invalid_indexes",
+          "index_not_unique"
+        ],
+        "warnings": [
+          "index_not_in_source"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Ada ve parsel numarası birlikte tekil, mahalle aranır",
+          "input": {
+            "indexes": [
+              {
+                "fields": [
+                  "Ada",
+                  "Parsel"
+                ],
+                "name": "Ada ve parsel",
+                "unique": true
+              },
+              {
+                "fields": [
+                  "Mahalle"
+                ],
+                "name": "Mahalle"
+              }
+            ],
+            "layer": "parsel"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.contingents",
       "version": 1,
       "title": "Değer bileşimleri",
@@ -42376,7 +42514,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.records.duplicate` v1: the objects to copy where they are, as one undo step\n(“Kaydı çoğalt”).\n\nRefusals, in this order: `no_entities`, `invalid_uid` (`uids[i]`), `invalid_count` (more than\n1000), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`\n(`uids[i]`), `layer_locked` (every object on a locked layer). Warnings: `layer_locked` (objects and\nchildren on locked layers left out), `unique_cleared` (a field a form keeps unique left empty).",
+        "description": "Input of `cad.records.duplicate` v1: the objects to copy where they are, as one undo step\n(“Kaydı çoğalt”).\n\nRefusals, in this order: `no_entities`, `invalid_uid` (`uids[i]`), `invalid_count` (more than\n1000), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`\n(`uids[i]`), `layer_locked` (every object on a locked layer), `not_unique` (a copy whose emptied key\nanother record holds: a layer index taking empty values as the same, docs/adr/0758 §3). Warnings:\n`layer_locked` (objects and children on locked layers left out), `unique_cleared` (a field a form or the\nlayer keeps unique, or a unique index of the layer holds, left empty).",
         "properties": {
           "children": {
             "description": "The records the objects' composite relations hold are copied too, their field taking the\ncopy's id; written only as `false`.",
@@ -42462,6 +42600,7 @@
           "invalid_count",
           "entity_not_found",
           "layer_locked",
+          "not_unique",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -47378,6 +47517,13 @@
               "null"
             ]
           },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
             "items": {
@@ -47489,6 +47635,13 @@
               "string",
               "null"
             ]
+          },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
@@ -56947,6 +57100,13 @@
               "null"
             ]
           },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
             "items": {
@@ -57058,6 +57218,13 @@
               "string",
               "null"
             ]
+          },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
@@ -57581,6 +57748,13 @@
               "null"
             ]
           },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
             "items": {
@@ -57692,6 +57866,13 @@
               "string",
               "null"
             ]
+          },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
@@ -58119,6 +58300,13 @@
               "null"
             ]
           },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
             "items": {
@@ -58230,6 +58418,13 @@
               "string",
               "null"
             ]
+          },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
@@ -60361,6 +60556,13 @@
               "null"
             ]
           },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
             "items": {
@@ -60472,6 +60674,13 @@
               "string",
               "null"
             ]
+          },
+          "indexes": {
+            "description": "The tables' indexes the layers the import made took (docs/adr/0758 §5).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "layers": {
             "description": "The layers made, in the tree's order, and the group they went into.",
@@ -65461,7 +65670,7 @@
       "code": "unique_cleared",
       "kind": "warning",
       "retryable": false,
-      "meaning": "Formun tekil tuttuğu alan kopyada boş bırakıldı."
+      "meaning": "Formun ya da katmanın tekil tuttuğu alan kopyada boş bırakıldı."
     },
     {
       "code": "subtype_misfit",
@@ -65498,6 +65707,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Kayıt kuralları katmana uymuyor ya da ifadesi derlenmiyor."
+    },
+    {
+      "code": "invalid_indexes",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dizinler katmanın alanlarına uymuyor."
+    },
+    {
+      "code": "index_not_unique",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tekil dizin kurulamıyor: katmanın kayıtlarında aynı değerler var."
+    },
+    {
+      "code": "index_not_in_source",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Katman bir tabloya bağlı: dizini KentOS denetler, tabloda kurulmaz."
     },
     {
       "code": "not_unique",
@@ -91359,6 +91586,13 @@
             "null"
           ]
         },
+        "indexes": {
+          "description": "The layer's indexes written over it (docs/adr/0758 §5).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
         "layer": {
           "type": "string"
         },
@@ -96301,6 +96535,36 @@
       ],
       "type": "string"
     },
+    "LayerIndex": {
+      "additionalProperties": false,
+      "description": "An index of a layer.",
+      "properties": {
+        "fields": {
+          "description": "The fields' keys, in order (1–32, each once; a field holding bytes is not indexed).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Its name, once in the layer (the Turkish way, case aside): what a refusal and a file call it (1–64\ncharacters).",
+          "type": "string"
+        },
+        "nullsEqual": {
+          "description": "Empty values are the same value: a set with one is compared as the others (PostgreSQL's NULLS NOT DISTINCT);\nonly with `unique`; written only as `true`.",
+          "type": "boolean"
+        },
+        "unique": {
+          "description": "The layer's key: no two records hold the same values in its fields; written only as `true`.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "fields"
+      ],
+      "type": "object"
+    },
     "LayerLabelReport": {
       "description": "One layer's counts, and what its labelling is made of when it is a bound layer (docs/adr/0533 §4).",
       "properties": {
@@ -96552,6 +96816,13 @@
         },
         "id": {
           "type": "string"
+        },
+        "indexes": {
+          "description": "Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer\nholding objects has them.",
+          "items": {
+            "$ref": "#/$defs/LayerIndex"
+          },
+          "type": "array"
         },
         "locked": {
           "type": "boolean"

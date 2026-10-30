@@ -274,6 +274,7 @@ fn one_line(x: f64) -> DocumentSnapshotV1 {
         compose: None,
         filter: None,
         rules: Vec::new(),
+        indexes: Vec::new(),
         dataset: None,
         derivation: None,
     }];

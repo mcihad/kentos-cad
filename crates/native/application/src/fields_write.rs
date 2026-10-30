@@ -421,33 +421,17 @@ pub(crate) fn run(doc: &Document, input: &FieldsWrite) -> Result<Planned, Stop> 
                 at: "attrs".to_owned(),
             })
             .collect();
-        let Err(stop) = checks::unique_fit(doc, &uniques) else {
+        let Some(clash) = checks::unique_clash(doc, &uniques) else {
             break;
         };
-        let e = stop.into_error();
+        let e = clash.error;
         let field = e
             .path
             .as_deref()
             .and_then(|p| p.rsplit('.').next())
             .unwrap_or_default()
             .to_owned();
-        let written: BTreeSet<u32> = changed.iter().map(|c| c.0.0).collect();
-        let others: BTreeSet<&String> = doc
-            .by_layer_with_uids(layer)
-            .filter(|(_, o)| !written.contains(&o.base().id))
-            .filter_map(|(_, o)| o.base().attrs.get(&field))
-            .collect();
-        let clashes = |i: usize| {
-            let Some(v) = changed[i].3.get(&field) else {
-                return false;
-            };
-            others.contains(v)
-                || changed
-                    .iter()
-                    .enumerate()
-                    .any(|(j, c)| j != i && c.3.get(&field) == Some(v))
-        };
-        let mut hit: Vec<usize> = (0..changed.len()).filter(|&i| clashes(i)).collect();
+        let mut hit: Vec<usize> = clash.writes;
         if hit.is_empty() {
             hit = (0..changed.len()).collect();
         }

@@ -7,4 +7,8 @@ export type GpkgTableExported = { table: string, layer: string, rows: number,
 /**
  * Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.
  */
-geometry?: string, };
+geometry?: string, 
+/**
+ * The layer's indexes written over it (docs/adr/0758 §5).
+ */
+indexes?: number, };

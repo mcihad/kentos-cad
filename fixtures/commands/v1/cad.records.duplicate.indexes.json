@@ -1,0 +1,3598 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.records.duplicate",
+ "commandVersion": 1,
+ "title": "Kaydı çoğalt ve katmanın anahtarları",
+ "note": "ADR 0758 §3, ADR 0438 §3: kopya katmanın tekil alanlarını ve anahtarlarının alanlarını boş bırakır; boşları aynı sayan anahtar ikinci boşu reddeder. Written by scripts/fixtures/layer_indexes_cases.py without KentOS code.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Dizinler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "name": "Parsel",
+      "kind": "integer"
+     },
+     {
+      "name": "Mahalle",
+      "kind": "text"
+     },
+     {
+      "id": "bina-no",
+      "name": "Bina no",
+      "kind": "text"
+     },
+     {
+      "name": "Belge",
+      "kind": "binary"
+     },
+     {
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2
+     }
+    ],
+    "indexes": [
+     {
+      "name": "Ada ve parsel",
+      "fields": [
+       "Ada",
+       "Parsel"
+      ],
+      "unique": true
+     },
+     {
+      "name": "Mahalle",
+      "fields": [
+       "Mahalle"
+      ]
+     },
+     {
+      "name": "Bina",
+      "fields": [
+       "bina-no"
+      ],
+      "unique": true,
+      "nullsEqual": true
+     }
+    ]
+   },
+   {
+    "id": "yapi",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Kod",
+      "kind": "text",
+      "unique": true
+     },
+     {
+      "name": "Kat",
+      "kind": "integer"
+     }
+    ]
+   },
+   {
+    "id": "duz",
+    "name": "Düz",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "name": "Parsel",
+      "kind": "integer"
+     }
+    ],
+    "indexes": [
+     {
+      "name": "Ada",
+      "fields": [
+       "Ada"
+      ]
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Mahalleler",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "alt",
+      "name": "Sokak",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "5",
+     "Mahalle": "Merkez",
+     "Bina no": "B1"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "6",
+     "Mahalle": "Merkez",
+     "Bina no": "B2"
+    },
+    "pts": [
+     {
+      "x": 487040,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420010
+     },
+     {
+      "x": 487040,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "102",
+     "Parsel": "5",
+     "Bina no": "B3"
+    },
+    "pts": [
+     {
+      "x": 487060,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420010
+     },
+     {
+      "x": 487060,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "103",
+     "Bina no": "B4"
+    },
+    "pts": [
+     {
+      "x": 487080,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420010
+     },
+     {
+      "x": 487080,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "103",
+     "Bina no": "B5"
+    },
+    "pts": [
+     {
+      "x": 487100,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420010
+     },
+     {
+      "x": 487100,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "Alan": "250.00",
+     "Bina no": "B6"
+    },
+    "pts": [
+     {
+      "x": 487120,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420010
+     },
+     {
+      "x": 487120,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "yapi",
+    "attrs": {
+     "Kod": "Y-1",
+     "Kat": "2"
+    },
+    "pts": [
+     {
+      "x": 487140,
+      "y": 4420000
+     },
+     {
+      "x": 487150,
+      "y": 4420000
+     },
+     {
+      "x": 487150,
+      "y": 4420010
+     },
+     {
+      "x": 487140,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "yapi",
+    "attrs": {
+     "Kat": "1"
+    },
+    "pts": [
+     {
+      "x": 487160,
+      "y": 4420000
+     },
+     {
+      "x": 487170,
+      "y": 4420000
+     },
+     {
+      "x": 487170,
+      "y": 4420010
+     },
+     {
+      "x": 487160,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 9,
+    "layerId": "duz",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "5"
+    },
+    "pts": [
+     {
+      "x": 487180,
+      "y": 4420000
+     },
+     {
+      "x": 487190,
+      "y": 4420000
+     },
+     {
+      "x": 487190,
+      "y": 4420010
+     },
+     {
+      "x": 487180,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 10,
+    "layerId": "duz",
+    "attrs": {
+     "Ada": "102"
+    },
+    "pts": [
+     {
+      "x": 487200,
+      "y": 4420000
+     },
+     {
+      "x": 487210,
+      "y": 4420000
+     },
+     {
+      "x": 487210,
+      "y": 4420010
+     },
+     {
+      "x": 487200,
+      "y": 4420010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "parselin kopyası: anahtarların alanları boş, aranan mahalle kalır; geri alınır ve yinelenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Parsel” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:1",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Parsel” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "parsel",
+        "attrs": {
+         "Mahalle": "Merkez"
+        },
+        "pts": [
+         {
+          "x": 487020,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420010
+         },
+         {
+          "x": 487020,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "parsel",
+        "attrs": {
+         "Mahalle": "Merkez"
+        },
+        "pts": [
+         {
+          "x": 487020,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420010
+         },
+         {
+          "x": 487020,
+          "y": 4420010
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "parselsiz kayıt: yalnız tuttuğu anahtar alanları söylenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:4",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487080,
+          "y": 4420000
+         },
+         {
+          "x": 487090,
+          "y": 4420000
+         },
+         {
+          "x": 487090,
+          "y": 4420010
+         },
+         {
+          "x": 487080,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız bina nosu olan kayıt",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:6",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "parsel",
+        "attrs": {
+         "Alan": "250.00"
+        },
+        "pts": [
+         {
+          "x": 487120,
+          "y": 4420000
+         },
+         {
+          "x": 487130,
+          "y": 4420000
+         },
+         {
+          "x": 487130,
+          "y": 4420010
+         },
+         {
+          "x": 487120,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki parsel birden: boşları aynı sayan bina anahtarı ikinci boşu reddeder",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "uids.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "parselsiz iki kayıt birden: yine bina anahtarı reddeder",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4",
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "uids.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "katmanda tekil kod boş bırakılır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:7",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487140,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420010
+         },
+         {
+          "x": 487140,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "kodu olmayan yapı: söylenecek bir şey yok",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:8",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "1"
+        },
+        "pts": [
+         {
+          "x": 487160,
+          "y": 4420000
+         },
+         {
+          "x": 487170,
+          "y": 4420000
+         },
+         {
+          "x": 487170,
+          "y": 4420010
+         },
+         {
+          "x": 487160,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki yapı: tekil kod bir kez söylenir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 2,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:7",
+         "uid": "$uidOf:11",
+         "id": 11
+        },
+        {
+         "from": "$uidOf:8",
+         "uid": "$uidOf:12",
+         "id": 12
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487140,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420010
+         },
+         {
+          "x": 487140,
+          "y": 4420010
+         }
+        ]
+       },
+       "12": {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "1"
+        },
+        "pts": [
+         {
+          "x": 487160,
+          "y": 4420000
+         },
+         {
+          "x": 487170,
+          "y": 4420000
+         },
+         {
+          "x": 487170,
+          "y": 4420010
+         },
+         {
+          "x": 487160,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız aranan dizini olan katman: hiçbir alan boşaltılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:9",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "duz",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5"
+        },
+        "pts": [
+         {
+          "x": 487180,
+          "y": 4420000
+         },
+         {
+          "x": 487190,
+          "y": 4420000
+         },
+         {
+          "x": 487190,
+          "y": 4420010
+         },
+         {
+          "x": 487180,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "aranan dizinin iki kaydı",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:9",
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 2,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9",
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:9",
+         "uid": "$uidOf:11",
+         "id": 11
+        },
+        {
+         "from": "$uidOf:10",
+         "uid": "$uidOf:12",
+         "id": 12
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "duz",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5"
+        },
+        "pts": [
+         {
+          "x": 487180,
+          "y": 4420000
+         },
+         {
+          "x": 487190,
+          "y": 4420000
+         },
+         {
+          "x": 487190,
+          "y": 4420010
+         },
+         {
+          "x": 487180,
+          "y": 4420010
+         }
+        ]
+       },
+       "12": {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "duz",
+        "attrs": {
+         "Ada": "102"
+        },
+        "pts": [
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487210,
+          "y": 4420000
+         },
+         {
+          "x": 487210,
+          "y": 4420010
+         },
+         {
+          "x": 487200,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "yapı ve düz katman birlikte",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 2,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:7",
+         "uid": "$uidOf:11",
+         "id": 11
+        },
+        {
+         "from": "$uidOf:9",
+         "uid": "$uidOf:12",
+         "id": 12
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487140,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420010
+         },
+         {
+          "x": 487140,
+          "y": 4420010
+         }
+        ]
+       },
+       "12": {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "duz",
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5"
+        },
+        "pts": [
+         {
+          "x": 487180,
+          "y": 4420000
+         },
+         {
+          "x": 487190,
+          "y": 4420000
+         },
+         {
+          "x": 487190,
+          "y": 4420010
+         },
+         {
+          "x": 487180,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel ve yapı birlikte: önce parselin anahtarları, sonra yapının kodu",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 2,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Parsel” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:1",
+         "uid": "$uidOf:11",
+         "id": 11
+        },
+        {
+         "from": "$uidOf:7",
+         "uid": "$uidOf:12",
+         "id": 12
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Parsel” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "parsel",
+        "attrs": {
+         "Mahalle": "Merkez"
+        },
+        "pts": [
+         {
+          "x": 487020,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420010
+         },
+         {
+          "x": 487020,
+          "y": 4420010
+         }
+        ]
+       },
+       "12": {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487140,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420010
+         },
+         {
+          "x": 487140,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "yapı ve parsel ters sırayla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 2,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Parsel” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:7",
+         "uid": "$uidOf:11",
+         "id": 11
+        },
+        {
+         "from": "$uidOf:1",
+         "uid": "$uidOf:12",
+         "id": 12
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Ada” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Ada ve parsel” anahtarındaki “Parsel” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanın “Bina” anahtarındaki “Bina no” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487140,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420010
+         },
+         {
+          "x": 487140,
+          "y": 4420010
+         }
+        ]
+       },
+       "12": {
+        "kind": "polygon",
+        "id": 12,
+        "layerId": "parsel",
+        "attrs": {
+         "Mahalle": "Merkez"
+        },
+        "pts": [
+         {
+          "x": 487020,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420000
+         },
+         {
+          "x": 487030,
+          "y": 4420010
+         },
+         {
+          "x": 487020,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı kimlik iki kez: bir kopya",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:7",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487140,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420010
+         },
+         {
+          "x": 487140,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "kilitli katmandaki kayıt atlanır, öbürü çoğaltılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.layers.set",
+     "input": {
+      "operation": "locked",
+      "layer": "duz",
+      "value": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "active": "parsel",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:9",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "count": 1,
+       "children": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9",
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "copies": [
+        {
+         "from": "$uidOf:7",
+         "uid": "$uidOf:11",
+         "id": 11
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "layer_locked",
+        "message": "1 nesne kilitli katmanda olduğu için atlandı. Değiştirmek için katmanın kilidini Katmanlar panelinden açın.",
+        "path": "uids"
+       },
+       {
+        "code": "unique_cleared",
+        "message": "Katmanda tekil olan “Kod” alanı; kopyalarda boş bırakıldı.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "polygon",
+        "id": 11,
+        "layerId": "yapi",
+        "attrs": {
+         "Kat": "2"
+        },
+        "pts": [
+         {
+          "x": 487140,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420000
+         },
+         {
+          "x": 487150,
+          "y": 4420010
+         },
+         {
+          "x": 487140,
+          "y": 4420010
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Kaydı çoğalt",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "hepsi kilitli katmanda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.layers.set",
+     "input": {
+      "operation": "locked",
+      "layer": "duz",
+      "value": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": true,
+       "active": "parsel",
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Düz” katmanı kilitli; üzerindeki nesne düzenlenemez. Kilidi Katmanlar panelinden açın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_entities",
+       "message": "Çoğaltılacak nesne yok. En az bir nesnenin kalıcı kimliğini verin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "1001 nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_count",
+       "message": "En çok 1000 nesne birlikte çoğaltılır; 1001 verildi.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz beklenen sürüm",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "expectedRevision": "on iki"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “on iki” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama: bina anahtarının reddi yazmadan söylenir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "uids.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1675 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.forms.validate",
+ "commandVersion": 1,
+ "title": "Formu denetle ve katmanın anahtarı",
+ "note": "ADR 0758 §3: form katmanın tekil dizinlerini dizinin formda gösterilen ilk alanında söyler. Written by scripts/fixtures/layer_indexes_cases.py with the form twin of forms_cases.py, without KentOS code; the issues' sentences are the core's ($any).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Dizinler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "forms": [
+    {
+     "id": "parsel-formu",
+     "name": "Parsel",
+     "layer": "parsel",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "parsel",
+        "field": "Parsel"
+       },
+       {
+        "type": "field",
+        "id": "ada",
+        "field": "Ada"
+       },
+       {
+        "type": "field",
+        "id": "mahalle",
+        "field": "Mahalle"
+       },
+       {
+        "type": "field",
+        "id": "bina",
+        "field": "bina-no"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "6eba28a1fc2b5fa132e1a33f0dffa266",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "parsel",
+          "field": "Parsel"
+         },
+         {
+          "type": "field",
+          "id": "ada",
+          "field": "Ada"
+         },
+         {
+          "type": "field",
+          "id": "mahalle",
+          "field": "Mahalle"
+         },
+         {
+          "type": "field",
+          "id": "bina",
+          "field": "bina-no"
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "name": "Parsel",
+      "kind": "integer"
+     },
+     {
+      "name": "Mahalle",
+      "kind": "text"
+     },
+     {
+      "id": "bina-no",
+      "name": "Bina no",
+      "kind": "text"
+     },
+     {
+      "name": "Belge",
+      "kind": "binary"
+     },
+     {
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2
+     }
+    ],
+    "indexes": [
+     {
+      "name": "Ada ve parsel",
+      "fields": [
+       "Ada",
+       "Parsel"
+      ],
+      "unique": true
+     },
+     {
+      "name": "Bina",
+      "fields": [
+       "bina-no"
+      ],
+      "unique": true,
+      "nullsEqual": true
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Mahalleler",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "alt",
+      "name": "Sokak",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "5",
+     "Mahalle": "Merkez",
+     "Bina no": "B1"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "6",
+     "Mahalle": "Merkez",
+     "Bina no": "B2"
+    },
+    "pts": [
+     {
+      "x": 487040,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420010
+     },
+     {
+      "x": 487040,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "102",
+     "Parsel": "5",
+     "Bina no": "B3"
+    },
+    "pts": [
+     {
+      "x": 487060,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420010
+     },
+     {
+      "x": 487060,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "103",
+     "Bina no": "B4"
+    },
+    "pts": [
+     {
+      "x": 487080,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420010
+     },
+     {
+      "x": 487080,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "103",
+     "Bina no": "B5"
+    },
+    "pts": [
+     {
+      "x": 487100,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420010
+     },
+     {
+      "x": 487100,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "Alan": "250.00"
+    },
+    "pts": [
+     {
+      "x": 487120,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420010
+     },
+     {
+      "x": 487120,
+      "y": 4420010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "geçerli kayıt: sorun yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "5",
+        "Mahalle": "Merkez",
+        "Bina no": "B1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka kaydın (ada, parsel)'i: anahtarın formda gösterilen ilk alanı Ada'da",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:3",
+      "values": {
+       "Ada": "101"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "ada",
+         "field": "Ada",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "5",
+        "Bina no": "B3"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni (ada, parsel)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:3",
+      "values": {
+       "Ada": "101",
+       "Parsel": "9"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "9",
+        "Bina no": "B3"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel boşalınca anahtar sorulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:3",
+      "values": {
+       "Ada": "101",
+       "Parsel": ""
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Bina no": "B3"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşları aynı sayan bina no: boş kayıt varken boşaltılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:2",
+      "values": {
+       "bina-no": ""
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "bina",
+         "field": "bina-no",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "6",
+        "Mahalle": "Merkez"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka kaydın bina nosu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:2",
+      "values": {
+       "bina-no": "B1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "bina",
+         "field": "bina-no",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "6",
+        "Mahalle": "Merkez",
+        "Bina no": "B1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aranan dizinin alanı sınırlamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:3",
+      "values": {
+       "Mahalle": "Merkez"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "102",
+        "Parsel": "5",
+        "Bina no": "B3",
+        "Mahalle": "Merkez"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki anahtar birden bozulur: ikisi de söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:3",
+      "values": {
+       "Ada": "101",
+       "Parsel": "6",
+       "bina-no": "B1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "ada",
+         "field": "Ada",
+         "rule": "index/unique",
+         "message": "$any"
+        },
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "bina",
+         "field": "bina-no",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "6",
+        "Bina no": "B1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel değişir, adası aynı başka kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:1",
+      "values": {
+       "Parsel": "6"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "ada",
+         "field": "Ada",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "6",
+        "Mahalle": "Merkez",
+        "Bina no": "B1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kendi değerleri: sorun yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:1",
+      "values": {
+       "Ada": "101",
+       "Parsel": "5"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "5",
+        "Mahalle": "Merkez",
+        "Bina no": "B1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş kayıt: bina nosu boş, başka boş yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:6"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Alan": "250.00"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş kayda başka kaydın (ada, parsel)'i",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:6",
+      "values": {
+       "Ada": "102",
+       "Parsel": "5"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "ada",
+         "field": "Ada",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Alan": "250.00",
+        "Ada": "102",
+        "Parsel": "5"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş kayda yeni bina no",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:6",
+      "values": {
+       "bina-no": "B6"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Alan": "250.00",
+        "Bina no": "B6"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parselsiz iki kayıt: boşlar farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:4"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "103",
+        "Bina no": "B4"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parselsiz kayda başka kaydın parseli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:4",
+      "values": {
+       "Parsel": "5"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "103",
+        "Bina no": "B4",
+        "Parsel": "5"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parselsiz kayda yeni parsel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:4",
+      "values": {
+       "Parsel": "1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "103",
+        "Bina no": "B4",
+        "Parsel": "1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayının yazımıyla aynı (ada, parsel)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:1",
+      "values": {
+       "Ada": "+101",
+       "Parsel": "06"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "ada",
+         "field": "Ada",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "6",
+        "Mahalle": "Merkez",
+        "Bina no": "B1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bina no büyük küçük harf ayrı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:2",
+      "values": {
+       "bina-no": "b1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "6",
+        "Mahalle": "Merkez",
+        "Bina no": "b1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bina no boşlukla boş sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:2",
+      "values": {
+       "bina-no": "   "
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [
+        {
+         "code": "form_unique",
+         "severity": "error",
+         "item": "bina",
+         "field": "bina-no",
+         "rule": "index/unique",
+         "message": "$any"
+        }
+       ],
+       "valid": false,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "6",
+        "Mahalle": "Merkez"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "mahalle boşaltılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel-formu",
+      "uid": "$uidOf:1",
+      "values": {
+       "Mahalle": ""
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "issues": [],
+       "valid": true,
+       "items": [
+        {
+         "id": "parsel",
+         "shown": true
+        },
+        {
+         "id": "ada",
+         "shown": true
+        },
+        {
+         "id": "mahalle",
+         "shown": true
+        },
+        {
+         "id": "bina",
+         "shown": true
+        }
+       ],
+       "version": 1,
+       "attrs": {
+        "Ada": "101",
+        "Parsel": "5",
+        "Bina no": "B1"
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

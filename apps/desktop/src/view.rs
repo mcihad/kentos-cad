@@ -1982,6 +1982,7 @@ impl App {
             Asking::Subtypes => self.subtypes_view(),
             Asking::Contingents => self.contingents_view(),
             Asking::LayerRules => self.layer_rules_view(),
+            Asking::LayerIndexes => self.layer_indexes_view(),
             Asking::Domains => self.domains_view(),
             Asking::FormAudit => self.form_audit_view(),
             Asking::AnnotationStyles => self.annotation_styles_view(),

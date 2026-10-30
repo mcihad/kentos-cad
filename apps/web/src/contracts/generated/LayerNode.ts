@@ -9,6 +9,7 @@ import type { LayerDerivation } from "./LayerDerivation";
 import type { LayerField } from "./LayerField";
 import type { LayerFilter } from "./LayerFilter";
 import type { LayerGeometry } from "./LayerGeometry";
+import type { LayerIndex } from "./LayerIndex";
 import type { LayerNodeType } from "./LayerNodeType";
 import type { LayerRule } from "./LayerRule";
 import type { LayerSnap } from "./LayerSnap";
@@ -124,6 +125,11 @@ contingents?: Array<FieldGroup>,
  * Only a layer holding objects has them.
  */
 rules?: Array<LayerRule>, 
+/**
+ * Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer
+ * holding objects has them.
+ */
+indexes?: Array<LayerIndex>, 
 /**
  * The layer as a dataset (docs/adr/0633 §1): its title, responsible party, license, quality. Only a layer
  * has it, never a group.

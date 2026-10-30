@@ -6,8 +6,10 @@
  *
  * Refusals, in this order: `no_entities`, `invalid_uid` (`uids[i]`), `invalid_count` (more than
  * 1000), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`
- * (`uids[i]`), `layer_locked` (every object on a locked layer). Warnings: `layer_locked` (objects and
- * children on locked layers left out), `unique_cleared` (a field a form keeps unique left empty).
+ * (`uids[i]`), `layer_locked` (every object on a locked layer), `not_unique` (a copy whose emptied key
+ * another record holds: a layer index taking empty values as the same, docs/adr/0758 §3). Warnings:
+ * `layer_locked` (objects and children on locked layers left out), `unique_cleared` (a field a form or the
+ * layer keeps unique, or a unique index of the layer holds, left empty).
  */
 export type RecordsDuplicate = { 
 /**

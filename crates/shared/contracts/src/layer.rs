@@ -599,6 +599,14 @@ pub struct LayerNode {
         ts(as = "Option<Vec<crate::layer_rules::LayerRule>>", optional)
     )]
     pub rules: Vec<crate::layer_rules::LayerRule>,
+    /// Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer
+    /// holding objects has them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::layer_indexes::LayerIndex>>", optional)
+    )]
+    pub indexes: Vec<crate::layer_indexes::LayerIndex>,
     /// The layer as a dataset (docs/adr/0633 §1): its title, responsible party, license, quality. Only a layer
     /// has it, never a group.
     #[serde(default, skip_serializing_if = "Option::is_none")]

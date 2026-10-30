@@ -74,6 +74,8 @@ pub struct TableRead {
     pub skipped: Vec<(i64, String)>,
     /// What was not carried, once each.
     pub losses: BTreeSet<String>,
+    /// The table's indexes as the layer's (docs/adr/0758 §5).
+    pub indexes: Vec<kentos_commands::LayerIndex>,
 }
 
 /// A file read.
@@ -853,13 +855,12 @@ pub fn read_in(
         .map_err(|e| e.0)?;
         let name = layer.name.clone();
         let hints = field_hints(&gp, &layer.name)?;
-        tables.push(table_of_rows_hinted(
-            &layer,
-            &rows,
-            &uids,
-            &|fid| row_uid(&name, fid),
-            &hints,
-        )?);
+        let mut table =
+            table_of_rows_hinted(&layer, &rows, &uids, &|fid| row_uid(&name, fid), &hints)?;
+        // The table's indexes (docs/adr/0758 §5); one that cannot be read is no index of the layer.
+        let read = gp.indexes(&layer.name).unwrap_or_default();
+        table.indexes = layer_indexes_of(&layer.name, &table.fields, &read);
+        tables.push(table);
     }
     Ok(Read {
         file: path
@@ -1038,7 +1039,81 @@ pub fn table_of_rows_hinted(
         records,
         skipped,
         losses,
+        indexes: Vec::new(),
     })
+}
+
+/// A table's indexes as the layer's (docs/adr/0758 §5): an index over columns that are all its fields (not the fid,
+/// not the geometry, none holding bytes), named without the table's name before it; a UNIQUE constraint's by its
+/// columns. A name met again gets a number after it; the same columns twice are one index, unique when either was.
+pub(crate) fn layer_indexes_of(
+    table: &str,
+    fields: &[LayerField],
+    read: &[gpkg::indexes::Index],
+) -> Vec<kentos_commands::LayerIndex> {
+    let most = kentos_commands::MAX_NAME;
+    let mut out: Vec<kentos_commands::LayerIndex> = Vec::new();
+    for x in read {
+        let Some(keys) = x
+            .columns
+            .iter()
+            .map(|c| {
+                fields
+                    .iter()
+                    .find(|f| f.name == *c && f.kind != LayerFieldKind::Binary)
+                    .map(|f| f.key().to_owned())
+            })
+            .collect::<Option<Vec<String>>>()
+        else {
+            continue;
+        };
+        if keys.is_empty() || keys.len() > kentos_commands::MOST_INDEX_FIELDS {
+            continue;
+        }
+        if let Some(same) = out.iter_mut().find(|o| o.fields == keys) {
+            same.unique |= x.unique;
+            continue;
+        }
+        let prefix = format!("{table}_");
+        let given = if x.constraint {
+            x.columns.join(", ")
+        } else {
+            x.name
+                .get(..prefix.len())
+                .filter(|p| p.eq_ignore_ascii_case(&prefix) && x.name.len() > prefix.len())
+                .map_or(x.name.clone(), |_| x.name[prefix.len()..].to_owned())
+        };
+        let clean: String = given.chars().filter(|c| !c.is_control()).collect();
+        let mut base: String = kentos_commands::js_trim(&clean)
+            .chars()
+            .take(most)
+            .collect();
+        base = kentos_commands::js_trim(&base).to_owned();
+        if base.is_empty() {
+            base = "dizin".into();
+        }
+        let mut name = base.clone();
+        let mut n = 1;
+        while out
+            .iter()
+            .any(|o| kentos_commands::fold(&o.name) == kentos_commands::fold(&name))
+        {
+            n += 1;
+            let tail = format!(" {n}");
+            let head: String = base.chars().take(most - tail.chars().count()).collect();
+            name = format!("{}{tail}", kentos_commands::js_trim(&head));
+        }
+        out.push(kentos_commands::LayerIndex {
+            name,
+            fields: keys,
+            unique: x.unique,
+            nulls_equal: false,
+        });
+        if out.len() == kentos_commands::MOST_LAYER_INDEXES {
+            break;
+        }
+    }
+    out
 }
 
 // ── The drawing's layers as tables ──────────────────────────────────────────
@@ -1060,6 +1135,8 @@ pub struct TableWritten {
     pub columns: Vec<(String, String)>,
     /// A table of the file's the write took out and wrote again (docs/adr/0549).
     pub replaced: bool,
+    /// The layer's indexes written over it (docs/adr/0758 §5).
+    pub indexes: u32,
 }
 
 /// What [`write`] wrote.
@@ -1076,6 +1153,8 @@ pub struct Written {
     pub batches: u32,
     /// The relations and the QGIS styles written beside the tables (docs/adr/0627 §6, §7; [`write`] only).
     pub profile: crate::gpkg_profile::ProfileWritten,
+    /// What of the layers' indexes the file could not hold as given (docs/adr/0758 §5).
+    pub index_notes: Vec<String>,
 }
 
 fn c2(p: &kentos_commands::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
@@ -1568,6 +1647,53 @@ struct Plan {
     replaces: bool,
 }
 
+/// The layer's indexes over the table just written (docs/adr/0758 §5): each over the columns its fields went to, how
+/// many; what the file cannot hold as given said in `notes` (a unique one the rows break made plain, empty values taken
+/// as the same, which SQLite does not do).
+fn write_indexes(
+    doc: &Document,
+    p: &Plan,
+    session: &gpkg::Session<'_>,
+    notes: &mut Vec<String>,
+) -> Result<u32, WriteStop> {
+    let Some(node) = doc.layers().get(&p.layer) else {
+        return Ok(0);
+    };
+    let mut made = 0;
+    for x in &node.indexes {
+        let columns: Option<Vec<String>> = x
+            .fields
+            .iter()
+            .map(|k| {
+                let f = node.fields.iter().find(|f| f.key() == k)?;
+                let i = p.keys.iter().position(|a| *a == f.name)?;
+                Some(p.columns[i].name.clone())
+            })
+            .collect();
+        let Some(columns) = columns else {
+            notes.push(format!(
+                "“{}” tablosunun “{}” dizini yazılmadı: alanlarından biri tabloda sütun değil",
+                p.table, x.name
+            ));
+            continue;
+        };
+        let written = session.create_index(&p.table, &x.name, &columns, x.unique)?;
+        made += 1;
+        if x.unique && !written.unique {
+            notes.push(format!(
+                "“{}” tablosunun “{}” dizini tekil yazılamadı: yazılan değerler dosyada yineleniyor (KentOS boş metni değer saymaz, SQLite sayar); düz dizin yazıldı",
+                p.table, x.name
+            ));
+        } else if x.nulls_equal {
+            notes.push(format!(
+                "“{}” tablosunun “{}” dizini boşları aynı saymıyor: SQLite boş değerleri hep farklı sayar",
+                p.table, x.name
+            ));
+        }
+    }
+    Ok(made)
+}
+
 /// Writes the layers (by id; every layer with objects when empty) to a new GeoPackage at `path`.
 pub fn write(doc: &Document, layers: &[String], path: &Path) -> Result<Written, String> {
     let mut gp = GeoPackage::create(path).map_err(|e| e.0)?;
@@ -1701,6 +1827,7 @@ pub fn write_with_tables(
             (flow.progress)(done, total);
         }
         session.finish_table(w)?;
+        let indexes = write_indexes(doc, p, session, &mut out.index_notes)?;
         out.tables.push(TableWritten {
             table: p.table.clone(),
             layer: Some(p.layer.clone()),
@@ -1716,6 +1843,7 @@ pub fn write_with_tables(
                 .map(|(k, c)| (k.clone(), c.name.clone()))
                 .collect(),
             replaced: p.replaces,
+            indexes,
         });
     }
     for (p, t) in text_plans.iter().zip(tables) {
@@ -1770,6 +1898,7 @@ pub fn write_with_tables(
                 .map(|(h, c)| (h.clone(), c.name.clone()))
                 .collect(),
             replaced: p.replaces,
+            indexes: 0,
         });
     }
     Ok(out)

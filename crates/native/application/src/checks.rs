@@ -116,26 +116,30 @@ pub(crate) fn object_attrs(
     Ok((!out.is_empty()).then_some(out))
 }
 
+/// A clash with a layer's uniqueness: the refusal, and the writes (by their place in the writes given) holding values
+/// another record holds under the unique field, constraint or index refused.
+pub(crate) struct UniqueClash {
+    pub error: CommandError,
+    pub writes: Vec<usize>,
+}
+
 /// A bound layer's writes against its table's unique constraints (docs/adr/0755 §5), SQL's way: the values of a
 /// constraint's columns written anew (a column of it changed, or a new record) that another record of the layer holds
 /// after the writes is `not_unique` at `{at}.{name}` of its first column. A set with an empty value (NULL) is not asked
 /// unless the constraint takes NULLs as the same; an empty text is a value. Rows the layer has not taken (a part's,
 /// docs/adr/0510) are the table's to judge.
-fn table_unique_fit(
+fn table_unique_clash(
     doc: &Document,
     layer: &str,
     fields: &[kentos_commands::LayerField],
-    mine: &[&UniqueWrite<'_>],
+    mine: &[(usize, &UniqueWrite<'_>)],
     written: &HashSet<Slot>,
-) -> Result<(), Stop> {
-    let Some(link) = doc
+) -> Option<UniqueClash> {
+    let link = doc
         .settings()
         .sources
         .iter()
-        .find(|s| s.layer == layer && !s.uniques.is_empty())
-    else {
-        return Ok(());
-    };
+        .find(|s| s.layer == layer && !s.uniques.is_empty())?;
     for u in &link.uniques {
         let cols: Vec<&kentos_commands::LayerField> = u
             .columns
@@ -152,11 +156,12 @@ fn table_unique_fit(
         };
         let fresh: Vec<(&UniqueWrite<'_>, Vec<Option<String>>)> = mine
             .iter()
+            .map(|(_, w)| *w)
             .filter(|w| {
                 w.before
                     .is_none_or(|b| cols.iter().any(|f| b.get(&f.name) != w.after.get(&f.name)))
             })
-            .filter_map(|w| set(w.after).map(|v| (*w, v)))
+            .filter_map(|w| set(w.after).map(|v| (w, v)))
             .collect();
         if fresh.is_empty() {
             continue;
@@ -171,7 +176,7 @@ fn table_unique_fit(
                 *counts.entry(v).or_default() += 1;
             }
         }
-        for w in mine {
+        for (_, w) in mine {
             if let Some(v) = set(w.after) {
                 *counts.entry(v).or_default() += 1;
             }
@@ -206,14 +211,177 @@ fn table_unique_fit(
                         .join(", ")
                 )
             };
-            return Err(Stop::failed(error(
-                codes::NOT_UNIQUE,
-                message,
-                Some(format!("{}.{}", w.at, cols[0].name)),
-            )));
+            let writes = mine
+                .iter()
+                .filter(|(_, w)| {
+                    set(w.after).is_some_and(|v| counts.get(&v).copied().unwrap_or(0) > 1)
+                })
+                .map(|(i, _)| *i)
+                .collect();
+            return Some(UniqueClash {
+                error: error(
+                    codes::NOT_UNIQUE,
+                    message,
+                    Some(format!("{}.{}", w.at, cols[0].name)),
+                ),
+                writes,
+            });
         }
     }
-    Ok(())
+    None
+}
+
+/// Up to this many writes at once, a unique index looks for each written key in the layer instead of counting them all.
+const FEW_WRITES: usize = 16;
+
+/// Whether `attrs` hold `key` in `fields` (an empty value is none), compared in place.
+fn holds(
+    fields: &[&kentos_commands::LayerField],
+    attrs: &BTreeMap<String, String>,
+    key: &[Option<&str>],
+) -> bool {
+    fields.iter().zip(key).all(|(f, k)| {
+        attrs
+            .get(&f.name)
+            .map(String::as_str)
+            .filter(|v| !kentos_commands::js_trim(v).is_empty())
+            == *k
+    })
+}
+
+/// The values of `x`'s fields in `attrs`, as the index compares them (`index_values`).
+fn index_key<'v>(
+    x: &kentos_commands::LayerIndex,
+    fields: &[&kentos_commands::LayerField],
+    attrs: &'v BTreeMap<String, String>,
+) -> Option<Vec<Option<&'v str>>> {
+    kentos_commands::index_values(x, fields, |n| attrs.get(n).map(String::as_str))
+}
+
+/// A layer's writes against its unique indexes (docs/adr/0758 §3), the layer's keys: the values of an index's fields
+/// written anew (a field of it changed, or a new record) that another record of the layer holds after the writes is
+/// `not_unique` at `{at}.{name}` of the first field of it the write changed. An empty value is none: a set with one is
+/// not asked unless the index takes empty values as the same.
+fn index_unique_clash(
+    doc: &Document,
+    node: &kentos_commands::LayerNode,
+    mine: &[(usize, &UniqueWrite<'_>)],
+    written: &HashSet<Slot>,
+) -> Option<UniqueClash> {
+    for x in node.indexes.iter().filter(|x| x.unique) {
+        let fields: Vec<&kentos_commands::LayerField> = x
+            .fields
+            .iter()
+            .filter_map(|k| node.fields.iter().find(|f| f.key() == k))
+            .collect();
+        if fields.len() != x.fields.len() || fields.is_empty() {
+            continue;
+        }
+        let changed = |w: &UniqueWrite<'_>| {
+            w.before.is_none_or(|b| {
+                fields
+                    .iter()
+                    .any(|f| b.get(&f.name) != w.after.get(&f.name))
+            })
+        };
+        if !mine
+            .iter()
+            .any(|(_, w)| changed(w) && index_key(x, &fields, w.after).is_some())
+        {
+            continue;
+        }
+        // Few writes (a record typed, a form saved): the layer is walked once per written key, compared in place,
+        // without counting every record's (a set of 100 000 keys is ~25 ms a write). Only a clash counts them all.
+        if mine.len() <= FEW_WRITES
+            && !mine.iter().any(|(_, w)| {
+                changed(w)
+                    && index_key(x, &fields, w.after).is_some_and(|k| {
+                        mine.iter()
+                            .filter(|(_, o)| index_key(x, &fields, o.after).as_ref() == Some(&k))
+                            .nth(1)
+                            .is_some()
+                            || doc.by_layer(&node.id).any(|e| {
+                                !written.contains(&Slot(e.base().id))
+                                    && holds(&fields, &e.base().attrs, &k)
+                            })
+                    })
+            })
+        {
+            continue;
+        }
+        let mut counts: std::collections::HashMap<Vec<Option<&str>>, usize> =
+            std::collections::HashMap::new();
+        for e in doc.by_layer(&node.id) {
+            if written.contains(&Slot(e.base().id)) {
+                continue;
+            }
+            if let Some(v) = index_key(x, &fields, &e.base().attrs) {
+                *counts.entry(v).or_default() += 1;
+            }
+        }
+        for (_, w) in mine {
+            if let Some(v) = index_key(x, &fields, w.after) {
+                *counts.entry(v).or_default() += 1;
+            }
+        }
+        let held = |w: &UniqueWrite<'_>| {
+            index_key(x, &fields, w.after)
+                .and_then(|v| counts.get(&v).copied())
+                .unwrap_or(0)
+                > 1
+        };
+        let Some((_, w)) = mine.iter().find(|(_, w)| changed(w) && held(w)) else {
+            continue;
+        };
+        let values: Vec<Option<String>> = fields
+            .iter()
+            .map(|f| {
+                w.after
+                    .get(&f.name)
+                    .filter(|v| !kentos_commands::js_trim(v).is_empty())
+                    .cloned()
+            })
+            .collect();
+        let said = crate::layers_indexes::said_values(&fields, &values);
+        let message = if fields.len() == 1 {
+            format!(
+                "“{}” alanı katmanda tekil (“{}” dizini); {said} başka bir kayıtta var. Başka bir değer verin.",
+                fields[0].label(),
+                x.name
+            )
+        } else {
+            format!(
+                "{} alanları katmanda birlikte tekil (“{}” dizini); {said} başka bir kayıtta var. Başka değerler verin.",
+                fields
+                    .iter()
+                    .map(|f| format!("“{}”", f.label()))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                x.name
+            )
+        };
+        let at = fields
+            .iter()
+            .find(|f| {
+                w.before
+                    .is_none_or(|b| b.get(&f.name) != w.after.get(&f.name))
+            })
+            .unwrap_or(&fields[0]);
+        let writes = mine
+            .iter()
+            .filter(|(_, w)| held(w))
+            .map(|(i, _)| *i)
+            .collect();
+        return Some(UniqueClash {
+            error: error(
+                codes::NOT_UNIQUE,
+                message,
+                Some(format!("{}.{}", w.at, at.name)),
+            ),
+            writes,
+        });
+    }
+    None
 }
 
 /// The layers' record rules (Kayıt kuralları, docs/adr/0438 §1) asked of writes, each layer's
@@ -345,23 +513,37 @@ pub(crate) struct UniqueWrite<'a> {
 /// Writes against their layers' unique fields (docs/adr/0438 §3): a value written anew that another
 /// record of the layer holds after the writes, the written ones among them, is `not_unique` at
 /// `{at}.{name}`. A value a record kept is not asked; empty ones are not unique's. Then the bound
-/// tables' unique constraints ([`table_unique_fit`]).
+/// tables' unique constraints ([`table_unique_clash`]) and the layers' unique indexes ([`index_unique_clash`]).
 pub(crate) fn unique_fit(doc: &Document, writes: &[UniqueWrite<'_>]) -> Result<(), Stop> {
+    match unique_clash(doc, writes) {
+        Some(clash) => Err(Stop::failed(clash.error)),
+        None => Ok(()),
+    }
+}
+
+/// [`unique_fit`]'s first clash, with the writes holding the values that clash.
+pub(crate) fn unique_clash(doc: &Document, writes: &[UniqueWrite<'_>]) -> Option<UniqueClash> {
     let mut layers: Vec<&str> = writes.iter().map(|w| w.layer).collect();
     layers.dedup();
     for layer in layers {
         let Some(node) = doc.layers().get(layer) else {
             continue;
         };
-        let mine: Vec<&UniqueWrite<'_>> = writes.iter().filter(|w| w.layer == layer).collect();
-        let written: HashSet<Slot> = mine.iter().filter_map(|w| w.slot).collect();
-        table_unique_fit(doc, layer, &node.fields, &mine, &written)?;
+        let mine: Vec<(usize, &UniqueWrite<'_>)> = writes
+            .iter()
+            .enumerate()
+            .filter(|(_, w)| w.layer == layer)
+            .collect();
+        let written: HashSet<Slot> = mine.iter().filter_map(|(_, w)| w.slot).collect();
+        if let Some(clash) = table_unique_clash(doc, layer, &node.fields, &mine, &written) {
+            return Some(clash);
+        }
         for f in node.fields.iter().filter(|f| f.unique) {
             let fresh = |w: &UniqueWrite<'_>| -> Option<String> {
                 let v = w.after.get(&f.name).filter(|v| !v.trim().is_empty())?;
                 (w.before.and_then(|b| b.get(&f.name)) != Some(v)).then(|| v.clone())
             };
-            if !mine.iter().any(|w| fresh(w).is_some()) {
+            if !mine.iter().any(|(_, w)| fresh(w).is_some()) {
                 continue;
             }
             let mut counts: std::collections::HashMap<&str, usize> =
@@ -374,29 +556,45 @@ pub(crate) fn unique_fit(doc: &Document, writes: &[UniqueWrite<'_>]) -> Result<(
                     *counts.entry(v.as_str()).or_default() += 1;
                 }
             }
-            for w in &mine {
+            for (_, w) in &mine {
                 if let Some(v) = w.after.get(&f.name).filter(|v| !v.trim().is_empty()) {
                     *counts.entry(v.as_str()).or_default() += 1;
                 }
             }
-            for w in &mine {
+            let held = |w: &UniqueWrite<'_>| {
+                w.after
+                    .get(&f.name)
+                    .filter(|v| !v.trim().is_empty())
+                    .is_some_and(|v| counts.get(v.as_str()).copied().unwrap_or(0) > 1)
+            };
+            for (_, w) in &mine {
                 if let Some(v) = fresh(w)
                     && counts.get(v.as_str()).copied().unwrap_or(0) > 1
                 {
-                    return Err(Stop::failed(error(
-                        codes::NOT_UNIQUE,
-                        format!(
-                            "“{}” alanı katmanda tekil; “{}” başka bir kayıtta var. Başka bir değer verin.",
-                            f.label(),
-                            kentos_commands::display_value(f, &v)
+                    return Some(UniqueClash {
+                        error: error(
+                            codes::NOT_UNIQUE,
+                            format!(
+                                "“{}” alanı katmanda tekil; “{}” başka bir kayıtta var. Başka bir değer verin.",
+                                f.label(),
+                                kentos_commands::display_value(f, &v)
+                            ),
+                            Some(format!("{}.{}", w.at, f.name)),
                         ),
-                        Some(format!("{}.{}", w.at, f.name)),
-                    )));
+                        writes: mine
+                            .iter()
+                            .filter(|(_, w)| held(w))
+                            .map(|(i, _)| *i)
+                            .collect(),
+                    });
                 }
             }
         }
+        if let Some(clash) = index_unique_clash(doc, node, &mine, &written) {
+            return Some(clash);
+        }
     }
-    Ok(())
+    None
 }
 
 /// A new record's empty fields filled (docs/adr/0199 §2, 0422 §2, 0752), as its form fills them: a form the layer

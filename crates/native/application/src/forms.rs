@@ -173,6 +173,13 @@ pub(crate) fn rules<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_commands:
         .map_or(&[][..], |n| n.rules.as_slice())
 }
 
+/// The layer's indexes (docs/adr/0758 §3), whose unique ones a form over it keeps.
+pub(crate) fn indexes<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_commands::LayerIndex] {
+    doc.layers()
+        .get(layer)
+        .map_or(&[][..], |n| n.indexes.as_slice())
+}
+
 /// The layer's value groups (docs/adr/0423), which a form over it reads.
 pub(crate) fn contingents<'d>(
     doc: &'d Document,
@@ -212,6 +219,7 @@ pub(crate) fn prepared(
         p.with_subtypes(subtypes(doc, &form.layer))
             .with_contingents(contingents(doc, &form.layer))
             .with_rules(rules(doc, &form.layer))
+            .with_indexes(indexes(doc, &form.layer))
             .with_table(checks, uniques, dialect)
     })
     .map_err(|issues| {
@@ -526,6 +534,7 @@ pub(crate) fn enforced(
             p.with_subtypes(subtypes(doc, layer))
                 .with_contingents(contingents(doc, layer))
                 .with_rules(rules(doc, layer))
+                .with_indexes(indexes(doc, layer))
                 .with_table(checks, uniques, dialect)
         })
         .map_err(|issues| refuse(first_error(&issues)))?;

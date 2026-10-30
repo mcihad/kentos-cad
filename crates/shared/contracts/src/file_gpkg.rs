@@ -121,6 +121,11 @@ pub struct GpkgImported {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub datasets: u32,
+    /// The tables' indexes the layers the import made took (docs/adr/0758 §5).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub indexes: u32,
     /// The drawing's revision after the step (plan: before it).
     pub revision: String,
     /// What the merge did on each layer (docs/adr/0628 §5).
@@ -179,6 +184,11 @@ pub struct GpkgTableExported {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub geometry: Option<String>,
+    /// The layer's indexes written over it (docs/adr/0758 §5).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub indexes: u32,
 }
 
 /// A project relation written as an OGC 18-000 related table (docs/adr/0627 §6).

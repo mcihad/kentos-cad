@@ -166,6 +166,7 @@ impl Document {
                         p.with_subtypes(subtypes)
                             .with_contingents(groups)
                             .with_rules(node.map_or(&[][..], |n| n.rules.as_slice()))
+                            .with_indexes(node.map_or(&[][..], |n| n.indexes.as_slice()))
                     })
                     .map(|p| (f.layer.clone(), p))
             })

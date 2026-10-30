@@ -702,6 +702,13 @@ impl LayerTree {
         }
     }
 
+    /// A layer's indexes, as an undo or a redo puts them (docs/adr/0758).
+    pub(crate) fn replace_indexes(&mut self, id: &str, indexes: &[kentos_contracts::LayerIndex]) {
+        if let Some(node) = self.node_mut(id) {
+            node.indexes = indexes.to_vec();
+        }
+    }
+
     /// A layer's value combinations, as an undo or a redo puts them (docs/adr/0423).
     pub(crate) fn replace_contingents(
         &mut self,
@@ -771,6 +778,7 @@ impl LayerTree {
             style: new.style,
             children: Vec::new(),
             rules: Vec::new(),
+            indexes: Vec::new(),
             dataset: None,
             derivation: None,
         }

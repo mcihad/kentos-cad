@@ -28,6 +28,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Katmanın dizinleri ve anahtarları (30 Ekim 2026; [ADR 0758](docs/adr/0758-layer-keys-and-indexes.md)).**
+  Katman düğümünün `indexes`'i (`.kcad` şema 136 opt-in; ad, 1–32 alanın kararlı anahtarı, `unique`, `nullsEqual`;
+  `layer_indexes_problem`), `cad.layers.indexes` (tek adım “Dizinler”, `invalid_indexes`, kayıtların zaten bozduğu yeni ya da
+  sıkılaşan tekil dizin `index_not_unique` ve `uids`, bağlı katmanda `index_not_in_source`). Tekil dizin katmanın anahtarı:
+  her yazmada `checks::unique_clash` (boş değer değer değil, `nullsEqual` değilse; ret yazmanın değiştirdiği ilk alanda),
+  `cad.fields.write` yalnız çakışan kümeyi tutanları çıkarır, formda `Prepared::with_indexes` (`index/unique`), Kaydı çoğalt
+  katmanın tekil alanlarını ve anahtarlarını boş bırakır. Kaldırılan
+  alanı anan dizin bütünüyle gider. GeoPackage'a `CREATE [UNIQUE] INDEX "{tablo}_{ad}"`, okurken `kentos_geopackage::indexes`
+  (kısmi, ifade, bayt, fid dizinleri alınmaz). Dizinler penceresi `data.layerIndexes`. 130 ortak durum
+  (`layer_indexes_cases.py`), dosyalar SQLite ve GDAL ile.
+
 - **Tablo bağlamak arayüzü kilitlemez (30 Ekim 2026; [ADR 0757](docs/adr/0757-binding-without-freezing.md)).**
   Sahibin sözü: “50.000 satırı olan bir tablom var … 3 4 belki de 10 saniye kadar sistemi kilitliyor … qgis içinde bu
   problemlerin hiçbiri yok”. `cad.sources.edit`'in bağlaması masaüstünde iş olarak okuma kopyasında (`sources::edit_job`:

@@ -16,11 +16,11 @@ use kentos_commands::{
     CAD_BLOCKS_EDIT, CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate,
     EntitiesFillet, EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim,
     FieldsUsage, HatchPatternsEdit, LabelsPin, LayersCompose, LayersContingents, LayersEdit,
-    LayersFilter, LayersFind, LayersInfo, LayersLabels, LayersRenderer, LayersRules, LayersService,
-    LayersSet, LayersStates, LayersSubtypes, LayersTable, LayersTime, LayersTranslate, LibraryEdit,
-    LineTypesEdit, NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsCreate,
-    SheetsEdit, SheetsFit, StandardsApply, StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo,
-    ViewsEdit, ViewsOp,
+    LayersFilter, LayersFind, LayersIndexes, LayersInfo, LayersLabels, LayersRenderer, LayersRules,
+    LayersService, LayersSet, LayersStates, LayersSubtypes, LayersTable, LayersTime,
+    LayersTranslate, LibraryEdit, LineTypesEdit, NetworkDefine, NurbsCreate, OffsetBy,
+    ScenariosEdit, SettingsSet, SheetsCreate, SheetsEdit, SheetsFit, StandardsApply,
+    StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
 use kentos_commands::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
@@ -77,22 +77,24 @@ use kentos_native_application::time_query;
 use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, addresses_check, addresses_compare,
-    addresses_normalize,
-    adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas, casework_edit, casework_query, casework_run, array, blocks_define,
-    blocks_edit, circle, constructions, crs_transform, curves_construct, delete, dimensions_edit,
+    addresses_normalize, adjoin_cmd, annotations_scales, annotations_write, arc, arch_audit, areas,
+    array, blocks_define, blocks_edit, casework_edit, casework_query, casework_run, circle,
+    columns_distances, constructions, crs_transform, curves_construct, delete, dimensions_edit,
     dimensions_query, dimensions_reassociate, edit, entities_chamfer, entities_extend,
-    entities_fillet, entities_order, entities_pick, entities_relate, entities_select, entities_trim,
-    entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit, images_clip, labels_pin,
-    labels_report, layers_compose, layers_contingents, layers_edit, layers_filter, layers_find,
-    layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
-    layers_states, layers_subtypes, layers_table, layers_time, layers_translate, leaders_edit, line,
-    linearref_define, network_define, nurbs, objects_derive, offset, openings_create, openings_distances, openings_edit, walls_distances, columns_distances, levels_assign, legends, north, revisions,
-    parcels, point, points_construct, polygon, polygon_regular, polyline, rectangle_create,
-    revcloud_create, roads_edit, scenarios_edit, sector_create, set, settings_set, shape_edits,
-    sheets_create, sheets_edit, sheets_fit, sheets_levels, slabs_create, slabs_edit, snap_find, spaces_create, spaces_edit,
-    spaces_quantities, styles_edit, survey_adjust, survey_points, tables_edit, texts_check,
-    texts_edit, time_version, transform, ucs_set, units_change, views_edit, walls_create,
-    walls_edit, walls_from_lines, walls_joins, walls_partition, walls_rectangle,
+    entities_fillet, entities_order, entities_pick, entities_relate, entities_select,
+    entities_trim, entities_vertex, fields_edit, fields_usage, fonts_report, hatches_edit,
+    images_clip, labels_pin, labels_report, layers_compose, layers_contingents, layers_edit,
+    layers_filter, layers_find, layers_indexes, layers_info, layers_labels, layers_renderer,
+    layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
+    layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define,
+    network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
+    openings_edit, parcels, point, points_construct, polygon, polygon_regular, polyline,
+    rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
+    settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, slabs_create,
+    slabs_edit, snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit,
+    survey_adjust, survey_points, tables_edit, texts_check, texts_edit, time_version, transform,
+    ucs_set, units_change, views_edit, walls_create, walls_distances, walls_edit, walls_from_lines,
+    walls_joins, walls_partition, walls_rectangle,
 };
 use kentos_native_application::{
     arch_edit, columns_create, grids_create, ramps_create, stairs_create,
@@ -576,6 +578,12 @@ impl Input for LayersContingents {
 }
 
 impl Input for LayersRules {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for LayersIndexes {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -4436,6 +4444,7 @@ fn run_op(
         kentos_commands::CAD_LAYERS_SUBTYPES => run!(layers_subtypes, LayersSubtypes),
         kentos_commands::CAD_LAYERS_CONTINGENTS => run!(layers_contingents, LayersContingents),
         kentos_commands::CAD_LAYERS_RULES => run!(layers_rules, LayersRules),
+        kentos_commands::CAD_LAYERS_INDEXES => run!(layers_indexes, LayersIndexes),
         kentos_commands::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
         kentos_commands::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
         kentos_commands::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),

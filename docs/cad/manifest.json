@@ -1630,6 +1630,22 @@
    "tests": 0
   },
   {
+   "id": "data.layerIndexes",
+   "kind": "command",
+   "title": "Dizinler",
+   "level": "semantic",
+   "via": [
+    "cad.layers.indexes"
+   ],
+   "operation": null,
+   "python": "kentos.cad.layers.indexes",
+   "mcp": "cad.layers.indexes",
+   "note": "Dizinler cad.layers.indexes ile tek adımda yazılır; tekil dizin katmanın her yazmasında sorulur, GeoPackage'a yazılır ve okunur (ADR 0758).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.layerRules",
    "kind": "command",
    "title": "Kayıt kuralları",

@@ -247,6 +247,7 @@ impl Judge<'_> {
             p.with_subtypes(node.and_then(|n| n.subtypes.as_ref()))
                 .with_contingents(node.map_or(&[][..], |n| n.contingents.as_slice()))
                 .with_rules(node.map_or(&[][..], |n| n.rules.as_slice()))
+                .with_indexes(node.map_or(&[][..], |n| n.indexes.as_slice()))
         })
         .map_err(|issues| first_error(&issues))
     }

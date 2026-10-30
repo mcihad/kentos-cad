@@ -3106,6 +3106,7 @@
        "data.subtypes",
        "data.contingents",
        "data.layerRules",
+       "data.layerIndexes",
        "data.domains",
        "data.duplicate"
       ]
@@ -6305,6 +6306,7 @@
    "data.domains",
    "data.subtypes",
    "data.layerRules",
+   "data.layerIndexes",
    "data.tableStyles",
    "data.duplicate",
    "data.contingents",

@@ -1,0 +1,2164 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.set",
+ "commandVersion": 1,
+ "title": "Öznitelikler ve katmanın anahtarı",
+ "note": "ADR 0758 §3: tekil dizinin alanlarını değiştiren yazma, alanlarında başka bir kaydın değerlerini verirse reddedilir; boş değer değer değildir, boşları aynı sayan dizin onları da karşılaştırır. Written by scripts/fixtures/layer_indexes_cases.py without KentOS code.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Dizinler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "name": "Parsel",
+      "kind": "integer"
+     },
+     {
+      "name": "Mahalle",
+      "kind": "text"
+     },
+     {
+      "id": "bina-no",
+      "name": "Bina no",
+      "kind": "text"
+     },
+     {
+      "name": "Belge",
+      "kind": "binary"
+     },
+     {
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2
+     }
+    ],
+    "indexes": [
+     {
+      "name": "Ada ve parsel",
+      "fields": [
+       "Ada",
+       "Parsel"
+      ],
+      "unique": true
+     },
+     {
+      "name": "Mahalle",
+      "fields": [
+       "Mahalle"
+      ]
+     },
+     {
+      "name": "Bina",
+      "fields": [
+       "bina-no"
+      ],
+      "unique": true,
+      "nullsEqual": true
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Mahalleler",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "alt",
+      "name": "Sokak",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "5",
+     "Mahalle": "Merkez",
+     "Bina no": "B1"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "6",
+     "Mahalle": "Merkez",
+     "Bina no": "B2"
+    },
+    "pts": [
+     {
+      "x": 487040,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420000
+     },
+     {
+      "x": 487050,
+      "y": 4420010
+     },
+     {
+      "x": 487040,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "102",
+     "Parsel": "5",
+     "Bina no": "B3"
+    },
+    "pts": [
+     {
+      "x": 487060,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420000
+     },
+     {
+      "x": 487070,
+      "y": 4420010
+     },
+     {
+      "x": 487060,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "103",
+     "Bina no": "B4"
+    },
+    "pts": [
+     {
+      "x": 487080,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420000
+     },
+     {
+      "x": 487090,
+      "y": 4420010
+     },
+     {
+      "x": 487080,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "103",
+     "Bina no": "B5"
+    },
+    "pts": [
+     {
+      "x": 487100,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420000
+     },
+     {
+      "x": 487110,
+      "y": 4420010
+     },
+     {
+      "x": 487100,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "Alan": "250.00"
+    },
+    "pts": [
+     {
+      "x": 487120,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420010
+     },
+     {
+      "x": 487120,
+      "y": 4420010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "ada değişince (ada, parsel) başka kayıtta var: yeri Ada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Ada": "101"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “5”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel değişince (ada, parsel) başka kayıtta var: yeri Parsel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Parsel": "6"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “6”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Parsel"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikisi birden değişir, başka kaydın değerleri: yeri ilk değişen alan Ada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "6"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “6”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni (ada, parsel): yazılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Parsel": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "7",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parseli boş kayda parsel verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "Parsel": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4"
+       ],
+       "ids": [
+        4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4",
+         "Parsel": "5"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kayda birden aynı (ada, parsel): ikisi de yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4",
+       "$uidOf:5"
+      ],
+      "attrs": {
+       "Parsel": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“103”, “7”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Parsel"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel boşalınca anahtar sorulmaz (boş değer değildir)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Parsel": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "parseli boş iki kaydın adası aynı kalır: boşlar farklı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4",
+       "$uidOf:5"
+      ],
+      "attrs": {
+       "Mahalle": "Yalı"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:4",
+        "$uidOf:5"
+       ],
+       "ids": [
+        4,
+        5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4",
+         "Mahalle": "Yalı"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5",
+         "Mahalle": "Yalı"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "anahtarın alanlarına dokunmayan yazma sorulmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "Mahalle": "Çarşı"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ],
+       "ids": [
+        1,
+        2
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Çarşı",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Çarşı",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kendi değerlerini yeniden yazmak serbest",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "ids": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aranan dizin sınırlamaz: aynı mahalle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Mahalle": "Merkez"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3",
+         "Mahalle": "Merkez"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşları aynı sayan dizinde boşalan bina no, boş kayıt varken: reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Bina no": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşları aynı sayan dizinde başka kaydın bina nosu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "Bina no": "B1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); “B1” başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşları aynı sayan dizinde yeni bina no",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "attrs": {
+       "Bina no": "B6"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00",
+         "Bina no": "B6"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş kayda başka kaydın (ada, parsel)'i",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“102”, “5”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş kayda yeni (ada, parsel)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "attrs": {
+       "Ada": "104",
+       "Parsel": "1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:6"
+       ],
+       "ids": [
+        6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00",
+         "Ada": "104",
+         "Parsel": "1"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ada sayının yazımıyla: 0101 101'dir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Ada": "0101",
+       "Parsel": "6"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “6”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kaydın adası birden 101: (101, 5) ve (101, 6) zaten var mı? 3 ve 5 için",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:5"
+      ],
+      "attrs": {
+       "Ada": "101"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “5”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": false,
+      "canRedo": false,
+      "revision": "same",
+      "dirty": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "önce yeni değer, sonra başka kayıt onu alamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "Parsel": "9"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:3"
+       ],
+       "ids": [
+        3
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "9",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "9"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“102”, “9”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "9",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "değeri bırakılan (ada, parsel) başka kayda geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "Parsel": "8"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:1"
+       ],
+       "ids": [
+        1
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "8",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "Parsel": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [
+        "$uidOf:2"
+       ],
+       "ids": [
+        2
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "8",
+         "Mahalle": "Merkez",
+         "Bina no": "B1"
+        }
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "5",
+         "Mahalle": "Merkez",
+         "Bina no": "B2"
+        }
+       },
+       "3": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B3"
+        }
+       },
+       "4": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B4"
+        }
+       },
+       "5": {
+        "attrs": {
+         "Ada": "103",
+         "Bina no": "B5"
+        }
+       },
+       "6": {
+        "attrs": {
+         "Alan": "250.00"
+        }
+       }
+      },
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  }
+ ]
+}

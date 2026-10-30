@@ -1,0 +1,59 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Parseller",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis",
+    "drawingFont": "barlow"
+  },
+  "origin": { "x": 487000.0, "y": 4420000.0 },
+  "layers": [
+    {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+      "fields": [
+        { "name": "Ada", "kind": "integer" },
+        { "name": "Parsel", "kind": "integer" },
+        { "name": "Mahalle", "kind": "text" },
+        { "id": "bina-no", "name": "Bina no", "kind": "text" }
+      ],
+      "indexes": [
+        { "name": "Ada ve parsel", "fields": ["Ada", "Parsel"], "unique": true },
+        { "name": "Mahalle", "fields": ["Mahalle"] },
+        { "name": "Bina", "fields": ["bina-no"], "unique": true, "nullsEqual": true }
+      ],
+      "children": []
+    },
+    {
+      "id": "grup",
+      "name": "Mahalleler",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+      "children": []
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon", "id": 1, "layerId": "parsel",
+      "attrs": { "Ada": "101", "Parsel": "5", "Mahalle": "Merkez", "Bina no": "B1" },
+      "pts": [ { "x": 487000.0, "y": 4420000.0 }, { "x": 487010.0, "y": 4420000.0 }, { "x": 487010.0, "y": 4420010.0 }, { "x": 487000.0, "y": 4420010.0 } ]
+    }
+  ],
+  "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"],
+  "styles": { "items": [], "categories": [] }
+}

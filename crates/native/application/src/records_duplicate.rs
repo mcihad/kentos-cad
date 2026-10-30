@@ -4,7 +4,9 @@
 //!
 //! The checks, in order: the ids, their count, the expected revision, the objects, the locked layers
 //! (every object on one: refused; some: left out with a warning). A child's field takes its parent's
-//! copy's id; a field a form of the layer keeps unique is left empty in the copy.
+//! copy's id; a field a form of the layer keeps unique, the layer keeps unique (docs/adr/0438 §3) or a unique index of
+//! the layer holds (its key, docs/adr/0758 §3) is left empty in the copy; copies whose emptied key another record
+//! holds (an index taking empty values as the same) are refused.
 
 use std::collections::HashSet;
 
@@ -173,6 +175,19 @@ fn check(doc: &Document, input: &RecordsDuplicate) -> Result<Planned, Stop> {
         }
     }
     cleared.sort();
+    // The layers' own unique fields and keys the copies leave empty, once each, after the forms' (docs/adr/0758 §3).
+    let mut keys: Vec<String> = Vec::new();
+    for c in &copies {
+        let Some(e) = doc.get(c.slot) else { continue };
+        for (said, field) in key_fields(doc, &e.base().layer_id) {
+            if e.base().attrs.contains_key(&field)
+                && !cleared.iter().any(|(_, f)| *f == field)
+                && !keys.contains(&said)
+            {
+                keys.push(said);
+            }
+        }
+    }
     for (form, field) in cleared {
         warnings.push(CommandWarning {
             code: codes::UNIQUE_CLEARED.into(),
@@ -182,6 +197,31 @@ fn check(doc: &Document, input: &RecordsDuplicate) -> Result<Planned, Stop> {
             path: Some("uids".into()),
         });
     }
+    for said in keys {
+        warnings.push(CommandWarning {
+            code: codes::UNIQUE_CLEARED.into(),
+            message: format!("{said}; kopyalarda boş bırakıldı."),
+            path: Some("uids".into()),
+        });
+    }
+    // The copies as they are written, against the layers' keys: an index taking empty values as the same refuses a
+    // second empty one.
+    let made: Vec<(String, std::collections::BTreeMap<String, String>)> = copies
+        .iter()
+        .filter_map(|c| doc.get(c.slot))
+        .map(|e| (e.base().layer_id.clone(), copied_attrs(doc, e)))
+        .collect();
+    let writes: Vec<checks::UniqueWrite<'_>> = made
+        .iter()
+        .map(|(layer, attrs)| checks::UniqueWrite {
+            slot: None,
+            layer,
+            before: None,
+            after: attrs,
+            at: "uids".to_owned(),
+        })
+        .collect();
+    checks::unique_fit(doc, &writes)?;
     Ok(Planned {
         copies,
         children,
@@ -208,6 +248,44 @@ fn unique_fields(doc: &Document, layer: &str) -> Vec<(String, String)> {
         }
     }
     out
+}
+
+/// The fields of `layer` the layer itself keeps unique (docs/adr/0438 §3) and those its unique indexes hold (docs/adr/0758
+/// §3): what keeps each, said, and the field's name.
+fn key_fields(doc: &Document, layer: &str) -> Vec<(String, String)> {
+    let Some(node) = doc.layers().get(layer) else {
+        return Vec::new();
+    };
+    let mut out: Vec<(String, String)> = Vec::new();
+    for f in node.fields.iter().filter(|f| f.unique) {
+        out.push((format!("Katmanda tekil olan “{}” alanı", f.label()), f.name.clone()));
+    }
+    for x in node.indexes.iter().filter(|x| x.unique) {
+        for k in &x.fields {
+            if let Some(f) = node.fields.iter().find(|f| f.key() == k)
+                && !out.iter().any(|(_, n)| *n == f.name)
+            {
+                out.push((
+                    format!("Katmanın “{}” anahtarındaki “{}” alanı", x.name, f.label()),
+                    f.name.clone(),
+                ));
+            }
+        }
+    }
+    out
+}
+
+/// A copy's values: the object's, without what a form or the layer keeps unique.
+fn copied_attrs(doc: &Document, e: &Entity) -> std::collections::BTreeMap<String, String> {
+    let layer = &e.base().layer_id;
+    let mut attrs = e.base().attrs.clone();
+    for (_, field) in unique_fields(doc, layer) {
+        attrs.remove(&field);
+    }
+    for (_, field) in key_fields(doc, layer) {
+        attrs.remove(&field);
+    }
+    attrs
 }
 
 /// Checks `input` against the document, writing nothing.
@@ -271,13 +349,10 @@ fn write_execute(
             continue;
         };
         let mut entity: Entity = original.clone();
-        let layer = entity.base().layer_id.clone();
-        let unique = unique_fields(cx.doc, &layer);
+        let attrs = copied_attrs(cx.doc, original);
         let base = entity.base_mut();
         base.id = 0;
-        for (_, field) in unique {
-            base.attrs.remove(&field);
-        }
+        base.attrs = attrs;
         if let Some((at, field)) = &c.parent {
             let parent: &RecordCopy = &out.copies[*at];
             base.attrs.insert(field.clone(), parent.uid.clone());

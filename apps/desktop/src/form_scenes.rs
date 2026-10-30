@@ -1953,6 +1953,86 @@ fn permits(app: &mut App) {
     app.features.layer = Some("ruhsat".into());
 }
 
+/// Four parcels on two islands with a key over the island and the parcel, a plain index over the neighbourhood and a
+/// key over the building number taking empty values as the same (docs/adr/0758).
+fn keyed_parcels(app: &mut App) {
+    let mut o = Objects::new();
+    let rows: [(&str, &str, &str, &str); 4] = [
+        ("101", "5", "Merkez", "B1"),
+        ("101", "6", "Merkez", "B2"),
+        ("102", "5", "Yalı", "B3"),
+        ("103", "", "Yalı", ""),
+    ];
+    for (i, (ada, parsel, mahalle, bina)) in rows.iter().enumerate() {
+        let x = 22.0 * i as f64;
+        let id = o.path(
+            "parsel",
+            &[[x, 0.0], [x + 18.0, 0.0], [x + 18.0, 14.0], [x, 14.0]],
+            true,
+        );
+        let mut values = vec![("Ada", *ada), ("Mahalle", *mahalle)];
+        if !parsel.is_empty() {
+            values.push(("Parsel", *parsel));
+        }
+        if !bina.is_empty() {
+            values.push(("Bina no", *bina));
+        }
+        let label = if parsel.is_empty() {
+            (*ada).to_owned()
+        } else {
+            format!("{ada}/{parsel}")
+        };
+        o.data(id, &values, Some(label.as_str()));
+    }
+    open_edited(app, o, |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut parsel = crate::tools_scenes::layer("parsel", "Parsel", "#0E7490", 0.35);
+        parsel["fields"] = json!([
+            { "name": "Ada", "kind": "integer" },
+            { "name": "Parsel", "kind": "integer" },
+            { "name": "Mahalle", "kind": "text" },
+            { "id": "bina-no", "name": "Bina no", "kind": "text" },
+            { "name": "Alan", "kind": "decimal", "scale": 2, "unit": "m²" }]);
+        parsel["indexes"] = json!([
+            { "name": "Ada ve parsel", "fields": ["Ada", "Parsel"], "unique": true },
+            { "name": "Mahalle", "fields": ["Mahalle"] },
+            { "name": "Bina", "fields": ["bina-no"], "unique": true, "nullsEqual": true }]);
+        layers.push(parsel);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("parsel");
+    });
+    app.features.layer = Some("parsel".into());
+}
+
+/// Dizinler on the parcels, the key over the island and the parcel chosen.
+fn parcel_indexes(app: &mut App) {
+    keyed_parcels(app);
+    run(app, "data.layerIndexes");
+    let _ = app.update(Message::LayerIndexes(
+        crate::forms::layer_indexes::Event::Choose(0),
+    ));
+}
+
+/// Dizinler: the neighbourhood made unique, which two parcels already break; Kaydet is off.
+fn parcel_indexes_broken(app: &mut App) {
+    keyed_parcels(app);
+    run(app, "data.layerIndexes");
+    use crate::forms::layer_indexes::Event as I;
+    let _ = app.update(Message::LayerIndexes(I::Choose(1)));
+    let _ = app.update(Message::LayerIndexes(I::Unique(true)));
+}
+
+/// Dizinler: a new index over the neighbourhood and the area, the fields put in by their chips.
+fn parcel_index_new(app: &mut App) {
+    keyed_parcels(app);
+    run(app, "data.layerIndexes");
+    use crate::forms::layer_indexes::Event as I;
+    let _ = app.update(Message::LayerIndexes(I::New));
+    let _ = app.update(Message::LayerIndexes(I::Name("Mahalle ve alan".into())));
+    let _ = app.update(Message::LayerIndexes(I::ToggleField("Mahalle".into())));
+    let _ = app.update(Message::LayerIndexes(I::ToggleField("Alan".into())));
+}
+
 /// Kayıt kuralları on the permits, the dates' rule chosen.
 fn permit_rules(app: &mut App) {
     permits(app);
@@ -2886,6 +2966,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-adim-ozet", stepped_summary),
         ("form-adim-tasarim", stepped_designer),
         ("form-kayit-kurallari", permit_rules),
+        ("form-dizinler", parcel_indexes),
+        ("form-dizin-bozuk", parcel_indexes_broken),
+        ("form-dizin-yeni", parcel_index_new),
         ("form-kural-formda", permit_entry),
         ("form-cakisma", permit_conflict),
         ("form-alan-ekleri", permit_fields),

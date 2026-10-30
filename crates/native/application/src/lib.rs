@@ -242,6 +242,7 @@ pub mod fields_usage;
 pub mod layers_find;
 pub mod layers_info;
 pub mod layers_contingents;
+pub mod layers_indexes;
 pub mod layers_rules;
 pub mod layers_subtypes;
 pub mod layers_table;
@@ -537,6 +538,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_LAYERS_RULES,
         kentos_commands::CAD_LAYERS_RULES_VERSION,
+    ),
+    (
+        kentos_commands::CAD_LAYERS_INDEXES,
+        kentos_commands::CAD_LAYERS_INDEXES_VERSION,
     ),
     // Records without a geometry ([`records`], docs/adr/0410).
     (

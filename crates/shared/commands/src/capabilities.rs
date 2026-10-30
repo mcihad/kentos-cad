@@ -684,6 +684,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.layers.indexes",
+        refusals: &[
+            REVISION,
+            &["layer_not_found", "not_a_layer", "service_layer"],
+            &["invalid_indexes", "index_not_unique"],
+        ],
+        warnings: &["index_not_in_source"],
+        targets: none,
+    },
+    Entry {
         id: "cad.layers.contingents",
         refusals: &[
             REVISION,
@@ -723,6 +733,9 @@ const ENTRIES: &[Entry] = &[
                 "invalid_count",
                 "entity_not_found",
                 "layer_locked",
+                // A copy whose emptied key another record holds: an index taking empty values as the same
+                // (docs/adr/0758 §3).
+                "not_unique",
             ],
             REVISION,
         ],

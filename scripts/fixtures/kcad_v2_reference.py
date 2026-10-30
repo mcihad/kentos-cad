@@ -1342,6 +1342,8 @@ def layer_entries(n):
                 "contingents": (opaque, False),
                 # Schema 72 (docs/adr/0438 §1): the record rules, as their JSON.
                 "rules": (opaque, False),
+                # Schema 136 (docs/adr/0758): the indexes, as their JSON.
+                "indexes": (opaque, False),
                 # Schema 98 (docs/adr/0583 §1): the system its objects came from, as its JSON.
                 "sourceCrs": (opaque, False),
                 # Schema 106 (docs/adr/0633 §3): the layer as a dataset and what it was derived from, as their JSON.
@@ -2281,6 +2283,13 @@ def document(d):
     if "cadWork" in d["settings"]:
         # What a CAD project is drawn for (docs/adr/0801).
         schema = max(schema, 135)
+
+    def indexed(nodes):
+        return any(n.get("indexes") or indexed(n.get("children", [])) for n in nodes)
+
+    if indexed(d.get("layers", [])):
+        # A layer's indexes (docs/adr/0758).
+        schema = max(schema, 136)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2994,7 +3003,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-136.kcad"] = container(root(cmap(parts), version=uint(136)))
+    files["schema-version-137.kcad"] = container(root(cmap(parts), version=uint(137)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5231,6 +5240,26 @@ def build():
     untyped = copy.deepcopy(worked)
     del untyped["settings"]["workspace"]
     out["broken/cad-work-no-type.kcad"] = container(document(untyped))
+    # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
+    # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
+    # same on a plain index and a default written are refused too.
+    keyed_layer = load("layer-indexes.json")
+    li = document(keyed_layer)
+    assert li.count(b"\x67version\x18\x88") == 1, "the indexes are schema 136"
+    out["layer-indexes.kcad"] = container(li)
+    out["broken/layer-indexes-in-schema-135.kcad"] = container(li.replace(b"\x67version\x18\x88", b"\x67version\x18\x87"))
+
+    def index_bad(name, change):
+        d = copy.deepcopy(keyed_layer)
+        change(d)
+        out["broken/layer-indexes-" + name + ".kcad"] = container(document(d))
+    written = opaque(keyed_layer["layers"][0]["indexes"])
+    assert li.count(written) == 1
+    out["broken/layer-indexes-empty.kcad"] = container(li.replace(written, opaque([])))
+    index_bad("on-group", lambda d: d["layers"][1].update(indexes=[{"name": "Ad", "fields": ["Ad"]}]))
+    index_bad("unknown-field", lambda d: d["layers"][0]["indexes"][1].update(fields=["Renk"]))
+    index_bad("nulls-equal-plain", lambda d: d["layers"][0]["indexes"][1].update(nullsEqual=True))
+    index_bad("default-written", lambda d: d["layers"][0]["indexes"][1].update(unique=False))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

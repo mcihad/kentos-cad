@@ -1741,6 +1741,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
     let mut geometry: Option<kentos_contracts::LayerGeometry> = None;
     let mut contingents: Option<(usize, Vec<kentos_contracts::FieldGroup>)> = None;
     let mut rules: Option<(usize, Vec<kentos_contracts::LayerRule>)> = None;
+    let mut indexes: Option<(usize, Vec<kentos_contracts::LayerIndex>)> = None;
     map(r, |r, key| {
         match key {
             "id" => id = Some(text(r)?),
@@ -1872,6 +1873,36 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                     ));
                 }
                 rules = Some((at, read));
+            }
+            // Schema 136 (docs/adr/0758): the indexes, read whole; checked below.
+            "indexes" if has.layer_indexes => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let read: Vec<kentos_contracts::LayerIndex> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("dizinler okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "dizinler yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if read.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; dizin yoksa alan hiç yazılmaz",
+                    ));
+                }
+                indexes = Some((at, read));
             }
             // Schema 102 (docs/adr/0622 §5): what the layer holds.
             "geometry" if has.layer_geometry => {
@@ -2065,6 +2096,20 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
             return Err(r.fail_at(Code::BadValue, *at, &problem));
         }
     }
+    if let Some((at, read)) = &indexes {
+        if kind == Some(LayerNodeType::Group) {
+            return Err(r.fail_at(
+                Code::BadValue,
+                *at,
+                "grubun dizinleri olmaz; yalnız katmanın olur",
+            ));
+        }
+        let none = Vec::new();
+        let fields_now: &Vec<_> = fields.as_ref().unwrap_or(&none);
+        if let Some((_, problem)) = kentos_contracts::layer_indexes_problem(fields_now, read) {
+            return Err(r.fail_at(Code::BadValue, *at, &problem));
+        }
+    }
     if source_crs.is_some() && kind == Some(LayerNodeType::Group) {
         return Err(r.fail(
             Code::BadValue,
@@ -2089,6 +2134,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
         source_crs,
         geometry,
         rules: rules.map(|(_, c)| c).unwrap_or_default(),
+        indexes: indexes.map(|(_, c)| c).unwrap_or_default(),
         contingents: contingents.map(|(_, c)| c).unwrap_or_default(),
         subtypes: subtypes.map(|(_, s)| s),
         table_styles,

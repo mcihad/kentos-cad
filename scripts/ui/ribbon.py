@@ -435,7 +435,7 @@ GIS = [
           overflow=["chart.bar", "chart.pie", "chart.histogram", "chart.box", "chart.scatter", "chart.line"]),
         P("Form", "forms", [S("data.forms"), S("data.formEdit"), S("data.relations")],
           overflow=["data.joinViews", "data.formAudit", "data.tableStyles", "data.subtypes", "data.contingents",
-            "data.layerRules", "data.domains", "data.duplicate"]),
+            "data.layerRules", "data.layerIndexes", "data.domains", "data.duplicate"]),
         P("Kaynak", "sourceLinked", [S("data.sources"), S("source.link"), S("source.write"), S("source.read"),
             S("source.status")],
           overflow=["source.reconcile", "source.relink", "source.unlink", "source.writeTogether", "raster.gpkgWrite"]),
@@ -737,7 +737,7 @@ MODULES = {
         "layer.filter", "layer.filterClear", "layer.labels", "tool.labelMove", "tool.labelPin", "tool.labelHide",
         "tool.labelRotate", "view.pinnedLabels", "view.unplacedLabels", "draft.overlap.allow", "draft.overlap.layer",
         "draft.overlap.layers", "draft.topologyPoints", "data.domains", "data.subtypes", "data.layerRules",
-        "data.tableStyles", "data.duplicate", "data.contingents", "processing.history", "layer.dataset"],
+        "data.layerIndexes", "data.tableStyles", "data.duplicate", "data.contingents", "processing.history", "layer.dataset"],
     "only": {
         # A map's terrain, sheets and parcels (some still to come); İfraz, Aplikasyon and the parcel table are Harita's.
         "analysis.slope": ["harita", "cbs"], "analysis.volume": ["harita", "cbs"], "map.contours": ["harita", "cbs"],

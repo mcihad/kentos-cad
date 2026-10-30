@@ -180,6 +180,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::LayerRule>,
         after: Vec<kentos_contracts::LayerRule>,
     },
+    /// A layer's indexes (Dizinler, docs/adr/0758), before and after.
+    LayerIndexes {
+        layer: String,
+        before: Vec<kentos_contracts::LayerIndex>,
+        after: Vec<kentos_contracts::LayerIndex>,
+    },
     /// A layer or a group taken out of the tree with everything under it
     /// (`Document::remove_layer`), and its inverse, which puts it back; a
     /// new one (`Document::add_layer`) is a `LayerAdd`.
@@ -468,6 +474,15 @@ impl Op {
                 before,
                 after,
             } => Op::LayerRules {
+                layer: layer.clone(),
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::LayerIndexes {
+                layer,
+                before,
+                after,
+            } => Op::LayerIndexes {
                 layer: layer.clone(),
                 before: after.clone(),
                 after: before.clone(),
@@ -1164,6 +1179,7 @@ impl Document {
                 | Op::LayerSubtypes { .. }
                 | Op::LayerContingents { .. }
                 | Op::LayerRules { .. }
+                | Op::LayerIndexes { .. }
                 | Op::LayerRemove(_)
                 | Op::LayerAdd(_)
                 | Op::LayerMove { .. }
@@ -1385,6 +1401,10 @@ impl Document {
             }
             Op::LayerRules { layer, after, .. } => {
                 self.layers.replace_rules(layer, after);
+                return;
+            }
+            Op::LayerIndexes { layer, after, .. } => {
+                self.layers.replace_indexes(layer, after);
                 return;
             }
             // A node still holding objects stays: taking it away would leave

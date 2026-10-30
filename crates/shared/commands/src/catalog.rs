@@ -6694,6 +6694,39 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Dizinler (docs/adr/0758), held together by fixtures/commands/v1/cad.layers.indexes.json.
+        CommandDescriptor {
+            id: crate::CAD_LAYERS_INDEXES.into(),
+            version: crate::CAD_LAYERS_INDEXES_VERSION,
+            title: "Dizinler".into(),
+            summary: "Katmanın dizinlerini yazar (ArcGIS'in öznitelik dizini, veritabanının CREATE INDEX'i): her dizin (name) 1–32 alanı (fields, \
+                      anahtarlarıyla, sırayla) tutar; tekil olanı (unique) katmanın anahtarıdır: alanlarında başka bir kaydın değerlerini veren yazma, \
+                      kaynağı ne olursa olsun (form, tablo, komut, içe aktarma, Python, ajan) reddedilir (not_unique). Boş değer değer sayılmaz; \
+                      nullsEqual boşları aynı sayar (PostgreSQL'in NULLS NOT DISTINCT'i). Kayıtların zaten bozduğu yeni tekil dizin reddedilir \
+                      (index_not_unique, kayıtların kimlikleriyle). GeoPackage'a yazılan katmanın tablosu dizinlerini alır, okunan tablonun dizinleri \
+                      katmana gelir. Boş liste kaldırır; tek geri alma adımı “Dizinler”."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::LayersIndexes>(),
+            output: schema::<crate::LayersComposed>(),
+            plan: Some(schema::<crate::LayersComposePlan>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ada ve parsel numarası birlikte tekil, mahalle aranır".into(),
+                input: json!({ "layer": "parsel", "indexes": [
+                    { "name": "Ada ve parsel", "fields": ["Ada", "Parsel"], "unique": true },
+                    { "name": "Mahalle", "fields": ["Mahalle"] }
+                ] }),
+                output: None,
+            }],
+        },
         // Değer bileşimleri (docs/adr/0423), held together by fixtures/commands/v1/cad.layers.contingents.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_CONTINGENTS.into(),
@@ -11642,6 +11675,9 @@ mod tests {
                     }
                     crate::CAD_LAYERS_RULES => {
                         serde_json::from_value::<crate::LayersRules>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LAYERS_INDEXES => {
+                        serde_json::from_value::<crate::LayersIndexes>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_COMPOSE => {
                         serde_json::from_value::<crate::LayersCompose>(e.input.clone()).map(|_| ())

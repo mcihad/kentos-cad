@@ -59,6 +59,8 @@ pub struct Prepared {
     table: crate::TableChecks,
     /// The bound table's unique constraints (docs/adr/0755 §5).
     table_uniques: Vec<kentos_contracts::TableUnique>,
+    /// The layer's unique indexes (docs/adr/0758 §3): its keys.
+    keys: Vec<kentos_contracts::LayerIndex>,
     /// The rules' schema: what the layer's rules compile against.
     schema: Schema,
     /// The day the rules read (`@tarih`): what a listed value's validity is judged on (docs/adr/0438 §5).
@@ -203,6 +205,7 @@ impl Prepared {
             rules: crate::LayerRules::default(),
             table: crate::TableChecks::default(),
             table_uniques: Vec::new(),
+            keys: Vec::new(),
             today,
             fields: fields.to_vec(),
             items,
@@ -228,6 +231,22 @@ impl Prepared {
             self.schema.unit,
         )
         .unwrap_or_default();
+        self
+    }
+
+    /// The layer's indexes (docs/adr/0758 §3): a record whose values another record holds under a unique one is not
+    /// unique, told on the index's first field the form shows.
+    pub fn with_indexes(mut self, indexes: &[kentos_contracts::LayerIndex]) -> Prepared {
+        self.keys = indexes
+            .iter()
+            .filter(|x| {
+                x.unique
+                    && x.fields
+                        .iter()
+                        .all(|k| self.fields.iter().any(|f| f.key() == k))
+            })
+            .cloned()
+            .collect();
         self
     }
 
@@ -363,6 +382,14 @@ impl Prepared {
             .filter_map(|c| self.fields.iter().find(|f| f.name == *c))
         {
             if !keys.contains(&f.key()) {
+                keys.push(f.key());
+            }
+        }
+        // And the fields of the layer's unique indexes (docs/adr/0758 §3).
+        for k in self.keys.iter().flat_map(|x| &x.fields) {
+            if let Some(f) = self.fields.iter().find(|f| f.key() == k)
+                && !keys.contains(&f.key())
+            {
                 keys.push(f.key());
             }
         }
@@ -1060,6 +1087,76 @@ impl Prepared {
         let others: Vec<&Attrs> = others.collect();
         let mut issues = self.field_unique_issues(attrs, object, &others);
         issues.extend(self.table_unique_issues(attrs, &others));
+        issues.extend(self.index_unique_issues(attrs, &others));
+        issues
+    }
+
+    /// The layer's unique indexes among `others` (docs/adr/0758 §3): an empty value is none, and a set with one is not
+    /// compared unless the index takes empty values as the same. Told on the index's first field the form shows (its
+    /// first field when it shows none).
+    fn index_unique_issues(&self, attrs: &Attrs, others: &[&Attrs]) -> Vec<FormIssue> {
+        let mut issues = Vec::new();
+        for x in &self.keys {
+            let fields: Vec<(usize, &LayerField)> = x
+                .fields
+                .iter()
+                .filter_map(|k| self.fields.iter().enumerate().find(|(_, f)| f.key() == k))
+                .collect();
+            if fields.len() != x.fields.len() || fields.is_empty() {
+                continue;
+            }
+            let only: Vec<&LayerField> = fields.iter().map(|(_, f)| *f).collect();
+            let Some(mine) =
+                kentos_contracts::index_values(x, &only, |n| attrs.get(n).map(String::as_str))
+            else {
+                continue;
+            };
+            // Another record holds the same set: the same value in every field, empty where this one is.
+            let held = others.iter().any(|o| {
+                only.iter().zip(&mine).all(|(f, v)| {
+                    o.get(&f.name)
+                        .map(String::as_str)
+                        .filter(|s| !js_trim(s).is_empty())
+                        == *v
+                })
+            });
+            if !held {
+                continue;
+            }
+            let said = |v: &Option<&str>| v.map_or("boş".to_owned(), |s| format!("“{s}”"));
+            let shown = fields
+                .iter()
+                .find(|(i, _)| self.bound().any(|(_, b)| b.index == *i))
+                .copied()
+                .unwrap_or(fields[0]);
+            let message = if fields.len() == 1 {
+                format!(
+                    "“{}” katmanda tekil olmalı (“{}” dizini); {} başka bir kayıtta var.",
+                    shown.1.label(),
+                    x.name,
+                    said(&mine[0])
+                )
+            } else {
+                format!(
+                    "{} katmanda birlikte tekil olmalı (“{}” dizini); ({}) başka bir kayıtta var.",
+                    fields
+                        .iter()
+                        .map(|(_, f)| format!("“{}”", f.label()))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    x.name,
+                    mine.iter().map(said).collect::<Vec<_>>().join(", ")
+                )
+            };
+            issues.push(issue(
+                codes::UNIQUE,
+                FormSeverity::Error,
+                self.item_of(shown.0),
+                Some(shown.1.key()),
+                Some("index/unique"),
+                message,
+            ));
+        }
         issues
     }
 

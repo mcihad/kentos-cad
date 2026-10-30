@@ -532,6 +532,14 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
             path: Some("layers".into()),
         });
     }
+    // What of the layers' indexes the file could not hold as given (docs/adr/0758 §5).
+    if !written.index_notes.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: format!("{}.", written.index_notes.join("; ")),
+            path: Some("layers".into()),
+        });
+    }
     // What of the relations and looks the file could not carry (docs/adr/0627 §6, §7).
     if !written.profile.left.is_empty() {
         warnings.push(CommandWarning {
@@ -555,6 +563,7 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
                 layer: t.layer.or(t.output).unwrap_or_default(),
                 rows: t.rows,
                 geometry: t.geometry,
+                indexes: t.indexes,
             })
             .collect(),
         left: written.left,

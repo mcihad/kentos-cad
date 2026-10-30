@@ -8987,6 +8987,11 @@
      "covered": false
     },
     {
+     "key": "nullsEqual",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "off",
      "value": true,
      "covered": false
@@ -9854,13 +9859,14 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1070,
+   "cases": 1092,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.entities.set.contingents.json",
     "fixtures/commands/v1/cad.entities.set.forms.json",
+    "fixtures/commands/v1/cad.entities.set.indexes.json",
     "fixtures/commands/v1/cad.entities.set.json",
     "fixtures/commands/v1/cad.entities.set.kinds.json",
     "fixtures/commands/v1/cad.entities.set.rules.json",
@@ -10612,8 +10618,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 36,
+   "cases": 56,
    "files": [
+    "fixtures/commands/v1/cad.fields.write.indexes.json",
     "fixtures/commands/v1/cad.fields.write.json",
     "fixtures/commands/v1/cad.sources.generated.json"
    ],
@@ -11767,12 +11774,13 @@
     "mcp": true,
     "server": false
    },
-   "cases": 146,
+   "cases": 166,
    "files": [
     "fixtures/commands/v1/cad.forms.edit.publish.json",
     "fixtures/commands/v1/cad.forms.edit.withdraw.json",
     "fixtures/commands/v1/cad.forms.validate.contingents.json",
     "fixtures/commands/v1/cad.forms.validate.defaults.json",
+    "fixtures/commands/v1/cad.forms.validate.indexes.json",
     "fixtures/commands/v1/cad.forms.validate.json",
     "fixtures/commands/v1/cad.forms.validate.rules.json",
     "fixtures/commands/v1/cad.forms.validate.subtypes.json"
@@ -13142,6 +13150,35 @@
      "key": "plot",
      "value": true,
      "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.layers.indexes",
+   "title": "Dizinler",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 34,
+   "files": [
+    "fixtures/commands/v1/cad.layers.indexes.json"
+   ],
+   "options": [
+    {
+     "key": "nullsEqual",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "unique",
+     "value": true,
+     "covered": true
     }
    ],
    "kinds": []
@@ -15893,7 +15930,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 257,
+   "cases": 277,
    "files": [
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.polygon.create.area-rules.json",
@@ -15901,6 +15938,7 @@
     "fixtures/commands/v1/cad.polygon.create.fields.json",
     "fixtures/commands/v1/cad.polygon.create.formdefaults.json",
     "fixtures/commands/v1/cad.polygon.create.forms.json",
+    "fixtures/commands/v1/cad.polygon.create.indexes.json",
     "fixtures/commands/v1/cad.polygon.create.json",
     "fixtures/commands/v1/cad.polygon.create.rules.json",
     "fixtures/commands/v1/cad.polygon.create.subtypes.json",
@@ -18651,7 +18689,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 208,
+   "cases": 225,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.dimensions.create.json",
@@ -18692,6 +18730,16 @@
     {
      "key": "autoSelect",
      "value": true,
+     "covered": true
+    },
+    {
+     "key": "cadWork",
+     "value": "architecture",
+     "covered": true
+    },
+    {
+     "key": "cadWork",
+     "value": "map",
      "covered": true
     },
     {
@@ -29186,6 +29234,16 @@
      "covered": false
     },
     {
+     "key": "cadWork",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "cadWork",
+     "value": "map",
+     "covered": false
+    },
+    {
      "key": "caps",
      "value": "closed",
      "covered": false
@@ -31730,6 +31788,16 @@
     {
      "key": "broken",
      "value": "wallGone",
+     "covered": false
+    },
+    {
+     "key": "cadWork",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "cadWork",
+     "value": "map",
      "covered": false
     },
     {
@@ -34297,6 +34365,16 @@
     {
      "key": "broken",
      "value": "wallGone",
+     "covered": false
+    },
+    {
+     "key": "cadWork",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "cadWork",
+     "value": "map",
      "covered": false
     },
     {

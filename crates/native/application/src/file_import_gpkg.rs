@@ -306,8 +306,16 @@ pub(crate) fn run_with(
             )
         })
         .collect();
+    // The tables' indexes, for the layers the import makes (docs/adr/0758 §5).
+    let indexes: BTreeMap<String, Vec<kentos_commands::LayerIndex>> = read
+        .tables
+        .iter()
+        .filter(|t| !t.indexes.is_empty())
+        .map(|t| (t.name.clone(), t.indexes.clone()))
+        .collect();
     let (mut out, mut warnings) = run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"), write)?;
     if !fresh {
+        take_indexes(doc, &indexes, &mut out, &mut left);
         take_profile(doc, &profile, &foreign, &mut out, &mut left);
         if !left.is_empty() {
             warnings.push(CommandWarning {
@@ -332,6 +340,49 @@ pub(crate) fn run_with(
         });
     }
     Ok((out, warnings))
+}
+
+/// The tables' indexes on the layers the import made for them (docs/adr/0758 §5), in the import's step: an index that
+/// no longer fits the layer's fields (a relation made one of them a reference) is left, and said.
+fn take_indexes(
+    doc: &mut Document,
+    indexes: &BTreeMap<String, Vec<kentos_commands::LayerIndex>>,
+    out: &mut GpkgImported,
+    left: &mut Vec<String>,
+) {
+    let made: BTreeSet<&str> = out.layers.iter().map(|l| l.id.as_str()).collect();
+    for t in &out.tables {
+        let (Some(read), true) = (indexes.get(&t.table), made.contains(t.layer.as_str())) else {
+            continue;
+        };
+        let Some(node) = doc.layers().get(&t.layer) else {
+            continue;
+        };
+        let fits: Vec<kentos_commands::LayerIndex> = read
+            .iter()
+            .filter(|x| {
+                kentos_commands::layer_indexes_problem(&node.fields, std::slice::from_ref(x))
+                    .is_none()
+            })
+            .cloned()
+            .collect();
+        if fits.len() < read.len() {
+            left.push(format!(
+                "“{}” tablosunun {} dizini katmanın alanlarına uymadı",
+                t.table,
+                read.len() - fits.len()
+            ));
+        }
+        let n = fits.len() as u32;
+        match doc.set_layer_indexes(&t.layer, fits, crate::layers_indexes::LABEL) {
+            Ok(_) => out.indexes += n,
+            Err(why) => left.push(format!(
+                "“{}” tablosunun dizinleri alınmadı: {}",
+                t.table, why.0
+            )),
+        }
+    }
+    out.revision = doc.revision().to_string();
 }
 
 /// The file's QGIS styles as the looks of the layers the import made for their tables, and its relations whose two
@@ -624,6 +675,7 @@ pub(crate) fn run_read(
             relations: Vec::new(),
             styles: 0,
             datasets: 0,
+            indexes: 0,
             merged,
             rejects: rejects_written,
             revision: doc.revision().to_string(),

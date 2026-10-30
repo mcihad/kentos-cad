@@ -48,6 +48,7 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
             p.with_subtypes(forms::subtypes(doc, &form.layer))
                 .with_contingents(forms::contingents(doc, &form.layer))
                 .with_rules(forms::rules(doc, &form.layer))
+                .with_indexes(forms::indexes(doc, &form.layer))
                 .with_table(checks, uniques, dialect)
         })
     {

@@ -2072,6 +2072,7 @@ fn sink_answer(
                 layer: t.layer.or(t.output).unwrap_or_default(),
                 rows: t.rows,
                 geometry: t.geometry,
+                indexes: t.indexes,
             })
             .collect(),
         left: written.left,

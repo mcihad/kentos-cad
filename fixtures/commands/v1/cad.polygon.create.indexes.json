@@ -1,0 +1,1336 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.polygon.create",
+ "commandVersion": 1,
+ "title": "Alan çiz ve katmanın anahtarı",
+ "note": "ADR 0758 §3: yeni kayıt anahtarın değerlerini yineleyemez. Written by scripts/fixtures/layer_indexes_cases.py without KentOS code.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Dizinler",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ada",
+      "kind": "integer"
+     },
+     {
+      "name": "Parsel",
+      "kind": "integer"
+     },
+     {
+      "name": "Mahalle",
+      "kind": "text"
+     },
+     {
+      "id": "bina-no",
+      "name": "Bina no",
+      "kind": "text"
+     },
+     {
+      "name": "Belge",
+      "kind": "binary"
+     },
+     {
+      "name": "Alan",
+      "kind": "decimal",
+      "scale": 2
+     }
+    ],
+    "indexes": [
+     {
+      "name": "Ada ve parsel",
+      "fields": [
+       "Ada",
+       "Parsel"
+      ],
+      "unique": true
+     },
+     {
+      "name": "Bina",
+      "fields": [
+       "bina-no"
+      ],
+      "unique": true,
+      "nullsEqual": true
+     }
+    ]
+   },
+   {
+    "id": "grup",
+    "name": "Mahalleler",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "alt",
+      "name": "Sokak",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   },
+   {
+    "id": "altlik",
+    "name": "OpenStreetMap",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "service": {
+     "kind": "xyz",
+     "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+     "maxZoom": 19
+    }
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "5",
+     "Mahalle": "Merkez",
+     "Bina no": "B1"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420000
+     },
+     {
+      "x": 487030,
+      "y": 4420010
+     },
+     {
+      "x": 487020,
+      "y": 4420010
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "Alan": "250.00"
+    },
+    "pts": [
+     {
+      "x": 487120,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420000
+     },
+     {
+      "x": 487130,
+      "y": 4420010
+     },
+     {
+      "x": 487120,
+      "y": 4420010
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "başka kaydın (ada, parsel)'i: yeri Ada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "5",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “5”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yeni (ada, parsel)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "7",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "7",
+         "Bina no": "B9"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı adada başka parsel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "6",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "6",
+         "Bina no": "B9"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı parsel başka adada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "5",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "102",
+         "Parsel": "5",
+         "Bina no": "B9"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "parselsiz yeni kayıt (boş değer değildir)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "101",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "101",
+         "Bina no": "B9"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "adasız yeni kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Parsel": "5",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Parsel": "5",
+         "Bina no": "B9"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "değersiz kayıt: boş kayıt varken bina no boşları aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bina nosuz yeni kayıt: boş kayıt varken boşlar aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "105",
+       "Parsel": "1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boşluklu bina no boş sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "105",
+       "Parsel": "1",
+       "Bina no": "   "
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka kaydın bina nosu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "105",
+       "Parsel": "1",
+       "Bina no": "B1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); “B1” başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bina nosu büyük küçük harf ayrı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "105",
+       "Parsel": "1",
+       "Bina no": "b1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "105",
+         "Parsel": "1",
+         "Bina no": "b1"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "bina nosu sonunda boşlukla başka değer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "105",
+       "Parsel": "1",
+       "Bina no": "B1 "
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "105",
+         "Parsel": "1",
+         "Bina no": "B1 "
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayının yazımıyla aynı (ada, parsel)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "+101",
+       "Parsel": "05",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “5”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sayının yazımıyla yeni (ada, parsel)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "0101",
+       "Parsel": "+7",
+       "Bina no": "B9"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "7",
+         "Bina no": "B9"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mahalle ve alan anahtarda değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "106",
+       "Parsel": "1",
+       "Mahalle": "Merkez",
+       "Alan": "250",
+       "Bina no": "B7"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "106",
+         "Parsel": "1",
+         "Mahalle": "Merkez",
+         "Alan": "250",
+         "Bina no": "B7"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "bina no boş kayıttaki gibi başka alanlarla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Alan": "250"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Bina no” alanı katmanda tekil (“Bina” dizini); boş başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.Bina no"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanı aynı, anahtarı yeni",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "107",
+       "Parsel": "2",
+       "Alan": "250",
+       "Bina no": "B8"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "107",
+         "Parsel": "2",
+         "Alan": "250",
+         "Bina no": "B8"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "büyük ada numarası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "9007199254740993",
+       "Parsel": "1",
+       "Bina no": "B10"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“Ada” alanının sayısı çok büyük; “9007199254740993” verildi. Mutlak değeri en çok 9007199254740991 olabilir.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksi ada numarası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "-101",
+       "Parsel": "5",
+       "Bina no": "B11"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uid",
+       "id": 7,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       6,
+       7
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "attrs": {
+         "Ada": "-101",
+         "Parsel": "5",
+         "Bina no": "B11"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka kaydın (ada, parsel)'i bina no yeniyken de",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487200,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420000
+       },
+       {
+        "x": 487210,
+        "y": 4420010
+       },
+       {
+        "x": 487200,
+        "y": 4420010
+       }
+      ],
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "5",
+       "Bina no": "B12"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“Ada”, “Parsel” alanları katmanda birlikte tekil (“Ada ve parsel” dizini); (“101”, “5”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.Ada"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       6
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

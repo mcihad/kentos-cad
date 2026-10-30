@@ -1661,6 +1661,13 @@
       ],
       "note": "Kurallar cad.layers.rules ile tek adımda yazılır; katmanın her yazması onları sorar, form alanlarında gösterir (ADR 0438)."
     },
+    "data.layerIndexes": {
+      "level": "semantic",
+      "via": [
+        "cad.layers.indexes"
+      ],
+      "note": "Dizinler cad.layers.indexes ile tek adımda yazılır; tekil dizin katmanın her yazmasında sorulur, GeoPackage'a yazılır ve okunur (ADR 0758)."
+    },
     "data.domains": {
       "level": "semantic",
       "via": [

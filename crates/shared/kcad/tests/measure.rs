@@ -167,6 +167,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             compose: None,
             filter: None,
             rules: Vec::new(),
+            indexes: Vec::new(),
             dataset: None,
             derivation: None,
         }],

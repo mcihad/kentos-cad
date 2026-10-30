@@ -141,6 +141,23 @@ fn schemas(nodes: &[LayerNode]) -> AppResult<()> {
                 )));
             }
         }
+        // A layer's indexes (docs/adr/0758 §1), as the KCAD readers take them.
+        if !n.indexes.is_empty() {
+            if n.kind == LayerNodeType::Group {
+                return Err(AppError::invalid(format!(
+                    "“{}” bir grup; grubun dizinleri olmaz, dizinler yalnız katmanındır.",
+                    n.name
+                )));
+            }
+            if let Some((_, problem)) =
+                kentos_contracts::layer_indexes_problem(&n.fields, &n.indexes)
+            {
+                return Err(AppError::invalid(format!(
+                    "“{}” katmanının dizinleri: {problem}",
+                    n.name
+                )));
+            }
+        }
         schemas(&n.children)?;
     }
     Ok(())
@@ -1272,6 +1289,7 @@ mod tests {
             compose: None,
             filter: None,
             rules: Vec::new(),
+            indexes: Vec::new(),
             dataset: None,
             derivation: None,
         }

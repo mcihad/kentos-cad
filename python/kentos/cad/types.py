@@ -28426,6 +28426,7 @@ class GpkgImported(_Model):
         layers: The layers made, in the tree's order, and the group they went into.
         revision: The drawing's revision after the step (plan: before it).
         datasets: Layers the import made with their table's description as a dataset (docs/adr/0633 §5). Unit: count.
+        indexes: The tables' indexes the layers the import made took (docs/adr/0758 §5). Unit: count.
         merged: What the merge did on each layer (docs/adr/0628 §5).
         moved: Whether the coordinates were moved into the project's system.
         rejects: The CSV of the rows refused (docs/adr/0628 §6).
@@ -28443,6 +28444,7 @@ class GpkgImported(_Model):
     revision: str
     datasets: int | Unset = UNSET
     group: str | None | Unset = UNSET
+    indexes: int | Unset = UNSET
     merged: list[MergeReport] | Unset = UNSET
     moved: bool | Unset = UNSET
     rejects: RejectsWritten | None | Unset = UNSET
@@ -28463,6 +28465,8 @@ class GpkgImported(_Model):
             out["datasets"] = self.datasets
         if self.group is not UNSET:
             out["group"] = self.group
+        if self.indexes is not UNSET:
+            out["indexes"] = self.indexes
         if self.merged is not UNSET:
             out["merged"] = [e0.to_json() for e0 in self.merged]
         if self.moved is not UNSET:
@@ -28489,6 +28493,7 @@ class GpkgImported(_Model):
             revision=data["revision"],
             datasets=data.get("datasets", UNSET),
             group=data.get("group", UNSET),
+            indexes=data.get("indexes", UNSET),
             merged=[MergeReport.from_json(e0) for e0 in data["merged"]] if "merged" in data else UNSET,
             moved=data.get("moved", UNSET),
             rejects=UNSET if "rejects" not in data else None if data["rejects"] is None else RejectsWritten.from_json(data["rejects"]),
@@ -28535,11 +28540,13 @@ class GpkgTableExported(_Model):
     Attributes:
         rows: Unit: count.
         geometry: Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.
+        indexes: The layer's indexes written over it (docs/adr/0758 §5). Unit: count.
     """
     table: str
     layer: str
     rows: int
     geometry: str | None | Unset = UNSET
+    indexes: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -28548,6 +28555,8 @@ class GpkgTableExported(_Model):
         out["rows"] = self.rows
         if self.geometry is not UNSET:
             out["geometry"] = self.geometry
+        if self.indexes is not UNSET:
+            out["indexes"] = self.indexes
         return out
 
     @classmethod
@@ -28557,6 +28566,7 @@ class GpkgTableExported(_Model):
             layer=data["layer"],
             rows=data["rows"],
             geometry=data.get("geometry", UNSET),
+            indexes=data.get("indexes", UNSET),
         )
 
 
@@ -33044,6 +33054,42 @@ class LayerFound(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LayerIndex(_Model):
+    """An index of a layer.
+    Attributes:
+        name: Its name, once in the layer (the Turkish way, case aside): what a refusal and a file call it (1–64
+            characters).
+        fields: The fields' keys, in order (1–32, each once; a field holding bytes is not indexed).
+        nulls_equal: Empty values are the same value: a set with one is compared as the others (PostgreSQL's NULLS NOT DISTINCT);
+            only with `unique`; written only as `true`.
+        unique: The layer's key: no two records hold the same values in its fields; written only as `true`.
+    """
+    name: str
+    fields: list[str]
+    nulls_equal: bool | Unset = UNSET
+    unique: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["fields"] = list(self.fields)
+        if self.nulls_equal is not UNSET:
+            out["nullsEqual"] = self.nulls_equal
+        if self.unique is not UNSET:
+            out["unique"] = self.unique
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerIndex:
+        return cls(
+            name=data["name"],
+            fields=list(data["fields"]),
+            nulls_equal=data.get("nullsEqual", UNSET),
+            unique=data.get("unique", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerLabelReport(_Model):
     """One layer's counts, and what its labelling is made of when it is a bound layer (docs/adr/0533 §4).
     Attributes:
@@ -33192,6 +33238,8 @@ class LayerNode(_Model):
             `true` is written.
         geometry: What the layer holds (docs/adr/0622 §5): points, lines, areas or annotation; absent, any kind. Only a layer
             has it, never a group.
+        indexes: Dizinler (docs/adr/0758): what the records are looked up by; a unique one is the layer's key. Only a layer
+            holding objects has them.
         plot: Yazdır: absent, it is printed; `false`, it is drawn on screen but not
             on a sheet, its PDF or a print (AutoCAD's plot switch, DXF's 290;
             docs/adr/0260 §4). A group's covers what it holds. Only `false` is written.
@@ -33230,6 +33278,7 @@ class LayerNode(_Model):
     filter: LayerFilter | None | Unset = UNSET
     frozen: bool | None | Unset = UNSET
     geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
+    indexes: list[LayerIndex] | Unset = UNSET
     plot: bool | None | Unset = UNSET
     replaces: str | None | Unset = UNSET
     rules: list[LayerRule] | Unset = UNSET
@@ -33273,6 +33322,8 @@ class LayerNode(_Model):
             out["frozen"] = self.frozen
         if self.geometry is not UNSET:
             out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
+        if self.indexes is not UNSET:
+            out["indexes"] = [e0.to_json() for e0 in self.indexes]
         if self.plot is not UNSET:
             out["plot"] = self.plot
         if self.replaces is not UNSET:
@@ -33317,6 +33368,7 @@ class LayerNode(_Model):
             filter=UNSET if "filter" not in data else None if data["filter"] is None else LayerFilter.from_json(data["filter"]),
             frozen=data.get("frozen", UNSET),
             geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
+            indexes=[LayerIndex.from_json(e0) for e0 in data["indexes"]] if "indexes" in data else UNSET,
             plot=data.get("plot", UNSET),
             replaces=data.get("replaces", UNSET),
             rules=[LayerRule.from_json(e0) for e0 in data["rules"]] if "rules" in data else UNSET,
@@ -34431,6 +34483,42 @@ class LayersFound(_Model):
         return cls(
             layers=[LayerFound.from_json(e0) for e0 in data["layers"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayersIndexes(_Model):
+    """Input of `cad.layers.indexes` v1: a layer's indexes written as one undo step “Dizinler”; none takes them away. A
+    layer that already has them is left as it is. A unique index is the layer's key: every later write that would give
+    two records the same values in its fields is refused `not_unique`; a new one the records already break is refused.
+
+    Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`,
+    `not_a_layer`, `service_layer`; then `invalid_indexes` (indexes that do not fit the layer, `layer_indexes_problem`,
+    path `indexes/<where>`), `index_not_unique` (a new or newly unique index two records already break, its records'
+    ids in `uids`). Warning: `index_not_in_source` (a bound layer: KentOS keeps the key, the table does not get it).
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        indexes: The indexes, in their order.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    indexes: list[LayerIndex] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["indexes"] = [e0.to_json() for e0 in self.indexes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayersIndexes:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            indexes=[LayerIndex.from_json(e0) for e0 in data["indexes"]] if "indexes" in data else list(),
         )
 
 
@@ -51240,8 +51328,10 @@ class RecordsDuplicate(_Model):
 
     Refusals, in this order: `no_entities`, `invalid_uid` (`uids[i]`), `invalid_count` (more than
     1000), `invalid_revision`, `revision_conflict` (status `conflict`), `entity_not_found`
-    (`uids[i]`), `layer_locked` (every object on a locked layer). Warnings: `layer_locked` (objects and
-    children on locked layers left out), `unique_cleared` (a field a form keeps unique left empty).
+    (`uids[i]`), `layer_locked` (every object on a locked layer), `not_unique` (a copy whose emptied key
+    another record holds: a layer index taking empty values as the same, docs/adr/0758 §3). Warnings:
+    `layer_locked` (objects and children on locked layers left out), `unique_cleared` (a field a form or the
+    layer keeps unique, or a unique index of the layer holds, left empty).
     Attributes:
         uids: The objects' persistent ids; an object given twice is copied once.
         children: The records the objects' composite relations hold are copied too, their field taking the
@@ -84109,6 +84199,7 @@ __all__ = [
     "LayerGeometryChoice",
     "LayerGeometryChoiceName",
     "LayerGeometryName",
+    "LayerIndex",
     "LayerLabelReport",
     "LayerLabels",
     "LayerMask",
@@ -84148,6 +84239,7 @@ __all__ = [
     "LayersFiltered",
     "LayersFind",
     "LayersFound",
+    "LayersIndexes",
     "LayersInfo",
     "LayersInfoPlan",
     "LayersInformed",

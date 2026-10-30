@@ -66,6 +66,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (modül başına galeri ve öntanımlı pafta) web'de de kullanılabilir; web'in pafta kipi bugünkü gibi türe göre çalışır.
   Modül programları (tek `kentos-cad` dosyası, modül adlarıyla; ADR 0802 §1) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
   karşılığı yoktur.
+- ADR 0758: katmanın dizinleri ve anahtarları (`LayerNode.indexes`, `.kcad` şema 136; `cad.layers.indexes`). Web'in
+  işleyicisi ve Dizinler penceresi; web'in yazma yolları (tablo, form, Yapıştır) tekil dizini çekirdeğin kuralıyla sormalı
+  (`kentos_forms`'un `with_indexes`'i WASM'a bağlanınca formda da); web'in GeoPackage alışverişi `kentos_geopackage::indexes`'i
+  WASM'dan kullanmalı. Ortak durumlar `fixtures/commands/v1/*.indexes.json`.
 - ADR 0757: tablo bağlamak arayüzü kilitlemez. Web PostGIS'e bağlanmaz (sunucunun vekiliyle ayrı karar); web'in GeoPackage
   bağlaması gelince bağlama işçide `cad.sources.edit`'in iş olarak adımlarını (`sources::BIND_STEPS`) söylemeli: pencere hemen
   kapanır, köşede tablo, adım, yaklaşık satır, yumuşak çubuk ve Durdur; sürerken çizim düzenleme almaz (masaüstünün

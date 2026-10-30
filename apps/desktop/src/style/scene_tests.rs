@@ -64,6 +64,7 @@ fn layer(id: &str, color: &str, renderer: Option<Value>) -> LayerNode {
         compose: None,
         filter: None,
         rules: Vec::new(),
+        indexes: Vec::new(),
         dataset: None,
         derivation: None,
     }

@@ -38,6 +38,10 @@ styles?: number,
  */
 datasets?: number, 
 /**
+ * The tables' indexes the layers the import made took (docs/adr/0758 §5).
+ */
+indexes?: number, 
+/**
  * The drawing's revision after the step (plan: before it).
  */
 revision: string, 

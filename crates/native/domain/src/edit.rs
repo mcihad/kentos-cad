@@ -381,6 +381,8 @@ impl Document {
         );
         // A record rule's fields follow too (docs/adr/0438 §1); its expression followed the renames.
         next_node.rules = kentos_contracts::follow_layer_rules(&next_node.rules, &fields);
+        // An index over a field that is gone goes whole (docs/adr/0758 §1).
+        next_node.indexes = kentos_contracts::follow_layer_indexes(&node.indexes, &fields);
         if before == fields && changes.is_empty() {
             return Ok(false);
         }
@@ -761,6 +763,38 @@ impl Document {
         let op = Op::LayerRules {
             layer: id.to_owned(),
             before: node.rules.clone(),
+            after: next,
+        };
+        self.record(vec![op], label);
+        Ok(true)
+    }
+
+    /// A layer's indexes (Dizinler, docs/adr/0758) as one undo step `label`; whether they changed. Indexes that do
+    /// not fit the layer's fields are refused (the records a unique one would find twice are the command's to say).
+    pub fn set_layer_indexes(
+        &mut self,
+        id: &str,
+        next: Vec<kentos_contracts::LayerIndex>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(node) = self.layers.get(id) else {
+            return Ok(false);
+        };
+        if !next.is_empty() && node.kind == LayerNodeType::Group {
+            return Err(Refusal(format!(
+                "“{}” bir grup; dizinler yalnız katmanın olur.",
+                node.name
+            )));
+        }
+        if let Some((_, problem)) = kentos_contracts::layer_indexes_problem(&node.fields, &next) {
+            return Err(Refusal(format!("Dizinler: {problem}")));
+        }
+        if node.indexes == next {
+            return Ok(false);
+        }
+        let op = Op::LayerIndexes {
+            layer: id.to_owned(),
+            before: node.indexes.clone(),
             after: next,
         };
         self.record(vec![op], label);
@@ -1440,6 +1474,13 @@ fn followed_ops(node: &kentos_contracts::LayerNode, next: &kentos_contracts::Lay
             layer: layer.clone(),
             before: node.rules.clone(),
             after: next.rules.clone(),
+        });
+    }
+    if node.indexes != next.indexes {
+        ops.push(Op::LayerIndexes {
+            layer: layer.clone(),
+            before: node.indexes.clone(),
+            after: next.indexes.clone(),
         });
     }
     if node.table_styles != next.table_styles {

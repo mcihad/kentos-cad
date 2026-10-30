@@ -125,6 +125,7 @@ COMMANDS: dict[str, Any] = {
     "cad.layers.edit": layers.edit,
     "cad.layers.filter": layers.filter,
     "cad.layers.find": layers.find,
+    "cad.layers.indexes": layers.indexes,
     "cad.layers.info": layers.info,
     "cad.layers.labels": layers.labels,
     "cad.layers.renderer": layers.renderer,

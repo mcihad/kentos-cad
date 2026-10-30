@@ -495,6 +495,36 @@ pub struct LayersRules {
     pub expected_revision: Option<String>,
 }
 
+/// Writes a layer's indexes (Dizinler, docs/adr/0758).
+pub const CAD_LAYERS_INDEXES: &str = "cad.layers.indexes";
+pub const CAD_LAYERS_INDEXES_VERSION: u32 = 1;
+
+/// Input of `cad.layers.indexes` v1: a layer's indexes written as one undo step “Dizinler”; none takes them away. A
+/// layer that already has them is left as it is. A unique index is the layer's key: every later write that would give
+/// two records the same values in its fields is refused `not_unique`; a new one the records already break is refused.
+///
+/// Refusals, checked in this order: `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`,
+/// `not_a_layer`, `service_layer`; then `invalid_indexes` (indexes that do not fit the layer, `layer_indexes_problem`,
+/// path `indexes/<where>`), `index_not_unique` (a new or newly unique index two records already break, its records'
+/// ids in `uids`). Warning: `index_not_in_source` (a bound layer: KentOS keeps the key, the table does not get it).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayersIndexes {
+    /// The layer's id.
+    pub layer: String,
+    /// The indexes, in their order.
+    #[serde(default)]
+    pub indexes: Vec<crate::layer_indexes::LayerIndex>,
+    /// The document revision the input was prepared against, as decimal text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
 /// Writes a layer's value groups (Değer bileşimleri, docs/adr/0423).
 pub const CAD_LAYERS_CONTINGENTS: &str = "cad.layers.contingents";
 pub const CAD_LAYERS_CONTINGENTS_VERSION: u32 = 1;

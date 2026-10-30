@@ -1348,15 +1348,16 @@ impl<'d> Encoder<'d> {
                 + usize::from(n.subtypes.is_some())
                 + usize::from(!n.contingents.is_empty())
                 + usize::from(!n.rules.is_empty())
+                + usize::from(!n.indexes.is_empty())
                 + usize::from(n.source_crs.is_some())
                 + usize::from(n.geometry.is_some())
                 + usize::from(n.dataset.is_some())
                 + usize::from(n.derivation.is_some()),
             true,
         )?;
-        // id (2), card feed name plot snap time type (4), style (5), fields filter locked (6),
-        // actions compose dataset service visible (7), children expanded replaces scenario subtypes (8),
-        // sourceCrs (9), derivation (10), contingents tableStyles (11).
+        // id (2), card feed name plot snap time type (4), rules style (5), fields filter frozen locked (6),
+        // actions compose dataset indexes service visible (7), children expanded geometry replaces scenario
+        // subtypes (8), sourceCrs (9), derivation (10), contingents tableStyles (11).
         if n.service.is_some() && n.feed.is_some() {
             return Err(self.fail(
                 Code::BadValue,
@@ -1472,6 +1473,26 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(d)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        // Schema 136 (docs/adr/0758): the indexes, as their JSON, fitting the fields.
+        if !n.indexes.is_empty() {
+            self.key("indexes");
+            self.at(Seg::Name("indexes"), |e| {
+                if n.kind == LayerNodeType::Group {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "grubun dizinleri olmaz; yalnız katmanın olur",
+                    ));
+                }
+                if let Some((_, problem)) =
+                    kentos_contracts::layer_indexes_problem(&n.fields, &n.indexes)
+                {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&n.indexes)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -2056,6 +2077,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 136 (docs/adr/0758): a layer's indexes.
+    fn indexed(nodes: &[LayerNode]) -> bool {
+        nodes
+            .iter()
+            .any(|n| !n.indexes.is_empty() || indexed(&n.children))
+    }
+    if indexed(&doc.layers) {
+        return crate::SCHEMA_WITH_LAYER_INDEXES;
+    }
     // Schema 135 (docs/adr/0801): what a CAD project is drawn for.
     if doc.settings.cad_work.is_some() {
         return crate::SCHEMA_WITH_CAD_WORK;

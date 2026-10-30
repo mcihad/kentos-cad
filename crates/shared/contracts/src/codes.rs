@@ -838,7 +838,7 @@ codes! {
     /// (docs/adr/0325).
     FIELD_NOT_FOUND = "field_not_found", Failed, false, "Verilen alan yok: katmanda bu adla ya da yazıda bu sırada alan bulunmuyor.";
     /// A field a form keeps unique left empty in a copy (Kaydı çoğalt, docs/adr/0415 §1).
-    UNIQUE_CLEARED = "unique_cleared", Warning, false, "Formun tekil tuttuğu alan kopyada boş bırakıldı.";
+    UNIQUE_CLEARED = "unique_cleared", Warning, false, "Formun ya da katmanın tekil tuttuğu alan kopyada boş bırakıldı.";
     /// A record keeps values its subtype does not allow (docs/adr/0422 §2).
     SUBTYPE_MISFIT = "subtype_misfit", Warning, false, "Kaydın alt türüne uymayan değerleri var.";
     /// A record's values that no row of a restrictive value group allows (docs/adr/0423 §2).
@@ -851,6 +851,12 @@ codes! {
     RULE_UNMET = "rule_unmet", Warning, false, "Yazma katmanın bir uyarı kuralına uymuyor.";
     /// A layer's record rules that do not fit it or do not compile (docs/adr/0438 §1).
     INVALID_RULES = "invalid_rules", Failed, false, "Kayıt kuralları katmana uymuyor ya da ifadesi derlenmiyor.";
+    /// A layer's indexes that do not fit its fields (docs/adr/0758 §2).
+    INVALID_INDEXES = "invalid_indexes", Failed, false, "Dizinler katmanın alanlarına uymuyor.";
+    /// A unique index the layer's records already break (docs/adr/0758 §2).
+    INDEX_NOT_UNIQUE = "index_not_unique", Failed, false, "Tekil dizin kurulamıyor: katmanın kayıtlarında aynı değerler var.";
+    /// An index of a bound layer, kept by KentOS and not by its table (docs/adr/0758 §2).
+    INDEX_NOT_IN_SOURCE = "index_not_in_source", Warning, false, "Katman bir tabloya bağlı: dizini KentOS denetler, tabloda kurulmaz.";
     /// A value of a unique field another record of the layer holds (docs/adr/0438 §3).
     NOT_UNIQUE = "not_unique", Failed, false, "Tekil alanın bu değeri katmanın başka bir kaydında var.";
     /// The form was published anew since it was opened (docs/adr/0438 §6).

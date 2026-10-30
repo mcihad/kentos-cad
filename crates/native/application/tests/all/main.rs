@@ -66,6 +66,7 @@ mod standards_cmd;
 mod rasters_georef;
 mod stretch_ties;
 mod layer_digest;
+mod layer_indexes;
 mod tables_cmd;
 mod transform;
 mod units;
