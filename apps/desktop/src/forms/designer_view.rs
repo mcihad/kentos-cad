@@ -1863,13 +1863,19 @@ impl App {
                 }
                 col = col.push(label::strong("Denetimler"));
                 for (i, c) in f.checks.iter().enumerate() {
-                    // When it is asked (docs/adr/0438 §2).
+                    // When it is asked (docs/adr/0438 §2, docs/adr/0760 §1).
                     use kentos_commands::CheckMoment;
-                    let moments = [None, Some(CheckMoment::Save), Some(CheckMoment::Submit)];
+                    let moments = [
+                        None,
+                        Some(CheckMoment::Leave),
+                        Some(CheckMoment::Save),
+                        Some(CheckMoment::Submit),
+                    ];
                     let at = moments.iter().position(|m| *m == c.on);
                     let when = Select::new(
                         [
                             Choice::new("Değer değişince"),
+                            Choice::new("Alandan çıkınca"),
                             Choice::new("Kaydederken"),
                             Choice::new("İş akışında ilerlerken"),
                         ],

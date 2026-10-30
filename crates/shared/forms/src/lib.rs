@@ -38,7 +38,9 @@ pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
 pub use record::{Attached, Attrs, Object, schema_in, schema_of};
 pub use requirements::{requirements, unsupported};
-pub use session::{CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, MOMENT, Moment, Prepared, added_key};
+pub use session::{
+    CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, Left, MOMENT, Moment, Prepared, added_key,
+};
 pub use table_checks::{BrokenCheck, Dialect, Judged, TableChecks};
 
 use kentos_contracts::{FormIssue, FormSeverity};

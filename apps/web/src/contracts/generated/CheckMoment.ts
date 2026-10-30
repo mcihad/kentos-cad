@@ -3,4 +3,4 @@
 /**
  * When a check is asked (docs/adr/0438 §2).
  */
-export type CheckMoment = "save" | "submit";
+export type CheckMoment = "save" | "submit" | "leave";

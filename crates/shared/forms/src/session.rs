@@ -67,6 +67,9 @@ pub struct Prepared {
     today: Option<String>,
 }
 
+/// The ids of the items the user already left on a screen (docs/adr/0760 §1).
+pub type Left = std::collections::BTreeSet<String>;
+
 /// When a record's checks are asked (docs/adr/0438 §2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Moment {
@@ -272,11 +275,20 @@ impl Prepared {
         self
     }
 
-    /// Whether a check asked at `on` is asked at `moment`.
-    fn asked(&self, on: Option<kentos_contracts::CheckMoment>, moment: Moment) -> bool {
+    /// Whether a check asked at `on` on `item` is asked at `moment`, with the items already `left`
+    /// (docs/adr/0760 §1).
+    fn asked(
+        &self,
+        on: Option<kentos_contracts::CheckMoment>,
+        moment: Moment,
+        item: &str,
+        left: &Left,
+    ) -> bool {
         use kentos_contracts::CheckMoment;
         match (on, moment) {
             (None, _) | (Some(_), Moment::Submit) => true,
+            (Some(CheckMoment::Leave), Moment::Save) => true,
+            (Some(CheckMoment::Leave), Moment::Change) => left.contains(item),
             (Some(_), Moment::Change) => false,
             (Some(CheckMoment::Save), Moment::Save) => true,
             (Some(CheckMoment::Submit), Moment::Save) => self.workflow.is_none(),
@@ -855,6 +867,18 @@ impl Prepared {
     /// the checks without a moment, on saving those asked on saving too, on a workflow step every one.
     /// The layer's record rules are asked whatever the moment.
     pub fn validate_at(&self, attrs: &Attrs, object: &Object, moment: Moment) -> Vec<FormIssue> {
+        self.validate_left(attrs, object, moment, &Left::new())
+    }
+
+    /// [`Prepared::validate_at`] with the items the user already left (docs/adr/0760 §1): a check kept
+    /// for leaving its field is asked as the value changes once its item is among them.
+    pub fn validate_left(
+        &self,
+        attrs: &Attrs,
+        object: &Object,
+        moment: Moment,
+        left: &Left,
+    ) -> Vec<FormIssue> {
         let states = self.flags(attrs, object);
         let draft = self.in_draft(attrs);
         let subtype = self.subtype(attrs);
@@ -1034,7 +1058,7 @@ impl Prepared {
                 continue;
             }
             for (i, (check, expr)) in b.item.checks.iter().zip(&b.checks).enumerate() {
-                if self.asked(check.on, moment) && !holds(expr, attrs, object) {
+                if self.asked(check.on, moment, &node.id, left) && !holds(expr, attrs, object) {
                     let (code, severity) = if check.warning {
                         (codes::CHECK_WARNING, FormSeverity::Warning)
                     } else {
@@ -1331,6 +1355,19 @@ impl Prepared {
         new: bool,
         moment: Moment,
     ) -> (Attrs, Vec<FormIssue>) {
+        self.assess_left(before, values, object, new, moment, &Left::new())
+    }
+
+    /// [`Prepared::assess_at`] with the items the user already left (docs/adr/0760 §1).
+    pub fn assess_left(
+        &self,
+        before: &Attrs,
+        values: &[(String, String)],
+        object: &Object,
+        new: bool,
+        moment: Moment,
+        left: &Left,
+    ) -> (Attrs, Vec<FormIssue>) {
         let mut written = before.clone();
         let mut issues = Vec::new();
         let mut changed: Vec<usize> = Vec::new();
@@ -1415,7 +1452,7 @@ impl Prepared {
         issues.extend(completed);
         let said: Vec<Option<String>> = issues.iter().map(|i| i.field.clone()).collect();
         issues.extend(
-            self.validate_at(&after, object, moment)
+            self.validate_left(&after, object, moment, left)
                 .into_iter()
                 .filter(|i| !said.contains(&i.field)),
         );

@@ -28,6 +28,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Alandan çıkınca denetim (30 Ekim 2026; [ADR 0760](docs/adr/0760-check-on-leaving-the-field.md)).**
+  Denetimin `on`'u `leave` da olur (“Alandan çıkınca”): değer değişirken yalnız çıkılan öğede, kaydederken ve iş akışında
+  hep sorulur (`Prepared::asked`, `validate_left`, `assess_left`, `kentos_forms::Left`); komutun doğrulaması azalmaz.
+  KentOS UI'ın `focus_watch`'ı parçanın odak giriş ve çıkışını haber verir (basış, tuş, dokunma sonrası yalnız kendi
+  ağacında; Tab bırakılışta görülür); Formla düzenle'de her alan sarılı (`Event::Focus`), seçilen değer hemen çıkılmış
+  sayılır (`chosen_item`). Şema değişmez (formlar şema 72'de bütün). 24 ortak durum (`moments`), resimler `form-cikinca-*`.
+
 - **Formda haritadan seçilen değer ve sunucuda mekânsal liste (30 Ekim 2026; [ADR 0759](docs/adr/0759-map-pick-and-spatial-guard.md)).**
   Formla düzenle'de başka katmandan listesi olan, tek değerli, yazılabilir alanın yanında Haritadan seç: pencere çekilir (bağlı
   form yerinde kalır), `PickObjects::on_layer` yalnız listenin katmanından tek nesne alır (seçim süzgeci ve Otomatik seçim sayılmaz),

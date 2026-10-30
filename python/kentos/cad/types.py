@@ -943,12 +943,14 @@ class CheckMoment(_StrEnum):
 
     - ``save``: When the record is saved: not while the value is typed.
     - ``submit``: When the record goes forward in the form's workflow (a step); a form without a workflow asks it
+    - ``leave``: Once its field was left (focus moved on, a list's value chosen), and on saving (docs/adr/0760 §1).
     """
     SAVE = "save"
     SUBMIT = "submit"
+    LEAVE = "leave"
 
 
-CheckMomentName = Literal["save", "submit"]
+CheckMomentName = Literal["save", "submit", "leave"]
 """The names of :class:`CheckMoment`, for a plain string."""
 
 

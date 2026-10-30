@@ -78,6 +78,11 @@
           "const": "submit",
           "description": "When the record goes forward in the form's workflow (a step); a form without a workflow asks it\nwhen the record is saved.",
           "type": "string"
+        },
+        {
+          "const": "leave",
+          "description": "Once its field was left (focus moved on, a list's value chosen), and on saving (docs/adr/0760 §1).",
+          "type": "string"
         }
       ]
     },

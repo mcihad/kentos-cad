@@ -265,6 +265,7 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
         ("form-aranir-liste", searched_list, province_focused),
         ("form-kaynak-arama", sources_search, neighbourhood_focused),
         ("form-kaynak-tasarim", sources_designer, properties_down),
+        ("form-cikinca-tasarim", left_designer, properties_bottom),
     ]
 }
 
@@ -274,10 +275,19 @@ fn neighbourhood_focused(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
 
 /// The designer's properties scrolled to the list's extras (docs/adr/0439).
 fn properties_down(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
+    properties_at(s, app, 0.55);
+}
+
+/// The designer's properties scrolled to their end: a field's checks (docs/adr/0760).
+fn properties_bottom(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
+    properties_at(s, app, 1.0);
+}
+
+fn properties_at(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App, y: f32) {
     use iced::futures::StreamExt as _;
     let task: iced::Task<Message> = iced::widget::operation::snap_to(
         crate::forms::designer_view::PROPERTIES_SCROLL,
-        iced::widget::scrollable::RelativeOffset { x: 0.0, y: 0.55 },
+        iced::widget::scrollable::RelativeOffset { x: 0.0, y },
     );
     if let Some(mut stream) = iced_runtime::task::into_stream(task) {
         while let Some(action) = iced::futures::executor::block_on(stream.next()) {
@@ -503,6 +513,55 @@ fn buildings_with_a_form(app: &mut App) {
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
     doc.model.set_settings(settings);
+}
+
+/// The buildings' survey form with checks kept for leaving the field (docs/adr/0760): a warning past
+/// ten storeys and a short note refused once the field is left; the form opened on B-4.
+pub(crate) fn left_checks(app: &mut App) {
+    styled_buildings(app);
+    let form = published(
+        "hasar",
+        "Hasar tespiti",
+        "bina",
+        json!([
+            { "type": "field", "id": "durum", "field": "Durum" },
+            { "type": "field", "id": "kat", "field": "Kat", "label": "Kat sayısı",
+              "checks": [{ "rule": "Kat < 40", "message": "Kat 40'tan az olmalı." },
+                         { "rule": "Kat <= 10", "message": "10 kattan yüksek binada ruhsat ayrıca denetlenir.",
+                           "warning": true, "on": "leave" }] },
+            { "type": "field", "id": "not", "field": "Not", "label": "Not",
+              "checks": [{ "rule": "uzunluk([Not]) >= 10", "message": "Not en az 10 karakter olmalı.", "on": "leave" }] }
+        ]),
+    );
+    let doc = app.document.as_mut().expect("a drawing");
+    let mut settings = doc.model.settings().clone();
+    settings.forms = vec![serde_json::from_value(form).expect("a form")];
+    doc.model.set_settings(settings);
+    let _ = app.update(Message::Run("data.featureTable"));
+    app.selection.set([Slot(4)]);
+    run(app, "data.formEdit");
+}
+
+/// Formlar on the survey form, its storeys chosen: the checks with Ne zaman, one asked on leaving.
+fn left_designer(app: &mut App) {
+    left_checks(app);
+    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("kat".into()));
+}
+
+/// Twelve storeys typed, the field still being typed in: no word under it yet.
+fn left_typing(app: &mut App) {
+    left_checks(app);
+    entry(app, entry::Event::Value("Kat".into(), "12".into()));
+    entry(app, entry::Event::Value("Not".into(), "kısa".into()));
+}
+
+/// The storeys and the note left: the warning and the note's error under them.
+fn left_done(app: &mut App) {
+    left_typing(app);
+    entry(app, entry::Event::Focus("kat".into(), false));
+    entry(app, entry::Event::Focus("not".into(), false));
 }
 
 /// Alanlar on the buildings: the floor count chosen and being renamed, its places listed.
@@ -3008,6 +3067,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-haritadan-seciliyor", map_picking),
         ("form-haritadan-secildi", map_picked),
         ("form-haritadan-uzakta", map_apart),
+        ("form-cikinca-yazarken", left_typing),
+        ("form-cikinca-cikti", left_done),
         ("form-iliski-kartlar", meters_cards),
         ("form-iliski-bekleyen", meters_pending),
         ("form-iliski-yigini", meters_nested),

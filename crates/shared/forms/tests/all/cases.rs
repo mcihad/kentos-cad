@@ -322,3 +322,25 @@ fn a_picked_object_gives_the_list_s_value_as_the_cases_say() {
         assert_eq!(got, c["out"], "{name}");
     }
 }
+
+/// Which checks a record is asked at each moment, with the items already left (docs/adr/0760 §1).
+#[test]
+fn the_checks_are_asked_at_their_moments_as_the_cases_say() {
+    for c in cases("moments") {
+        let form = prepared(&c);
+        let moment = match c["moment"].as_str() {
+            Some("change") => kentos_forms::Moment::Change,
+            Some("save") => kentos_forms::Moment::Save,
+            Some("submit") => kentos_forms::Moment::Submit,
+            other => panic!("{}: {other:?}", c["name"]),
+        };
+        let left: kentos_forms::Left = c["left"]
+            .as_array()
+            .expect("the left items")
+            .iter()
+            .filter_map(|v| v.as_str().map(String::from))
+            .collect();
+        let got = form.validate_left(&attrs(&c["attrs"]), &object(&c), moment, &left);
+        assert_eq!(bare(&got), c["issues"], "{}", c["name"]);
+    }
+}

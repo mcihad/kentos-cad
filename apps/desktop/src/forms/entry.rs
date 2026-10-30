@@ -126,6 +126,9 @@ pub struct Entry {
     tab: usize,
     tried: bool,
     touched: BTreeSet<String>,
+    /// The items the user left (docs/adr/0760 §2): a check kept for leaving its field is asked on them
+    /// as the values change.
+    left: kentos_forms::Left,
     after: Attrs,
     items: Vec<FormItemState>,
     pub(crate) issues: Vec<FormIssue>,
@@ -260,6 +263,8 @@ pub enum Event {
     OpenRelated(String),
     /// Haritadan seç (docs/adr/0759 §1): a list item's value picked on the map, by its item.
     PickOnMap(String),
+    /// The focus entered (true) or left (false) a field's item, by its id (docs/adr/0760 §2).
+    Focus(String, bool),
     /// A related object, or the one a reference names, is shown in the drawing.
     ShowObject(String),
     /// A related item's object linked to the record, or its link to it broken (docs/adr/0405 §4):
@@ -484,12 +489,13 @@ impl Entry {
         } else {
             kentos_forms::Moment::Change
         };
-        let (after, mut issues) = prepared.assess_at(
+        let (after, mut issues) = prepared.assess_left(
             &self.before,
             &self.written(),
             &self.screen.object,
             self.new_record,
             moment,
+            &self.left,
         );
         self.items = prepared.described(&after, &self.screen.object);
         self.snapshot =
@@ -1008,6 +1014,7 @@ impl App {
             issue_at: 0,
             asking_close: false,
             touched: BTreeSet::new(),
+            left: kentos_forms::Left::new(),
             after: Attrs::new(),
             items: Vec::new(),
             issues: Vec::new(),
@@ -1542,6 +1549,9 @@ impl App {
                     *content = text_editor::Content::with_text(&text);
                 }
                 e.touched.insert(key.clone());
+                if let Some(item) = chosen_item(&e.body.items, &e.fields, &key) {
+                    e.left.insert(item);
+                }
                 // Typing over an overridable calculation keeps the value; emptying it follows again.
                 if e.overridable(&key) {
                     if text.is_empty() {
@@ -1597,6 +1607,13 @@ impl App {
             }
             Event::OpenRelated(uid) => return self.open_related(&uid),
             Event::PickOnMap(item) => return self.pick_on_map(&item),
+            Event::Focus(item, on) => {
+                // Leaving a field asks its checks kept for leaving (docs/adr/0760 §2); entering one says
+                // nothing. A field never typed in is left too: its checks see an empty value and pass.
+                if !on && e.left.insert(item) {
+                    e.recompute(&doc.model);
+                }
+            }
             Event::RunAction(item) => {
                 use kentos_commands::ActionKind as K;
                 let Some(FormItem::Action {
@@ -3207,6 +3224,15 @@ impl App {
                     } else {
                         control
                     };
+                    // Leaving the field asks its checks kept for leaving (docs/adr/0760 §2).
+                    let control: Element<'a, Message> = if read_only || e.preview {
+                        control
+                    } else {
+                        let id = f.id.clone();
+                        kentos_ui::widget::focus_watch(control)
+                            .on_focus(move |on| e.msg(Event::Focus(id.clone(), on)))
+                            .into()
+                    };
                     let said = said_note(e, &f.field);
                     form = form.field(words, control);
                     if state.is_some_and(|s| s.required) {
@@ -3649,6 +3675,33 @@ fn collapsed_groups(items: &[FormItem]) -> BTreeSet<String> {
         out.extend(collapsed_groups(item.items()));
     }
     out
+}
+
+/// The item a value chosen (not typed) for the field `key` was given on (docs/adr/0760 §2): a list,
+/// a check box, a slider or a colour finishes the field as it is chosen, as a browser's change event
+/// fires on a selection at once; a typed one is left when the focus leaves it.
+fn chosen_item(items: &[FormItem], fields: &[LayerField], key: &str) -> Option<String> {
+    for item in items {
+        if let FormItem::Field(f) = item
+            && f.field == key
+            && !f.mirror
+        {
+            let field = fields.iter().find(|l| l.key() == key)?;
+            let typed = matches!(
+                kentos_forms::widget_of(f, field),
+                FormWidget::Text
+                    | FormWidget::TextArea
+                    | FormWidget::Number
+                    | FormWidget::Search
+                    | FormWidget::Date
+            );
+            return (!typed).then(|| f.id.clone());
+        }
+        if let Some(id) = chosen_item(item.items(), fields, key) {
+            return Some(id);
+        }
+    }
+    None
 }
 
 /// A field's control by its widget; read-only shows the value without an edit.
@@ -4910,5 +4963,91 @@ mod tests {
         for east in [0, 3 * 3600, -(5 * 3600 + 30 * 60), 14 * 3600] {
             assert_eq!(offset_minutes(&offset_text(east)), Some(east / 60));
         }
+    }
+}
+
+#[cfg(test)]
+mod left_tests {
+    use super::Event;
+    use crate::app::App;
+
+    fn said(app: &App, key: &str) -> Option<String> {
+        app.form_entry
+            .as_ref()
+            .and_then(|e| e.issue_of(key))
+            .map(|i| i.message.clone())
+    }
+
+    fn event(app: &mut App, event: Event) {
+        crate::form_scenes::entry(app, event);
+    }
+
+    /// The survey form on B-4, twelve storeys and a short note typed.
+    fn typed() -> App {
+        let mut app = crate::files_testing::app_with_drawing();
+        crate::form_scenes::left_checks(&mut app);
+        assert_eq!(
+            app.form_entry.as_ref().and_then(|e| e.value_of("Kat")),
+            Some("9".into()),
+            "B-4, nine storeys: {:?}",
+            crate::files_testing::last_said(&app)
+        );
+        event(&mut app, Event::Value("Kat".into(), "12".into()));
+        event(&mut app, Event::Value("Not".into(), "kısa".into()));
+        app
+    }
+
+    #[test]
+    fn a_check_kept_for_leaving_waits_until_the_field_is_left() {
+        let mut app = typed();
+        assert_eq!(said(&app, "Kat"), None, "typing: not yet");
+        assert_eq!(said(&app, "Not"), None);
+        event(&mut app, Event::Focus("kat".into(), true));
+        assert_eq!(said(&app, "Kat"), None, "entering says nothing");
+        event(&mut app, Event::Focus("kat".into(), false));
+        assert_eq!(
+            said(&app, "Kat").as_deref(),
+            Some("10 kattan yüksek binada ruhsat ayrıca denetlenir.")
+        );
+        assert_eq!(said(&app, "Not"), None, "the note not left");
+        event(&mut app, Event::Focus("not".into(), false));
+        assert_eq!(
+            said(&app, "Not").as_deref(),
+            Some("Not en az 10 karakter olmalı.")
+        );
+        // Typed again after leaving: the field stays left, the check answers the new value.
+        event(
+            &mut app,
+            Event::Value("Not".into(), "Kolonlarda çatlak var.".into()),
+        );
+        assert_eq!(said(&app, "Not"), None);
+        event(&mut app, Event::Value("Kat".into(), "8".into()));
+        assert_eq!(said(&app, "Kat"), None);
+    }
+
+    #[test]
+    fn saving_asks_the_checks_of_fields_never_left() {
+        let mut app = typed();
+        let _ = app.update(crate::app::Message::FormEntry(Event::Save));
+        let e = app
+            .form_entry
+            .as_ref()
+            .expect("an error keeps the window open");
+        assert!(
+            e.issues
+                .iter()
+                .any(|i| i.message == "Not en az 10 karakter olmalı."),
+            "{:?}",
+            e.issues
+        );
+    }
+
+    #[test]
+    fn a_value_chosen_from_a_list_leaves_its_field_at_once() {
+        let mut app = typed();
+        event(&mut app, Event::Value("Durum".into(), "kotu".into()));
+        let e = app.form_entry.as_ref().expect("the form");
+        assert!(e.left.contains("durum"), "a list's choice leaves it");
+        assert!(!e.left.contains("kat"), "a typed field waits for the focus");
     }
 }

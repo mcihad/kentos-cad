@@ -5472,7 +5472,7 @@ class _Schema:
                    "color", "checkList", "search", "chips", "tree")
         # docs/adr/0438 §2: when a check is asked (save or submit; as the value changes it is written not at all).
         check = self.fields({"rule": (self.text, True), "message": (self.text, True), "warning": (true_, False),
-                             "on": (self.enum(("save", "submit")), False)})
+                             "on": (self.enum(("save", "submit", "leave")), False)})
         # docs/adr/0404 §1: a field's list from another layer, its chain's matches.
         match = self.fields({"field": (self.text, True), "record": (self.text, True),
                              # docs/adr/0439 §4: compared folded.

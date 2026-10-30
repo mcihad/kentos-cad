@@ -1201,6 +1201,8 @@ pub enum CheckMoment {
     /// When the record goes forward in the form's workflow (a step); a form without a workflow asks it
     /// when the record is saved.
     Submit,
+    /// Once its field was left (focus moved on, a list's value chosen), and on saving (docs/adr/0760 §1).
+    Leave,
 }
 
 /// How a field is edited.

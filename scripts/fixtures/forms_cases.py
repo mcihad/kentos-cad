@@ -1139,16 +1139,19 @@ class Form:
         state_field = next(f for f in self.fields if key_of(f) == wf["field"])
         return (attrs.get(state_field["name"], "").strip(JS_SPACE) or wf["initial"]) in wf["drafts"]
 
-    def asked(self, on, moment):
+    def asked(self, on, moment, item=None, left=()):
         """docs/adr/0438 §2: a check without a moment always; one kept for saving on saving and on a step; one kept
-        for the workflow's step on a step, and on saving when the form has no workflow."""
+        for the workflow's step on a step, and on saving when the form has no workflow. docs/adr/0760 §1: one kept for
+        leaving its field as the value changes once its item was left, and on saving and on a step always."""
         if on is None or moment == "submit":
             return True
+        if on == "leave":
+            return moment == "save" or item in left
         if moment == "change":
             return False
         return on == "save" or self.workflow is None
 
-    def validate(self, attrs, obj=None, moment="save"):
+    def validate(self, attrs, obj=None, moment="save", left=()):
         issues = []
         draft = self.in_draft(attrs)
         for (x, _), state in zip(self.nodes, self.states(attrs, obj)):
@@ -1206,7 +1209,7 @@ class Form:
                 issues.append(issue("form_choice_filtered", True, x["id"], key_of(f), "choiceFilter"))
                 continue
             for i, c in enumerate(x.get("checks", [])):
-                if self.asked(c.get("on"), moment) and not holds(c["rule"], self.fields, attrs, self.ctx(obj)):
+                if self.asked(c.get("on"), moment, x["id"], left) and not holds(c["rule"], self.fields, attrs, self.ctx(obj)):
                     code = "form_check_warning" if c.get("warning") else "form_check_failed"
                     issues.append(issue(code, not c.get("warning"), x["id"], key_of(f), f"checks/{i}"))
         # docs/adr/0438 §1: a rule of the layer the record breaks, on its field's item.
@@ -1673,6 +1676,7 @@ def core():
         "generate": gen,
         "needs": needs,
         "picks": picks_core(),
+        "moments": moments_core(),
     }
 
 
@@ -2029,6 +2033,64 @@ def sources_core():
     guard("formun göstermediği kopya hedefleri kopyanın değeriyle yazılabilir", {}, copied)
     guard("kopya hedefine başka değer yazılamaz", {}, {**copied, "Malik": "Başkası"})
     return pre, records, assess, enforce
+
+
+def moments_core():
+    """docs/adr/0760 §1: which checks a record is asked at each moment, with the items already left."""
+    out = []
+    checks = [{"rule": "Kat <= 20", "message": "Kat en çok 20 olmalı."},
+              {"rule": "Kat <= 10", "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.", "warning": True,
+               "on": "leave"},
+              {"rule": "Kat <= 5", "message": "Kat 5'i geçen bina kaydedilirken incelenir.", "on": "save"},
+              {"rule": "Kat <= 3", "message": "Kat 3'ü geçen bina onaylanırken incelenir.", "on": "submit"}]
+    note = [{"rule": "uzunluk(Açıklama) >= 10", "message": "Açıklama en az 10 karakter olmalı.", "on": "leave"}]
+
+    def body(workflow=False):
+        b = body_with(lambda b: (item(b, "kat").update(checks=copy.deepcopy(checks)),
+                                 item(b, "aciklama").update(checks=copy.deepcopy(note))))
+        if workflow:
+            b["workflow"] = {"field": "Durum", "initial": "inceleme", "steps": [
+                {"label": "Onayla", "from": ["inceleme"], "to": "iyi"}]}
+        return b
+
+    def case(name, attrs, moment, left=(), workflow=False):
+        b = body(workflow)
+        assert kc.body_problem(b) is None, name
+        form = Form(b, FIELDS)
+        out.append({"name": name, "fields": FIELDS, "body": b, "attrs": attrs, "moment": moment, "left": list(left),
+                    "issues": form.validate(attrs, None, moment, left)})
+
+    big = {"Durum": "iyi", "Kat": "25"}
+    case("değişirken, alandan çıkılmamış: yalnız zamansız denetim", big, "change")
+    case("değişirken, alandan çıkılmış: çıkınca sorulan da", big, "change", ["kat"])
+    case("değişirken, başka alandan çıkılmış: bu alanınki sorulmaz", big, "change", ["durum"])
+    case("kaydederken: zamansız, çıkınca, kaydederken ve iş akışsız formda iş akışında sorulan", big, "save")
+    case("kaydederken alandan çıkılmamış olsa da çıkınca sorulan sorulur", big, "save", [])
+    case("iş akışında ilerlerken: hepsi", big, "submit")
+    case("iş akışlı form kaydederken: iş akışınınki sorulmaz, çıkınca sorulan sorulur", big, "save", workflow=True)
+    case("iş akışlı form değişirken, alandan çıkılmış", big, "change", ["kat"], workflow=True)
+    case("iş akışlı form ilerlerken: hepsi", big, "submit", workflow=True)
+    mid = {"Durum": "iyi", "Kat": "8"}
+    case("8 kat değişirken, çıkılmamış: hiçbiri", mid, "change")
+    case("8 kat değişirken, çıkılmış: hiçbiri", mid, "change", ["kat"])
+    case("8 kat kaydederken: kaydederken sorulan", mid, "save")
+    case("8 kat ilerlerken: kaydederken ve iş akışında sorulan", mid, "submit")
+    high = {"Durum": "iyi", "Kat": "12"}
+    case("12 kat değişirken, çıkılmış: çıkınca sorulan uyarı", high, "change", ["kat"])
+    case("12 kat değişirken, çıkılmamış: uyarı yok", high, "change")
+    case("12 kat kaydederken: uyarı ve kaydederken sorulan", high, "save")
+    case("boş değer: çıkılmış olsa da denetim sorulmaz", {"Durum": "iyi"}, "change", ["kat"])
+    short = {"Durum": "inceleme", "Kat": "2", "Açıklama": "kısa"}
+    case("kısa not, yazılırken: sorulmaz", short, "change")
+    case("kısa not, alandan çıkılınca: sorulur", short, "change", ["aciklama"])
+    case("kısa not, kaydederken: sorulur", short, "save")
+    hidden = {"Durum": "iyi", "Kat": "2", "Açıklama": "kısa"}
+    case("gizli alanın notu, çıkılmış olsa da sorulmaz", hidden, "change", ["aciklama"])
+    case("iki alandan çıkılmış: ikisinin de denetimi", {"Durum": "inceleme", "Kat": "25", "Açıklama": "kısa"}, "change",
+         ["kat", "aciklama"])
+    case("aralık dışı değer: denetimden önce değer hatası", {"Durum": "iyi", "Kat": "50"}, "change", ["kat"])
+    case("uygun değer, çıkılmış: sorun yok", {"Durum": "iyi", "Kat": "2"}, "change", ["kat", "durum"])
+    return out
 
 
 def picks_core():

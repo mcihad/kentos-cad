@@ -49132,5 +49132,3795 @@
     "miss": "notListed"
    }
   }
+ ],
+ "moments": [
+  {
+   "name": "değişirken, alandan çıkılmamış: yalnız zamansız denetim",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "change",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    }
+   ]
+  },
+  {
+   "name": "değişirken, alandan çıkılmış: çıkınca sorulan da",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "change",
+   "left": [
+    "kat"
+   ],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    }
+   ]
+  },
+  {
+   "name": "değişirken, başka alandan çıkılmış: bu alanınki sorulmaz",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "change",
+   "left": [
+    "durum"
+   ],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    }
+   ]
+  },
+  {
+   "name": "kaydederken: zamansız, çıkınca, kaydederken ve iş akışsız formda iş akışında sorulan",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "save",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/3"
+    }
+   ]
+  },
+  {
+   "name": "kaydederken alandan çıkılmamış olsa da çıkınca sorulan sorulur",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "save",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/3"
+    }
+   ]
+  },
+  {
+   "name": "iş akışında ilerlerken: hepsi",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "submit",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/3"
+    }
+   ]
+  },
+  {
+   "name": "iş akışlı form kaydederken: iş akışınınki sorulmaz, çıkınca sorulan sorulur",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ],
+    "workflow": {
+     "field": "Durum",
+     "initial": "inceleme",
+     "steps": [
+      {
+       "label": "Onayla",
+       "from": [
+        "inceleme"
+       ],
+       "to": "iyi"
+      }
+     ]
+    }
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "save",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    }
+   ]
+  },
+  {
+   "name": "iş akışlı form değişirken, alandan çıkılmış",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ],
+    "workflow": {
+     "field": "Durum",
+     "initial": "inceleme",
+     "steps": [
+      {
+       "label": "Onayla",
+       "from": [
+        "inceleme"
+       ],
+       "to": "iyi"
+      }
+     ]
+    }
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "change",
+   "left": [
+    "kat"
+   ],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    }
+   ]
+  },
+  {
+   "name": "iş akışlı form ilerlerken: hepsi",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ],
+    "workflow": {
+     "field": "Durum",
+     "initial": "inceleme",
+     "steps": [
+      {
+       "label": "Onayla",
+       "from": [
+        "inceleme"
+       ],
+       "to": "iyi"
+      }
+     ]
+    }
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "25"
+   },
+   "moment": "submit",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/3"
+    }
+   ]
+  },
+  {
+   "name": "8 kat değişirken, çıkılmamış: hiçbiri",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "8"
+   },
+   "moment": "change",
+   "left": [],
+   "issues": []
+  },
+  {
+   "name": "8 kat değişirken, çıkılmış: hiçbiri",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "8"
+   },
+   "moment": "change",
+   "left": [
+    "kat"
+   ],
+   "issues": []
+  },
+  {
+   "name": "8 kat kaydederken: kaydederken sorulan",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "8"
+   },
+   "moment": "save",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/3"
+    }
+   ]
+  },
+  {
+   "name": "8 kat ilerlerken: kaydederken ve iş akışında sorulan",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "8"
+   },
+   "moment": "submit",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/3"
+    }
+   ]
+  },
+  {
+   "name": "12 kat değişirken, çıkılmış: çıkınca sorulan uyarı",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "12"
+   },
+   "moment": "change",
+   "left": [
+    "kat"
+   ],
+   "issues": [
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    }
+   ]
+  },
+  {
+   "name": "12 kat değişirken, çıkılmamış: uyarı yok",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "12"
+   },
+   "moment": "change",
+   "left": [],
+   "issues": []
+  },
+  {
+   "name": "12 kat kaydederken: uyarı ve kaydederken sorulan",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "12"
+   },
+   "moment": "save",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/2"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/3"
+    }
+   ]
+  },
+  {
+   "name": "boş değer: çıkılmış olsa da denetim sorulmaz",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi"
+   },
+   "moment": "change",
+   "left": [
+    "kat"
+   ],
+   "issues": []
+  },
+  {
+   "name": "kısa not, yazılırken: sorulmaz",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "inceleme",
+    "Kat": "2",
+    "Açıklama": "kısa"
+   },
+   "moment": "change",
+   "left": [],
+   "issues": []
+  },
+  {
+   "name": "kısa not, alandan çıkılınca: sorulur",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "inceleme",
+    "Kat": "2",
+    "Açıklama": "kısa"
+   },
+   "moment": "change",
+   "left": [
+    "aciklama"
+   ],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "aciklama",
+     "field": "Açıklama",
+     "rule": "checks/0"
+    }
+   ]
+  },
+  {
+   "name": "kısa not, kaydederken: sorulur",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "inceleme",
+    "Kat": "2",
+    "Açıklama": "kısa"
+   },
+   "moment": "save",
+   "left": [],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "aciklama",
+     "field": "Açıklama",
+     "rule": "checks/0"
+    }
+   ]
+  },
+  {
+   "name": "gizli alanın notu, çıkılmış olsa da sorulmaz",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "2",
+    "Açıklama": "kısa"
+   },
+   "moment": "change",
+   "left": [
+    "aciklama"
+   ],
+   "issues": []
+  },
+  {
+   "name": "iki alandan çıkılmış: ikisinin de denetimi",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "inceleme",
+    "Kat": "25",
+    "Açıklama": "kısa"
+   },
+   "moment": "change",
+   "left": [
+    "kat",
+    "aciklama"
+   ],
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/0"
+    },
+    {
+     "code": "form_check_warning",
+     "severity": "warning",
+     "item": "kat",
+     "field": "kat-sayisi",
+     "rule": "checks/1"
+    },
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "aciklama",
+     "field": "Açıklama",
+     "rule": "checks/0"
+    }
+   ]
+  },
+  {
+   "name": "aralık dışı değer: denetimden önce değer hatası",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "50"
+   },
+   "moment": "change",
+   "left": [
+    "kat"
+   ],
+   "issues": [
+    {
+     "code": "form_value_invalid",
+     "severity": "error",
+     "item": "kat",
+     "field": "kat-sayisi"
+    }
+   ]
+  },
+  {
+   "name": "uygun değer, çıkılmış: sorun yok",
+   "fields": [
+    {
+     "name": "Durum",
+     "kind": "text",
+     "values": [
+      {
+       "code": "iyi",
+       "label": "İyi"
+      },
+      {
+       "code": "inceleme",
+       "label": "Ek inceleme gerekli"
+      }
+     ],
+     "required": true
+    },
+    {
+     "id": "kat-sayisi",
+     "name": "Kat",
+     "kind": "integer",
+     "min": "1",
+     "max": "40"
+    },
+    {
+     "name": "Açıklama",
+     "kind": "text",
+     "length": 500
+    },
+    {
+     "name": "Tarih",
+     "kind": "date"
+    },
+    {
+     "name": "Onaylı",
+     "kind": "boolean"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "tab",
+      "id": "genel",
+      "label": "Genel",
+      "items": [
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum",
+        "required": true
+       },
+       {
+        "type": "field",
+        "id": "kat",
+        "field": "kat-sayisi",
+        "label": "Kat sayısı",
+        "help": "Zemin kat dahil.",
+        "checks": [
+         {
+          "rule": "Kat <= 20",
+          "message": "Kat en çok 20 olmalı."
+         },
+         {
+          "rule": "Kat <= 10",
+          "message": "Kat 10'u geçiyorsa yapı ruhsatı ayrıca denetlenir.",
+          "warning": true,
+          "on": "leave"
+         },
+         {
+          "rule": "Kat <= 5",
+          "message": "Kat 5'i geçen bina kaydedilirken incelenir.",
+          "on": "save"
+         },
+         {
+          "rule": "Kat <= 3",
+          "message": "Kat 3'ü geçen bina onaylanırken incelenir.",
+          "on": "submit"
+         }
+        ]
+       },
+       {
+        "type": "field",
+        "id": "aciklama",
+        "field": "Açıklama",
+        "widget": "textArea",
+        "visibleWhen": "Durum = 'inceleme'",
+        "requiredWhen": "Durum = 'inceleme'",
+        "checks": [
+         {
+          "rule": "uzunluk(Açıklama) >= 10",
+          "message": "Açıklama en az 10 karakter olmalı.",
+          "on": "leave"
+         }
+        ]
+       }
+      ]
+     },
+     {
+      "type": "tab",
+      "id": "ayrinti",
+      "label": "Ayrıntı",
+      "items": [
+       {
+        "type": "group",
+        "id": "denetim",
+        "label": "Denetim",
+        "columns": 2,
+        "visibleWhen": "Kat >= 1",
+        "items": [
+         {
+          "type": "field",
+          "id": "tarih",
+          "field": "Tarih",
+          "default": "2026-10-16"
+         },
+         {
+          "type": "field",
+          "id": "onay",
+          "field": "Onaylı",
+          "widget": "switch",
+          "readOnlyWhen": "Durum = 'iyi'"
+         }
+        ]
+       },
+       {
+        "type": "note",
+        "id": "bilgi",
+        "text": "Denetimi yapan kişi kaydeder."
+       }
+      ]
+     }
+    ]
+   },
+   "attrs": {
+    "Durum": "iyi",
+    "Kat": "2"
+   },
+   "moment": "change",
+   "left": [
+    "kat",
+    "durum"
+   ],
+   "issues": []
+  }
  ]
 }
