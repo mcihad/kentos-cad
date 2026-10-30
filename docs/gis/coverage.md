@@ -6,7 +6,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 ## Ürün komutları
 
 - 304 komut; masaüstü 282, başsız 304, Python 304, MCP 282, sunucu 22.
-- Seçenekler: 5894 hücre, 1753 tanesi bir durumda deneniyor (4141 açık).
+- Seçenekler: 5894 hücre, 1754 tanesi bir durumda deneniyor (4140 açık).
 - Veri türleri (hedef türler): 206 hücre, 132 tanesi bir durumda deneniyor (74 açık).
 - Ortak komut durumu olmayan: 41; 22 sunucu komutu (sunucunun veritabanı testlerinde), 19 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dwg, file.export.dxf, file.export.fgb, file.export.gis, file.export.gml, file.export.gpkg, file.export.maplibre, file.export.parquet, file.export.pdf, file.export.qml, file.export.shp, file.export.sld, file.export.table, file.export.xyz, file.package, file.preflight.sheets).
 
@@ -74,7 +74,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `cad.joins.edit` | keep="all" | — |
 | `cad.joins.query` | keep="all" | — |
 | `cad.layers.compose` | blend="addition", blend="colorBurn", blend="colorDodge", blend="darken", blend="difference", blend="exclusion", blend="hardLight", blend="lighten", blend="overlay", blend="softLight" | — |
-| `cad.layers.edit` | geometry="annotation", kind="bigint", kind="binary", kind="boolean", kind="datetime", kind="instant", kind="json", kind="layer", kind="time", kind="uuid", lineType="continuous", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true, visible=true, withheld=true | — |
+| `cad.layers.edit` | geometry="annotation", kind="bigint", kind="binary", kind="boolean", kind="instant", kind="json", kind="layer", kind="time", kind="uuid", lineType="continuous", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true, visible=true, withheld=true | — |
 | `cad.layers.find` | lineType="continuous", lineType="dashdot", lineType="dotted", plot=true | — |
 | `cad.layers.labels` | align="center", align="left", align="right", always=true, area="boundary", area="corner", area="horizontal", area="perimeter", curved=true, ink="fg", ink="fg-dim", ink="label", kind="interior", kind="manhattan", line="contour", line="horizontal", line="parallel", mode="always", overlap="always", overlap="ifNeeded", overlap="never", placement="corner", point="center", position="above", position="below", position="on", position="sides", shape="ellipse", shape="rect", shape="round" | — |
 | `cad.layers.service` | auth="arcgis", auth="basic", auth="google", auth="header", auth="none", auth="oauth2", dynamic=true, kind="arcgis", kind="bigint", kind="binary", kind="boolean", kind="date", kind="datetime", kind="decimal", kind="google", kind="instant", kind="json", kind="ogcFeatures", kind="ogcTiles", kind="time", kind="uuid", kind="vector", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, required=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true, withheld=true, yFlip=true | — |

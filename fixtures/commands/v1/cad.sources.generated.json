@@ -1,0 +1,7115 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.edit",
+ "commandVersion": 1,
+ "title": "Bağlı tablonun hesaplanan sütunları",
+ "note": "ADR 0754. Tablonun sütunları sqlite3 ile PRAGMA table_xinfo'yla (hesaplananlar dahil) ve sqlite_master'daki CREATE metninden okunur, KentOS kodu olmadan; yazmadan sonra tablonun hesapladıkları sqlite3'ün kendisine dosyanın kopyasında aynı UPDATE ya da INSERT çalıştırılarak hesaplatılır. Satırlar ve bağ bound_sources_cases.py'nin bağlamasından (GDAL'ın OGR'ı hesaplanan sütunları da okur). Hesaplanan sütun alan olur, column.made'i tablonun yazdığı ifade (GENERATED ALWAYS AS (…) STORED | VIRTUAL), zorunlu değil, varsayılanı yok; yazmada adı geçmez, değeri tablodan geri okunur; çizimde var olan kaydın değeri değiştirilemez (attribute_generated).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlı katmanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bağlanınca hesaplanan sütun alan olur: değeri tablodan, ifadesi column.made'de",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-1.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-1.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-1.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-1.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "VIRTUAL sütunun değeri de tablodan okunur, ifadesi VIRTUAL diye yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-2.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-2.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-2.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-2.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "kısa “AS (…)” biçimi tam yazılır; türü yazılmayan VIRTUAL'dır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-3.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-3.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-3.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-3.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "NOT NULL hesaplanan sütun zorunlu alan olmaz; satırlara bölünmüş ifadesi tek satır yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-4.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-4.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-4.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-4.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "veritabanının hesapladığı varsayılanlı düz sütun düz kalır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-5.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-5.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-5.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-5.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "plan bağlamayı yazmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-6.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-6.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-6.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false,
+      "dirty": false
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "hemen okumak bir şey değiştirmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-7.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-7.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-7.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-7.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "dosyada kod değişince okumak hesaplanan değerleri getirir; ifadesi değişen sütunun column.made'i yenilenir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-8.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-8.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-8.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen-2.gpkg",
+     "to": "$tmp:uretilen-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 2,
+       "removed": 0,
+       "source": "482acf3ba9aa9cacc9bb8c34f90314afcf0fde63f3fb48d580439f25cc032ef8",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5.2",
+         "ada": "101",
+         "parsel": "52",
+         "ana": "101",
+         "birlesik": "101-5-2",
+         "etiket": "101/52",
+         "seviye": "3",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "101-6",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '-')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "okumanın planı ne alanları ne nesneleri yazar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-9.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-9.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-9.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-9.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen-2.gpkg",
+     "to": "$tmp:uretilen-9.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 2,
+       "removed": 0,
+       "source": "482acf3ba9aa9cacc9bb8c34f90314afcf0fde63f3fb48d580439f25cc032ef8",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "kayıtlı nesnenin STORED hesaplanan değeri değiştirilemez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-10.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-10.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-10.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-10.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "ana": "999"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "attribute_generated",
+       "message": "“ana” alanının değeri değiştirilemez: tablo onu hesaplıyor: substr(kod, 1, instr(kod || '.', '.') - 1). Değer, kayıt tabloya yazılınca tablodan gelir.",
+       "path": "attrs.ana"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "VIRTUAL hesaplanan değer de değiştirilemez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-11.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-11.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-11.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-11.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "birlesik": "x"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "attribute_generated",
+       "message": "“birlesik” alanının değeri değiştirilemez: tablo onu hesaplıyor: replace(kod, '.', ''). Değer, kayıt tabloya yazılınca tablodan gelir.",
+       "path": "attrs.birlesik"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "hesaplanan değeri kaldırmak da değiştirmektir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-12.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-12.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-12.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-12.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "etiket": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "attribute_generated",
+       "message": "“etiket” alanının değeri değiştirilemez: tablo onu hesaplıyor: ada || '/' || parsel. Değer, kayıt tabloya yazılınca tablodan gelir.",
+       "path": "attrs.etiket"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "ilk değişen hesaplanan alan söylenir, düz alanın değişikliği de yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-13.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-13.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-13.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-13.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "notu": "yeni",
+       "seviye": "5",
+       "ana": "1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "attribute_generated",
+       "message": "“ana” alanının değeri değiştirilemez: tablo onu hesaplıyor: substr(kod, 1, instr(kod || '.', '.') - 1). Değer, kayıt tabloya yazılınca tablodan gelir.",
+       "path": "attrs.ana"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "aynı değeri yazmak değişiklik değildir; düz alan yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-14.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-14.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-14.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-14.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "ana": "101",
+       "notu": "yeni not"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00",
+         "notu": "yeni not"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla hesaplanan alana yazamaz: değişen her kayıt sorunlu, hiçbiri yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-15.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-15.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-15.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-15.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "ana",
+       "expression": "kod"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_values",
+       "message": "2 nesnenin değeri alanların kurallarına uymuyor; hiçbir değer yazılmadı. İlki: “ana” alanının değeri değiştirilemez: tablo onu hesaplıyor: substr(kod, 1, instr(kod || '.', '.') - 1). Değer, kayıt tabloya yazılınca tablodan gelir. (ana). Sorunların hepsi plan'da; uyanları yazmak için policy valid verin.",
+       "path": "write"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.fields.write"
+    }
+   ]
+  },
+  {
+   "name": "Alan hesapla'nın planı sorunları kayıt kayıt söyler; değişmeyen kayıt sorun değildir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-16.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-16.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-16.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-16.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "write": {
+       "kind": "calculate",
+       "field": "ana",
+       "expression": "kod"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "unchanged": 1,
+       "kept": 0,
+       "invalid": 2,
+       "problems": [
+        {
+         "uid": "$uidOf:2",
+         "field": "ana",
+         "code": "attribute_generated",
+         "message": "“ana” alanının değeri değiştirilemez: tablo onu hesaplıyor: substr(kod, 1, instr(kod || '.', '.') - 1). Değer, kayıt tabloya yazılınca tablodan gelir."
+        },
+        {
+         "uid": "$uidOf:3",
+         "field": "ana",
+         "code": "attribute_generated",
+         "message": "“ana” alanının değeri değiştirilemez: tablo onu hesaplıyor: substr(kod, 1, instr(kod || '.', '.') - 1). Değer, kayıt tabloya yazılınca tablodan gelir."
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.fields.write"
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır'da hesaplanan alanın aynı değeri değişiklik değildir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-17.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-17.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-17.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-17.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "ana": "101"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 0,
+       "unchanged": 1,
+       "kept": 0,
+       "invalid": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.fields.write"
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır policy valid: düz alan yazılır, hesaplanan alan atlanır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-18.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-18.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-18.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-18.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "policy": "valid",
+      "write": {
+       "kind": "values",
+       "rows": [
+        {
+         "uid": "$uidOf:2",
+         "values": {
+          "notu": "yeni"
+         }
+        },
+        {
+         "uid": "$uidOf:3",
+         "values": {
+          "birlesik": "x"
+         }
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": 1,
+       "unchanged": 0,
+       "kept": 0,
+       "invalid": 1,
+       "changes": [
+        {
+         "uid": "$uidOf:2",
+         "field": "notu",
+         "after": "yeni"
+        }
+       ],
+       "problems": [
+        {
+         "uid": "$uidOf:3",
+         "field": "birlesik",
+         "code": "attribute_generated",
+         "message": "“birlesik” alanının değeri değiştirilemez: tablo onu hesaplıyor: replace(kod, '.', ''). Değer, kayıt tabloya yazılınca tablodan gelir."
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "values_skipped",
+        "path": "write",
+        "message": "1 nesnenin değeri kurallara uymadığı için yazılmadı. İlki: “birlesik” alanının değeri değiştirilemez: tablo onu hesaplıyor: replace(kod, '.', ''). Değer, kayıt tabloya yazılınca tablodan gelir. (birlesik)."
+       }
+      ]
+     },
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00",
+         "notu": "yeni"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.fields.write"
+    }
+   ]
+  },
+  {
+   "name": "Formla kaydet hesaplanan alanın değişikliğini reddeder",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-19.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-19.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-19.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-19.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "name": "Parsel",
+       "layer": "import-parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     },
+     "command": "cad.forms.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel",
+      "uid": "$uidOf:2",
+      "values": {
+       "ana": "999"
+      },
+      "draft": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "attribute_generated",
+       "message": "“ana” alanının değeri değiştirilemez: tablo onu hesaplıyor: substr(kod, 1, instr(kod || '.', '.') - 1). Değer, kayıt tabloya yazılınca tablodan gelir.",
+       "path": "values.ana"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.forms.submit"
+    }
+   ]
+  },
+  {
+   "name": "Formla kaydette hesaplanan alanın aynı değeri reddedilmez, düz alan yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-20.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-20.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-20.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-20.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "name": "Parsel",
+       "layer": "import-parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ]
+     },
+     "command": "cad.forms.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "form": "parsel",
+      "uid": "$uidOf:2",
+      "values": {
+       "ana": "101",
+       "notu": "form notu"
+      },
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "uid": "$uidOf:2",
+       "attrs": {
+        "kod": "101.5",
+        "ada": "101",
+        "parsel": "5",
+        "ana": "101",
+        "birlesik": "1015",
+        "etiket": "101/5",
+        "seviye": "2",
+        "sabit": "7",
+        "olusturma": "2026-01-01T10:00:00",
+        "notu": "form notu"
+       },
+       "changed": true,
+       "revision": "$current",
+       "changes": [
+        {
+         "uid": "$uidOf:2",
+         "layer": "import-parsel",
+         "fields": [
+          "notu"
+         ]
+        }
+       ],
+       "undo": "Form: Parsel",
+       "snapshot": "$any"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00",
+         "notu": "form notu"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.forms.submit"
+    }
+   ]
+  },
+  {
+   "name": "kod değişince yazmak hesaplanan sütunları tablodan geri okur",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-21.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-21.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-21.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-21.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kod": "103.7.1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "103.7.1",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "103",
+         "birlesik": "10371",
+         "etiket": "101/5",
+         "seviye": "3",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "yazdıktan sonra yazılacak bir şey kalmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-22.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-22.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-22.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-22.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kod": "103.7.1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "103.7.1",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "103",
+         "birlesik": "10371",
+         "etiket": "101/5",
+         "seviye": "3",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.sources.sync"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "yazmayı geri almak tablodan gelen değerleri de geri alır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-23.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-23.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-23.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-23.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kod": "103.7.1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "103.7.1",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "103",
+         "birlesik": "10371",
+         "etiket": "101/5",
+         "seviye": "3",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.sources.sync"
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "103.7.1",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "yazmanın planı tabloya yazmaz, hesaplananları getirmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-24.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-24.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-24.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-24.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kod": "103.7.1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "NULL'a dönen hesaplanan değer yazılınca nesneden kalkar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-25.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-25.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-25.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-25.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "parsel": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "2": {
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "ana": "101",
+         "birlesik": "1015",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "yeni nesneye verilen hesaplanan değeri tablo yazarken değiştirir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uretilen.gpkg",
+     "to": "$tmp:uretilen-26.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uretilen-26.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:uretilen-26.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.5",
+         "ada": "101",
+         "parsel": "5",
+         "ana": "101",
+         "birlesik": "1015",
+         "etiket": "101/5",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-01-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "101.6",
+         "ada": "101",
+         "parsel": "6",
+         "ana": "101",
+         "birlesik": "1016",
+         "etiket": "101/6",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "2026-02-01T10:00:00",
+         "notu": "köşe"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "kod": "102",
+         "ada": "102",
+         "ana": "102",
+         "birlesik": "102",
+         "seviye": "1",
+         "sabit": "7",
+         "olusturma": "2026-03-01T10:00:00"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:uretilen-26.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "1d0dcd47cc60f04954a0306dafa20057d5078729a3d467329f87d6108145be77",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "kod",
+          "kind": "text",
+          "required": true
+         },
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "ana",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"
+          }
+         },
+         {
+          "name": "birlesik",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"
+          }
+         },
+         {
+          "name": "etiket",
+          "kind": "text",
+          "column": {
+           "made": "GENERATED ALWAYS AS (ada || '/' || parsel) STORED"
+          }
+         },
+         {
+          "name": "seviye",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (CASE WHEN kod = '' THEN 0 ELSE length(kod) - length(replace(kod, '.', '')) + 1 END) STORED"
+          }
+         },
+         {
+          "name": "sabit",
+          "kind": "integer",
+          "column": {
+           "made": "GENERATED ALWAYS AS (7) VIRTUAL"
+          }
+         },
+         {
+          "name": "olusturma",
+          "kind": "datetime",
+          "column": {
+           "made": "CURRENT_TIMESTAMP"
+          }
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487200.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487200.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "kod": "105.1",
+       "ada": "105",
+       "parsel": "1",
+       "ana": "999"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 1,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "fields": {
+       "5": {
+        "attrs": {
+         "kod": "105.1",
+         "ada": "105",
+         "parsel": "1",
+         "ana": "105",
+         "birlesik": "1051",
+         "etiket": "105/1",
+         "seviye": "2",
+         "sabit": "7",
+         "olusturma": "$any"
+        }
+       }
+      },
+      "revision": "changed"
+     },
+     "command": "cad.sources.sync"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  }
+ ]
+}

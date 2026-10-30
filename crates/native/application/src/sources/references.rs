@@ -69,18 +69,25 @@ fn is_null(sql: &str) -> bool {
     up == "NULL" || up.starts_with("NULL::")
 }
 
-/// The default the database works out for a column, as its text (docs/adr/0753 §1): none without a default, for NULL,
-/// and for a literal (the field's own default, docs/adr/0750); a control character a space, a text past [`MAX_MADE`]
-/// characters shortened with “…”.
+/// The default the database works out for a column, as its text (docs/adr/0753 §1), or the clause of a column it makes
+/// itself (an identity, a generated column; docs/adr/0754): none without a default, for NULL, and for a literal (the
+/// field's own default, docs/adr/0750); a run of blanks and control characters one space (a generation expression
+/// written over lines reads on one), a text past [`MAX_MADE`] characters shortened with “…”.
 pub(crate) fn made_of(c: &gpkg::Column) -> Option<String> {
     let d = c.default.as_deref()?;
-    if literal_default(d).is_some() || is_null(d) {
+    if gpkg::Making::of(c) == gpkg::Making::Plain && (literal_default(d).is_some() || is_null(d)) {
         return None;
     }
-    let plain: String = d
-        .chars()
-        .map(|c| if c.is_control() { ' ' } else { c })
-        .collect();
+    let mut plain = String::with_capacity(d.len());
+    for ch in d.chars() {
+        if ch.is_whitespace() || ch.is_control() {
+            if !plain.ends_with(' ') {
+                plain.push(' ');
+            }
+        } else {
+            plain.push(ch);
+        }
+    }
     let text = js_trim(&plain);
     if text.is_empty() {
         return None;

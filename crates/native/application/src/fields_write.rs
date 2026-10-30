@@ -393,7 +393,8 @@ pub(crate) fn run(doc: &Document, input: &FieldsWrite) -> Result<Planned, Stop> 
             unchanged += 1;
             continue;
         }
-        let fit = checks::subtype_fit(doc, layer, Some(before), &after, "attrs")
+        let fit = checks::made_fit(doc, layer, Some(before), &after, "attrs")
+            .and_then(|()| checks::subtype_fit(doc, layer, Some(before), &after, "attrs"))
             .and_then(|_| checks::combination_fit(doc, layer, Some(before), &after, "attrs"))
             .and_then(|_| {
                 rules

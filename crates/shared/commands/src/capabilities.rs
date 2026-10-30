@@ -1225,6 +1225,8 @@ const ENTRIES: &[Entry] = &[
                 // docs/adr/0438 §1, §3: the layer's record rules and unique fields.
                 "rule_broken",
                 "not_unique",
+                // docs/adr/0754 §3: a field the bound table always makes.
+                "attribute_generated",
             ],
             REVISION,
         ],
@@ -3948,6 +3950,8 @@ const ENTRIES: &[Entry] = &[
                 "unknown_relation",
                 "relation_mismatch",
                 "relation_field_unknown",
+                // docs/adr/0754 §3: a field the bound table always makes.
+                "attribute_generated",
             ],
             // docs/adr/0532 §1: commit carries the step to the sources.
             &[

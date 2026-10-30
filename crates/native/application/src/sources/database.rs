@@ -380,22 +380,29 @@ pub(super) fn write(
                 e => provider_stop(e, &address, at_one(place)),
             }
         })?;
-        // What the tables gave the new rows' columns left to their defaults, for their objects (docs/adr/0750).
+        // What the tables gave the new rows' columns left to their defaults (docs/adr/0750), and the updated rows'
+        // generated columns they worked out again (docs/adr/0754), for their objects.
         let mut filled: Vec<(usize, super::Filled)> = Vec::new();
-        for ((i, edits), e) in jobs.iter().zip(edited) {
+        for (k, ((i, edits), e)) in jobs.iter().zip(edited).enumerate() {
             let it = &mut items[*i];
             it.others |= e.before != it.link.revision;
             // Someone else's rows in the area keep the link “changed” until a read takes them.
             if !it.others || it.base.is_none() {
                 it.link.revision = e.after;
             }
-            let rows: super::Filled = edits
+            let mut rows: super::Filled = edits
                 .insert
                 .iter()
                 .zip(e.filled)
                 .filter(|(_, f)| !f.is_empty())
                 .map(|((uid, _), f)| (uid.clone(), f))
                 .collect();
+            rows.extend(
+                e.refreshed
+                    .into_iter()
+                    .filter(|(_, f)| !f.is_empty())
+                    .filter_map(|(fid, f)| fid_uids[k].get(&fid).map(|u| (u.to_string(), f))),
+            );
             if !rows.is_empty() {
                 filled.push((*i, rows));
             }

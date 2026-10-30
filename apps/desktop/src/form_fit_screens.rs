@@ -457,3 +457,312 @@ fn district_form_screens() {
 fn typography_control() -> f32 {
     kentos_ui::theme::metrics::control()
 }
+
+/// The fields of the owner's `muhasebe.hesap_plani` bound from PostGIS (docs/adr/0754): `id` is the key and no field;
+/// the database's defaults (`uuidv7()`, `now()`) and its generated columns (`ana_hesap`, `d1`…`d4`, `birlesik_kod`,
+/// worked out from `kod`) in `column.made`; `ust_id` refers to the table itself, of more than 10 000 rows, so no list
+/// (docs/adr/0753).
+fn ledger_fields() -> serde_json::Value {
+    let part = |n: u32| {
+        format!(
+            "GENERATED ALWAYS AS (NULLIF(split_part((kod)::text, '.'::text, {n}), ''::text)) STORED"
+        )
+    };
+    serde_json::json!([
+        { "name": "genel_id", "kind": "uuid", "column": { "made": "uuidv7()" } },
+        { "name": "ek_veri", "kind": "json", "default": "{}" },
+        { "name": "olusturma_tarihi", "kind": "instant", "column": { "made": "now()" } },
+        { "name": "guncelleme_tarihi", "kind": "instant", "column": { "made": "now()" } },
+        { "name": "kod", "kind": "text", "length": 32, "required": true },
+        { "name": "ad", "kind": "text", "length": 200, "required": true },
+        { "name": "ust_id", "kind": "bigint",
+          "column": { "refers": { "table": "muhasebe.hesap_plani", "column": "id", "label": "ad" } } },
+        { "name": "duzey", "kind": "integer", "default": "1" },
+        { "name": "tur", "kind": "text", "length": 16, "required": true },
+        { "name": "calisma_sekli", "kind": "text", "length": 16, "required": true },
+        { "name": "yil", "kind": "integer", "required": true },
+        { "name": "kayit_atilabilir", "kind": "boolean", "default": "true" },
+        { "name": "yasal_dayanak", "kind": "text" },
+        { "name": "aciklama", "kind": "text" },
+        { "name": "aktif", "kind": "boolean", "default": "true" },
+        { "name": "sahip_turu", "kind": "text", "length": 16 },
+        { "name": "sahip_id", "kind": "bigint" },
+        { "name": "ana_hesap", "kind": "text", "length": 3,
+          "column": { "made": "GENERATED ALWAYS AS (split_part((kod)::text, '.'::text, 1)) STORED" } },
+        { "name": "d1", "kind": "text", "length": 2, "column": { "made": part(2) } },
+        { "name": "d2", "kind": "text", "length": 2, "column": { "made": part(3) } },
+        { "name": "d3", "kind": "text", "length": 2, "column": { "made": part(4) } },
+        { "name": "d4", "kind": "text", "length": 2, "column": { "made": part(5) } },
+        { "name": "birlesik_kod", "kind": "text", "length": 11,
+          "column": { "made": "GENERATED ALWAYS AS (replace((kod)::text, '.'::text, ''::text)) STORED" } }
+    ])
+}
+
+/// An account like the owner's, its values as PostGIS gives them (the generated ones worked out from its code).
+fn ledger(app: &mut App) {
+    let mut o = crate::tools_scenes::Objects::new();
+    let id = o.path(
+        "hesap_plani",
+        &[[0.0, 0.0], [40.0, 0.0], [40.0, 30.0], [0.0, 30.0]],
+        true,
+    );
+    o.data(
+        id,
+        &[
+            ("genel_id", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0aa1"),
+            ("ek_veri", "{}"),
+            ("olusturma_tarihi", "2026-01-05T09:00:00+03:00"),
+            ("guncelleme_tarihi", "2026-10-30T08:15:00+03:00"),
+            ("kod", "104.02.01"),
+            ("ad", "AB Hibeleri"),
+            ("ust_id", "13"),
+            ("duzey", "5"),
+            ("tur", "aktif"),
+            ("calisma_sekli", "borc"),
+            ("yil", "2026"),
+            ("kayit_atilabilir", "true"),
+            ("aktif", "true"),
+            ("ana_hesap", "104"),
+            ("d1", "02"),
+            ("d2", "01"),
+            ("birlesik_kod", "1040201"),
+        ],
+        None,
+    );
+    let fields = ledger_fields();
+    crate::tools_scenes::open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut layer = crate::tools_scenes::layer("hesap_plani", "Hesap planı", "#2F7D5B", 0.35);
+        layer["fields"] = fields;
+        layers.push(layer);
+        d["layers"] = serde_json::Value::Array(layers);
+        d["activeLayer"] = serde_json::json!("hesap_plani");
+    });
+}
+
+/// docs/adr/0754 §3: a value the bound table works out itself is shown and never edited, in Öznitelikler and in the
+/// attribute table; a plain field beside it is; Alanlar and an empty form field say what makes it.
+#[test]
+fn a_generated_field_is_shown_and_never_edited() {
+    let (mut app, _) = App::boot(None);
+    ledger(&mut app);
+    app.selection.set([Slot(1)]);
+    let doc = app.document.as_ref().expect("open");
+    let rows: Vec<_> = app
+        .properties_panel(doc)
+        .sections
+        .into_iter()
+        .flat_map(|s| s.rows)
+        .collect();
+    let editable = |label: &str| {
+        rows.iter()
+            .find(|r| r.label == label)
+            .map(|r| r.editor.is_some())
+    };
+    assert_eq!(editable("ana_hesap"), Some(false), "a generated value");
+    assert_eq!(editable("birlesik_kod"), Some(false));
+    assert_eq!(editable("aciklama"), Some(true), "a plain field");
+    let attrs = |app: &App| {
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.get(Slot(1)))
+            .map(|e| e.base().attrs.clone())
+            .unwrap_or_default()
+    };
+    let _ = app.update(Message::Run("data.featureTable"));
+    for m in app.features_edit(1, "ana_hesap", "999").expect("the cell") {
+        let _ = app.update(m);
+    }
+    assert!(!app.features.editing(), "the generated cell does not open");
+    assert_eq!(
+        attrs(&app).get("ana_hesap").map(String::as_str),
+        Some("104")
+    );
+    for m in app
+        .features_edit(1, "aciklama", "Hibe hesabı")
+        .expect("the cell")
+    {
+        let _ = app.update(m);
+    }
+    assert_eq!(
+        attrs(&app).get("aciklama").map(String::as_str),
+        Some("Hibe hesabı")
+    );
+    let fields: Vec<kentos_commands::LayerField> =
+        serde_json::from_value(ledger_fields()).expect("fields");
+    let column = |name: &str| {
+        fields
+            .iter()
+            .find(|f| f.name == name)
+            .and_then(|f| f.column.as_ref())
+    };
+    assert_eq!(
+        crate::layer_fields::made_said(column("ana_hesap")).as_deref(),
+        Some("Veritabanı hesaplar: split_part((kod)::text, '.'::text, 1)")
+    );
+    assert!(
+        crate::layer_fields::column_said(column("d4"))
+            .is_some_and(|s| s.starts_with(
+                "Değerini veritabanı satırın diğer değerlerinden hesaplar: NULLIF(split_part("
+            ) && s.ends_with("Düzenlenmez; kaynağa her yazmada tablodan gelir.")),
+        "{:?}",
+        crate::layer_fields::column_said(column("d4"))
+    );
+    assert_eq!(
+        crate::layer_fields::made_said(column("genel_id")).as_deref(),
+        Some("Veritabanı verir: uuidv7()")
+    );
+    let identity = |always: bool| kentos_commands::FieldColumn {
+        made: Some(if always {
+            "GENERATED ALWAYS AS IDENTITY".to_owned()
+        } else {
+            "GENERATED BY DEFAULT AS IDENTITY".to_owned()
+        }),
+        refers: None,
+    };
+    assert_eq!(
+        crate::layer_fields::made_said(Some(&identity(true))).as_deref(),
+        Some("Veritabanı verir: sıradaki numara")
+    );
+    assert!(
+        crate::layer_fields::column_said(Some(&identity(false)))
+            .is_some_and(|s| s.contains("boş bırakılırsa veritabanı sıradaki numarayı verir"))
+    );
+    assert!(
+        crate::layer_fields::column_said(Some(&identity(true))).is_some_and(|s| s
+            .contains("her zaman kendisi numaralar")
+            && s.ends_with("düzenlenmez."))
+    );
+}
+
+/// The owner's ledger table with a form made from it (docs/adr/0754): the designer on a generated field, the new
+/// record's preview saying what the database works out, the form on an account (its generated values shown, not
+/// written), full screen, Öznitelikler, Alanlar on a generated field, and the attribute table, whose generated cell
+/// stays shut where a plain one opens. Pictures in `.run/shots/form-hesap-*`.
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn ledger_form_screens() {
+    use kentos_ui::snapshot::Input;
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (w, h) in [(1100.0, 650.0), (1440.0, 900.0)] {
+        sizes::load(Default::default());
+        let (mut app, _) = App::boot(None);
+        owners_look(&mut app);
+        let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
+        snapshot.settle(&mut app, App::view, &mut update);
+        ledger(&mut app);
+        let shot = |snapshot: &mut Snapshot, app: &App, step: &str| {
+            let file = out.join(format!("form-hesap-{step}-{w}x{h}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("a picture");
+            println!("{}", file.display());
+        };
+        run(&mut app, "data.forms");
+        designer(&mut app, Event::NewForm);
+        designer(&mut app, Event::NewLayer("hesap_plani".into()));
+        designer(&mut app, Event::NewName("Hesap".into()));
+        designer(&mut app, Event::Create);
+        designer(&mut app, Event::SelectItem("ana-hesap".into()));
+        snapshot.settle(&mut app, App::view, &mut update);
+        shot(&mut snapshot, &app, "1-tasarim");
+        designer(&mut app, Event::Preview(true));
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Down the new record to its generated fields: what the database works out, read-only.
+        if let Some(caption) = text_at(&mut snapshot, &app, "Yeni kayıt · Hesap planı") {
+            let at = iced::Point::new(caption.x + 150.0, caption.y + 200.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -30.0));
+            shot(&mut snapshot, &app, "2-onizleme-hesaplanan");
+        }
+        designer(&mut app, Event::Save);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Forms(Event::Cancel));
+        app.selection.set([Slot(1)]);
+        run(&mut app, "data.formEdit");
+        snapshot.settle(&mut app, App::view, &mut update);
+        if let Some(field) = input_at(&mut snapshot, &app, "form-entry-ad") {
+            let at = iced::Point::new(field.x + field.width / 2.0, field.y + field.height + 40.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -30.0));
+        }
+        shot(&mut snapshot, &app, "3-formla-duzenle");
+        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Full screen: the fields in two columns, the generated ones at the end.
+        sizes::set(
+            "Formla düzenle · Hesap",
+            sizes::Kept {
+                width: 1040.0,
+                height: 600.0,
+                maximized: true,
+            },
+        );
+        run(&mut app, "data.formEdit");
+        snapshot.settle(&mut app, App::view, &mut update);
+        if let Some(field) = input_at(&mut snapshot, &app, "form-entry-ad") {
+            let at = iced::Point::new(field.x + field.width / 2.0, field.y + field.height + 40.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -30.0));
+        }
+        shot(&mut snapshot, &app, "4-tam-ekran");
+        let _ = app.update(Message::FormEntry(crate::forms::entry::Event::Cancel));
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Öznitelikler on the account, down to its generated rows.
+        app.props_closed.insert("general");
+        app.props_closed.insert("geometry");
+        snapshot.settle(&mut app, App::view, &mut update);
+        if let Some(row) = text_at(&mut snapshot, &app, "ek_veri") {
+            let at = iced::Point::new(row.x + 40.0, row.y + row.height / 2.0);
+            snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -30.0));
+        }
+        shot(&mut snapshot, &app, "5-oznitelikler");
+        // Alanlar on a generated field.
+        run(&mut app, "layer.fields");
+        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Choose(17)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        shot(&mut snapshot, &app, "6-alanlar-hesaplanan");
+        let _ = app.update(Message::LayerFields(crate::layer_fields::Event::Cancel));
+        snapshot.settle(&mut app, App::view, &mut update);
+        // The attribute table, the account's code, name, note and generated columns shown (Sütunlar ▾): the generated
+        // cell pressed to edit stays shut, a plain one opens.
+        app.features.hidden.insert(
+            "hesap_plani".into(),
+            [
+                "genel_id",
+                "ek_veri",
+                "olusturma_tarihi",
+                "guncelleme_tarihi",
+                "ust_id",
+                "duzey",
+                "tur",
+                "calisma_sekli",
+                "yil",
+                "kayit_atilabilir",
+                "yasal_dayanak",
+                "aktif",
+                "sahip_turu",
+                "sahip_id",
+            ]
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+        );
+        let _ = app.update(Message::Run("data.featureTable"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        if let Ok(m) = app.features_edit(1, "ana_hesap", "999") {
+            for m in m.into_iter().take(2) {
+                let _ = app.update(m);
+            }
+            snapshot.settle(&mut app, App::view, &mut update);
+            shot(&mut snapshot, &app, "7-tablo-hesaplanan");
+        }
+        if let Ok(m) = app.features_edit(1, "aciklama", "Hibe") {
+            for m in m.into_iter().take(2) {
+                let _ = app.update(m);
+            }
+            snapshot.settle(&mut app, App::view, &mut update);
+            shot(&mut snapshot, &app, "7b-tablo-duz");
+        }
+    }
+    sizes::load(Default::default());
+}

@@ -401,6 +401,9 @@ codes! {
     INVALID_ATTRIBUTE = "invalid_attribute", Failed, false, "Öznitelik adı boş ya da değer katmanın alanının kuralına uymuyor.";
     /// A required field of the layer written empty or taken away (docs/adr/0199 §2).
     ATTRIBUTE_REQUIRED = "attribute_required", Failed, false, "Katmanın zorunlu alanı boş yazıldı ya da kaldırıldı.";
+    /// A kept record's value written anew in a field the bound table always makes itself: a generated column or an
+    /// identity it always numbers (docs/adr/0754 §3).
+    ATTRIBUTE_GENERATED = "attribute_generated", Failed, false, "Alanın değerini bağlı tablo kendisi yapıyor (GENERATED ALWAYS: hesaplanan sütun ya da her zaman numaralanan kimlik); kaydın değeri değiştirilemez, tabloya yazılınca tablodan gelir.";
     /// A line weight that is not a number from 0 to 100 mm (docs/adr/0139).
     INVALID_LINE_WEIGHT = "invalid_line_weight", Failed, false, "Çizgi kalınlığı 0 ile 100 mm arasında bir sayı olmalı.";
     /// A new object's link to the object whose label it writes that cannot

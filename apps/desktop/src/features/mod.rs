@@ -702,7 +702,12 @@ impl App {
             self.features.editing = None;
             return Task::none();
         };
-        let Some(key) = &c.key else {
+        // A value the bound table always makes itself is shown, not written (docs/adr/0754 §3).
+        let Some(key) = c.key.as_ref().filter(|_| {
+            !c.field
+                .as_ref()
+                .is_some_and(kentos_commands::LayerField::made_always)
+        }) else {
             self.features.editing = None;
             return Task::none();
         };
@@ -771,12 +776,23 @@ impl App {
             self.features.editing = None;
             return Task::none();
         }
-        // The next column the table shows: a hidden one is passed over.
+        // The next column the table shows: a hidden one is passed over, and one whose value the bound table always
+        // makes (docs/adr/0754 §3).
         let shown = &rows.visible;
+        let made = |j: usize| {
+            rows.table.columns[j]
+                .field
+                .as_ref()
+                .is_some_and(kentos_commands::LayerField::made_always)
+        };
         let next = walk.and_then(|w| {
             let c = match w {
-                Walk::Right => shown.iter().copied().find(|&j| j > column)?,
-                Walk::Left => shown.iter().rev().copied().find(|&j| j < column)?,
+                Walk::Right => shown.iter().copied().find(|&j| j > column && !made(j))?,
+                Walk::Left => shown
+                    .iter()
+                    .rev()
+                    .copied()
+                    .find(|&j| j < column && !made(j))?,
             };
             (1..=last).contains(&c).then_some((slot, c))
         });

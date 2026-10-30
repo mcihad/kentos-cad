@@ -513,15 +513,27 @@ pub(super) fn write(
                 "layer",
             )
         })?;
-        // What the tables gave the new rows' columns left to their defaults, for their objects (docs/adr/0750).
-        for ((it, e), rows) in items.iter().zip(&edits).zip(&inserted) {
-            let filled: super::Filled = e
+        // What the tables gave the new rows' columns left to their defaults (docs/adr/0750), and the updated rows'
+        // generated columns they worked out again (docs/adr/0754), for their objects.
+        for ((it, e), written) in items.iter().zip(&edits).zip(&inserted) {
+            let mut filled: super::Filled = e
                 .insert
                 .iter()
-                .zip(rows)
+                .zip(&written.inserted)
                 .filter(|(_, r)| !r.filled.is_empty())
                 .map(|((uid, _), r)| (uid.clone(), r.filled.clone()))
                 .collect();
+            if !written.refreshed.is_empty() {
+                let by_fid: HashMap<i64, kentos_domain::Uuid> =
+                    it.stored.rows.iter().map(|(u, (f, ..))| (*f, *u)).collect();
+                filled.extend(
+                    written
+                        .refreshed
+                        .iter()
+                        .filter(|(_, f)| !f.is_empty())
+                        .filter_map(|(fid, f)| by_fid.get(fid).map(|u| (u.to_string(), f.clone()))),
+                );
+            }
             if !filled.is_empty() {
                 super::take_filled(doc, &it.link.layer, &it.stored.layer.columns, &filled);
             }

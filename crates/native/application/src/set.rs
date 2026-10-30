@@ -466,6 +466,8 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             crate::forms::enforced(doc, c.slot, old, &after.layer_id, &after.attrs, "attrs")?;
             // The record against its subtype (docs/adr/0422 §2); one warning for all of them.
             let before = (old.base().layer_id == after.layer_id).then_some(&old.base().attrs);
+            // A value the bound table always makes itself stays the table's (docs/adr/0754 §3).
+            checks::made_fit(doc, &after.layer_id, before, &after.attrs, "attrs")?;
             if let Some(w) =
                 checks::subtype_fit(doc, &after.layer_id, before, &after.attrs, "attrs")?
                 && !misfits.iter().any(|m| m.code == w.code)

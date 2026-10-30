@@ -142,7 +142,8 @@ değerde yaklaşık 50 milyon katlanmış metin). Şimdi kümelerle tek geçişt
 
 - Kendine başvuran listenin (`ust_id`) KentOS'tan eklenen yeni satırla yazmadan sonra yenilenmesi: şimdilik sonraki
   okumada.
-- Kimlik (identity) ve hesaplanan (generated) sütunlar: alan olmamaları ya da salt okunur olmaları.
+- Kimlik (identity) ve hesaplanan (generated) sütunlar: alan olmamaları ya da salt okunur olmaları. ADR 0754'te
+  kapandı: alan olurlar, değerleri tablonundur, yazılmazlar.
 - Birden çok sütunlu yabancı anahtar; 10 000'den çok satırlı tablo için aranan liste (ADR 0439'un başka katmandan
   listesi gibi).
 - Başvurulan tablo projede katmansa ilişki olarak önerilmesi (QGIS'in *Discover Relations*'ı gibi).

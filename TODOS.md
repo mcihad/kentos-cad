@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0754: bağlı tablonun hesaplanan (`GENERATED ALWAYS AS (…) STORED|VIRTUAL`) ve kimlik (`GENERATED … AS
+  IDENTITY`) sütunları alanın `column.made`'inde yan tümceleriyle; tablonun her zaman yaptığı değer hiç yazılmaz,
+  güncellemeden ve eklemeden sonra tablodan geri okunur; çizimde var olan kaydın değeri değiştirilemez
+  (`attribute_generated`); formda salt okunur ve “Veritabanı hesaplar: …”, Öznitelikler'de ve tablonun hücresinde
+  düzenlenmez, Alanlar'da sütunun sözü (web'in formu, Öznitelikler'i, tablosu ve Alanlar penceresi gelince aynısı).
 - ADR 0753: alanın `column`'u (`.kcad` şema 133; veritabanının verdiği değer `made`, yabancı anahtarın tablosu
   `refers`); bağlı tablonun tek sütunlu yabancı anahtarı alanın değer listesi (başvurulan satırlar, etiketi adı
   tanınan ya da ilk metin sütunu, aynı etiket koduyla ayrılır), her okumada yenilenir; formun yeni kaydında

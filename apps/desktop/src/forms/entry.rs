@@ -2982,8 +2982,12 @@ impl App {
                         continue;
                     };
                     let state = e.state(&f.id);
-                    // A mirror is shown, never written (docs/adr/0437).
-                    let read_only = locked || f.mirror || state.is_some_and(|s| s.read_only);
+                    // A mirror is shown, never written (docs/adr/0437); nor is a value the bound table always makes
+                    // itself (docs/adr/0754 §3).
+                    let read_only = locked
+                        || f.mirror
+                        || field.made_always()
+                        || state.is_some_and(|s| s.read_only);
                     let words = e
                         .words_of(&f.id, f.label.as_ref())
                         .unwrap_or_else(|| field.label().to_owned());
@@ -3589,12 +3593,12 @@ fn entry_control<'a>(
         e.said(&item.id)
             .and_then(|w| w.placeholder.clone())
             .or_else(|| item.placeholder.clone())
-            // A new record's value its table works out (docs/adr/0753 §2): left empty, said.
+            // A new record's value its table works out (docs/adr/0753 §2), and any record's the table always makes
+            // (docs/adr/0754 §3): left empty, said.
             .or_else(|| {
-                e.new_record
-                    .then(|| field.column.as_ref().and_then(|c| c.made.as_ref()))
+                (e.new_record || field.made_always())
+                    .then(|| crate::layer_fields::made_said(field.column.as_ref()))
                     .flatten()
-                    .map(|m| format!("Veritabanı verir: {m}"))
             })
             .unwrap_or_default()
     };

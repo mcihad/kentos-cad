@@ -407,6 +407,51 @@ pub(crate) fn subtype_fit(
     }))
 }
 
+/// A record's values on `layer` against the fields its bound table always makes itself (docs/adr/0754 §3): a kept
+/// record (`before`) whose value of such a field changes is `attribute_generated` at `{at}.{name}`. A new record's value
+/// is the table's to replace when the record is written to it.
+pub(crate) fn made_fit(
+    doc: &Document,
+    layer: &str,
+    before: Option<&BTreeMap<String, String>>,
+    after: &BTreeMap<String, String>,
+    at: &str,
+) -> Result<(), Stop> {
+    let Some(before) = before else {
+        return Ok(());
+    };
+    let Some(node) = doc.layers().get(layer) else {
+        return Ok(());
+    };
+    for f in node.fields.iter().filter(|f| f.made_always()) {
+        if before.get(&f.name) == after.get(&f.name) {
+            continue;
+        }
+        let how = match f
+            .column
+            .as_ref()
+            .and_then(kentos_commands::FieldColumn::making)
+        {
+            Some(kentos_commands::ColumnMade::Generated(Some(e))) => {
+                format!("tablo onu hesaplıyor: {e}")
+            }
+            Some(kentos_commands::ColumnMade::Identity { .. }) => {
+                "tablo onu her zaman kendisi numaralıyor (GENERATED ALWAYS AS IDENTITY)".to_owned()
+            }
+            _ => "tablo onu kendisi hesaplıyor (GENERATED ALWAYS)".to_owned(),
+        };
+        return Err(Stop::failed(error(
+            codes::ATTRIBUTE_GENERATED,
+            format!(
+                "“{}” alanının değeri değiştirilemez: {how}. Değer, kayıt tabloya yazılınca tablodan gelir.",
+                f.label()
+            ),
+            Some(format!("{at}.{}", f.name)),
+        )));
+    }
+    Ok(())
+}
+
 /// The attributes written to an object on `layer`, by its fields
 /// (docs/adr/0199 §2): each value given to a field's key in its canonical
 /// text, a null (taken away) checked as empty; in the names' order, the first

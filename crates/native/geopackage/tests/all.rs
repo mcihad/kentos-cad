@@ -434,6 +434,163 @@ fn a_table_is_edited_in_place_and_its_index_follows() {
     let _ = std::fs::remove_file(&tmp);
 }
 
+/// A table's generated columns (`uretilen.gpkg`, scripts/fixtures/source_generated_cases.py; docs/adr/0754): listed
+/// with their clauses as the table's text writes them, their values read (the virtual ones too); an edit never names
+/// them, an update reads them again and an insert reads them back, whatever values the rows gave them.
+#[test]
+fn a_tables_generated_columns_are_read_and_never_written() {
+    use kentos_geopackage::{Edits, Making};
+    let tmp =
+        std::env::temp_dir().join(format!("kentos-gpkg-generated-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("uretilen.gpkg"), &tmp).expect("copied");
+    let mut gp = GeoPackage::open(&tmp, true).expect("opens");
+    let parsel = gp
+        .layers()
+        .expect("layers")
+        .into_iter()
+        .find(|l| l.name == "parsel")
+        .expect("parsel");
+    let made: Vec<(&str, Option<&str>, Making)> = parsel
+        .columns
+        .iter()
+        .map(|c| (c.name.as_str(), c.default.as_deref(), Making::of(c)))
+        .collect();
+    assert_eq!(
+        made[3],
+        (
+            "ana",
+            Some("GENERATED ALWAYS AS (substr(kod, 1, instr(kod || '.', '.') - 1)) STORED"),
+            Making::Generated
+        )
+    );
+    assert_eq!(
+        made[4],
+        (
+            "birlesik",
+            Some("GENERATED ALWAYS AS (replace(kod, '.', '')) VIRTUAL"),
+            Making::Generated
+        )
+    );
+    assert_eq!(
+        made[5],
+        (
+            "etiket",
+            Some("GENERATED ALWAYS AS (ada || '/' || parsel) STORED"),
+            Making::Generated
+        )
+    );
+    assert_eq!(
+        made[7],
+        (
+            "sabit",
+            Some("GENERATED ALWAYS AS (7) VIRTUAL"),
+            Making::Generated
+        )
+    );
+    assert!(
+        made[6].1.is_some_and(
+            |d| d.starts_with("GENERATED ALWAYS AS (CASE\n") && d.ends_with("END) STORED")
+        ),
+        "{:?}",
+        made[6]
+    );
+    assert_eq!(
+        made[8],
+        ("olusturma", Some("CURRENT_TIMESTAMP"), Making::Plain)
+    );
+    assert_eq!((made[0].2, made[9].2), (Making::Plain, Making::Plain));
+    assert!(parsel.columns[6].not_null, "seviye keeps its NOT NULL");
+    let rows = gp.rows(&parsel, &Query::default()).expect("rows");
+    assert_eq!(
+        rows[0].values[4],
+        Value::Text("1015".into()),
+        "a virtual value is read"
+    );
+    assert_eq!(
+        rows[2].values[5],
+        Value::Null,
+        "102 has no parcel: its label is NULL"
+    );
+    let mut changed = rows[0].values.clone();
+    changed[0] = Value::Text("103.7.1".into());
+    changed[3] = Value::Text("verilmez".into());
+    changed[6] = Value::Integer(99);
+    let mut fresh = vec![Value::Null; parsel.columns.len()];
+    fresh[0] = Value::Text("105.1".into());
+    fresh[1] = Value::Text("105".into());
+    fresh[2] = Value::Text("1".into());
+    fresh[3] = Value::Text("999".into());
+    let edits = Edits {
+        update: vec![(
+            1,
+            NewRow {
+                fid: None,
+                geometry: rows[0].geometry.clone().and_then(Result::ok),
+                values: changed,
+            },
+        )],
+        insert: vec![(
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7a01".into(),
+            NewRow {
+                fid: None,
+                geometry: rows[1].geometry.clone().and_then(Result::ok),
+                values: fresh,
+            },
+        )],
+        ..Edits::default()
+    };
+    let written = gp.edit_many(&[(&parsel, &edits)], &[]).expect("edited");
+    assert_eq!(
+        written[0].refreshed,
+        vec![(
+            1,
+            vec![
+                (3, Value::Text("103".into())),
+                (4, Value::Text("10371".into())),
+                (5, Value::Text("101/5".into())),
+                (6, Value::Integer(3)),
+                (7, Value::Integer(7)),
+            ]
+        )]
+    );
+    let new = &written[0].inserted[0];
+    assert_eq!(new.fid, 4);
+    let filled: Vec<(usize, Value)> = new
+        .filled
+        .iter()
+        .filter(|(i, _)| *i != 8)
+        .cloned()
+        .collect();
+    assert_eq!(
+        filled,
+        vec![
+            (3, Value::Text("105".into())),
+            (4, Value::Text("1051".into())),
+            (5, Value::Text("105/1".into())),
+            (6, Value::Integer(2)),
+            (7, Value::Integer(7)),
+        ]
+    );
+    assert!(
+        new.filled
+            .iter()
+            .any(|(i, v)| *i == 8 && matches!(v, Value::Text(_))),
+        "the made time came back: {:?}",
+        new.filled
+    );
+    drop(gp);
+    let gp = GeoPackage::open(&tmp, false).expect("opens");
+    let rows = gp.rows(&parsel, &Query::default()).expect("rows");
+    assert_eq!(rows[0].values[3], Value::Text("103".into()));
+    assert_eq!(
+        rows[3].values[3],
+        Value::Text("105".into()),
+        "the table's, not the row's 999"
+    );
+    drop(gp);
+    let _ = std::fs::remove_file(&tmp);
+}
+
 /// A GeoPackage's tables as `layers()` names them.
 fn names(path: &Path) -> Vec<String> {
     GeoPackage::open(path, false)

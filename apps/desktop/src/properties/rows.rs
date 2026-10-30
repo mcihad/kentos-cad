@@ -2517,7 +2517,8 @@ fn field_rows(
         let field = Field::Attribute(slot, f.name.clone());
         let listed =
             f.kind == LayerFieldKind::Boolean || f.values.as_ref().is_some_and(|v| !v.is_empty());
-        let editor = if locked || lookup.is_some() {
+        // A value the bound table always makes itself is shown, not written (docs/adr/0754 §3).
+        let editor = if locked || lookup.is_some() || f.made_always() {
             None
         } else if listed {
             let pairs: Vec<(String, String)> = match &f.values {

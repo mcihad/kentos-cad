@@ -9854,7 +9854,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1038,
+   "cases": 1052,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
@@ -9880,9 +9880,12 @@
     "fixtures/commands/v1/cad.records.duplicate.json",
     "fixtures/commands/v1/cad.records.page.json",
     "fixtures/commands/v1/cad.relations.edit.json",
+    "fixtures/commands/v1/cad.sources.defaults.json",
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.edit.json",
+    "fixtures/commands/v1/cad.sources.generated.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
+    "fixtures/commands/v1/cad.sources.references.json",
     "fixtures/commands/v1/cad.sources.relate.json",
     "fixtures/commands/v1/cad.sources.sync.dims.json",
     "fixtures/commands/v1/cad.sources.sync.json",
@@ -10608,9 +10611,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 32,
+   "cases": 36,
    "files": [
-    "fixtures/commands/v1/cad.fields.write.json"
+    "fixtures/commands/v1/cad.fields.write.json",
+    "fixtures/commands/v1/cad.sources.generated.json"
    ],
    "options": [
     {
@@ -10722,12 +10726,13 @@
     "mcp": true,
     "server": false
    },
-   "cases": 160,
+   "cases": 162,
    "files": [
     "fixtures/commands/v1/cad.forms.edit.json",
     "fixtures/commands/v1/cad.forms.edit.publish.json",
     "fixtures/commands/v1/cad.forms.edit.withdraw.json",
-    "fixtures/commands/v1/cad.forms.submit.commit.json"
+    "fixtures/commands/v1/cad.forms.submit.commit.json",
+    "fixtures/commands/v1/cad.sources.generated.json"
    ],
    "options": [
     {
@@ -11667,14 +11672,15 @@
     "mcp": true,
     "server": false
    },
-   "cases": 131,
+   "cases": 133,
    "files": [
     "fixtures/commands/v1/cad.forms.edit.withdraw.json",
     "fixtures/commands/v1/cad.forms.submit.children.json",
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.forms.submit.json",
     "fixtures/commands/v1/cad.forms.submit.related.json",
-    "fixtures/commands/v1/cad.forms.submit.rules.json"
+    "fixtures/commands/v1/cad.forms.submit.rules.json",
+    "fixtures/commands/v1/cad.sources.generated.json"
    ],
    "options": [
     {
@@ -11760,11 +11766,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 121,
+   "cases": 146,
    "files": [
     "fixtures/commands/v1/cad.forms.edit.publish.json",
     "fixtures/commands/v1/cad.forms.edit.withdraw.json",
     "fixtures/commands/v1/cad.forms.validate.contingents.json",
+    "fixtures/commands/v1/cad.forms.validate.defaults.json",
     "fixtures/commands/v1/cad.forms.validate.json",
     "fixtures/commands/v1/cad.forms.validate.rules.json",
     "fixtures/commands/v1/cad.forms.validate.subtypes.json"
@@ -12781,7 +12788,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 189,
+   "cases": 191,
    "files": [
     "fixtures/commands/v1/cad.forms.edit.publish.json",
     "fixtures/commands/v1/cad.forms.submit.commit.json",
@@ -12789,6 +12796,7 @@
     "fixtures/commands/v1/cad.layers.edit.json",
     "fixtures/commands/v1/cad.layers.edit.renames.json",
     "fixtures/commands/v1/cad.records.page.json",
+    "fixtures/commands/v1/cad.sources.references.json",
     "fixtures/commands/v1/cad.sources.relate.json",
     "fixtures/commands/v1/cad.sources.sync.renamed.json",
     "fixtures/commands/v1/cad.sources.sync.together.json"
@@ -12847,7 +12855,7 @@
     {
      "key": "kind",
      "value": "datetime",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kind",
@@ -15884,17 +15892,21 @@
     "mcp": true,
     "server": false
    },
-   "cases": 217,
+   "cases": 254,
    "files": [
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.polygon.create.area-rules.json",
     "fixtures/commands/v1/cad.polygon.create.contingents.json",
     "fixtures/commands/v1/cad.polygon.create.fields.json",
+    "fixtures/commands/v1/cad.polygon.create.formdefaults.json",
     "fixtures/commands/v1/cad.polygon.create.forms.json",
     "fixtures/commands/v1/cad.polygon.create.json",
     "fixtures/commands/v1/cad.polygon.create.rules.json",
     "fixtures/commands/v1/cad.polygon.create.subtypes.json",
+    "fixtures/commands/v1/cad.sources.defaults.json",
+    "fixtures/commands/v1/cad.sources.generated.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
+    "fixtures/commands/v1/cad.sources.references.json",
     "fixtures/commands/v1/cad.sources.sync.json",
     "fixtures/commands/v1/cad.sources.sync.together.json"
    ],
@@ -23009,7 +23021,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 560,
+   "cases": 631,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
@@ -23017,12 +23029,15 @@
     "fixtures/commands/v1/cad.processing.batch.sink.json",
     "fixtures/commands/v1/cad.processing.run.source.json",
     "fixtures/commands/v1/cad.records.page.json",
+    "fixtures/commands/v1/cad.sources.defaults.json",
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.edit.json",
+    "fixtures/commands/v1/cad.sources.generated.json",
     "fixtures/commands/v1/cad.sources.query.json",
     "fixtures/commands/v1/cad.sources.query.time.json",
     "fixtures/commands/v1/cad.sources.query.trouble.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
+    "fixtures/commands/v1/cad.sources.references.json",
     "fixtures/commands/v1/cad.sources.relate.json",
     "fixtures/commands/v1/cad.sources.sync.dims.json",
     "fixtures/commands/v1/cad.sources.sync.json",
@@ -23203,10 +23218,13 @@
     "mcp": true,
     "server": false
    },
-   "cases": 150,
+   "cases": 182,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.sources.defaults.json",
+    "fixtures/commands/v1/cad.sources.generated.json",
+    "fixtures/commands/v1/cad.sources.references.json",
     "fixtures/commands/v1/cad.sources.sync.dims.json",
     "fixtures/commands/v1/cad.sources.sync.json",
     "fixtures/commands/v1/cad.sources.sync.neighbours.json",

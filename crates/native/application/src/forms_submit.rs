@@ -163,6 +163,8 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
                 &path,
             )
         })?;
+    // A value the bound table always makes itself stays the table's (docs/adr/0754 §3).
+    checks::made_fit(doc, &form.layer, Some(&e.base().attrs), &after, "values")?;
     let mut entity = e.clone();
     entity.base_mut().attrs = after;
     let uid_text = uid.to_string();
@@ -401,6 +403,8 @@ fn child(
             out
         }
     };
+    // A kept child's value its bound table always makes itself stays the table's (docs/adr/0754 §3).
+    checks::made_fit(doc, &r.child, slot.map(|_| &before), &attrs, &at("values"))?;
     let mut entity = base;
     entity.base_mut().attrs = attrs;
     Ok(Child {

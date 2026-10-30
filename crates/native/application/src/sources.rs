@@ -772,7 +772,8 @@ impl Diff {
 
 /// The objects a write would leave empty in a column the table keeps NOT NULL (docs/adr/0750): a new row's column
 /// without a default (one with a default the table fills), any changed row's column; refused at `at` before anything is
-/// written, the objects with it.
+/// written, the objects with it. A column the table always makes itself is never written, so never asked
+/// (docs/adr/0754).
 fn empty_not_null(stored: &Stored, d: &Diff, table: &str, at: &str) -> Result<(), Stop> {
     let columns = &stored.layer.columns;
     let mut names: BTreeSet<&str> = BTreeSet::new();
@@ -780,7 +781,11 @@ fn empty_not_null(stored: &Stored, d: &Diff, table: &str, at: &str) -> Result<()
     let mut empty = |row: &gpkg::NewRow, new: bool| {
         let mut any = false;
         for (c, v) in columns.iter().zip(&row.values) {
-            if c.not_null && (!new || c.default.is_none()) && matches!(v, Value::Null) {
+            if c.not_null
+                && (!new || c.default.is_none())
+                && matches!(v, Value::Null)
+                && gpkg::Making::of(c).written()
+            {
                 names.insert(c.name.as_str());
                 any = true;
             }
@@ -825,9 +830,10 @@ fn empty_not_null(stored: &Stored, d: &Diff, table: &str, at: &str) -> Result<()
 /// layer's column index (docs/adr/0750).
 type Filled = Vec<(String, Vec<(usize, Value)>)>;
 
-/// The values a table gave new rows' columns left to their defaults (docs/adr/0750), written to the rows' objects on
-/// `layer` in the write's step: each value as the attribute it reads as there (its field's kind), so the layer and the
-/// table match again and a later write does not take them for someone else's change.
+/// The values a table gave new rows' columns left to their defaults (docs/adr/0750), and the generated columns it worked
+/// out again for written rows (docs/adr/0754), written to the rows' objects on `layer` in the write's step: each value
+/// as the attribute it reads as there (its field's kind), a NULL one none, so the layer and the table match again and a
+/// later write does not take them for someone else's change. An object they leave as it was is not rewritten.
 fn take_filled(doc: &mut Document, layer: &str, columns: &[gpkg::Column], rows: &Filled) {
     let fields: Vec<kentos_commands::LayerField> = doc
         .layers()
@@ -842,6 +848,7 @@ fn take_filled(doc: &mut Document, layer: &str, columns: &[gpkg::Column], rows: 
         let Some(mut e) = doc.get(slot).cloned() else {
             continue;
         };
+        let before = e.base().attrs.clone();
         let attrs = &mut e.base_mut().attrs;
         for (i, v) in filled {
             let Some(c) = columns.get(*i) else {
@@ -851,11 +858,16 @@ fn take_filled(doc: &mut Document, layer: &str, columns: &[gpkg::Column], rows: 
                 .iter()
                 .find(|f| f.name == c.name)
                 .or_else(|| fields.iter().find(|f| f.name.eq_ignore_ascii_case(&c.name)));
-            if let Some(t) = gp::field_text(v, c, field.map(|f| f.kind)) {
-                attrs.insert(field.map_or(c.name.clone(), |f| f.name.clone()), t);
+            let name = field.map_or(c.name.clone(), |f| f.name.clone());
+            if matches!(v, Value::Null) {
+                attrs.remove(&name);
+            } else if let Some(t) = gp::field_text(v, c, field.map(|f| f.kind)) {
+                attrs.insert(name, t);
             }
         }
-        changes.push((slot, e));
+        if e.base().attrs != before {
+            changes.push((slot, e));
+        }
     }
     if !changes.is_empty() {
         doc.update_many(changes, "Kaynağın verdiği değerler");
