@@ -4,7 +4,7 @@
 //!
 //! ```text
 //! KENTOS_PROBE_FILE=~/Downloads/fast-food-Restaurant.dwg \
-//!   cargo test -p kentos-desktop --bin kentos-cad measure_probe -- --ignored --nocapture
+//!   cargo test -p kentos-desktop --lib measure_probe -- --ignored --nocapture
 //! ```
 
 use std::time::Instant;

@@ -6,7 +6,7 @@
 //! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=doseme-arac,doseme-balkon-onizleme,doseme-delik,doseme-islak-hacim,doseme-yazildi,doseme-oteleme-hata,doseme-metraj,doseme-metraj-mahaller,doseme-metraj-gecisler cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=doseme-arac,doseme-balkon-onizleme,doseme-delik,doseme-islak-hacim,doseme-yazildi,doseme-oteleme-hata,doseme-metraj,doseme-metraj-mahaller,doseme-metraj-gecisler cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

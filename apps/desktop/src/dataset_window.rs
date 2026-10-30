@@ -809,7 +809,7 @@ mod tests {
     /// The four tabs, dark and light (`.run/shots/veri-kumesi-*`):
     ///
     /// ```text
-    /// cargo test -p kentos-desktop --bin kentos-cad dataset_window::tests::screens -- --ignored --nocapture
+    /// cargo test -p kentos-desktop --lib dataset_window::tests::screens -- --ignored --nocapture
     /// ```
     #[test]
     #[ignore = "pictures for the owner, run by hand"]

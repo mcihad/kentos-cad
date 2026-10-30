@@ -5,7 +5,7 @@
 //! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=kolon-mesafe,kolon-mesafe-yazi-kutusu,kolon-mesafe-kaydirildi,kolon-mesafe-yakin,kolon-mesafe-aksa-bagli cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=kolon-mesafe,kolon-mesafe-yazi-kutusu,kolon-mesafe-kaydirildi,kolon-mesafe-yakin,kolon-mesafe-aksa-bagli cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

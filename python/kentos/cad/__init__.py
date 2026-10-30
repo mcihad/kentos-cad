@@ -330,6 +330,8 @@ __all__ = [
     "CadImportScale",
     "CadPaperShapeKind",
     "CadParameter",
+    "CadWork",
+    "CadWorkName",
     "CalculateFieldsWriteOp",
     "CalloutKind",
     "CalloutKindName",

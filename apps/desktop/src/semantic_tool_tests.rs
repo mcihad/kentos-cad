@@ -194,7 +194,7 @@ fn the_parcel_and_the_closed_area_write_through_their_commands() {
 /// console (`.run/shots/arac-komut-dilim-bulut*`):
 ///
 /// ```text
-/// cargo test -p kentos-desktop --bin kentos-cad semantic_tool_screens -- --ignored --nocapture
+/// cargo test -p kentos-desktop --lib semantic_tool_screens -- --ignored --nocapture
 /// ```
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
@@ -305,7 +305,7 @@ fn parcala_writes_through_its_command() {
 /// The construction and the area command as the owner looks at them (`.run/shots/arac-komut-yapim-alan*`):
 ///
 /// ```text
-/// cargo test -p kentos-desktop --bin kentos-cad construction_area_screens -- --ignored --nocapture
+/// cargo test -p kentos-desktop --lib construction_area_screens -- --ignored --nocapture
 /// ```
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
@@ -337,7 +337,7 @@ fn construction_area_screens() {
 /// Parçala's pieces, selected, with the call in the Python console (`.run/shots/arac-komut-parcala*`):
 ///
 /// ```text
-/// cargo test -p kentos-desktop --bin kentos-cad split_screens -- --ignored --nocapture
+/// cargo test -p kentos-desktop --lib split_screens -- --ignored --nocapture
 /// ```
 #[test]
 #[ignore = "pictures for the owner, run by hand"]

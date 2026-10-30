@@ -37,14 +37,19 @@ pub(crate) fn mode_icon(mode: Workspace) -> Icon {
 pub(crate) type SelectionTab = (u64, u64, u64, u64, Option<&'static str>);
 
 impl App {
-    /// The type the interface shows: the drawing's, CBS without one.
+    /// The type the interface shows: the drawing's; without one (or without a
+    /// drawing), a module's program's own (docs/adr/0801), kentos-cad's CBS.
     pub(crate) fn work_mode(&self) -> Workspace {
-        effective_mode(self.document.as_ref().and_then(|d| d.settings().workspace)).id
+        let own = self
+            .document
+            .as_ref()
+            .and_then(|d| d.settings().project_type());
+        effective_mode(own.or(self.program_type())).id
     }
 
-    /// The ribbon's tabs in the drawing's mode.
+    /// The ribbon's tabs in the drawing's mode, a CAD ribbon cut to its work (docs/adr/0801).
     pub(crate) fn ribbon_tabs(&self) -> impl Iterator<Item = &'static Tab> {
-        catalog().tabs_in(self.work_mode())
+        catalog().tabs_for(self.work_mode(), self.ribbon_work())
     }
 
     /// The contextual tabs of the drawing's mode (the web's Seçim, shown
@@ -134,10 +139,7 @@ impl App {
     /// The chosen tab: the chosen one while the mode keeps it, else Giriş.
     pub(crate) fn regular_tab(&self) -> &'static str {
         let mut tabs = self.ribbon_tabs();
-        let first = catalog()
-            .tabs_in(self.work_mode())
-            .nth(1)
-            .map_or("home", |t| t.id);
+        let first = self.ribbon_tabs().nth(1).map_or("home", |t| t.id);
         tabs.find(|t| t.id == self.tab).map_or(first, |t| t.id)
     }
 
@@ -197,9 +199,19 @@ impl App {
         let mode = effective_mode(Some(current));
         let set = self.document.as_ref().and_then(|d| d.settings().workspace);
         let unasked = matches!(set, None | Some(Workspace::LegacyHybrid));
+        // A CAD project not asked its work is asked it from here too (docs/adr/0801).
+        let workless = set == Some(Workspace::Cad)
+            && self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.settings().cad_work().is_none());
         let note = match set {
-            None | Some(Workspace::LegacyHybrid) => {
-                " Projenin türü henüz seçilmedi; CBS gösteriliyor. Seçmek için tıklayın: tür bir kez seçilir."
+            None | Some(Workspace::LegacyHybrid) => format!(
+                " Projenin türü henüz seçilmedi; {} gösteriliyor. Seçmek için tıklayın: tür bir kez seçilir.",
+                mode.label
+            ),
+            Some(Workspace::Cad) if workless => {
+                " Bu CAD çiziminin işi (Mimari proje, Harita / imar planı, Detay / imalat) henüz seçilmedi. Seçmek için tıklayın: iş bir kez seçilir."
                     .to_owned()
             }
             Some(saved) if saved != current => {
@@ -223,21 +235,27 @@ impl App {
             face = face.push(kentos_ui::label::strong(mode.label));
         }
         let cell = iced::widget::container(face).padding([0, 6]);
-        let body: Element<'static, Message> = if unasked && self.document.is_some() {
-            iced::widget::button(cell)
+        let ask = if unasked {
+            Some(Message::AskProjectType)
+        } else {
+            workless.then_some(Message::AskCadWork)
+        };
+        let body: Element<'static, Message> = match ask.filter(|_| self.document.is_some()) {
+            Some(ask) => iced::widget::button(cell)
                 .padding(0)
                 .style(kentos_ui::style::button::ghost)
-                .on_press(Message::AskProjectType)
-                .into()
-        } else {
-            cell.into()
+                .on_press(ask)
+                .into(),
+            None => cell.into(),
+        };
+        // The work a CAD drawing is drawn for goes with its type (docs/adr/0801).
+        let title = match self.document.as_ref().and_then(|d| d.settings().cad_work()) {
+            Some(work) => format!("Proje türü: {} · {}", mode.label, work.name()),
+            None => format!("Proje türü: {}", mode.label),
         };
         tip(
             body,
-            Tip::new(format!("Proje türü: {}", mode.label)).body(format!(
-                "{}{note}",
-                mode.description
-            )),
+            Tip::new(title).body(format!("{}{note}", mode.description)),
             iced::widget::tooltip::Position::Top,
         )
     }

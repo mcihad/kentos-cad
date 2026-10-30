@@ -6,7 +6,7 @@
 //! takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=cephe-olcu-onizleme,cephe-olcu-yazildi,cephe-olcu-oznitelikler,cephe-olcu-izleme,cephe-olcu-dort-yan,cephe-olcu-dort-yan-yazildi,cephe-olcu-cekirdek,mahal-olcu cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=cephe-olcu-onizleme,cephe-olcu-yazildi,cephe-olcu-oznitelikler,cephe-olcu-izleme,cephe-olcu-dort-yan,cephe-olcu-dort-yan-yazildi,cephe-olcu-cekirdek,mahal-olcu cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

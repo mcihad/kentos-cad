@@ -187,10 +187,11 @@ impl App {
                     )
                 });
         pane = pane.push(tiles);
-        let recent = self.recent.list();
+        // A module's program lists its own module's files (docs/adr/0801).
+        let recent = self.shown_recent();
         if !recent.is_empty() {
             let mut list = Column::new().spacing(1);
-            for (k, r) in recent.iter().take(RECENT).enumerate() {
+            for (k, r) in recent.iter().copied().take(RECENT).enumerate() {
                 list = list.push(crate::start::recent_row(
                     r,
                     event(Event::OpenRecent(r.path.clone())),

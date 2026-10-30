@@ -29,13 +29,21 @@ def M(label, blocks, size='small', checklist=False):
     if checklist: m["checklist"] = True
     return m
 def B(name): return {"builtin": name}
-def P(label, icon, items, overflow=(), launcher=None, keep=False):
+def P(label, icon, items, overflow=(), launcher=None, keep=False, works=()):
     p = {"label": label, "icon": icon, "items": items}
     if overflow: p["overflow"] = list(overflow)
     if launcher: p["launcher"] = launcher
     if keep: p["keep"] = True
+    if works: p["works"] = list(works)
     return p
-def T(i, label, panels): return {"id": i, "label": label, "panels": panels}
+# A CAD tab or panel only some works show (docs/adr/0801): `works` names them (architecture, map, detail); none: every
+# work, and a CAD project not asked its work shows them all. The contextual tabs show whatever the work.
+def T(i, label, panels, works=()):
+    t = {"id": i, "label": label, "panels": panels}
+    if works: t["works"] = list(works)
+    return t
+MAP = ["map"]
+ARCHITECTURE = ["architecture"]
 def toTab(tab, title): return {"tab": tab, "title": title}
 def toCmd(cmd, title): return {"command": cmd, "title": title}
 
@@ -103,12 +111,15 @@ def file_tab(cad):
 def survey_tab(cad):
     query = [P("Sorgu", "measure", [S("tool.measure"), S("tool.area"), S("crs.query"), S("tool.measureAngle"),
         S("tool.identify"), S("tool.stationOffset")])] if cad else []
+    # A CAD project's survey panels are a map's (docs/adr/0801): a building's and a detail's Ölçme is its Sorgu.
+    works = MAP if cad else ()
     return T("survey", "Ölçme", query + [
-    P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send")]),
-    P("Poligon ve alım", "surveyTraverse", [L("calc.traverse"), L("calc.polar"), L("calc.stakeout")]),
-    P("Kestirme ve dengeleme", "surveyNetwork", [S("calc.forward"), S("calc.resection"), S("calc.network"), S("calc.levelNetwork")]),
-    P("Noktalar", "point", [L("point.editor"), S("crs.points"), S("cogo.check"), S("cogo.update")]),
-    P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),
+    P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send")], works=works),
+    P("Poligon ve alım", "surveyTraverse", [L("calc.traverse"), L("calc.polar"), L("calc.stakeout")], works=works),
+    P("Kestirme ve dengeleme", "surveyNetwork", [S("calc.forward"), S("calc.resection"), S("calc.network"), S("calc.levelNetwork")],
+      works=works),
+    P("Noktalar", "point", [L("point.editor"), S("crs.points"), S("cogo.check"), S("cogo.update")], works=works),
+    P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")], works=works),
     ])
 
 def view_tab(cad):
@@ -180,7 +191,7 @@ CAD = [
         P("Plan yazıları", "coordinateLabel", [S("tool.coordinateLabel"), S("tool.coordinateVertices"),
             S("tool.stationLabels"), S("map.edgeLengths"), S("tool.spot"), S("tool.vertexPoints")]),
         P("Topoloji", "topologyCheck", [S("topology.check"), S("topology.rules"), S("draft.topology")]),
-    ]),
+    ], works=MAP),
     survey_tab(True),
     T("insert", "Ekle", [
         P("Blok", "blockInsert", [L("tool.blockInsert"), S("tool.blockDefine"), S("block.panel"), S("block.library"),
@@ -277,7 +288,7 @@ CAD = [
         P("Proje", "archSettings", [S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
           overflow=["arch.sheetSet"]),
-    ]),
+    ], works=ARCHITECTURE),
     view_tab(True),
     T("manage", "Yönet", [
         P("Stiller", "styles", [L("style.manager"), S("style.layerStyle"), S("lineTypes.manage"),

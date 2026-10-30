@@ -7,7 +7,7 @@
 //! clash in its preview's tag:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=mutfak-l-onizleme,mutfak-l-kor-kose,mutfak-l-acik-kose,mutfak-u-cihazlar,mutfak-oznitelikler,mutfak-modul-eni,mutfak-duvar-izler,mutfak-kapi-cakismasi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=mutfak-l-onizleme,mutfak-l-kor-kose,mutfak-l-acik-kose,mutfak-u-cihazlar,mutfak-oznitelikler,mutfak-modul-eni,mutfak-duvar-izler,mutfak-kapi-cakismasi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

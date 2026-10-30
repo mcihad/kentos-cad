@@ -339,6 +339,7 @@ mod tests {
             angle_unit: kentos_commands::AngleUnit::Grad,
             plot_scale: 1000.0,
             workspace: Some(kentos_commands::Workspace::Gis),
+            cad_work: None,
             drawing_font: None,
             drawing_unit: None,
             second_srid: None,

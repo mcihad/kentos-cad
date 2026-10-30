@@ -6,7 +6,7 @@
 //! then fixed. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=rampa-sahanlik-arac,rampa-sahanlik-yazildi,rampa-sahanlik-kat,rampa-sahanlik-metraj,rampa-sahanlik-denetim,rampa-sahanlik-duzeltildi,rampa-sahanlik-oznitelik cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=rampa-sahanlik-arac,rampa-sahanlik-yazildi,rampa-sahanlik-kat,rampa-sahanlik-metraj,rampa-sahanlik-denetim,rampa-sahanlik-duzeltildi,rampa-sahanlik-oznitelik cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

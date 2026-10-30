@@ -1052,6 +1052,10 @@ codes! {
     INVALID_PROJECT_TYPE = "invalid_project_type", Failed, false, "Bu proje türü seçilemez.";
     /// A project already has another type; conversion is a separate operation.
     PROJECT_TYPE_LOCKED = "project_type_locked", Failed, false, "Projenin türü değiştirilemez; dönüştürme gerekir.";
+    /// A work given to a project that is not a CAD project (docs/adr/0801).
+    CAD_WORK_NEEDS_CAD = "cad_work_needs_cad", Failed, false, "İş yalnız CAD projesinin ayarıdır.";
+    /// A project already has another work; conversion is a separate operation (docs/adr/0801).
+    CAD_WORK_LOCKED = "cad_work_locked", Failed, false, "Projenin işi değiştirilemez; dönüştürme gerekir.";
     /// Shown decimals out of 0–4.
     INVALID_DECIMALS = "invalid_decimals", Failed, false, "Gösterilen basamak 0–4 aralığında olmalı.";
     /// A coordinate system the registry does not have.

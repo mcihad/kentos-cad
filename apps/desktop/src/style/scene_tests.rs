@@ -164,6 +164,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             angle_unit: AngleUnit::Grad,
             plot_scale: 1000.0,
             workspace: None,
+            cad_work: None,
             drawing_font: None,
             drawing_unit: None,
             second_srid: None,

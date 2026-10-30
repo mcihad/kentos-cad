@@ -17,4 +17,4 @@ if [ -z "${KENTOS_DEV_PASSWORD:-}" ] && [ -f "$env_file" ]; then
   export KENTOS_DEV_PASSWORD
 fi
 KENTOS_SNAPSHOT_BACKEND="${KENTOS_SNAPSHOT_BACKEND:-wgpu}" \
-  cargo test -q -p kentos-desktop --bin kentos-cad jobs_live -- --ignored --nocapture
+  cargo test -q -p kentos-desktop --lib jobs_live -- --ignored --nocapture

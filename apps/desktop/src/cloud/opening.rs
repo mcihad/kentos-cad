@@ -513,6 +513,8 @@ impl App {
         }
         // A project without a type is asked it (docs/adr/0165 §1); the answer goes with its settings.
         self.ask_project_type();
+        // A CAD project without a work is asked it (docs/adr/0801).
+        self.ask_cad_work();
         let kept_goes = if storage == ProjectStorage::File && !o.offline {
             self.send_kept_save()
         } else {

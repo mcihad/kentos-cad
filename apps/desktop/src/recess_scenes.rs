@@ -6,7 +6,7 @@
 //! in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=nis-oda,nis-ayrintili,nis-pencere-alti,nis-arac,nis-derin,nis-oznitelikler,baca-oznitelikler,nis-serit cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=nis-oda,nis-ayrintili,nis-pencere-alti,nis-arac,nis-derin,nis-oznitelikler,baca-oznitelikler,nis-serit cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

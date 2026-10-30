@@ -5,7 +5,7 @@
 //! the pictures:
 //!
 //! ```text
-//! cargo test -p kentos-desktop --bin kentos-cad catalog_jobs_tests::screens -- --ignored --nocapture
+//! cargo test -p kentos-desktop --lib catalog_jobs_tests::screens -- --ignored --nocapture
 //! ```
 //!
 //! They go to `.run/shots/isler-*.png`.

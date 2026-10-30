@@ -6,7 +6,7 @@
 //! release:
 //!
 //! ```text
-//! KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --bin kentos-cad label_probe -- --ignored --nocapture
+//! KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --lib label_probe -- --ignored --nocapture
 //! ```
 
 use std::collections::BTreeSet;
@@ -380,7 +380,7 @@ fn wheel(snapshot: &mut Snapshot, app: &mut App, notches: i32, fx: f32, fy: f32)
 /// crossing the band's size changes only once the view settles. Run by hand, in release:
 ///
 /// ```text
-/// KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --bin kentos-cad label_quality -- --ignored --nocapture
+/// KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --lib label_quality -- --ignored --nocapture
 /// ```
 #[test]
 #[ignore = "a probe on a file of one's own, run by hand"]

@@ -38,7 +38,7 @@ use kentos_contracts::{
     DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, HeightKind, HeightReference,
     LayerField, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
     LengthStyle, MigrationSource, ProjectSettings, SurveySettings, TopologySettings, Vec2,
-    layer_fields_problem, layer_states_problem,
+    Workspace, layer_fields_problem, layer_states_problem,
 };
 use serde_json::Value;
 
@@ -477,6 +477,7 @@ impl<'d> Encoder<'d> {
     fn settings(&mut self, s: &'d ProjectSettings) -> Result<(), KcadError> {
         let n = 6
             + usize::from(s.workspace.is_some())
+            + usize::from(s.cad_work.is_some())
             + usize::from(!s.xref_paths.is_empty())
             + usize::from(s.heights.is_some())
             + usize::from(s.coordinate_epoch.is_some())
@@ -551,6 +552,18 @@ impl<'d> Encoder<'d> {
         if let Some(v) = &s.survey {
             self.key("survey");
             self.at(Seg::Name("survey"), |e| e.survey(v))?;
+        }
+        // Schema 135 (docs/adr/0801): what a CAD project is drawn for (the first of the 7-letter keys); a CAD
+        // project's only.
+        if let Some(w) = s.cad_work {
+            self.key("cadWork");
+            if s.workspace != Some(Workspace::Cad) {
+                return Err(self.fail(
+                    Code::BadValue,
+                    "cadWork yalnız CAD projesinde (workspace cad) yazılır",
+                ));
+            }
+            self.w.text(w.id());
         }
         // Schema 72 (docs/adr/0430): the project's value lists, written whole and checked.
         if !s.domains.is_empty() {
@@ -2043,6 +2056,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 135 (docs/adr/0801): what a CAD project is drawn for.
+    if doc.settings.cad_work.is_some() {
+        return crate::SCHEMA_WITH_CAD_WORK;
+    }
     // Schema 134 (docs/adr/0755): a bound table's constraints in its link, a field's list from one of them.
     fn checked(nodes: &[LayerNode]) -> bool {
         nodes.iter().any(|n| {

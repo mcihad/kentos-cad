@@ -668,11 +668,14 @@ pub const SCHEMA_WITH_FIELD_COLUMNS: u32 = 133;
 /// `checks` and `uniques`) and the CHECK a field's bound column takes its list from (`column.check`), written only when
 /// a link or a field has one.
 pub const SCHEMA_WITH_TABLE_CONSTRAINTS: u32 = 134;
+/// Schema 135 (docs/adr/0801): what a CAD project is drawn for (the settings' `cadWork`: `architecture`, `map`,
+/// `detail`), its KentOS program and its ribbon; written only when a CAD project has one.
+pub const SCHEMA_WITH_CAD_WORK: u32 = 135;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 133] = [
+pub const SCHEMAS: [u32; 134] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -806,6 +809,7 @@ pub const SCHEMAS: [u32; 133] = [
     SCHEMA_WITH_PROFILE_FILES,
     SCHEMA_WITH_FIELD_COLUMNS,
     SCHEMA_WITH_TABLE_CONSTRAINTS,
+    SCHEMA_WITH_CAD_WORK,
 ];
 
 /// The file a drawing is saved as.

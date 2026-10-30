@@ -3,7 +3,7 @@
 //! shows the list as a choice and a broken constraint on its field. Pictures in `.run/shots/kisit-*`.
 //!
 //! ```text
-//! cargo test -p kentos-desktop --bin kentos-cad constraint_screens -- --ignored --nocapture --test-threads=1
+//! cargo test -p kentos-desktop --lib constraint_screens -- --ignored --nocapture --test-threads=1
 //! ```
 
 use std::path::PathBuf;

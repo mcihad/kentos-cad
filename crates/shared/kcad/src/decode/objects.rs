@@ -319,6 +319,8 @@ pub(super) struct Features {
     /// Schema 133: a layer field's bound column, what the table makes and refers to (docs/adr/0753).
     pub(super) field_columns: bool,
     pub(super) table_constraints: bool,
+    /// Schema 135 (docs/adr/0801): what a CAD project is drawn for.
+    pub(super) cad_work: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -518,6 +520,7 @@ impl Features {
             withheld_fields: schema >= crate::SCHEMA_WITH_WITHHELD_FIELDS,
             field_columns: schema >= crate::SCHEMA_WITH_FIELD_COLUMNS,
             table_constraints: schema >= crate::SCHEMA_WITH_TABLE_CONSTRAINTS,
+            cad_work: schema >= crate::SCHEMA_WITH_CAD_WORK,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,

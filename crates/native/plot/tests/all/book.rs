@@ -34,6 +34,7 @@ fn drawing(scenario: &Value) -> Document {
         province: None,
         drawing_unit: Some(DrawingUnit::Mm),
         annotation: None,
+        cad_work: None,
     })
     .expect("a new project");
     let k11 = &step(scenario, |s| s["as"] == "k11")["input"];

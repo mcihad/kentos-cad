@@ -122,9 +122,8 @@ impl App {
                 let mut rows: Vec<(Option<Message>, bool)> =
                     TILES.iter().map(|(id, ..)| run(self, id)).collect();
                 rows.extend(
-                    self.recent
-                        .list()
-                        .iter()
+                    self.shown_recent()
+                        .into_iter()
                         .take(RECENT)
                         .map(|r| (Some(event(Event::OpenRecent(r.path.clone()))), true)),
                 );

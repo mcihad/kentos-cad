@@ -5,7 +5,7 @@
 //! and the door's grids:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=gecici-aks-adaylar,gecici-aks-secildi,gecici-aks-yazildi,gecici-boy,gecici-boy-yazildi,gecici-kolon-aks,gecici-acik-aks cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=gecici-aks-adaylar,gecici-aks-secildi,gecici-aks-yazildi,gecici-boy,gecici-boy-yazildi,gecici-kolon-aks,gecici-acik-aks cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

@@ -6,7 +6,7 @@
 //! turned and mirrored bed's Öznitelikler. `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=kitaplik-klasor,kitaplik-birim,kitaplik-birim-secildi,kitaplik-yerlestir,blok-ekle-varyant,blok-ekle-mm,blok-oznitelik-boyut cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=kitaplik-klasor,kitaplik-birim,kitaplik-birim-secildi,kitaplik-yerlestir,blok-ekle-varyant,blok-ekle-mm,blok-oznitelik-boyut cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

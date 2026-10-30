@@ -26,11 +26,11 @@ mod variables;
 mod views;
 
 use kentos_contracts::{
-    AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, ColumnRefers, DOCUMENT_FORMAT,
-    DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit,
-    FieldChoice, FieldColumn, GeoidModel, HeightKind, HeightReference, LayerField, LayerFieldKind,
-    LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LengthStyle,
-    LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId,
+    AngleUnit, AnnotationHeights, AnnotationKind, AreaUnit, Bounds, CadWork, ColumnRefers,
+    DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont,
+    DrawingUnit, FieldChoice, FieldColumn, GeoidModel, HeightKind, HeightReference, LayerField,
+    LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
+    LengthStyle, LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId,
     ProjectSettings, ProjectStyles, SurveySettings, TopologyException, TopologyRule,
     TopologyRuleKind, TopologySettings, Vec2, Workspace, annotation_mm_holds, layer_fields_problem,
     layer_states_problem,
@@ -635,6 +635,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut arch = None;
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
+    let mut cad_work = None;
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1047,6 +1048,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 line_type_scale = Some(s);
             }
+            // Schema 135 (docs/adr/0801): what a CAD project is drawn for.
+            "cadWork" if has.cad_work => {
+                cad_work = Some(named(
+                    r,
+                    &[
+                        ("architecture", CadWork::Architecture),
+                        ("map", CadWork::Map),
+                        ("detail", CadWork::Detail),
+                    ],
+                )?)
+            }
             "workspace" => {
                 workspace = Some(named(
                     r,
@@ -1315,6 +1327,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     if let Some(problem) = kentos_contracts::bases_problem(&source_bases, &sources) {
         return Err(relation("sourceBases", &problem, r));
     }
+    // A work is a CAD project's (docs/adr/0801).
+    if cad_work.is_some() && workspace != Some(Workspace::Cad) {
+        return Err(relation(
+            "cadWork",
+            "iş yalnız CAD projesinin olur (workspace cad); başka türde ya da türü seçilmemiş projede yazılmaz",
+            r,
+        ));
+    }
     Ok(ProjectSettings {
         source_bases,
         heights,
@@ -1329,6 +1349,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         angle_unit: required(r, angle_unit, "angleUnit")?,
         plot_scale: required(r, plot_scale, "plotScale")?,
         workspace,
+        cad_work,
         drawing_font,
         drawing_unit,
         second_srid,

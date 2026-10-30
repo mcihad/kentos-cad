@@ -2,7 +2,7 @@
 //! nothing runs past its pane or the window (docs/adr/0749). Pictures in `.run/shots/form-sigar-*`.
 //!
 //! ```text
-//! cargo test -p kentos-desktop --bin kentos-cad form_fit_screens -- --ignored --nocapture --test-threads=1
+//! cargo test -p kentos-desktop --lib form_fit_screens -- --ignored --nocapture --test-threads=1
 //! ```
 
 use std::path::PathBuf;

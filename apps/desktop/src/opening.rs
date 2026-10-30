@@ -220,6 +220,32 @@ pub enum Purpose {
     Tab,
 }
 
+/// A drawing an open has read whole, before it goes on screen: a module's
+/// program may hold it for a question, or hand its file over (docs/adr/0801).
+pub(crate) struct Opened {
+    pub doc: Box<Document>,
+    pub purpose: Purpose,
+    /// What the open says of a DWG, DXF or NCZ source.
+    pub notes: Vec<String>,
+    /// The file read.
+    pub source: PathBuf,
+    /// A DWG, DXF or NCZ opened as a CAD drawing of its own (ADR 0624), not a KentOS project.
+    pub external: bool,
+    /// A module's program asked its question before placing it: nothing is asked again.
+    pub asked: bool,
+}
+
+impl std::fmt::Debug for Opened {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Opened")
+            .field("name", &self.doc.name())
+            .field("purpose", &self.purpose)
+            .field("source", &self.source)
+            .field("external", &self.external)
+            .finish_non_exhaustive()
+    }
+}
+
 /// An open under way.
 pub struct Opening {
     pub id: u64,
@@ -377,7 +403,7 @@ impl App {
                 match result {
                     None => {}
                     Some(Err(error)) => self.say(Level::Error, error),
-                    Some(Ok(mut doc)) => {
+                    Some(Ok(doc)) => {
                         let now = self
                             .document
                             .as_ref()
@@ -389,32 +415,73 @@ impl App {
                             ));
                             return Task::none();
                         }
-                        if o.purpose == Purpose::Tab && !self.park_active() {
-                            return Task::none();
-                        }
-                        if let Purpose::Recovery { id, name } = &o.purpose {
-                            // Unsaved work, not a file: Save asks where; no file is written over by itself.
-                            doc.path = None;
-                            doc.legacy = false;
-                            doc.model.mark_unsaved();
-                            let task = self.update(Message::Opened(Some(Ok(doc))));
-                            self.recovered(id, name);
-                            self.ask_project_type();
-                            return task;
-                        }
-                        let task = self.update(Message::Opened(Some(Ok(doc))));
-                        if !o.notes.is_empty() {
-                            self.recent.add(&o.source_path, "CAD çizimi — kaynak korunur, KCAD olarak kaydedilir".into());
-                        }
-                        for note in o.notes { self.output(note); }
-                        // A project without a type is asked it (docs/adr/0165 §1).
-                        self.ask_project_type();
-                        return task;
+                        let opened = Opened {
+                            doc,
+                            purpose: o.purpose,
+                            external: !o.notes.is_empty(),
+                            notes: o.notes,
+                            source: o.source_path,
+                            asked: false,
+                        };
+                        // A module's program places what is its own and hands over the rest (docs/adr/0801).
+                        return self.opened_in_program(opened);
                     }
                 }
             }
         }
         Task::none()
+    }
+
+    /// A drawing read whole goes on screen: in its own tab for Yeni sekmede aç, as
+    /// unsaved work for a recovery copy; a file goes first in the recent files,
+    /// and a project not asked its type or its CAD work is asked it
+    /// (docs/adr/0165 §1, 0801).
+    pub(crate) fn place_opened(&mut self, opened: Opened) -> Task<Message> {
+        let Opened {
+            mut doc,
+            purpose,
+            notes,
+            source,
+            external,
+            asked,
+        } = opened;
+        if purpose == Purpose::Tab && !self.park_active() {
+            return Task::none();
+        }
+        if let Purpose::Recovery { id, name } = &purpose {
+            // Unsaved work, not a file: Save asks where; no file is written over by itself.
+            doc.path = None;
+            doc.legacy = false;
+            doc.model.mark_unsaved();
+            let task = self.update(Message::Opened(Some(Ok(doc))));
+            self.recovered(id, name);
+            if !asked {
+                self.ask_project_type();
+                self.ask_cad_work();
+            }
+            return task;
+        }
+        let task = self.update(Message::Opened(Some(Ok(doc))));
+        if external {
+            let module = self.document_module();
+            self.recent.add_in(
+                &source,
+                "CAD çizimi — kaynak korunur, KCAD olarak kaydedilir".into(),
+                module,
+            );
+        }
+        for note in notes {
+            self.output(note);
+        }
+        // A project without a type is asked it (docs/adr/0165 §1), a CAD drawing without a work its work (docs/adr/0801);
+        // a DWG, DXF or NCZ is not asked, being no KentOS project.
+        if !asked {
+            self.ask_project_type();
+            if !external {
+                self.ask_cad_work();
+            }
+        }
+        task
     }
 
     /// While an open runs the app takes no command: Esc stops the open, the

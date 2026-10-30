@@ -17,6 +17,8 @@ use kentos_ui::widget::{Dialog, Switch, overlay};
 use kentos_ui::{label, style};
 use serde_json::Value;
 
+use kentos_launch::Module;
+
 use crate::app::{App, Dialog as Asking, Message, Then};
 use crate::catalog::catalog;
 use crate::opening::Purpose;
@@ -119,7 +121,9 @@ impl App {
             "{} nesne · {system}",
             crate::crs::grouped(doc.entity_count() as f64)
         );
-        self.recent.add(&path, info);
+        // The module the drawing belongs to, for a module's program and KentOS Launcher (docs/adr/0801).
+        let module = self.document_module();
+        self.recent.add_in(&path, info, module);
     }
 
     pub(crate) fn start_view(&self) -> Element<'_, Message> {
@@ -154,19 +158,38 @@ impl App {
             }
             (None, _) => "Kurumunuzun projeleri; önce giriş yapılır".to_owned(),
         };
+        // A module's program says what it makes and opens (docs/adr/0801).
+        let (new_sub, open_sub) = match self.program {
+            Some(Module::Architecture) => (
+                "Mimari proje ya da detay: birimi ve ölçeği işle gelir",
+                "KentOS Mimari projesi, DWG, DXF veya NCZ çizimi",
+            ),
+            Some(Module::Map) => (
+                "Harita ya da imar planı, ilin koordinat sisteminde",
+                "KentOS Harita projesi, DWG, DXF veya NCZ çizimi",
+            ),
+            Some(Module::Gis) => (
+                "Koordinat sistemi ve ölçekle CBS projesi",
+                "KentOS GIS projesi; CAD çizimleri kendi programında açılır",
+            ),
+            None => (
+                "Proje türü, koordinat sistemi ve ölçekle boş çizim",
+                "KCAD, DWG, DXF veya NCZ çizimi",
+            ),
+        };
         let mut actions = Column::new()
             .spacing(4)
             .push(action(
                 "file.new",
                 Icon::DocumentNew,
                 "Yeni proje",
-                "Proje türü, koordinat sistemi ve ölçekle boş çizim".to_owned(),
+                new_sub.to_owned(),
             ))
             .push(action(
                 "file.open",
                 Icon::Open,
                 "Dosya aç",
-                "KCAD, DWG, DXF veya NCZ çizimi".to_owned(),
+                open_sub.to_owned(),
             ))
             .push(action(
                 "cloud.open",
@@ -205,6 +228,14 @@ impl App {
                     .style(style::button::list_item(false)),
             );
         }
+        // The program's own name: KentOS Mimari, KentOS Harita, KentOS GIS; kentos-cad's KentOS CAD.
+        let (product, line) = match self.program {
+            Some(m) => (
+                m.title().strip_prefix("KentOS ").unwrap_or(m.title()),
+                m.note(),
+            ),
+            None => ("CAD", "Harita, kadastro ve kent bilgi sistemi çizimi"),
+        };
         let brand = row![
             kentos_ui::widget::brand_mark(44.0),
             column![
@@ -212,11 +243,11 @@ impl App {
                     text("KentOS ")
                         .font(typography::ui_strong())
                         .size(typography::title()),
-                    text("CAD")
+                    text(product)
                         .size(typography::title())
                         .style(style::text::muted),
                 ],
-                label::caption("Harita, kadastro ve kent bilgi sistemi çizimi"),
+                label::caption(line),
             ]
             .spacing(2),
         ]
@@ -224,12 +255,13 @@ impl App {
         .align_y(Center);
 
         let mut list = Column::new().spacing(2);
-        if self.recent.list().is_empty() {
+        let shown = self.shown_recent();
+        if shown.is_empty() {
             list = list.push(label::muted(
                 "Henüz dosya yok. Açtığınız ya da kaydettiğiniz çizimler burada görünür; tek tıkla yeniden açılır.",
             ));
         }
-        for r in self.recent.list() {
+        for r in shown {
             list = list.push(recent_row(
                 r,
                 event(Event::Open(r.path.clone())),

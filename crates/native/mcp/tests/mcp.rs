@@ -872,6 +872,7 @@ fn stand_in_desktop(path: &std::path::Path) -> std::thread::JoinHandle<()> {
             province: None,
             drawing_unit: None,
             annotation: None,
+            cad_work: None,
         })
         .expect("a drawing");
         let (stream, _) = listener.accept().expect("a connection");

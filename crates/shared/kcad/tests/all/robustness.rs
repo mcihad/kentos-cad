@@ -524,6 +524,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             angle_unit: AngleUnit::Deg,
             plot_scale: rng.float(),
             workspace: rng.chance(50).then_some(Workspace::Gis),
+            cad_work: None,
             drawing_font: rng.chance(50).then_some(DrawingFont::ArchitectsDaughter),
             // A drawing unit and a second system are put on by `with_schema` (schemas 11
             // and 12), from a stream of its own.

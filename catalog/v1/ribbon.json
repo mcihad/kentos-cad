@@ -534,6 +534,9 @@
        }
       ]
      }
+    ],
+    "works": [
+     "map"
     ]
    },
    {
@@ -586,6 +589,9 @@
         "command": "field.send",
         "size": "small"
        }
+      ],
+      "works": [
+       "map"
       ]
      },
      {
@@ -604,6 +610,9 @@
         "command": "calc.stakeout",
         "size": "large"
        }
+      ],
+      "works": [
+       "map"
       ]
      },
      {
@@ -626,6 +635,9 @@
         "command": "calc.levelNetwork",
         "size": "small"
        }
+      ],
+      "works": [
+       "map"
       ]
      },
      {
@@ -648,6 +660,9 @@
         "command": "cogo.update",
         "size": "small"
        }
+      ],
+      "works": [
+       "map"
       ]
      },
      {
@@ -666,6 +681,9 @@
         "command": "crs.transform",
         "size": "small"
        }
+      ],
+      "works": [
+       "map"
       ]
      }
     ]
@@ -1647,6 +1665,9 @@
        "arch.sheetSet"
       ]
      }
+    ],
+    "works": [
+     "architecture"
     ]
    },
    {

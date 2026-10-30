@@ -179,7 +179,7 @@ fn a_read_of_the_changed_objects_is_the_whole_read_and_builds_the_same_graph() {
 /// What reading a city's network takes on the interface's thread, whole and after a street moved, and what putting
 /// the input together and rebuilding takes on the network thread (docs/adr/0641 §4): the grid city of
 /// `network::timing` (225 × 225 crossings, 100 800 streets) as a drawing. Release, by hand:
-/// `cargo test --release -p kentos-desktop --bin kentos-cad networks::read_tests::timing -- --ignored --nocapture`;
+/// `cargo test --release -p kentos-desktop --lib networks::read_tests::timing -- --ignored --nocapture`;
 /// `KENTOS_PERF_GRID` another grid.
 #[test]
 #[ignore = "timings, run by hand in release"]

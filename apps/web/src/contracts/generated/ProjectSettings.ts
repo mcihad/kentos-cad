@@ -4,6 +4,7 @@ import type { AngleUnit } from "./AngleUnit";
 import type { AnnotationHeights } from "./AnnotationHeights";
 import type { ArchSettings } from "./ArchSettings";
 import type { AreaUnit } from "./AreaUnit";
+import type { CadWork } from "./CadWork";
 import type { CrsDefinition } from "./CrsDefinition";
 import type { DatumTransform } from "./DatumTransform";
 import type { DimensionStyleDef } from "./DimensionStyleDef";
@@ -50,6 +51,11 @@ plotScale: number,
  * (see [`ProjectSettings::project_type`]).
  */
 workspace?: Workspace, 
+/**
+ * What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon. Only a CAD project has
+ * one; none while it is not asked (CAD projects written before works).
+ */
+cadWork?: CadWork, 
 /**
  * Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
  * the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a

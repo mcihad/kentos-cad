@@ -12,7 +12,9 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::document::{AngleUnit, AreaUnit, DrawingFont, DrawingUnit, LengthStyle, Workspace};
+use crate::document::{
+    AngleUnit, AreaUnit, CadWork, DrawingFont, DrawingUnit, LengthStyle, Workspace,
+};
 
 /// Changes project settings by key.
 pub const CAD_SETTINGS_SET: &str = "cad.settings.set";
@@ -30,6 +32,9 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// - `name`: the drawing's name, trimmed;
 /// - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
 ///   yet); a project without a type chooses once; an existing type cannot change (ADR 0622);
+/// - `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS
+///   program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes
+///   both); a CAD project without a work chooses once, an existing work cannot change;
 /// - `srid`: the project's coordinate system, an EPSG code of the registry,
 ///   or 0 for a local project without one; it is assigned, the coordinates
 ///   stay as they are (CLAUDE.md §5). It takes the place of a defined system
@@ -68,6 +73,8 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// view without levels), `invalid_heights`, `invalid_epoch`; then
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `project_type_locked` (an existing project type changed),
+/// `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
+/// changed),
 /// `second_needs_system` (a second system for a project without one),
 /// `second_is_own` (the second system the project's own), `unit_needs_local`
 /// (a unit other than metres for a project with a system),
@@ -87,6 +94,10 @@ pub struct SettingsSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub project_type: Option<Workspace>,
+    /// What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cad_work: Option<CadWork>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]

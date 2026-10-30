@@ -140,6 +140,34 @@ fn accent_text(theme: &Theme) -> text::Style {
 pub(super) fn kind<'a>(s: &'a State, theme: &Theme) -> Element<'a, Message> {
     let modes = catalog().modes();
     let chosen = s.draft.kind.workspace();
+    // A module's program makes its own type only (docs/adr/0801): its card, and where the others are made.
+    if let Some(program) = s.limit {
+        let own: Vec<Element<'a, Message>> = modes
+            .iter()
+            .filter(|m| m.ready && s.allows_type(m.id))
+            .map(|m| type_card(m, m.id == chosen, theme))
+            .collect();
+        let elsewhere = match program {
+            kentos_launch::Module::Gis => {
+                "CAD projeleri KentOS Mimari'de (bina, detay) ve KentOS Harita'da (harita, imar planı) yapılır."
+            }
+            _ => "CBS projeleri KentOS GIS'te yapılır.",
+        };
+        return page(
+            head(
+                "Ne tür bir proje?",
+                "Tür; sahneyi, eksenleri ve şeridi belirler. Proje başladıktan sonra değişmez.",
+            ),
+            vec![
+                // As wide as one of the two cards kentos-cad shows.
+                Row::with_children(own)
+                    .push(space::horizontal().width(Fill))
+                    .spacing(10)
+                    .into(),
+                label::muted(format!("{} {elsewhere}", program_makes(program))).into(),
+            ],
+        );
+    }
     let ready: Vec<Element<'a, Message>> = modes
         .iter()
         .filter(|m| m.ready)
@@ -173,6 +201,20 @@ pub(super) fn kind<'a>(s: &'a State, theme: &Theme) -> Element<'a, Message> {
         ),
         parts,
     )
+}
+
+/// What a module's program makes, in a sentence.
+fn program_makes(program: kentos_launch::Module) -> String {
+    match program {
+        kentos_launch::Module::Gis => "KentOS GIS, CBS projeleri yapar.".to_owned(),
+        m => {
+            let works: Vec<&str> = crate::program::works_of(m)
+                .into_iter()
+                .map(kentos_commands::CadWork::name)
+                .collect();
+            format!("{}, {} çizimleri yapar.", m.title(), works.join(" ve "))
+        }
+    }
 }
 
 /// A type that can be chosen: its picture across the card, its name, what
@@ -322,17 +364,24 @@ pub(super) fn coords(s: &State) -> Element<'_, Message> {
             place(s),
         );
     }
-    // What the drawing is for (docs/adr/0626 §1): its unit, scale and coordinates come with it.
+    // What the drawing is for (docs/adr/0626 §1): its unit, scale and coordinates come with it; a module's program
+    // offers its own works (docs/adr/0801).
     let chosen = d.work();
-    let works = Column::with_children(WORKS.iter().enumerate().map(|(i, w)| {
-        choice_card(
-            icon(crate::icons::from_web(Some(w.icon))).size(22.0).into(),
-            w.name,
-            w.note,
-            chosen == Some(w),
-            event(Event::Work(i)),
-        )
-    }))
+    let works = Column::with_children(
+        WORKS
+            .iter()
+            .enumerate()
+            .filter(|(_, w)| s.allows_work(w.work))
+            .map(|(i, w)| {
+                choice_card(
+                    icon(crate::icons::from_web(Some(w.icon))).size(22.0).into(),
+                    w.name,
+                    w.note,
+                    chosen == Some(w),
+                    event(Event::Work(i)),
+                )
+            }),
+    )
     .spacing(10);
     let mut parts = vec![works.into()];
     // A plan is on a real coordinate system: the province and the system chosen here.
@@ -350,7 +399,7 @@ pub(super) fn coords(s: &State) -> Element<'_, Message> {
 
 /// A card to choose one of (the web's `.wiz__choice`): a mark in its box,
 /// the name, what it is for and the round mark.
-fn choice_card<'a>(
+pub(in crate::project) fn choice_card<'a>(
     mark: Element<'a, Message>,
     name: &'a str,
     note: &'a str,

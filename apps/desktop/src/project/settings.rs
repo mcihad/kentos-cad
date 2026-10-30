@@ -1417,18 +1417,29 @@ fn project_type<'a>(saved: Option<Workspace>, s: &'a State) -> Element<'a, Messa
     match saved {
         Some(kind) => {
             let mode = crate::catalog::effective_mode(Some(kind));
+            // A CAD project's work goes with its type (docs/adr/0801).
+            let work = s.settings.cad_work();
+            let title = match work {
+                Some(w) => format!("{} · {} · {}", mode.label, mode.title, w.name()),
+                None => format!("{} · {}", mode.label, mode.title),
+            };
+            let note = match (kind, work) {
+                (Workspace::Cad, Some(_)) => "Proje türü ve işi projeyle başlar ve değişmez: sahnesi, eksen ve açı düzeni ve şeridi türe, şeridin sekmeleri ve projenin KentOS programı işe göredir. Türler ve işler arasında geçiş ileride projeyi dönüştürerek olacak.",
+                (Workspace::Cad, None) => "Proje türü projeyle başlar ve değişmez. Bu CAD çiziminin işi henüz seçilmedi: açılışta ve durum çubuğundaki türe basılınca bir kez sorulur.",
+                _ => "Proje türü projeyle başlar ve değişmez: sahnesi, eksen ve açı düzeni ve şeridi türe göredir. CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak.",
+            };
             column![
                 row![
                     kentos_ui::icon::icon(crate::modes::mode_icon(kind))
                         .size(16.0)
                         .tone(kentos_ui::icon::Tone::Accent),
-                    text(format!("{} · {}", mode.label, mode.title))
+                    text(title)
                         .font(typography::ui_strong())
                         .size(typography::body()),
                 ]
                 .spacing(8)
                 .align_y(iced::Center),
-                label::caption("Proje türü projeyle başlar ve değişmez: sahnesi, eksen ve açı düzeni ve şeridi türe göredir. CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak."),
+                label::caption(note),
             ]
             .spacing(6)
             .into()

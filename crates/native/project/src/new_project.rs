@@ -53,6 +53,8 @@ pub struct NewProject {
     /// The annotation heights on paper the wizard was given (docs/adr/0205 §1,
     /// 0622 §2); none: every kind's own.
     pub annotation: Option<kentos_contracts::AnnotationHeights>,
+    /// What a CAD project is drawn for (docs/adr/0801): its KentOS program and ribbon; a CBS project has none.
+    pub cad_work: Option<kentos_contracts::CadWork>,
 }
 
 /// The default units of a project (the web's `PROJECT_SETTINGS_DEFAULTS`).
@@ -86,6 +88,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         angle_unit: AngleUnit::Grad,
         plot_scale: 1000.0,
         workspace: Some(Workspace::Gis),
+        cad_work: None,
         drawing_font: Some(DrawingFont::Barlow),
         drawing_unit: None,
         second_srid: None,
@@ -130,6 +133,8 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
         settings: ProjectSettings {
             plot_scale: o.plot_scale,
             workspace: Some(o.workspace),
+            // A work is a CAD project's (docs/adr/0801).
+            cad_work: o.cad_work.filter(|_| cad),
             // A CAD project's angles are degrees, a CBS project's grads (docs/adr/0165 §4).
             angle_unit: if cad { AngleUnit::Deg } else { AngleUnit::Grad },
             drawing_font: Some(o.drawing_font),
@@ -527,6 +532,7 @@ mod tests {
                     .get("drawingUnit")
                     .map(|u| serde_json::from_value(u.clone()).expect("a unit")),
                 annotation: None,
+                cad_work: None,
             };
             let want: DocumentSnapshotV1 =
                 serde_json::from_value(case["snapshot"].clone()).expect("the web's drawing reads");
@@ -546,6 +552,7 @@ mod tests {
             province: None,
             drawing_unit: None,
             annotation: None,
+            cad_work: None,
         });
         assert!(refused.expect_err("unknown").contains("EPSG:1234"));
         let b = sheet_around(Vec2 { x: 0.0, y: 0.0 }, 1000.0, false);

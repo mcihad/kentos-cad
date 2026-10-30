@@ -246,6 +246,7 @@ mod tests {
             angle_unit: AngleUnit::Grad,
             plot_scale: 1000.0,
             workspace: Some(Workspace::Gis),
+            cad_work: None,
             drawing_font: None,
             drawing_unit: None,
             second_srid: second,

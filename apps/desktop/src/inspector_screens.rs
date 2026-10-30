@@ -3,7 +3,7 @@
 //! the panel cut out of it, in `.run/shots/oznitelik-*`.
 //!
 //! ```text
-//! cargo test -p kentos-desktop --bin kentos-cad inspector_screens -- --ignored --nocapture
+//! cargo test -p kentos-desktop --lib inspector_screens -- --ignored --nocapture
 //! ```
 
 use std::path::PathBuf;

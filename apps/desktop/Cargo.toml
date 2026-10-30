@@ -5,10 +5,44 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+# `cargo run -p kentos-desktop` is kentos-cad, the module programs built or not.
+default-run = "kentos-cad"
+
+# The desktop is a library and its programs (docs/adr/0801): `kentos-cad`, every module at once (`--modul <id>` one of
+# them), and each module's own program. The unit tests live in the library; no program has tests of its own, so a
+# test run links one binary. Doc comments are not tests.
+[lib]
+name = "kentos_desktop"
+path = "src/lib.rs"
+doctest = false
 
 [[bin]]
 name = "kentos-cad"
 path = "src/main.rs"
+test = false
+
+# KentOS Mimari, KentOS Harita and KentOS GIS: the library fixed to one module. Built with
+# `--features module-programs`, so an ordinary build and test link only kentos-cad (a debug link is large).
+[[bin]]
+name = "kentos-mimari"
+path = "src/bin/kentos-mimari.rs"
+test = false
+required-features = ["module-programs"]
+
+[[bin]]
+name = "kentos-harita"
+path = "src/bin/kentos-harita.rs"
+test = false
+required-features = ["module-programs"]
+
+[[bin]]
+name = "kentos-gis"
+path = "src/bin/kentos-gis.rs"
+test = false
+required-features = ["module-programs"]
+
+[features]
+module-programs = []
 
 [dependencies]
 kentos-postgis = { path = "../../crates/native/postgis" }

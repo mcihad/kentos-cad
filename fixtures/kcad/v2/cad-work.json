@@ -1,0 +1,35 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Konut",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 100.0,
+    "workspace": "cad",
+    "cadWork": "architecture",
+    "drawingFont": "barlow"
+  },
+  "origin": { "x": 0.0, "y": 0.0 },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    { "kind": "line", "id": 1, "layerId": "0", "attrs": {}, "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 12.5, "y": 0.0 } }
+  ],
+  "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"],
+  "styles": { "items": [], "categories": [] }
+}

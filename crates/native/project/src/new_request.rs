@@ -275,6 +275,41 @@ mod tests {
         );
     }
 
+    /// A new CAD project's work is the wizard's (docs/adr/0801): a building in metres, a plan on a system, a detail
+    /// in millimetres; a local unit no work has none, nor has a CBS project.
+    #[test]
+    fn a_new_cad_project_takes_its_works_work() {
+        use kentos_contracts::CadWork;
+        let work = |input: Value| made(input).expect("a project").cad_work;
+        assert_eq!(
+            work(json!({ "workspace": "cad" })),
+            Some(CadWork::Architecture)
+        );
+        assert_eq!(
+            work(json!({ "workspace": "cad", "srid": 5256 })),
+            Some(CadWork::Map)
+        );
+        assert_eq!(
+            work(json!({ "workspace": "cad", "coords": "real", "province": 58 })),
+            Some(CadWork::Map)
+        );
+        assert_eq!(
+            work(json!({ "workspace": "cad", "drawingUnit": "mm" })),
+            Some(CadWork::Detail)
+        );
+        assert_eq!(
+            work(json!({ "workspace": "cad", "drawingUnit": "cm" })),
+            None
+        );
+        assert_eq!(work(json!({ "srid": 5256 })), None);
+        // The project it makes carries it.
+        let snapshot = crate::new_project::new_project(
+            &made(json!({ "workspace": "cad", "drawingUnit": "mm" })).expect("a project"),
+        )
+        .expect("a drawing");
+        assert_eq!(snapshot.settings.cad_work, Some(CadWork::Detail));
+    }
+
     #[test]
     fn what_a_window_cannot_ask_is_refused_with_its_reason() {
         let code = |input: Value| made(input).map_err(|r| r.code).err();

@@ -7,7 +7,7 @@
 //! `tools_screens` takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=isaret-stil-denetim,isaret-kot-arac,isaret-kot-oznitelik,isaret-kuzey-arac,isaret-kuzey,isaret-revizyon-onizleme,isaret-revizyon-listesi,isaret-lejant,isaret-belgele-isaret,isaret-belgele-revizyon,isaret-belgele-cizelge cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=isaret-stil-denetim,isaret-kot-arac,isaret-kot-oznitelik,isaret-kuzey-arac,isaret-kuzey,isaret-revizyon-onizleme,isaret-revizyon-listesi,isaret-lejant,isaret-belgele-isaret,isaret-belgele-revizyon,isaret-belgele-cizelge cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

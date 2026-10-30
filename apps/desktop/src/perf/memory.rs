@@ -5,7 +5,7 @@
 //! `malloc_trim`), so a stage's transient memory is not counted as kept. Not a correctness test:
 //!
 //! ```text
-//! KENTOS_PERF_SIZES=250000 cargo test --release -p kentos-desktop --bin kentos-cad perf::memory -- --ignored --nocapture --test-threads=1
+//! KENTOS_PERF_SIZES=250000 cargo test --release -p kentos-desktop --lib perf::memory -- --ignored --nocapture --test-threads=1
 //! ```
 
 use super::frame::Harness;

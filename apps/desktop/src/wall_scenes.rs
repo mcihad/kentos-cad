@@ -29,8 +29,8 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=gecici-olcu,gecici-olcu-dis,gecici-olcu-yazi-kutusu,gecici-olcu-tasindi,gecici-olcu-geri-alindi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
-//! KENTOS_SHOTS_ONLY=mimari-bolme-yay,mimari-bolme-yay-arasi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture   # docs/adr/0734
+//! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
+//! KENTOS_SHOTS_ONLY=mimari-bolme-yay,mimari-bolme-yay-arasi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0734
 //! ```
 //!
 //! Test code only.

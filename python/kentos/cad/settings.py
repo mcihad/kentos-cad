@@ -16,6 +16,8 @@ from .types import (  # noqa: F401
     ArchSettings,
     AreaUnit,
     AreaUnitName,
+    CadWork,
+    CadWorkName,
     DrawingFont,
     DrawingFontName,
     DrawingUnit,
@@ -75,6 +77,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         auto_select: bool | None | Unset = UNSET,
+        cad_work: CadWork | CadWorkName | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -124,6 +127,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             area_unit:
             auto_select: Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
                 the active layer's. No object changes.
+            cad_work: What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
             coordinate_epoch: Unit: year.
             drawing_font:
             drawing_unit:
@@ -156,6 +160,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             area_decimals=area_decimals,
             area_unit=area_unit,
             auto_select=auto_select,
+            cad_work=cad_work,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
@@ -181,6 +186,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         auto_select: bool | None | Unset = UNSET,
+        cad_work: CadWork | CadWorkName | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -204,6 +210,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             area_decimals=area_decimals,
             area_unit=area_unit,
             auto_select=auto_select,
+            cad_work=cad_work,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
@@ -229,6 +236,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         auto_select: bool | None | Unset = UNSET,
+        cad_work: CadWork | CadWorkName | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -252,6 +260,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             area_decimals=area_decimals,
             area_unit=area_unit,
             auto_select=auto_select,
+            cad_work=cad_work,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
@@ -277,6 +286,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         auto_select: bool | None | Unset = UNSET,
+        cad_work: CadWork | CadWorkName | None | Unset = UNSET,
         coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
@@ -305,6 +315,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             area_decimals=area_decimals,
             area_unit=area_unit,
             auto_select=auto_select,
+            cad_work=cad_work,
             coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,

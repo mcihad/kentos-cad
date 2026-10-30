@@ -201,6 +201,7 @@
         "Mil plakası"
       ],
       "options": {
+        "cadWork": "detail",
         "drawingFont": "barlow",
         "drawingUnit": "mm",
         "name": "Mil plakası",
@@ -321,6 +322,7 @@
         "Aplikasyon"
       ],
       "options": {
+        "cadWork": "map",
         "drawingFont": "barlow",
         "name": "  Aplikasyon  ",
         "plotScale": 1000,
@@ -387,6 +389,7 @@
         "Yeni proje"
       ],
       "options": {
+        "cadWork": "map",
         "drawingFont": "plex-mono",
         "name": "Yeni proje",
         "plotScale": 1000,
@@ -448,6 +451,7 @@
         "Vaziyet"
       ],
       "options": {
+        "cadWork": "architecture",
         "drawingFont": "barlow",
         "drawingUnit": "m",
         "name": "Vaziyet",

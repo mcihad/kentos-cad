@@ -298,6 +298,8 @@ def settings(s):
                 "angleUnit": (enum(("grad", "deg")), True),
                 "plotScale": (f64, True),
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
+                # Schema 135 (docs/adr/0801): what a CAD project is drawn for.
+                "cadWork": (enum(("architecture", "map", "detail")), False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
                 "drawingUnit": (enum(("mm", "cm", "m", "in", "ft")), False),
@@ -2276,6 +2278,9 @@ def document(d):
             "checks" in s or "uniques" in s for s in d["settings"].get("sources", [])):
         # A bound table's constraints, a field's list from one of them (docs/adr/0755).
         schema = max(schema, 134)
+    if "cadWork" in d["settings"]:
+        # What a CAD project is drawn for (docs/adr/0801).
+        schema = max(schema, 135)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2989,7 +2994,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-135.kcad"] = container(root(cmap(parts), version=uint(135)))
+    files["schema-version-136.kcad"] = container(root(cmap(parts), version=uint(136)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5210,6 +5215,22 @@ def build():
     held_bad("unique-no-columns", lambda d: d["settings"]["sources"][0]["uniques"][1].update(columns=[]))
     held_bad("unique-column-twice", lambda d: d["settings"]["sources"][0]["uniques"][0].update(columns=["kod", "kod"]))
     held_bad("column-check-blank", lambda d: d["layers"][0]["fields"][3]["column"].update(check=""))
+    # Schema 135 (docs/adr/0801): a CAD project drawn for a building; schema 134 refuses its work, a work KentOS does
+    # not know, a CBS project's and a project's without a type are refused too.
+    worked = load("cad-work.json")
+    cw = document(worked)
+    assert cw.count(b"\x67version\x18\x87") == 1, "the work is schema 135"
+    out["cad-work.kcad"] = container(cw)
+    out["broken/cad-work-in-schema-134.kcad"] = container(cw.replace(b"\x67version\x18\x87", b"\x67version\x18\x86"))
+    work = cmap({"cadWork": text("architecture")})[1:]
+    assert cw.count(work) == 1
+    out["broken/cad-work-unknown.kcad"] = container(cw.replace(work, cmap({"cadWork": text("survey")})[1:]))
+    gis = cmap({"workspace": text("cad")})[1:]
+    assert cw.count(gis) == 1
+    out["broken/cad-work-on-gis.kcad"] = container(cw.replace(gis, cmap({"workspace": text("gis")})[1:]))
+    untyped = copy.deepcopy(worked)
+    del untyped["settings"]["workspace"]
+    out["broken/cad-work-no-type.kcad"] = container(document(untyped))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

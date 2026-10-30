@@ -9,10 +9,12 @@
 
 pub(crate) mod arch;
 mod ask_type;
+pub(crate) mod ask_work;
 mod choices;
 mod content;
 mod heights;
 mod custom_crs;
+pub(crate) mod hand_over;
 mod scale;
 pub(crate) mod settings;
 mod survey;
@@ -27,6 +29,8 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
 use kentos_ui::{label, style};
 
+#[cfg(test)]
+pub(crate) use ask_type::Event as TypeEvent;
 pub(crate) use ask_type::TYPE_TITLE;
 
 use crate::app::{App, Dialog, Message};
@@ -39,6 +43,10 @@ pub enum Window {
     New(Box<wizard::State>),
     Settings(Box<settings::State>),
     Type(Box<ask_type::State>),
+    /// What a CAD drawing is drawn for (docs/adr/0801).
+    Work(Box<ask_work::State>),
+    /// A file another KentOS program opens (docs/adr/0801).
+    Hand(Box<hand_over::State>),
 }
 
 #[derive(Debug, Clone)]
@@ -46,6 +54,8 @@ pub enum Event {
     New(wizard::Event),
     Settings(settings::Event),
     Type(ask_type::Event),
+    Work(ask_work::Event),
+    Hand(hand_over::Event),
     Close,
 }
 
@@ -105,6 +115,11 @@ impl App {
                 self.project_type_event(e);
                 Task::none()
             }
+            Event::Work(e) => self.project_work_event(e),
+            Event::Hand(e) => {
+                self.project_hand_event(e);
+                Task::none()
+            }
             Event::Close => {
                 self.close_project_window();
                 Task::none()
@@ -129,8 +144,19 @@ impl App {
             self.dialog = Some(Dialog::Project);
             return;
         }
-        if let Some(Window::Type(s)) = self.project.take() {
-            self.type_left_unasked(&s.name);
+        match self.project.take() {
+            Some(Window::Type(s)) => self.type_left_unasked(&s.name),
+            // Sonra: the drawing as it is (docs/adr/0801); what placing it asks of the next frame waits for no one.
+            Some(window @ Window::Work(_)) => {
+                self.project = Some(window);
+                self.dialog = Some(Dialog::Project);
+                let _ = self.work_left_unasked();
+            }
+            Some(Window::Hand(s)) => self.output(format!(
+                "“{}” açılmadı; ekrandaki çizim olduğu gibi duruyor.",
+                s.name
+            )),
+            _ => {}
         }
     }
 
@@ -139,6 +165,8 @@ impl App {
             Some(Window::New(s)) => self.new_project_view(s),
             Some(Window::Settings(s)) => self.project_settings_view(s),
             Some(Window::Type(s)) => self.project_type_view(s),
+            Some(Window::Work(s)) => self.project_work_view(s),
+            Some(Window::Hand(s)) => self.project_hand_view(s),
             None => text("").into(),
         }
     }

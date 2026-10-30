@@ -25,6 +25,7 @@ fn plan(unit: DrawingUnit) -> Session {
         province: None,
         drawing_unit: Some(unit),
         annotation: None,
+        cad_work: None,
     })
     .expect("a new plan")
 }

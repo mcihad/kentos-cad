@@ -10,7 +10,7 @@
 //! object without a level given Zemin kat in one step:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=denetim-katlar,denetim-kata-ver,denetim-katsizlar,denetim-kat-verildi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=denetim-katlar,denetim-kata-ver,denetim-katsizlar,denetim-kat-verildi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

@@ -473,6 +473,8 @@ pub enum Message {
     /// The status bar's type of a project not asked its type yet, pressed:
     /// the question (docs/adr/0622 §1).
     AskProjectType,
+    /// The status bar's type of a CAD project not asked its work yet, pressed: the question (docs/adr/0801).
+    AskCadWork,
     /// A frame of the status bar's message fading, or the moment it goes (message_log.rs).
     LogFrame,
     /// The bottom panel's log list scrolled: whether new lines follow to its end.
@@ -1243,6 +1245,11 @@ pub struct App {
     pub(crate) sheet_data_key: Option<u64>,
     /// The window's notices in its corner (toasts.rs): a save that closed its window, a copy.
     pub(crate) toasts: kentos_ui::widget::Toasts<Message>,
+    /// The module this program works as (docs/adr/0801): KentOS Mimari, Harita or GIS; none in kentos-cad, every
+    /// module at once.
+    pub(crate) program: Option<kentos_launch::Module>,
+    /// Starts the program a file belongs to (program.rs); a test puts one of its own here.
+    pub(crate) hand_over: fn(kentos_launch::Module, &std::path::Path) -> Result<String, String>,
 }
 
 impl App {
@@ -1264,6 +1271,16 @@ impl App {
 
     /// `start`, keeping recovery copies in `recovery`: work a crash left is offered first.
     pub fn start_with(
+        path: Option<PathBuf>,
+        settings: Settings,
+        recovery: Recovery,
+    ) -> (Self, Task<Message>) {
+        Self::start_in(None, path, settings, recovery)
+    }
+
+    /// `start_with` as `program`'s module (docs/adr/0801); none: kentos-cad, every module at once.
+    pub fn start_in(
+        program: Option<kentos_launch::Module>,
         path: Option<PathBuf>,
         settings: Settings,
         recovery: Recovery,
@@ -1356,9 +1373,13 @@ impl App {
             last_click: None,
             log: {
                 let mut log = crate::log_plan::Log::default();
+                // A module's program says its own name (docs/adr/0801).
                 log.push(
                     Level::Info,
-                    "KentOS CAD masaüstü hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler.",
+                    format!(
+                        "{} hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler.",
+                        program.map_or("KentOS CAD masaüstü", kentos_launch::Module::title)
+                    ),
                     crate::cloud::now_ms(),
                 );
                 log
@@ -1393,6 +1414,8 @@ impl App {
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
             toasts: kentos_ui::widget::Toasts::new(),
+            program,
+            hand_over: crate::program::start_program,
             session: Session::new(),
             spatial: Spatial::new(),
             styles: crate::style::Styles::new(),
@@ -1563,6 +1586,22 @@ impl App {
     }
 
     pub fn title(&self) -> String {
+        // A module's program says its own name first (docs/adr/0801): “KentOS Mimari — Konut.kcad”.
+        if let Some(program) = self.program {
+            let Some(doc) = &self.document else {
+                return program.title().to_owned();
+            };
+            let dot = if doc.dirty() { " •" } else { "" };
+            return match doc.cloud_source() {
+                Some(source) => format!(
+                    "{} — {}{dot} — {}",
+                    program.title(),
+                    doc.name(),
+                    source.workspace
+                ),
+                None => format!("{} — {}{dot}", program.title(), doc.name()),
+            };
+        }
         match &self.document {
             // A cloud project says its workspace too (docs/adr/0041).
             Some(doc) => match doc.cloud_source() {
@@ -1967,6 +2006,7 @@ impl App {
             Message::BottomReset => self.bottom_dragged(None, Instant::now()),
             Message::HistoryCleared => self.clear_history(),
             Message::AskProjectType => self.ask_project_type(),
+            Message::AskCadWork => self.ask_cad_work(),
             Message::LogFrame => self.log_frame(Instant::now()),
             Message::LogScrolled(viewport) => self.log_scrolled(viewport),
             Message::LayoutSave => self.layout.write(Instant::now(), false),

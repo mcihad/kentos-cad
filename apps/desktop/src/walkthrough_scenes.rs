@@ -6,7 +6,7 @@
 //! 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=daire-kabuk,daire-bolme-onizleme,daire-bolmeler,daire-aciklik,daire-mahal-onizleme,daire-mahaller,daire-etiket-onizleme,daire-etiketler,daire-olculer,daire-ic-olcu,daire-numara,daire-numaralandi,daire-mutfak,daire-merdiven,daire-cizelge,daire-cizelge-yazildi,daire-metraj,daire-denetim cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=daire-kabuk,daire-bolme-onizleme,daire-bolmeler,daire-aciklik,daire-mahal-onizleme,daire-mahaller,daire-etiket-onizleme,daire-etiketler,daire-olculer,daire-ic-olcu,daire-numara,daire-numaralandi,daire-mutfak,daire-merdiven,daire-cizelge,daire-cizelge-yazildi,daire-metraj,daire-denetim cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

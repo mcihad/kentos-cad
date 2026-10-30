@@ -204,6 +204,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             angle_unit: kentos_commands::AngleUnit::Grad,
             plot_scale: 1000.0,
             workspace: None,
+            cad_work: None,
             drawing_font: None,
             drawing_unit: None,
             second_srid: None,

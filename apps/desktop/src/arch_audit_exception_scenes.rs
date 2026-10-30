@@ -3,7 +3,7 @@
 //! on the drawing and written in one step; İstisna yap's note, the exceptions hidden, shown, lapsed; Kapsam; a row's menu:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=denetim-ekler,denetim-toplu-onizleme,denetim-toplu-duzeltildi,denetim-istisna-sor,denetim-istisna-gizli,denetim-istisna-goster,denetim-istisna-dustu,denetim-kapsam,denetim-satir-menusu cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=denetim-ekler,denetim-toplu-onizleme,denetim-toplu-duzeltildi,denetim-istisna-sor,denetim-istisna-gizli,denetim-istisna-goster,denetim-istisna-dustu,denetim-kapsam,denetim-satir-menusu cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

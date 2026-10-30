@@ -732,7 +732,7 @@ fn the_pyramid_files_keep_within_their_budget_the_oldest_going_first() {
 /// The first useful view of a multi-gigabyte orthophoto by HTTP ranges (docs/adr/0642 §5): its header, the whole
 /// raster in a 1100-pixel window (an overview's tiles) and a close view (level 0's), each with the bytes it fetched and
 /// how long it took. The file is `scripts/perf/big_cog.py`'s (.run/perf/orto-buyuk.tif). Release, by hand:
-/// `cargo test --release -p kentos-desktop --bin kentos-cad rasters::tests::first_view_of_a_large_cog -- --ignored --nocapture`.
+/// `cargo test --release -p kentos-desktop --lib rasters::tests::first_view_of_a_large_cog -- --ignored --nocapture`.
 #[test]
 #[ignore = "timings, run by hand in release"]
 fn first_view_of_a_large_cog() {

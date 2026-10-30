@@ -3,7 +3,7 @@
 //! text asks for it) and drawn, with the first dimension selected. Run by hand on a file of one's own, in release:
 //!
 //! ```text
-//! KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --bin kentos-cad inspector_probe -- --ignored --nocapture
+//! KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --lib inspector_probe -- --ignored --nocapture
 //! ```
 
 use std::time::{Duration, Instant};

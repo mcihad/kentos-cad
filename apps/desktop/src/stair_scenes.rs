@@ -7,7 +7,7 @@
 //! and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=merdiven-kat-arac,merdiven-kat-yazildi,merdiven-ust-kat,merdiven-ust-kat-alt,merdiven-kat-yukseldi,merdiven-kat-oznitelik,merdiven-direk,merdiven-metraj,merdiven-profil-denetim,merdiven-profil-duzeltildi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=merdiven-kat-arac,merdiven-kat-yazildi,merdiven-ust-kat,merdiven-ust-kat-alt,merdiven-kat-yukseldi,merdiven-kat-oznitelik,merdiven-direk,merdiven-metraj,merdiven-profil-denetim,merdiven-profil-duzeltildi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

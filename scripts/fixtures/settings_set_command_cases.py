@@ -149,6 +149,7 @@ def cases():
                         "setup": setup(workspace=before),
                         "steps": [step("execute", {"projectType": after}, done(["projectType"]),
                                        {**FLAGS, "settings": {"workspace": after}})]})
+    out.extend(work_cases())
     # Otomatik seçim (docs/adr/0622 §5): the project's choice, written even when it is the type's own; no object changes.
     out.append({"name": "Otomatik seçim: kapatılır ve açılır; proje ayarıdır",
                 "steps": [step("execute", {"autoSelect": False}, done(["autoSelect"]), {**FLAGS, "settings": {"autoSelect": False}}),
@@ -299,6 +300,68 @@ def cases():
                           step("execute", {"srid": 5255, "expectedRevision": "$once"},
                                {"status": "conflict", "error": {"code": "revision_conflict", "message": CONFLICT, "path": "expectedRevision", "revision": "$current"}},
                                {"revision": "same", "settings": {"srid": 5256, "areaDecimals": 3}})]})
+    return out
+
+
+# What a CAD project is drawn for (docs/adr/0801): `architecture`, `map` or `detail`; a CAD project's only (a project
+# without a type takes it with `projectType: cad`), chosen once like the type; the same work again changes nothing. The
+# refusals come after the type's and before the decimals': `cad_work_needs_cad`, then `cad_work_locked`.
+NEEDS_CAD = ("İş (cadWork) yalnız CAD projesinin ayarıdır; bu proje CAD projesi değil. Türü seçilmemiş eski projede "
+             "projectType: cad ile birlikte verin.")
+WORK_LOCKED = ("Projenin işi projeyle başlar ve değişmez; Mimari ile Harita arasında geçiş ileride projeyi dönüştürerek "
+               "olacak.")
+TYPE_LOCKED = "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasında geçiş ileride projeyi dönüştürerek olacak."
+
+
+def work_cases():
+    out = []
+    for work in ("architecture", "map", "detail"):
+        out.append({"name": f"İş: işi sorulmamış CAD projesine bir kez verilir ({work}); aynısı bir şey değiştirmez",
+                    "setup": setup(workspace="cad"),
+                    "steps": [step("execute", {"cadWork": work}, done(["cadWork"]),
+                                   {**FLAGS, "settings": {"workspace": "cad", "cadWork": work}}),
+                              step("execute", {"cadWork": work}, done([]),
+                                   {"settings": {"cadWork": work}, "revision": "same", "canUndo": False})]})
+    for before in (None, "hybrid"):
+        out.append({"name": f"Tür ve iş birlikte: türü sorulmamış proje ({before}) CAD ve detay olur",
+                    "setup": setup(workspace=before),
+                    "steps": [step("execute", {"projectType": "cad", "cadWork": "detail"}, done(["projectType", "cadWork"]),
+                                   {**FLAGS, "settings": {"workspace": "cad", "cadWork": "detail"}})]})
+    out.append({"name": "İş: plan yazmaz",
+                "setup": setup(workspace="cad"),
+                "steps": [step("plan", {"cadWork": "map"}, done(["cadWork"]),
+                               {**UNCHANGED, "settings": {"workspace": "cad", "cadWork": None}})]})
+    for op in ("validate", "plan", "execute"):
+        out.append({"name": f"İş kilidi: harita → mimari, {op}; ad da değişmez",
+                    "setup": setup(workspace="cad", cadWork="map"),
+                    "steps": [step(op, {"cadWork": "architecture", "name": "Değişmesin"},
+                                   failed("cad_work_locked", WORK_LOCKED, "cadWork"),
+                                   {**UNCHANGED, "name": "Ayarlar", "settings": {"workspace": "cad", "cadWork": "map"}})]})
+    out.append({"name": "İş kilidi: detay → mimari de değişmez (aynı programın işleri)",
+                "setup": setup(workspace="cad", cadWork="detail"),
+                "steps": [step("execute", {"cadWork": "architecture"}, failed("cad_work_locked", WORK_LOCKED, "cadWork"),
+                               {**UNCHANGED, "settings": {"cadWork": "detail"}})]})
+    for name, over, input_ in (
+            ("CBS projesine iş verilmez", {"workspace": "gis"}, {"cadWork": "architecture"}),
+            ("türü sorulmamış projeye iş tek başına verilmez", {"workspace": None}, {"cadWork": "map"}),
+            ("eski Hibrit projesine iş tek başına verilmez", {"workspace": "hybrid"}, {"cadWork": "map"}),
+            ("türsüz projeye CBS türüyle iş verilmez", {"workspace": None}, {"projectType": "gis", "cadWork": "map"})):
+        # The former Hibrit mode is held as a type not asked yet (docs/adr/0165 §1).
+        held = None if over["workspace"] == "hybrid" else over["workspace"]
+        out.append({"name": f"İş: {name}",
+                    "setup": setup(**over),
+                    "steps": [step("execute", input_, failed("cad_work_needs_cad", NEEDS_CAD, "cadWork"),
+                                   {**UNCHANGED, "settings": {"workspace": held, "cadWork": None}})]})
+    out.append({"name": "İş: tür kilidi önce söylenir",
+                "setup": setup(workspace="cad"),
+                "steps": [step("execute", {"projectType": "gis", "cadWork": "map"},
+                               failed("project_type_locked", TYPE_LOCKED, "projectType"),
+                               {**UNCHANGED, "settings": {"workspace": "cad", "cadWork": None}})]})
+    out.append({"name": "İş: girdinin kuralları önce (basamak), sonra iş",
+                "setup": setup(workspace="gis"),
+                "steps": [step("execute", {"cadWork": "map", "lengthDecimals": 9},
+                               failed("invalid_decimals", "Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı.", "lengthDecimals"),
+                               {**UNCHANGED, "settings": {"workspace": "gis", "cadWork": None}})]})
     return out
 
 
@@ -515,7 +578,7 @@ def build():
         "command": "cad.settings.set",
         "commandVersion": 1,
         "title": "Proje ayarları",
-        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720; do not edit by hand.",
+        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3, 0720, 0801; do not edit by hand.",
         "setup": setup(),
         "cases": cases()+room_choice_cases(),
     }

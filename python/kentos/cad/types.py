@@ -793,6 +793,28 @@ BreakLineName = Literal["dimension", "first", "second"]
 """The names of :class:`BreakLine`, for a plain string."""
 
 
+class CadWork(_StrEnum):
+    """What a CAD project is drawn for (docs/adr/0801; the Yeni proje wizard's
+    works, docs/adr/0626 §1): a building, a map or zoning plan, a detail. It
+    decides the KentOS program the project belongs to (KentOS Mimari for a
+    building and a detail, KentOS Harita for a map) and the ribbon's tabs and
+    panels; it never changes what the data means, and every command still
+    runs. Only a CAD project has one; one written before works has none and the
+    desktop asks it once. Like its type, a project keeps the work it has.
+
+    - ``architecture``: Mimari proje: buildings, floor plans, sections and elevations.
+    - ``map``: Harita / imar planı: site plans, zoning, surveys and infrastructure.
+    - ``detail``: Detay / imalat: parts, details and manufacturing drawings.
+    """
+    ARCHITECTURE = "architecture"
+    MAP = "map"
+    DETAIL = "detail"
+
+
+CadWorkName = Literal["architecture", "map", "detail"]
+"""The names of :class:`CadWork`, for a plain string."""
+
+
 class CalloutKind(_StrEnum):
     """A callout's line.
 
@@ -48021,6 +48043,8 @@ class ProjectSettings(_Model):
         auto_select: Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
             the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a
             CBS project, on otherwise ([`ProjectSettings::auto_select`]).
+        cad_work: What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon. Only a CAD project has
+            one; none while it is not asked (CAD projects written before works).
         connections: The project's service connections without their secrets (docs/adr/0208 §2).
         coordinate_epoch: The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
             said. Only a project with a coordinate system has one. Unit: year.
@@ -48088,6 +48112,7 @@ class ProjectSettings(_Model):
     annotation: AnnotationHeights | None | Unset = UNSET
     arch: ArchSettings | None | Unset = UNSET
     auto_select: bool | None | Unset = UNSET
+    cad_work: CadWork | CadWorkName | None | Unset = UNSET
     connections: list[ServiceConnection] | Unset = UNSET
     coordinate_epoch: float | None | Unset = UNSET
     custom_crs: CrsDefinition | None | Unset = UNSET
@@ -48142,6 +48167,8 @@ class ProjectSettings(_Model):
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.auto_select is not UNSET:
             out["autoSelect"] = self.auto_select
+        if self.cad_work is not UNSET:
+            out["cadWork"] = None if self.cad_work is None else _enum_out(self.cad_work)
         if self.connections is not UNSET:
             out["connections"] = [e0.to_json() for e0 in self.connections]
         if self.coordinate_epoch is not UNSET:
@@ -48231,6 +48258,7 @@ class ProjectSettings(_Model):
             annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
             auto_select=data.get("autoSelect", UNSET),
+            cad_work=UNSET if "cadWork" not in data else None if data["cadWork"] is None else _enum_in(CadWork, data["cadWork"]),
             connections=[ServiceConnection.from_json(e0) for e0 in data["connections"]] if "connections" in data else UNSET,
             coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
@@ -53761,6 +53789,9 @@ class SettingsSet(_Model):
     - `name`: the drawing's name, trimmed;
     - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
       yet); a project without a type chooses once; an existing type cannot change (ADR 0622);
+    - `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS
+      program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes
+      both); a CAD project without a work chooses once, an existing work cannot change;
     - `srid`: the project's coordinate system, an EPSG code of the registry,
       or 0 for a local project without one; it is assigned, the coordinates
       stay as they are (CLAUDE.md §5). It takes the place of a defined system
@@ -53799,6 +53830,8 @@ class SettingsSet(_Model):
     view without levels), `invalid_heights`, `invalid_epoch`; then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `project_type_locked` (an existing project type changed),
+    `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
+    changed),
     `second_needs_system` (a second system for a project without one),
     `second_is_own` (the second system the project's own), `unit_needs_local`
     (a unit other than metres for a project with a system),
@@ -53814,6 +53847,7 @@ class SettingsSet(_Model):
         area_decimals: Unit: count.
         auto_select: Otomatik seçim (docs/adr/0622 §5): true, a click and a box select any shown layer's objects; false, only
             the active layer's. No object changes.
+        cad_work: What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
         coordinate_epoch: Unit: year.
         expected_revision: The document revision the input was prepared against, as decimal text.
         length_decimals: Unit: count.
@@ -53829,6 +53863,7 @@ class SettingsSet(_Model):
     area_decimals: int | None | Unset = UNSET
     area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET
     auto_select: bool | None | Unset = UNSET
+    cad_work: CadWork | CadWorkName | None | Unset = UNSET
     coordinate_epoch: float | None | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
@@ -53855,6 +53890,8 @@ class SettingsSet(_Model):
             out["areaUnit"] = None if self.area_unit is None else _enum_out(self.area_unit)
         if self.auto_select is not UNSET:
             out["autoSelect"] = self.auto_select
+        if self.cad_work is not UNSET:
+            out["cadWork"] = None if self.cad_work is None else _enum_out(self.cad_work)
         if self.coordinate_epoch is not UNSET:
             out["coordinateEpoch"] = None if self.coordinate_epoch is None else float(self.coordinate_epoch)
         if self.drawing_font is not UNSET:
@@ -53891,6 +53928,7 @@ class SettingsSet(_Model):
             area_decimals=data.get("areaDecimals", UNSET),
             area_unit=UNSET if "areaUnit" not in data else None if data["areaUnit"] is None else _enum_in(AreaUnit, data["areaUnit"]),
             auto_select=data.get("autoSelect", UNSET),
+            cad_work=UNSET if "cadWork" not in data else None if data["cadWork"] is None else _enum_in(CadWork, data["cadWork"]),
             coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
@@ -83195,6 +83233,8 @@ __all__ = [
     "CadImportScale",
     "CadPaperShapeKind",
     "CadParameter",
+    "CadWork",
+    "CadWorkName",
     "CalculateFieldsWriteOp",
     "CalloutKind",
     "CalloutKindName",

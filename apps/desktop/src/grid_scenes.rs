@@ -6,7 +6,7 @@
 //! takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=aks-egrisel,aks-egrisel-yazildi,kolon-l,kolon-l-yazildi,kolon-l-oznitelik,aks-kesik,aks-esit-bol,aks-denetim,aks-denetim-duzeltildi cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=aks-egrisel,aks-egrisel-yazildi,kolon-l,kolon-l-yazildi,kolon-l-oznitelik,aks-kesik,aks-esit-bol,aks-denetim,aks-denetim-duzeltildi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

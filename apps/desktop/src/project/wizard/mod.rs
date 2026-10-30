@@ -12,6 +12,9 @@
 mod art;
 mod pages;
 mod strip;
+
+/// A card to choose one of, as the wizard's works are: the work question uses it too (docs/adr/0801).
+pub(super) use pages::choice_card;
 #[cfg(test)]
 mod tests;
 
@@ -73,6 +76,8 @@ pub(crate) fn note(name: &str, cloud: Option<(&str, bool, bool)>, dirty: bool) -
 
 pub struct State {
     draft: Draft,
+    /// A module's program makes its own projects only (docs/adr/0801): its type, and a CAD module's works.
+    limit: Option<kentos_launch::Module>,
     step: Step,
     /// The province search, kept while the wizard is open.
     query: String,
@@ -86,6 +91,7 @@ impl fmt::Debug for State {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("State")
             .field("draft", &self.draft)
+            .field("limit", &self.limit)
             .field("step", &self.step)
             .field("pending", &self.pending.is_some())
             .finish_non_exhaustive()
@@ -126,18 +132,47 @@ impl State {
         let font = serde_json::from_value(s.effective("newProjects.drawingFont"))
             .unwrap_or(DrawingFont::Barlow);
         let unit = serde_json::from_value(s.effective("newProjects.drawingUnit")).ok();
+        let limit = app.program;
+        let mut draft = Draft::initial(
+            limit.map_or_else(|| default_type(app), crate::program::type_of),
+            s.number("newProjects.srid") as u32,
+            font,
+            unit,
+        );
+        // A CAD module's project is drawn for one of its works: the last one's when it is, else its first.
+        if let Some(m) = limit {
+            let works = crate::program::works_of(m);
+            if let Some(first) = works.first()
+                && !draft.cad_work().is_some_and(|w| works.contains(&w))
+                && let Some(card) = WORKS.iter().find(|w| w.work == *first)
+            {
+                draft.choose_work(card);
+            }
+        }
         Self {
-            draft: Draft::initial(
-                default_type(app),
-                s.number("newProjects.srid") as u32,
-                font,
-                unit,
-            ),
-            step: Step::Type,
+            draft,
+            limit,
+            // The type is the program's: the wizard starts at what the project is for, or where it is.
+            step: if limit.is_some() {
+                Step::Coords
+            } else {
+                Step::Type
+            },
             query: String::new(),
             status: None,
             pending: None,
         }
+    }
+
+    /// Whether the wizard may make a project of this type.
+    fn allows_type(&self, w: Workspace) -> bool {
+        self.limit.is_none_or(|m| crate::program::type_of(m) == w)
+    }
+
+    /// Whether the wizard may make a project for this work.
+    pub(super) fn allows_work(&self, w: kentos_commands::CadWork) -> bool {
+        self.limit
+            .is_none_or(|m| crate::program::works_of(m).contains(&w))
     }
 
     /// The step at `index`, if every step before it can be left.
@@ -226,8 +261,19 @@ impl App {
         let Some(Window::New(s)) = &mut self.project else {
             return Task::none();
         };
+        let type_allowed = match &e {
+            Event::Type(w) | Event::Choose(w) => s.allows_type(*w),
+            _ => true,
+        };
+        let work_allowed = match &e {
+            Event::Work(i) => WORKS.get(*i).is_some_and(|w| s.allows_work(w.work)),
+            _ => true,
+        };
         let d = &mut s.draft;
         match e {
+            // A module's program makes its own type only (docs/adr/0801).
+            Event::Type(_) | Event::Choose(_) if !type_allowed => {}
+            Event::Work(_) if !work_allowed => {}
             Event::Type(w) | Event::Choose(w) => {
                 if ready(w) {
                     d.kind = if w == Workspace::Cad {
@@ -313,16 +359,20 @@ impl App {
             return Task::none();
         };
         let (kind, unit) = (s.draft.kind, s.draft.is_local().then_some(s.draft.unit));
+        let limited = s.limit.is_some();
         self.close_project_window();
         let settings = doc.settings().clone();
         let name = doc.name().to_owned();
         // The viewport fits its home view, once the drawing area has its size.
         self.show_document(*doc);
-        // The next wizard starts on this type, and a local project's unit.
-        let mut remembered = vec![(
-            "newProjects.workspace",
-            serde_json::to_value(kind.workspace()).unwrap_or_default(),
-        )];
+        // The next wizard starts on this type (a module's program chose none: its own), and a local project's unit.
+        let mut remembered = Vec::new();
+        if !limited {
+            remembered.push((
+                "newProjects.workspace",
+                serde_json::to_value(kind.workspace()).unwrap_or_default(),
+            ));
+        }
         if let Some(unit) = unit {
             remembered.push((
                 "newProjects.drawingUnit",
@@ -361,7 +411,7 @@ impl App {
         };
         match key {
             Named::Enter => Some(self.new_project_next()),
-            Named::ArrowLeft | Named::ArrowRight if s.step == Step::Type => {
+            Named::ArrowLeft | Named::ArrowRight if s.step == Step::Type && s.limit.is_none() => {
                 let other = match s.draft.kind {
                     Kind::Cad => Workspace::Gis,
                     Kind::Gis => Workspace::Cad,

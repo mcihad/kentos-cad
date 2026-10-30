@@ -5,7 +5,7 @@
 //! takes them in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=kat-dosya-acilis,kat-silme-pencere,kat-silme,kat-merdiven-izler,kat-dosya-menu,kat-gorunumu-serit cargo test -p kentos-desktop --bin kentos-cad tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=kat-dosya-acilis,kat-silme-pencere,kat-silme,kat-merdiven-izler,kat-dosya-menu,kat-gorunumu-serit cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.

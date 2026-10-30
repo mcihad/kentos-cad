@@ -1411,6 +1411,8 @@ pub(crate) async fn commit_in(
             &settings.profile_files,
             "project.settings.profileFiles",
         )?;
+        // A CAD work is a CAD project's (docs/adr/0801).
+        crate::projects::check_cad_work(settings, "project.settings.cadWork")?;
     }
     // The sheet book keeps the file format's rules (docs/adr/0251).
     if let Some(Some(sheets)) = &patch.sheets {

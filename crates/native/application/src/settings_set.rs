@@ -1,6 +1,6 @@
 //! `cad.settings.set` v1 (docs/adr/0248 §5): a few of the project's own
 //! settings changed by key, as Proje ayarları and the ribbon's Ölçek change
-//! them: the drawing's name and type, its coordinate systems (assigned,
+//! them: the drawing's name, type and CAD work (docs/adr/0801), its coordinate systems (assigned,
 //! never a transformation of the coordinates, CLAUDE.md §5), a local
 //! project's unit, the shown decimals and units, the plot scale (the
 //! annotations at the old general height follow in one undo step,
@@ -156,6 +156,7 @@ fn registered(srid: u32) -> bool {
 fn check_input(input: &SettingsSet) -> Result<(), Stop> {
     let given = input.name.is_some()
         || input.project_type.is_some()
+        || input.cad_work.is_some()
         || input.srid.is_some()
         || input.second_srid.is_some()
         || input.map_srid.is_some()
@@ -270,6 +271,24 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
             ));
         }
         s.workspace = Some(t);
+    }
+    // What a CAD project is drawn for (docs/adr/0801): a CAD project's, chosen once.
+    if let Some(w) = input.cad_work {
+        if s.project_type() != Some(Workspace::Cad) {
+            return Err(fail(
+                codes::CAD_WORK_NEEDS_CAD,
+                "İş (cadWork) yalnız CAD projesinin ayarıdır; bu proje CAD projesi değil. Türü seçilmemiş eski projede projectType: cad ile birlikte verin.".into(),
+                "cadWork",
+            ));
+        }
+        if s.cad_work().is_some_and(|kept| kept != w) {
+            return Err(fail(
+                codes::CAD_WORK_LOCKED,
+                "Projenin işi projeyle başlar ve değişmez; Mimari ile Harita arasında geçiş ileride projeyi dönüştürerek olacak.".into(),
+                "cadWork",
+            ));
+        }
+        s.cad_work = Some(w);
     }
     if let Some(srid) = input.srid {
         // An assignment takes the place of a defined system (docs/adr/0168 §1).
@@ -489,6 +508,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
     };
     key(doc.name() != name_before, "name");
     key(before.workspace != after.workspace, "projectType");
+    key(before.cad_work != after.cad_work, "cadWork");
     key(
         (before.srid, &before.custom_crs) != (after.srid, &after.custom_crs),
         "srid",

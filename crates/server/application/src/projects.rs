@@ -242,6 +242,20 @@ pub fn check_profile_files(
     }
 }
 
+/// A CAD work is a CAD project's (docs/adr/0801): the file format refuses one on any other project, a CBS one or one
+/// whose type is not asked, and so does the server. Like the type, it is not locked here.
+pub fn check_cad_work(settings: &kentos_contracts::ProjectSettings, path: &str) -> AppResult<()> {
+    if settings.cad_work.is_some()
+        && settings.project_type() != Some(kentos_contracts::Workspace::Cad)
+    {
+        return Err(AppError::invalid_at(
+            path,
+            "cadWork yalnız CAD projesinin ayarıdır (workspace cad); başka türde ya da türü seçilmemiş projede verilmez.",
+        ));
+    }
+    Ok(())
+}
+
 /// A project's associative arrays by the contract's rules but for the blocks
 /// and objects they name (`arrays_shape_problem`, docs/adr/0300 §5), refused
 /// at their place under `path`; the blocks and objects are the document's.
@@ -531,6 +545,7 @@ pub async fn create(
     check_networks(&input.settings.networks, "settings.networks")?;
     check_address_locators(&input.settings.address_locators, "settings.addressLocators")?;
     check_profile_files(&input.settings.profile_files, "settings.profileFiles")?;
+    check_cad_work(&input.settings, "settings.cadWork")?;
     check_sheets(input.sheets.as_ref(), "sheets")?;
     check_arrays(&input.arrays, "arrays")?;
     check_constraints(&input.constraints, "constraints")?;
@@ -1468,5 +1483,33 @@ mod tests {
         let e = check_profile_files(&[file(ProfileFileKind::Profile, "Park")], AT)
             .expect_err("a name the rule refuses");
         assert!(e.to_string().contains("profil ya da eşleme adı olamaz"), "{e}");
+    }
+
+    #[test]
+    fn a_cad_work_is_a_cad_projects() {
+        use kentos_contracts::{CadWork, ProjectSettings, Workspace};
+        const AT: &str = "settings.cadWork";
+        let settings = |workspace: Option<Workspace>, cad_work: Option<CadWork>| {
+            let mut s: ProjectSettings = serde_json::from_value(serde_json::json!({
+                "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2",
+                "angleUnit": "deg", "plotScale": 1000.0
+            }))
+            .expect("settings");
+            s.workspace = workspace;
+            s.cad_work = cad_work;
+            s
+        };
+        assert!(check_cad_work(&settings(Some(Workspace::Cad), Some(CadWork::Map)), AT).is_ok());
+        assert!(check_cad_work(&settings(Some(Workspace::Cad), None), AT).is_ok());
+        assert!(check_cad_work(&settings(Some(Workspace::Gis), None), AT).is_ok());
+        for (workspace, why) in [
+            (Some(Workspace::Gis), "a CBS project's"),
+            (None, "a project's without a type"),
+            (Some(Workspace::LegacyHybrid), "the former Hibrit's"),
+        ] {
+            let e = check_cad_work(&settings(workspace, Some(CadWork::Architecture)), AT)
+                .expect_err(why);
+            assert!(e.to_string().contains("yalnız CAD projesinin"), "{e}");
+        }
     }
 }

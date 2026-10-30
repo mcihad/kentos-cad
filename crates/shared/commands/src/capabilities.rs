@@ -3859,6 +3859,8 @@ const ENTRIES: &[Entry] = &[
                 "empty_name",
                 "invalid_project_type",
                 "project_type_locked",
+                "cad_work_needs_cad",
+                "cad_work_locked",
                 "invalid_decimals",
                 "invalid_scale",
                 "unknown_srid",

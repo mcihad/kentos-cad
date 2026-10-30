@@ -2,6 +2,7 @@
 import type { AngleUnit } from "./AngleUnit";
 import type { ArchSettings } from "./ArchSettings";
 import type { AreaUnit } from "./AreaUnit";
+import type { CadWork } from "./CadWork";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { HeightReference } from "./HeightReference";
@@ -16,6 +17,9 @@ import type { Workspace } from "./Workspace";
  * - `name`: the drawing's name, trimmed;
  * - `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen
  *   yet); a project without a type chooses once; an existing type cannot change (ADR 0622);
+ * - `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS
+ *   program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes
+ *   both); a CAD project without a work chooses once, an existing work cannot change;
  * - `srid`: the project's coordinate system, an EPSG code of the registry,
  *   or 0 for a local project without one; it is assigned, the coordinates
  *   stay as they are (CLAUDE.md §5). It takes the place of a defined system
@@ -54,6 +58,8 @@ import type { Workspace } from "./Workspace";
  * view without levels), `invalid_heights`, `invalid_epoch`; then
  * `invalid_revision`, `revision_conflict` (status `conflict`);
  * `project_type_locked` (an existing project type changed),
+ * `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
+ * changed),
  * `second_needs_system` (a second system for a project without one),
  * `second_is_own` (the second system the project's own), `unit_needs_local`
  * (a unit other than metres for a project with a system),
@@ -62,7 +68,11 @@ import type { Workspace } from "./Workspace";
  * sheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),
  * `heights_need_system` (ellipsoidal heights or an epoch for a project without a system).
  */
-export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, 
+export type SettingsSet = { name?: string, projectType?: Workspace, 
+/**
+ * What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon.
+ */
+cadWork?: CadWork, srid?: number, secondSrid?: number, 
 /**
  * The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes.
  */

@@ -7,7 +7,9 @@
 //! window (apps/desktop/src/project/wizard) draws it; fixtures/project/v1/wizard.json
 //! holds its answers for a few drafts (written here while the web waits, ADR 0228).
 
-use kentos_contracts::{AnnotationHeights, AnnotationKind, DrawingFont, DrawingUnit, Workspace};
+use kentos_contracts::{
+    AnnotationHeights, AnnotationKind, CadWork, DrawingFont, DrawingUnit, Workspace,
+};
 
 use crate::crs::{LOCAL_SRID, System, system, systems, turef_zone_for};
 use crate::new_project::{NEW_PROJECT_NAME, NewProject, js_number};
@@ -70,6 +72,8 @@ pub enum Coords {
 /// unit come with it, its drawing scale too ([`Draft::scale`]); Proje ayarları changes any of them later.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Work {
+    /// The project's `cadWork` (docs/adr/0801): its KentOS program and its ribbon.
+    pub work: CadWork,
     pub name: &'static str,
     /// What it is for and what it brings, under its name.
     pub note: &'static str,
@@ -84,6 +88,7 @@ pub struct Work {
 /// province's system in metres at 1:1000, a part or a detail in millimetres at 1:1.
 pub const WORKS: [Work; 3] = [
     Work {
+        work: CadWork::Architecture,
         name: "Mimari proje",
         note: "Bina, kat planı, kesit ve görünüş. Metre, 1:100; çizim 0,0’dan başlar.",
         icon: "space",
@@ -91,6 +96,7 @@ pub const WORKS: [Work; 3] = [
         unit: DrawingUnit::M,
     },
     Work {
+        work: CadWork::Map,
         name: "Harita / imar planı",
         note: "Vaziyet, imar, halihazır ve altyapı. Metre, 1:1000; ilin koordinat sisteminde.",
         icon: "parcel",
@@ -98,6 +104,7 @@ pub const WORKS: [Work; 3] = [
         unit: DrawingUnit::M,
     },
     Work {
+        work: CadWork::Detail,
         name: "Detay / imalat",
         note: "Parça, detay ve imalat çizimi. Milimetre, 1:1; çizim 0,0’dan başlar.",
         icon: "dimLinear",
@@ -325,6 +332,12 @@ impl Draft {
             .find(|w| w.coords == self.coords && (w.coords == Coords::Real || w.unit == self.unit))
     }
 
+    /// The CAD work the project is made for (docs/adr/0801): its work's, none for a CBS draft and a local unit no
+    /// work has.
+    pub fn cad_work(&self) -> Option<CadWork> {
+        self.work().map(|w| w.work)
+    }
+
     /// The draft made for `work`: its coordinates and unit, the scale its own.
     pub fn choose_work(&mut self, work: &Work) {
         self.coords = work.coords;
@@ -524,6 +537,7 @@ impl Draft {
             province: if local { None } else { self.province },
             drawing_unit: local.then_some(self.unit),
             annotation: self.annotation.clone().and_then(AnnotationHeights::sanitized),
+            cad_work: self.cad_work(),
         }
     }
 }
@@ -563,6 +577,9 @@ mod tests {
         }
         if let Some(a) = &o.annotation {
             options["annotation"] = serde_json::to_value(a).expect("heights");
+        }
+        if let Some(w) = o.cad_work {
+            options["cadWork"] = serde_json::to_value(w).expect("a work");
         }
         serde_json::json!({
             "srid": d.srid(),
@@ -670,6 +687,20 @@ mod tests {
                 ("Detay / imalat", LOCAL_SRID, DrawingUnit::Mm, 1.0, Some(DrawingUnit::Mm)),
             ]
         );
+        // Each work names the project's work (docs/adr/0801), the contract's in the same order and words.
+        assert_eq!(WORKS.map(|w| w.work), CadWork::ALL);
+        assert_eq!(WORKS.map(|w| w.name), CadWork::ALL.map(CadWork::name));
+        for w in &WORKS {
+            d.choose_work(w);
+            assert_eq!(d.options().cad_work, Some(w.work));
+        }
+        // A CBS project has none, and neither has a local unit no work has.
+        let mut gis = Draft::initial(Workspace::Gis, 5256, DrawingFont::Barlow, None);
+        assert_eq!(gis.options().cad_work, None);
+        gis.kind = Kind::Cad;
+        gis.coords = Coords::Local;
+        gis.unit = DrawingUnit::Cm;
+        assert_eq!(gis.options().cad_work, None);
         assert_eq!(d.note(Step::Coords), "Detay / imalat · mm · 1:1");
         assert_eq!(
             d.summary().into_iter().take(2).collect::<Vec<_>>(),

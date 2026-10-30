@@ -71,6 +71,8 @@ impl App {
                 // The question was about the drawing on screen when it was asked.
                 if self.document.as_ref().is_some_and(|d| d.session == session) {
                     self.choose_mode(mode_command(choice));
+                    // A CAD project is asked its work next (docs/adr/0801).
+                    self.ask_cad_work();
                 }
             }
             Event::Later => {
@@ -168,7 +170,8 @@ mod tests {
         // Seç writes the chosen type: an edit, not an undo step.
         send(&mut app, Event::Choose(Workspace::Cad));
         send(&mut app, Event::Pick);
-        assert_eq!(app.dialog, None);
+        // A CAD project is asked its work next (docs/adr/0801).
+        assert!(app.asking_work());
         let doc = app.document.as_ref().expect("a drawing");
         assert_eq!(doc.settings().workspace, Some(Workspace::Cad));
         assert!(doc.dirty());

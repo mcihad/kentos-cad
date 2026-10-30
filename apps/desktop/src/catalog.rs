@@ -1039,6 +1039,8 @@ pub struct Catalog {
     /// filter (`app/workspaces.ts`): what it hides left out, its own tab
     /// names (CAD's Harita is Ölçme).
     mode_tabs: Vec<(kentos_commands::Workspace, Vec<Tab>)>,
+    /// The CAD ribbon cut to each work (docs/adr/0801): the tabs and panels whose `works` name it, or none.
+    work_tabs: Vec<(kentos_commands::CadWork, Vec<Tab>)>,
     quick: Vec<&'static str>,
     modes: Vec<Mode>,
     /// The menu bar's menus by id: their blocks of command ids, in order.
@@ -1103,15 +1105,39 @@ impl Catalog {
             .filter(|tab| !tab.contextual)
     }
 
-    /// The ribbon tabs of a project type (CBS's when the type has none of
-    /// its own), the contextual ones left out.
+    /// The whole ribbon of a project type (CBS's when the type has none of
+    /// its own), the contextual tabs left out: every CAD work's at once. The
+    /// window shows `tabs_for`; the tests hold the whole one.
+    #[cfg(test)]
     pub fn tabs_in(&self, mode: kentos_commands::Workspace) -> impl Iterator<Item = &Tab> {
-        self.mode_tabs
-            .iter()
-            .find(|(m, _)| *m == mode)
-            .map_or(&self.tabs, |(_, tabs)| tabs)
-            .iter()
-            .filter(|tab| !tab.contextual)
+        self.tabs_for(mode, None)
+    }
+
+    /// The ribbon tabs of a project type cut to a CAD work (docs/adr/0801): a CAD
+    /// project's work shows the tabs and panels that name it or no work; no
+    /// work, and any other type, shows the type's whole ribbon.
+    pub fn tabs_for(
+        &self,
+        mode: kentos_commands::Workspace,
+        work: Option<kentos_commands::CadWork>,
+    ) -> impl Iterator<Item = &Tab> {
+        let cut = match (mode, work) {
+            (kentos_commands::Workspace::Cad, Some(work)) => self
+                .work_tabs
+                .iter()
+                .find(|(w, _)| *w == work)
+                .map(|(_, tabs)| tabs),
+            _ => None,
+        };
+        cut.or_else(|| {
+            self.mode_tabs
+                .iter()
+                .find(|(m, _)| *m == mode)
+                .map(|(_, tabs)| tabs)
+        })
+        .unwrap_or(&self.tabs)
+        .iter()
+        .filter(|tab| !tab.contextual)
     }
 
     /// The contextual ribbon tabs of a project type (the web's Seçim, shown
@@ -1268,30 +1294,59 @@ impl Catalog {
             ));
         }
         let mut mode_tabs: Vec<(kentos_commands::Workspace, Vec<Tab>)> = Vec::new();
-        for (name, raw_tabs) in ribbon.tabs {
+        let mut work_tabs: Vec<(kentos_commands::CadWork, Vec<Tab>)> = Vec::new();
+        for (name, raw_tabs) in &ribbon.tabs {
             let Ok(mode) = serde_json::from_value(serde_json::Value::String(name.clone())) else {
                 continue;
             };
-            let mut tabs: Vec<Tab> = raw_tabs
-                .into_iter()
-                .map(|t| tab(t.id, t.label, false, Vec::new(), t.panels, &splits))
-                .collect();
-            for c in ribbon
-                .contextual
-                .iter()
-                .filter(|c| c.modes.is_empty() || c.modes.contains(&name))
-            {
-                tabs.push(tab(
-                    c.id.clone(),
-                    c.label.clone(),
-                    true,
-                    c.kinds.clone(),
-                    c.panels.clone(),
-                    &splits,
-                ));
+            // A tab or panel shows for a work its `works` name, or for every work without them (docs/adr/0801).
+            let shown = |works: &[String], work: Option<&str>| {
+                work.is_none_or(|w| works.is_empty() || works.iter().any(|x| x == w))
+            };
+            let build = |work: Option<&str>| {
+                let mut tabs: Vec<Tab> = raw_tabs
+                    .iter()
+                    .filter(|t| shown(&t.works, work))
+                    .map(|t| {
+                        let panels = t
+                            .panels
+                            .iter()
+                            .filter(|p| shown(&p.works, work))
+                            .cloned()
+                            .collect();
+                        tab(
+                            t.id.clone(),
+                            t.label.clone(),
+                            false,
+                            Vec::new(),
+                            panels,
+                            &splits,
+                        )
+                    })
+                    .collect();
+                for c in ribbon
+                    .contextual
+                    .iter()
+                    .filter(|c| c.modes.is_empty() || c.modes.contains(name))
+                {
+                    tabs.push(tab(
+                        c.id.clone(),
+                        c.label.clone(),
+                        true,
+                        c.kinds.clone(),
+                        c.panels.clone(),
+                        &splits,
+                    ));
+                }
+                place_methods(&mut tabs, &methods);
+                tabs
+            };
+            mode_tabs.push((mode, build(None)));
+            if mode == kentos_commands::Workspace::Cad {
+                for work in kentos_commands::CadWork::ALL {
+                    work_tabs.push((work, build(Some(work.id()))));
+                }
             }
-            place_methods(&mut tabs, &methods);
-            mode_tabs.push((mode, tabs));
         }
         // The ribbon a project not asked its type shows is CBS's.
         let tabs = mode_tabs
@@ -1360,6 +1415,7 @@ impl Catalog {
             by_id,
             tabs,
             mode_tabs,
+            work_tabs,
             quick: raw.layout.quick_access.into_iter().map(leak).collect(),
             menus: raw
                 .layout
@@ -1686,6 +1742,9 @@ struct RawRibbonTab {
     id: String,
     label: String,
     panels: Vec<RawPanel>,
+    /// The CAD works it shows for (docs/adr/0801); none: every work.
+    #[serde(default)]
+    works: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -1702,6 +1761,9 @@ struct RawContextual {
 #[derive(Deserialize, Clone)]
 struct RawPanel {
     label: String,
+    /// The CAD works it shows for (docs/adr/0801); none: every work.
+    #[serde(default)]
+    works: Vec<String>,
     #[serde(default)]
     icon: Option<String>,
     items: Vec<RawItem>,

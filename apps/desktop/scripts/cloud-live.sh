@@ -17,4 +17,4 @@ mkdir -p .run
 cargo build -q -p kentos-api
 KENTOS_DEV_PASSWORD="$(sed -n 's/^KENTOS_DEV_PASSWORD=//p' .env.local)" \
 KENTOS_SNAPSHOT_BACKEND="${KENTOS_SNAPSHOT_BACKEND:-wgpu}" \
-  cargo test -q -p kentos-desktop --bin kentos-cad cloud_live -- --ignored --nocapture
+  cargo test -q -p kentos-desktop --lib cloud_live -- --ignored --nocapture

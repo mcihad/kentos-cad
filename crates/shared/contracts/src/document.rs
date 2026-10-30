@@ -63,6 +63,68 @@ pub enum Workspace {
     LegacyHybrid,
 }
 
+impl Workspace {
+    /// The id the file and the commands write (`cad`, `gis` …; the former Hibrit's `hybrid`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            Workspace::Cad => "cad",
+            Workspace::Gis => "gis",
+            Workspace::Plan3d => "plan3d",
+            Workspace::Disaster => "disaster",
+            Workspace::LegacyHybrid => "hybrid",
+        }
+    }
+}
+
+/// What a CAD project is drawn for (docs/adr/0801; the Yeni proje wizard's
+/// works, docs/adr/0626 §1): a building, a map or zoning plan, a detail. It
+/// decides the KentOS program the project belongs to (KentOS Mimari for a
+/// building and a detail, KentOS Harita for a map) and the ribbon's tabs and
+/// panels; it never changes what the data means, and every command still
+/// runs. Only a CAD project has one; one written before works has none and the
+/// desktop asks it once. Like its type, a project keeps the work it has.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "lowercase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum CadWork {
+    /// Mimari proje: buildings, floor plans, sections and elevations.
+    Architecture,
+    /// Harita / imar planı: site plans, zoning, surveys and infrastructure.
+    Map,
+    /// Detay / imalat: parts, details and manufacturing drawings.
+    Detail,
+}
+
+impl CadWork {
+    /// Every work, in the wizard's order.
+    pub const ALL: [CadWork; 3] = [CadWork::Architecture, CadWork::Map, CadWork::Detail];
+
+    /// The id the file and the commands write (`architecture`, `map`, `detail`).
+    pub const fn id(self) -> &'static str {
+        match self {
+            CadWork::Architecture => "architecture",
+            CadWork::Map => "map",
+            CadWork::Detail => "detail",
+        }
+    }
+
+    /// The work by its id; none for one KentOS does not know.
+    pub fn from_id(id: &str) -> Option<CadWork> {
+        CadWork::ALL.into_iter().find(|w| w.id() == id)
+    }
+
+    /// Its name, as the wizard's card and the desktop's question say it.
+    pub const fn name(self) -> &'static str {
+        match self {
+            CadWork::Architecture => "Mimari proje",
+            CadWork::Map => "Harita / imar planı",
+            CadWork::Detail => "Detay / imalat",
+        }
+    }
+}
+
 /// The typeface of the text that is part of the drawing (text objects,
 /// dimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with
 /// the app. A project setting: everyone who opens the project sees the same
@@ -196,6 +258,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub workspace: Option<Workspace>,
+    /// What a CAD project is drawn for (docs/adr/0801): its KentOS program and its ribbon. Only a CAD project has
+    /// one; none while it is not asked (CAD projects written before works).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub cad_work: Option<CadWork>,
     /// Otomatik seçim (docs/adr/0622 §5): on, a click and a box select any shown layer's objects (with the list of
     /// the ones under the click); off, only the active layer's, as a GIS edits one layer at a time. Absent: off in a
     /// CBS project, on otherwise ([`ProjectSettings::auto_select`]).
@@ -708,6 +775,12 @@ impl ProjectSettings {
         self.workspace.filter(|w| *w != Workspace::LegacyHybrid)
     }
 
+    /// What a CAD project is drawn for (docs/adr/0801); none for any other project and while it is not asked.
+    pub fn cad_work(&self) -> Option<CadWork> {
+        self.cad_work
+            .filter(|_| self.project_type() == Some(Workspace::Cad))
+    }
+
     /// Whether any shown layer's objects are selected, or only the active layer's (docs/adr/0622 §5): the project's
     /// choice, else off in a CBS project and on otherwise (a project not yet asked its type selects as it did).
     pub fn auto_select(&self) -> bool {
@@ -794,8 +867,11 @@ impl ProjectSettings {
     /// the layer states that hold (docs/adr/0177 §4), the topology rules
     /// and exceptions that hold (docs/adr/0202 §1), the annotation heights
     /// that hold and are not their kind's default (docs/adr/0205 §1), the
-    /// networks that hold (docs/adr/0209 §2).
+    /// networks that hold (docs/adr/0209 §2), a work only in a CAD project
+    /// (docs/adr/0801).
     pub fn sanitized(mut self) -> Self {
+        // A work is a CAD project's (docs/adr/0801).
+        self.cad_work = self.cad_work();
         if self.srid != 0
             || self
                 .custom_crs

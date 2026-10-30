@@ -67,6 +67,40 @@ impl Module {
             Module::Gis => "Coğrafi bilgi sistemi",
         }
     }
+
+    /// The type its projects have, as a project file writes it (`ProjectSettings.workspace`): `cad` or `gis`.
+    pub const fn project_type(self) -> &'static str {
+        match self {
+            Module::Architecture | Module::Map => "cad",
+            Module::Gis => "gis",
+        }
+    }
+
+    /// The CAD works its projects are drawn for, as a project file writes them (`ProjectSettings.cadWork`), the
+    /// one a new project starts with first; a CBS module has none.
+    pub const fn cad_works(self) -> &'static [&'static str] {
+        match self {
+            Module::Architecture => &["architecture", "detail"],
+            Module::Map => &["map"],
+            Module::Gis => &[],
+        }
+    }
+
+    /// The module a project belongs to (docs/adr/0801), by its type and CAD work as the project file writes them:
+    /// a CBS project (`gis`) KentOS GIS's, a CAD project (`cad`) its work's module; none for a CAD project not asked
+    /// its work yet, a project not asked its type and any other.
+    pub fn of_project(project_type: Option<&str>, cad_work: Option<&str>) -> Option<Module> {
+        match project_type? {
+            "gis" => Some(Module::Gis),
+            "cad" => {
+                let work = cad_work?;
+                Module::ALL
+                    .into_iter()
+                    .find(|m| m.cad_works().contains(&work))
+            }
+            _ => None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -86,5 +120,33 @@ mod tests {
         let programs: Vec<&str> = Module::ALL.iter().map(|m| m.program()).collect();
         assert_eq!(programs, ["kentos-mimari", "kentos-harita", "kentos-gis"]);
         assert_eq!(Module::from_id(""), None);
+    }
+
+    #[test]
+    fn a_project_belongs_by_its_type_and_work() {
+        let of = Module::of_project;
+        assert_eq!(of(Some("gis"), None), Some(Module::Gis));
+        // A CBS project's work is no work: the file's rules refuse one; here it is not looked at.
+        assert_eq!(of(Some("gis"), Some("map")), Some(Module::Gis));
+        assert_eq!(
+            of(Some("cad"), Some("architecture")),
+            Some(Module::Architecture)
+        );
+        assert_eq!(of(Some("cad"), Some("detail")), Some(Module::Architecture));
+        assert_eq!(of(Some("cad"), Some("map")), Some(Module::Map));
+        // Not asked yet, or not known: no module.
+        assert_eq!(of(Some("cad"), None), None);
+        assert_eq!(of(Some("cad"), Some("survey")), None);
+        assert_eq!(of(None, None), None);
+        assert_eq!(of(None, Some("map")), None);
+        assert_eq!(of(Some("hybrid"), None), None);
+        assert_eq!(of(Some("plan3d"), None), None);
+        // Every work a module names is its own and none is two modules'.
+        for m in Module::ALL {
+            assert_eq!(m.cad_works().is_empty(), m.project_type() == "gis");
+            for w in m.cad_works() {
+                assert_eq!(of(Some(m.project_type()), Some(w)), Some(m));
+            }
+        }
     }
 }
