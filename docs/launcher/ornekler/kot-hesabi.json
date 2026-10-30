@@ -1,0 +1,15 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "kot-hesabi",
+  "name": "Kot hesabı",
+  "note": "Java ile nivelman ve kot hesabı",
+  "icon": "grafik",
+  "color": "teal",
+  "launch": {
+    "kind": "program",
+    "program": "java",
+    "args": ["-jar", "/opt/kurum/kot-hesabi/kot-hesabi.jar", "{dosya}"]
+  },
+  "order": 70,
+  "files": ["txt", "gsi"]
+}

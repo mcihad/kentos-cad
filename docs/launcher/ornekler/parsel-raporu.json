@@ -1,0 +1,18 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "parsel-raporu",
+  "name": "Parsel raporu",
+  "note": "Python betiği: ada ve parsel raporu",
+  "icon": "terminal",
+  "color": "orange",
+  "version": "1.2",
+  "launch": {
+    "kind": "program",
+    "program": "python3",
+    "args": ["rapor.py", "--cikti", "raporlar", "{dosya}"],
+    "env": { "PYTHONUTF8": "1" },
+    "cwd": "betikler"
+  },
+  "order": 60,
+  "files": ["csv", "xlsx"]
+}

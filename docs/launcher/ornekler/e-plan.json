@@ -1,0 +1,10 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "e-plan",
+  "name": "e-Plan",
+  "note": "Plan ve imar bilgileri, tarayıcıda",
+  "icon": "web",
+  "color": "blue",
+  "launch": { "kind": "url", "url": "https://e-plan.example.org" },
+  "order": 90
+}

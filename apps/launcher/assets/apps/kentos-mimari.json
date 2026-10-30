@@ -1,0 +1,10 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "kentos-mimari",
+  "icon": "mimari",
+  "color": "purple",
+  "picture": "mimari",
+  "launch": { "kind": "kentos", "module": "mimari" },
+  "order": 10,
+  "files": ["kcad", "dxf", "dwg"]
+}
