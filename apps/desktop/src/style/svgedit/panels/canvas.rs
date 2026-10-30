@@ -68,7 +68,7 @@ pub(super) fn canvas_props<'a>(ed: &SvgEditor) -> Element<'a, Message> {
                 .spacing(6)
                 .align_y(Center),
             )
-            .padding([3, 10])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(ui_style::button::secondary)
             .on_press(change(|ed| ed.clear_guides()))
             .into(),

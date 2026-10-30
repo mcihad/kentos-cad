@@ -146,6 +146,10 @@ pub enum Event {
     Builder,
     /// A header pressed, by the table's column (0: Sıra).
     Sort(usize),
+    /// A column's edge dragged: the model's column and its new width.
+    Width(usize, f32),
+    /// A column's edge double-clicked: the model's column, as wide as what it shows.
+    Fit(usize),
     /// A row pressed, by its place in the order shown.
     Press(usize),
     /// A row's Sıra double-clicked: that object, zoomed to.
@@ -196,6 +200,8 @@ pub enum Event {
     /// A join view's cell double-clicked: the row and the column.
     JoinEdit(usize, usize),
     JoinInput(String),
+    /// A join view's column edge dragged: the column and its new width.
+    JoinWidth(usize, f32),
     /// Enter: written to the cell's record.
     JoinEnter,
     JoinCancel,
@@ -292,6 +298,8 @@ pub(crate) struct FeaturesPanel {
     pub(crate) join: joins::JoinPane,
     /// The columns the reader hid, by layer and attribute key (outgoing.rs).
     pub(crate) hidden: BTreeMap<String, BTreeSet<String>>,
+    /// The widths the reader gave by dragging, by what the table shows and its column; for the session.
+    pub(crate) widths: BTreeMap<(String, String), f32>,
     /// A bound layer's state as last read, and Yenile's count (source.rs).
     pub(crate) source: RefCell<Option<source::SourceLine>>,
     pub(crate) source_refresh: u64,
@@ -317,6 +325,52 @@ impl FeaturesPanel {
             ..FeaturesPanel::default()
         };
     }
+}
+
+/// What a join view's dragged widths are kept under, before its id (a layer's id is never this).
+pub(crate) const JOIN_WIDTHS: &str = "birlesik:";
+
+/// Under which name a column's dragged width is kept: the layer shown and the column.
+pub(crate) fn column_key(rows: &Rows, j: usize) -> Option<(String, String)> {
+    let column = rows.table.columns.get(j)?;
+    Some((
+        rows.layer.clone().unwrap_or_default(),
+        column.key.clone().unwrap_or_else(|| column.label.clone()),
+    ))
+}
+
+/// A column's width as wide as its header and what it shows (the first rows of a long table): in the unit of
+/// `Column::width`, as a drag gives it.
+fn fitted_width(rows: &Rows, header: &str, j: usize) -> f32 {
+    // Measuring is cached; a table of 100 000 rows does not stop the double click.
+    const MEASURED_ROWS: usize = 2_000;
+    /// The sort arrow's room in the header.
+    const ARROW: f32 = 15.0;
+    let body = kentos_ui::theme::typography::body();
+    let number = rows
+        .table
+        .columns
+        .get(j)
+        .is_some_and(|c| c.order == "number");
+    let values = rows
+        .shown
+        .iter()
+        .take(MEASURED_ROWS)
+        .filter_map(|&at| rows.table.rows.get(at)?.cells.get(j))
+        .map(|cell| {
+            if number {
+                kentos_ui::theme::typography::mono_width(&cell.shown, body)
+            } else {
+                kentos_ui::theme::typography::measured_width(&cell.shown, body, false)
+            }
+        })
+        .fold(0.0, f32::max);
+    let title = kentos_ui::theme::typography::measured_width(
+        header,
+        kentos_ui::theme::typography::caption(),
+        true,
+    ) + ARROW;
+    kentos_ui::theme::typography::unscaled((values.max(title) + 2.0).ceil())
 }
 
 /// A header press: ascending, then descending, then the drawing's order.
@@ -590,6 +644,7 @@ impl App {
             Event::JoinPress(_)
             | Event::JoinEdit(..)
             | Event::JoinInput(_)
+            | Event::JoinWidth(..)
             | Event::JoinEnter
             | Event::JoinCancel
             | Event::JoinExport(_) => return self.join_event(event),
@@ -607,6 +662,23 @@ impl App {
                     (p.sort, p.descending) = next_sort(&p.sort, p.descending, &key);
                 }
                 p.changed();
+            }
+            Event::Width(j, width) => {
+                if let Some(doc) = &self.document {
+                    let rows = self.feature_rows(doc);
+                    if let Some(key) = column_key(&rows, j) {
+                        self.features.widths.insert(key, width);
+                    }
+                }
+            }
+            Event::Fit(j) => {
+                if let Some(doc) = &self.document {
+                    let rows = self.feature_rows(doc);
+                    if let Some(key) = column_key(&rows, j) {
+                        let width = fitted_width(&rows, &Self::feature_header(&rows, j), j);
+                        self.features.widths.insert(key, width);
+                    }
+                }
             }
             Event::Press(at) => {
                 let shown = self.shown_features();

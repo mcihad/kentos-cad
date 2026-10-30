@@ -9,7 +9,7 @@
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
-use iced::widget::{Column, container, row, text, text_input};
+use iced::widget::{Column, container, row, text};
 use iced::{Element, Fill, Task};
 use kentos_commands::{EntitiesSetProperties, Entity, PropertiesOperation};
 use kentos_domain::{Document, Slot};
@@ -21,7 +21,7 @@ use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, set};
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog as Frame, Segmented, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -467,13 +467,9 @@ impl App {
             return text("").into();
         };
         let number = |value: &str, on: fn(String) -> Event| {
-            focus_ring(
-                text_input("", value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .width(110)
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field("", value)
+                .on_input(move |t| msg(on(t)))
+                .width(110)
         };
         let controls = row![
             words::field(
@@ -557,16 +553,14 @@ impl App {
             .push(controls)
             .push(said)
             .push(table);
-        overlay::modal(
-            Frame::new(COGO_TITLE)
-                .push(content)
-                .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
-                .action(words::secondary(SAVE, any.then(|| msg(Event::Save))))
-                .action(words::secondary(UPDATE, Some(msg(Event::Update))))
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(860.0),
-            msg(Event::Close),
-        )
+        Frame::new(COGO_TITLE)
+            .push(content)
+            .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
+            .action(words::secondary(SAVE, any.then(|| msg(Event::Save))))
+            .action(words::secondary(UPDATE, Some(msg(Event::Update))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(860.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

@@ -8,13 +8,12 @@
 //! step “Blok tanımla”. The new block is the one Blok ekle places next; the
 //! insert that took the objects' place is selected.
 
-use iced::widget::{Column, Id, text, text_input};
+use iced::widget::{Column, Id, text};
 use iced::{Element, Task};
 use kentos_commands::BlocksDefine;
 use kentos_domain::Slot;
 use kentos_interaction::{Format, Level, Vec2, block_define};
-use kentos_ui::style;
-use kentos_ui::widget::{Dialog as Window, focus_ring, overlay};
+use kentos_ui::widget::Dialog as Window;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -269,17 +268,15 @@ impl App {
             }
             Ok(_) => {}
         }
-        overlay::modal(
-            Window::new(DEFINE_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Close))))
-                .action(words::primary(
-                    CREATE,
-                    d.answer.is_ok().then(|| msg(Event::Create)),
-                ))
-                .width(460.0),
-            msg(Event::Close),
-        )
+        Window::new(DEFINE_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Close))))
+            .action(words::primary(
+                CREATE,
+                d.answer.is_ok().then(|| msg(Event::Create)),
+            ))
+            .width(460.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
@@ -317,15 +314,13 @@ fn field<'a>(
     on: fn(String) -> Event,
     id: Option<&'static str>,
 ) -> Element<'a, Message> {
-    let mut input = text_input(placeholder, value)
+    let mut input = kentos_ui::widget::text_field(placeholder, value)
         .on_input(move |t| msg(on(t)))
-        .on_submit(msg(Event::Create))
-        .padding([5, 8])
-        .style(style::field::input);
+        .on_submit(msg(Event::Create));
     if let Some(id) = id {
         input = input.id(Id::new(id));
     }
-    focus_ring(input).into()
+    input.into()
 }
 
 #[cfg(test)]

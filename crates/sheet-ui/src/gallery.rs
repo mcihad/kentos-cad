@@ -1171,7 +1171,10 @@ impl Designer {
         };
         let made = match kentos_sheet::create::from_template(t, &ids, &options, None) {
             Ok(made) => made,
-            Err(e) => { self.error = Some(e.message); return false; }
+            Err(e) => {
+                self.error = Some(e.message);
+                return false;
+            }
         };
         for a in &made.pictures {
             if let Some(bytes) = kentos_sheet::template::base64_decode(&a.data) {
@@ -1860,7 +1863,10 @@ impl Designer {
 
         // At the foot: why the chosen action cannot run, the paper Kullan uses, Kapat, Kullan.
         let picked = self.picked_card();
-        let mut window = Dialog::new("Pafta şablonları").hint("Esc").push(content);
+        let mut window = Dialog::new("Pafta şablonları")
+            .on_close(Message::Gallery(GalleryMessage::Close))
+            .hint("Esc")
+            .push(content);
         if let Some(note) = g.note {
             window = window.aside(
                 row![
@@ -1914,7 +1920,7 @@ impl Designer {
                     .align_y(Center),
             )
             .on_press_maybe(picked.is_some().then(|| gm(GalleryMessage::Use)))
-            .padding([6, 16])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary),
             Tip::new("Kullan").body(TemplateAction::Use.tip()),
             iced::widget::tooltip::Position::Top,
@@ -1923,7 +1929,7 @@ impl Designer {
             .action(
                 button(label::body("Kapat"))
                     .on_press(gm(GalleryMessage::Close))
-                    .padding([6, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .action(use_button)
@@ -1972,7 +1978,7 @@ impl Designer {
                     .align_y(Center),
             )
             .on_press_maybe(on.then(|| gm(GalleryMessage::Act(a))))
-            .padding([4, 8])
+            .padding(kentos_ui::theme::metrics::action())
             .style(if a == TemplateAction::Delete {
                 style::button::danger_outline
             } else {

@@ -509,13 +509,16 @@ impl App {
         match open.editing {
             None => {
                 let runs = contract_runs(Some(open.runs.clone()));
-                let layout = kentos_native_application::geometry::contract_layout(open.flow.as_deref());
-                let typed = keep.then_some((open.text.as_str(), runs.as_slice(), layout.as_deref()));
+                let layout =
+                    kentos_native_application::geometry::contract_layout(open.flow.as_deref());
+                let typed =
+                    keep.then_some((open.text.as_str(), runs.as_slice(), layout.as_deref()));
                 self.with_tool(|s, cx| s.paragraph_typed(typed, cx));
             }
             Some(slot) if keep => {
-                let layout = kentos_native_application::geometry::contract_layout(open.flow.as_deref())
-                    .map(|l| *l);
+                let layout =
+                    kentos_native_application::geometry::contract_layout(open.flow.as_deref())
+                        .map(|l| *l);
                 let (text, runs) = kentos_interaction::paragraph::trimmed_paragraph(
                     &open.text,
                     &contract_runs(Some(open.runs.clone())),
@@ -570,7 +573,7 @@ impl App {
         let tool = |icon: &'static str, says: &'static str, t: Toggle| {
             tip(
                 button(kentos_ui::icon::icon(crate::icons::from_web(Some(icon))).size(16.0))
-                    .padding(5)
+                    .padding(kentos_ui::theme::metrics::icon(16.0))
                     .style(style::button::ghost)
                     .on_press(Message::Paragraph(Event::Format(t))),
                 Tip::new(says),
@@ -601,7 +604,11 @@ impl App {
             tool("textUnderline", "Altı çizili", Toggle::Underline),
             tool("textSuperscript", "Üst simge (m²)", Toggle::Super),
             tool("textSubscript", "Alt simge (H₂O)", Toggle::Sub),
-            tool("textStack", "Kesir: seçili harfler / # ya da ^ çevresinde üst üste (1/2)", Toggle::Stack),
+            tool(
+                "textStack",
+                "Kesir: seçili harfler / # ya da ^ çevresinde üst üste (1/2)",
+                Toggle::Stack
+            ),
             tip(
                 menu_button("textColor", Menu::Color),
                 Tip::new("Renk: seçili harflerin rengi"),
@@ -648,11 +655,11 @@ impl App {
                 .wrapping(iced::widget::text::Wrapping::None)
                 .width(Fill),
             button(label::body("Vazgeç"))
-                .padding([4, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(Message::Paragraph(Event::Drop)),
             button(label::body("Tamam"))
-                .padding([4, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::primary)
                 .on_press(Message::Paragraph(Event::Keep)),
         ]
@@ -700,7 +707,7 @@ impl App {
             Menu::Color => {
                 let mut items = vec![
                     button(label::caption("Yazının rengi"))
-                        .padding([3, 8])
+                        .padding(kentos_ui::theme::metrics::action_small())
                         .style(style::button::ghost)
                         .on_press(Message::Paragraph(Event::Format(Toggle::Color(None))))
                         .into(),
@@ -739,7 +746,7 @@ impl App {
             Menu::Symbol => row(SYMBOLS.iter().map(|&(ch, name)| {
                 tip(
                     button(label::body(ch.to_string()).font(typography::ui()))
-                        .padding([3, 7])
+                        .padding(kentos_ui::theme::metrics::action_small())
                         .style(style::button::ghost)
                         .on_press(Message::Paragraph(Event::Symbol(ch))),
                     Tip::new(name),
@@ -749,28 +756,26 @@ impl App {
             .spacing(2)
             .align_y(Center)
             .into(),
-            Menu::List => row(
-                [
-                    ("textList", "Madde işaretli", ListKind::Bullets),
-                    ("textNumbered", "Numaralı", ListKind::Numbers),
-                    ("textListOff", "Listeyi kaldır", ListKind::Plain),
-                ]
-                .into_iter()
-                .map(|(icon, name, kind)| {
-                    button(
-                        row![
-                            kentos_ui::icon::icon(crate::icons::from_web(Some(icon))).size(16.0),
-                            label::body(name),
-                        ]
-                        .spacing(4)
-                        .align_y(Center),
-                    )
-                    .padding([3, 7])
-                    .style(style::button::ghost)
-                    .on_press(Message::Paragraph(Event::List(kind)))
-                    .into()
-                }),
-            )
+            Menu::List => row([
+                ("textList", "Madde işaretli", ListKind::Bullets),
+                ("textNumbered", "Numaralı", ListKind::Numbers),
+                ("textListOff", "Listeyi kaldır", ListKind::Plain),
+            ]
+            .into_iter()
+            .map(|(icon, name, kind)| {
+                button(
+                    row![
+                        kentos_ui::icon::icon(crate::icons::from_web(Some(icon))).size(16.0),
+                        label::body(name),
+                    ]
+                    .spacing(4)
+                    .align_y(Center),
+                )
+                .padding(kentos_ui::theme::metrics::action_small())
+                .style(style::button::ghost)
+                .on_press(Message::Paragraph(Event::List(kind)))
+                .into()
+            }))
             .spacing(2)
             .align_y(Center)
             .into(),

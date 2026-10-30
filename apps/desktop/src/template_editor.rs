@@ -20,7 +20,7 @@ use kentos_native_style::object_template::{
 };
 use kentos_native_style::template_form::{MemberRow, TemplateForm, from_form, to_form};
 use kentos_ui::icon::{Icon, icon};
-use kentos_ui::widget::{Dialog as Window, Menu, MenuButton, Segmented, overlay};
+use kentos_ui::widget::{Dialog as Window, Menu, MenuButton, Segmented};
 use kentos_ui::{label, style};
 use serde_json::{Map, Value, json};
 
@@ -538,7 +538,7 @@ impl App {
                     side,
                     button(icon(crate::icons::from_web(Some("trash"))).size(14.0))
                         .on_press(msg(Event::MemberRemove(i)))
-                        .padding([4, 6])
+                        .padding(kentos_ui::theme::metrics::icon_small(14.0))
                         .style(style::button::ghost),
                 ]
                 .spacing(6)
@@ -555,7 +555,7 @@ impl App {
                 .align_y(Center),
             )
             .on_press(msg(Event::MemberAdd))
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary),
         )
         .into()
@@ -731,11 +731,11 @@ impl App {
             label::body(symbol_name).width(Length::Fill),
             button(label::body("Seç…"))
                 .on_press(msg(Event::PickSymbol))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
             button(label::body("Kaldır"))
                 .on_press_maybe((!f.symbol.is_empty()).then(|| msg(Event::ClearSymbol)))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::ghost),
         ]
         .spacing(6)
@@ -752,7 +752,7 @@ impl App {
                         .width(Length::FillPortion(3)),
                     button(icon(crate::icons::from_web(Some("trash"))).size(14.0))
                         .on_press(msg(Event::AttrRemove(i)))
-                        .padding([4, 6])
+                        .padding(kentos_ui::theme::metrics::icon_small(14.0))
                         .style(style::button::ghost),
                 ]
                 .spacing(6)
@@ -769,7 +769,7 @@ impl App {
                 .align_y(Center),
             )
             .on_press(msg(Event::AttrAdd))
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary),
         );
         let mut body = Column::new()
@@ -963,19 +963,17 @@ impl App {
                     .collect(),
             ));
         }
-        overlay::modal(
-            Window::new(title)
-                // The body scrolls; the buttons stay in view whatever the window's height.
-                .scroll(body.padding(iced::Padding::ZERO.right(10)))
-                .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
-                .action(words::primary(
-                    "Kaydet",
-                    problems.is_empty().then(|| msg(Event::Save)),
-                ))
-                .width(640.0)
-                .max_height(820.0),
-            msg(Event::Close),
-        )
+        Window::new(title)
+            // The body scrolls; the buttons stay in view whatever the window's height.
+            .scroll(body.padding(iced::Padding::ZERO.right(10)))
+            .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
+            .action(words::primary(
+                "Kaydet",
+                problems.is_empty().then(|| msg(Event::Save)),
+            ))
+            .width(640.0)
+            .max_height(820.0)
+            .modal(msg(Event::Close))
     }
 }
 

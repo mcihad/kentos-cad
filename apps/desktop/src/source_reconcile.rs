@@ -23,7 +23,7 @@ use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::sources::reconcile;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, Segmented, overlay};
+use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -611,17 +611,15 @@ impl App {
                         .width(Fill),
                 );
         }
-        overlay::modal(
-            Frame::new(RECONCILE_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(
-                    APPLY,
-                    (unresolved == 0).then(|| msg(Event::Apply)),
-                ))
-                .width(640.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(RECONCILE_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(
+                APPLY,
+                (unresolved == 0).then(|| msg(Event::Apply)),
+            ))
+            .width(640.0)
+            .modal(msg(Event::Cancel))
     }
 }
 

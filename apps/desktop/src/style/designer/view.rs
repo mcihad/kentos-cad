@@ -119,6 +119,7 @@ impl App {
                 ..container::Style::default()
             });
         Dialog::new(d.title())
+            .on_close(ev(Event::Close))
             .push(frame)
             .push(footer(d))
             .width(typography::unscaled(width))

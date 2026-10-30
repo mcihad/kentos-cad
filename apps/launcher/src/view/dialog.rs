@@ -4,8 +4,8 @@
 //! format's own (docs/launcher/README.md), so the file can be edited by hand.
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Column, Row, button, column, container, row, text, text_input};
-use iced::{Alignment, Element, Fill, Length};
+use iced::widget::{Column, Row, button, column, container, row, text};
+use iced::{Alignment, Element, Fill};
 use kentos_ui::label;
 use kentos_ui::theme::{metrics, typography};
 use kentos_ui::widget::{Confirm, Dialog, Form, Segmented, Tip, tip};
@@ -23,13 +23,9 @@ fn input<'a>(
     value: &'a str,
     on_input: impl Fn(String) -> Field + 'a,
 ) -> Element<'a, Message> {
-    text_input(placeholder, value)
+    kentos_ui::widget::text_field(placeholder, value)
         .on_input(move |v| Message::Draft(on_input(v)))
         .on_submit(Message::SaveDraft)
-        .size(typography::body())
-        .font(typography::ui())
-        .padding(metrics::padding(metrics::control(), 8.0))
-        .style(kentos_ui::style::field::input)
         .width(Fill)
         .into()
 }
@@ -173,26 +169,18 @@ pub fn edit<'a>(launcher: &'a Launcher, draft: &'a Draft) -> Element<'a, Message
         || "kullanıcının uygulama klasörü".to_owned(),
         |f| f.display().to_string(),
     );
-    let save = button(
-        container(label::strong(if draft.base.is_some() {
-            "Kaydet"
-        } else {
-            "Ekle"
-        }))
-        .center_x(Length::Shrink)
-        .center_y(Length::Fixed(metrics::button())),
-    )
-    .padding([0.0, px(18.0)])
+    let save = button(label::strong(if draft.base.is_some() {
+        "Kaydet"
+    } else {
+        "Ekle"
+    }))
+    .padding(metrics::action())
     .style(kentos_ui::style::button::primary)
     .on_press(Message::SaveDraft);
-    let cancel = button(
-        container(label::body("Vazgeç"))
-            .center_x(Length::Shrink)
-            .center_y(Length::Fixed(metrics::button())),
-    )
-    .padding([0.0, px(16.0)])
-    .style(kentos_ui::style::button::secondary)
-    .on_press(Message::CloseDialog);
+    let cancel = button(label::body("Vazgeç"))
+        .padding(metrics::action())
+        .style(kentos_ui::style::button::secondary)
+        .on_press(Message::CloseDialog);
 
     Dialog::new(title)
         .hint("Esc")

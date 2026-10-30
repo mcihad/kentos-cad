@@ -334,7 +334,7 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
                 tip(
                     button(icon(Icon::Maximize).size(10.0).tone(Tone::Muted))
                         .on_press(message.clone())
-                        .padding(2)
+                        .padding(crate::theme::metrics::icon_small(10.0))
                         .style(style::button::ribbon(style::button::Ribbon::Idle)),
                     Tip::new(name.clone()),
                     tooltip::Position::Bottom,

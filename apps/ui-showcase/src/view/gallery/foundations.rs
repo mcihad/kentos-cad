@@ -1,8 +1,6 @@
 //! Temel sayfalar: renkler, yazı ve ikonlar.
 
-use iced::widget::{
-    button, checkbox, column, container, row, slider, space, text, text_input, themer,
-};
+use iced::widget::{button, checkbox, column, container, row, slider, space, text, themer};
 use iced::{Bottom, Center, Color, Element, Fill};
 
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -173,12 +171,8 @@ impl Showcase {
                     label::mono_caption("1:25.000"),
                 ]
                 .align_y(Center),
-                text_input("Katman adı", &gallery.text)
-                    .on_input(|text| Message::Gallery(Demo::TextChanged(text)))
-                    .font(typography::ui())
-                    .size(typography::body())
-                    .padding([3, 6])
-                    .style(style::field::input),
+                kentos_ui::widget::text_field("Katman adı", &gallery.text)
+                    .on_input(|text| Message::Gallery(Demo::TextChanged(text))),
                 checkbox(gallery.checked)
                     .label("Etiketleri göster")
                     .size(13.0)
@@ -193,11 +187,11 @@ impl Showcase {
                 row![
                     button(label::body("Vazgeç"))
                         .on_press(pressed("Vazgeç"))
-                        .padding([3, 10])
+                        .padding(kentos_ui::theme::metrics::action_small())
                         .style(style::button::secondary),
                     button(label::body("Uygula"))
                         .on_press(pressed("Uygula"))
-                        .padding([3, 10])
+                        .padding(kentos_ui::theme::metrics::action_small())
                         .style(style::button::primary),
                 ]
                 .spacing(6),
@@ -550,14 +544,14 @@ pub(super) fn icons_page<'a>() -> Vec<Element<'a, Message>> {
                 .align_y(Center)
         )
         .on_press(pressed("Etkin"))
-        .padding([3, 8])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::flat),
         button(
             row![icon(Icon::ZoomIn), label::body("Devre dışı")]
                 .spacing(6)
                 .align_y(Center)
         )
-        .padding([3, 8])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::flat),
         button(
             row![icon(Icon::Power).size(14.0), label::body("Birincil")]
@@ -565,7 +559,7 @@ pub(super) fn icons_page<'a>() -> Vec<Element<'a, Message>> {
                 .align_y(Center)
         )
         .on_press(pressed("Birincil"))
-        .padding([5, 12])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::primary),
     ]
     .spacing(8)

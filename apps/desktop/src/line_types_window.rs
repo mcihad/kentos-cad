@@ -4,7 +4,7 @@
 //! scale. Every write goes through `cad.linetypes.edit`: the table is a project setting, no undo step.
 
 use iced::widget::canvas::{self, Frame, Geometry, Path, Stroke};
-use iced::widget::{Canvas, Column, button, container, row, text, text_input};
+use iced::widget::{Canvas, Column, button, container, row, text};
 use iced::{Center, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     CommandResult, LineTypeDef, LineTypesEdit, LineTypesEdited, LineTypesOperation, PatternUnit,
@@ -13,7 +13,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, line_types_edit};
 use kentos_native_style::line_types::{MAX_DASHES, dashes_of};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame2, Elided, overlay};
+use kentos_ui::widget::{Dialog as Frame2, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -416,12 +416,9 @@ impl App {
         .spacing(8);
         let scale = row![
             container(
-                text_input("1", &w.scale)
+                kentos_ui::widget::text_field("1", &w.scale)
                     .on_input(|t| msg(Event::Scale(t)))
                     .on_submit(msg(Event::ScaleSubmit))
-                    .padding([4, 6])
-                    .size(typography::caption())
-                    .style(style::field::input)
             )
             .width(typography::scaled(80.0)),
             words::secondary("Uygula", Some(msg(Event::ScaleSubmit))),
@@ -447,13 +444,11 @@ impl App {
         if let Some((kind, said)) = &w.said {
             body = body.push(words::summary(vec![words::text_line(*kind, said.clone())]));
         }
-        overlay::modal(
-            Frame2::new(LINE_TYPES_TITLE)
-                .push(body)
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(640.0),
-            msg(Event::Close),
-        )
+        Frame2::new(LINE_TYPES_TITLE)
+            .push(body)
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(640.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

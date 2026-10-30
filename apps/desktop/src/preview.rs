@@ -260,7 +260,7 @@ fn lock_chip<'a>(words: String, length: bool, snap: Color) -> Element<'a, Messag
             .size(11.0)
             .tone(kentos_ui::icon::Tone::Muted),
     )
-    .padding(2)
+    .padding(kentos_ui::theme::metrics::icon_small(11.0))
     .style(kentos_ui::style::button::ghost)
     .on_press(Message::DropLock(length));
     container(

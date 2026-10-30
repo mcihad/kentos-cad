@@ -832,7 +832,7 @@ fn num<'a>(w: &LayerStyleWindow, n: Num, hint: &str) -> Element<'a, Message> {
 
 fn small<'a>(text: &'static str, press: Option<Message>) -> Element<'a, Message> {
     button(label::body(text))
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press_maybe(press)
         .into()
@@ -1416,7 +1416,7 @@ fn fields_table<'a>(
             .spacing(5)
             .align_y(Center),
     )
-    .padding([4, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press_maybe((n < 12).then(|| th(Edit::FieldAdd(of))));
     column![table, add].spacing(8).into()

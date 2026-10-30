@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0805, 0806: veri tablosu (başlık bandı `table_head`, satır çizgisi, tıklanmayan satırın da aydınlanması, bütün başlık hücresinin basılması, ok kuralı, sürüklenen sütun, `Table::grid`) ve sekmeler (daralmaz, `‹ ›` ve liste,
+  tekerlek, kesilen kenar solar, eylemlerin kendi satırı). Web dönünce `ui/` tablolarına ve sekmelerine aynı kural.
+- ADR 0804: bileşenlerin tek dili masaüstünde (tek kontrol yüksekliği 28, `Cell`, tek ızgara satırı, pencerenin × ve köşe kavisi, seçili satır yalnız
+  yumuşak zemin, `Tokens::soft`, `cell`, `cell_hover`, `rule`, `border_grip`). Web dönünce `--ctl-h` 28'e iner, Öznitelikler hücreleri ve pencere başlığı aynı dile geçer,
+  `tokens.css` yeni jetonları alır.
 - ADR 0801, 0802: CAD projesinin işi `cadWork` (`.kcad` şema 135; Mimari proje, Harita / imar planı); web'in
   sihirbazı onu yazar (ortak `fixtures/project/v1/wizard.json` değişti), `cad.settings.set`'in 16 yeni `cadWork`
   durumu web'in işleyicisinde de geçer, şerit `catalog/v1/ribbon.json`'un `works`'üne uyar, işi olmayan CAD çiziminde

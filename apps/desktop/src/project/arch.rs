@@ -3,7 +3,7 @@
 //! does not hold is said under the rows and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch`,
 //! which keeps a level a wall names.
 
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Length};
 use kentos_commands::{ArchLevel, ArchSettings, WallDetail};
 use kentos_ui::icon::icon;
@@ -28,7 +28,9 @@ pub fn in_use_view<'a>(
     if e.uids.is_empty() {
         banner.into()
     } else {
-        banner.action(format!("Nesneleri seç ({})", e.uids.len()), select).into()
+        banner
+            .action(format!("Nesneleri seç ({})", e.uids.len()), select)
+            .into()
     }
 }
 
@@ -217,14 +219,10 @@ fn field<'a>(
     wrong: bool,
     on: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    kentos_ui::widget::focus_ring(
-        text_input(holder, value)
-            .on_input(on)
-            .padding([4, 7])
-            .size(typography::body())
-            .style(style::field::validated(wrong)),
-    )
-    .into()
+    kentos_ui::widget::text_field(holder, value)
+        .on_input(on)
+        .style(style::field::validated(wrong))
+        .into()
 }
 
 /// The section.
@@ -268,13 +266,21 @@ pub(super) fn view<'a>(
             )),
     );
     let read_now = read(rows, detail, method, None);
-    let head = row![
-        container(label::caption("Kat")).width(Length::FillPortion(5)),
-        container(label::caption("Kot (m)")).width(Length::FillPortion(3)),
-        container(label::caption("Kat yüksekliği (m)")).width(Length::FillPortion(3)),
-        iced::widget::space().width(Length::Fixed(3.0 * 26.0 + 2.0 * 6.0)),
-    ]
-    .spacing(6);
+    let head = kentos_ui::widget::table::band(
+        row![
+            container(kentos_ui::widget::table::title("Kat"))
+                .padding([0, 8])
+                .width(Length::FillPortion(5)),
+            container(kentos_ui::widget::table::title("Kot (m)"))
+                .padding([0, 8])
+                .width(Length::FillPortion(3)),
+            container(kentos_ui::widget::table::title("Kat yüksekliği (m)"))
+                .padding([0, 8])
+                .width(Length::FillPortion(3)),
+            iced::widget::space().width(Length::Fixed(3.0 * 26.0 + 2.0 * 6.0)),
+        ]
+        .spacing(6),
+    );
     let mut table = Column::new().spacing(4).push(head);
     for (i, r) in rows.iter().enumerate() {
         table = table.push(
@@ -350,7 +356,7 @@ pub(super) fn view<'a>(
         .align_y(Center),
     )
     .on_press(on_add)
-    .padding([4, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary);
     let levels: Element<'a, Message> = if rows.is_empty() {
         Banner::info("Projenin katı yok. Duvarları katlara bağlamak için kat ekleyin; kot katın döşemesinin yüksekliğidir.").into()
@@ -476,7 +482,7 @@ pub(super) fn choices_view<'a>(
                         edit: ChoiceEdit::Add,
                     })
                 }))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         );
         out = out.push(super::group::<Message>(title, list));

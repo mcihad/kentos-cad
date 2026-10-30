@@ -16,14 +16,14 @@
 //! rule says whether it compiles and how many of the layer's records break it now (they are not
 //! judged anew by the rule; their next write is).
 
-use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{LayerField, LayerNodeType, LayerRule, LayersRules, layer_rules_problem};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_rules};
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -376,10 +376,10 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(
-            Frame::new(TITLE).push(body).width(900.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .width(900.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
@@ -409,13 +409,7 @@ fn rule_editor<'a>(
     broken: usize,
 ) -> Element<'a, Message> {
     let input = |hint: &'static str, value: &str, on: fn(String) -> Event| {
-        focus_ring(
-            text_input(hint, value)
-                .size(typography::body())
-                .on_input(move |s| msg(on(s)))
-                .padding([5, 8])
-                .style(style::field::input),
-        )
+        kentos_ui::widget::text_field(hint, value).on_input(move |s| msg(on(s)))
     };
     let state = match problem {
         Some(why) => words::text_line(Kind::Error, why.clone()),

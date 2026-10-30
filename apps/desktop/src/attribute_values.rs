@@ -13,12 +13,11 @@
 
 use std::collections::BTreeMap;
 
-use iced::widget::{Column, Id, text, text_editor, text_input};
+use iced::widget::{Column, Id, text, text_editor};
 use iced::{Element, Task};
 use kentos_commands::BlockId;
 use kentos_interaction::js_trim;
-use kentos_ui::style;
-use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};
+use kentos_ui::widget::Dialog as Frame;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -45,9 +44,10 @@ struct Field {
 
 impl Field {
     fn value(&self) -> String {
-        self.lines.as_ref().map_or_else(|| self.text.clone(), |c| {
-            c.text().trim_end_matches('\n').to_owned()
-        })
+        self.lines.as_ref().map_or_else(
+            || self.text.clone(),
+            |c| c.text().trim_end_matches('\n').to_owned(),
+        )
     }
 }
 
@@ -104,7 +104,11 @@ impl Window {
     fn unverified(&self) -> Option<&str> {
         self.fields
             .iter()
-            .find(|f| f.again.as_deref().is_some_and(|a| js_trim(a) != js_trim(&f.text)))
+            .find(|f| {
+                f.again
+                    .as_deref()
+                    .is_some_and(|a| js_trim(a) != js_trim(&f.text))
+            })
             .map(|f| f.label.as_str())
     }
 }
@@ -223,32 +227,24 @@ impl App {
             )]));
         for (i, f) in w.fields.iter().enumerate() {
             let control: Element<'_, Message> = match &f.lines {
-                Some(content) => focus_ring(
-                    text_editor(content)
-                        .id(field_id(i))
-                        .on_action(move |a| msg(Event::Lines(i, a)))
-                        .height(72)
-                        .padding([5, 8]),
-                )
-                .into(),
-                None => focus_ring(
-                    text_input(&f.default, &f.text)
-                        .id(field_id(i))
-                        .on_input(move |t| msg(Event::Text(i, t)))
-                        .on_submit(msg(Event::Place))
-                        .padding([5, 8])
-                        .style(style::field::input),
-                )
-                .into(),
+                Some(content) => text_editor(content)
+                    .id(field_id(i))
+                    .on_action(move |a| msg(Event::Lines(i, a)))
+                    .height(72)
+                    .padding([5, 8])
+                    .into(),
+                None => kentos_ui::widget::text_field(&f.default, &f.text)
+                    .id(field_id(i))
+                    .on_input(move |t| msg(Event::Text(i, t)))
+                    .on_submit(msg(Event::Place))
+                    .into(),
             };
             body = body.push(words::field(&f.label, control, None));
             if let Some(again) = &f.again {
-                let input = text_input("Aynı değeri yeniden yazın", again)
+                let input = kentos_ui::widget::text_field("Aynı değeri yeniden yazın", again)
                     .on_input(move |t| msg(Event::Again(i, t)))
-                    .on_submit(msg(Event::Place))
-                    .padding([5, 8])
-                    .style(style::field::input);
-                body = body.push(words::field(&f.again_label, focus_ring(input), None));
+                    .on_submit(msg(Event::Place));
+                body = body.push(words::field(&f.again_label, input, None));
             }
         }
         let unverified = w.unverified();
@@ -258,17 +254,15 @@ impl App {
                 format!("“{label}” iki kez aynı yazılmadı; yerleştirmeden önce doğrulayın."),
             )]));
         }
-        overlay::modal(
-            Frame::new(VALUES_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Close))))
-                .action(words::primary(
-                    PLACE,
-                    unverified.is_none().then(|| msg(Event::Place)),
-                ))
-                .width(420.0),
-            msg(Event::Close),
-        )
+        Frame::new(VALUES_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Close))))
+            .action(words::primary(
+                PLACE,
+                unverified.is_none().then(|| msg(Event::Place)),
+            ))
+            .width(420.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): the

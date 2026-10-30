@@ -200,7 +200,7 @@ impl<'a, Message: Clone + 'a> From<Suggest<'a, Message>> for Element<'a, Message
             .id(s.id.clone())
             .on_input_maybe(on_input.map(|f| move |text| f(text)))
             // A form field's height: the choices and dates beside it line up.
-            .padding([3, 8])
+            .padding(crate::theme::metrics::field())
             .size(typography::body())
             .font(typography::ui())
             .width(Fill)

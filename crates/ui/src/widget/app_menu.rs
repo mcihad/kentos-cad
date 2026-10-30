@@ -315,7 +315,7 @@ impl<'a, Message: Clone + 'a> From<Entry<'a, Message>> for Element<'a, Message> 
         };
 
         let heading: Element<'a, Message> = match entry.shortcut {
-            Some(shortcut) => row![title, space::horizontal(), label::mono_caption(shortcut)]
+            Some(shortcut) => row![title, space::horizontal(), label::caption(shortcut)]
                 .align_y(Center)
                 .into(),
             None => title.into(),

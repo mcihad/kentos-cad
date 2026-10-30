@@ -247,7 +247,11 @@ impl App {
             s.merge.offer(&doc.model);
             if let Ok((out, _)) = &plan {
                 let made: Vec<&str> = out.layers.iter().map(|l| l.id.as_str()).collect();
-                s.merge.learn(&doc.model, out.tables.iter().map(|t| t.layer.as_str()), &made);
+                s.merge.learn(
+                    &doc.model,
+                    out.tables.iter().map(|t| t.layer.as_str()),
+                    &made,
+                );
             }
             s.plan = plan;
         }
@@ -569,7 +573,8 @@ impl App {
                     ready.then(|| event(Event::Save)),
                 ))
                 .width(640.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 
@@ -645,7 +650,9 @@ impl App {
                 } else {
                     lines.push(words::text_line(Line::Ok, merge_form::MERGE_LINE));
                 }
-                lines.extend(merge_form::report_lines(&out.merged, |id| self.layer_path(id)));
+                lines.extend(merge_form::report_lines(&out.merged, |id| {
+                    self.layer_path(id)
+                }));
                 for w in warnings
                     .iter()
                     .filter(|w| !merge_form::said_by_merge(w, &out.merged))
@@ -677,7 +684,8 @@ impl App {
                     ready.then(|| event(Event::Run)),
                 ))
                 .width(640.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

@@ -8,7 +8,7 @@
 
 use std::fmt;
 
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     AnnotationStyleKind, CommandResult, Entity, LeaderArrow, LeaderEdit, LeaderStyleDef,
@@ -19,7 +19,7 @@ use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;
 use kentos_native_application::{ExecutionContext, leaders_edit, snap_find, styles_edit};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Segmented, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -256,7 +256,7 @@ impl App {
                 let aperture = 10.0 / self.viewport.camera.scale.max(1e-9);
                 let tip = self.document.as_ref().and_then(|d| {
                     let input = SnapFind {
-            model_scope:self.spatial.sheet_model_scope(),
+                        model_scope: self.spatial.sheet_model_scope(),
                         at: p,
                         aperture,
                         kinds: None,
@@ -497,13 +497,9 @@ impl App {
             return label::caption("").into();
         };
         let field = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .width(120)
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value)
+                .on_input(move |t| msg(on(t)))
+                .width(120)
         };
         let mut options = row![words::field(
             "Doğrultu",
@@ -536,22 +532,20 @@ impl App {
         if let Err(why) = self.align_input() {
             lines.push(words::text_line(Kind::Warn, why));
         }
-        overlay::modal(
-            Frame::new(ALIGN_TITLE)
-                .push(
-                    Column::new()
-                        .spacing(12)
-                        .push(words::summary(lines))
-                        .push(options),
-                )
-                .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
-                .action(words::primary(
-                    "Hizala",
-                    self.align_input().is_ok().then(|| msg(Event::Align)),
-                ))
-                .width(560.0),
-            msg(Event::Close),
-        )
+        Frame::new(ALIGN_TITLE)
+            .push(
+                Column::new()
+                    .spacing(12)
+                    .push(words::summary(lines))
+                    .push(options),
+            )
+            .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
+            .action(words::primary(
+                "Hizala",
+                self.align_input().is_ok().then(|| msg(Event::Align)),
+            ))
+            .width(560.0)
+            .modal(msg(Event::Close))
     }
 
     pub(crate) fn leader_styles_view(&self) -> Element<'_, Message> {
@@ -591,13 +585,9 @@ impl App {
         let form: Element<'_, Message> = match w.chosen.and_then(|i| w.styles.get(i)) {
             Some(s) => {
                 let input = |placeholder: &'static str, value: String, on: fn(String) -> Event| {
-                    focus_ring(
-                        text_input(placeholder, &value)
-                            .on_input(move |t| msg(on(t)))
-                            .padding([5, 8])
-                            .width(200)
-                            .style(style::field::input),
-                    )
+                    kentos_ui::widget::text_field(placeholder, &value)
+                        .on_input(move |t| msg(on(t)))
+                        .width(200)
                 };
                 let arrows: Vec<Choice> = ARROWS.iter().map(|(_, n)| Choice::new(*n)).collect();
                 let at = ARROWS.iter().position(|(a, _)| *a == s.arrow);
@@ -642,17 +632,15 @@ impl App {
                 p.clone(),
             )]));
         }
-        overlay::modal(
-            Frame::new(STYLES_TITLE)
-                .push(body)
-                .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
-                .action(words::primary(
-                    "Kaydet",
-                    problem.is_none().then(|| msg(Event::Save)),
-                ))
-                .width(520.0),
-            msg(Event::Close),
-        )
+        Frame::new(STYLES_TITLE)
+            .push(body)
+            .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
+            .action(words::primary(
+                "Kaydet",
+                problem.is_none().then(|| msg(Event::Save)),
+            ))
+            .width(520.0)
+            .modal(msg(Event::Close))
     }
 }
 
@@ -665,9 +653,7 @@ impl StylesWindow {
         self.chosen = Some(i).filter(|i| *i < self.styles.len());
         if let Some(s) = self.chosen.and_then(|i| self.styles.get(i)) {
             self.height = crate::crs::js_number(s.height);
-            self.size = s
-                .arrow_size
-                .map_or_else(String::new, crate::crs::js_number);
+            self.size = s.arrow_size.map_or_else(String::new, crate::crs::js_number);
         }
     }
 

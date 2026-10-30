@@ -1,6 +1,6 @@
 # ADR 0747: Öznitelikler'in satırları ve hücreleri
 
-- **Durum:** kabul edildi (2026-10-29). Sahibin bildirimleri ve isteği (`/frontend-design` ile, “object inspector
+- **Durum:** kabul edildi (2026-10-29); hücrenin görünüşü [ADR 0804](0804-one-control-height-cells-and-frames.md) ile değişti (düzenlenen satırın sol çubuğu kalktı, hücre çizgiden çizgiye doldurur). Sahibin bildirimleri ve isteği (`/frontend-design` ile, “object inspector
   iyileştir daha da iyi hale getir”):
   > ölçü yazılarını değiştirirken klavye çok geç yanıt veriyor … içine yerleştirdiğim form elemanları satırın arka
   > planını tam kaplamıyor, küçücük kalıyor

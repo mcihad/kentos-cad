@@ -10,7 +10,7 @@
 //! definition through `cad.addresses.define` (a project setting, not an
 //! undo step). The form's rules are `kentos_interaction::address_form`'s.
 
-use iced::widget::{Column, Space, button, column, container, row, scrollable, text_input};
+use iced::widget::{Column, Space, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     AddressLocator, AddressName, AddressesDefine, AddressesDefineOperation, AddressesNormalize,
@@ -24,8 +24,8 @@ use kentos_interaction::address_form::{
 use kentos_interaction::{Format, Level};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use super::Event as Address;
@@ -653,7 +653,7 @@ impl App {
                     .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe(on)
         };
         let left = column![
@@ -710,22 +710,20 @@ impl App {
         };
         let ready = problem.is_none() && self.data_defs(w).is_ok_and(|now| now != w.saved);
         let one = w.chosen.is_some();
-        overlay::modal(
-            Frame::new(TITLE)
-                .fill(row![left, right].spacing(16).height(Fill))
-                .push(words::summary(lines))
-                .aside(words::secondary(GUESS, one.then(|| msg(Event::Guess))))
-                .aside(words::secondary(CHECK, one.then(|| msg(Event::Check))))
-                .aside(words::secondary(
-                    NORMALIZE,
-                    self.address_normalizable(w).then(|| msg(Event::Normalize)),
-                ))
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
-                .width(1000.0)
-                .max_height(660.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .fill(row![left, right].spacing(16).height(Fill))
+            .push(words::summary(lines))
+            .aside(words::secondary(GUESS, one.then(|| msg(Event::Guess))))
+            .aside(words::secondary(CHECK, one.then(|| msg(Event::Check))))
+            .aside(words::secondary(
+                NORMALIZE,
+                self.address_normalizable(w).then(|| msg(Event::Normalize)),
+            ))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
+            .width(1000.0)
+            .max_height(660.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn address_form_view<'a>(&'a self, f: &'a AddressForm) -> Element<'a, Message> {
@@ -776,24 +774,15 @@ impl App {
                 .into()
         };
         let input = |value: &'a str, on: fn(String) -> Event| -> Element<'a, Message> {
-            container(
-                text_input("", value)
-                    .size(typography::body())
-                    .padding([4, 8])
-                    .on_input(move |t| msg(on(t)))
-                    .style(style::field::input),
-            )
-            .width(Length::Fixed(typography::scaled(120.0)))
-            .into()
+            container(kentos_ui::widget::text_field("", value).on_input(move |t| msg(on(t))))
+                .width(Length::Fixed(typography::scaled(120.0)))
+                .into()
         };
         let mut form = Column::new().spacing(8).padding([0, 8]);
         form = form.push(labelled(
             "Ad",
-            text_input("Tanımın adı", &f.name)
-                .size(typography::body())
-                .padding([4, 8])
+            kentos_ui::widget::text_field("Tanımın adı", &f.name)
                 .on_input(|t| msg(Event::Name(t)))
-                .style(style::field::input)
                 .into(),
         ));
         // Kapı noktaları.

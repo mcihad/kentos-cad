@@ -1277,7 +1277,7 @@ impl App {
             tip(
                 button(icon(glyph).size(14.0))
                     .on_press_maybe(locked.is_none().then_some(Message::Run(id)))
-                    .padding([2, 4])
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
                     .style(style::button::ghost),
                 tip_of,
                 tooltip::Position::Bottom,

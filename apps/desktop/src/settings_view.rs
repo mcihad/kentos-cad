@@ -556,7 +556,7 @@ pub(crate) fn range(key: &str) -> std::ops::RangeInclusive<f64> {
 pub(crate) fn action(label_text: &'static str, edit: Edit) -> Element<'static, Message> {
     button(label::body(label_text))
         .on_press(Message::Settings(edit))
-        .padding([4, 12])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .into()
 }

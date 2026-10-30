@@ -34,12 +34,13 @@
 //! | Saat                 | Metin girişi ve saat seçici                        |
 //! | Nesne başvurusu      | Aranabilir liste, haritadan seçme, başvuruya git   |
 //!
-//! Her düzenleyici değer hücresini tam doldurur ve satır içi kontrol
-//! yüksekliğindedir ([`metrics::inline`]); hücre üzerine gelinene dek düz
-//! yazı gibi durur, üzerine gelince çerçevesi çıkar (DESIGN.md §7.5). Ad
-//! sütunu ile değer sütunu arasındaki çizgi sürüklenerek ad sütunu
-//! genişletilir; çift tık varsayılana döndürür. Sayı alanlarının adı yana
-//! sürüklenince değer adım adım değişir (Shift ince, Ctrl kaba).
+//! Her düzenleyici değer hücresini çizgiden çizgiye doldurur ([`Cell`], satır
+//! yüksekliği [`metrics::row`]; DESIGN.md §7.5, docs/adr/0804): yazılabilir hücre
+//! gömük zeminde durur, imleçte aydınlanır, düzenlenirken alan zeminini ve vurgu
+//! kenarını alır; salt okunur değerin zemini yoktur. Ad sütunu ile değer sütunu
+//! arasındaki çizgi sürüklenerek ad sütunu genişletilir; çift tık varsayılana
+//! döndürür. Sayı alanlarının adı yana sürüklenince değer adım adım değişir
+//! (Shift ince, Ctrl kaba).
 //!
 //! Üstteki araç çubuğu alanları arar, kategorili ve alfabetik görünüm
 //! arasında geçer, yalnız değişen alanları gösterir ve boş alanları gizler.
@@ -88,7 +89,10 @@ use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
 use crate::theme::{Tokens, metrics, typography};
+use crate::widget::cell::{Cell, is_cell};
 use crate::widget::elided::Elided;
+use crate::widget::property_grid::{head_face, rule};
+use crate::widget::sheet_row::{KeyWidth, SheetRow};
 use crate::widget::{
     Choice, ContextMenu, DatePicker, InputField, Menu, Sash, Scrub, Segmented, Select, TimePicker,
     Tip, tip,
@@ -101,12 +105,6 @@ const KEY_WIDTH: f32 = 136.0;
 /// Ad sütununun alabileceği genişlikler, 12 piksellik gövde metninde.
 const KEY_MIN: f32 = 84.0;
 const KEY_MAX: f32 = 320.0;
-/// Satır yüksekliği, varsayılan yazı boyutunda (web'in `--row-h`'ı).
-const ROW_HEIGHT: f32 = 28.0;
-/// Kategori satırının yüksekliği, varsayılan yazı boyutunda.
-const CATEGORY_HEIGHT: f32 = 26.0;
-/// Değer hücresindeki düzenleyicinin hücre kenarından uzaklığı.
-const INSET: f32 = 3.0;
 /// Boş değerin gösterimi.
 const EMPTY: &str = "—";
 /// Çoklu seçimde değerleri farklı alanın gösterimi.
@@ -728,7 +726,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         }
     }
 
-    /// Hücre içindeki küçük ikon düğmesi; satır içi yükseklikte.
+    /// Hücre içindeki küçük ikon düğmesi: hücrenin sağında, bütün yüksekliğinde.
     fn cell_button(
         &self,
         glyph: Icon,
@@ -736,7 +734,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         event: Event,
         active: bool,
     ) -> Element<'a, Message> {
-        let side = metrics::inline();
+        let side = metrics::row();
 
         tip(
             button(container(icon(glyph).size(13.0)).center(Fill))
@@ -744,7 +742,13 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 .padding(0)
                 .width(side)
                 .height(side)
-                .style(style::button::tool(active)),
+                .style(move |theme: &Theme, status| {
+                    if active {
+                        style::button::tool(true)(theme, status)
+                    } else {
+                        style::button::cell_tool(theme, status)
+                    }
+                }),
             Tip::new(description),
             Position::Left,
         )
@@ -775,18 +779,19 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 shown
             };
 
-            return container(
-                Elided::new(shown)
-                    .size(typography::body())
-                    .font(if field.is_numeric() {
-                        typography::mono()
-                    } else {
-                        typography::ui()
-                    })
-                    .style(style::text::muted)
-                    .width(Fill),
+            return Cell::flat(
+                container(
+                    Elided::new(shown)
+                        .size(typography::body())
+                        .font(if field.is_numeric() {
+                            typography::mono()
+                        } else {
+                            typography::ui()
+                        })
+                        .width(Fill),
+                )
+                .padding([0.0, metrics::cell_pad()]),
             )
-            .padding([0, 6])
             .into();
         }
 
@@ -795,7 +800,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
 
         match &field.kind {
             FieldKind::Text if field.multiline => self.long_text(id, value),
-            FieldKind::Text => self.input(id, field, value).into(),
+            FieldKind::Text => Cell::new(self.input(id, field, value)).into(),
             FieldKind::Integer { .. } | FieldKind::Real { .. } => {
                 let mut input = self.input(id, field, value);
 
@@ -803,9 +808,9 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                     input = input.suffix(unit);
                 }
 
-                input.trailing(self.spinner(id, field, value)).into()
+                Cell::new(input.trailing(self.spinner(id, field, value))).into()
             }
-            FieldKind::Bool => self.toggle(id, field, value),
+            FieldKind::Bool => Cell::new(self.toggle(id, field, value)).into(),
             FieldKind::Choice(options) => {
                 let selected = value
                     .as_str()
@@ -821,17 +826,16 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                     })
                 })
                 .placeholder(if varied { VARIES } else { EMPTY })
-                .borderless();
+                .cell();
 
                 if field.required {
-                    select.into()
+                    Cell::new(select).into()
                 } else {
-                    select
-                        .clear(on_event(Event::Set {
-                            id,
-                            value: Value::Null,
-                        }))
-                        .into()
+                    Cell::new(select.clear(on_event(Event::Set {
+                        id,
+                        value: Value::Null,
+                    })))
+                    .into()
                 }
             }
             FieldKind::Range { min, max, step } => {
@@ -842,85 +846,95 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                     input = input.suffix(unit);
                 }
 
-                row![
-                    container(
-                        slider(*min..=*max, current, move |amount| {
-                            on_event(Event::Set {
-                                id,
-                                value: Value::Real(amount),
+                Cell::new(
+                    row![
+                        container(
+                            slider(*min..=*max, current, move |amount| {
+                                on_event(Event::Set {
+                                    id,
+                                    value: Value::Real(amount),
+                                })
                             })
+                            .step(*step)
+                        )
+                        .padding(iced::Padding {
+                            left: metrics::cell_pad(),
+                            ..iced::Padding::ZERO
                         })
-                        .step(*step)
-                    )
-                    .padding([0, 4])
-                    .width(Fill),
-                    container(input).width(typography::scaled(72.0)),
-                ]
-                .spacing(4)
-                .align_y(Center)
+                        .width(Fill),
+                        container(input).width(typography::scaled(72.0)),
+                    ]
+                    .align_y(Center),
+                )
                 .into()
             }
             FieldKind::Date => {
                 let set = on_event.clone();
 
-                DatePicker::date(
-                    match value {
-                        Value::Date(date) => Some(*date),
-                        _ => None,
-                    },
-                    move |date| {
-                        set(Event::Set {
-                            id,
-                            value: date.map_or(Value::Null, Value::Date),
-                        })
-                    },
+                Cell::new(
+                    DatePicker::date(
+                        match value {
+                            Value::Date(date) => Some(*date),
+                            _ => None,
+                        },
+                        move |date| {
+                            set(Event::Set {
+                                id,
+                                value: date.map_or(Value::Null, Value::Date),
+                            })
+                        },
+                    )
+                    .anchor(self.input(id, field, value))
+                    .now(self.now)
+                    .clearable(!field.required)
+                    .cell(),
                 )
-                .anchor(self.input(id, field, value))
-                .now(self.now)
-                .clearable(!field.required)
-                .inline()
                 .into()
             }
             FieldKind::DateTime => {
                 let set = on_event.clone();
 
-                DatePicker::date_time(
-                    match value {
-                        Value::DateTime(moment) => Some(*moment),
-                        _ => None,
-                    },
-                    move |moment| {
-                        set(Event::Set {
-                            id,
-                            value: moment.map_or(Value::Null, Value::DateTime),
-                        })
-                    },
+                Cell::new(
+                    DatePicker::date_time(
+                        match value {
+                            Value::DateTime(moment) => Some(*moment),
+                            _ => None,
+                        },
+                        move |moment| {
+                            set(Event::Set {
+                                id,
+                                value: moment.map_or(Value::Null, Value::DateTime),
+                            })
+                        },
+                    )
+                    .anchor(self.input(id, field, value))
+                    .now(self.now)
+                    .clearable(!field.required)
+                    .cell(),
                 )
-                .anchor(self.input(id, field, value))
-                .now(self.now)
-                .clearable(!field.required)
-                .inline()
                 .into()
             }
             FieldKind::Time => {
                 let set = on_event.clone();
 
-                TimePicker::new(
-                    match value {
-                        Value::Time(time) => Some(*time),
-                        _ => None,
-                    },
-                    move |time| {
-                        set(Event::Set {
-                            id,
-                            value: time.map_or(Value::Null, Value::Time),
-                        })
-                    },
+                Cell::new(
+                    TimePicker::new(
+                        match value {
+                            Value::Time(time) => Some(*time),
+                            _ => None,
+                        },
+                        move |time| {
+                            set(Event::Set {
+                                id,
+                                value: time.map_or(Value::Null, Value::Time),
+                            })
+                        },
+                    )
+                    .anchor(self.input(id, field, value))
+                    .now(self.now)
+                    .clearable(!field.required)
+                    .cell(),
                 )
-                .anchor(self.input(id, field, value))
-                .now(self.now)
-                .clearable(!field.required)
-                .inline()
                 .into()
             }
             FieldKind::Object { .. } => self.object_editor(id, field, value, candidates, pickable),
@@ -967,39 +981,44 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
 
         preview = preview.push(icon(Icon::Document).size(13.0).tone(Tone::Muted));
 
-        button(container(preview).center_y(Fill))
-            .on_press(self.emit(edit))
-            .padding([0, 6])
-            .width(Fill)
-            .height(metrics::inline())
-            .style(cell_button(self.state.editors.contains_key(&id)))
-            .into()
+        Cell::new(
+            button(container(preview).center_y(Fill))
+                .on_press(self.emit(edit))
+                .padding(iced::Padding {
+                    left: metrics::cell_pad(),
+                    right: metrics::cell_end(),
+                    ..iced::Padding::ZERO
+                })
+                .width(Fill)
+                .height(metrics::row())
+                .style(bare_button),
+        )
+        .active(self.state.editors.contains_key(&id))
+        .into()
     }
 
-    /// Sayının yanındaki artırma/azaltma okları: hücrenin yüksekliğini iki
-    /// eşit parçada paylaşır.
+    /// Sayının yanındaki artırma/azaltma okları: hücrenin yüksekliğini iki eşit
+    /// parçada paylaşır, hücrenin sağ kenarına dayanır.
     fn spinner(&self, id: PropertyId, field: &Field, value: &Value) -> Element<'a, Message> {
-        let half = ((metrics::inline() - 3.0) / 2.0).floor();
+        let half = (metrics::row() / 2.0).floor();
         let arrow = |glyph: Icon, direction: f64| {
             let next =
                 stepped(field, value, direction).map(|value| self.emit(Event::Set { id, value }));
 
             button(container(icon(glyph).size(8.0)).center(Fill))
                 .on_press_maybe(next)
-                .width(typography::from_default(15.0))
+                .width(typography::from_default(18.0))
                 .height(half)
                 .padding(0)
-                .style(style::button::subtle)
+                .style(style::button::cell_tool)
         };
 
-        column![arrow(Icon::ChevronUp, 1.0), arrow(Icon::ChevronDown, -1.0)]
-            .spacing(1)
-            .into()
+        column![arrow(Icon::ChevronUp, 1.0), arrow(Icon::ChevronDown, -1.0)].into()
     }
 
-    /// Evet/hayır: hücreyi dolduran sıkışık parçalı seçim; boş
-    /// bırakılabilen alanda "—" parçası da vardır. Çoklu seçimde değerler
-    /// farklıysa hiçbir parça seçili değildir.
+    /// Evet/hayır: hücreyi dolduran parçalı seçim; boş bırakılabilen alanda "—"
+    /// parçası da vardır. Çoklu seçimde değerler farklıysa hiçbir parça seçili
+    /// değildir.
     fn toggle(&self, id: PropertyId, field: &Field, value: &Value) -> Element<'a, Message> {
         let mut options = Vec::with_capacity(3);
 
@@ -1025,8 +1044,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
                 value: option.value(),
             })
         })
-        .compact()
-        .width(Fill)
+        .cell()
         .into()
     }
 
@@ -1040,26 +1058,28 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         pickable: bool,
     ) -> Element<'a, Message> {
         if self.state.picking == Some(id) {
-            return row![
-                container(
-                    row![
-                        icon(Icon::Target).size(13.0).tone(Tone::Accent),
-                        label::body("Haritada seçin").style(style::text::accent),
-                    ]
-                    .spacing(6)
-                    .align_y(Center)
-                )
-                .padding([0, 6])
-                .width(Fill),
-                self.cell_button(
-                    Icon::Close,
-                    "Haritadan seçimi iptal et",
-                    Event::Pick(id),
-                    true
-                ),
-            ]
-            .spacing(2)
-            .align_y(Center)
+            return Cell::new(
+                row![
+                    container(
+                        row![
+                            icon(Icon::Target).size(13.0).tone(Tone::Accent),
+                            label::body("Haritada seçin").style(style::text::accent),
+                        ]
+                        .spacing(6)
+                        .align_y(Center)
+                    )
+                    .padding([0.0, metrics::cell_pad()])
+                    .width(Fill),
+                    self.cell_button(
+                        Icon::Close,
+                        "Haritadan seçimi iptal et",
+                        Event::Pick(id),
+                        false
+                    ),
+                ]
+                .align_y(Center),
+            )
+            .active(true)
             .into();
         }
 
@@ -1088,7 +1108,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             },
         )
         .placeholder(if varied { VARIES } else { "Seçilmedi" })
-        .borderless();
+        .cell();
 
         if pickable {
             select = select.action(Icon::Target, "Haritadan seç", self.emit(Event::Pick(id)));
@@ -1101,7 +1121,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             }));
         }
 
-        let mut editor = row![select].spacing(2).align_y(Center);
+        let mut editor = row![select].align_y(Center);
 
         if let Some(object) = value.as_object().filter(|_| !varied) {
             editor = editor.push(self.cell_button(
@@ -1112,7 +1132,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             ));
         }
 
-        editor.into()
+        Cell::new(editor).into()
     }
 
     /// Satırın ad hücresi: değişiklik çizgisi, tür ikonu, ad ve (değiştiyse)
@@ -1127,24 +1147,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         scrub: Option<Element<'a, Message>>,
         revert: Option<Element<'a, Message>>,
     ) -> Element<'a, Message> {
-        let font = if modified {
-            typography::ui_strong()
-        } else {
-            typography::ui()
-        };
-
-        let name: Element<'a, Message> = {
-            let text = Elided::new(name)
-                .size(typography::body())
-                .font(font)
-                .width(Fill);
-
-            if editable {
-                text.into()
-            } else {
-                text.style(style::text::muted).into()
-            }
-        };
+        let name = key_name(name, modified);
 
         let lead = row![
             container(icon(glyph).size(13.0).tone(Tone::Muted))
@@ -1162,7 +1165,8 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
 
         let mut content = row![marker(modified), lead].align_y(Center);
 
-        if !editable {
+        // A row that is all fixed says it with its glyph already.
+        if !editable && glyph != Icon::Lock {
             content = content
                 .push(container(icon(Icon::Lock).size(11.0).tone(Tone::Muted)).padding([0, 6]));
         }
@@ -1172,10 +1176,9 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         }
 
         container(content)
-            .width(self.state.key_width())
-            .height(row_height())
+            .width(Fill)
+            .height(Fill)
             .align_y(Center)
-            .style(style::container::surface)
             .into()
     }
 
@@ -1190,11 +1193,6 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         name: String,
         modified: bool,
     ) -> Element<'a, Message> {
-        let font = if modified {
-            typography::ui_strong()
-        } else {
-            typography::ui()
-        };
         let start = self
             .state
             .scrub_start(id)
@@ -1207,13 +1205,10 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             container(icon(glyph).size(13.0).tone(Tone::Muted))
                 .width(22)
                 .center_x(22),
-            Elided::new(name)
-                .size(typography::body())
-                .font(font)
-                .width(Fill),
+            key_name(name, modified),
         ]
         .align_y(Center)
-        .height(row_height())
+        .height(metrics::row())
         .width(Fill);
 
         Scrub::new(lead, move |pixels| match scrubbed(field, &start, pixels) {
@@ -1275,11 +1270,12 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             scrub,
             revert,
         );
-        let line = row![
+        let line = SheetRow::new(
             key,
-            cell(self.editor(id, field, value, candidates, pickable))
-        ]
-        .spacing(1);
+            self.editor(id, field, value, candidates, pickable),
+            KeyWidth::Fixed(self.state.key_width()),
+            metrics::row(),
+        );
 
         // Sağ tık: ilk değer, boşaltma ve kopyalama.
         let on_event = self.on_event.clone();
@@ -1331,7 +1327,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         if let Some(content) = self.state.editors.get(&id) {
             let on_event = self.on_event.clone();
 
-            rows.push(full_width(
+            rows.push(block(
                 column![
                     text_editor(content)
                         .on_action(move |action| on_event(Event::TextAction(id, action)))
@@ -1365,17 +1361,19 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             .and_then(|draft| draft.error.clone())
         {
             rows.push(
-                container(
-                    row![
-                        icon(Icon::Warning).size(12.0).tone(Tone::Danger),
-                        label::caption(error).style(style::text::danger),
-                    ]
-                    .spacing(6)
-                    .align_y(Center),
-                )
-                .padding([4, 8])
-                .width(Fill)
-                .style(style::container::surface)
+                column![
+                    container(
+                        row![
+                            icon(Icon::Warning).size(12.0).tone(Tone::Danger),
+                            label::caption(error).style(style::text::danger),
+                        ]
+                        .spacing(6)
+                        .align_y(Center),
+                    )
+                    .padding([4.0, metrics::cell_pad()])
+                    .width(Fill),
+                    rule(),
+                ]
                 .into(),
             );
         }
@@ -1392,11 +1390,12 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
             .width(Fill);
         let on_event = self.on_event.clone();
 
-        let line = row![
+        let line = SheetRow::new(
             self.key_cell(Icon::Lock, name.to_string(), false, false, None, None),
-            cell(container(shown).padding([0, 6])),
-        ]
-        .spacing(1);
+            Cell::flat(container(shown).padding([0.0, metrics::cell_pad()])),
+            KeyWidth::Fixed(self.state.key_width()),
+            metrics::row(),
+        );
 
         ContextMenu::new(line, move |_| {
             Menu::new()
@@ -1412,55 +1411,54 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         glyph: Option<Icon>,
         element: Element<'a, Message>,
     ) -> Element<'a, Message> {
-        row![
+        SheetRow::new(
             self.key_cell(
                 glyph.unwrap_or(Icon::Properties),
                 name,
                 true,
                 false,
                 None,
-                None
+                None,
             ),
-            cell(element),
-        ]
-        .spacing(1)
+            if is_cell(&element) {
+                element
+            } else {
+                Cell::padded(element).into()
+            },
+            KeyWidth::Fixed(self.state.key_width()),
+            metrics::row(),
+        )
         .into()
     }
 
     fn category_row(&self, title: &str, count: usize, modified: usize) -> Element<'a, Message> {
         let collapsed = self.state.collapsed.contains(title);
 
-        let mut content = row![
-            icon(if collapsed {
-                Icon::ChevronRight
-            } else {
-                Icon::ChevronDown
-            })
-            .size(10.0)
-            .tone(Tone::Muted),
-            label::strong(title.to_owned()),
-            space::horizontal(),
-        ]
-        .spacing(6)
-        .align_y(Center);
+        let mut says = row![].spacing(8).align_y(Center);
 
         if modified > 0 {
-            content = content.push(label::caption(format!("{modified} değişti")).style(
+            says = says.push(label::caption(format!("{modified} değişti")).style(
                 |theme: &Theme| iced::widget::text::Style {
                     color: Some(Tokens::of(theme).accent_hover),
                 },
             ));
         }
 
-        content = content.push(label::mono_caption(count.to_string()));
+        says = says.push(label::mono_caption(count.to_string()));
 
-        button(content)
+        column![
+            button(head_face(
+                title.to_owned().into(),
+                Some(!collapsed),
+                Some(says.into()),
+            ))
             .on_press(self.emit(Event::Collapse(title.to_owned())))
-            .padding([0, 8])
+            .padding(0)
             .width(Fill)
-            .height(typography::from_default(CATEGORY_HEIGHT))
-            .style(style::button::category)
-            .into()
+            .style(style::button::category),
+            rule(),
+        ]
+        .into()
     }
 
     fn subject_row(&self, subject: Subject<'a, Message>) -> Element<'a, Message> {
@@ -1537,8 +1535,7 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         let mut search = InputField::new("Özellik ara", &state.filter)
             .on_input(move |filter| on_event(Event::Filter(filter)))
             .icon(Icon::Search)
-            .clear(self.emit(Event::Filter(String::new())))
-            .inline();
+            .clear(self.emit(Event::Filter(String::new())));
 
         if !state.filter.trim().is_empty() {
             search = search.suffix(format!("{shown}/{total}"));
@@ -1559,13 +1556,13 @@ impl<'a, Message: Clone + 'a> Inspector<'a, Message> {
         .compact();
 
         let toggle = |glyph: Icon, description: &'static str, active: bool, event: Event| {
-            let side = metrics::inline();
+            let side = metrics::control();
 
             tip(
-                button(container(icon(glyph).size(13.0)).center(Fill))
+                button(container(icon(glyph).size(14.0)).center(Fill))
                     .on_press(self.emit(event))
                     .padding(0)
-                    .width(side + 2.0)
+                    .width(side)
                     .height(side)
                     .style(style::button::tool(active)),
                 Tip::new(description),
@@ -1706,16 +1703,22 @@ fn kind_icon(field: &Field) -> Icon {
     }
 }
 
-/// Satır yüksekliği, o anki yazı boyutunda.
-fn row_height() -> f32 {
-    typography::from_default(ROW_HEIGHT)
+/// A row's name: the secondary tone, a changed one's the text's and half bold.
+fn key_name<'a, Message: 'a>(name: String, modified: bool) -> Element<'a, Message> {
+    let text = Elided::new(name).size(typography::body()).width(Fill);
+
+    if modified {
+        text.font(typography::ui_strong()).into()
+    } else {
+        text.font(typography::ui()).style(style::text::muted).into()
+    }
 }
 
 /// Değişen alanı gösteren, satırın solundaki ince çizgi.
 fn marker<'a, Message: 'a>(modified: bool) -> Element<'a, Message> {
     container(space::horizontal())
         .width(2)
-        .height(row_height())
+        .height(metrics::row())
         .style(move |theme| container::Style {
             background: modified.then(|| Tokens::of(theme).accent.into()),
             ..container::Style::default()
@@ -1753,27 +1756,12 @@ fn pill<'a, Message: 'a>(text: &'static str, accent: bool) -> Element<'a, Messag
     .into()
 }
 
-/// Hücredeki düğme (uzun metin önizlemesi): metin girişi hücresi gibi
-/// üzerine gelinene dek düz yazı.
-fn cell_button(open: bool) -> impl Fn(&Theme, button::Status) -> button::Style {
-    move |theme, status| {
-        let t = Tokens::of(theme);
-        let edge = match status {
-            _ if open => Some(t.accent_line()),
-            button::Status::Hovered | button::Status::Pressed => Some(t.border_strong()),
-            _ => None,
-        };
-
-        button::Style {
-            background: edge.map(|_| Background::Color(t.field)),
-            text_color: t.text,
-            border: Border {
-                color: edge.unwrap_or(Color::TRANSPARENT),
-                width: 1.0,
-                radius: style::button::radius().into(),
-            },
-            ..button::Style::default()
-        }
+/// The button filling a cell (a long text's preview): the cell draws its states.
+fn bare_button(theme: &Theme, _: button::Status) -> button::Style {
+    button::Style {
+        background: None,
+        text_color: Tokens::of(theme).text,
+        ..button::Style::default()
     }
 }
 
@@ -1888,23 +1876,9 @@ fn object_label(candidates: &[(ObjectId, String)], object: ObjectId) -> String {
         .map_or_else(|| format!("#{object}"), |(_, name)| name.clone())
 }
 
-/// Değer hücresi: düzenleyici hücreyi doldurur, kenardan 3 piksel içeride.
-fn cell<'a, Message: 'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
-    container(content)
-        .width(Fill)
-        .height(row_height())
-        .padding([0.0, INSET])
-        .align_y(Center)
-        .style(style::container::surface_alt)
-        .into()
-}
-
-fn full_width<'a, Message: 'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
-    container(content)
-        .padding(8)
-        .width(Fill)
-        .style(style::container::surface)
-        .into()
+/// A block under a row (a long text's editor): as wide as the grid, the line under it.
+fn block<'a, Message: 'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
+    column![container(content).padding(8).width(Fill), rule()].into()
 }
 
 /// Görünen bir satır: kategori başlığı ya da girdi.
@@ -2048,17 +2022,15 @@ impl<'a, Message: Clone + 'a> From<Inspector<'a, Message>> for Element<'a, Messa
 
             rows.push(
                 container(label::muted(message))
-                    .padding([8, 10])
+                    .padding([8.0, metrics::cell_pad()])
                     .width(Fill)
-                    .style(style::container::surface)
                     .into(),
             );
         }
 
-        let grid = container(Column::with_children(rows).spacing(1))
-            .padding([1, 0])
+        let grid = container(Column::with_children(rows))
             .width(Fill)
-            .style(style::container::grid_lines);
+            .style(style::container::surface);
 
         // Ad ve değer sütunları arasındaki çizgi sürüklenir.
         let key_width = inspector.state.key_width();

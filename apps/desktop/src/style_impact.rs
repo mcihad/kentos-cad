@@ -8,7 +8,7 @@ use iced::widget::{Column, row, text};
 use iced::{Element, Task};
 use kentos_commands::{CommandResult, ImpactTarget, StyleImpact, StylesImpact};
 use kentos_native_application::{ExecutionContext, styles_impact};
-use kentos_ui::widget::{Dialog as Frame, overlay};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -168,17 +168,15 @@ impl App {
             .push(label::caption(format!("{what}: {}", i.name)).style(style::text::muted))
             .push(rows)
             .push(words::summary(vec![words::text_line(Kind::Ok, note)]));
-        overlay::modal(
-            Frame::new(IMPACT_TITLE)
-                .push(body)
-                .action(words::secondary(
-                    CHOOSE,
-                    (i.follow > 0).then(|| msg(Event::Choose)),
-                ))
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(560.0),
-            msg(Event::Close),
-        )
+        Frame::new(IMPACT_TITLE)
+            .push(body)
+            .action(words::secondary(
+                CHOOSE,
+                (i.follow > 0).then(|| msg(Event::Choose)),
+            ))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(560.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

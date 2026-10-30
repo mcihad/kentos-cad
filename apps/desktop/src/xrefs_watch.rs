@@ -13,7 +13,9 @@ use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt as _, Stream};
 use iced::widget::{Column, Row, button, container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_commands::{AssetKind, AssetState, AssetsCheck, BlockId, XrefState, XrefsList, XrefsOperation};
+use kentos_commands::{
+    AssetKind, AssetState, AssetsCheck, BlockId, XrefState, XrefsList, XrefsOperation,
+};
 use kentos_native_application::assets_check;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::{label, style};
@@ -75,21 +77,34 @@ fn stamp(path: &Path) -> Option<(u64, SystemTime)> {
 
 impl App {
     fn drawing_file(&self) -> Option<String> {
-        self.document.as_ref()?.path.as_ref().map(|p| p.display().to_string())
+        self.document
+            .as_ref()?
+            .path
+            .as_ref()
+            .map(|p| p.display().to_string())
     }
 
     /// Whether the open drawing has a loaded external reference or a linked picture to follow.
     pub(crate) fn xrefs_watching(&self) -> bool {
         self.document.as_ref().is_some_and(|d| {
-            d.model.blocks().iter().any(|b| b.xref.as_ref().is_some_and(|x| !x.unloaded))
+            d.model
+                .blocks()
+                .iter()
+                .any(|b| b.xref.as_ref().is_some_and(|x| !x.unloaded))
                 || self.styles.images.has_files()
         })
     }
 
     /// The linked pictures' files looked at: one that changed, came back or went is read again and drawn.
     fn pictures_tick(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
-        let folder = doc.path.as_deref().and_then(Path::parent).map(Path::to_path_buf);
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let folder = doc
+            .path
+            .as_deref()
+            .and_then(Path::parent)
+            .map(Path::to_path_buf);
         let search = doc.model.settings().xref_paths.clone();
         let seen: Vec<(String, Option<(u64, SystemTime)>)> = self
             .styles
@@ -116,7 +131,9 @@ impl App {
                 let bitmap = crate::pictures::fetch(&key, &doc.model, folder.as_deref());
                 let read = bitmap.is_some();
                 self.styles.images.put_bitmap(key, bitmap);
-                let name = Path::new(&file).file_name().map_or_else(|| file.clone(), |n| n.to_string_lossy().into_owned());
+                let name = Path::new(&file)
+                    .file_name()
+                    .map_or_else(|| file.clone(), |n| n.to_string_lossy().into_owned());
                 said.push(if read {
                     format!("{name} değişti; resim yeniden okundu.")
                 } else {
@@ -131,20 +148,32 @@ impl App {
 
     /// The external references' files, with the SHA-256 compared (`cad.assets.check`).
     fn xref_assets(&self) -> Vec<kentos_commands::AssetStatus> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        let input = AssetsCheck { drawing: self.drawing_file(), kinds: Some(vec![AssetKind::Xref]), digests: Some(true) };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let input = AssetsCheck {
+            drawing: self.drawing_file(),
+            kinds: Some(vec![AssetKind::Xref]),
+            digests: Some(true),
+        };
         assets_check::check_in(&doc.model, &input).assets
     }
 
     /// The drawing just opened: its linked files' state said, its references' files seen.
     pub(crate) fn xrefs_check_opened(&mut self) {
         self.xref_watch = Watch::default();
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         // The references with their SHA-256; the other links only looked for (a large raster is not read).
         let xrefs = self.xref_assets();
         let others = assets_check::check_in(
             &doc.model,
-            &AssetsCheck { drawing: self.drawing_file(), kinds: None, digests: Some(false) },
+            &AssetsCheck {
+                drawing: self.drawing_file(),
+                kinds: None,
+                digests: Some(false),
+            },
         )
         .assets;
         let nested: Vec<BlockId> = doc
@@ -154,11 +183,16 @@ impl App {
             .filter(|b| b.xref.as_ref().is_some_and(|x| x.parent.is_some()))
             .map(|b| b.id)
             .collect();
-        let changed: Vec<String> =
-            xrefs.iter().filter(|a| a.state == AssetState::Changed).map(|a| a.name.clone()).collect();
+        let changed: Vec<String> = xrefs
+            .iter()
+            .filter(|a| a.state == AssetState::Changed)
+            .map(|a| a.name.clone())
+            .collect();
         let missing: Vec<String> = xrefs
             .iter()
-            .filter(|a| a.state == AssetState::Missing && a.block.is_none_or(|b| !nested.contains(&b)))
+            .filter(|a| {
+                a.state == AssetState::Missing && a.block.is_none_or(|b| !nested.contains(&b))
+            })
             .map(|a| a.name.clone())
             .collect();
         let lost: Vec<String> = others
@@ -202,13 +236,22 @@ impl App {
 
     /// After a command: each loaded reference's file as it is now is the one seen.
     pub(crate) fn xref_watch_seen(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let drawing = self.drawing_file();
         let search = doc.model.settings().xref_paths.clone();
         let mut stamps = HashMap::new();
         for b in doc.model.blocks() {
-            let Some(x) = b.xref.as_ref().filter(|x| !x.unloaded) else { continue };
-            let found = kentos_native_application::links::find(&x.path, x.relative.as_deref(), drawing.as_deref(), &search);
+            let Some(x) = b.xref.as_ref().filter(|x| !x.unloaded) else {
+                continue;
+            };
+            let found = kentos_native_application::links::find(
+                &x.path,
+                x.relative.as_deref(),
+                drawing.as_deref(),
+                &search,
+            );
             if let Some(s) = found.at.as_deref().and_then(stamp) {
                 stamps.insert(b.id, s);
             }
@@ -219,13 +262,22 @@ impl App {
     /// The references' files looked at: a source that changed since it was told is told by the card.
     fn xrefs_tick(&mut self) {
         self.pictures_tick();
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let drawing = self.drawing_file();
         let search = doc.model.settings().xref_paths.clone();
         let mut moved = false;
         for b in doc.model.blocks() {
-            let Some(x) = b.xref.as_ref().filter(|x| !x.unloaded) else { continue };
-            let found = kentos_native_application::links::find(&x.path, x.relative.as_deref(), drawing.as_deref(), &search);
+            let Some(x) = b.xref.as_ref().filter(|x| !x.unloaded) else {
+                continue;
+            };
+            let found = kentos_native_application::links::find(
+                &x.path,
+                x.relative.as_deref(),
+                drawing.as_deref(),
+                &search,
+            );
             let now = found.at.as_deref().and_then(stamp);
             let before = self.xref_watch.stamps.get(&b.id).copied();
             if now != before {
@@ -250,7 +302,10 @@ impl App {
             return;
         }
         let listed = self.document.as_ref().and_then(|doc| {
-            let input = XrefsList { drawing: drawing.clone(), affected: true };
+            let input = XrefsList {
+                drawing: drawing.clone(),
+                affected: true,
+            };
             match kentos_native_application::xrefs_list::plan(
                 &kentos_native_application::ExecutionContext::new(&mut doc.model.clone()),
                 &input,
@@ -263,7 +318,10 @@ impl App {
         for (b, name, now) in changed {
             self.xref_watch.told.insert(b, now);
             notice.names.push(name.clone());
-            if let Some(x) = listed.as_ref().and_then(|l| l.iter().find(|x| x.name == name)) {
+            if let Some(x) = listed
+                .as_ref()
+                .and_then(|l| l.iter().find(|x| x.name == name))
+            {
                 for s in &x.sheets {
                     if !notice.sheets.contains(s) {
                         notice.sheets.push(s.clone());
@@ -291,14 +349,22 @@ impl App {
         match event {
             Event::Tick => self.xrefs_tick(),
             Event::Reload => {
-                let names = self.xref_watch.notice.take().map(|n| n.names).unwrap_or_default();
+                let names = self
+                    .xref_watch
+                    .notice
+                    .take()
+                    .map(|n| n.names)
+                    .unwrap_or_default();
                 let listed: Vec<(String, XrefState)> = self
                     .document
                     .as_ref()
                     .map(|_| self.xrefs_state())
                     .unwrap_or_default();
                 for name in names {
-                    if listed.iter().any(|(n, s)| *n == name && *s == XrefState::Changed) {
+                    if listed
+                        .iter()
+                        .any(|(n, s)| *n == name && *s == XrefState::Changed)
+                    {
                         let _ = self.xref_reload(name);
                     }
                 }
@@ -314,8 +380,13 @@ impl App {
 
     /// The references' names and states.
     fn xrefs_state(&self) -> Vec<(String, XrefState)> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        let input = XrefsList { drawing: self.drawing_file(), affected: false };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let input = XrefsList {
+            drawing: self.drawing_file(),
+            affected: false,
+        };
         kentos_native_application::xrefs::list_of(&doc.model, &input)
             .xrefs
             .into_iter()
@@ -328,7 +399,10 @@ impl App {
         let done = self.xref_run(XrefsOperation::Reload { name })?;
         self.say(
             kentos_interaction::Level::Success,
-            format!("“{}” yeniden yüklendi: {} nesne (tek adımda geri alınır).", done.name, done.objects),
+            format!(
+                "“{}” yeniden yüklendi: {} nesne (tek adımda geri alınır).",
+                done.name, done.objects
+            ),
         );
         Some(())
     }
@@ -339,45 +413,67 @@ impl App {
         let what = if n.names.len() == 1 {
             format!("“{}” dış başvurusunun kaynağı değişti.", n.names[0])
         } else {
-            format!("{} dış başvurunun kaynağı değişti: {}.", n.names.len(), n.names.join(", "))
+            format!(
+                "{} dış başvurunun kaynağı değişti: {}.",
+                n.names.len(),
+                n.names.join(", ")
+            )
         };
         let mut seen = Vec::new();
         if !n.sheets.is_empty() {
-            seen.push(format!("{} paftayı ({})", n.sheets.len(), n.sheets.join(", ")));
+            seen.push(format!(
+                "{} paftayı ({})",
+                n.sheets.len(),
+                n.sheets.join(", ")
+            ));
         }
         if !n.views.is_empty() {
-            seen.push(format!("{} görünümü ({})", n.views.len(), n.views.join(", ")));
+            seen.push(format!(
+                "{} görünümü ({})",
+                n.views.len(),
+                n.views.join(", ")
+            ));
         }
         let effect = if seen.is_empty() {
             "Çizim son yüklenen hâlini gösteriyor.".to_owned()
         } else {
-            format!("{} etkiler. Çizim son yüklenen hâlini gösteriyor.", seen.join(" ve "))
+            format!(
+                "{} etkiler. Çizim son yüklenen hâlini gösteriyor.",
+                seen.join(" ve ")
+            )
         };
-        let words = Column::new().spacing(2).push(label::strong(what)).push(label::caption(effect));
+        let words = Column::new()
+            .spacing(2)
+            .push(label::strong(what))
+            .push(label::caption(effect));
         let actions = Row::new()
             .spacing(6)
             .push(
                 button(label::body("Yeniden yükle"))
                     .on_press(msg(Event::Reload))
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             )
             .push(
                 button(label::body("Dış başvurular"))
                     .on_press(msg(Event::Open))
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .push(
                 button(icon(Icon::Close).size(14.0))
                     .on_press(msg(Event::Close))
-                    .padding(4)
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
                     .style(style::button::ghost),
             );
         let card = container(
-            row![icon(Icon::Warning).size(18.0).tone(Tone::Warning), container(words).width(Fill), actions]
-                .spacing(12)
-                .align_y(Center),
+            row![
+                icon(Icon::Warning).size(18.0).tone(Tone::Warning),
+                container(words).width(Fill),
+                actions
+            ]
+            .spacing(12)
+            .align_y(Center),
         )
         .padding([10, 14])
         .max_width(720.0)

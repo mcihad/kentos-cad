@@ -260,7 +260,7 @@ impl App {
             tip(
                 button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(15.0))
                     .on_press(message)
-                    .padding([4, 5])
+                    .padding(kentos_ui::theme::metrics::icon_small(15.0))
                     .style(kentos_ui::style::button::flat),
                 about,
                 iced::widget::tooltip::Position::Top,

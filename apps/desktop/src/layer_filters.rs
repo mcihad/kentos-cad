@@ -19,7 +19,7 @@
 
 use std::time::Duration;
 
-use iced::widget::{Column, button, container, row, text, text_input};
+use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, EntityId, LayerFilter, LayerNodeType, LayersFilter};
 use kentos_domain::Uuid;
@@ -27,9 +27,8 @@ use kentos_interaction::Level;
 use kentos_native_application::layer_filter::compile_filter;
 use kentos_native_application::{ExecutionContext, layers_filter};
 use kentos_ui::icon::icon;
-use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -531,17 +530,15 @@ impl App {
             layers.iter().position(|id| *id == w.layer),
             |i| msg(Event::Layer(i)),
         );
-        let input = text_input(PLACEHOLDER, &w.expression)
+        let input = kentos_ui::widget::text_field(PLACEHOLDER, &w.expression)
             .id(expression_id())
-            .size(typography::body())
-            .padding([5, 8])
             .on_input(|t| msg(Event::Expression(t)))
             .on_submit_maybe(w.ready.then(|| msg(Event::Save)))
             .style(style::field::validated(w.invalid));
         let builder = kentos_ui::widget::tip(
             button(icon(from_web(Some("expression"))).size(16.0))
                 .style(style::button::ghost)
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .on_press(msg(Event::Builder)),
             kentos_ui::widget::Tip::new("İfade oluşturucu…"),
             iced::widget::tooltip::Position::Top,
@@ -554,7 +551,7 @@ impl App {
                     .align_y(Center),
             )
             .on_press_maybe(on)
-            .padding([3, 10])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(style::button::secondary)
         };
         let list = row![
@@ -603,18 +600,16 @@ impl App {
             ))
             .push(words::field("Nesne listesi", list, None))
             .push(words::summary(lines));
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .action(words::secondary(
-                    REMOVE,
-                    has_filter.then(|| msg(Event::Remove)),
-                ))
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, w.ready.then(|| msg(Event::Save))))
-                .width(640.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::secondary(
+                REMOVE,
+                has_filter.then(|| msg(Event::Remove)),
+            ))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, w.ready.then(|| msg(Event::Save))))
+            .width(640.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): Katman by its path, İfade's text

@@ -13,7 +13,7 @@
 //!
 //! The window edits a copy; Kaydet writes it through `cad.layers.subtypes` in one step and closes.
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     LayerField, LayerNodeType, LayerSubtypes, LayersSubtypes, Subtype, SubtypeField,
@@ -22,8 +22,8 @@ use kentos_commands::{
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_subtypes};
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -402,7 +402,7 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(frame.width(900.0), msg(Event::Cancel))
+        frame.width(900.0).modal(msg(Event::Cancel))
     }
 
     fn subtypes_body<'a>(
@@ -493,11 +493,8 @@ impl App {
             .flatten()
             .find(|c| c.code == t.code)
             .map_or(t.code.clone(), |c| c.label.clone());
-        let name = text_input(&listed_label, &t.label)
-            .size(typography::body())
-            .on_input(|s| msg(Event::Label(s)))
-            .padding([5, 8])
-            .style(style::field::input);
+        let name = kentos_ui::widget::text_field(&listed_label, &t.label)
+            .on_input(|s| msg(Event::Label(s)));
         let mut rows = Column::new().spacing(6);
         rows = rows.push(
             row![
@@ -514,7 +511,7 @@ impl App {
         column![
             words::field(
                 "Ad",
-                container(focus_ring(name)).width(320),
+                container(name).width(320),
                 Some(format!("Boş bırakılırsa listedeki adı: {listed_label}.")),
             ),
             container(scrollable(rows).height(Fill))
@@ -588,14 +585,11 @@ fn field_line<'a>(t: &'a Subtype, f: &LayerField) -> Element<'a, Message> {
         }
         _ => {
             let k = key.clone();
-            text_input(
+            kentos_ui::widget::text_field(
                 f.default.as_deref().unwrap_or(""),
                 rule.and_then(|r| r.default.as_deref()).unwrap_or(""),
             )
-            .size(typography::body())
             .on_input(move |s| msg(Event::Default(k.clone(), Some(s))))
-            .padding([4, 8])
-            .style(style::field::input)
             .into()
         }
     };

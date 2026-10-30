@@ -37,7 +37,7 @@ fn small<'a, Message: Clone + 'a>(
         .align_y(iced::Center),
     )
     .on_press(message)
-    .padding([5, 8])
+    .padding(crate::theme::metrics::action())
     .style(style::button::flat)
     .into()
 }
@@ -213,7 +213,7 @@ impl<'a, Message: Clone + 'a> AiPrompt<'a, Message> {
                 (busy || ready)
                     .then(|| (self.on_event)(if busy { AiEvent::Stop } else { AiEvent::Submit })),
             )
-            .padding([7, 12])
+            .padding(crate::theme::metrics::action())
             .style(if busy {
                 style::button::secondary
             } else {
@@ -409,7 +409,7 @@ impl<'a, Message: Clone + 'a> AiQuestion<'a, Message> {
                             q.ready()
                                 .then(|| (self.on_event)(QuestionEvent::Submit { id })),
                         )
-                        .padding([7, 12])
+                        .padding(crate::theme::metrics::action())
                         .style(style::button::primary),
                 );
                 body = body.push(actions);
@@ -641,11 +641,11 @@ impl<'a, Message: Clone + 'a> AiToolCall<'a, Message> {
                             .width(Fill),
                         button(text("Reddet").size(typography::body()))
                             .on_press_maybe(self.reject)
-                            .padding([6, 10])
+                            .padding(crate::theme::metrics::action())
                             .style(style::button::secondary),
                         button(text("Onayla").size(typography::body()))
                             .on_press_maybe(self.approve)
-                            .padding([6, 10])
+                            .padding(crate::theme::metrics::action())
                             .style(style::button::primary)
                     ]
                     .spacing(8)
@@ -889,7 +889,7 @@ impl<'a, Message: Clone + 'a> AiMessage<'a, Message> {
             if let Some(usage) = data.usage {
                 actions = actions.push(space::horizontal()).push(
                     text(format!(
-                        "{} token · {:.1} sn",
+                        "{} token, {:.1} sn",
                         usage.output_tokens,
                         usage.elapsed.as_secs_f64()
                     ))
@@ -1004,7 +1004,7 @@ impl<'a, Message: Clone + 'a> AiConversation<'a, Message> {
                     )
                     .on_press(message)
                     .width(Fill)
-                    .padding([12, 14])
+                    .padding(crate::theme::metrics::action())
                     .style(style::button::secondary),
                 );
             }

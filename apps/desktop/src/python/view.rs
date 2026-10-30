@@ -71,7 +71,7 @@ fn small(glyph: Icon, about: Tip, message: Option<Message>) -> Element<'static, 
     tip(
         button(icon(glyph).size(15.0))
             .on_press_maybe(message)
-            .padding([4, 6])
+            .padding(kentos_ui::theme::metrics::icon_small(15.0))
             .style(style::button::flat),
         about,
         iced::widget::tooltip::Position::Top,
@@ -98,7 +98,7 @@ fn link_toggle(c: &super::Console, program: Option<kentos_launch::Module>) -> El
     tip(
         button(icon(Icon::Link).size(15.0))
             .on_press(ev(Event::Link))
-            .padding([4, 6])
+            .padding(kentos_ui::theme::metrics::icon_small(15.0))
             .style(style::button::toggle(c.link.is_some())),
         about,
         iced::widget::tooltip::Position::Top,

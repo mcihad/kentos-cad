@@ -132,7 +132,7 @@ Serin, kâğıt paftayı andıran griler. Krem ya da sıcak kâğıt tonu kullan
 |---|---|
 | **Plus Jakarta Sans** (varsayılan, iki platformda; değişken ağırlık) | Bütün arayüz metni. **Uygulama ayarları → Görünüm → Yazı tipi** (`appearance.uiFont`, ADR 0126) ile Inter, IBM Plex Sans, Source Sans 3, Noto Sans, Roboto ya da sistemin yazı tipi seçilir. |
 | **Barlow** (varsayılan çizim yazı tipi) | Çizimin kendi yazıları: yazı nesneleri, ölçü değerleri, etiketler (üst katman). **Proje ayarları → Genel → Çizim yazı tipi** (`doc.settings.drawingFont`, projeyle kaydedilir; yeni projelerin varsayılanı Uygulama ayarları → Yeni projeler) ile klasik teknik çizim yazıları seçilir: Arimo (Arial ölçülerinde), Overpass (DIN/ISO), Quicksand (ince, yuvarlak uçlu; plotter yazısına benzer), Architects Daughter (mimari el yazısı), Courier Prime (daktilo), IBM Plex Mono. Veridir; arayüz yazı tipi seçimini izlemez. |
-| **IBM Plex Mono** (400, 500; `appearance.monoFont` ile JetBrains Mono) | **Yalnızca** komut satırı girdisi, komut geçmişi, takma ad gösterimi (`PL`, `PARSEL`) ve işlem pencerelerindeki ifade alanı (komut gibi yazılır). Veri etiketlerinde mono kullanılmaz. |
+| **IBM Plex Mono** (400, 500; `appearance.monoFont` ile JetBrains Mono) | Komut satırı girdisi, komut geçmişi, takma ad gösterimi (`PL`, `PARSEL`), kod ve işlem pencerelerindeki ifade alanı (komut gibi yazılır). Masaüstünde bir de **sütunda hizalanacak sayılar** (koordinat, ölçü, tablo değeri): Plus Jakarta Sans'ın rakamları orantılıdır, iced 0.14 `tnum` özelliğini açamaz ([ADR 0804](docs/adr/0804-one-control-height-cells-and-frames.md)). Adlar, sözcükler, kısayollar, sayaçlar ve tek başına duran sayı mono yazılmaz. |
 
 **Yazı tipleri uygulamayla gelir, CDN'den ya da internetten yüklenmez** (`apps/web/src/assets/fonts/<ad>/`, her birinin yanında SIL OFL 1.1 lisansı; `styles/fonts.css`). Yalnız Latin ve Latin Extended alt kümeleri vardır (ğ, ş, İ ikincisindedir); tarayıcı yalnız kullanılan yazı tipini indirir. Seçim kartında her yazı tipi kendisiyle yazılır (“Ağ Şı İ 123”). Arayüz yazı tipi çizim alanındaki işaretlere (kenet adı, ölçek çubuğu, kuzey oku) de uygulanır; çizimdeki yazı nesneleri, ölçü değerleri ve etiketler veridir, yazı tipi değişmez. Masaüstü aynı yüzleri web'in dosyalarından üretilmiş TrueType olarak taşır (`apps/desktop/assets/fonts/drawing`, [ADR 0055](docs/adr/0055-desktop-drawing-text.md)).
 
@@ -193,8 +193,10 @@ Bütün boyutlar `--ui-scale` ile çarpılır. **Uygulama ayarları → Görün�
 | `--ribbon-h` | 96 | Şeridin panelleri (sekme satırı `--menubar-h`) |
 | `--status-h` | 28 | Durum çubuğu |
 | `--cmd-h` | 36 | Komut satırı |
-| `--row-h` | 28 | Ağaç, özellik ızgarası ve liste satırı |
-| `--ctl-h` | 30 | Kontrol yüksekliği |
+| `--row-h` | 28 | Tablo, ağaç, özellik ızgarası, liste ve menü satırı |
+| `--ctl-h` | 28 (web 30, dönüşte TODOS.md §0.2) | **Bütün girdiler ve eylem düğmeleri:** metin, açılır liste, sayı, tarih, renk, arama, parçalı seçim |
+
+Masaüstünde satır ile kontrol aynı modüldür ([ADR 0804](docs/adr/0804-one-control-height-cells-and-frames.md)): bir panelde her şey 28'lik kareli kâğıda oturur. Yoğunluk bileşen başına seçilmez, girdilerin ikinci bir boyu yoktur. 22 px yalnız bir satırın içinde duran küçük düğmelerindir (`metrics::action_small`, `metrics::icon_small`). Uygulamalar iced'in `text_input`'unu kendi iç boşluğuyla kurmaz: `text_field`, kendi çerçevesi olan satırda `bare_field`; düğmeler `metrics::action`, yalnız ikonlular `metrics::icon`. `crates/ui/tests/control_heights.rs` bunu 11–18 px'te ölçer.
 
 ### 5.3 Köşe yarıçapları (hiyerarşi)
 
@@ -330,7 +332,8 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 
 ### 7.5 Dok panelleri
 
-- **Üst yuva sekmeleri:** sağ dokun üst yuvası "Katmanlar | İşlemler" sekmelerini taşır. Sekme şeridi panel başlığının yerini alır (katlama oku solda kalır); etkin sekmede 2 px amber alt çizgi, amber simge ve 600 ağırlık vardır. Meta ("13 katman", "2 araç") sekmelerin sağında, dar dokta üç noktayla kısalır.
+- **Yuva sekmeleri:** bir yuvanın panelleri yan yana sekmelerdir. Sekme başlığı kadar geniştir, ikonuna inmez, daralmaz; seçilince genişliği değişmez ([ADR 0806](docs/adr/0806-tabs-keep-their-width.md)). Sığmayınca şerit kayar: sağda `‹ ›` okları (her basış bir sekme), tekerlek de kaydırır, kesilen kenar zemine doğru solar; `⋯` bütün panelleri listeler; seçilen sekme görünür yapılır. Etkin sekmede 2 px vurgu alt çizgisi vardır.
+- **Eylemler:** panelin eylem düğmeleri sekmelerin yanına sığarsa başlığın sağında, sığmazsa altında kendi satırındadır: sekmelerle karışmaz. Kısa bilgi ("13 katman", "#284") sığmazsa görünmez.
 - **Başlık:** katlama oku, başlık (600), üçüncül meta ("13 katman", "#284") ve sağda simge düğmeleri.
 - **Katman ağacı:**
   - Satır sırası: girinti, katlama oku, renk örneği ya da klasör, ad, nesne sayısı, göz ve kilit.
@@ -341,7 +344,9 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 - **Öznitelikler:**
   - Üstte özet: tür, etiket (amber, ör. parsel no) ve katman yolu.
   - Altında katlanabilir bölümler: Genel, Geometri, Öznitelik bilgileri.
-  - Düzenlenebilir hücre üzerine gelinene kadar düz metin gibi görünür. Enter kaydeder, Esc vazgeçer.
+  - **Satır:** ad sütunu, ince sütun çizgisi, değer hücresi ve altında ince çizgi. Bütün ızgaralar (Öznitelikler, Nesne inceleyici, salt okunur ızgara) aynı satırı ve aynı bölüm başlığını kullanır; sütunlar tam pikselde durur. Üzerine gelinen satır bütünüyle hafifçe aydınlanır.
+  - **Hücre (`Cell`, ADR 0804):** düzenleyici hücreyi çizgiden çizgiye doldurur, köşesizdir, küçük bir kutu olarak durmaz. Yazılabilir değer gömük zeminde, salt okunur değer panelin üstünde düz yazıdır: zemini olan değişir, olmayan değişmez. İmleçte zemin aydınlanır; düzenlenirken ya da listesi açıkken alan zeminini ve 1 px vurgu kenarını alır; geçersiz değerde kenar kırmızıdır. Yazı bu durumlarda bir piksel bile kaymaz. Enter kaydeder, Esc vazgeçer.
+  - Evet/hayır gibi kısa seçimler parçalı seçimin hücre biçimiyle hücreyi paylaşır; yan yana iki sayı ince çizgiyle ayrılır.
   - Sayılar tabular yazılır, birim üçüncül renktedir.
   - Seçim yokken "Seçili nesne yok" ve yönlendirme metni, altında çizim özeti gösterilir.
 
@@ -352,7 +357,7 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 - Yazarken öneri listesi çıkar: simge, başlık, takma ad (mono) ve kısayol.
 - **Alt panel isteğe bağlıdır** (F2). Sekmeleri: Komut geçmişi (zaman, simge, metin), Koordinat listesi (Köşe, Y (sağa), X (yukarı), Kenar, Semt; CAD projesinde X (sağa), Y (yukarı) ve Açı; dipte alan ve çevre), Noktalar, Tablo, İstatistik ve Grafik (§7.17), Arama, Topoloji, Servis bilgisi, Uyarılar (okunmamış sayısı rozetle). Sekmeler sığmayınca etkin olmayanlar yalnız simgeleriyle görünür, adları ipucundadır.
 - **Noktalar** (nokta editörü, [ADR 0153](docs/adr/0153-point-editor.md)): üstte iki gruplu araç çubuğu. Solda arama kutusu (200 px), katman seçici (170 px; "Bütün katmanlar" ve nokta taşıyan katmanlar sayılarıyla), "Yalnız seçililer" ve "Bağlı çizgiler izler" (açık). Sağda sayaç (`128 / 1204 nokta`, ikincil renk), İşlemler ▾, Satır ekle, Sil ve Göster: simgeli ikincil düğmeler, seçim yokken Sil ve Göster sönük. Dar panelde sağ grup ikinci satıra geçer ve sağa dayanır; düğme kesilmez. Altında yapışkan başlıklı tablo: Sıra (üçüncül), Ad (yarı kalın), Y (sağa), X (yukarı), Z (kot), Kod, Katman; sayılar sağa dayalı ve tabular. Başlık tıklanınca sıralar, sıralı sütunun başlığında vurgu renginde ok. Seçili satır vurgu tonunda zemin ve solda 2 px vurgu çubuğuyla gösterilir (masaüstünde vurgu zemini).
-  - Düzenlenen hücre (çift tık) kendi içinde 22 px'lik alan olur: vurgu çizgili çerçeve, sayılarda sağa dayalı tabular yazı; açılınca değer seçilidir.
+  - Düzenlenen hücre (çift tık) hücrenin kendisidir: çizgiden çizgiye alan zemini ve vurgu kenarı, sayılarda sağa dayalı yazı; yazı yerinden oynamaz, açılınca değer seçilidir.
   - Satır ekle'nin taslak satırı tablonun en altındadır: vurgu tonunda zemin, Sıra hücresinde vurgu renginde yarı kalın "Yeni".
   - İşlemler ▾ menüsü hedefi başlıkta söyler ("3 seçili nokta", "Tablodaki 36 nokta"); her komut simgesi ve ikinci satırda ne yaptığıyla. Dört toplu işlemin altında ayraç, Dışa aktar (dışa aktarma simgesi) ve yalnız bu menüde İçe aktar (içe aktarma simgesi). Satırın sağ tık menüsü: başlık, Göster, ayraç, aynı komutlar (Dışa aktar dahil, İçe aktar hariç), ayraç, Sil; seçili olmayan satırda başlık noktanın adıdır ("Nokta 105").
   - Tablodan açılan koordinat listesi verme penceresinde ilk kapsam tablonun satırlarıdır: "Tablodaki (36)" ya da "Seçili satırlar (3)"; ardından Görünen katmanlar ve Tümü. İçe aktar'dan sonra açılan Çift noktaları ayıkla'da Ölçüt Aynı ad seçili, başlık "Aynı adlı 4 nokta", Tutulan'ın ipucu "İlki çizimdekini, Sonuncusu dosyadakini tutar; …".
@@ -399,6 +404,8 @@ Bir komut çalışırken çizim alanının üst ortasında yüzen şerittir (`ui
 ### 7.9 Pencereler
 
 - Karartılmış arka plan, 10 px köşe ve pop gölgesi. Başlık 16 px. Esc ve arka plana tıklama kapatır; pencerenin içine (yazıya, boşluğa) tıklamak kapatmaz.
+- **Kapatma düğmesi isteğe bağlıdır** (`Dialog::on_close`, `Dialog::modal`; `Dialog::no_close` gizler; [ADR 0804](docs/adr/0804-one-control-height-cells-and-frames.md)). Başlığın sağında tam ekran düğmesiyle aynı karede durur. Pencereler × ile gelir; iki cevabı olan onay kutusu gelmez.
+- **Boyutlanma:** ayrı bir kulakçık yoktur, çekilebildiğini çerçeve söyler. Sağ alt köşenin kavisi biraz kalın ve belirgindir; imleç bir kenara gelince o kenarın çerçevesi vurgu renginde aydınlanır, köşeye gelince kavis kısa kuyruklarıyla. Köşe yarıçapını izler; yüzen araç pencereleri de aynıdır.
 - **Boy:** pencere içeriği kadardır, en çok kendi sınırı ya da uygulama penceresi kadar; sığmayınca gövde kayar, başlık ve alt çubuk hep görünür. Kaydırma çubuğu gövdenin yanında durur, içeriğin üstüne binmez. Sekmeli pencereler (ayarlar, yeni proje) sekme değişince boy değiştirmesin diye sabit boydadır. Masaüstünde `Dialog::scroll` ve `max_height` (KentOS UI).
 - **Pencere açıkken uygulama kısayolları çalışmaz.** Tab pencerenin denetimleri arasında döner; arka plandakilere geçmez.
 - **Alt çubuk:** solda ikincil eylem (hayalet düğme), sağda "Vazgeç" ve birincil eylem. Birincil eylem, değişiklik yoksa devre dışıdır.
@@ -560,8 +567,12 @@ Bütün uygulamaların paneli ([ADR 0803](docs/adr/0803-launcher-sheet-and-plate
 
 | Kontrol | Kural |
 |---|---|
-| Metin alanı | Alan zemini, 1 px çizgi; üzerine gelince güçlü çizgi, odakta amber çizgi. Metin kutularında odak halkası çizilmez; kenarlık yeterlidir. |
-| Düğme | İkincil (çizgili), birincil (dolu amber, 600), hayalet (çizgisiz), küçük (28 px). |
+| Girdi | Metin, açılır liste, sayı, tarih, renk, arama, öneri, etiket: alan zemini, 1 px çizgi; üzerine gelince güçlü çizgi, odakta vurgu çizgisi: hepsinde aynı. Metin kutularında odak halkası çizilmez; kenarlık yeterlidir. Boyları aynıdır (§5.2). |
+| Düğme | İkincil (çizgili), birincil (dolu vurgu, 600), hayalet (çizgisiz): 28 px; satır içindeki küçüğü 22 px. Yalnız ikonlu düğme aynı iki boyda karedir. |
+| Tablo | [ADR 0805](docs/adr/0805-data-tables-head-rows-cells.md): başlık satırla aynı boyda kendi bandında, yarı kalın ana metin rengi, altında güçlü çizgi; başlıklı sütunlar arasında çizgi. Satır en az 28 px, altında ince çizgi, tıklanmasa da aydınlanır. Sayılar sağda ve eş aralıklı, başlıkları üstlerinde. Sıralanabilir başlığın bütün hücresi basılır; ok sıralıyken vurgu renginde, imleçte soluk, yazıyı kaydırmaz. Sütun kenarı sürüklenir, çift tık sığdırır. Sığmayan yazı “…” ile biter. Hücre hücre okunan tablolarda sütun çizgileri satırlardan da geçer (`Table::grid`). |
+| Sekme şeridi | Satırla aynı boyda. Sekmeler daralmaz; sığmayınca `‹ ›`, tekerlek ve bütün sekmelerin listesi ([ADR 0806](docs/adr/0806-tabs-keep-their-width.md)). |
+| Seçili satır | Tablo, ağaç, liste: yumuşak vurgu zemini. Birkaçı seçiliyken birincil satır ayrıca vurgu kenarında. Sol 2 px çubuk seçim değil “etkin” demektir (etkin katman). Döşemeler (malzeme, nesne) kenarlıdır: aralarında satır çizgisi yoktur. |
+| Küçük yazı | `Tokens::soft`: okunur en sessiz ton (AA). `faint` yazıda kullanılmaz, çizgi ve işaretlerindir. |
 | Not kutusu | Bilgi (mavi simge) ya da uyarı (amber zemin tonu, ⚠). İlk ifade kalın olabilir: "**Koordinatlar dönüştürülmez.**" |
 
 ---
@@ -680,7 +691,7 @@ Bütün uygulamaların paneli ([ADR 0803](docs/adr/0803-launcher-sheet-and-plate
 
 - Tek bir krem, terrakota ya da neon yeşil vurgu; genel "SaaS kartı" görünümü; aynı köşe yarıçapı ve gölgenin her yerde kullanılması.
 - BÜYÜK HARF etiketler, harf aralığı açılmış üst başlıklar, "A · B · C" biçimli meta satırları, bağlantı sonuna "→".
-- Veri etiketlerinde mono yazı (mono yalnızca komut satırındadır).
+- Adlarda, sözcüklerde ve kısayollarda mono yazı (mono komut satırının, kodun ve sayı sütunlarınındır).
 - Arayüzde sabit renk ya da sabit px yazı boyutu; katman adına göre görsel özel durum.
 - Birden fazla dolu amber düğme; amber'i uyarı ya da süsleme için kullanmak.
 - Sessizce hiçbir şey yapmayan düğme; açıklamasız devre dışı öğe.

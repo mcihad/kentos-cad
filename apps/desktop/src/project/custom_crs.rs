@@ -845,7 +845,8 @@ pub fn view<'a>(
             ))
             // As wide as Proje ayarları: the common points' national coordinates fit their columns.
             .width(900.0)
-            .max_height(760.0),
+            .max_height(760.0)
+            .on_close(Some(on(Event::Cancel))),
     )
 }
 

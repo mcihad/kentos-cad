@@ -354,7 +354,7 @@ impl<'a, Message: Clone + 'a> Entry<'a, Message> {
         let mut heading = row![label::strong(toast.title.clone())].spacing(6);
 
         if item.count > 1 {
-            heading = heading.push(label::mono_caption(format!("×{}", item.count)));
+            heading = heading.push(label::caption(format!("×{}", item.count)));
         }
 
         let mut text = Column::new().push(heading).spacing(2);

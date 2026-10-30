@@ -17,7 +17,7 @@
 //! sets) and closes the window. A link keeps the events of its layer on their routes: every later write that touches
 //! a route or an event places the layer's events again in the same undo step (docs/adr/0569 §3).
 
-use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     EventLink, EventLinkKind, EventSide, LinearRefDefine, LinearRefDefineOperation,
@@ -26,7 +26,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, linearref_define};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -425,10 +425,10 @@ impl App {
             .align_y(Center),
         ]
         .spacing(14);
-        overlay::modal(
-            Frame::new(TITLE).push(body).width(720.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .width(720.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn event_link_editor<'a>(
@@ -488,19 +488,13 @@ impl App {
             ),
             |i| msg(Event::Offset(i)),
         );
-        let name = text_input("Bağın adı", &l.name)
-            .size(typography::body())
-            .on_input(|t| msg(Event::Name(t)))
-            .padding([5, 8])
-            .style(style::field::input);
-        let tolerance = text_input("0,001", &r.tolerance)
-            .size(typography::body())
-            .on_input(|t| msg(Event::Tolerance(t)))
-            .padding([5, 8])
-            .style(style::field::input);
+        let name =
+            kentos_ui::widget::text_field("Bağın adı", &l.name).on_input(|t| msg(Event::Name(t)));
+        let tolerance = kentos_ui::widget::text_field("0,001", &r.tolerance)
+            .on_input(|t| msg(Event::Tolerance(t)));
         let mut editor = Column::new()
             .spacing(10)
-            .push(words::field("Ad", focus_ring(name), None))
+            .push(words::field("Ad", name, None))
             .push(words::field("Olay katmanı", events, None))
             .push(words::field("Olay türü", kind, None))
             .push(words::field("Rota katmanları", routes, None))
@@ -547,7 +541,7 @@ impl App {
                 LEFT,
                 Some(msg(Event::Left)),
             ))
-            .push(words::field("Tolerans (m)", focus_ring(tolerance), None))
+            .push(words::field("Tolerans (m)", tolerance, None))
             .push(
                 label::caption(
                     "Rotası ya da olayı değişen her yazma, aynı adımda, bağın olaylarını rotalarının verdiği yere koyar \

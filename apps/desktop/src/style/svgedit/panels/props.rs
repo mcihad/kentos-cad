@@ -262,7 +262,7 @@ fn selection_props<'a>(ed: &'a SvgEditor, sel: &[Obj]) -> Element<'a, Message> {
                 .spacing(6)
                 .align_y(Center),
             )
-            .padding([3, 10])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(ui_style::button::secondary)
             .on_press(change(move |ed| ed.edit_nodes(Some(id.clone()))))
             .into(),
@@ -279,7 +279,7 @@ fn selection_props<'a>(ed: &'a SvgEditor, sel: &[Obj]) -> Element<'a, Message> {
                     .spacing(6)
                     .align_y(Center),
                 )
-                .padding([3, 10])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(ui_style::button::secondary)
                 .on_press(change(|ed| ed.path_op(PathOp::ToPath))),
                 container(label::caption(

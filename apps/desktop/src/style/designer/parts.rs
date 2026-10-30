@@ -450,7 +450,7 @@ pub(super) fn dash_row<'a>(env: &Env<'_>, hint: &str) -> Element<'a, Message> {
 fn small<'a>(text: &str, tip_text: &str, press: Option<Message>) -> Element<'a, Message> {
     tip(
         button(label::body(text.to_owned()))
-            .padding([3, 9])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(style::button::secondary)
             .on_press_maybe(press),
         Tip::new(tip_text.to_owned()),

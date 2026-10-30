@@ -9,7 +9,7 @@
 
 use std::fmt::Write as _;
 
-use iced::widget::{Column, text_input};
+use iced::widget::Column;
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     CommandResult, CommandWarning, Entity, MeshZonal, MeshesProfile, MeshesProfiled, MeshesQueried,
@@ -17,9 +17,8 @@ use kentos_commands::{
     PointCloudsRegion, PointCloudsRegioned, Vec2,
 };
 use kentos_native_application::{ExecutionContext, mesh_areas, meshes, pointcloud_areas};
-use kentos_ui::style;
 use kentos_ui::widget::segmented::Segmented;
-use kentos_ui::widget::{Dialog, focus_ring, overlay};
+use kentos_ui::widget::{Dialog, overlay};
 
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message, off_thread};
@@ -705,15 +704,10 @@ fn parse(t: &str) -> Option<f64> {
 }
 
 fn input<'a>(hint: &str, value: &str, on: fn(String) -> Event) -> Element<'a, Message> {
-    focus_ring(
-        text_input(hint, value)
-            .on_input(move |t| event(on(t)))
-            .padding([5, 8])
-            .width(Fill)
-            .size(kentos_ui::theme::typography::body())
-            .style(style::field::input),
-    )
-    .into()
+    kentos_ui::widget::text_field(hint, value)
+        .on_input(move |t| event(on(t)))
+        .width(Fill)
+        .into()
 }
 
 fn window<'a>(

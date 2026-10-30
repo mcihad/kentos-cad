@@ -197,11 +197,13 @@ impl App {
             _ => Shown::Row(i),
         };
         let table = Table::new(columns)
+            .grid()
             .virtualized(count + usize::from(draft_at.is_some()), move |i| {
-                let field = |numeric: bool| {
+                let field = |numeric: bool, place: usize| {
                     cell::edit_box(
                         &text,
                         numeric,
+                        kentos_ui::widget::table::cell_pads(place, cols.len()),
                         |t| msg(Event::Input(t)),
                         msg(Event::Finish(Some(Walk::Down))),
                         msg(Event::Finish(None)),
@@ -213,38 +215,41 @@ impl App {
                     let (after, d) = draft
                         .clone()
                         .unwrap_or((At { path: 0, index: 0 }, super::edit::Draft::default()));
-                    let cells = cols.iter().map(|c| -> Element<'_, Message> {
-                        if let (Some(col), Some((Cell::Draft, ec))) = (c.edit(), editing)
-                            && ec == col
-                        {
-                            return field(c.numeric);
-                        }
-                        let value = match c.key {
-                            Key::No => {
-                                return label::strong(texts::DRAFT)
-                                    .style(style::text::accent)
-                                    .into();
+                    let cells = cols
+                        .iter()
+                        .enumerate()
+                        .map(|(place, c)| -> Element<'_, Message> {
+                            if let (Some(col), Some((Cell::Draft, ec))) = (c.edit(), editing)
+                                && ec == col
+                            {
+                                return field(c.numeric, place);
                             }
-                            Key::Ring => rings.get(after.path).cloned().unwrap_or_default(),
-                            Key::Value(Column::East) => d.east.clone(),
-                            Key::Value(Column::North) => d.north.clone(),
-                            Key::Value(Column::Z) => d.z.clone(),
-                            _ => String::new(),
-                        };
-                        let shown: Element<'_, Message> = if c.numeric {
-                            label::mono(value).style(style::text::muted).into()
-                        } else {
-                            label::muted(value).into()
-                        };
-                        match c.edit() {
-                            Some(col) if !matches!(col, Column::Radius | Column::M) => {
-                                mouse_area(shown)
-                                    .on_double_click(msg(Event::Edit(i, col)))
-                                    .into()
+                            let value = match c.key {
+                                Key::No => {
+                                    return label::strong(texts::DRAFT)
+                                        .style(style::text::accent)
+                                        .into();
+                                }
+                                Key::Ring => rings.get(after.path).cloned().unwrap_or_default(),
+                                Key::Value(Column::East) => d.east.clone(),
+                                Key::Value(Column::North) => d.north.clone(),
+                                Key::Value(Column::Z) => d.z.clone(),
+                                _ => String::new(),
+                            };
+                            let shown: Element<'_, Message> = if c.numeric {
+                                label::mono(value).style(style::text::muted).into()
+                            } else {
+                                label::muted(value).into()
+                            };
+                            match c.edit() {
+                                Some(col) if !matches!(col, Column::Radius | Column::M) => {
+                                    mouse_area(shown)
+                                        .on_double_click(msg(Event::Edit(i, col)))
+                                        .into()
+                                }
+                                _ => shown,
                             }
-                            _ => shown,
-                        }
-                    });
+                        });
                     return TableLine::new(cells).selected(true).current(false);
                 };
                 let r = &shown_rows[k];
@@ -262,52 +267,57 @@ impl App {
                     };
                     n.map(|n| p.pts[n])
                 });
-                let cells = cols.iter().map(|c| -> Element<'_, Message> {
-                    if let (Some(col), Some((Cell::Vertex(a), ec))) = (c.edit(), editing)
-                        && a == at
-                        && ec == col
-                    {
-                        return field(c.numeric);
-                    }
-                    let value = match c.key {
-                        Key::No => (k + 1).to_string(),
-                        Key::Ring => rings.get(r.path).cloned().unwrap_or_default(),
-                        Key::Value(Column::East) => format.coord(r.p.x),
-                        Key::Value(Column::North) => format.coord(r.p.y),
-                        Key::Value(Column::Z) => {
-                            r.z.map(|z| format.length_bare(z)).unwrap_or_default()
+                let cells = cols
+                    .iter()
+                    .enumerate()
+                    .map(|(place, c)| -> Element<'_, Message> {
+                        if let (Some(col), Some((Cell::Vertex(a), ec))) = (c.edit(), editing)
+                            && a == at
+                            && ec == col
+                        {
+                            return field(c.numeric, place);
                         }
-                        Key::Value(Column::M) => {
-                            r.m.map(|m| {
-                                kentos_geometry_core::display::fixed(m, format.length_decimals)
-                            })
-                            .unwrap_or_default()
+                        let value = match c.key {
+                            Key::No => (k + 1).to_string(),
+                            Key::Ring => rings.get(r.path).cloned().unwrap_or_default(),
+                            Key::Value(Column::East) => format.coord(r.p.x),
+                            Key::Value(Column::North) => format.coord(r.p.y),
+                            Key::Value(Column::Z) => {
+                                r.z.map(|z| format.length_bare(z)).unwrap_or_default()
+                            }
+                            Key::Value(Column::M) => {
+                                r.m.map(|m| {
+                                    kentos_geometry_core::display::fixed(m, format.length_decimals)
+                                })
+                                .unwrap_or_default()
+                            }
+                            Key::Value(Column::Radius) => {
+                                r.radius.map(|v| format.length_bare(v)).unwrap_or_default()
+                            }
+                            Key::Chord => {
+                                r.chord.map(|v| format.length_bare(v)).unwrap_or_default()
+                            }
+                            Key::Bearing => next
+                                .map(|n| format.direction_bare(bearing_grad(r.p, n)))
+                                .unwrap_or_default(),
+                        };
+                        if c.key == Key::No {
+                            return mouse_area(label::muted(value))
+                                .on_double_click(msg(Event::Zoom(i)))
+                                .into();
                         }
-                        Key::Value(Column::Radius) => {
-                            r.radius.map(|v| format.length_bare(v)).unwrap_or_default()
+                        let shown: Element<'_, Message> = if c.numeric {
+                            label::mono(value).into()
+                        } else {
+                            label::body(value).into()
+                        };
+                        match c.edit() {
+                            Some(col) if writes && cell_editable(kind, r, col) => mouse_area(shown)
+                                .on_double_click(msg(Event::Edit(i, col)))
+                                .into(),
+                            _ => shown,
                         }
-                        Key::Chord => r.chord.map(|v| format.length_bare(v)).unwrap_or_default(),
-                        Key::Bearing => next
-                            .map(|n| format.direction_bare(bearing_grad(r.p, n)))
-                            .unwrap_or_default(),
-                    };
-                    if c.key == Key::No {
-                        return mouse_area(label::muted(value))
-                            .on_double_click(msg(Event::Zoom(i)))
-                            .into();
-                    }
-                    let shown: Element<'_, Message> = if c.numeric {
-                        label::mono(value).into()
-                    } else {
-                        label::body(value).into()
-                    };
-                    match c.edit() {
-                        Some(col) if writes && cell_editable(kind, r, col) => mouse_area(shown)
-                            .on_double_click(msg(Event::Edit(i, col)))
-                            .into(),
-                        _ => shown,
-                    }
-                });
+                    });
                 TableLine::new(cells)
                     .selected(selected.contains(&at))
                     // Every selected row alike, as the web shows them: no primary one.
@@ -341,7 +351,7 @@ impl App {
                             .align_y(Center),
                     )
                     .style(style::button::secondary)
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press_maybe(on),
                     Tip::new(words).body(hint),
                     iced::widget::tooltip::Position::Top,

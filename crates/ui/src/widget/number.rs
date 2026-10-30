@@ -53,7 +53,7 @@ use crate::theme::{Mode, Tokens, metrics, typography};
 use crate::widget::dropdown::propagate;
 
 /// Alanın iç boşluğu ve öndeki etiketin en az genişliği.
-const PAD: f32 = 7.0;
+const PAD: f32 = metrics::FIELD_PAD;
 const HANDLE: f32 = 18.0;
 /// Sürüklemenin başladığı uzaklık.
 const DRAG: f32 = 3.0;
@@ -380,8 +380,8 @@ pub struct NumberInput<'a, Message> {
     /// Noktalı ondalık, binlik ayraçsız ([`NumberInput::point`]).
     point: bool,
     width: Length,
-    /// Satır içi yükseklik (tablo ve özellik hücresi).
-    inline: bool,
+    /// Izgara hücresini doldurur ([`NumberInput::cell`]).
+    cell: bool,
     /// Öndeki etiket, düzenlenen metin ve birim.
     parts: [Element<'a, Edit>; 3],
 }
@@ -402,7 +402,7 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
             decimals: None,
             point: false,
             width: Length::Fill,
-            inline: false,
+            cell: false,
             parts: [text("").into(), field("").into(), text("").into()],
         }
     }
@@ -458,19 +458,16 @@ impl<'a, Message: Clone + 'a> NumberInput<'a, Message> {
         self
     }
 
-    /// Satır içi yükseklik: tablo ve özellik hücresine sığar
-    /// ([`metrics::inline`]).
-    pub fn inline(mut self) -> Self {
-        self.inline = true;
+    /// Izgara hücresini dolduran görünüm (docs/adr/0804): çerçevesi yok, satır
+    /// yüksekliğinde, yazısı öbür değerlerin hizasında; durumlarını sarıldığı
+    /// [`Cell`](crate::widget::cell::Cell) çizer.
+    pub fn cell(mut self) -> Self {
+        self.cell = true;
         self
     }
 
     fn height(&self) -> f32 {
-        if self.inline {
-            metrics::inline()
-        } else {
-            metrics::control()
-        }
+        metrics::control()
     }
 
     /// Sürükleme bitince gönderilen mesaj (ör. geri alma adımını kapatmak
@@ -621,13 +618,22 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
         // Etiket yoksa tutamak da yoktur; alan boşluktan başlar.
         let handle = if self.label.is_some() {
             (label.size().width + 2.0 * PAD).max(typography::scaled(HANDLE))
+        } else if self.cell {
+            // The field's own 2 px and this: its text where every value's is.
+            metrics::cell_pad() - 2.0
+        } else {
+            PAD - 2.0
+        };
+        // The unit's distance to the end: the box's, or a cell's.
+        let end = if self.cell {
+            metrics::cell_end()
         } else {
             PAD - 2.0
         };
         let suffix = if unit.size().width > 0.0 {
-            unit.size().width + PAD
+            unit.size().width + end + 2.0
         } else {
-            PAD - 2.0
+            end
         };
         let field_width = (size.width - handle - suffix).max(0.0);
 
@@ -646,8 +652,10 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                     middle(&label),
                 )),
                 field.clone().move_to(Point::new(handle, middle(&field))),
-                unit.clone()
-                    .move_to(Point::new(size.width - suffix + 2.0, middle(&unit))),
+                unit.clone().move_to(Point::new(
+                    size.width - unit.size().width - end,
+                    middle(&unit),
+                )),
             ],
         )
     }
@@ -917,25 +925,28 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
         let edge = if state.error.is_some() {
             t.danger
         } else if state.editing || scrubbing {
-            t.accent
+            t.accent_line()
         } else if state.hovered.is_some() {
-            t.muted
+            t.border_strong()
         } else {
             t.border
         };
 
-        renderer.fill_quad(
-            Quad {
-                bounds,
-                border: Border {
-                    color: edge,
-                    width: 1.0,
-                    radius: radius().into(),
+        // In a cell the cell draws the ground and the edge; only what it cannot know is drawn here.
+        if !self.cell {
+            renderer.fill_quad(
+                Quad {
+                    bounds,
+                    border: Border {
+                        color: edge,
+                        width: 1.0,
+                        radius: radius().into(),
+                    },
+                    ..Quad::default()
                 },
-                ..Quad::default()
-            },
-            Background::Color(t.field),
-        );
+                Background::Color(t.field),
+            );
+        }
 
         // Sürüklerken alt kenarda verniyer ölçeği imleçle birlikte kayar.
         if let (Some(press), true) = (state.press, scrubbing) {
@@ -955,8 +966,12 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
             let handle = Rectangle {
                 width: label.bounds().x + label.bounds().width - bounds.x + PAD - 1.0,
                 ..bounds
-            }
-            .shrink(1.0);
+            };
+            let handle = if self.cell {
+                handle
+            } else {
+                handle.shrink(1.0)
+            };
 
             let hot = scrubbing || state.hovered == Some(Part::Handle);
 
@@ -964,7 +979,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                 Quad {
                     bounds: handle,
                     border: Border {
-                        radius: (radius() - 1.0).into(),
+                        radius: if self.cell {
+                            0.0.into()
+                        } else {
+                            (radius() - 1.0).into()
+                        },
                         ..Border::default()
                     },
                     ..Quad::default()
@@ -1010,6 +1029,22 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
                 viewport,
             );
         }
+
+        // A value it refuses: the cell does not read this number's own state.
+        if self.cell && state.error.is_some() {
+            renderer.fill_quad(
+                Quad {
+                    bounds,
+                    border: Border {
+                        color: t.danger,
+                        width: 1.0,
+                        radius: 0.0.into(),
+                    },
+                    ..Quad::default()
+                },
+                Background::Color(Color::TRANSPARENT),
+            );
+        }
     }
 
     fn operate(
@@ -1035,8 +1070,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
 
 impl<'a, Message: Clone + 'a> From<NumberInput<'a, Message>> for Element<'a, Message> {
     fn from(input: NumberInput<'a, Message>) -> Self {
-        // A halo round the box while its field has the keyboard.
-        crate::widget::focus_ring(Element::new(input)).into()
+        Element::new(input)
     }
 }
 

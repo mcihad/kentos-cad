@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use iced::widget::{Column, container, row, text_input};
+use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CadParameter, CommandResult, ConstraintEdit, ConstraintsEdit, ParameterEdit, ParameterKind,
@@ -16,7 +16,7 @@ use kentos_commands::{
 use kentos_native_application::constraint_solve::{parameter_values, unmet};
 use kentos_native_application::{ExecutionContext, constraints_edit, parameters_edit};
 use kentos_ui::theme::typography;
-use kentos_ui::widget::{Dialog as Frame, Elided, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -281,12 +281,9 @@ impl App {
                 let key = p.name.clone();
                 let submit = p.name.clone();
                 container(
-                    text_input("ifade", &typed)
+                    kentos_ui::widget::text_field("ifade", &typed)
                         .on_input(move |t| msg(Event::Expression(key.clone(), t)))
-                        .on_submit(msg(Event::Apply(submit)))
-                        .padding([4, 6])
-                        .size(typography::caption())
-                        .style(style::field::input),
+                        .on_submit(msg(Event::Apply(submit))),
                 )
                 .width(typography::scaled(200.0))
                 .into()
@@ -312,20 +309,17 @@ impl App {
             .width(Fill);
         let add = row![
             container(
-                text_input("ad", &w.new_name)
+                kentos_ui::widget::text_field("ad", &w.new_name)
                     .on_input(|t| msg(Event::NewName(t)))
-                    .padding([4, 6])
-                    .size(typography::caption())
-                    .style(style::field::input)
             )
             .width(typography::scaled(110.0)),
             container(
-                text_input("ifade (3.5, 120cm, genislik / 2)", &w.new_expression)
-                    .on_input(|t| msg(Event::NewExpression(t)))
-                    .on_submit(msg(Event::Add))
-                    .padding([4, 6])
-                    .size(typography::caption())
-                    .style(style::field::input)
+                kentos_ui::widget::text_field(
+                    "ifade (3.5, 120cm, genislik / 2)",
+                    &w.new_expression
+                )
+                .on_input(|t| msg(Event::NewExpression(t)))
+                .on_submit(msg(Event::Add))
             )
             .width(Fill),
             words::secondary(
@@ -402,13 +396,11 @@ impl App {
         if let Some((kind, said)) = &w.said {
             body = body.push(words::summary(vec![words::text_line(*kind, said.clone())]));
         }
-        overlay::modal(
-            Frame::new(PARAMETERS_TITLE)
-                .push(body)
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(720.0),
-            msg(Event::Close),
-        )
+        Frame::new(PARAMETERS_TITLE)
+            .push(body)
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(720.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

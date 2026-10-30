@@ -6,7 +6,7 @@
 //! change; a broken template is said. Kaydet writes through
 //! `cad.layers.info` (one step “Bilgi kartı”).
 
-use iced::widget::{Column, button, column, container, row, text_editor, text_input};
+use iced::widget::{Column, button, column, container, row, text_editor};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, InfoCard, LayerAction, LayerNodeType, LayersInfo, actions_problem,
@@ -17,8 +17,8 @@ use kentos_native_application::expression_unit::Unit;
 use kentos_native_application::{ExecutionContext, layers_info};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -308,22 +308,11 @@ impl App {
             |i| msg(Event::Layer(i)),
         );
         let input = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .size(typography::body())
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value).on_input(move |t| msg(on(t)))
         };
-        let title = kentos_ui::widget::focus_ring(
-            text_input("Parsel {Ada}/{Parsel}", &w.title)
-                .id(title_id())
-                .on_input(|t| msg(Event::Title(t)))
-                .padding([5, 8])
-                .size(typography::body())
-                .style(style::field::input),
-        );
+        let title = kentos_ui::widget::text_field("Parsel {Ada}/{Parsel}", &w.title)
+            .id(title_id())
+            .on_input(|t| msg(Event::Title(t)));
         let text = text_editor(&w.text)
             .placeholder("Alan: {yuvarla($alan, 2)} m²")
             .on_action(|a| msg(Event::Text(a)))
@@ -336,7 +325,7 @@ impl App {
                 kentos_ui::widget::tip(
                     button(icon(from_web(Some(glyph))).size(14.0))
                         .on_press_maybe(on)
-                        .padding(4)
+                        .padding(kentos_ui::theme::metrics::icon_small(14.0))
                         .style(style::button::ghost),
                     kentos_ui::widget::Tip::new(tip),
                     iced::widget::tooltip::Position::Top,
@@ -344,21 +333,18 @@ impl App {
             };
             list = list.push(
                 row![
-                    container(kentos_ui::widget::focus_ring(
-                        text_input("Ad", &a.name)
+                    container(
+                        kentos_ui::widget::text_field("Ad", &a.name)
                             .on_input(move |t| msg(Event::Name(i, t)))
-                            .padding([5, 8])
-                            .size(typography::body())
-                            .style(style::field::input),
-                    ))
+                    )
                     .width(Length::Fixed(140.0)),
-                    container(kentos_ui::widget::focus_ring(
-                        text_input("https://… {Ada} ya da dosya yolu", &a.target)
-                            .on_input(move |t| msg(Event::Target(i, t)))
-                            .padding([5, 8])
-                            .size(typography::body())
-                            .style(style::field::input),
-                    ))
+                    container(
+                        kentos_ui::widget::text_field(
+                            "https://… {Ada} ya da dosya yolu",
+                            &a.target
+                        )
+                        .on_input(move |t| msg(Event::Target(i, t)))
+                    )
                     .width(Fill),
                     small("chevronUp", "Yukarı", (i > 0).then(|| msg(Event::Up(i)))),
                     small(
@@ -381,7 +367,7 @@ impl App {
                 .align_y(Center),
         )
         .on_press(msg(Event::Add))
-        .padding([3, 10])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::secondary);
         let form = column![
             words::field(
@@ -445,15 +431,13 @@ impl App {
                 .spacing(12),
             )
             .push(words::summary(lines));
-        overlay::modal(
-            Frame::new(TITLE)
-                .scroll(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
-                .width(780.0)
-                .max_height(820.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .scroll(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
+            .width(780.0)
+            .max_height(820.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The sample object's card and actions with the window's draft.

@@ -6,7 +6,7 @@ use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{AffectReason, SheetsSet, SheetsSetResult};
 use kentos_ui::icon::icon;
-use kentos_ui::widget::{Dialog as Frame, overlay};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -64,7 +64,10 @@ impl App {
         };
         match kentos_native_application::sheets_set::plan_in(&doc.model, &input) {
             kentos_commands::CommandResult::Completed { output, .. } => {
-                self.sheet_set = Some(Window { set: output, chosen });
+                self.sheet_set = Some(Window {
+                    set: output,
+                    chosen,
+                });
                 self.dialog = Some(Dialog::SheetSet);
             }
             kentos_commands::CommandResult::Failed { error } => self.warn(error.message),
@@ -107,7 +110,13 @@ impl App {
                 ),
             )
         } else if touched.is_empty() {
-            words::text_line(Kind::Ok, format!("{sheets} pafta; seçili {} nesne hiçbir paftada görünmüyor.", w.chosen))
+            words::text_line(
+                Kind::Ok,
+                format!(
+                    "{sheets} pafta; seçili {} nesne hiçbir paftada görünmüyor.",
+                    w.chosen
+                ),
+            )
         } else {
             words::text_line(
                 Kind::Warn,
@@ -132,7 +141,8 @@ impl App {
             };
             let mut group = Column::new().spacing(6).push(label::strong(head));
             for id in &series.sheets {
-                let Some((k, s)) = w.set.sheets.iter().enumerate().find(|(_, s)| &s.id == id) else {
+                let Some((k, s)) = w.set.sheets.iter().enumerate().find(|(_, s)| &s.id == id)
+                else {
                     continue;
                 };
                 let hit: Vec<_> = affected.iter().filter(|a| a.sheet == s.id).collect();
@@ -142,7 +152,9 @@ impl App {
                     s.frames
                         .iter()
                         .map(|f| {
-                            let scale = f.scale.map_or_else(|| "atlas".to_owned(), |n| format!("1:{n}"));
+                            let scale = f
+                                .scale
+                                .map_or_else(|| "atlas".to_owned(), |n| format!("1:{n}"));
                             let marks = if f.marks.is_empty() {
                                 String::new()
                             } else {
@@ -153,29 +165,50 @@ impl App {
                         .collect::<Vec<_>>()
                         .join("; ")
                 };
-                let mut text = Column::new().spacing(2).push(label::body(s.name.clone())).push(label::caption(frames));
+                let mut text = Column::new()
+                    .spacing(2)
+                    .push(label::body(s.name.clone()))
+                    .push(label::caption(frames));
                 if !hit.is_empty() {
                     let why: Vec<String> = hit
                         .iter()
                         .map(|a| {
-                            let name = s.frames.iter().find(|f| f.item == a.item).map_or("", |f| f.name.as_str());
-                            let reasons: Vec<&str> = a.reasons.iter().map(|r| reason_words(*r)).collect();
+                            let name = s
+                                .frames
+                                .iter()
+                                .find(|f| f.item == a.item)
+                                .map_or("", |f| f.name.as_str());
+                            let reasons: Vec<&str> =
+                                a.reasons.iter().map(|r| reason_words(*r)).collect();
                             format!("{name}: {}", reasons.join(", "))
                         })
                         .collect();
-                    text = text.push(label::caption(format!("Yeniden basılacak — {}", why.join("; "))));
+                    text = text.push(label::caption(format!(
+                        "Yeniden basılacak — {}",
+                        why.join("; ")
+                    )));
                 }
                 let line = row![
-                    icon(crate::icons::from_web(Some(if hit.is_empty() { "sheet" } else { "warning" }))).size(18.0),
+                    icon(crate::icons::from_web(Some(if hit.is_empty() {
+                        "sheet"
+                    } else {
+                        "warning"
+                    })))
+                    .size(18.0),
                     container(text).width(Fill),
                     button(label::body(GO))
                         .on_press(msg(Event::Go(k)))
-                        .padding([4, 10])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::secondary),
                 ]
                 .spacing(10)
                 .align_y(Center);
-                group = group.push(container(line).padding([6, 10]).style(style::container::field_box).width(Fill));
+                group = group.push(
+                    container(line)
+                        .padding([6, 10])
+                        .style(style::container::field_box)
+                        .width(Fill),
+                );
             }
             list = list.push(group);
         }
@@ -183,17 +216,18 @@ impl App {
             .spacing(12)
             .push(words::summary(vec![line]))
             .push(iced::widget::scrollable(list).height(420.0));
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(760.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(760.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first sheet's.
-    pub(crate) fn sheet_set_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn sheet_set_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         if self.sheet_set.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -25,7 +25,7 @@ use iced::{Border, Element, Event, Length, Rectangle, Renderer, Size, Theme, Vec
 
 use crate::theme::{Tokens, shape};
 
-/// Odak halesinin kalınlığı (metin kutusunun [`focus_ring`](super::focus_ring)'iyle aynı).
+/// Odak halesinin kalınlığı .
 pub(crate) const HALO: f32 = 3.0;
 
 /// Iced text_input caches ModifiersChanged independently of KeyPressed.
@@ -33,9 +33,9 @@ pub(crate) const HALO: f32 = 3.0;
 /// release); synchronize from this key's actual modifiers before forwarding it.
 pub(crate) fn text_modifiers(event: &Event) -> Option<Event> {
     match event {
-        Event::Keyboard(keyboard::Event::KeyPressed { modifiers, .. }) => {
-            Some(Event::Keyboard(keyboard::Event::ModifiersChanged(*modifiers)))
-        }
+        Event::Keyboard(keyboard::Event::KeyPressed { modifiers, .. }) => Some(Event::Keyboard(
+            keyboard::Event::ModifiersChanged(*modifiers),
+        )),
         _ => None,
     }
 }
@@ -90,22 +90,33 @@ pub(crate) fn pressed(event: &Event) -> Option<(Named, Modifiers)> {
 /// A character shortcut belongs to the host, except field editing and AltGr text.
 pub(crate) fn host_character_chord(event: &Event) -> bool {
     let Event::Keyboard(keyboard::Event::KeyPressed {
-        key: key @ keyboard::Key::Character(_), physical_key, modifiers, text, ..
-    }) = event else { return false; };
-    let altgr = modifiers.control() && modifiers.alt() && !modifiers.logo()
+        key: key @ keyboard::Key::Character(_),
+        physical_key,
+        modifiers,
+        text,
+        ..
+    }) = event
+    else {
+        return false;
+    };
+    let altgr = modifiers.control()
+        && modifiers.alt()
+        && !modifiers.logo()
         && text.as_deref().is_some_and(|s| {
             let mut chars = s.chars();
-            chars.next().is_some_and(|c| !c.is_alphanumeric() && !c.is_control())
+            chars
+                .next()
+                .is_some_and(|c| !c.is_alphanumeric() && !c.is_control())
                 && chars.next().is_none()
         });
-    let editing = modifiers.command() && match key.to_latin(*physical_key) {
-        Some('a' | 'c' | 'x') => true,
-        Some('v') => !modifiers.alt(),
-        _ => false,
-    };
+    let editing = modifiers.command()
+        && match key.to_latin(*physical_key) {
+            Some('a' | 'c' | 'x') => true,
+            Some('v') => !modifiers.alt(),
+            _ => false,
+        };
     (modifiers.control() || modifiers.logo()) && !altgr && !editing
 }
-
 
 /// Ok tuşunun adımı: sol ve yukarı −1, sağ ve aşağı +1.
 pub(crate) fn arrow_step(named: Named) -> Option<i32> {

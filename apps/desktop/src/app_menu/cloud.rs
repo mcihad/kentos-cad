@@ -29,7 +29,7 @@ impl App {
                                 .align_y(Center),
                         )
                         .on_press_maybe(self.menu_runs(id).then(|| event(Event::Run(id))))
-                        .padding([5, 12])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(if focus == Some(i) || primary {
                             style::button::primary
                         } else {
@@ -73,7 +73,7 @@ impl App {
                 .width(Fill),
                 button(label::body("Çıkış"))
                     .on_press(event(Event::Run("cloud.signOut")))
-                    .padding([3, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::ghost),
             ]
             .spacing(10)

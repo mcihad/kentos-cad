@@ -27,9 +27,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::fmt;
 
-use iced::widget::{
-    Column, Row, button, container, row, scrollable, space, text_editor, text_input,
-};
+use iced::widget::{Column, Row, button, container, row, scrollable, space, text_editor};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::FormsFill;
 use kentos_commands::{
@@ -51,9 +49,7 @@ use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tabs::{Tab, Tabs};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{
-    DatePicker, Dialog as Frame, Segmented, Switch, TimePicker, focus_ring, overlay,
-};
+use kentos_ui::widget::{DatePicker, Dialog as Frame, Segmented, Switch, TimePicker};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -439,7 +435,9 @@ impl Entry {
                     (false, false) => 1,
                     _ => 0,
                 };
-                *added.entry(kentos_forms::added_key(layer, field)).or_default() += delta;
+                *added
+                    .entry(kentos_forms::added_key(layer, field))
+                    .or_default() += delta;
             }
         }
         self.screen.object.added = added;
@@ -458,7 +456,8 @@ impl Entry {
             moment,
         );
         self.items = prepared.described(&after, &self.screen.object);
-        self.snapshot = kentos_native_application::forms::record_snapshot(doc, &self.form, &self.uid, &after);
+        self.snapshot =
+            kentos_native_application::forms::record_snapshot(doc, &self.form, &self.uid, &after);
         // A paged list's search reaches every value (docs/adr/0439 §1).
         self.whole = self
             .items
@@ -701,7 +700,10 @@ impl Entry {
     /// A searched list's search waiting for its turn (docs/adr/0439 §6), and what it searched.
     #[cfg(test)]
     pub(crate) fn search_for_tests(&self, key: &str) -> (Option<u64>, Option<String>) {
-        (self.pending.get(key).copied(), self.searched.get(key).cloned())
+        (
+            self.pending.get(key).copied(),
+            self.searched.get(key).cloned(),
+        )
     }
 
     /// The tabs shown, in order: a step form's steps.
@@ -709,7 +711,9 @@ impl Entry {
         self.body
             .items
             .iter()
-            .filter(|t| matches!(t, FormItem::Tab { .. }) && self.state(t.id()).is_some_and(|s| s.shown))
+            .filter(|t| {
+                matches!(t, FormItem::Tab { .. }) && self.state(t.id()).is_some_and(|s| s.shown)
+            })
             .collect()
     }
 
@@ -1143,7 +1147,9 @@ impl App {
     /// An event of the designer's preview: typing, tabs and groups; nothing is written.
     pub(crate) fn form_preview_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Save | Event::Cancel | Event::FirstIssue | Event::Reload | Event::Overwrite => Task::none(),
+            Event::Save | Event::Cancel | Event::FirstIssue | Event::Reload | Event::Overwrite => {
+                Task::none()
+            }
             event => self.entry_event(true, event),
         }
     }
@@ -1416,7 +1422,9 @@ impl App {
         if self.form_stack.len() + 1 >= MOST_NESTED {
             self.say(
                 Level::Warn,
-                format!("En çok {MOST_NESTED} form iç içe açılır; önce açık formlardan birini kapatın."),
+                format!(
+                    "En çok {MOST_NESTED} form iç içe açılır; önce açık formlardan birini kapatın."
+                ),
             );
             return Task::none();
         }
@@ -1598,7 +1606,9 @@ impl App {
                                 .walk()
                                 .into_iter()
                                 .filter_map(|(_, i)| match i {
-                                    FormItem::Field(f) if f.calculate.is_some() => Some(f.field.clone()),
+                                    FormItem::Field(f) if f.calculate.is_some() => {
+                                        Some(f.field.clone())
+                                    }
                                     _ => None,
                                 })
                                 .collect();
@@ -1607,7 +1617,10 @@ impl App {
                             }
                             e.recompute(&doc.model);
                         }
-                        self.say(Level::Info, "Hesaplar kayıtta yeniden çalıştı; yazmak için Kaydet’e basın.");
+                        self.say(
+                            Level::Info,
+                            "Hesaplar kayıtta yeniden çalıştı; yazmak için Kaydet’e basın.",
+                        );
                     }
                     K::Step => {
                         if let Some(step) = step {
@@ -1786,8 +1799,21 @@ impl App {
                     let Some(body) = self
                         .document
                         .as_ref()
-                        .and_then(|d| d.model.settings().forms.iter().find(|f| f.id == e.form).cloned())
-                        .and_then(|f| if e.draft { Some(f.draft) } else { f.releases.last().map(|r| r.body.clone()) })
+                        .and_then(|d| {
+                            d.model
+                                .settings()
+                                .forms
+                                .iter()
+                                .find(|f| f.id == e.form)
+                                .cloned()
+                        })
+                        .and_then(|f| {
+                            if e.draft {
+                                Some(f.draft)
+                            } else {
+                                f.releases.last().map(|r| r.body.clone())
+                            }
+                        })
                     else {
                         return Vec::new();
                     };
@@ -1799,7 +1825,12 @@ impl App {
                             _ => None,
                         })
                         .collect();
-                    let gone: Vec<String> = e.values.keys().filter(|k| !bound.contains(k)).cloned().collect();
+                    let gone: Vec<String> = e
+                        .values
+                        .keys()
+                        .filter(|k| !bound.contains(k))
+                        .cloned()
+                        .collect();
                     for k in &gone {
                         e.values.remove(k);
                     }
@@ -1823,7 +1854,10 @@ impl App {
                 if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
                     e.recompute(&doc.model);
                 }
-                self.say(Level::Info, "Kayıt yeniden yüklendi; yazdıklarınız duruyor.");
+                self.say(
+                    Level::Info,
+                    "Kayıt yeniden yüklendi; yazdıklarınız duruyor.",
+                );
                 return task;
             }
             Event::Overwrite => {
@@ -1907,7 +1941,10 @@ impl App {
                 if let Some(uid) = &docked {
                     let _ = self.redock(uid, &form);
                 }
-                self.say(Level::Success, format!("“{label}”: kayıt “{to}” durumunda."));
+                self.say(
+                    Level::Success,
+                    format!("“{label}”: kayıt “{to}” durumunda."),
+                );
                 Task::none()
             }
             other => {
@@ -2050,7 +2087,8 @@ impl App {
         if let kentos_commands::CommandResult::Conflict { error } = &result
             && matches!(
                 error.code.as_str(),
-                kentos_commands::codes::RECORD_CHANGED | kentos_commands::codes::FORM_RELEASE_CHANGED
+                kentos_commands::codes::RECORD_CHANGED
+                    | kentos_commands::codes::FORM_RELEASE_CHANGED
             )
         {
             let words = error.message.clone();
@@ -2079,7 +2117,9 @@ impl App {
                 let mut said = match (done.changes.len(), done.children.len()) {
                     (0, _) => "Kayıtta değişiklik yok.".to_owned(),
                     (_, 0) => format!("Kayıt “{name}” formuyla yazıldı."),
-                    (_, n) => format!("Kayıt “{name}” formuyla, {n} alt kaydıyla birlikte yazıldı."),
+                    (_, n) => {
+                        format!("Kayıt “{name}” formuyla, {n} alt kaydıyla birlikte yazıldı.")
+                    }
                 };
                 // With Kaynağa da yaz, the file's side of the same step (docs/adr/0532 §1).
                 if let Some(committed) = &done.committed {
@@ -2091,7 +2131,9 @@ impl App {
                                 .settings()
                                 .sources
                                 .iter()
-                                .find(|s| committed.layers.first().is_some_and(|l| l.layer == s.layer))
+                                .find(|s| {
+                                    committed.layers.first().is_some_and(|l| l.layer == s.layer)
+                                })
                                 .or_else(|| d.model.settings().sources.first())
                                 .map(|s| s.path.clone())
                         })
@@ -2151,7 +2193,11 @@ impl App {
     /// How the record's form is opened, a line a fact, and whether its release's fields changed since it
     /// was published (docs/adr/0444 §2, §3).
     fn entry_how(&self, e: &Entry, locked: bool) -> (Vec<String>, bool) {
-        let form = self.project_forms().iter().find(|f| f.id == e.form).cloned();
+        let form = self
+            .project_forms()
+            .iter()
+            .find(|f| f.id == e.form)
+            .cloned();
         let mut lines = Vec::new();
         let release = form.as_ref().and_then(|f| f.releases.last().cloned());
         lines.push(match (&release, e.draft) {
@@ -2165,7 +2211,10 @@ impl App {
         lines.push(if needs.is_empty() {
             "Saf form: yalnız kaydın değerleriyle çalışır.".into()
         } else {
-            format!("Gerektirdikleri: {}; bu bilgisayar hepsini sağlar.", needs.join(", "))
+            format!(
+                "Gerektirdikleri: {}; bu bilgisayar hepsini sağlar.",
+                needs.join(", ")
+            )
         });
         if locked {
             lines.push("Salt okunur: katman kilitli.".into());
@@ -2218,7 +2267,7 @@ impl App {
             .push(head)
             .fill(page)
             .push(self.entry_footer(e, locked));
-        overlay::modal(frame.key(key).width(760.0), e.msg(Event::Cancel))
+        frame.key(key).width(760.0).modal(e.msg(Event::Cancel))
     }
 
     /// The docked editor (docs/adr/0416): the form's title, its pages and its footer, scrolled in the
@@ -2298,7 +2347,7 @@ impl App {
         // ◀ 3 / 12 ▶: the layer's records one after another (docs/adr/0408 §3).
         let step = |glyph: Icon, to: i32, can: bool| {
             iced::widget::button(icon(glyph).size(12.0))
-                .padding([3, 6])
+                .padding(kentos_ui::theme::metrics::icon_small(12.0))
                 .style(style::button::tool(false))
                 .on_press_maybe(can.then(|| e.msg(Event::Step(to))))
         };
@@ -2316,7 +2365,9 @@ impl App {
         // why it is read-only.
         let (lines, stale) = self.entry_how(e, locked);
         top = top.push(kentos_ui::widget::tip(
-            icon(Icon::Info).size(13.0).tone(kentos_ui::icon::Tone::Muted),
+            icon(Icon::Info)
+                .size(13.0)
+                .tone(kentos_ui::icon::Tone::Muted),
             kentos_ui::widget::Tip::new("Bu form").body(lines.join("\n")),
             iced::widget::tooltip::Position::Bottom,
         ));
@@ -2359,7 +2410,9 @@ impl App {
             .and_then(|w| w.log.as_ref())
             .and_then(|k| e.fields.iter().find(|f| f.key() == k))
             .and_then(|f| e.before.get(&f.name))
-            .and_then(|log| kentos_native_application::forms::logged_snapshot(log).map(str::to_owned));
+            .and_then(|log| {
+                kentos_native_application::forms::logged_snapshot(log).map(str::to_owned)
+            });
         if let (Some(then), Some(now)) = (logged, e.snapshot.as_ref()) {
             body = body.push(words::summary(vec![if then == *now {
                 words::text_line(
@@ -2381,7 +2434,9 @@ impl App {
             let missing = e
                 .issues
                 .iter()
-                .filter(|i| i.code == kentos_forms::codes::REQUIRED && i.severity == FormSeverity::Warning)
+                .filter(|i| {
+                    i.code == kentos_forms::codes::REQUIRED && i.severity == FormSeverity::Warning
+                })
                 .count();
             if missing > 0 {
                 body = body.push(words::summary(vec![words::text_line(
@@ -2396,10 +2451,7 @@ impl App {
         // user chooses, never emptied silently.
         let misfits = e.misfits();
         if !misfits.is_empty() && !locked {
-            let names: Vec<&str> = misfits
-                .iter()
-                .map(|k| e.label_of(k).unwrap_or(k))
-                .collect();
+            let names: Vec<&str> = misfits.iter().map(|k| e.label_of(k).unwrap_or(k)).collect();
             body = body.push(
                 row![
                     container(words::summary(vec![words::text_line(
@@ -2445,16 +2497,28 @@ impl App {
                 .push(words::text_line(Kind::Warn, UNSAVED))
                 .push(space::horizontal().width(Fill))
                 .push(words::secondary(DISCARD, Some(e.msg(Event::Discard))))
-                .push(words::secondary(KEEP_EDITING, Some(e.msg(Event::KeepEditing))))
-                .push(words::primary(SAVE_AND_CLOSE, (!locked).then(|| e.msg(Event::Save))));
+                .push(words::secondary(
+                    KEEP_EDITING,
+                    Some(e.msg(Event::KeepEditing)),
+                ))
+                .push(words::primary(
+                    SAVE_AND_CLOSE,
+                    (!locked).then(|| e.msg(Event::Save)),
+                ));
         }
         if e.conflict.is_some() {
             return footer
-                .push(words::text_line(Kind::Warn, "Kayıt ya da form siz düzenlerken değişti."))
+                .push(words::text_line(
+                    Kind::Warn,
+                    "Kayıt ya da form siz düzenlerken değişti.",
+                ))
                 .push(space::horizontal().width(Fill))
                 .push(words::secondary(CANCEL, Some(e.msg(Event::Cancel))))
                 .push(words::secondary(RELOAD, Some(e.msg(Event::Reload))))
-                .push(words::primary(OVERWRITE, (!locked).then(|| e.msg(Event::Overwrite))));
+                .push(words::primary(
+                    OVERWRITE,
+                    (!locked).then(|| e.msg(Event::Overwrite)),
+                ));
         }
         if errors > 0 {
             // Where the last press went, then the next (docs/adr/0443 §6).
@@ -2534,9 +2598,11 @@ impl App {
             );
         }
         let by_state = e.screen.prepared.locked_by_state(&e.after);
-        if let (Some(w), Some(state), true) =
-            (e.screen.prepared.workflow(), e.screen.prepared.state_of(&e.before), live)
-        {
+        if let (Some(w), Some(state), true) = (
+            e.screen.prepared.workflow(),
+            e.screen.prepared.state_of(&e.before),
+            live,
+        ) {
             for step in w.steps_from(&state) {
                 footer = footer.push(words::secondary(
                     step.label.as_str(),
@@ -2614,7 +2680,9 @@ impl App {
             .iter()
             .map(|t| {
                 let label = match t {
-                    FormItem::Tab { id, label, .. } => e.words_of(id, Some(label)).unwrap_or_default(),
+                    FormItem::Tab { id, label, .. } => {
+                        e.words_of(id, Some(label)).unwrap_or_default()
+                    }
                     _ => String::new(),
                 };
                 let count = if e.tried {
@@ -2788,7 +2856,9 @@ impl App {
                             let mut rows = Column::new().spacing(8);
                             for pair in shown.chunks(2) {
                                 let right: Element<'a, Message> = match pair.get(1) {
-                                    Some(r) => self.entry_form_in(e, std::slice::from_ref(r), locked, 80.0),
+                                    Some(r) => {
+                                        self.entry_form_in(e, std::slice::from_ref(r), locked, 80.0)
+                                    }
                                     None => space::horizontal().width(Fill).into(),
                                 };
                                 rows = rows.push(
@@ -2900,7 +2970,8 @@ impl App {
                     let known = tool
                         .as_ref()
                         .is_none_or(|t| self.processing.registry.get(t).is_some());
-                    let read_only = self.entry_locked(e) || e.screen.prepared.locked_by_state(&e.before);
+                    let read_only =
+                        self.entry_locked(e) || e.screen.prepared.locked_by_state(&e.before);
                     let can = known
                         && !e.preview
                         && e.members.is_empty()
@@ -2916,10 +2987,10 @@ impl App {
                             icon(glyph).size(12.0),
                             label::body(e.words_of(id, Some(title)).unwrap_or_default())
                         ]
-                            .spacing(6)
-                            .align_y(Center),
+                        .spacing(6)
+                        .align_y(Center),
                     )
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary)
                     .on_press_maybe(can.then(|| e.msg(Event::RunAction(id.clone()))));
                     out = out.push(match tool.as_ref().filter(|_| !known) {
@@ -3043,7 +3114,7 @@ impl App {
                     {
                         let back = kentos_ui::widget::tip(
                             iced::widget::button(icon(Icon::Undo).size(12.0))
-                                .padding([4, 6])
+                                .padding(kentos_ui::theme::metrics::icon_small(12.0))
                                 .style(style::button::tool(false))
                                 .on_press(e.msg(Event::Value(f.field.clone(), String::new()))),
                             kentos_ui::widget::Tip::new("Hesaba dön")
@@ -3067,11 +3138,9 @@ impl App {
                             .spacing(3)
                             .push(control)
                             .push(
-                                iced::widget::text_input("Bu alana not", note)
-                                    .size(typography::caption())
-                                    .padding([3, 6])
-                                    .style(style::field::input)
-                                    .on_input(move |text| e.msg(Event::FieldNote(key.clone(), text))),
+                                kentos_ui::widget::text_field("Bu alana not", note).on_input(
+                                    move |text| e.msg(Event::FieldNote(key.clone(), text)),
+                                ),
                             )
                             .into()
                     } else {
@@ -3193,7 +3262,11 @@ impl App {
                 label::caption(count).style(muted),
                 space::horizontal().width(Fill),
                 words::ghost(
-                    if e.facts.is_some() { "Bilgiyi gizle" } else { "Bilgi" },
+                    if e.facts.is_some() {
+                        "Bilgiyi gizle"
+                    } else {
+                        "Bilgi"
+                    },
                     (!e.preview && !shown.is_empty()).then(|| e.msg(Event::InspectAttachments))
                 ),
                 words::secondary(
@@ -3319,24 +3392,31 @@ impl App {
         // A table of the other layer's fields, its numbers totalled (docs/adr/0425), or a card for each
         // (docs/adr/0440 §6), a page at a time.
         // A bar for each value of the first column (docs/adr/0441 §3).
-        if let (Some(d), Some(FormItem::Related {
-            layer,
-            field,
-            view: kentos_commands::RelatedView::Chart,
-            columns,
-            ..
-        })) = (doc, crate::forms::designer::find(&e.body.items, id))
+        if let (
+            Some(d),
+            Some(FormItem::Related {
+                layer,
+                field,
+                view: kentos_commands::RelatedView::Chart,
+                columns,
+                ..
+            }),
+        ) = (doc, crate::forms::designer::find(&e.body.items, id))
         {
             col = col.push(related_chart(d, layer, field, columns, &uids));
             return self.related_footer(e, id, col, live, candidates);
         }
-        if let (Some(d), Some(FormItem::Related {
-            layer,
-            field,
-            view: view @ (kentos_commands::RelatedView::Table | kentos_commands::RelatedView::Cards),
-            columns,
-            ..
-        })) = (doc, crate::forms::designer::find(&e.body.items, id))
+        if let (
+            Some(d),
+            Some(FormItem::Related {
+                layer,
+                field,
+                view:
+                    view @ (kentos_commands::RelatedView::Table | kentos_commands::RelatedView::Cards),
+                columns,
+                ..
+            }),
+        ) = (doc, crate::forms::designer::find(&e.body.items, id))
         {
             let page = e
                 .related_pages
@@ -3361,11 +3441,12 @@ impl App {
                 let last = (first + RELATED_PAGE - 1).min(uids.len());
                 let go = |to: usize, glyph: Icon| {
                     iced::widget::button(icon(glyph).size(12.0))
-                        .padding([3, 6])
+                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
                         .style(style::button::tool(false))
-                        .on_press_maybe((to != page && to < pages).then(|| {
-                            e.msg(Event::RelatedPage(id.to_owned(), to))
-                        }))
+                        .on_press_maybe(
+                            (to != page && to < pages)
+                                .then(|| e.msg(Event::RelatedPage(id.to_owned(), to))),
+                        )
                 };
                 col = col.push(
                     row![
@@ -3647,7 +3728,10 @@ fn entry_control<'a>(
             .filter(|c| offered.is_none_or(|o| o.contains(&c.code)))
             // A label in the chosen language; the code is the list's own (docs/adr/0443 §5).
             .map(|c| {
-                let said = e.said(&item.id).and_then(|w| w.choices.get(&c.code)).cloned();
+                let said = e
+                    .said(&item.id)
+                    .and_then(|w| w.choices.get(&c.code))
+                    .cloned();
                 (c.code.clone(), said.unwrap_or_else(|| c.label.clone()))
             })
             .collect(),
@@ -3760,16 +3844,24 @@ fn entry_control<'a>(
                     .map(|(c, _)| c.as_str())
                     .filter(|c| codes.contains(c))
                     .collect();
-                out.extend(codes.iter().filter(|c| !choices.iter().any(|(x, _)| x == *c)));
+                out.extend(
+                    codes
+                        .iter()
+                        .filter(|c| !choices.iter().any(|(x, _)| x == *c)),
+                );
                 out.join(kentos_commands::MULTIPLE_JOIN)
             };
             let mut chips = Row::new().spacing(4);
             for h in &held {
-                let words = choices
+                let words = choices.iter().find(|(c, _)| c == h).map_or_else(
+                    || kentos_commands::display_value(field, h),
+                    |(_, l)| l.clone(),
+                );
+                let rest: Vec<&str> = held
                     .iter()
-                    .find(|(c, _)| c == h)
-                    .map_or_else(|| kentos_commands::display_value(field, h), |(_, l)| l.clone());
-                let rest: Vec<&str> = held.iter().filter(|x| *x != h).map(String::as_str).collect();
+                    .filter(|x| *x != h)
+                    .map(String::as_str)
+                    .collect();
                 let face = row![label::caption(words)].spacing(4).align_y(Center);
                 let face = if read_only {
                     face
@@ -3795,11 +3887,15 @@ fn entry_control<'a>(
                     let set_add = set.clone();
                     let codes: Vec<String> = free.iter().map(|(c, _)| c.clone()).collect();
                     let order: Vec<String> = choices.iter().map(|(c, _)| c.clone()).collect();
-                    let add = Select::new(free.iter().map(|(_, l)| Choice::new(l.clone())), None, move |i| {
-                        let mut next: Vec<&str> = held_now.iter().map(String::as_str).collect();
-                        next.push(codes[i].as_str());
-                        set_add(ordered_codes(&next, &order))
-                    })
+                    let add = Select::new(
+                        free.iter().map(|(_, l)| Choice::new(l.clone())),
+                        None,
+                        move |i| {
+                            let mut next: Vec<&str> = held_now.iter().map(String::as_str).collect();
+                            next.push(codes[i].as_str());
+                            set_add(ordered_codes(&next, &order))
+                        },
+                    )
                     .placeholder("Ekle…");
                     col = col.push(container(add).width(220));
                 }
@@ -3817,13 +3913,12 @@ fn entry_control<'a>(
                 };
                 if branch != last {
                     if let Some(b) = &branch {
-                        col = col.push(
-                            container(label::caption(b.clone()).style(muted))
-                                .padding(iced::Padding {
-                                    top: 4.0,
-                                    ..iced::Padding::ZERO
-                                }),
-                        );
+                        col = col.push(container(label::caption(b.clone()).style(muted)).padding(
+                            iced::Padding {
+                                top: 4.0,
+                                ..iced::Padding::ZERO
+                            },
+                        ));
                     }
                     last = branch.clone();
                 }
@@ -3905,7 +4000,9 @@ fn entry_control<'a>(
                 })
                 .collect();
             if more {
-                rows.push(kentos_ui::widget::suggest::Suggestion::offer("Daha fazla göster"));
+                rows.push(kentos_ui::widget::suggest::Suggestion::offer(
+                    "Daha fazla göster",
+                ));
             }
             let mut suggest = kentos_ui::widget::Suggest::new(shown.as_str(), placeholder.as_str())
                 .id(input_id(&key))
@@ -4004,14 +4101,14 @@ fn entry_control<'a>(
             DatePicker::date_time(at, move |d: Option<DateTime>| {
                 set_at(d.map_or_else(String::new, |d| instant_text(&d, &written)))
             })
-            .anchor(focus_ring(
-                text_input(or_shape(&placeholder, "YYYY-AA-GGTSS:DD+03:00"), &value)
-                    .size(typography::body())
-                    .id(input_id(&key))
-                    .on_input(set)
-                    .padding([5, 8])
-                    .style(style::field::input),
-            ))
+            .anchor(
+                kentos_ui::widget::text_field(
+                    or_shape(&placeholder, "YYYY-AA-GGTSS:DD+03:00"),
+                    &value,
+                )
+                .id(input_id(&key))
+                .on_input(set),
+            )
             .clearable(!field.required)
             .now(now_at(&offset))
             .into()
@@ -4034,14 +4131,11 @@ fn entry_control<'a>(
                     )
                 }))
             })
-            .anchor(focus_ring(
-                text_input(or_shape(&placeholder, "GG.AA.YYYY SS:DD"), &value)
-                    .size(typography::body())
+            .anchor(
+                kentos_ui::widget::text_field(or_shape(&placeholder, "GG.AA.YYYY SS:DD"), &value)
                     .id(input_id(&key))
-                    .on_input(set)
-                    .padding([5, 8])
-                    .style(style::field::input),
-            ))
+                    .on_input(set),
+            )
             .clearable(!field.required)
             .now(device_now())
             .into()
@@ -4053,14 +4147,11 @@ fn entry_control<'a>(
                     format!("{:02}:{:02}:{:02}", t.hour(), t.minute(), t.second())
                 }))
             })
-            .anchor(focus_ring(
-                text_input(or_shape(&placeholder, "SS:DD"), &value)
-                    .size(typography::body())
+            .anchor(
+                kentos_ui::widget::text_field(or_shape(&placeholder, "SS:DD"), &value)
                     .id(input_id(&key))
-                    .on_input(set)
-                    .padding([5, 8])
-                    .style(style::field::input),
-            ))
+                    .on_input(set),
+            )
             .clearable(!field.required)
             .now(device_now())
             .into()
@@ -4073,14 +4164,11 @@ fn entry_control<'a>(
                     format!("{:04}-{:02}-{:02}", d.year(), d.month(), d.day())
                 }))
             })
-            .anchor(focus_ring(
-                text_input(or_shape(&placeholder, "YYYY-AA-GG"), &value)
-                    .size(typography::body())
+            .anchor(
+                kentos_ui::widget::text_field(or_shape(&placeholder, "YYYY-AA-GG"), &value)
                     .id(input_id(&key))
-                    .on_input(set)
-                    .padding([5, 8])
-                    .style(style::field::input),
-            ))
+                    .on_input(set),
+            )
             .clearable(!field.required)
             .now(device_now())
             .into()
@@ -4176,15 +4264,11 @@ fn entry_control<'a>(
                     .on_submit(e.msg(Event::Save))
                     .into();
             }
-            let input = text_input(&placeholder, &shown)
-                .size(typography::body())
-                .id(input_id(&key))
-                .padding([5, 8])
-                .style(style::field::input);
+            let input = kentos_ui::widget::text_field(&placeholder, &shown).id(input_id(&key));
             if read_only {
                 input.into()
             } else {
-                focus_ring(input.on_input(set).on_submit(e.msg(Event::Save))).into()
+                input.on_input(set).on_submit(e.msg(Event::Save)).into()
             }
         }
     }
@@ -4225,7 +4309,7 @@ fn colour_control<'a>(
     })
     .alpha()
     .anchor(face);
-    let input = text_input(
+    let input = kentos_ui::widget::text_field(
         if placeholder.is_empty() {
             "#RRGGBB"
         } else {
@@ -4233,15 +4317,9 @@ fn colour_control<'a>(
         },
         value,
     )
-    .size(typography::body())
     .id(input_id(key))
-    .padding([5, 8])
-    .style(style::field::input)
     .on_input(set);
-    row![picker, focus_ring(input)]
-        .spacing(8)
-        .align_y(Center)
-        .into()
+    row![picker, input].spacing(8).align_y(Center).into()
 }
 
 /// An instant's date and time of day and its offset from UTC (`Z`, `+03:00`): the offset an empty one takes is the
@@ -4334,7 +4412,6 @@ fn muted(theme: &iced::Theme) -> iced::widget::text::Style {
     }
 }
 
-
 /// The related objects as a table (docs/adr/0425): the item's columns (the other layer's first four
 /// fields when it names none), each object a row with Aç, Git and Bağı kopar; the decimal columns'
 /// totals under them.
@@ -4357,7 +4434,12 @@ fn related_table<'a>(
         .map(|n| n.fields.clone())
         .unwrap_or_default();
     let shown: Vec<kentos_commands::LayerField> = if columns.is_empty() {
-        fields.iter().filter(|f| f.key() != link).take(4).cloned().collect()
+        fields
+            .iter()
+            .filter(|f| f.key() != link)
+            .take(4)
+            .cloned()
+            .collect()
     } else {
         columns
             .iter()
@@ -4370,7 +4452,10 @@ fn related_table<'a>(
     let cell = |text: String, f: Option<&kentos_commands::LayerField>| -> Element<'a, Message> {
         let t = label::body(text);
         if f.is_some_and(numeric) {
-            container(t).width(Fill).align_x(iced::alignment::Horizontal::Right).into()
+            container(t)
+                .width(Fill)
+                .align_x(iced::alignment::Horizontal::Right)
+                .into()
         } else {
             container(t).width(Fill).into()
         }
@@ -4379,7 +4464,9 @@ fn related_table<'a>(
     for f in &shown {
         let words = label::caption(f.label().to_owned()).style(muted);
         head = head.push(if numeric(f) {
-            container(words).width(Fill).align_x(iced::alignment::Horizontal::Right)
+            container(words)
+                .width(Fill)
+                .align_x(iced::alignment::Horizontal::Right)
         } else {
             container(words).width(Fill)
         });
@@ -4423,7 +4510,7 @@ fn related_table<'a>(
         let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
             kentos_ui::widget::tip(
                 iced::widget::button(icon(glyph).size(13.0))
-                    .padding([3, 5])
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
                     .style(style::button::tool(false))
                     .on_press_maybe(on),
                 kentos_ui::widget::Tip::new(tip),
@@ -4432,8 +4519,16 @@ fn related_table<'a>(
         };
         line = line.push(
             row![
-                tool(Icon::Open, "Aç", live.then(|| e.msg(Event::OpenRelated(uid.clone())))),
-                tool(Icon::Target, "Çizimde göster", live.then(|| e.msg(Event::ShowObject(uid.clone())))),
+                tool(
+                    Icon::Open,
+                    "Aç",
+                    live.then(|| e.msg(Event::OpenRelated(uid.clone())))
+                ),
+                tool(
+                    Icon::Target,
+                    "Çizimde göster",
+                    live.then(|| e.msg(Event::ShowObject(uid.clone())))
+                ),
                 tool(
                     Icon::Close,
                     "Bağı kopar",
@@ -4456,10 +4551,16 @@ fn related_table<'a>(
                 None if i == 0 => "Toplam".to_owned(),
                 None => String::new(),
             };
-            foot = foot.push(cell(text, Some(f).filter(|f| f.kind == LayerFieldKind::Decimal)));
+            foot = foot.push(cell(
+                text,
+                Some(f).filter(|f| f.kind == LayerFieldKind::Decimal),
+            ));
         }
         foot = foot.push(space::horizontal().width(84));
-        rows = rows.push(container(foot).padding(iced::Padding { top: 4.0, ..iced::Padding::ZERO }));
+        rows = rows.push(container(foot).padding(iced::Padding {
+            top: 4.0,
+            ..iced::Padding::ZERO
+        }));
     }
     rows.into()
 }
@@ -4485,7 +4586,9 @@ fn related_chart<'a>(
         .or_else(|| fields.iter().find(|f| f.key() != link))
         .cloned();
     let Some(by) = by else {
-        return label::caption("Grafik için alt katmanın bir alanı gerekir.").style(muted).into();
+        return label::caption("Grafik için alt katmanın bir alanı gerekir.")
+            .style(muted)
+            .into();
     };
     let mut counts: Vec<(String, usize)> = Vec::new();
     for uid in uids {
@@ -4503,7 +4606,11 @@ fn related_chart<'a>(
         }
     }
     counts.sort_by(|a, b| {
-        (a.0.is_empty(), std::cmp::Reverse(a.1), &a.0).cmp(&(b.0.is_empty(), std::cmp::Reverse(b.1), &b.0))
+        (a.0.is_empty(), std::cmp::Reverse(a.1), &a.0).cmp(&(
+            b.0.is_empty(),
+            std::cmp::Reverse(b.1),
+            &b.0,
+        ))
     });
     let most = counts.iter().map(|(_, n)| *n).max().unwrap_or(1).max(1) as f32;
     let mut rows = Column::new()
@@ -4519,8 +4626,12 @@ fn related_chart<'a>(
         rows = rows.push(
             row![
                 container(label::caption(words)).width(140),
-                kentos_ui::widget::progress::bar(Some(share)).width(Fill).height(10.0),
-                container(label::caption(n.to_string())).width(40).align_x(iced::alignment::Horizontal::Right),
+                kentos_ui::widget::progress::bar(Some(share))
+                    .width(Fill)
+                    .height(10.0),
+                container(label::caption(n.to_string()))
+                    .width(40)
+                    .align_x(iced::alignment::Horizontal::Right),
             ]
             .spacing(8)
             .align_y(Center),
@@ -4549,7 +4660,12 @@ fn related_cards<'a>(
         .map(|n| n.fields.clone())
         .unwrap_or_default();
     let shown: Vec<kentos_commands::LayerField> = if columns.is_empty() {
-        fields.iter().filter(|f| f.key() != link).take(4).cloned().collect()
+        fields
+            .iter()
+            .filter(|f| f.key() != link)
+            .take(4)
+            .cloned()
+            .collect()
     } else {
         columns
             .iter()
@@ -4579,7 +4695,7 @@ fn related_cards<'a>(
         let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
             kentos_ui::widget::tip(
                 iced::widget::button(icon(glyph).size(13.0))
-                    .padding([3, 5])
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
                     .style(style::button::tool(false))
                     .on_press_maybe(on),
                 kentos_ui::widget::Tip::new(tip),
@@ -4588,7 +4704,11 @@ fn related_cards<'a>(
         };
         let tools = Row::new()
             .spacing(2)
-            .push(tool(Icon::Open, "Aç", live.then(|| e.msg(Event::OpenRelated(uid.clone())))))
+            .push(tool(
+                Icon::Open,
+                "Aç",
+                live.then(|| e.msg(Event::OpenRelated(uid.clone()))),
+            ))
             .push(tool(
                 Icon::Target,
                 "Çizimde göster",
@@ -4600,10 +4720,14 @@ fn related_cards<'a>(
                 live.then(|| e.msg(Event::Unlink(id.to_owned(), uid.clone()))),
             ));
         cards = cards.push(
-            container(row![container(body).width(Fill), tools].spacing(8).align_y(iced::alignment::Vertical::Top))
-                .padding(8)
-                .width(Fill)
-                .style(style::container::field_box),
+            container(
+                row![container(body).width(Fill), tools]
+                    .spacing(8)
+                    .align_y(iced::alignment::Vertical::Top),
+            )
+            .padding(8)
+            .width(Fill)
+            .style(style::container::field_box),
         );
     }
     cards.into()

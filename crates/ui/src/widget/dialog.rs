@@ -9,13 +9,13 @@ use iced::widget::text::{Fragment, IntoFragment};
 use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Background, Center, Element, Fill, Shrink, Theme, border};
 
-use crate::icon::icon;
+use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
 use crate::theme::{Tokens, typography};
 use crate::widget::fit::Fit;
 use crate::widget::sizable;
-use crate::widget::{Severity, horizontal_divider};
+use crate::widget::{Severity, Tip, horizontal_divider, overlay, tip};
 
 /// Başlık, gövde ve sağa hizalı eylem düğmelerinden oluşan kutu.
 pub struct Dialog<'a, Message> {
@@ -31,6 +31,9 @@ pub struct Dialog<'a, Message> {
     /// The key its size is kept by (docs/adr/0746); none: its title. `None` after `fixed`: not sized.
     key: Option<String>,
     sizable: bool,
+    /// Başlıktaki kapatma düğmesinin mesajı; yoksa düğme yoktur.
+    on_close: Option<Message>,
+    close_hidden: bool,
 }
 
 impl<'a, Message: 'a> Dialog<'a, Message> {
@@ -45,7 +48,35 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
             max_height: None,
             key: None,
             sizable: true,
+            on_close: None,
+            close_hidden: false,
         }
+    }
+
+    /// Başlığın sağında kapatma düğmesi (×) gösterir; basılınca `message` gelir. Verilmezse düğme yoktur: kutu kendi
+    /// düğmeleriyle kapanır (bir soru, yarıda bırakılmaması gereken bir iş).
+    pub fn on_close(mut self, message: impl Into<Option<Message>>) -> Self {
+        self.on_close = message.into();
+        self
+    }
+
+    /// Kapatma düğmesini gizler, [`modal`](Dialog::modal) ile de.
+    pub fn no_close(mut self) -> Self {
+        self.on_close = None;
+        self.close_hidden = true;
+        self
+    }
+
+    /// Kutuyu pencerenin ortasına, arkasını karartarak yerleştirir ([`overlay::modal`]): karartılmış alana basmak ve
+    /// başlıktaki × `on_dismiss`'i gönderir; × istenmiyorsa önce [`no_close`](Dialog::no_close).
+    pub fn modal(mut self, on_dismiss: Message) -> Element<'a, Message>
+    where
+        Message: Clone,
+    {
+        if !self.close_hidden {
+            self.on_close.get_or_insert_with(|| on_dismiss.clone());
+        }
+        overlay::modal(self, on_dismiss)
     }
 
     /// Başlığın sağındaki kısa not (ör. kutuyu açan kısayol).
@@ -138,7 +169,7 @@ impl<'a, Message: 'a> Dialog<'a, Message> {
     }
 }
 
-impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
+impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
     fn from(dialog: Dialog<'a, Message>) -> Self {
         let key = dialog.key.unwrap_or_else(|| dialog.title.to_string());
         let kept = dialog.sizable && sizable::sizes::get(&key).is_some();
@@ -147,13 +178,34 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
             .align_y(Center);
 
         if let Some(hint) = dialog.hint {
-            header = header.push(label::mono_caption(hint));
+            header = header.push(
+                container(label::caption(hint))
+                    .padding([0, 5])
+                    .style(style::container::keycap),
+            );
         }
+        let side = typography::from_default(sizable::TOGGLE);
+        let closable = dialog.on_close.is_some();
+        let mut tools = iced::widget::Row::new()
+            .spacing(sizable::TOGGLE_GAP)
+            .align_y(Center);
         // The full screen toggle's square, drawn by `Sizable` (docs/adr/0746).
         if dialog.sizable {
-            let side = typography::scaled(sizable::TOGGLE);
-            header = header.push(Space::new().width(side).height(side));
+            tools = tools.push(Space::new().width(side).height(side));
         }
+        if let Some(message) = dialog.on_close {
+            tools = tools.push(tip(
+                button(container(icon(Icon::Close).size(14.0)).center(Fill))
+                    .on_press(message)
+                    .padding(0)
+                    .width(side)
+                    .height(side)
+                    .style(style::button::flat),
+                Tip::new("Kapat"),
+                iced::widget::tooltip::Position::Bottom,
+            ));
+        }
+        header = header.push(tools);
 
         // Kayan parça, başlık ve düğmeler yerleştikten sonra kalan yeri alır.
         let mut content = Fit::new()
@@ -202,7 +254,7 @@ impl<'a, Message: 'a> From<Dialog<'a, Message>> for Element<'a, Message> {
             }
         };
         if dialog.sizable {
-            sizable::Sizable::new(key, boxed).into()
+            sizable::Sizable::new(key, boxed).closable(closable).into()
         } else {
             boxed.into()
         }
@@ -287,6 +339,14 @@ impl<'a, Message: Clone + 'a> Confirm<'a, Message> {
     }
 }
 
+impl<'a, Message: Clone + 'a> Confirm<'a, Message> {
+    /// Kutuyu pencerenin ortasına, arkasını karartarak yerleştirir ([`overlay::modal`]): karartılmış alana basmak
+    /// `on_dismiss`'i gönderir. Bir sorunun × düğmesi yoktur: iki cevabı vardır.
+    pub fn modal(self, on_dismiss: Message) -> Element<'a, Message> {
+        overlay::modal(self, on_dismiss)
+    }
+}
+
 impl<'a, Message: Clone + 'a> From<Confirm<'a, Message>> for Element<'a, Message> {
     fn from(confirm: Confirm<'a, Message>) -> Self {
         let severity = confirm.severity;
@@ -324,11 +384,11 @@ impl<'a, Message: Clone + 'a> From<Confirm<'a, Message>> for Element<'a, Message
             space::horizontal(),
             button(label::body(confirm.cancel))
                 .on_press(confirm.on_cancel)
-                .padding([5, 16])
+                .padding(crate::theme::metrics::action())
                 .style(style::button::secondary),
             button(label::body(confirm.confirm))
                 .on_press(confirm.on_confirm)
-                .padding([5, 16])
+                .padding(crate::theme::metrics::action())
                 .style(if confirm.destructive {
                     style::button::danger
                 } else {

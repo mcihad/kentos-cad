@@ -7,7 +7,7 @@
 //! window keeps its choices for as long as the app runs; objects selected
 //! when it opens are the schedule's.
 
-use iced::widget::{Column, button, column, container, row, text_input};
+use iced::widget::{Column, button, column, container, row};
 use iced::{Center, Element, Fill, Length, Task, Theme};
 use kentos_commands::{TableFileRead, TableGrid, TableSource, TextLook};
 use kentos_domain::{Slot, Uuid};
@@ -18,7 +18,7 @@ use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{self as grid, Table};
-use kentos_ui::widget::{Dialog as Frame, Segmented, Tip, focus_ring, overlay, tip};
+use kentos_ui::widget::{Dialog as Frame, Segmented, Tip, tip};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -343,7 +343,10 @@ impl App {
                 let cells = table::schedule(&doc.model, kind, &slots, &self.format());
                 match &cells.problem {
                     Some(p) => Now::Why(Kind::Error, p.clone()),
-                    None => Now::Cells(cells, Some(Box::new(table::source_of(&doc.model, kind, &slots)))),
+                    None => Now::Cells(
+                        cells,
+                        Some(Box::new(table::source_of(&doc.model, kind, &slots))),
+                    ),
                 }
             }
         }
@@ -543,24 +546,16 @@ impl App {
                 row![
                     words::field(
                         "Satır",
-                        focus_ring(
-                            text_input("4", &w.rows)
-                                .on_input(|t| msg(Event::Rows(t)))
-                                .padding([5, 8])
-                                .width(90)
-                                .style(style::field::input)
-                        ),
+                        kentos_ui::widget::text_field("4", &w.rows)
+                            .on_input(|t| msg(Event::Rows(t)))
+                            .width(90),
                         None
                     ),
                     words::field(
                         "Sütun",
-                        focus_ring(
-                            text_input("3", &w.columns)
-                                .on_input(|t| msg(Event::Columns(t)))
-                                .padding([5, 8])
-                                .width(90)
-                                .style(style::field::input)
-                        ),
+                        kentos_ui::widget::text_field("3", &w.columns)
+                            .on_input(|t| msg(Event::Columns(t)))
+                            .width(90),
                         None
                     ),
                     words::field(
@@ -602,7 +597,7 @@ impl App {
                     .spacing(6)
                     .align_y(Center),
                 )
-                .padding([5, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(msg(Event::ChooseFile));
                 let file = container(
@@ -656,7 +651,7 @@ impl App {
                         .spacing(6)
                         .align_y(Center),
                 )
-                .padding([5, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(msg(Event::Pick));
                 let objects = container(
@@ -726,13 +721,9 @@ impl App {
             ))
             .into(),
             None => row![
-                focus_ring(
-                    text_input("2.5", &w.height_mm)
-                        .on_input(|t| msg(Event::Height(t)))
-                        .padding([5, 8])
-                        .width(80)
-                        .style(style::field::input)
-                ),
+                kentos_ui::widget::text_field("2.5", &w.height_mm)
+                    .on_input(|t| msg(Event::Height(t)))
+                    .width(80),
                 label::muted("mm"),
             ]
             .spacing(6)
@@ -769,13 +760,9 @@ impl App {
         if framed {
             frame_row = frame_row.push(
                 row![
-                    focus_ring(
-                        text_input("0.7", &w.frame_mm)
-                            .on_input(|t| msg(Event::FrameWidth(t)))
-                            .padding([5, 8])
-                            .width(70)
-                            .style(style::field::input)
-                    ),
+                    kentos_ui::widget::text_field("0.7", &w.frame_mm)
+                        .on_input(|t| msg(Event::FrameWidth(t)))
+                        .width(70),
                     label::muted("mm"),
                 ]
                 .spacing(6)
@@ -900,14 +887,12 @@ impl App {
             summary,
         ]
         .spacing(12);
-        overlay::modal(
-            Frame::new(INSERT_TITLE)
-                .scroll(content)
-                .action(words::secondary(CANCEL, Some(msg(Event::Close))))
-                .action(words::primary(PLACE, ready.then(|| msg(Event::Place))))
-                .width(700.0),
-            msg(Event::Close),
-        )
+        Frame::new(INSERT_TITLE)
+            .scroll(content)
+            .action(words::secondary(CANCEL, Some(msg(Event::Close))))
+            .action(words::primary(PLACE, ready.then(|| msg(Event::Place))))
+            .width(700.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

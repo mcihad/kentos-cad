@@ -8,7 +8,7 @@ use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, WallJoinIssue, WallsJoins};
 use kentos_interaction::Level;
 use kentos_ui::icon::icon;
-use kentos_ui::widget::{Dialog as Frame, overlay};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -164,11 +164,11 @@ impl App {
                 )));
             let show = button(label::body(SHOW))
                 .on_press(msg(Event::Show(i)))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary);
             let apply = button(label::body(APPLY))
                 .on_press_maybe(issue.fix.is_some().then(|| msg(Event::Apply(i))))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary);
             list = list.push(
                 container(
@@ -191,14 +191,12 @@ impl App {
                 .height(iced::Length::Shrink)
                 .height(360.0),
         );
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .action(words::secondary(REFRESH, Some(msg(Event::Refresh))))
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(720.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::secondary(REFRESH, Some(msg(Event::Refresh))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(720.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first issue's Göster and Öneriyi uygula.

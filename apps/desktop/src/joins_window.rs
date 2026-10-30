@@ -21,7 +21,7 @@
 //! read off the UI thread through `cad.sources.describe`, the key one of the table's columns). Toplama sütunları:
 //! each a heading, what it does (Sayı, Toplam, En küçük, En büyük, Ortalama) and the joined records' field.
 
-use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     JoinAggregate, JoinHow, JoinKeep, JoinSource, JoinView, JoinsEdit, JoinsOp,
@@ -32,7 +32,7 @@ use kentos_native_application::{ExecutionContext, joins_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -547,10 +547,10 @@ impl App {
             .align_y(Center),
         ]
         .spacing(14);
-        overlay::modal(
-            Frame::new(TITLE).push(body).width(860.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .width(860.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn join_editor<'a>(
@@ -577,11 +577,8 @@ impl App {
             )
             .placeholder("Anahtar alanı")
         };
-        let name = text_input("Görünümün adı", &v.name)
-            .size(typography::body())
-            .on_input(|t| msg(Event::Name(t)))
-            .padding([5, 8])
-            .style(style::field::input);
+        let name = kentos_ui::widget::text_field("Görünümün adı", &v.name)
+            .on_input(|t| msg(Event::Name(t)));
         let joined = if v.source.is_some() {
             Joined::Source
         } else {
@@ -589,7 +586,7 @@ impl App {
         };
         let mut form = Column::new()
             .spacing(10)
-            .push(words::field("Ad", focus_ring(name), None))
+            .push(words::field("Ad", name, None))
             .push(words::field("Katman", pick(&v.layer, Event::Layer), None))
             .push(words::field(
                 "Anahtar",
@@ -622,19 +619,16 @@ impl App {
             }
             Some(src) => {
                 let w = self.joins_window.as_ref();
-                let path = text_input(
+                let path = kentos_ui::widget::text_field(
                     "GeoPackage dosyası ya da postgresql://kullanıcı@sunucu/veritabanı",
                     &src.path,
                 )
-                .size(typography::body())
                 .on_input(|t| msg(Event::SourcePath(t)))
-                .on_submit(msg(Event::SourceRead))
-                .padding([5, 8])
-                .style(style::field::input);
+                .on_submit(msg(Event::SourceRead));
                 form = form.push(words::field(
                     "Kaynak",
                     row![
-                        container(focus_ring(path)).width(Fill),
+                        container(path).width(Fill),
                         words::secondary(PICK_FILE, Some(msg(Event::SourcePick))),
                         words::secondary(
                             READ_TABLES,
@@ -710,11 +704,8 @@ impl App {
         // Toplama sütunları: a heading, what it does and the field.
         let mut sums = Column::new().spacing(6);
         for (i, a) in v.aggregates.iter().enumerate() {
-            let head = text_input("Sütunun adı", &a.name)
-                .size(typography::body())
-                .on_input(move |t| msg(Event::SumName(i, t)))
-                .padding([5, 8])
-                .style(style::field::input);
+            let head = kentos_ui::widget::text_field("Sütunun adı", &a.name)
+                .on_input(move |t| msg(Event::SumName(i, t)));
             let how = Select::new(
                 HOWS.iter().map(|(_, w)| Choice::new(*w)),
                 HOWS.iter().position(|(h, _)| *h == a.how),
@@ -736,7 +727,7 @@ impl App {
             );
             sums = sums.push(
                 row![
-                    container(focus_ring(head)).width(Length::FillPortion(3)),
+                    container(head).width(Length::FillPortion(3)),
                     container(how).width(Length::FillPortion(2)),
                     container(field).width(Length::FillPortion(3)),
                     words::ghost("Kaldır", Some(msg(Event::SumRemove(i)))),

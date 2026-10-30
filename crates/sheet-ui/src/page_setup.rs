@@ -3,14 +3,14 @@ use crate::{
     Message,
     designer::{Designer, Dialog as Window},
 };
-use iced::{Element, Fill};
 use iced::widget::{button, column, row};
+use iced::{Element, Fill};
 use kentos_sheet::{
     Page,
     ops::Op,
     print_setup::{
-        self, AppliedPageSetup, NamedPageSetup, PlotArea, PlotScale, PlotSettings, PrintDevice,
-        SavePageSetups, ApplyPageSetup, SetSheetPlot,
+        self, AppliedPageSetup, ApplyPageSetup, NamedPageSetup, PlotArea, PlotScale, PlotSettings,
+        PrintDevice, SavePageSetups, SetSheetPlot,
     },
     units::RectUm,
     viewport::ScaleRatio,
@@ -284,9 +284,11 @@ impl Designer {
             body = body.push(
                 row![
                     button(label::body(&p.name))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press(on(SetupMessage::Load(id)))
                         .style(style::button::secondary),
                     button(label::body("Sil"))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press(on(SetupMessage::Remove(remove)))
                         .style(style::button::secondary)
                 ]
@@ -443,20 +445,24 @@ impl Designer {
             body = body.push(label::body(e).style(style::text::danger));
         }
         Dialog::new("Sayfa düzenleri")
+            .on_close(crate::Message::CloseDialog)
             .width(650.)
             .scroll(body)
             .action(
                 button(label::body("Vazgeç"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(Message::CloseDialog)
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body("Uygula"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(on(SetupMessage::Apply))
                     .style(style::button::secondary),
             )
             .action(
                 button(label::strong("Kaydet ve uygula"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(on(SetupMessage::Save))
                     .style(style::button::primary),
             )

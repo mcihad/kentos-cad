@@ -13,7 +13,7 @@
 use std::collections::HashMap;
 
 use iced::widget::canvas::{self, Frame, Path, Stroke};
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Center, Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     AnnotationStyleKind, ComponentHatch, Entity, StyleEditOperation, StylesEdit, WallCaps,
@@ -21,7 +21,7 @@ use kentos_commands::{
 };
 use kentos_interaction::{Format, Level};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Choice, Confirm, Dialog as Frame_, Elided, Select, focus_ring, overlay};
+use kentos_ui::widget::{Choice, Confirm, Dialog as Frame_, Elided, Select, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -616,14 +616,12 @@ impl App {
         }
         let body = body.push(row![side, main].spacing(16));
         let can_save = problem.is_none() && self.wall_styles_changed();
-        let window = overlay::modal(
-            Frame_::new(TITLE)
-                .scroll(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
-                .width(860.0),
-            msg(Event::Cancel),
-        );
+        let window = Frame_::new(TITLE)
+            .scroll(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
+            .width(860.0)
+            .modal(msg(Event::Cancel));
         let Some(id) = &w.asking else {
             return window;
         };
@@ -652,16 +650,11 @@ impl App {
         s: &'a WallStyleDef,
         format: &Format,
     ) -> Element<'a, Message> {
-        let name = text_input("Stilin adı", &s.name)
-            .on_input(|t| msg(Event::Name(t)))
-            .padding([5, 8])
-            .size(typography::body())
-            .style(style::field::input);
+        let name =
+            kentos_ui::widget::text_field("Stilin adı", &s.name).on_input(|t| msg(Event::Name(t)));
         let fixed = kentos_commands::fixed_width(&s.components);
-        let width = text_input("", &w.width_typed)
+        let width = kentos_ui::widget::text_field("", &w.width_typed)
             .on_input(|t| msg(Event::Width(t)))
-            .padding([5, 8])
-            .size(typography::body())
             .style(style::field::validated(number(&w.width_typed).is_err()));
         let width_hint = match fixed {
             Some(f) => format!("Bileşenlerin toplamı: {}", format.length(f)),
@@ -690,39 +683,33 @@ impl App {
         })
         .searchable(false);
         let top = row![
-            container(words::field("Ad", focus_ring(name), None)).width(Fill),
-            container(words::field(
-                "Genişlik",
-                focus_ring(width),
-                Some(width_hint)
-            ))
-            .width(Fill),
+            container(words::field("Ad", name, None)).width(Fill),
+            container(words::field("Genişlik", width, Some(width_hint))).width(Fill),
             container(words::field("Şematik dolgu", fill, None)).width(Fill),
         ]
         .spacing(12)
         .align_y(iced::Top);
         // The components, from the wall's left face.
         let head = |t: &'static str, part: u16| {
-            container(
-                label::caption(t).style(|theme: &Theme| iced::widget::text::Style {
-                    color: Some(Tokens::of(theme).muted),
-                }),
-            )
-            .width(iced::Length::FillPortion(part))
+            container(kentos_ui::widget::table::title(t))
+                .padding([0, 8])
+                .width(iced::Length::FillPortion(part))
         };
-        let mut table = Column::new().spacing(4).push(
-            row![
-                head("Bileşen", 5),
-                head("Malzeme", 4),
-                head("Kalınlık (m)", 3),
-                head("Tarama", 4),
-                head("Ölçek", 2),
-                head("Gösterim", 4),
-                head("Öncelik", 3),
-                iced::widget::space().width(iced::Length::Fixed(2.0 * 26.0 + 6.0)),
-            ]
-            .spacing(6),
-        );
+        let mut table = Column::new()
+            .spacing(4)
+            .push(kentos_ui::widget::table::band(
+                row![
+                    head("Bileşen", 4),
+                    head("Malzeme", 4),
+                    head("Kalınlık (m)", 4),
+                    head("Tarama", 4),
+                    head("Ölçek", 2),
+                    head("Gösterim", 4),
+                    head("Öncelik", 3),
+                    iced::widget::space().width(iced::Length::Fixed(2.0 * 26.0 + 6.0)),
+                ]
+                .spacing(6),
+            ));
         let patterns: Vec<&'static str> = std::iter::once("SOLID")
             .chain(
                 kentos_geometry_core::geom::hatch_pattern::library()
@@ -733,13 +720,11 @@ impl App {
         for (i, c) in s.components.iter().enumerate() {
             let typed = |f: Field| w.typed.get(&(i, f)).cloned().unwrap_or_default();
             let input = |f: Field, part: u16, hint: &'static str, wrong: bool| {
-                container(focus_ring(
-                    text_input(hint, &typed(f))
+                container(
+                    kentos_ui::widget::text_field(hint, &typed(f))
                         .on_input(move |t| msg(Event::Component(i, f, t)))
-                        .padding([4, 6])
-                        .size(typography::body())
                         .style(style::field::validated(wrong)),
-                ))
+                )
                 .width(iced::Length::FillPortion(part))
             };
             let thickness = typed(Field::Thickness);
@@ -799,9 +784,9 @@ impl App {
             };
             table = table.push(
                 row![
-                    input(Field::Name, 5, "Ad", typed(Field::Name).trim().is_empty()),
+                    input(Field::Name, 4, "Ad", typed(Field::Name).trim().is_empty()),
                     input(Field::Material, 4, "", false),
-                    input(Field::Thickness, 3, "kalan", number(&thickness).is_err()),
+                    input(Field::Thickness, 4, "kalan", number(&thickness).is_err()),
                     container(pattern).width(iced::Length::FillPortion(4)),
                     scale,
                     container(detail).width(iced::Length::FillPortion(4)),

@@ -145,7 +145,7 @@ impl Designer {
         // The sheets.
         let add = button(icon(Icon::Plus).size(14.0))
             .on_press(Message::NewSheet)
-            .padding(3)
+            .padding(kentos_ui::theme::metrics::icon_small(14.0))
             .style(style::button::ghost);
         let mut sheets = column![].spacing(1).padding([4, 4]);
         for (i, s) in self.book.sheets.iter().enumerate() {
@@ -229,8 +229,21 @@ impl Designer {
         // The items.
         let rows = self.tree_rows();
         let items = self.items();
-        let inherited=self.open_sheet().and_then(|s|s.master.as_deref()).and_then(|id|self.book.master(id)).filter(|m|!m.items.is_empty());
-        let empty=inherited.map_or_else(||"Bu paftada öğe yok.".to_owned(),|m|format!("Yerel öğe yok; {} öğe “{}” ana sayfasından geliyor.",m.items.len(),m.name));
+        let inherited = self
+            .open_sheet()
+            .and_then(|s| s.master.as_deref())
+            .and_then(|id| self.book.master(id))
+            .filter(|m| !m.items.is_empty());
+        let empty = inherited.map_or_else(
+            || "Bu paftada öğe yok.".to_owned(),
+            |m| {
+                format!(
+                    "Yerel öğe yok; {} öğe “{}” ana sayfasından geliyor.",
+                    m.items.len(),
+                    m.name
+                )
+            },
+        );
         let mut tree = TreeView::new([TreeColumn::new("Ad").width(Fill)])
             .header(false)
             .empty(empty)

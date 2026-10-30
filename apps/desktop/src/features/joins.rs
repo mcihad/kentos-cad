@@ -151,7 +151,7 @@ impl App {
                 .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press(Message::Run("data.joinViews")),
             Tip::new(words::VIEWS).body(words::VIEWS_HINT),
             iced::widget::tooltip::Position::Top,
@@ -240,16 +240,28 @@ impl App {
                 .width(Length::Fixed(56.0))
                 .align_right(),
         ];
-        for c in &r.columns {
-            columns.push(TableColumn::new(c.name.clone()).width(Length::Fixed(140.0)));
+        for (j, c) in r.columns.iter().enumerate() {
+            let width = self
+                .features
+                .widths
+                .get(&(format!("{}{}", super::JOIN_WIDTHS, v.id), c.name.clone()))
+                .copied()
+                .unwrap_or(140.0);
+            columns.push(
+                TableColumn::new(c.name.clone())
+                    .width(Length::Fixed(width))
+                    .resizable(move |width| msg(Event::JoinWidth(j, width))),
+            );
         }
-        let min_width = 56.0 + 148.0 * r.columns.len() as f32;
+        let column_count = r.columns.len() + 1;
+        let min_width = self.viewport.bounds.width;
         let read_rows = r.clone();
         let editing = self.features.join.editing.clone();
         let text = self.features.join.text.clone();
         let count = r.rows.len();
         let table = Table::new(columns)
             .horizontal()
+            .grid()
             .min_width(min_width)
             .virtualized(count, move |i| {
                 let line = &read_rows.rows[i];
@@ -263,6 +275,7 @@ impl App {
                         cells.push(cell::edit_box(
                             &text,
                             false,
+                            kentos_ui::widget::table::cell_pads(j + 1, column_count),
                             |t| msg(Event::JoinInput(t)),
                             msg(Event::JoinEnter),
                             msg(Event::JoinCancel),
@@ -278,9 +291,17 @@ impl App {
                             .then(|| words::NO_RECORD.to_owned())
                     });
                     let face: Element<'_, Message> = match &reason {
-                        Some(_) => label::muted(value).wrapping(Wrapping::None).into(),
-                        None => label::body(value).wrapping(Wrapping::None).into(),
+                        Some(_) => kentos_ui::widget::table::text(value)
+                            .style(kentos_ui::style::text::muted)
+                            .into(),
+                        None => kentos_ui::widget::table::text(value).into(),
                     };
+                    // The whole cell takes the double click: an empty value too.
+                    let face: Element<'_, Message> = iced::widget::container(face)
+                        .width(iced::Fill)
+                        .height(iced::Fill)
+                        .align_y(iced::Center)
+                        .into();
                     cells.push(match reason {
                         Some(why) => tip(
                             face,
@@ -346,6 +367,14 @@ impl App {
                 return focus_field();
             }
             Event::JoinInput(t) => self.features.join.text = t,
+            Event::JoinWidth(j, width) => {
+                if let Some(c) = r.columns.get(j) {
+                    self.features.widths.insert(
+                        (format!("{}{}", super::JOIN_WIDTHS, v.id), c.name.clone()),
+                        width,
+                    );
+                }
+            }
             Event::JoinCancel => self.features.join.editing = None,
             Event::JoinEnter => {
                 let Some((id, j)) = self.features.join.editing.take() else {

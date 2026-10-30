@@ -18,13 +18,13 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use iced::widget::{Column, button, column, container, row, text_editor, text_input};
+use iced::widget::{Column, button, column, container, row, text_editor};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{Attachment, AttachmentKind, EntitiesSetProperties, PropertiesOperation};
 use kentos_domain::Slot;
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
-use kentos_ui::widget::{Dialog as Frame, overlay};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message, Picker};
@@ -822,15 +822,10 @@ impl App {
         let editing = matches!(f.mode, Mode::Edit(..));
         let input =
             |placeholder: &str, value: &str, id: iced::widget::Id, on: fn(String) -> Event| {
-                kentos_ui::widget::focus_ring(
-                    text_input(placeholder, value)
-                        .id(id)
-                        .on_input(move |t| msg(on(t)))
-                        .on_submit_maybe(problem.is_none().then(|| msg(Event::FormSave)))
-                        .padding([5, 8])
-                        .size(typography::body())
-                        .style(style::field::input),
-                )
+                kentos_ui::widget::text_field(placeholder, value)
+                    .id(id)
+                    .on_input(move |t| msg(on(t)))
+                    .on_submit_maybe(problem.is_none().then(|| msg(Event::FormSave)))
             };
         let note = text_editor(&f.note)
             .on_action(|a| msg(Event::FormNote(a)))
@@ -872,17 +867,15 @@ impl App {
                     },
                 ),
             }]));
-        overlay::modal(
-            Frame::new(if editing { EDIT_TITLE } else { LINK_TITLE })
-                .push(body)
-                .action(words::secondary("Vazgeç", Some(msg(Event::FormCancel))))
-                .action(words::primary(
-                    "Kaydet",
-                    problem.is_none().then(|| msg(Event::FormSave)),
-                ))
-                .width(520.0),
-            msg(Event::FormCancel),
-        )
+        Frame::new(if editing { EDIT_TITLE } else { LINK_TITLE })
+            .push(body)
+            .action(words::secondary("Vazgeç", Some(msg(Event::FormCancel))))
+            .action(words::primary(
+                "Kaydet",
+                problem.is_none().then(|| msg(Event::FormSave)),
+            ))
+            .width(520.0)
+            .modal(msg(Event::FormCancel))
     }
 
     pub(crate) fn photo_viewer_view(&self) -> Element<'_, Message> {
@@ -940,30 +933,28 @@ impl App {
             notes = notes.push(
                 button(label::body("Notu kaydet"))
                     .on_press_maybe(changed.then(|| msg(Event::ViewerSaveNote)))
-                    .padding([5, 12])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             );
         }
         let many = photos.len() > 1;
-        overlay::modal(
-            Frame::new(VIEWER_TITLE)
-                .push(column![frame, caption, notes].spacing(10))
-                .action(words::secondary(
-                    "Önceki",
-                    many.then(|| msg(Event::ViewerStep(-1))),
-                ))
-                .action(words::secondary(
-                    "Sonraki",
-                    many.then(|| msg(Event::ViewerStep(1))),
-                ))
-                .action(words::secondary(
-                    "Dışarıda aç",
-                    Some(msg(Event::ViewerOutside)),
-                ))
-                .action(words::primary("Kapat", Some(msg(Event::ViewerClose))))
-                .width(940.0),
-            msg(Event::ViewerClose),
-        )
+        Frame::new(VIEWER_TITLE)
+            .push(column![frame, caption, notes].spacing(10))
+            .action(words::secondary(
+                "Önceki",
+                many.then(|| msg(Event::ViewerStep(-1))),
+            ))
+            .action(words::secondary(
+                "Sonraki",
+                many.then(|| msg(Event::ViewerStep(1))),
+            ))
+            .action(words::secondary(
+                "Dışarıda aç",
+                Some(msg(Event::ViewerOutside)),
+            ))
+            .action(words::primary("Kapat", Some(msg(Event::ViewerClose))))
+            .width(940.0)
+            .modal(msg(Event::ViewerClose))
     }
 }
 

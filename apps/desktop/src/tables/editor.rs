@@ -13,9 +13,7 @@
 //! one step (“Tabloyu düzenle”).
 
 use iced::keyboard::key::Named;
-use iced::widget::{
-    Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack, text_input,
-};
+use iced::widget::{Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack};
 use iced::{Center, Element, Fill, Length, Task, Theme};
 use kentos_commands::{
     CommandResult, Entity, FieldSource, ProjectValue, TableAlign, TableEdit, TableEntity,
@@ -25,10 +23,10 @@ use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::entity::CellRange;
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, tables_edit};
-use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, Tip, focus_ring, overlay, tip};
+use kentos_ui::widget::select::{Choice, Select};
+use kentos_ui::widget::{Dialog as Frame, Tip, tip};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -369,7 +367,12 @@ impl App {
 
     /// The draft as `cad.tables.edit` would write `edits`: the saved table when there are none, the refusal's words
     /// when it refuses them.
-    fn table_planned(&self, uid: Uuid, edits: &[TableEdit], saved: &TableEntity) -> Result<TableEntity, String> {
+    fn table_planned(
+        &self,
+        uid: Uuid,
+        edits: &[TableEdit],
+        saved: &TableEntity,
+    ) -> Result<TableEntity, String> {
         if edits.is_empty() {
             return Ok(saved.clone());
         }
@@ -540,7 +543,11 @@ impl App {
             Event::Words(t) => e.words = t,
             Event::Commit => {
                 // A schedule's cell that is not its objects' own field is read only (docs/adr/0733 §6).
-                if let Some(Err(why)) = self.document.as_ref().and_then(|d| schedule_cell(&d.model, &e.saved, e.active)) {
+                if let Some(Err(why)) = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| schedule_cell(&d.model, &e.saved, e.active))
+                {
                     e.problem = Some(why);
                     e.words = e.words_at(e.active);
                     return Task::none();
@@ -673,7 +680,10 @@ impl App {
             self.dialog = None;
             return;
         }
-        if matches!(e.saved.source, Some(kentos_commands::TableSource::Schedule { .. })) {
+        if matches!(
+            e.saved.source,
+            Some(kentos_commands::TableSource::Schedule { .. })
+        ) {
             self.save_schedule_editor();
             return;
         }
@@ -719,20 +729,30 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        let group = doc.model.begin_group(kentos_native_application::schedules::EDIT_STEP);
+        let group = doc
+            .model
+            .begin_group(kentos_native_application::schedules::EDIT_STEP);
         let mut problem = None;
         let mut sizes = Vec::new();
         for edit in edits {
             let result = match edit {
-                TableEdit::SetCell { row, col, words } => kentos_native_application::schedules_edit::execute(
-                    &mut ExecutionContext::new(&mut doc.model),
-                    SchedulesEdit {
-                        uid: uid.clone(),
-                        operation: ScheduleOperation::Cell { row, column: col, value: words },
-                        expected_revision: None,
-                    },
-                ),
-                size @ (TableEdit::RowHeight { .. } | TableEdit::ColumnWidth { .. } | TableEdit::Fit { .. }) => {
+                TableEdit::SetCell { row, col, words } => {
+                    kentos_native_application::schedules_edit::execute(
+                        &mut ExecutionContext::new(&mut doc.model),
+                        SchedulesEdit {
+                            uid: uid.clone(),
+                            operation: ScheduleOperation::Cell {
+                                row,
+                                column: col,
+                                value: words,
+                            },
+                            expected_revision: None,
+                        },
+                    )
+                }
+                size @ (TableEdit::RowHeight { .. }
+                | TableEdit::ColumnWidth { .. }
+                | TableEdit::Fit { .. }) => {
                     sizes.push(size);
                     continue;
                 }
@@ -744,8 +764,9 @@ impl App {
                     break;
                 }
             };
-            if let CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } =
-                result
+            if let CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } = result
             {
                 problem = Some(error.message);
                 break;
@@ -756,7 +777,9 @@ impl App {
                 operation: TablesOperation::Edit { uid, edits: sizes },
                 expected_revision: None,
             };
-            if let CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } =
+            if let CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } =
                 tables_edit::execute(&mut ExecutionContext::new(&mut doc.model), input)
             {
                 problem = Some(error.message);
@@ -772,7 +795,10 @@ impl App {
             }
             None => {
                 doc.model.end_group(group);
-                self.announce(Level::Success, "Çizelge kaydedildi: hücreler nesnelere yazıldı. Ctrl+Z geri alır.");
+                self.announce(
+                    Level::Success,
+                    "Çizelge kaydedildi: hücreler nesnelere yazıldı. Ctrl+Z geri alır.",
+                );
                 self.table_editor = None;
                 self.dialog = None;
             }
@@ -796,7 +822,7 @@ impl App {
          -> Element<'_, Message> {
             tip(
                 button(icon(crate::icons::from_web(Some(name))).size(18.0))
-                    .padding(5)
+                    .padding(kentos_ui::theme::metrics::icon(18.0))
                     .style(style::button::toggle(on == Some(true)))
                     .on_press_maybe(enabled.then(|| msg(Event::Tool(t)))),
                 Tip::new(says),
@@ -990,18 +1016,27 @@ impl App {
                 .collect()
         };
         let picked = |list: &[(&str, &str)], now: &Option<String>| {
-            now.as_deref().and_then(|c| list.iter().position(|(_, h)| *h == c))
+            now.as_deref()
+                .and_then(|c| list.iter().position(|(_, h)| *h == c))
         };
-        let decimals: Vec<Choice> = (0..=4).map(|d| Choice::new(format!("{d} basamak"))).collect();
+        let decimals: Vec<Choice> = (0..=4)
+            .map(|d| Choice::new(format!("{d} basamak")))
+            .collect();
         let blocks: Vec<Choice> = e.blocks.iter().map(Choice::new).collect();
-        let field_now = e.draft.field_at(at_cell(e).0, at_cell(e).1).and_then(|f| match &f.source {
-            FieldSource::Project { value: ProjectValue::BlockCount, name: Some(n) } => {
-                e.blocks.iter().position(|b| b == n)
-            }
-            _ => None,
-        });
+        let field_now =
+            e.draft
+                .field_at(at_cell(e).0, at_cell(e).1)
+                .and_then(|f| match &f.source {
+                    FieldSource::Project {
+                        value: ProjectValue::BlockCount,
+                        name: Some(n),
+                    } => e.blocks.iter().position(|b| b == n),
+                    _ => None,
+                });
         let narrow = |w: f32, el: Element<'static, Message>| -> Element<'static, Message> {
-            container(el).width(Length::Fixed(typography::scaled(w))).into()
+            container(el)
+                .width(Length::Fixed(typography::scaled(w)))
+                .into()
         };
         let format_tools = row![
             tool_button("tableBold", "Kalın: seçili hücreler".into(), Tool::Bold, Some(bold_on), true),
@@ -1082,15 +1117,11 @@ impl App {
                 .width(Length::Fixed(typography::scaled(72.0)))
                 .center_x(Length::Fixed(typography::scaled(72.0)))
                 .style(style::container::header),
-            focus_ring(
-                text_input("", &e.words)
-                    .id(Id::new(BAR))
-                    .on_input(|t| msg(Event::Words(t)))
-                    .on_submit(msg(Event::Commit))
-                    .padding([5, 8])
-                    .width(Fill)
-                    .style(style::field::input)
-            ),
+            kentos_ui::widget::text_field("", &e.words)
+                .id(Id::new(BAR))
+                .on_input(|t| msg(Event::Words(t)))
+                .on_submit(msg(Event::Commit))
+                .width(Fill),
         ]
         .spacing(8)
         .align_y(Center);
@@ -1255,14 +1286,10 @@ impl App {
             column![
                 label::caption(title),
                 row![
-                    focus_ring(
-                        text_input("", value)
-                            .on_input(move |t| msg(on(t)))
-                            .on_submit(msg(Event::CommitSizes))
-                            .padding([5, 8])
-                            .width(96)
-                            .style(style::field::input)
-                    ),
+                    kentos_ui::widget::text_field("", value)
+                        .on_input(move |t| msg(on(t)))
+                        .on_submit(msg(Event::CommitSizes))
+                        .width(96),
                     label::muted(unit),
                 ]
                 .spacing(6)
@@ -1341,7 +1368,10 @@ impl App {
         // The status line.
         let width: f64 = e.draft.columns.iter().sum();
         let depth: f64 = e.draft.rows.iter().sum();
-        let cell = self.document.as_ref().and_then(|d| schedule_cell(&d.model, &e.saved, e.active));
+        let cell = self
+            .document
+            .as_ref()
+            .and_then(|d| schedule_cell(&d.model, &e.saved, e.active));
         let status: Element<'_, Message> = match (&e.problem, cell) {
             (Some(p), _) => words::text_line(words::Kind::Error, p.clone()),
             (None, Some(Ok(says))) => words::text_line(words::Kind::Ok, says),
@@ -1370,12 +1400,12 @@ impl App {
                 .action(words::primary("Kaydet ve kapat", Some(msg(Event::Answer(Answer::Save)))))
                 .width(460.0);
             return stack![
-                overlay::modal(frame, msg(Event::Close)),
-                overlay::modal(question, msg(Event::Answer(Answer::Stay))),
+                frame.modal(msg(Event::Close)),
+                question.modal(msg(Event::Answer(Answer::Stay))),
             ]
             .into();
         }
-        overlay::modal(frame, msg(Event::Close))
+        frame.modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
@@ -1419,7 +1449,9 @@ fn cell_note(e: &Editor) -> String {
                 Some(n) => format!("{} ({n})", value.label()),
                 None => value.label().to_owned(),
             },
-            FieldSource::Object { value, .. } => format!("Nesnenin {}", value.label().to_lowercase()),
+            FieldSource::Object { value, .. } => {
+                format!("Nesnenin {}", value.label().to_lowercase())
+            }
         };
         return match f.broken {
             Some(b) => format!("Alan: {what}; okunamadı: {}", b.words()),
@@ -1480,18 +1512,33 @@ pub(crate) fn schedule_cell(
     t: &kentos_commands::TableEntity,
     at: (usize, usize),
 ) -> Option<Result<String, String>> {
-    let Some(kentos_commands::TableSource::Schedule { of, columns, total, members, .. }) = &t.source else {
+    let Some(kentos_commands::TableSource::Schedule {
+        of,
+        columns,
+        total,
+        members,
+        ..
+    }) = &t.source
+    else {
         return None;
     };
     let (r, c) = at;
     let column = columns.get(c)?;
     if r == 0 {
-        return Some(Err("Başlık satırı: sütunun adı belgenin yazdığıdır; düzenlenmez.".into()));
+        return Some(Err(
+            "Başlık satırı: sütunun adı belgenin yazdığıdır; düzenlenmez.".into(),
+        ));
     }
     let objects = members.get(r - 1).filter(|m| !m.is_empty());
     let Some(objects) = objects else {
-        let what = if *total && r + 1 == t.cells.len() { "Genel toplam" } else { "Grup başlığı ya da ara toplam" };
-        return Some(Err(format!("{what}: nesnelerin satırı değil; düzenlenmez.")));
+        let what = if *total && r + 1 == t.cells.len() {
+            "Genel toplam"
+        } else {
+            "Grup başlığı ya da ara toplam"
+        };
+        return Some(Err(format!(
+            "{what}: nesnelerin satırı değil; düzenlenmez."
+        )));
     };
     if !kentos_native_application::schedules::editable(*of, column.field) {
         return Some(Err(format!(
@@ -1501,11 +1548,19 @@ pub(crate) fn schedule_cell(
     }
     let names: Vec<String> = objects
         .iter()
-        .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)))
+        .filter_map(|u| {
+            Uuid::parse_str(u)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+        })
         .filter_map(|e| {
             ["number", "tag", "name", "type"]
                 .iter()
-                .find_map(|p| doc.arch_value(e, p, None).map(|v| doc.arch_value_text(&v, false)))
+                .find_map(|p| {
+                    doc.arch_value(e, p, None)
+                        .map(|v| doc.arch_value_text(&v, false))
+                })
                 .filter(|w| !w.is_empty())
         })
         .take(6)
@@ -1588,12 +1643,21 @@ fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
         rows: false,
     };
     match t {
-        Tool::RowAbove => vec![TableEdit::InsertRows { at: row, count: rows }],
+        Tool::RowAbove => vec![TableEdit::InsertRows {
+            at: row,
+            count: rows,
+        }],
         Tool::RowBelow => vec![TableEdit::InsertRows {
             at: row + rows,
             count: rows,
         }],
-        Tool::ColumnLeft => vec![TableEdit::InsertColumns { at: col, count: cols }, fit_new(col, cols)],
+        Tool::ColumnLeft => vec![
+            TableEdit::InsertColumns {
+                at: col,
+                count: cols,
+            },
+            fit_new(col, cols),
+        ],
         Tool::ColumnRight => vec![
             TableEdit::InsertColumns {
                 at: col + cols,
@@ -1601,9 +1665,20 @@ fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
             },
             fit_new(col + cols, cols),
         ],
-        Tool::DeleteRows => vec![TableEdit::DeleteRows { from: row, count: rows }],
-        Tool::DeleteColumns => vec![TableEdit::DeleteColumns { from: col, count: cols }],
-        Tool::Merge => vec![TableEdit::Merge { row, col, rows, cols }],
+        Tool::DeleteRows => vec![TableEdit::DeleteRows {
+            from: row,
+            count: rows,
+        }],
+        Tool::DeleteColumns => vec![TableEdit::DeleteColumns {
+            from: col,
+            count: cols,
+        }],
+        Tool::Merge => vec![TableEdit::Merge {
+            row,
+            col,
+            rows,
+            cols,
+        }],
         Tool::Unmerge => vec![TableEdit::Unmerge {
             row: e.active.0 as u32,
             col: e.active.1 as u32,
@@ -1613,7 +1688,9 @@ fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
             count: cols,
             align: a,
         }],
-        Tool::Header => vec![TableEdit::Header { on: !e.draft.header }],
+        Tool::Header => vec![TableEdit::Header {
+            on: !e.draft.header,
+        }],
         Tool::Grid(g) => vec![TableEdit::Grid { grid: g }],
         // 0,7 mm on paper, as Tablo ekle's (the web's).
         Tool::Frame => vec![TableEdit::Frame {
@@ -1629,7 +1706,11 @@ fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
             rows: true,
         }],
         Tool::Bold => {
-            let on = e.draft.cell_style(r.row, r.col).bold.unwrap_or(e.draft.header && r.row == 0);
+            let on = e
+                .draft
+                .cell_style(r.row, r.col)
+                .bold
+                .unwrap_or(e.draft.header && r.row == 0);
             vec![style_edit(r, |s| {
                 if let TableEdit::Style { bold, .. } = s {
                     *bold = Some(!on);
@@ -1651,7 +1732,12 @@ fn tool_edits(e: &Editor, t: Tool) -> Vec<TableEdit> {
                 *decimals = Some(d);
             }
         })],
-        Tool::ClearStyle => vec![TableEdit::ClearStyle { row, col, rows, cols }],
+        Tool::ClearStyle => vec![TableEdit::ClearStyle {
+            row,
+            col,
+            rows,
+            cols,
+        }],
         Tool::Field(i) => match e.blocks.get(i) {
             Some(name) => {
                 let at = e.owner(e.active);

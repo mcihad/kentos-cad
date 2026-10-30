@@ -429,7 +429,7 @@ pub fn view<'a>(
         .spacing(6)
         .align_y(Center),
     )
-    .padding([5, 14])
+    .padding(kentos_ui::theme::metrics::action())
     .style(ui_style::button::secondary)
     .on_press_maybe((!png).then(|| ev(EdEvent::File(Event::ExportCopy))));
     let copy_el: Element<'a, Message> = if png {
@@ -447,7 +447,7 @@ pub fn view<'a>(
     let foot = row![
         space::horizontal(),
         button(label::body("Kapat"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(ui_style::button::secondary)
             .on_press(change(|ed| ed.files.dialog = None)),
         copy_el,
@@ -459,13 +459,14 @@ pub fn view<'a>(
             .spacing(6)
             .align_y(Center),
         )
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(ui_style::button::primary)
         .on_press(ev(EdEvent::File(Event::ExportSave))),
     ]
     .spacing(8)
     .align_y(Center);
     Dialog::new("Dışa aktar")
+        .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(row![preview, form].spacing(18))
         .push(foot)
         .width(typography::unscaled(width))

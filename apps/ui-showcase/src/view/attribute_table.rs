@@ -123,11 +123,8 @@ impl Showcase {
 
         let mut toolbar = Toolbar::new()
             .push(
-                container(
-                    self.layer_select(self.active_layer, Message::LayerActivated)
-                        .inline(),
-                )
-                .width(typography::scaled(150.0)),
+                container(self.layer_select(self.active_layer, Message::LayerActivated))
+                    .width(typography::scaled(150.0)),
             )
             .search(&view.search, "Tabloda ara", Message::TableSearch)
             .separator()

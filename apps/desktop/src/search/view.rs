@@ -43,7 +43,7 @@ fn bar_button<'a>(
                 .align_y(Center),
         )
         .style(style::button::secondary)
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,
@@ -226,8 +226,7 @@ impl App {
         )
         .id(iced::widget::Id::new(SEARCH_FIELD))
         .on_enter(msg(Event::Submit))
-        .fill()
-        .height(28.0);
+        .fill();
         let mut layers = vec![Choice::new(texts::ALL_LAYERS)];
         layers.extend(
             rows.layers

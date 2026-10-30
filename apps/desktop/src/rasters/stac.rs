@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, CommandWarning, StacItemInfo, StacNext, StacPrepare, StacPrepared, StacQa,
@@ -665,18 +665,12 @@ impl App {
         };
         let mut body = Column::new().spacing(12);
         let input = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value).on_input(move |t| msg(on(t)))
         };
         let small = |caption: &'static str, on: Option<Message>| {
             button(label::body(caption))
                 .on_press_maybe(on)
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(kentos_ui::style::button::secondary)
         };
         body = body.push(words::field(
@@ -952,7 +946,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
                 .action(words::primary("Hazırla", can.then(|| msg(Event::Prepare))))
                 .width(860.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(msg(Event::Close))),
         )
     }
 }

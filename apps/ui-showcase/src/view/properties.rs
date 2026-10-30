@@ -1,9 +1,7 @@
 //! Katman özellikleri penceresi: genel, kaynak, sembolizasyon, etiketler ve
 //! alanlar.
 
-use iced::widget::{
-    Column, button, checkbox, column, container, pick_list, row, slider, space, text_input,
-};
+use iced::widget::{Column, button, checkbox, column, container, pick_list, row, slider, space};
 use iced::{Center, Element, Fill, Right};
 
 use kentos_ui::label;
@@ -89,11 +87,8 @@ impl Showcase {
         let problem = draft.problem(&self.layers, properties.layer);
 
         let mut name = column![
-            text_input("Katman adı", &draft.name)
+            kentos_ui::widget::text_field("Katman adı", &draft.name)
                 .on_input(|name| Message::PropertiesEdited(Edit::Name(name)))
-                .font(typography::ui())
-                .size(typography::body())
-                .padding([4, 8])
                 .style(style::field::validated(problem.is_some())),
         ]
         .spacing(4);
@@ -275,7 +270,7 @@ fn labels_section<'a>(properties: &'a LayerProperties, layer: &'a Layer) -> Elem
             })
             .font(typography::ui())
             .text_size(typography::body())
-            .padding([3, 8])
+            .padding(kentos_ui::theme::metrics::field())
             .width(typography::scaled(220.0))
             .style(style::field::pick_list)
             .menu_style(style::field::menu),
@@ -289,7 +284,7 @@ fn labels_section<'a>(properties: &'a LayerProperties, layer: &'a Layer) -> Elem
             )
             .font(typography::ui())
             .text_size(typography::body())
-            .padding([3, 8])
+            .padding(kentos_ui::theme::metrics::field())
             .width(typography::scaled(220.0))
             .style(style::field::pick_list)
             .menu_style(style::field::menu),

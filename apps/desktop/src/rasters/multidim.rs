@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, column, container, row, text_input};
+use iced::widget::{Column, column, container, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     CommandResult, CreateOperation, DatasetDim, EntitiesCreate, EntityGeometry, NewObject,
@@ -916,7 +916,8 @@ impl App {
                     self.multidim_can(s).then(|| msg(Event::Run)),
                 ))
                 .width(640.0)
-                .max_height(780.0),
+                .max_height(780.0)
+                .on_close(Some(msg(Event::Close))),
         )
     }
 
@@ -926,15 +927,12 @@ impl App {
                      value: &'a str,
                      on: fn(String) -> Event,
                      submit: Option<Event>| {
-            let mut t = text_input(placeholder, value)
-                .on_input(move |v| msg(on(v)))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(kentos_ui::style::field::input);
+            let mut t =
+                kentos_ui::widget::text_field(placeholder, value).on_input(move |v| msg(on(v)));
             if let Some(e) = submit {
                 t = t.on_submit(msg(e));
             }
-            kentos_ui::widget::focus_ring(t)
+            t
         };
         let mut col = Column::new().spacing(10).push(
             row![
@@ -1019,13 +1017,8 @@ impl App {
             ));
         }
         if s.mode == Mode::Mesh {
-            let cell = kentos_ui::widget::focus_ring(
-                text_input("0,5", &s.cell)
-                    .on_input(|t| msg(Event::Cell(t)))
-                    .padding([5, 8])
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            );
+            let cell =
+                kentos_ui::widget::text_field("0,5", &s.cell).on_input(|t| msg(Event::Cell(t)));
             col = col.push(
                 row![
                     container(words::field(
@@ -1149,14 +1142,9 @@ impl App {
         } else {
             "Çizim dosyanın yolunu tutar; dosya yerinden oynarsa bulunamaz.".to_owned()
         };
-        let name = kentos_ui::widget::focus_ring(
-            text_input("Katmanın adı", &s.layer)
-                .on_input(|t| msg(Event::Layer(t)))
-                .on_submit(msg(Event::Run))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(kentos_ui::style::field::input),
-        );
+        let name = kentos_ui::widget::text_field("Katmanın adı", &s.layer)
+            .on_input(|t| msg(Event::Layer(t)))
+            .on_submit(msg(Event::Run));
         row![
             container(words::field("Saklama", keep, Some(hint)))
                 .width(iced::Length::FillPortion(3)),

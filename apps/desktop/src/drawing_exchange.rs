@@ -21,7 +21,7 @@ use kentos_native_application::exchange_write::{Counts, changes_tree, put_blocks
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog as Frame, Elided, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 use serde_json::Value;
 
@@ -899,14 +899,12 @@ impl App {
                     .width(Fill),
             )
             .push(same);
-        overlay::modal(
-            Frame::new(TAKE_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(TAKE, (n > 0).then(|| msg(Event::Take))))
-                .width(600.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TAKE_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(TAKE, (n > 0).then(|| msg(Event::Take))))
+            .width(600.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): a

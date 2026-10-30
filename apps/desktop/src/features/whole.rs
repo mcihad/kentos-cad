@@ -125,6 +125,8 @@ pub enum WholeEvent {
     Toggle(bool),
     /// A header pressed, by the shown columns (0: Sıra).
     Sort(usize),
+    /// A column's edge dragged, by the shown columns, and its new width.
+    Width(usize, f32),
     More,
     Stop,
     /// The question last asked again, as it was: a page the source did not give or one stopped (docs/adr/0740 §2).
@@ -317,6 +319,14 @@ impl App {
                 self.features.whole.descending = false;
                 return self.whole_ask(false);
             }
+            WholeEvent::Width(j, width) => {
+                let Some(layer) = self.features.whole.layer.clone() else {
+                    return Task::none();
+                };
+                if let Some(c) = self.whole_columns(&layer).get(j) {
+                    self.features.widths.insert((layer, c.clone()), width);
+                }
+            }
             WholeEvent::Sort(column) => {
                 let Some(layer) = self.features.whole.layer.clone() else {
                     return Task::none();
@@ -453,13 +463,20 @@ impl App {
             } else {
                 SortOrder::Ascending
             });
+            let width = self
+                .features
+                .widths
+                .get(&(layer.to_owned(), c.clone()))
+                .copied()
+                .unwrap_or(140.0);
             columns.push(
                 TableColumn::new(c.clone())
-                    .width(Length::Fixed(140.0))
-                    .sortable(order, msg(WholeEvent::Sort(j + 1))),
+                    .width(Length::Fixed(width))
+                    .sortable(order, msg(WholeEvent::Sort(j + 1)))
+                    .resizable(move |width| msg(WholeEvent::Width(j, width))),
             );
         }
-        let min_width = 56.0 + 148.0 * columns_shown.len() as f32;
+        let min_width = self.viewport.bounds.width;
         let held: Vec<bool> = {
             let doc = self.document.as_ref();
             p.rows
@@ -475,6 +492,7 @@ impl App {
         let table = Table::new(columns)
             .height(iced::Fill)
             .horizontal()
+            .grid()
             .min_width(min_width)
             .virtualized(rows.len(), move |i| {
                 let r = &rows[i];
@@ -487,9 +505,11 @@ impl App {
                         .cloned()
                         .unwrap_or_else(|| texts::EMPTY.to_owned());
                     cells.push(if held[i] {
-                        label::body(value).wrapping(Wrapping::None).into()
+                        kentos_ui::widget::table::text(value).into()
                     } else {
-                        label::muted(value).wrapping(Wrapping::None).into()
+                        kentos_ui::widget::table::text(value)
+                            .style(style::text::muted)
+                            .into()
                     });
                 }
                 TableLine::new(cells).on_press(msg(WholeEvent::Press(i)))

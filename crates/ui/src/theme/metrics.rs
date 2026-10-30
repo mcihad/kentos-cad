@@ -32,12 +32,23 @@ use iced::Padding;
 
 use super::typography;
 
-/// Giriş alanı, seçim kutusu, sayı girişi, parçalı seçim ve küçük düğme.
+/// Bütün girdiler ve düğmeler: metin, açılır liste, sayı, tarih, renk, arama,
+/// parçalı seçim, eylem düğmesi (docs/adr/0804). Girdilerin tek yüksekliği budur.
 pub const CONTROL: f32 = 28.0;
-/// Satır içi kontrol: tablo ve özellik hücresinde, araç çubuğunda.
+/// Satırın içinde duran küçük düğme: tablo satırındaki ve durum çubuğundaki işler.
+/// Girdi bu boyda olmaz.
 pub const INLINE: f32 = 22.0;
-/// İletişim kutusunun eylem düğmeleri (Tamam, Vazgeç).
-pub const BUTTON: f32 = 32.0;
+/// Izgara, tablo, ağaç ve liste satırı (DESIGN.md §5.2'nin `--row-h`'ı): bütün
+/// satırlar kontrolle aynı boyda, hücrenin düzenleyicisi satırı tam doldurur.
+pub const ROW: f32 = CONTROL;
+/// Girdideki yazının kenara uzaklığı.
+pub const FIELD_PAD: f32 = 8.0;
+/// Eylem düğmesindeki yazının kenara uzaklığı.
+pub const ACTION_PAD: f32 = 12.0;
+/// Hücredeki yazının hücrenin sol kenarına uzaklığı.
+pub const CELL_PAD: f32 = 10.0;
+/// Hücrenin sonundaki birimin ve okun hücrenin sağ kenarına uzaklığı.
+pub const CELL_END: f32 = 8.0;
 
 /// iced metninin varsayılan satır yüksekliği, yazı boyutunun katı.
 const LINE_HEIGHT: f32 = 1.3;
@@ -52,9 +63,44 @@ pub fn inline() -> f32 {
     typography::from_default(INLINE)
 }
 
-/// Geçerli yazı boyutunda iletişim düğmesinin yüksekliği.
-pub fn button() -> f32 {
-    typography::from_default(BUTTON)
+/// Geçerli yazı boyutunda satır yüksekliği.
+pub fn row() -> f32 {
+    typography::from_default(ROW)
+}
+
+/// Geçerli yazı boyutunda hücre içi boşluğu.
+pub fn cell_pad() -> f32 {
+    typography::from_default(CELL_PAD)
+}
+
+/// Geçerli yazı boyutunda hücrenin sonundaki boşluk.
+pub fn cell_end() -> f32 {
+    typography::from_default(CELL_END)
+}
+
+/// Metin girişinin iç boşluğu: kontrol yüksekliğine getirir.
+pub fn field() -> Padding {
+    padding(control(), FIELD_PAD)
+}
+
+/// Eylem düğmesinin iç boşluğu: kontrol yüksekliğine getirir.
+pub fn action() -> Padding {
+    padding(control(), ACTION_PAD)
+}
+
+/// Satırın içinde duran küçük düğmenin iç boşluğu.
+pub fn action_small() -> Padding {
+    padding(inline(), FIELD_PAD)
+}
+
+/// Yalnız ikonlu düğmenin iç boşluğu: `glyph` boyundaki ikonla kontrol yüksekliğinde bir kare.
+pub fn icon(glyph: f32) -> Padding {
+    Padding::new(((control() - glyph) / 2.0).max(0.0))
+}
+
+/// Satırın içinde duran, yalnız ikonlu küçük düğmenin iç boşluğu.
+pub fn icon_small(glyph: f32) -> Padding {
+    Padding::new(((inline() - glyph) / 2.0).max(0.0))
 }
 
 /// Gövde metniyle yazılan bir metin girişini ya da açılır listeyi

@@ -121,6 +121,7 @@ impl App {
                 ..container::Style::default()
             });
         Dialog::new(d.title())
+            .on_close(ev(Event::Close))
             .push(frame)
             .push(footer(d))
             .width(typography::unscaled(width))
@@ -158,7 +159,7 @@ impl App {
         let zoom = |glyph: Icon, words: &'static str, e: Event| {
             tip(
                 button(icon(glyph).size(15.0))
-                    .padding(5)
+                    .padding(kentos_ui::theme::metrics::icon(15.0))
                     .style(style::button::ghost)
                     .on_press(ev(e)),
                 Tip::new(words),
@@ -258,7 +259,7 @@ fn footer(d: &Designer) -> Element<'_, Message> {
             .spacing(6)
             .align_y(Center),
         )
-        .padding([5, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::ghost)
         .on_press(ev(Event::Layout)),
         Tip::new(words::LAYOUT_TIP),
@@ -277,7 +278,7 @@ fn footer(d: &Designer) -> Element<'_, Message> {
     .align_y(Center)
     .width(Fill);
     let close = button(label::body(words::CLOSE))
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press(ev(Event::Close));
     let save_run = button(
@@ -285,11 +286,11 @@ fn footer(d: &Designer) -> Element<'_, Message> {
             .spacing(6)
             .align_y(Center),
     )
-    .padding([5, 14])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press(ev(Event::SaveRun));
     let save = button(label::body(words::SAVE).style(style::text::on_accent))
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::primary)
         .on_press(ev(Event::Save));
     row![layout, status, close, save_run, save]
@@ -328,7 +329,7 @@ fn unsaved(d: &Designer) -> Element<'_, Message> {
     let verb = texts::unsaved::VERB;
     let answer = |words: String, e: Event| {
         button(label::body(words))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(e))
     };
@@ -337,7 +338,7 @@ fn unsaved(d: &Designer) -> Element<'_, Message> {
         space::horizontal(),
         answer("Vazgeç".to_owned(), Event::Answer(None)),
         button(label::body(format!("Kaydet ve {verb}")).style(style::text::on_accent))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
             .on_press(ev(Event::Answer(Some(true)))),
     ]

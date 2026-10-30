@@ -439,7 +439,7 @@ fn title_row<'a>(
     line = line.push(
         button(icon(Icon::Close).size(10.0).tone(Tone::Muted))
             .on_press(close)
-            .padding(4)
+            .padding(kentos_ui::theme::metrics::icon_small(10.0))
             .style(style::button::ghost),
     );
     container(line)

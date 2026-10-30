@@ -17,7 +17,8 @@ use kentos_ui::style;
 use kentos_ui::widget::number::{Unit, units};
 use kentos_ui::widget::property_grid::{choice, value};
 use kentos_ui::widget::{
-    EditCell, EmptyState, Inspector, Menu, NumberInput, PropertySheet, Segmented, Switch, Tip, tip,
+    Cell, EditCell, EmptyState, Inspector, Menu, NumberInput, PropertySheet, Segmented, Switch,
+    Tip, tip,
 };
 
 use crate::designer::Designer;
@@ -67,13 +68,13 @@ fn number<'a>(
     enabled: bool,
 ) -> Element<'a, Message> {
     match (v, enabled) {
-        (Some(v), true) => dragged(
+        (Some(v), true) => Cell::new(dragged(
             NumberInput::new(v, move |x| Message::Frame(field, x))
                 .units(units_)
                 .decimals(decimals)
                 .step(if decimals == 0 { 1.0 } else { 0.5 })
-                .inline(),
-        )
+                .cell(),
+        ))
         .into(),
         (None, true) => EditCell::new("—", move |t| Message::FrameText(field, t))
             .numeric(true)
@@ -100,9 +101,10 @@ fn dragged<'a>(n: NumberInput<'a, Message>) -> NumberInput<'a, Message> {
 impl Designer {
     /// The inspector: its tabs and the open one.
     pub fn inspector_panel(&self) -> Element<'_, Message> {
-        if let Some(view)=self.active_viewport() {
-            let item=self.book.item(&view.item);
-            let locked=item.is_some_and(|i|matches!(&i.kind,kentos_sheet::ItemKind::Map(m) if m.view_locked));
+        if let Some(view) = self.active_viewport() {
+            let item = self.book.item(&view.item);
+            let locked = item
+                .is_some_and(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m) if m.view_locked));
             let body=column![
                 label::body("Model düzenleme"),
                 label::caption(item.map_or("Görünüm",|i|i.name.as_str())),
@@ -110,9 +112,13 @@ impl Designer {
                 label::body("Çizim araçları bu görünümdeki gerçek model üzerinde çalışır. Tekerlek yakınlaştırır; orta tuş kaydırır."),
                 label::caption(if locked {"Kamera kilitli. Model nesneleri düzenlenebilir; görünüm kaydırılamaz ve ölçeği değişmez."} else {"Kaydırma ve yakınlaşma yalnız bu görünümün kamerasını değiştirir."}),
                 label::caption("Geri al model geçmişini kullanır. Kâğıda dönünce pafta öğeleri yeniden düzenlenir."),
-                button(label::body("Kâğıda dön")).on_press(Message::ReturnPaper).padding([6,12]).style(style::button::primary),
+                button(label::body("Kâğıda dön")).on_press(Message::ReturnPaper).padding(kentos_ui::theme::metrics::action()).style(style::button::primary),
             ].spacing(14);
-            return container(scrollable(body).height(Fill)).padding(16).width(WIDTH).height(Fill).into();
+            return container(scrollable(body).height(Fill))
+                .padding(16)
+                .width(WIDTH)
+                .height(Fill)
+                .into();
         }
 
         let errors = self
@@ -149,7 +155,7 @@ impl Designer {
                         .align_y(Center),
                     )
                     .on_press(Message::InspectorTab(InspectorTab::Preflight))
-                    .padding([3, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::ghost),
                 )
                 .padding([0, 8]),
@@ -452,13 +458,13 @@ impl Designer {
             .row(
                 "Saydamsızlık",
                 match common(&chosen, |i| i.opacity) {
-                    Some(o) => dragged(
+                    Some(o) => Cell::new(dragged(
                         NumberInput::new(f64::from(o), Message::Opacity)
                             .units(units::PERCENT)
                             .range(0.0..=100.0)
                             .decimals(0)
-                            .inline(),
-                    )
+                            .cell(),
+                    ))
                     .into(),
                     None => value("—", true, Some("%".into())),
                 },
@@ -466,24 +472,24 @@ impl Designer {
             .row(
                 "İç boşluk",
                 match common(&chosen, |i| i.padding) {
-                    Some(p) => dragged(
+                    Some(p) => Cell::new(dragged(
                         NumberInput::new(f64::from(p) / 1000.0, Message::Padding)
                             .units(MM)
                             .range(0.0..=100.0)
                             .decimals(1)
                             .step(0.5)
-                            .inline(),
-                    )
+                            .cell(),
+                    ))
                     .into(),
                     None => value("—", true, Some("mm".into())),
                 },
             )
             .row(
                 "Yazdırılır",
-                Switch::new(
+                Cell::padded(Switch::new(
                     common(&chosen, |i| i.printable).unwrap_or(true),
                     Message::Printable,
-                ),
+                )),
             );
         col = col.push(look);
         // The data bindings (design §7): every property an expression may give, ƒ to bind or edit it.
@@ -591,7 +597,7 @@ impl Designer {
                             .on_press_maybe(editable.then_some(Message::Variables(
                                 crate::variables::VariablesMessage::Open,
                             )))
-                            .padding([3, 8])
+                            .padding(kentos_ui::theme::metrics::action_small())
                             .style(style::button::secondary),
                             Tip::new("Tarihi değiştir").body(
                                 "Paftaya ya da projeye ISO biçiminde bir “tarih” değişkeni girin (2026-10-03); sapma o günün değeriyle yazılır.",
@@ -619,7 +625,7 @@ impl Designer {
             } else {
                 Switch::disabled(hand)
             };
-            part = part.push(PropertySheet::new().row("Sapmayı elle gir", switch));
+            part = part.push(PropertySheet::new().row("Sapmayı elle gir", Cell::padded(switch)));
             part = part.push(hint(
                 "Kapalıyken sapma modelden hesaplanır; açıkken buraya girilen değer kullanılır ve kâğıtta “elle” yazılır.".into(),
             ));
@@ -702,7 +708,7 @@ impl Designer {
                 .align_y(Center),
             )
             .on_press_maybe(on)
-            .padding([3, 8])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(style::button::secondary)
         };
         let numbered = matches!(c.naming, PointNaming::Sequence(_));
@@ -777,7 +783,8 @@ impl Designer {
         let said = match &m.level {
             None => "Bütün katların nesneleri çizilir.".to_owned(),
             Some(l) if l.below => {
-                "Katın ve katsız nesneler; altındaki kat soluk. Öbür katlar haritada yok.".to_owned()
+                "Katın ve katsız nesneler; altındaki kat soluk. Öbür katlar haritada yok."
+                    .to_owned()
             }
             Some(_) => "Katın ve katsız nesneler çizilir; öbür katlar haritada yok.".to_owned(),
         };
@@ -948,7 +955,7 @@ impl Designer {
             );
             let remove = button(icon(Icon::Close).size(12.0))
                 .on_press_maybe(editable.then_some(Message::MapOverrideRemove(k)))
-                .padding([2, 6])
+                .padding(kentos_ui::theme::metrics::icon_small(12.0))
                 .style(style::button::ghost);
             let card = column![
                 row![
@@ -1038,7 +1045,7 @@ impl Designer {
                         .iter()
                         .all(|i| matches!(&i.kind,kentos_sheet::ItemKind::Map(m)if !m.view_locked&&!m.source.is_link()))
             }))
-            .padding([3, 8])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(style::button::secondary)
         };
         let scale = plot.map_or_else(String::new, |p| format!("Projenin çizim ölçeği 1/{p}. "));
@@ -1204,23 +1211,68 @@ impl Designer {
                 Switch::disabled(map.frame_plot)
             }
             .label("Çerçeve baskıya çıksın");
-            let annotation_id=one.id.clone();
-            let physical=view.denominator();
-            let annotation=if editable && !one.locked {
-                Switch::new(map.annotation_scale.is_none(),move |automatic|Message::MapConfigure(Box::new(SetViewport{id:annotation_id.clone(),annotation:Some(if automatic {kentos_sheet::viewport::AnnotationScale::Auto}else{kentos_sheet::viewport::AnnotationScale::Fixed{scale:physical.min(kentos_contracts::MAX_ANNOTATIVE_SCALE)}}),..Default::default()})))
-            } else {Switch::disabled(map.annotation_scale.is_none())}.label("Açıklamalar görünüm ölçeğini izlesin");
-            let representation:Element<'_,Message>=if let Some(scale)=map.annotation_scale {
-                let mut choices=self.ctx.annotation_scales.iter().map(|s|Choice::new(format!("1:{s}"))).collect::<Vec<_>>();
-                let selected=self.ctx.annotation_scales.iter().position(|s|*s==scale).unwrap_or_else(||{choices.push(Choice::new(format!("1:{scale} (temsil yok)")).disabled());choices.len()-1});
-                let scales=self.ctx.annotation_scales.clone();let id=one.id.clone();
-                if editable && !one.locked {Select::new(choices,Some(selected),move|i|Message::MapConfigure(Box::new(SetViewport{id:id.clone(),annotation:Some(kentos_sheet::viewport::AnnotationScale::Fixed{scale:scales.get(i).copied().unwrap_or(scale)}),..Default::default()}))).into()} else {label::caption(format!("Açıklama temsili 1:{scale}")).into()}
-            } else {label::caption(format!("Açıklama temsili: görünümdeki 1:{physical}")).into()};
+            let annotation_id = one.id.clone();
+            let physical = view.denominator();
+            let annotation = if editable && !one.locked {
+                Switch::new(map.annotation_scale.is_none(), move |automatic| {
+                    Message::MapConfigure(Box::new(SetViewport {
+                        id: annotation_id.clone(),
+                        annotation: Some(if automatic {
+                            kentos_sheet::viewport::AnnotationScale::Auto
+                        } else {
+                            kentos_sheet::viewport::AnnotationScale::Fixed {
+                                scale: physical.min(kentos_contracts::MAX_ANNOTATIVE_SCALE),
+                            }
+                        }),
+                        ..Default::default()
+                    }))
+                })
+            } else {
+                Switch::disabled(map.annotation_scale.is_none())
+            }
+            .label("Açıklamalar görünüm ölçeğini izlesin");
+            let representation: Element<'_, Message> = if let Some(scale) = map.annotation_scale {
+                let mut choices = self
+                    .ctx
+                    .annotation_scales
+                    .iter()
+                    .map(|s| Choice::new(format!("1:{s}")))
+                    .collect::<Vec<_>>();
+                let selected = self
+                    .ctx
+                    .annotation_scales
+                    .iter()
+                    .position(|s| *s == scale)
+                    .unwrap_or_else(|| {
+                        choices.push(Choice::new(format!("1:{scale} (temsil yok)")).disabled());
+                        choices.len() - 1
+                    });
+                let scales = self.ctx.annotation_scales.clone();
+                let id = one.id.clone();
+                if editable && !one.locked {
+                    Select::new(choices, Some(selected), move |i| {
+                        Message::MapConfigure(Box::new(SetViewport {
+                            id: id.clone(),
+                            annotation: Some(kentos_sheet::viewport::AnnotationScale::Fixed {
+                                scale: scales.get(i).copied().unwrap_or(scale),
+                            }),
+                            ..Default::default()
+                        }))
+                    })
+                    .into()
+                } else {
+                    label::caption(format!("Açıklama temsili 1:{scale}")).into()
+                }
+            } else {
+                label::caption(format!("Açıklama temsili: görünümdeki 1:{physical}")).into()
+            };
             let clip_name = match &map.clip {
                 kentos_sheet::clip::Clip::Frame => "Tam çerçeve",
                 kentos_sheet::clip::Clip::Rectangle { .. } => "Dikdörtgen sınır",
                 kentos_sheet::clip::Clip::Polygon { .. } => "Çokgen sınır",
             };
             let clipping = button(label::body(format!("Kırpma: {clip_name}…")))
+                .padding(kentos_ui::theme::metrics::action())
                 .on_press_maybe((editable && !one.locked).then_some(Message::ViewportClip(
                     crate::viewport_clip::ClipMessage::Open(one.id.clone()),
                 )))
@@ -1231,7 +1283,7 @@ impl Designer {
                 annotation,
                 representation,
                 label::caption("Özel açıklama ölçeği ilgili metin/ölçü temsilini seçer; kâğıt boyu görünüm ölçeğiyle hesaplanır."),
-                button(row![icon(crate::icons::LAYOUT).size(14.),label::caption("Modeli bu görünümde düzenle")].spacing(6)).on_press_maybe(effective.is_some().then_some(Message::EnterModel(edit_model_id))).padding([3,8]).style(style::button::secondary),
+                button(row![icon(crate::icons::LAYOUT).size(14.),label::caption("Modeli bu görünümde düzenle")].spacing(6)).on_press_maybe(effective.is_some().then_some(Message::EnterModel(edit_model_id))).padding(kentos_ui::theme::metrics::action_small()).style(style::button::secondary),
                 clipping,
                 labelled(
                     "Kaynak",
@@ -1332,7 +1384,7 @@ impl Designer {
         )
         .on_press_maybe(editable.then_some(Message::ChoosePicture))
         .width(Fill)
-        .padding([3, 8])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::secondary);
         // The file on a line of its own (a long name ends in “…”), the button under it.
         let rows = PropertySheet::new()
@@ -1362,13 +1414,13 @@ impl Designer {
             })
         };
         let margin = |side: Side, v: i32| -> Element<'_, Message> {
-            dragged(
+            Cell::new(dragged(
                 NumberInput::new(f64::from(v) / 1000.0, move |x| Message::Margin(side, x))
                     .units(MM)
                     .range(0.0..=200.0)
                     .decimals(1)
-                    .inline(),
-            )
+                    .cell(),
+            ))
             .into()
         };
         let mut sheet = PropertySheet::new()
@@ -1380,12 +1432,14 @@ impl Designer {
             .row(
                 "Ayarlar",
                 button(label::body("Sayfa düzenleri…"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(Message::PageSetup(crate::page_setup::SetupMessage::Open))
                     .style(style::button::secondary),
             )
             .row(
                 "Mürekkep",
                 button(label::body("Baskı profilleri…"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(Message::PlotProfiles(
                         crate::plot_profiles::PlotMessage::Open,
                     ))
@@ -1399,16 +1453,17 @@ impl Designer {
             .row("Boy", choice(paper_name(paper), None, paper_menu))
             .row(
                 "Yön",
-                Segmented::new(
-                    [
-                        crate::gallery::OrientationName(Orientation::Portrait),
-                        crate::gallery::OrientationName(Orientation::Landscape),
-                    ],
-                    crate::gallery::OrientationName(page.orientation),
-                    |o: crate::gallery::OrientationName| Message::Orientation(o.0),
-                )
-                .compact()
-                .width(Fill),
+                Cell::new(
+                    Segmented::new(
+                        [
+                            crate::gallery::OrientationName(Orientation::Portrait),
+                            crate::gallery::OrientationName(Orientation::Landscape),
+                        ],
+                        crate::gallery::OrientationName(page.orientation),
+                        |o: crate::gallery::OrientationName| Message::Orientation(o.0),
+                    )
+                    .cell(),
+                ),
             )
             .row(
                 "Ölçüler",
@@ -1474,11 +1529,11 @@ impl Designer {
             .row("Ana sayfa", value(master, false, None))
             .row(
                 "Izgaraya yapış",
-                Switch::new(s.snap_grid.enabled, Message::SnapToGrid),
+                Cell::padded(Switch::new(s.snap_grid.enabled, Message::SnapToGrid)),
             )
             .row(
                 "Izgara aralığı",
-                dragged(
+                Cell::new(dragged(
                     NumberInput::new(
                         f64::from(s.snap_grid.spacing) / 1000.0,
                         Message::GridSpacing,
@@ -1486,8 +1541,8 @@ impl Designer {
                     .units(MM)
                     .range(0.5..=100.0)
                     .decimals(1)
-                    .inline(),
-                ),
+                    .cell(),
+                )),
             )
             .row("Kılavuzlar", value(s.guides.len().to_string(), true, None));
         // The template it was made from (the web's page tab): its name, “Yeni sürüm var”.
@@ -1530,14 +1585,25 @@ impl Designer {
                 .on_press(Message::SaveTemplate(
                     crate::save_template::SaveMessage::Open,
                 ))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         );
         column![sheet, after].into()
     }
 
     fn preflight_tab(&self) -> Element<'_, Message> {
-        column![container(button(label::body("Baskı öncesi tam denetim…")).on_press(Message::NativePreflight).padding([6,10]).style(style::button::secondary)).padding([8,12]),self.layout_preflight_tab()].spacing(8).into()
+        column![
+            container(
+                button(label::body("Baskı öncesi tam denetim…"))
+                    .on_press(Message::NativePreflight)
+                    .padding(kentos_ui::theme::metrics::action())
+                    .style(style::button::secondary)
+            )
+            .padding([8, 12]),
+            self.layout_preflight_tab()
+        ]
+        .spacing(8)
+        .into()
     }
     fn layout_preflight_tab(&self) -> Element<'_, Message> {
         if self.findings.is_empty() {
@@ -1579,7 +1645,7 @@ impl Designer {
                 actions = actions.push(
                     button(label::caption(format!("Göster: {name}")))
                         .on_press(Message::Reveal(item.clone()))
-                        .padding([2, 8])
+                        .padding(kentos_ui::theme::metrics::action_small())
                         .style(style::button::secondary),
                 );
             }
@@ -1587,7 +1653,7 @@ impl Designer {
                 actions = actions.push(
                     button(label::caption(fix.label.as_str()))
                         .on_press(Message::Fix(i, j))
-                        .padding([2, 8])
+                        .padding(kentos_ui::theme::metrics::action_small())
                         .style(style::button::secondary),
                 );
             }

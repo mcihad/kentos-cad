@@ -14,7 +14,7 @@
 use std::collections::BTreeMap;
 use std::time::Instant;
 
-use iced::widget::{text, text_input};
+use iced::widget::text;
 use iced::{Element, Task};
 use kentos_cloud::saving::envelope;
 use kentos_cloud::{ApiFailure, SaveState};
@@ -24,8 +24,8 @@ use kentos_commands::{
 };
 use kentos_domain::{External, ExternalMeta, Uuid};
 use kentos_interaction::js_trim;
+use kentos_ui::label;
 use kentos_ui::widget::{Banner, Dialog as Window, Form, overlay};
-use kentos_ui::{label, style};
 use serde_json::json;
 
 use crate::app::{App, Dialog, Message};
@@ -455,13 +455,11 @@ impl App {
         let Some(r) = &self.cloud.rename else {
             return text("").into();
         };
-        let field = text_input("", &r.text)
+        let field = kentos_ui::widget::text_field("", &r.text)
             .id(iced::widget::Id::new(RENAME_FIELD))
             .on_input_maybe((!r.busy).then_some(|t| cloud(Event::RenameInput(t))))
-            .on_submit(cloud(Event::RenameSubmit))
-            .padding([5, 8])
-            .style(style::field::input);
-        let field = kentos_ui::widget::focus_ring(field);
+            .on_submit(cloud(Event::RenameSubmit));
+        let field = field;
         let mut form = Form::new()
             .label_width(80.0)
             .field(forms::rename::NAME, field)
@@ -471,17 +469,15 @@ impl App {
             Some(Status::Error(t)) => form = form.row(Banner::error(t.clone())),
             None => {}
         }
-        overlay::modal(
-            Window::new(forms::rename::TITLE)
-                .push(form)
-                .action(secondary(forms::CANCEL, Some(cloud(Event::Close))))
-                .action(primary(
-                    forms::rename::SAVE,
-                    r.can_save().then(|| cloud(Event::RenameSubmit)),
-                ))
-                .width(460.0),
-            cloud(Event::Close),
-        )
+        Window::new(forms::rename::TITLE)
+            .push(form)
+            .action(secondary(forms::CANCEL, Some(cloud(Event::Close))))
+            .action(primary(
+                forms::rename::SAVE,
+                r.can_save().then(|| cloud(Event::RenameSubmit)),
+            ))
+            .width(460.0)
+            .modal(cloud(Event::Close))
     }
 
     /// Çöp kutusuna taşı (the web's `trashProject` question).

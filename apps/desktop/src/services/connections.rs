@@ -8,14 +8,14 @@
 //! session) with the values as typed and says what it answered; ArcGIS and
 //! OAuth 2 ask for their token first.
 
-use iced::widget::{Column, button, column, container, row, scrollable, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{AuthKind, ConnectionSecret, ServiceConnection, connections_problem};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -542,7 +542,7 @@ impl App {
                     .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe(on)
         };
         let left = column![
@@ -570,19 +570,15 @@ impl App {
                 "Gizli değerler çizime yazılmaz; yalnız bu cihazda saklanır. Çizim başka cihazda açılınca orada yeniden girilir.",
             ),
         };
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(
-                    column![row![left, right].spacing(16), words::summary(vec![line])].spacing(12),
-                )
-                .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
-                .action(words::primary(
-                    "Kaydet",
-                    w.changed().then(|| msg(Event::Save)),
-                ))
-                .width(860.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(column![row![left, right].spacing(16), words::summary(vec![line])].spacing(12))
+            .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
+            .action(words::primary(
+                "Kaydet",
+                w.changed().then(|| msg(Event::Save)),
+            ))
+            .width(860.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn connection_form<'a>(&'a self, w: &'a Window, r: &'a Row) -> Element<'a, Message> {
@@ -591,12 +587,9 @@ impl App {
                      on: fn(String) -> Event,
                      secret: bool|
          -> Element<'a, Message> {
-            text_input(hint, value)
-                .size(typography::body())
-                .padding([4, 8])
+            kentos_ui::widget::text_field(hint, value)
                 .secure(secret && !w.show)
                 .on_input(move |t| msg(on(t)))
-                .style(style::field::input)
                 .into()
         };
         let labelled = |name: &'a str, body: Element<'a, Message>| -> Element<'a, Message> {
@@ -641,22 +634,16 @@ impl App {
                     form = form.push(
                         row![
                             container(
-                                text_input(what, n)
-                                    .size(typography::body())
-                                    .padding([4, 8])
+                                kentos_ui::widget::text_field(what, n)
                                     .on_input(move |t| msg(Event::PairName(i, t)))
-                                    .style(style::field::input)
                             )
                             .width(Length::Fixed(typography::scaled(130.0))),
-                            text_input("Değer", v)
-                                .size(typography::body())
-                                .padding([4, 8])
+                            kentos_ui::widget::text_field("Değer", v)
                                 .secure(!w.show)
-                                .on_input(move |t| msg(Event::PairValue(i, t)))
-                                .style(style::field::input),
+                                .on_input(move |t| msg(Event::PairValue(i, t))),
                             button(icon(kentos_ui::icon::Icon::Close).size(12.0))
                                 .style(style::button::subtle)
-                                .padding(4)
+                                .padding(kentos_ui::theme::metrics::icon_small(12.0))
                                 .on_press_maybe(
                                     (r.pairs.len() > 1).then(|| msg(Event::RemovePair(i)))
                                 ),
@@ -672,7 +659,7 @@ impl App {
                         "Başlık ekle"
                     }))
                     .style(style::button::secondary)
-                    .padding([3, 10])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .on_press(msg(Event::AddPair)),
                 );
             }
@@ -767,7 +754,7 @@ impl App {
                     .align_y(Center),
                 )
                 .style(style::button::secondary)
-                .padding([4, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .on_press_maybe((!w.trying).then(|| msg(Event::Try))),
             );
         container(form).width(Fill).into()

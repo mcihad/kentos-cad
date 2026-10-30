@@ -4,11 +4,11 @@
 //! Geçmiş tab's forms are. What they say is forms_plan.rs's.
 
 use iced::widget::text::Wrapping;
-use iced::widget::{Column, column, container, row, text_editor, text_input};
+use iced::widget::{Column, column, container, row, text_editor};
 use iced::{Element, Fill, Length, Theme};
 use kentos_commands::ProjectType;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Choice, Dialog, Select, overlay};
+use kentos_ui::widget::{Choice, Dialog, Select};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
@@ -26,7 +26,7 @@ impl App {
             Form::Metadata(f) => metadata_window(f, self.cloud_types(), self.program),
             Form::Made(f) => made_window(f),
         };
-        Some(overlay::modal(window, msg(Event::Close)))
+        Some(window.modal(msg(Event::Close)))
     }
 }
 
@@ -40,14 +40,11 @@ fn metadata_window(
         types.insert(0, f.project_type);
     }
     let on = !f.busy;
-    let name = text_input(metadata::NAME, &f.name)
+    let name = kentos_ui::widget::text_field(metadata::NAME, &f.name)
         .id(iced::widget::Id::new(FORM_NAME))
         .on_input_maybe(on.then_some(|t| msg(Event::Name(t))))
-        .on_submit(msg(Event::Submit))
-        .size(typography::body())
-        .padding([5, 8])
-        .style(style::field::input);
-    let name = kentos_ui::widget::focus_ring(name);
+        .on_submit(msg(Event::Submit));
+    let name = name;
     let choices: Vec<Choice> = types.iter().map(|t| Choice::new(type_label(*t))).collect();
     let chosen = types.iter().position(|t| *t == f.project_type);
     let kind = Select::new(choices, chosen, move |i| {
@@ -61,13 +58,10 @@ fn metadata_window(
         .size(typography::body())
         .padding([5, 8])
         .style(style::field::text_area);
-    let tags = text_input(fields::TAGS_PLACEHOLDER, &f.tags)
+    let tags = kentos_ui::widget::text_field(fields::TAGS_PLACEHOLDER, &f.tags)
         .on_input_maybe(on.then_some(|t| msg(Event::Tags(t))))
-        .on_submit(msg(Event::Submit))
-        .size(typography::body())
-        .padding([5, 8])
-        .style(style::field::input);
-    let tags = kentos_ui::widget::focus_ring(tags);
+        .on_submit(msg(Event::Submit));
+    let tags = tags;
     let mut body = column![
         labelled(metadata::NAME, name),
         labelled(fields::TYPE, kind),
@@ -113,14 +107,11 @@ fn made_window(f: &MadeForm) -> Dialog<'_, Message> {
             540.0,
         ),
     };
-    let name = text_input(&placeholder, &f.name)
+    let name = kentos_ui::widget::text_field(&placeholder, &f.name)
         .id(iced::widget::Id::new(FORM_NAME))
         .on_input_maybe(on.then_some(|t| msg(Event::Name(t))))
-        .on_submit(msg(Event::Submit))
-        .size(typography::body())
-        .padding([5, 8])
-        .style(style::field::input);
-    let name = kentos_ui::widget::focus_ring(name);
+        .on_submit(msg(Event::Submit));
+    let name = name;
     let mut body = column![
         label::body(lead).width(Fill),
         bullets(consequences),

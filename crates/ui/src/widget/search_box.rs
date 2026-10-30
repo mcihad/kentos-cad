@@ -46,14 +46,12 @@ use iced::{
 use crate::icon::{Icon, Tone, icon};
 use crate::label;
 use crate::style;
-use crate::theme::{Tokens, typography};
+use crate::theme::{Tokens, metrics, typography};
 
-/// Kutunun genişliği ve yüksekliği (web: 206 × 24 px).
+/// Kutunun genişliği (web: 206 px); yüksekliği bütün girdilerinki ([`metrics::control`]).
 const WIDTH: f32 = 206.0;
-const HEIGHT: f32 = 24.0;
-/// Büyütecin sütunu ve dar yerdeki kutu.
+/// Büyütecin sütunu.
 const GLASS: f32 = 24.0;
-const COMPACT: f32 = 26.0;
 /// Listenin genişliği ve kutuyla arası (web: 390 px, 4 px).
 const LIST_WIDTH: f32 = 390.0;
 const LIST_GAP: f32 = 4.0;
@@ -93,7 +91,6 @@ pub struct SearchBox<'a, Message> {
     id: widget::Id,
     compact: bool,
     fill: bool,
-    height: f32,
     room: Option<f32>,
 }
 
@@ -117,7 +114,6 @@ impl<'a, Message: Clone + 'a> SearchBox<'a, Message> {
             id: widget::Id::unique(),
             compact: false,
             fill: false,
-            height: HEIGHT,
             room: None,
         }
     }
@@ -185,12 +181,6 @@ impl<'a, Message: Clone + 'a> SearchBox<'a, Message> {
         self
     }
 
-    /// Kutunun yüksekliği (ölçeklenmeden önce; varsayılanı 24).
-    pub fn height(mut self, height: f32) -> Self {
-        self.height = height;
-        self
-    }
-
     /// Kutunun alabileceği en çok genişlik (piksel): dar satırda odaklanan
     /// kutu yanındakileri dışarı itmesin.
     pub fn room(mut self, room: f32) -> Self {
@@ -216,13 +206,12 @@ impl<'a, Message: Clone + 'a> From<SearchBox<'a, Message>> for Element<'a, Messa
             .center_x(Fill)
             .center_y(Fill);
         let hint = b.hint.map(|hint| {
-            container(label::mono_caption(hint))
+            container(label::caption(hint))
                 .padding([0, 5])
                 .style(style::container::keycap)
                 .into()
         });
-        // A halo round the box while its field has the keyboard.
-        crate::widget::focus_ring(Element::new(Search {
+        Element::new(Search {
             glass: glass.into(),
             input: input.into(),
             hint,
@@ -237,11 +226,9 @@ impl<'a, Message: Clone + 'a> From<SearchBox<'a, Message>> for Element<'a, Messa
             id: b.id,
             compact: b.compact,
             fill: b.fill,
-            height: b.height,
             room: b.room,
             list: None,
-        }))
-        .into()
+        })
     }
 }
 
@@ -260,7 +247,6 @@ struct Search<'a, Message> {
     id: widget::Id,
     compact: bool,
     fill: bool,
-    height: f32,
     room: Option<f32>,
     /// Açık liste; `overlay`da kurulur.
     list: Option<Element<'a, Message>>,
@@ -448,7 +434,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Search<'a, Me
         } else {
             Length::Shrink
         };
-        Size::new(width, Length::Fixed(typography::scaled(self.height)))
+        Size::new(width, Length::Fixed(metrics::control()))
     }
 
     fn layout(
@@ -458,17 +444,21 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Search<'a, Me
         limits: &layout::Limits,
     ) -> layout::Node {
         let narrow = self.narrow(tree.state.downcast_ref::<State>());
-        let height = typography::scaled(self.height);
+        let height = metrics::control();
         let width = if narrow {
-            typography::scaled(COMPACT)
+            metrics::control()
         } else if self.fill {
             limits.max().width
         } else {
             let full = typography::scaled(WIDTH);
             self.room
-                .map_or(full, |room| full.min(room.max(typography::scaled(COMPACT))))
+                .map_or(full, |room| full.min(room.max(metrics::control())))
         };
-        let glass_width = typography::scaled(if narrow { COMPACT } else { GLASS });
+        let glass_width = if narrow {
+            metrics::control()
+        } else {
+            typography::scaled(GLASS)
+        };
         let glass = self
             .glass
             .as_widget_mut()
@@ -638,9 +628,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Search<'a, Me
         // while typed in; a narrow box is the bare magnifier.
         if !narrow {
             let edge = if state.focused {
-                t.accent
+                t.accent_line()
             } else if state.hovered {
-                t.muted
+                t.border_strong()
             } else {
                 t.border
             };

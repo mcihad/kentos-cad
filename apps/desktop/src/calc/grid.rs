@@ -12,7 +12,7 @@
 //! colour (the web's `check` and `mark`).
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Length, Right, Task, Theme};
 use kentos_interaction::{is_js_space, js_trim};
 use kentos_ui::icon::{Icon, icon};
@@ -325,14 +325,20 @@ pub fn view_with<'a>(
             .align_x(Right)
             .into()
     };
-    let mut head = Row::new()
-        .push(number("#".to_owned(), false))
-        .align_y(Center);
+    let mut head = Row::new().push(
+        container(kentos_ui::widget::table::title("#"))
+            .width(Length::Fixed(NO))
+            .height(Fill)
+            .padding([0, 8])
+            .align_x(Right)
+            .align_y(Center),
+    );
     for (i, c) in columns.iter().enumerate() {
         // The unit set off by the row's own gap: a leading space in its text is lost at some widths.
         let mut words = Row::new()
             .spacing(4)
-            .push(label::caption(c.label).style(style::text::default));
+            .align_y(Center)
+            .push(kentos_ui::widget::table::title(c.label));
         if let Some(unit) = c.unit {
             words = words.push(label::caption(format!("({unit})")));
         }
@@ -342,9 +348,17 @@ pub fn view_with<'a>(
         } else {
             Length::FillPortion(table.portion(i))
         };
-        head = head.push(container(words).width(width).padding([5, 8]));
+        head = head.push(kentos_ui::widget::vertical_divider()).push(
+            container(words)
+                .width(width)
+                .height(Fill)
+                .padding([0, 8])
+                .align_y(Center),
+        );
     }
-    head = head.push(container(label::caption("")).width(Length::Fixed(act)));
+    head = head
+        .push(kentos_ui::widget::vertical_divider())
+        .push(container(label::caption("")).width(Length::Fixed(act)));
     let mut body = Column::new();
     for r in 0..table.rows() {
         if r > 0 {
@@ -354,11 +368,12 @@ pub fn view_with<'a>(
         let off = mark == Some(Mark::Off);
         let mut line = Row::new()
             .push(number(format!("{}", r + 1), off))
-            .height(Length::Fixed(typography::scaled(28.0)))
+            .height(Length::Fixed(kentos_ui::theme::metrics::row()))
             .align_y(Center);
         for (c, col) in columns.iter().enumerate() {
             let value = table.get(r, c);
             let share = Length::FillPortion(table.portion(c));
+            line = line.push(kentos_ui::widget::vertical_divider());
             line = line.push(if table.check(c) {
                 check(owner, r, c, value, check_width)
             } else if table.readonly(r, c) {
@@ -375,7 +390,7 @@ pub fn view_with<'a>(
             tip(
                 button(icon(Icon::Close).size(12.0))
                     .on_press(owner.remove_row(r))
-                    .padding(6)
+                    .padding(kentos_ui::theme::metrics::icon(12.0))
                     .style(style::button::ghost),
                 Tip::new("Satırı sil"),
                 Position::Left,
@@ -388,12 +403,14 @@ pub fn view_with<'a>(
             buttons = buttons.push(container(b).width(Length::Fixed(ACT)).align_x(Center));
         }
         buttons = buttons.push(container(remove).width(Length::Fixed(ACT)).align_x(Center));
-        body = body.push(line.push(container(buttons).width(Length::Fixed(act))));
+        body = body.push(
+            line.push(kentos_ui::widget::vertical_divider())
+                .push(container(buttons).width(Length::Fixed(act))),
+        );
     }
     let sheet = container(
         column![
-            container(head).width(Fill).style(style::container::header),
-            horizontal_divider(),
+            kentos_ui::widget::table::band(head),
             container(
                 scrollable(body)
                     .direction(style::field::body_scrollbar())
@@ -405,7 +422,7 @@ pub fn view_with<'a>(
     )
     .width(Fill)
     .padding(1)
-    .style(style::container::field_box);
+    .style(style::container::bordered);
     let can_add = (0..table.rows()).any(|r| table.can_insert_after(r))
         || (table.rows() == 0 && table.can_insert_first());
     let add = button(
@@ -414,7 +431,7 @@ pub fn view_with<'a>(
             .align_y(Center),
     )
     .on_press_maybe(can_add.then(|| owner.add_row()))
-    .padding([5, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary);
     if !owner.adds() {
         return sheet.into();
@@ -435,17 +452,18 @@ fn cell<'a>(
     off: bool,
 ) -> Element<'a, Message> {
     let bad = col.numeric && read_number(value).is_some_and(f64::is_nan);
-    let look = style::field::cell(bad);
-    let input = text_input(&placeholder, value)
+    let input = kentos_ui::widget::bare_field(&placeholder, value)
         .id(owner.cell_id(r, c))
         .on_input(move |t| owner.cell(r, c, t))
         .on_paste(move |t| owner.paste(r, c, t))
         .on_submit(owner.submit(r, c))
-        .padding([4, 8])
+        .padding(kentos_ui::theme::metrics::padding(
+            kentos_ui::theme::metrics::row(),
+            8.0,
+        ))
         .width(Fill)
-        .size(typography::body())
         .style(move |theme: &Theme, status| {
-            let mut s = look(theme, status);
+            let mut s = style::field::bare_input(theme, status);
             if off {
                 s.value = s.value.scale_alpha(FADED);
                 s.placeholder = s.placeholder.scale_alpha(FADED);
@@ -453,13 +471,14 @@ fn cell<'a>(
             s
         });
     // Numbers in the figures' face; a hint in the words' face, as the web's.
-    if col.numeric && !value.is_empty() {
+    let input: Element<'a, Message> = if col.numeric && !value.is_empty() {
         input.font(typography::mono()).align_x(Right).into()
     } else if col.numeric {
         input.font(typography::ui()).align_x(Right).into()
     } else {
         input.font(typography::ui()).into()
-    }
+    };
+    kentos_ui::widget::Cell::new(input).invalid(bad).into()
 }
 
 /// A fixed cell: a known station's name, a dash where nothing is measured,
@@ -479,7 +498,7 @@ fn fixed<'a>(value: &str, numeric: bool, mark: Option<Mark>) -> Element<'a, Mess
         Some(Mark::Off) => words.style(faded(style::text::muted)),
         None => words.style(style::text::muted),
     };
-    let boxed = container(words).width(Fill).padding([4, 9]);
+    let boxed = container(words).width(Fill).padding([0, 8]);
     if numeric {
         boxed.align_x(Right).into()
     } else {

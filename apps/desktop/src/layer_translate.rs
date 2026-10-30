@@ -5,14 +5,14 @@
 //! and the layers to add or restyle, read again after every change. Çevir
 //! writes it as one undo step “Katmanları çevir” and closes.
 
-use iced::widget::{Column, button, container, row, text, text_input};
+use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, LayersTranslate, LayersTranslated, TranslateRule};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_translate};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -249,13 +249,7 @@ impl App {
         };
         let field =
             |placeholder: &'static str, value: &str, on: fn(usize, String) -> Event, i: usize| {
-                focus_ring(
-                    text_input(placeholder, value)
-                        .on_input(move |t| msg(on(i, t)))
-                        .padding([4, 6])
-                        .size(typography::caption())
-                        .style(style::field::input),
-                )
+                kentos_ui::widget::text_field(placeholder, value).on_input(move |t| msg(on(i, t)))
             };
         let mut rules = Column::new().spacing(4);
         rules = rules.push(
@@ -279,7 +273,7 @@ impl App {
                         .width(typography::scaled(64.0)),
                     button(icon(Icon::Close).size(12.0).tone(Tone::Muted))
                         .on_press(msg(Event::Remove(i)))
-                        .padding(4)
+                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
                         .style(style::button::ghost),
                 ]
                 .spacing(6)
@@ -354,13 +348,15 @@ impl App {
                 (lines, rows, true)
             }
         };
-        let head = row![
-            container(label::caption("Kaynak katman")).width(Fill),
-            container(label::caption("Standart katman")).width(Fill),
-            container(label::caption("Nesne")).width(typography::scaled(56.0)),
-        ]
-        .spacing(8)
-        .padding([4, 8]);
+        let head = kentos_ui::widget::table::band(
+            row![
+                container(kentos_ui::widget::table::title("Kaynak katman")).width(Fill),
+                container(kentos_ui::widget::table::title("Standart katman")).width(Fill),
+                container(kentos_ui::widget::table::title("Nesne")).width(typography::scaled(56.0)),
+            ]
+            .spacing(8)
+            .padding([0, 8]),
+        );
         let list = VirtualList::new(rows.len(), typography::scaled(ROW), move |i| {
             let (from, to, n, new) = &rows[i];
             let to = if *new {
@@ -399,17 +395,15 @@ impl App {
             )))
             .push(words::summary(lines))
             .push(words::field("Önizleme", table, None));
-        overlay::modal(
-            Frame::new(TRANSLATE_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(
-                    TRANSLATE,
-                    ready.then(|| msg(Event::Translate)),
-                ))
-                .width(640.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TRANSLATE_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(
+                TRANSLATE,
+                ready.then(|| msg(Event::Translate)),
+            ))
+            .width(640.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

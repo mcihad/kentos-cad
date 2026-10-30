@@ -287,7 +287,7 @@ impl App {
                         self.menu_runs("file.save")
                             .then(|| event(Event::Run("file.save")))
                     )
-                    .padding([3, 12])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::primary),
             ]
             .spacing(8)
@@ -350,7 +350,7 @@ impl App {
                 let runs = self.menu_runs(f.id);
                 let trailing: Element<'_, Message> = match (runs, catalog().get(f.id)) {
                     (true, Some(c)) => {
-                        label::mono_caption(c.shortcuts.first().copied().unwrap_or("")).into()
+                        label::caption(c.shortcuts.first().copied().unwrap_or("")).into()
                     }
                     _ => soon("Yakında"),
                 };
@@ -362,7 +362,8 @@ impl App {
                         .on_press_maybe(runs.then(|| event(Event::Run(f.id))))
                         .current(focus == Some(i)),
                 )
-            });
+            },
+        );
         column![head(title, Some(lead)), rows].spacing(12).into()
     }
 }

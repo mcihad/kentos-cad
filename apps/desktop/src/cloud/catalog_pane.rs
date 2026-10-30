@@ -64,7 +64,7 @@ impl App {
                     .align_y(Center),
                 )
                 .on_press_maybe((!held).then(|| cloud(Event::CatalogAct(Act::Favorite))))
-                .padding([3, 6])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::ghost),
                 Tip::new("Favorileriniz yalnız size görünür."),
                 iced::widget::tooltip::Position::Bottom,

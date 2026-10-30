@@ -6,8 +6,8 @@
 //! sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
 //! `cad.spaces.edit`.
 
-use iced::widget::{Column, Row, column, container, row, scrollable, text};
-use iced::{Center, Element, Fill, Task};
+use iced::widget::{Column, container, row, text};
+use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     CellKind, CommandResult, Entity, SpacesEdit, SpacesOperation, SpacesQuantified,
     SpacesQuantities, WorkbookColumn, WorkbookFormat, WorkbookSheet,
@@ -17,7 +17,8 @@ use kentos_native_application::{ExecutionContext, spaces_edit, spaces_quantities
 use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::segmented::Segmented;
-use kentos_ui::widget::{Choice, Dialog as Frame, Menu, Select, overlay};
+use kentos_ui::widget::table;
+use kentos_ui::widget::{Choice, Dialog as Frame, Menu, Select};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -101,14 +102,29 @@ impl Table {
     /// Measure the actual selected font; a fixed width must not let one cell
     /// draw over its neighbour. Long names wrap; numbers remain whole and scroll.
     fn display_widths(&self) -> Vec<f32> {
-        let size = typography::caption();
-        self.widths.iter().enumerate().map(|(i, minimum)| {
-            let heading = typography::measured_width(self.heading[i], size, true);
-            let values = self.shown.iter().filter_map(|r| r.get(i))
-                .map(|s| typography::measured_width(s, size, false)).fold(0.0, f32::max);
-            let values = if self.numbers[i] { values } else { values.min(typography::from_default(240.0)) };
-            typography::from_default(*minimum).max(heading.ceil()+12.0).max(values.ceil()+12.0)
-        }).collect()
+        let size = typography::body();
+        self.widths
+            .iter()
+            .enumerate()
+            .map(|(i, minimum)| {
+                let heading =
+                    typography::measured_width(self.heading[i], typography::caption(), false);
+                let values = self
+                    .shown
+                    .iter()
+                    .filter_map(|r| r.get(i))
+                    .map(|s| typography::measured_width(s, size, false))
+                    .fold(0.0, f32::max);
+                let values = if self.numbers[i] {
+                    values
+                } else {
+                    values.min(typography::from_default(240.0))
+                };
+                typography::from_default(*minimum)
+                    .max(heading.ceil() + 12.0)
+                    .max(values.ceil() + 12.0)
+            })
+            .collect()
     }
 }
 
@@ -310,7 +326,12 @@ impl App {
             spaces.heading.insert(3, "Boşluk");
             spaces.numbers.insert(3, false);
             spaces.widths.insert(3, 56.0);
-            for ((shown, cells), room) in spaces.shown.iter_mut().zip(&mut spaces.cells).zip(&q.spaces) {
+            for ((shown, cells), room) in spaces
+                .shown
+                .iter_mut()
+                .zip(&mut spaces.cells)
+                .zip(&q.spaces)
+            {
                 let mark = if room.void { "Boşluk" } else { "" }.to_owned();
                 shown.insert(3, mark.clone());
                 cells.insert(3, mark);
@@ -322,8 +343,16 @@ impl App {
             spaces.heading.insert(2, "Durum");
             spaces.numbers.insert(2, false);
             spaces.widths.insert(2, 180.0);
-            for ((shown, cells), room) in spaces.shown.iter_mut().zip(&mut spaces.cells).zip(&q.spaces) {
-                let status = room.boundary_break.map(|why| format!("Son geçerli sınır: {}", why.words())).unwrap_or_default();
+            for ((shown, cells), room) in spaces
+                .shown
+                .iter_mut()
+                .zip(&mut spaces.cells)
+                .zip(&q.spaces)
+            {
+                let status = room
+                    .boundary_break
+                    .map(|why| format!("Son geçerli sınır: {}", why.words()))
+                    .unwrap_or_default();
                 shown.insert(2, status.clone());
                 cells.insert(2, status);
             }
@@ -408,7 +437,15 @@ impl App {
         let openings = Table {
             name: "Açıklıklar",
             // A niche's or flue's depth (docs/adr/0719 §4).
-            heading: vec!["Numara", "Biçim", "Tür", "Genişlik", "Yükseklik", "Alan", "Derinlik"],
+            heading: vec![
+                "Numara",
+                "Biçim",
+                "Tür",
+                "Genişlik",
+                "Yükseklik",
+                "Alan",
+                "Derinlik",
+            ],
             numbers: vec![false, false, false, true, true, true, true],
             widths: vec![72.0, 90.0, 180.0, 88.0, 88.0, 88.0, 88.0],
             shown: q
@@ -446,11 +483,26 @@ impl App {
         let slabs = Table {
             name: "Döşemeler",
             heading: vec![
-                "Tür", "Kat", "Malzeme", "Kalınlık", "Üst kot", "Alan", "Boşluk", "Net alan", "Çevre", "Hacim", "Kenar",
-                "Kenar uzunluğu", "Metraj",
+                "Tür",
+                "Kat",
+                "Malzeme",
+                "Kalınlık",
+                "Üst kot",
+                "Alan",
+                "Boşluk",
+                "Net alan",
+                "Çevre",
+                "Hacim",
+                "Kenar",
+                "Kenar uzunluğu",
+                "Metraj",
             ],
-            numbers: vec![false, false, false, true, true, true, true, true, true, true, false, true, false],
-            widths: vec![72.0, 80.0, 110.0, 72.0, 72.0, 72.0, 64.0, 72.0, 64.0, 64.0, 80.0, 96.0, 72.0],
+            numbers: vec![
+                false, false, false, true, true, true, true, true, true, true, false, true, false,
+            ],
+            widths: vec![
+                72.0, 80.0, 110.0, 72.0, 72.0, 72.0, 64.0, 72.0, 64.0, 64.0, 80.0, 96.0, 72.0,
+            ],
             shown: q
                 .slabs
                 .iter()
@@ -462,12 +514,20 @@ impl App {
                         len(r.thickness),
                         r.top.map_or_else(String::new, len),
                         area(r.area),
-                        if r.void_area > 0.0 { area(r.void_area) } else { String::new() },
+                        if r.void_area > 0.0 {
+                            area(r.void_area)
+                        } else {
+                            String::new()
+                        },
                         area(r.net_area),
                         len(r.perimeter),
                         fixed(r.volume, 3),
                         r.edge.map_or_else(String::new, |e| e.label().to_owned()),
-                        if r.edge_length > 0.0 { len(r.edge_length) } else { String::new() },
+                        if r.edge_length > 0.0 {
+                            len(r.edge_length)
+                        } else {
+                            String::new()
+                        },
                         if r.excluded { "Dışında" } else { "Toplamda" }.to_owned(),
                     ]
                 })
@@ -523,7 +583,14 @@ impl App {
             .collect();
         let transitions = Table {
             name: "Geçişler",
-            heading: vec!["Açıklık", "Sol mahal", "Sol kaplama", "Sağ mahal", "Sağ kaplama", "Şerit"],
+            heading: vec![
+                "Açıklık",
+                "Sol mahal",
+                "Sol kaplama",
+                "Sağ mahal",
+                "Sağ kaplama",
+                "Şerit",
+            ],
             numbers: vec![false, false, false, false, false, true],
             widths: vec![72.0, 120.0, 110.0, 120.0, 110.0, 72.0],
             cells: q
@@ -541,11 +608,24 @@ impl App {
         let ramps = Table {
             name: "Rampalar",
             heading: vec![
-                "Kat", "Genişlik", "Kot farkı", "Eğim", "Eğimli uzunluk", "Orta çizgi", "Sahanlık", "Alan", "Başlangıç",
-                "Bitiş", "Korkuluk",
+                "Kat",
+                "Genişlik",
+                "Kot farkı",
+                "Eğim",
+                "Eğimli uzunluk",
+                "Orta çizgi",
+                "Sahanlık",
+                "Alan",
+                "Başlangıç",
+                "Bitiş",
+                "Korkuluk",
             ],
-            numbers: vec![false, true, true, true, true, true, true, true, true, true, true],
-            widths: vec![80.0, 72.0, 72.0, 64.0, 96.0, 80.0, 72.0, 72.0, 80.0, 72.0, 72.0],
+            numbers: vec![
+                false, true, true, true, true, true, true, true, true, true, true,
+            ],
+            widths: vec![
+                80.0, 72.0, 72.0, 64.0, 96.0, 80.0, 72.0, 72.0, 80.0, 72.0, 72.0,
+            ],
             shown: q
                 .ramps
                 .iter()
@@ -554,15 +634,24 @@ impl App {
                         level_name(&r.level),
                         len(r.width),
                         len(r.rise),
-                        r.slope.map_or_else(String::new, |s| format!("%{}", fixed(s, 2))),
+                        r.slope
+                            .map_or_else(String::new, |s| format!("%{}", fixed(s, 2))),
                         len(r.run),
                         len(r.length),
                         r.landings.to_string(),
                         area(r.area),
                         // Bound to its level: said so (docs/adr/0723 §2).
-                        if r.base_offset.is_some() { format!("{} · katın", len(r.base)) } else { len(r.base) },
+                        if r.base_offset.is_some() {
+                            format!("{} · katın", len(r.base))
+                        } else {
+                            len(r.base)
+                        },
                         len(r.top),
-                        if r.railing_length > 0.0 { len(r.railing_length) } else { String::new() },
+                        if r.railing_length > 0.0 {
+                            len(r.railing_length)
+                        } else {
+                            String::new()
+                        },
                     ]
                 })
                 .collect(),
@@ -590,11 +679,25 @@ impl App {
         let stairs = Table {
             name: "Merdivenler",
             heading: vec![
-                "Kat", "Genişlik", "Rıht", "Rıht yüksekliği", "Basamak", "Yükseklik", "Uzunluk", "Sahanlık", "Alan",
-                "Korkuluk", "Yarıçap", "İç basamak",
+                "Kat",
+                "Genişlik",
+                "Rıht",
+                "Rıht yüksekliği",
+                "Basamak",
+                "Yükseklik",
+                "Uzunluk",
+                "Sahanlık",
+                "Alan",
+                "Korkuluk",
+                "Yarıçap",
+                "İç basamak",
             ],
-            numbers: vec![false, true, true, true, true, true, true, true, true, true, true, true],
-            widths: vec![80.0, 72.0, 56.0, 96.0, 72.0, 88.0, 72.0, 72.0, 72.0, 72.0, 72.0, 80.0],
+            numbers: vec![
+                false, true, true, true, true, true, true, true, true, true, true, true,
+            ],
+            widths: vec![
+                80.0, 72.0, 56.0, 96.0, 72.0, 88.0, 72.0, 72.0, 72.0, 72.0, 72.0, 80.0,
+            ],
             shown: q
                 .stairs
                 .iter()
@@ -606,11 +709,19 @@ impl App {
                         len(s.riser_height),
                         len(s.tread),
                         // Following its level's height: said so (docs/adr/0724 §1).
-                        if s.height_from_level { format!("{} · katın", len(s.height)) } else { len(s.height) },
+                        if s.height_from_level {
+                            format!("{} · katın", len(s.height))
+                        } else {
+                            len(s.height)
+                        },
                         len(s.length),
                         s.landings.to_string(),
                         area(s.area),
-                        if s.railing_length > 0.0 { len(s.railing_length) } else { String::new() },
+                        if s.railing_length > 0.0 {
+                            len(s.railing_length)
+                        } else {
+                            String::new()
+                        },
                         s.radius.map_or_else(String::new, len),
                         s.inner_tread.map_or_else(String::new, len),
                     ]
@@ -645,7 +756,12 @@ impl App {
     /// including empty headings, under the same selected level filter. A number column's cells as the window shows
     /// them (the project's decimals), or with Sayılar: Tam to 15 significant digits (docs/adr/0733 §7); the words as
     /// they are.
-    fn quantities_sheets(&self, q: &SpacesQuantified, tab: Tab, format: WorkbookFormat) -> Vec<WorkbookSheet> {
+    fn quantities_sheets(
+        &self,
+        q: &SpacesQuantified,
+        tab: Tab,
+        format: WorkbookFormat,
+    ) -> Vec<WorkbookSheet> {
         let exact = self.quantities.as_ref().is_some_and(|w| w.exact);
         self.quantities_tables(q)
             .into_iter()
@@ -664,25 +780,38 @@ impl App {
                                     return cell.clone();
                                 }
                                 if exact {
-                                    return cell
-                                        .parse::<f64>()
-                                        .map_or_else(|_| cell.clone(), kentos_native_application::table_export::fifteen);
+                                    return cell.parse::<f64>().map_or_else(
+                                        |_| cell.clone(),
+                                        kentos_native_application::table_export::fifteen,
+                                    );
                                 }
                                 // The number the window shows, without its unit.
-                                let token = shown.get(j).and_then(|s| s.split_whitespace().next()).unwrap_or("");
+                                let token = shown
+                                    .get(j)
+                                    .and_then(|s| s.split_whitespace().next())
+                                    .unwrap_or("");
                                 let token = token.replace(',', ".");
-                                if token.parse::<f64>().is_ok() { token } else { cell.clone() }
+                                if token.parse::<f64>().is_ok() {
+                                    token
+                                } else {
+                                    cell.clone()
+                                }
                             })
                             .collect()
                     })
                     .collect();
                 WorkbookSheet {
                     name: t.name.to_owned(),
-                    columns: t.heading.iter().zip(&t.numbers).map(|(h, &n)| WorkbookColumn {
-                        name: (*h).to_owned(),
-                        kind: if n { CellKind::Number } else { CellKind::Text },
-                        decimals: None,
-                    }).collect(),
+                    columns: t
+                        .heading
+                        .iter()
+                        .zip(&t.numbers)
+                        .map(|(h, &n)| WorkbookColumn {
+                            name: (*h).to_owned(),
+                            kind: if n { CellKind::Number } else { CellKind::Text },
+                            decimals: None,
+                        })
+                        .collect(),
                     rows,
                 }
             })
@@ -764,7 +893,15 @@ impl App {
             .searchable(false)
             .into();
         let tabs = Segmented::new(
-            [Tab::Spaces, Tab::Walls, Tab::Openings, Tab::Slabs, Tab::Transitions, Tab::Ramps, Tab::Stairs],
+            [
+                Tab::Spaces,
+                Tab::Walls,
+                Tab::Openings,
+                Tab::Slabs,
+                Tab::Transitions,
+                Tab::Ramps,
+                Tab::Stairs,
+            ],
             w.tab,
             |t| msg(Event::Tab(t)),
         );
@@ -777,13 +914,11 @@ impl App {
         let q = match &w.answer {
             Ok(q) => q,
             Err(why) => {
-                return overlay::modal(
-                    Frame::new(TITLE)
-                        .push(words::text_line(Kind::Error, why.clone()))
-                        .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                        .width(720.0),
-                    msg(Event::Close),
-                );
+                return Frame::new(TITLE)
+                    .push(words::text_line(Kind::Error, why.clone()))
+                    .action(words::primary(CLOSE, Some(msg(Event::Close))))
+                    .width(720.0)
+                    .modal(msg(Event::Close));
             }
         };
         let f = self
@@ -801,7 +936,11 @@ impl App {
         } else {
             "yüksekliği olan duvar yok".to_owned()
         };
-        let stale = q.spaces.iter().filter(|r| r.boundary_break.is_some()).count();
+        let stale = q
+            .spaces
+            .iter()
+            .filter(|r| r.boundary_break.is_some())
+            .count();
         let mut summary_lines = vec![
             words::text_line(
                 Kind::Info,
@@ -820,7 +959,10 @@ impl App {
                     kentos_geometry_core::display::fixed(t.opening_area, 2),
                 ),
             ),
-            words::text_line(if stale == 0 { Kind::Ok } else { Kind::Warn }, self.quantities_rule(q, w.tab)),
+            words::text_line(
+                if stale == 0 { Kind::Ok } else { Kind::Warn },
+                self.quantities_rule(q, w.tab),
+            ),
         ];
         if stale > 0 {
             summary_lines.push(words::text_line(Kind::Warn,
@@ -838,7 +980,11 @@ impl App {
                 q.slabs.len(),
                 f.area(t.slab_area),
                 kentos_geometry_core::display::fixed(t.slab_volume, 2),
-                if out > 0 { format!(", {out} döşeme metraj dışında") } else { String::new() }
+                if out > 0 {
+                    format!(", {out} döşeme metraj dışında")
+                } else {
+                    String::new()
+                }
             ));
         }
         if t.railing_length > 0.0 {
@@ -855,14 +1001,25 @@ impl App {
             finish.push(format!("{} rampa, {}", q.ramps.len(), f.area(t.ramp_area)));
         }
         if t.ramp_railing_length > 0.0 {
-            finish.push(format!("rampa korkuluğu {}", f.length(t.ramp_railing_length)));
+            finish.push(format!(
+                "rampa korkuluğu {}",
+                f.length(t.ramp_railing_length)
+            ));
         }
         // Stairs (docs/adr/0724 §5).
         if !q.stairs.is_empty() {
-            finish.push(format!("{} merdiven, {} rıht, {}", q.stairs.len(), t.stair_risers, f.area(t.stair_area)));
+            finish.push(format!(
+                "{} merdiven, {} rıht, {}",
+                q.stairs.len(),
+                t.stair_risers,
+                f.area(t.stair_area)
+            ));
         }
         if t.stair_railing_length > 0.0 {
-            finish.push(format!("merdiven korkuluğu {}", f.length(t.stair_railing_length)));
+            finish.push(format!(
+                "merdiven korkuluğu {}",
+                f.length(t.stair_railing_length)
+            ));
         }
         if !finish.is_empty() {
             let mut line = finish.join("; ");
@@ -875,76 +1032,41 @@ impl App {
         let tables = self.quantities_tables(q);
         let tab = &tables[w.tab as usize];
         let widths = tab.display_widths();
-        let table_width = widths.iter().sum::<f32>() + 6.0 * widths.len().saturating_sub(1) as f32;
-        let width = |i: usize| widths[i];
-        let heading = tab
-            .heading
-            .iter()
-            .enumerate()
-            .fold(Row::new().spacing(6), |r, (i, h)| {
-                let t = text(*h)
-                    .font(typography::ui_strong())
-                    .size(typography::caption())
-                    .shaping(text::Shaping::Advanced)
-                    .wrapping(text::Wrapping::None)
-                    .width(width(i));
-                r.push(if tab.numbers[i] {
-                    t.align_x(iced::alignment::Horizontal::Right)
-                } else {
-                    t
-                })
-            });
-        let mut body = Column::new().spacing(2);
-        for r in &tab.shown {
-            body = body.push(
-                r.iter()
-                    .enumerate()
-                    .fold(Row::new().spacing(6), |row, (i, c)| {
-                        let t = text(c.clone())
-                            .font(typography::ui())
-                            .size(typography::caption())
-                            .shaping(text::Shaping::Advanced)
-                            .wrapping(text::Wrapping::WordOrGlyph)
-                            .width(width(i));
-                        row.push(if tab.numbers[i] {
-                            t.align_x(iced::alignment::Horizontal::Right)
-                        } else {
-                            t
-                        })
-                    }),
-            );
-        }
         let table: Element<'_, Message> = if tab.shown.is_empty() {
             words::text_line(
                 Kind::Info,
                 format!("Bu katta {} yok.", tab.name.to_lowercase()),
             )
         } else {
-            // iced 0.14 does not embed bars for Direction::Both, even with
-            // Scrollbar::spacing. Keep a trailing gutter in the scrollable
-            // content so the far-right digit and final row stay reachable.
-            const BAR_WIDTH: f32 = 10.0;
-            let bar = scrollable::Scrollbar::default()
-                .width(BAR_WIDTH)
-                .scroller_width(BAR_WIDTH);
+            let columns = tab.heading.iter().enumerate().map(|(i, h)| {
+                let column =
+                    table::Column::new(*h).width(Length::Fixed(typography::unscaled(widths[i])));
+                if tab.numbers[i] {
+                    column.align_right()
+                } else {
+                    column
+                }
+            });
+            // The head stays while the rows scroll; every column reaches its widest value, the table scrolls sideways.
+            let shown = tab.shown.clone();
+            let numbers = tab.numbers.clone();
             container(
-                scrollable(
-                    container(column![heading, body].spacing(6).width(table_width))
-                        .padding(iced::Padding {
-                            right: BAR_WIDTH + 6.0,
-                            bottom: BAR_WIDTH + 6.0,
-                            ..iced::Padding::ZERO
-                        }),
-                )
-                    .direction(scrollable::Direction::Both {
-                        vertical: bar,
-                        horizontal: bar,
-                    })
-                    .width(Fill)
-                    .height(280),
+                table::Table::new(columns)
+                    .horizontal()
+                    .grid()
+                    .height(280.0)
+                    .min_width(typography::from_default(700.0))
+                    .virtualized(shown.len(), move |i| {
+                        table::Row::new(shown[i].iter().enumerate().map(|(j, value)| {
+                            if numbers[j] {
+                                table::number(value.clone()).into()
+                            } else {
+                                table::text(value.clone()).into()
+                            }
+                        }))
+                    }),
             )
-            .padding([8, 10])
-            .style(style::container::field_box)
+            .style(style::container::bordered)
             .width(Fill)
             .into()
         };
@@ -970,7 +1092,11 @@ impl App {
         let exact = self.quantities.as_ref().is_some_and(|w| w.exact);
         let export: Element<'_, Message> = row![
             export,
-            crate::exchange::words::check(exact, "Tam sayılar (15 basamak)", Some(msg(Event::Exact(!exact)))),
+            crate::exchange::words::check(
+                exact,
+                "Tam sayılar (15 basamak)",
+                Some(msg(Event::Exact(!exact)))
+            ),
         ]
         .spacing(10)
         .align_y(Center)
@@ -983,14 +1109,12 @@ impl App {
             .push(words::text_line(Kind::Info,
                 "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki yedi tablo ayrı sayfalarda."))
             .push(row![export].width(Fill));
-        overlay::modal(
-            Frame::new(TITLE)
-                .scroll(body)
-                .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(980.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .scroll(body)
+            .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(980.0)
+            .modal(msg(Event::Close))
     }
 
     /// The rule the shown table's numbers come from: the command's own words.
@@ -1057,20 +1181,57 @@ mod tests {
 
     #[test]
     fn a_stale_room_after_a_valid_room_is_visible_and_exported_with_its_warning() {
-        let app=crate::files_testing::app_with_drawing();
-        let room=|uid:&str,broken:Option<&str>|serde_json::from_value(json!({
-            "uid":uid,"number":uid,"name":"Salon","method":"net","area":12.,"perimeter":14.,
-            "boundaryBreak":broken,"rule":"alan: halkaların alanı"
-        })).unwrap();
-        let mut q=SpacesQuantified {spaces:vec![room("M01",None),room("M02",Some("lostEnclosure"))],walls:vec![],openings:vec![],slabs:vec![],transitions:vec![],ramps:vec![],stairs:vec![],totals:Default::default()};
-        let [table,..]=app.quantities_tables(&q);
-        let status=table.heading.iter().position(|s|*s=="Durum").unwrap();
+        let app = crate::files_testing::app_with_drawing();
+        let room = |uid: &str, broken: Option<&str>| {
+            serde_json::from_value(json!({
+                "uid":uid,"number":uid,"name":"Salon","method":"net","area":12.,"perimeter":14.,
+                "boundaryBreak":broken,"rule":"alan: halkaların alanı"
+            }))
+            .unwrap()
+        };
+        let mut q = SpacesQuantified {
+            spaces: vec![room("M01", None), room("M02", Some("lostEnclosure"))],
+            walls: vec![],
+            openings: vec![],
+            slabs: vec![],
+            transitions: vec![],
+            ramps: vec![],
+            stairs: vec![],
+            totals: Default::default(),
+        };
+        let [table, ..] = app.quantities_tables(&q);
+        let status = table.heading.iter().position(|s| *s == "Durum").unwrap();
         assert!(table.shown[0][status].is_empty());
-        assert!(table.shown[1][status].contains(kentos_commands::SpaceBreak::LostEnclosure.words()));
-        assert_eq!(table.shown[1][status],table.cells[1][status],"copy/export lost the stale-area warning");
-        q.spaces[1].boundary_break=None;
-        let [valid,..]=app.quantities_tables(&q);
-        assert_eq!(valid.heading,["Numara","Ad","Kullanım","Kat","Yöntem","Alan","Çevre","Süpürgelik","Yükseklik","Hacim","Net","Eksen","Brüt"]);
-        assert!(valid.cells.iter().all(|r|r.len()==13),"valid export shape changed");
+        assert!(
+            table.shown[1][status].contains(kentos_commands::SpaceBreak::LostEnclosure.words())
+        );
+        assert_eq!(
+            table.shown[1][status], table.cells[1][status],
+            "copy/export lost the stale-area warning"
+        );
+        q.spaces[1].boundary_break = None;
+        let [valid, ..] = app.quantities_tables(&q);
+        assert_eq!(
+            valid.heading,
+            [
+                "Numara",
+                "Ad",
+                "Kullanım",
+                "Kat",
+                "Yöntem",
+                "Alan",
+                "Çevre",
+                "Süpürgelik",
+                "Yükseklik",
+                "Hacim",
+                "Net",
+                "Eksen",
+                "Brüt"
+            ]
+        );
+        assert!(
+            valid.cells.iter().all(|r| r.len() == 13),
+            "valid export shape changed"
+        );
     }
 }

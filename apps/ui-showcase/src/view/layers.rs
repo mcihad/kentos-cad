@@ -49,7 +49,7 @@ impl Showcase {
             tip(
                 button(icon(glyph).size(13.0))
                     .on_press(message)
-                    .padding([0, 3])
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
                     .style(style::button::subtle),
                 Tip::new(description),
                 tooltip::Position::Bottom,
@@ -255,7 +255,7 @@ fn zoom_button<'a>(node: NodeId) -> Element<'a, Message> {
     tip(
         button(icon(Icon::Target).size(13.0))
             .on_press(Message::ZoomToNode(node))
-            .padding([0, 4])
+            .padding(kentos_ui::theme::metrics::icon_small(13.0))
             .style(style::button::subtle),
         Tip::new("Yakınlaştır"),
         tooltip::Position::Left,

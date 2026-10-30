@@ -22,7 +22,7 @@ use kentos_native_style::library::{ItemKind, Source};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog as Frame, Elided, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -334,17 +334,15 @@ impl App {
                     .width(Fill),
             );
         }
-        overlay::modal(
-            Frame::new(PURGE_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(
-                    PURGE,
-                    (!w.checked.is_empty()).then(|| msg(Event::Purge)),
-                ))
-                .width(560.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(PURGE_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(
+                PURGE,
+                (!w.checked.is_empty()).then(|| msg(Event::Purge)),
+            ))
+            .width(560.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): a

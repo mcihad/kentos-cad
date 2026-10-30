@@ -193,13 +193,13 @@ impl App {
             .spacing(6)
             .align_y(Center),
         )
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::primary)
         .on_press_maybe((!window.saving && !groups.is_empty()).then(|| ev(Event::Save)));
         let footer = row![
             container(status).width(Fill),
             button(label::body(texts::CLOSE))
-                .padding([5, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(ev(Event::Close)),
             save,
@@ -210,6 +210,7 @@ impl App {
             .spacing(12)
             .height(Fill);
         Dialog::new(texts::TITLE)
+            .on_close(ev(Event::Close))
             .push(container(body).height(Length::Fill))
             .push(footer)
             .width(typography::unscaled(width))

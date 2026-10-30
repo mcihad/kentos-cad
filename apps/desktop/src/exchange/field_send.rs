@@ -6,7 +6,7 @@
 //! is cut to fit. The points come from the drawing's selection, Aplikasyon's
 //! table or Nokta editörü's rows; the drawing is not changed.
 
-use iced::widget::{Column, column, container, row, scrollable, text_input};
+use iced::widget::{Column, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{Entity, FieldPoint, FieldWrite, FieldWriteFormat, FieldWriteOptions};
 use kentos_interaction::Level;
@@ -266,13 +266,8 @@ impl App {
             |i| event(Event::Format(i)),
         )
         .searchable(false);
-        let job = kentos_ui::widget::focus_ring(
-            text_input("İş adı", &s.job)
-                .on_input(|t| event(Event::Job(t)))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(style::field::input),
-        );
+        let job =
+            kentos_ui::widget::text_field("İş adı", &s.job).on_input(|t| event(Event::Job(t)));
         let options = row![
             container(words::field("Biçim", pick, None)).width(Length::FillPortion(2)),
             container(words::field(
@@ -390,7 +385,8 @@ impl App {
                     s.ready().then(|| event(Event::Run)),
                 ))
                 .width(760.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

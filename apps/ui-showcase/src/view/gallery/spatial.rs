@@ -121,7 +121,7 @@ impl Showcase {
                  örneği Giriş sekmesindedir.",
                 button(label::body("Giriş sekmesinde aç"))
                     .on_press(Message::RibbonTabSelected(RibbonTab::Home))
-                    .padding([4, 12])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
                 Some(
                     "ModelSpace::new(viewport, &layers, Message::ModelSpace)\n    \

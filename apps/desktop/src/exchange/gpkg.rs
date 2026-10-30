@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use iced::widget::{Column, text_input};
+use iced::widget::Column;
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     CallOp, CommandResult, ExportGpkg, GpkgImported, MergeReport, SourcesEdit, SourcesEditOp,
@@ -17,7 +17,7 @@ use kentos_domain::Slot;
 use kentos_geopackage::{DataType, GeoPackage};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
-use kentos_ui::widget::{Dialog, focus_ring, overlay};
+use kentos_ui::widget::{Dialog, overlay};
 use serde_json::json;
 
 use super::merge_form::{self, MergeEvent, MergeForm};
@@ -140,7 +140,8 @@ fn import_input(s: &State, files: bool) -> serde_json::Value {
         .filter(|(_, c)| **c)
         .map(|(t, _)| t.name.as_str())
         .collect();
-    let mut input = json!({ "path": s.path.display().to_string(), "tables": tables, "reproject": s.reproject });
+    let mut input =
+        json!({ "path": s.path.display().to_string(), "tables": tables, "reproject": s.reproject });
     if let Some(m) = s.merge.input() {
         input["merge"] = serde_json::to_value(m).unwrap_or_default();
     }
@@ -306,10 +307,16 @@ impl App {
         s.merged = Some(match result {
             Some(CommandResult::Completed { output, .. }) => {
                 let made: Vec<&str> = output.layers.iter().map(|l| l.id.as_str()).collect();
-                s.merge.learn(&doc.model, output.tables.iter().map(|t| t.layer.as_str()), &made);
+                s.merge.learn(
+                    &doc.model,
+                    output.tables.iter().map(|t| t.layer.as_str()),
+                    &made,
+                );
                 Ok(output.merged)
             }
-            Some(CommandResult::Failed { error } | CommandResult::Conflict { error }) => Err(error.message),
+            Some(CommandResult::Failed { error } | CommandResult::Conflict { error }) => {
+                Err(error.message)
+            }
             _ => Err("GeoPackage okunamadı.".into()),
         });
     }
@@ -674,14 +681,9 @@ impl App {
         if s.bind {
             body = body.push(words::field(
                 "Anahtar alanı",
-                focus_ring(
-                    text_input("Yok", &s.key)
+                kentos_ui::widget::text_field("Yok", &s.key)
                         .on_input(|t| event(Event::Key(t)))
-                        .padding([5, 8])
-                        .width(Fill)
-                        .size(kentos_ui::theme::typography::body())
-                        .style(kentos_ui::style::field::input),
-                ),
+                        .width(Fill),
                 Some("Tablo başka bir programla yeniden yazılınca satırın kimliği değişebilir: etiket iğneleri o zaman satırı bu alanın değeriyle bulur. Her satırda dolu ve tekil olmalı; boş bırakılırsa iğneler satırın kimliğiyle ve geometrisiyle izlenir.".to_owned()),
             ));
         }
@@ -699,7 +701,9 @@ impl App {
         if !s.bind {
             body = body.push(s.merge.view(|e| event(Event::Merge(e))));
             match &s.merged {
-                Some(Ok(merged)) => lines.extend(merge_form::report_lines(merged, |id| self.layer_path(id))),
+                Some(Ok(merged)) => {
+                    lines.extend(merge_form::report_lines(merged, |id| self.layer_path(id)))
+                }
                 Some(Err(why)) => lines.push(words::text_line(Line::Warn, why.clone())),
                 None => {}
             }
@@ -733,7 +737,8 @@ impl App {
                     ready.then(|| event(Event::Run)),
                 ))
                 .width(640.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

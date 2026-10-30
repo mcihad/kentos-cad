@@ -2,17 +2,17 @@
 use crate::{
     Message,
     designer::Designer,
-    plot_profiles::{PlotDialog, PlotMessage as P, ColorMode},
+    plot_profiles::{ColorMode, PlotDialog, PlotMessage as P},
 };
-use iced::{Element, Fill};
 use iced::widget::{button, column, row};
+use iced::{Element, Fill};
 use kentos_sheet::{
-    plot_profile::{PlotColor, StyleKey, TableKind, Target},
     LineCap, LineJoin,
+    plot_profile::{PlotColor, StyleKey, TableKind, Target},
 };
 use kentos_ui::{
     label, style,
-    widget::{Dialog, Select, Choice, InputField, NumberInput, Switch, Segmented, ColorPicker},
+    widget::{Choice, ColorPicker, Dialog, InputField, NumberInput, Segmented, Select, Switch},
 };
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Cap(Option<LineCap>);
@@ -56,9 +56,11 @@ impl Designer {
         body = body.push(
             row![
                 button(label::body("Yeni adlı profil"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(on(P::New(TableKind::Named)))
                     .style(style::button::secondary),
                 button(label::body("Yeni renk profili"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(on(P::New(TableKind::ColorDependent)))
                     .style(style::button::secondary)
             ]
@@ -81,6 +83,7 @@ impl Designer {
                         .on_input(move |v| on(P::Name(v)))
                         .width(Fill),
                     button(label::body("Profili sil"))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press(on(P::Remove))
                         .style(style::button::secondary)
                 ]
@@ -94,9 +97,11 @@ impl Designer {
                         move |i| on(P::Entry(i))
                     ),
                     button(label::body("Stil ekle"))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press(on(P::NewEntry))
                         .style(style::button::secondary),
                     button(label::body("Stili sil"))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press_maybe(d.rule().map(|_| on(P::RemoveEntry)))
                         .style(style::button::secondary)
                 ]
@@ -255,6 +260,7 @@ impl Designer {
                         "Seçili kâğıt öğelerine ata ({})",
                         selected
                     )))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press_maybe((selected > 0).then_some(on(P::AssignSelected)))
                     .style(style::button::secondary),
                 );
@@ -278,6 +284,7 @@ impl Designer {
                         row![
                             label::body(title).width(Fill),
                             button(label::body("Kaldır"))
+                                .padding(kentos_ui::theme::metrics::action())
                                 .on_press(on(P::Unassign(target)))
                                 .style(style::button::secondary)
                         ]
@@ -291,20 +298,24 @@ impl Designer {
             body = body.push(label::body(e).style(style::text::danger));
         }
         Dialog::new("Baskı profilleri")
+            .on_close(crate::Message::CloseDialog)
             .width(700.)
             .scroll(body)
             .action(
                 button(label::body("Vazgeç"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(Message::CloseDialog)
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body("Kitaplığa kaydet"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(on(P::Save(false)))
                     .style(style::button::secondary),
             )
             .action(
                 button(label::strong("Kaydet ve paftaya uygula"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press_maybe(
                         (self.open_sheet().is_some() && d.current().is_some())
                             .then_some(on(P::Save(true))),

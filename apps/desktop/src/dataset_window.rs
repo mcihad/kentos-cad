@@ -17,8 +17,8 @@
 //! Soy what a processing tool made the layer from, whether its inputs changed since, the layers it came from and the
 //! layers made from it, Kayıt the layer as an OGC API Records record (to the clipboard or a file).
 
-use iced::widget::{Column, container, row, scrollable, text_editor, text_input};
-use iced::{Center, Element, Fill, Length, Task};
+use iced::widget::{Column, container, row, scrollable, text_editor};
+use iced::{Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, DatasetDescription, DatasetInfo, DatasetParty, DatasetsDescribe, DatasetsEdit,
     InputState, dataset_problem,
@@ -26,9 +26,10 @@ use kentos_commands::{
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, datasets_describe, datasets_edit};
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
+use kentos_ui::widget::table::{self, Table};
 use kentos_ui::widget::tabs::{Tab, Tabs};
-use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -408,29 +409,22 @@ impl App {
         if w.tab == 3 {
             frame = frame.action(words::secondary(COPY, Some(msg(Event::Copy))));
         }
-        overlay::modal(
-            frame
-                .action(words::primary(
-                    SAVE,
-                    problem.is_none().then(|| msg(Event::Save)),
-                ))
-                .width(820.0)
-                .max_height(820.0),
-            msg(Event::Cancel),
-        )
+        frame
+            .action(words::primary(
+                SAVE,
+                problem.is_none().then(|| msg(Event::Save)),
+            ))
+            .width(820.0)
+            .max_height(820.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// Tanım: the description's parts, two to a row.
     fn dataset_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         let f = &w.form;
         let line = |placeholder: &'static str, value: &'a str, part: Part| {
-            focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| msg(Event::Field(part, t)))
-                    .padding([5, 8])
-                    .size(typography::body())
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value)
+                .on_input(move |t| msg(Event::Field(part, t)))
         };
         let pair = |a: Element<'a, Message>, b: Element<'a, Message>| -> Element<'a, Message> {
             row![container(a).width(Fill), container(b).width(Fill)]
@@ -635,36 +629,32 @@ fn dictionary(d: Option<&DatasetDescription>) -> Element<'_, Message> {
         )
         .into();
     }
-    let head = |t: &'static str, w: f32| container(label::caption(t)).width(Length::Fixed(w));
-    let cell = |t: String, w: f32| container(label::body(t)).width(Length::Fixed(w));
-    let mut col = Column::new().spacing(4).push(
-        row![
-            head("Alan", 170.0),
-            head("Takma ad", 150.0),
-            head("Tür", 110.0),
-            head("Zorunlu", 70.0),
-            head("Birim", 70.0),
-            head("Değerler", 80.0),
-            head("Dolu", 80.0),
-        ]
-        .spacing(6),
-    );
-    for f in &d.dictionary {
-        col = col.push(
-            row![
-                cell(f.name.clone(), 170.0),
-                cell(f.alias.clone().unwrap_or_default(), 150.0),
-                cell(f.kind.name().to_owned(), 110.0),
-                cell(if f.required { "evet" } else { "" }.to_owned(), 70.0),
-                cell(f.unit.clone().unwrap_or_default(), 70.0),
-                cell(f.choices.map(|n| n.to_string()).unwrap_or_default(), 80.0),
-                cell(format!("{}/{}", f.filled, d.objects), 80.0),
-            ]
-            .spacing(6)
-            .align_y(Center),
-        );
-    }
-    col.into()
+    let columns = [
+        ("Alan", 170.0),
+        ("Takma ad", 150.0),
+        ("Tür", 110.0),
+        ("Zorunlu", 70.0),
+        ("Birim", 70.0),
+        ("Değerler", 80.0),
+        ("Dolu", 80.0),
+    ]
+    .map(|(title, width)| table::Column::new(title).width(Length::Fixed(width)));
+    Table::new(columns)
+        .extend(d.dictionary.iter().map(|f| {
+            table::Row::new(
+                [
+                    f.name.clone(),
+                    f.alias.clone().unwrap_or_default(),
+                    f.kind.name().to_owned(),
+                    if f.required { "evet" } else { "" }.to_owned(),
+                    f.unit.clone().unwrap_or_default(),
+                    f.choices.map(|n| n.to_string()).unwrap_or_default(),
+                    format!("{}/{}", f.filled, d.objects),
+                ]
+                .map(|value| table::text(value).into()),
+            )
+        }))
+        .into()
 }
 
 /// Kayıt: the record as JSON.

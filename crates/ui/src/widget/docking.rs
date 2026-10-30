@@ -100,32 +100,8 @@ const DOUBLE_CLICK: Duration = Duration::from_millis(400);
 const STASH: usize = 24;
 /// Başlıktaki menü ve daraltma düğmelerinin genişliği.
 const BUTTON: f32 = 22.0;
-/// Yalnızca ikonu kalan sekmede ikonun iki yanındaki boşluk: beş sekmelik
-/// yuva da varsayılan genişliğe sığar (web'in ikon sekmesi kadar).
-const ICON_PAD: f32 = 7.0;
-/// Yalnızca ikonu kalan sekmenin genişliği.
-const ICON_TAB: f32 = 2.0 * ICON_PAD + 14.0;
-
-/// Yalnızca ikonu kalan sekme mi (ikonu var, tabanına inmiş).
-fn icon_only(icon: bool, tab: Rectangle) -> bool {
-    icon && tab.width <= ICON_TAB + 0.5
-}
-
-/// Başlığın çizildiği alan: yalnızca ikonu kalan sekmede ikonun kutusu.
-fn label_room(icon: bool, tab: Rectangle, trail: f32) -> Rectangle {
-    if icon_only(icon, tab) {
-        Rectangle {
-            x: tab.x + ICON_PAD,
-            width: (tab.width - 2.0 * ICON_PAD).max(0.0),
-            ..tab
-        }
-    } else {
-        tabs::room(tab, trail)
-    }
-}
-/// Arkadaki sekmede kapatma düğmesinin çıkması için gereken genişlik.
-const CLOSE_TAB: f32 = 2.0 * tabs::PAD + 14.0 + tabs::CLOSE + 9.0;
-
+/// Eylemlerin kendi satırında soldan uzaklığı.
+const TOOLBAR_PAD: f32 = 6.0;
 /// Yuvanın kenarı.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Side {
@@ -857,6 +833,8 @@ pub struct Pane<'a, Message> {
     closable: bool,
     scrollable: bool,
     actions: Option<Element<'a, Message>>,
+    /// Eylemler yalnız bir bilgi yazısı: sekmelerin yanına sığmazsa düşer, kendine satır açmaz.
+    meta: bool,
     body: Box<dyn FnOnce() -> Element<'a, Message> + 'a>,
 }
 
@@ -873,6 +851,7 @@ impl<'a, Message: 'a> Pane<'a, Message> {
             closable: true,
             scrollable: false,
             actions: None,
+            meta: false,
             body: Box::new(body),
         }
     }
@@ -882,10 +861,17 @@ impl<'a, Message: 'a> Pane<'a, Message> {
         self
     }
 
-    /// Panel öndeyken başlık şeridinin sağında duran eylemler (ör. katman
-    /// ekle düğmesi).
+    /// Panel öndeyken duran eylemler (ör. katman ekle düğmesi): sekmelerin yanına sığarsa başlık şeridinin sağında,
+    /// sığmazsa sekmelerle karışmasın diye altında kendi satırında (docs/adr/0806).
     pub fn actions(mut self, actions: impl Into<Element<'a, Message>>) -> Self {
         self.actions = Some(actions.into());
+        self
+    }
+
+    /// Panel öndeyken başlık şeridinin sağında duran kısa bilgi (“3 nesne”): sığmazsa görünmez.
+    pub fn meta(mut self, meta: impl Into<Element<'a, Message>>) -> Self {
+        self.actions = Some(meta.into());
+        self.meta = true;
         self
     }
 
@@ -923,16 +909,16 @@ struct Entry<'a, K, Message> {
     float: Option<Rectangle>,
     /// Gövdesi kurulan panel; daraltılmış yığında yok.
     shown: Option<K>,
-    /// Eylemler, menü düğmesi, gövde ve daraltma ikonu.
-    parts: [Element<'a, Message>; 4],
+    /// Eylemler yalnız bir bilgi yazısı: sığmazsa kendine satır açmaz.
+    meta: bool,
+    /// Eylemler, menü düğmesi, gövde, daraltma ikonu ve şeridin iki oku.
+    parts: [Element<'a, Message>; 6],
 }
 
 /// Yığındaki sekme.
 struct Head<'a, K, Message> {
     key: K,
     closable: bool,
-    /// İkonu var: yer daralınca yalnızca ikonu kalır.
-    icon: bool,
     /// Başlık (ikon ve ad), kapatma ikonu ve sürüklenirken imlecin yanında
     /// çizilen başlık. İkon önbelleği bir karede tek yerde çizilebildiği
     /// için sürüklenen başlık ayrı bir öğedir.
@@ -944,7 +930,9 @@ const ACTIONS: usize = 0;
 const MENU: usize = 1;
 const BODY: usize = 2;
 const CHEVRON: usize = 3;
-const TABS: usize = 4;
+const PREV: usize = 4;
+const NEXT: usize = 5;
+const TABS: usize = 6;
 
 impl<'a, K, Message> DockSpace<'a, K, Message>
 where
@@ -1021,6 +1009,7 @@ where
         let mut shown = None;
         let mut body = None;
         let mut actions = None;
+        let mut meta = false;
         let mut closable = false;
 
         for (index, key) in stack.tabs.iter().enumerate() {
@@ -1036,6 +1025,7 @@ where
 
                     shown = Some(*key);
                     actions = pane.actions;
+                    meta = pane.meta;
                     body = Some(if pane.scrollable {
                         scrollable(content)
                             .direction(style::field::thin_scrollbar())
@@ -1062,7 +1052,6 @@ where
             tabs.push(Head {
                 key: *key,
                 closable: pane.closable,
-                icon: pane.icon.is_some(),
                 parts: [
                     heading().into(),
                     icon(Icon::Close).size(tabs::GLYPH).into(),
@@ -1142,11 +1131,14 @@ where
             collapsible,
             float,
             shown,
+            meta,
             parts: [
                 actions.unwrap_or_else(|| space::horizontal().width(0).into()),
                 menu.into(),
                 body.unwrap_or_else(|| space::horizontal().width(0).into()),
                 chevron.into(),
+                icon(Icon::ChevronLeft).size(12.0).into(),
+                icon(Icon::ChevronRight).size(12.0).into(),
             ],
         }
     }
@@ -1174,7 +1166,7 @@ where
         tree.children
             .resize_with(TABS + self.tabs.len(), Tree::empty);
 
-        for part in [ACTIONS, MENU, CHEVRON] {
+        for part in [ACTIONS, MENU, CHEVRON, PREV, NEXT] {
             tree.children[part].diff(&self.parts[part]);
         }
 
@@ -1210,15 +1202,8 @@ where
             Point::new(bounds.x + inset, bounds.y + inset),
             Size::new((bounds.width - 2.0 * inset).max(0.0), height),
         );
-        let body = Rectangle::new(
-            Point::new(header.x, header.y + height),
-            Size::new(
-                header.width,
-                (bounds.height - height - 2.0 * inset).max(0.0),
-            ),
-        );
 
-        // Başlığın sağı: menü, daraltma ve panelin eylemleri.
+        // Başlığın sağı: menü ve daraltma.
         let button = typography::scaled(BUTTON);
         let menu = Rectangle::new(
             Point::new(header.x + header.width - button - 2.0, header.y),
@@ -1230,22 +1215,8 @@ where
         });
         let trailing = chevron.map_or(menu.x, |chevron| chevron.x);
 
-        let actions = self.parts[ACTIONS].as_widget_mut().layout(
-            &mut tree.children[ACTIONS],
-            renderer,
-            &layout::Limits::new(Size::ZERO, Size::new(header.width / 2.0, height)),
-        );
-        let actions_size = actions.size();
-        let actions_rect = Rectangle::new(
-            Point::new(
-                trailing - actions_size.width - if actions_size.width > 0.0 { 4.0 } else { 0.0 },
-                header.y + ((height - actions_size.height) / 2.0).round(),
-            ),
-            actions_size,
-        );
-
-        // Sekmeler kalan yere dizilir; sığmayanlar menüdedir.
-        let room = (actions_rect.x - header.x).max(0.0);
+        // Sekmeler daralmaz: her biri başlığı ve kapatma düğmesinin yeri kadar geniştir, seçilince genişliği değişmez
+        // (docs/adr/0806).
         let (min, max) = (
             typography::scaled(tabs::MIN_WIDTH),
             typography::scaled(tabs::MAX_WIDTH),
@@ -1262,72 +1233,111 @@ where
                 )
             })
             .collect();
-        // Kapatma düğmesine yalnızca öndeki sekmede yer ayrılır; arkadaki
-        // sekmelerde düğme üzerine gelince başlığın sonuna çıkar. Yer
-        // daralınca arkadaki sekmelerin yalnızca ikonu kalır.
         let natural: Vec<f32> = self
             .tabs
             .iter()
             .zip(&labels)
-            .enumerate()
-            .map(|(index, (head, label))| {
-                let trail = if index == self.active {
-                    tabs::trail(head.closable)
-                } else {
-                    tabs::PAD
-                };
+            .map(|(head, label)| {
+                (tabs::PAD + label.size().width + tabs::trail(head.closable)).clamp(min, max)
+            })
+            .collect();
+        let total: f32 = natural.iter().sum();
 
-                (tabs::PAD + label.size().width + trail).clamp(min, max)
-            })
-            .collect();
-        let floors: Vec<f32> = self
-            .tabs
-            .iter()
-            .map(|head| {
-                if head.icon {
-                    ICON_TAB
-                } else {
-                    typography::scaled(tabs::SHRINK)
-                }
-            })
-            .collect();
-        let (widths, _) = tabs::fit(
-            &natural,
-            self.active,
-            room,
-            &floors,
-            typography::scaled(tabs::SHRINK),
+        // Eylemler: sekmelerin yanına sığarsa başlıkta, sığmazsa altında kendi satırında; sekmelerle karışmazlar.
+        let actions = self.parts[ACTIONS].as_widget_mut().layout(
+            &mut tree.children[ACTIONS],
+            renderer,
+            &layout::Limits::new(Size::ZERO, Size::new(header.width, height)),
         );
-        let widths: Vec<f32> = widths.into_iter().map(|width| width.min(room)).collect();
-        let visible = tabs::window(&widths, self.active, frame.first, room);
+        let actions_size = actions.size();
+        let has_actions = actions_size.width > 0.0;
+        let beside = if has_actions {
+            actions_size.width + 4.0
+        } else {
+            0.0
+        };
+        let inline = has_actions && total + beside <= trailing - header.x;
+        let below = has_actions && !inline && !self.meta && !self.collapsed;
+        let actions_rect = if inline {
+            Rectangle::new(
+                Point::new(
+                    trailing - beside,
+                    header.y + ((height - actions_size.height) / 2.0).round(),
+                ),
+                actions_size,
+            )
+        } else if below {
+            Rectangle::new(
+                Point::new(
+                    header.x + TOOLBAR_PAD,
+                    header.y + height + ((height - actions_size.height) / 2.0).round(),
+                ),
+                actions_size,
+            )
+        } else {
+            Rectangle::default()
+        };
+        let toolbar = below.then_some(Rectangle {
+            y: header.y + height,
+            ..header
+        });
+        let body_top = header.y + height + if below { height } else { 0.0 };
+        let body = Rectangle::new(
+            Point::new(header.x, body_top),
+            Size::new(
+                header.width,
+                (bounds.y + bounds.height - inset - body_top).max(0.0),
+            ),
+        );
 
-        frame.first = visible.start;
+        // Sığmayan şerit kayar: oklar başlığın sağında.
+        let free = (trailing - if inline { beside } else { 0.0 } - header.x).max(0.0);
+        let overflow = total > free;
+        let arrow = tabs::arrow_width();
+        let room = (free - if overflow { 2.0 * arrow } else { 0.0 }).max(0.0);
+        let widths: Vec<f32> = natural.iter().map(|width| width.min(room)).collect();
+        let offset = frame.scroll.settle(&widths, self.active, room);
+        frame.strip = Rectangle {
+            width: room,
+            ..header
+        };
+        frame.arrows = overflow.then(|| {
+            let prev = Rectangle::new(
+                Point::new(header.x + room, header.y),
+                Size::new(arrow, height),
+            );
+            (
+                prev,
+                Rectangle {
+                    x: prev.x + arrow,
+                    ..prev
+                },
+            )
+        });
+
         frame.tabs.clear();
         frame.clipped.clear();
 
-        let mut x = header.x;
+        let mut x = header.x - offset;
         let mut nodes = Vec::with_capacity(TABS + self.tabs.len());
         let mut heads = Vec::with_capacity(self.tabs.len());
 
-        for (index, ((head, tree), (label, width))) in self
+        for ((head, tree), (label, width)) in self
             .tabs
             .iter_mut()
             .zip(tree.children[TABS..].iter_mut())
             .zip(labels.into_iter().zip(widths))
-            .enumerate()
         {
             let rect = Rectangle::new(Point::new(x, header.y), Size::new(width, height));
-            let trail = if index == self.active {
-                tabs::trail(head.closable)
-            } else {
-                tabs::PAD
-            };
+            let trail = tabs::trail(head.closable);
 
             frame
                 .clipped
-                .push(label.size().width > label_room(head.icon, rect, trail).width + 0.5);
+                .push(label.size().width > tabs::room(rect, trail).width + 0.5);
 
-            if !visible.contains(&index) {
+            // Şeridin dışında kalan sekme çizilmez.
+            if x + width <= header.x || x >= header.x + room {
+                x += width;
                 frame.tabs.push(None);
                 heads.push(Node::with_children(
                     Size::ZERO,
@@ -1348,12 +1358,7 @@ where
                     tabs::square(tabs::close_area(rect).center(), tabs::GLYPH).position() - origin,
                 );
 
-            let pad = if icon_only(head.icon, rect) {
-                ICON_PAD
-            } else {
-                tabs::PAD
-            };
-            let at = Point::new(rect.x + pad, rect.y + label_y) - origin;
+            let at = Point::new(rect.x + tabs::PAD, rect.y + label_y) - origin;
             let ghost = head.parts[2]
                 .as_widget_mut()
                 .layout(
@@ -1371,7 +1376,12 @@ where
             x += width;
         }
 
-        nodes.push(actions.move_to(actions_rect.position() - origin));
+        // A meta that does not fit: its node stays, out of everything's way.
+        nodes.push(actions.move_to(if has_actions && !inline && !below {
+            Point::new(-1.0e5, -1.0e5)
+        } else {
+            actions_rect.position() - origin
+        }));
         nodes.push(
             self.parts[MENU]
                 .as_widget_mut()
@@ -1405,6 +1415,23 @@ where
                 .move_to(tabs::square(chevron.center(), tabs::GLYPH).position() - origin),
             None => Node::default(),
         });
+        for (part, slot) in [
+            (PREV, frame.arrows.map(|(prev, _)| prev)),
+            (NEXT, frame.arrows.map(|(_, next)| next)),
+        ] {
+            nodes.push(match slot {
+                Some(slot) => {
+                    let glyph = self.parts[part].as_widget_mut().layout(
+                        &mut tree.children[part],
+                        renderer,
+                        &layout::Limits::new(Size::ZERO, slot.size()),
+                    );
+                    let side = glyph.size().width;
+                    glyph.move_to(tabs::square(slot.center(), side).position() - origin)
+                }
+                None => Node::default(),
+            });
+        }
         nodes.extend(heads);
 
         frame.bounds = bounds;
@@ -1413,6 +1440,7 @@ where
         frame.menu = menu;
         frame.chevron = chevron;
         frame.actions = actions_rect;
+        frame.toolbar = toolbar;
 
         Node::with_children(bounds.size(), nodes).move_to(bounds.position())
     }
@@ -1424,15 +1452,20 @@ struct Frame {
     bounds: Rectangle,
     header: Rectangle,
     body: Rectangle,
-    /// Sekmelerin yeri; sığmayanlar yok.
+    /// Sekmelerin yeri; şeridin dışında kalanlar yok.
     tabs: Vec<Option<Rectangle>>,
     /// Başlığı sığmayan sekmeler; başlığın sonu solar.
     clipped: Vec<bool>,
-    /// İlk görünen sekme.
-    first: usize,
+    /// Sekmelerin göründüğü şerit ve kayması.
+    strip: Rectangle,
+    scroll: tabs::Scroll,
+    /// Şeridin okları: sekmeler sığmıyorsa.
+    arrows: Option<(Rectangle, Rectangle)>,
     menu: Rectangle,
     chevron: Option<Rectangle>,
     actions: Rectangle,
+    /// Eylemlerin kendi satırı: sekmelerin yanına sığmadılarsa.
+    toolbar: Option<Rectangle>,
 }
 
 /// Tutamak.
@@ -1707,6 +1740,9 @@ enum Hit {
     Chevron(usize),
     Menu(usize),
     Actions(usize),
+    /// Şeridin okları.
+    Prev(usize),
+    Next(usize),
     /// Başlığın boş yeri.
     Header(usize),
     Body(usize),
@@ -1726,6 +1762,8 @@ impl Hit {
             | Hit::Chevron(entry)
             | Hit::Menu(entry)
             | Hit::Actions(entry)
+            | Hit::Prev(entry)
+            | Hit::Next(entry)
             | Hit::Header(entry)
             | Hit::Body(entry)
             | Hit::Resize(entry, ..) => Some(entry),
@@ -1883,6 +1921,14 @@ where
     fn hit_stack(&self, index: usize, frame: &Frame, point: Point) -> Hit {
         let entry = &self.stacks[index];
 
+        if frame.toolbar.is_some_and(|row| row.contains(point)) {
+            return if frame.actions.contains(point) {
+                Hit::Actions(index)
+            } else {
+                Hit::Header(index)
+            };
+        }
+
         if !frame.header.contains(point) {
             return if frame.body.contains(point) && entry.shown.is_some() {
                 Hit::Body(index)
@@ -1899,8 +1945,21 @@ where
             return Hit::Chevron(index);
         }
 
-        if frame.actions.width > 0.0 && frame.actions.contains(point) {
+        if frame.toolbar.is_none() && frame.actions.width > 0.0 && frame.actions.contains(point) {
             return Hit::Actions(index);
+        }
+
+        if let Some((prev, next)) = frame.arrows {
+            if prev.contains(point) {
+                return Hit::Prev(index);
+            }
+            if next.contains(point) {
+                return Hit::Next(index);
+            }
+        }
+
+        if !frame.strip.contains(point) {
+            return Hit::Header(index);
         }
 
         for (tab, rect) in frame.tabs.iter().enumerate() {
@@ -1908,7 +1967,7 @@ where
                 continue;
             };
 
-            if shows_close(&entry.tabs[tab], *rect, tab == entry.active, true)
+            if shows_close(&entry.tabs[tab], tab == entry.active, true)
                 && tabs::close_area(*rect).contains(point)
             {
                 return Hit::Close(index, tab);
@@ -1997,7 +2056,8 @@ where
                     .find(|(index, _)| *index >= position)
                     .map(|(_, rect)| rect.x)
                     .or_else(|| visible.last().map(|(_, rect)| rect.x + rect.width))
-                    .unwrap_or(frame.header.x);
+                    .unwrap_or(frame.header.x)
+                    .clamp(frame.strip.x, frame.strip.x + frame.strip.width);
 
                 return Some(Drop {
                     target: Target::Tab(entry.slot, position),
@@ -2694,7 +2754,8 @@ where
             };
 
             for (part, part_layout) in entry_layout.children().enumerate().take(TABS) {
-                if part == CHEVRON || (part == BODY && entry.shown.is_none()) {
+                if matches!(part, CHEVRON | PREV | NEXT) || (part == BODY && entry.shown.is_none())
+                {
                     continue;
                 }
 
@@ -2799,6 +2860,22 @@ where
                 .map_or(mouse::Interaction::None, Sash::interaction),
             Some(Hit::Resize(_, right, bottom)) => resize_interaction(right, bottom),
             Some(Hit::Close(..) | Hit::Chevron(_)) => mouse::Interaction::Pointer,
+            Some(Hit::Prev(index))
+                if state
+                    .frames
+                    .get(index)
+                    .is_some_and(|frame| frame.scroll.can_back()) =>
+            {
+                mouse::Interaction::Pointer
+            }
+            Some(Hit::Next(index))
+                if state
+                    .frames
+                    .get(index)
+                    .is_some_and(|frame| frame.scroll.can_forth()) =>
+            {
+                mouse::Interaction::Pointer
+            }
             Some(Hit::Header(index)) if self.stacks[index].is_floating() => {
                 mouse::Interaction::Grab
             }
@@ -3058,7 +3135,9 @@ where
 
             for ((entry, tree), entry_layout) in self.stacks.iter_mut().zip(trees).zip(layouts) {
                 for (part, part_layout) in entry_layout.children().enumerate().take(TABS) {
-                    if part == CHEVRON || (part == BODY && entry.shown.is_none()) {
+                    if matches!(part, CHEVRON | PREV | NEXT)
+                        || (part == BODY && entry.shown.is_none())
+                    {
                         continue;
                     }
 
@@ -3183,6 +3262,14 @@ where
                         state.pressed = Some(hit);
                         Some(true)
                     }
+                    Hit::Prev(index) | Hit::Next(index) => {
+                        if let Some(frame) = state.frames.get_mut(index)
+                            && frame.scroll.step(matches!(hit, Hit::Next(_)))
+                        {
+                            shell.invalidate_layout();
+                        }
+                        Some(true)
+                    }
                     Hit::Header(index) => {
                         let entry = &self.stacks[index];
                         let now = Instant::now();
@@ -3284,6 +3371,32 @@ where
                     Hit::Area(_) | Hit::Center => Some(false),
                 }
             }
+            // Tekerlek sekmelerin üstünde şeridi kaydırır.
+            IcedEvent::Mouse(mouse::Event::WheelScrolled { delta }) => {
+                let index = match hit? {
+                    Hit::Tab(index, _)
+                    | Hit::Close(index, _)
+                    | Hit::Prev(index)
+                    | Hit::Next(index) => index,
+                    Hit::Header(index)
+                        if state
+                            .frames
+                            .get(index)
+                            .is_some_and(|frame| frame.header.contains(position - origin)) =>
+                    {
+                        index
+                    }
+                    _ => return Some(false),
+                };
+                let Some(frame) = state.frames.get_mut(index) else {
+                    return Some(false);
+                };
+                if frame.arrows.is_some() && frame.scroll.wheel(*delta) {
+                    shell.invalidate_layout();
+                    return Some(true);
+                }
+                Some(false)
+            }
             IcedEvent::Mouse(mouse::Event::ButtonPressed(mouse::Button::Middle)) => {
                 if let Some(Hit::Tab(index, tab) | Hit::Close(index, tab)) = hit
                     && let Some(head) = self.stacks[index].tabs.get(tab)
@@ -3347,12 +3460,32 @@ where
 
         tabs::strip(renderer, t, header, false);
 
+        // Eylemlerin satırı panelin zemininde, altında ince çizgi: sekmeler değil, öndeki panelin düğmeleri.
+        if let Some(row) = frame.toolbar {
+            let row = row + origin;
+            fill(renderer, row, t.surface);
+            fill(
+                renderer,
+                Rectangle {
+                    y: row.y + row.height - 1.0,
+                    height: 1.0,
+                    ..row
+                },
+                t.rule(),
+            );
+        }
+
         let mut parts = layout.children();
         let actions = parts.next();
         let menu = parts.next();
         let body = parts.next();
         let chevron = parts.next();
+        let prev = parts.next();
+        let next = parts.next();
+        let strip = frame.strip + origin;
 
+        // Sekmeler şeridin içinde: kesilen kenarlar soluk.
+        renderer.with_layer(strip, |renderer| {
         for (tab, ((head, head_tree), head_layout)) in entry
             .tabs
             .iter()
@@ -3398,20 +3531,14 @@ where
                     clip,
                 );
             };
-            let close = shows_close(head, rect, active, tab_hovered);
+            let close = shows_close(head, active, tab_hovered);
 
-            // Sığmayan başlık kısılır, sonu solar; yalnızca ikonu kalan
-            // sekmede solma olmaz. Üzerine gelinen arkadaki sekmede kapatma
-            // düğmesi başlığın sonuna çıkar.
-            if frame.clipped.get(tab).copied().unwrap_or(false) || (close && !active) {
-                let trail = if close { tabs::trail(true) } else { tabs::PAD };
-                let room = label_room(head.icon, rect, trail);
+            // En geniş sınırı aşan başlık kısılır, sonu solar.
+            if frame.clipped.get(tab).copied().unwrap_or(false) {
+                let room = tabs::room(rect, tabs::trail(head.closable));
 
                 renderer.with_layer(room, draw_label);
-
-                if room.width >= ICON_TAB {
-                    renderer.with_layer(room, |renderer| tabs::fade(renderer, room, under));
-                }
+                renderer.with_layer(room, |renderer| tabs::fade(renderer, room, under));
             } else {
                 draw_label(renderer);
             }
@@ -3444,6 +3571,40 @@ where
             }
         }
 
+        tabs::fade_edges(renderer, strip, &frame.scroll, t.window);
+        });
+
+        if frame.arrows.is_some() {
+            for (part, glyph, hit_here, can) in [
+                (
+                    PREV,
+                    prev,
+                    hovered == Some(Hit::Prev(index)),
+                    frame.scroll.can_back(),
+                ),
+                (
+                    NEXT,
+                    next,
+                    hovered == Some(Hit::Next(index)),
+                    frame.scroll.can_forth(),
+                ),
+            ] {
+                if let Some(glyph) = glyph {
+                    tabs::draw_arrow(
+                        renderer,
+                        t,
+                        theme,
+                        &entry.parts[part],
+                        &tree.children[part],
+                        glyph,
+                        can,
+                        hit_here,
+                        clip,
+                    );
+                }
+            }
+        }
+
         if let (Some(square), Some(glyph)) = (frame.chevron, chevron) {
             let hot = hovered == Some(Hit::Chevron(index));
 
@@ -3471,7 +3632,10 @@ where
             );
         }
 
-        for (part, part_layout) in [(ACTIONS, actions), (MENU, menu)] {
+        for (part, part_layout) in [
+            (ACTIONS, actions.filter(|_| frame.actions.width > 0.0)),
+            (MENU, menu),
+        ] {
             if let Some(part_layout) = part_layout {
                 entry.parts[part].as_widget().draw(
                     &tree.children[part],
@@ -3585,15 +3749,9 @@ where
     }
 }
 
-/// Sekmede kapatma düğmesi görünür mü: öndeki sekmede her zaman,
-/// arkadakinde üzerine gelince ve sekme yeterince genişse.
-fn shows_close<K, Message>(
-    head: &Head<'_, K, Message>,
-    rect: Rectangle,
-    active: bool,
-    hovered: bool,
-) -> bool {
-    head.closable && (active || (hovered && rect.width >= CLOSE_TAB))
+/// Sekmede kapatma düğmesi görünür mü: öndeki sekmede her zaman, arkadakinde üzerine gelince.
+fn shows_close<K, Message>(head: &Head<'_, K, Message>, active: bool, hovered: bool) -> bool {
+    head.closable && (active || hovered)
 }
 
 /// Listeden anahtarın ağacını alır.
@@ -3984,6 +4142,113 @@ mod interaction {
             },
         )
         .into()
+    }
+
+    /// A stack of five long titles, the front one with actions on a press.
+    fn crowded(docks: &Docks<P>) -> Element<'_, Event<P>> {
+        DockSpace::new(
+            text("orta"),
+            docks,
+            |event| event,
+            |panel| {
+                let pane = Pane::new(format!("Uzun başlıklı panel {panel:?}"), move || {
+                    text(format!("{panel:?} gövdesi")).into()
+                });
+                if panel == P::A {
+                    pane.actions(
+                        iced::widget::button(text("Ekle"))
+                            .on_press(Event::Collapsed(Slot::Docked(Side::Left, 0), true)),
+                    )
+                } else if panel == P::B {
+                    pane.meta(text("uzun bir bilgi yazısı burada duruyor"))
+                } else {
+                    pane
+                }
+            },
+        )
+        .into()
+    }
+
+    #[test]
+    fn crowded_tabs_keep_their_width_scroll_and_leave_the_actions_a_row_of_their_own() {
+        let mut snapshot = Snapshot::new(SIZE).expect("çizici kurulamadı");
+        let mut docks = Docks::new();
+        for panel in [P::A, P::B, P::C, P::D, P::E] {
+            docks.dock(panel, Side::Left);
+        }
+        docks.update(Event::Selected(P::A));
+        let mut update = |docks: &mut Docks<P>, event| docks.update(event);
+
+        snapshot.settle(&mut docks, crowded, &mut update);
+        let header = tabs::height();
+        let width = typography::scaled(docks.size(Side::Left));
+        let y = header / 2.0;
+        let button = typography::scaled(super::BUTTON);
+        let arrow = tabs::arrow_width();
+        // From the right: the menu, the fold, and the two arrows left of them.
+        let next = Point::new(width - 2.0 - 2.0 * button - arrow / 2.0, y);
+        let prev = Point::new(next.x - arrow, y);
+
+        // The first tab is whole under the pointer: a press on its title keeps it in front.
+        snapshot.input(
+            &mut docks,
+            crowded,
+            &mut update,
+            Input::Click(Point::new(20.0, y)),
+        );
+        assert_eq!(docks.stacks(Side::Left)[0].active(), Some(P::A));
+
+        // The arrows bring the other tabs under the same place, one by one; nothing is selected by them.
+        for (steps, expected) in [(1, P::B), (2, P::C), (3, P::D)] {
+            // Selecting the first tab shows it: the strip is back at its start.
+            docks.update(Event::Selected(P::A));
+            snapshot.settle(&mut docks, crowded, &mut update);
+            for _ in 0..steps {
+                snapshot.input(&mut docks, crowded, &mut update, Input::Click(next));
+            }
+            assert_eq!(docks.stacks(Side::Left)[0].active(), Some(P::A));
+            snapshot.input(
+                &mut docks,
+                crowded,
+                &mut update,
+                Input::Click(Point::new(20.0, y)),
+            );
+            assert_eq!(docks.stacks(Side::Left)[0].active(), Some(expected));
+        }
+
+        // The wheel over the strip goes to the last tab; it keeps its whole width at the strip's end.
+        docks.update(Event::Selected(P::A));
+        snapshot.settle(&mut docks, crowded, &mut update);
+        for _ in 0..30 {
+            snapshot.input(
+                &mut docks,
+                crowded,
+                &mut update,
+                Input::Scroll(Point::new(40.0, y), -1.0),
+            );
+        }
+        // The strip's right end: a press just before the arrows is on the last tab, not on the arrows.
+        snapshot.input(
+            &mut docks,
+            crowded,
+            &mut update,
+            Input::Click(Point::new(prev.x - arrow / 2.0 - 60.0, y)),
+        );
+        assert_eq!(docks.stacks(Side::Left)[0].active(), Some(P::E));
+
+        // A's action on its own row under the tabs: it does what it does, the tabs are not under it.
+        docks.update(Event::Selected(P::A));
+        snapshot.settle(&mut docks, crowded, &mut update);
+        snapshot.input(
+            &mut docks,
+            crowded,
+            &mut update,
+            Input::Click(Point::new(16.0, header + header / 2.0)),
+        );
+        assert!(
+            docks.stacks(Side::Left)[0].collapsed,
+            "the action's own message"
+        );
     }
 
     #[test]

@@ -6,7 +6,7 @@
 //! (`kentos_interaction::annotation_scale`); what was changed by hand stays;
 //! those on a locked layer are counted.
 
-use iced::widget::{Id, column, operation, row, text_input};
+use iced::widget::{Id, column, operation, row};
 use iced::{Center, Element, Task};
 use kentos_commands::{CommandResult, ScaleChange, SettingsSet};
 use kentos_interaction::Level;
@@ -14,7 +14,7 @@ use kentos_interaction::annotation_scale::follow_annotation_change;
 use kentos_native_application::{ExecutionContext, settings_set};
 use kentos_project::wizard::scale_text;
 use kentos_ui::theme::typography;
-use kentos_ui::widget::{Dialog as Frame, overlay};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -49,7 +49,10 @@ pub fn typed_plot_scale(text: &str) -> Option<f64> {
 
 /// The status bar's drawing scale of a CAD project (docs/adr/0622 §2): its unit's scales
 /// with the current one, then Ölçek yaz…; the annotations at the general height follow.
-pub(crate) fn plot_scale_menu(current: f64, unit: kentos_commands::DrawingUnit) -> kentos_ui::widget::Menu<Message> {
+pub(crate) fn plot_scale_menu(
+    current: f64,
+    unit: kentos_commands::DrawingUnit,
+) -> kentos_ui::widget::Menu<Message> {
     kentos_project::wizard::project_scales(true, unit, current)
         .into_iter()
         .fold(
@@ -179,12 +182,10 @@ impl App {
             .as_ref()
             .map_or(1000.0, |d| d.settings().plot_scale);
         let typed = typed_plot_scale(text);
-        let field = text_input("N", text)
+        let field = kentos_ui::widget::text_field("N", text)
             .id(Id::new(FIELD))
             .on_input(|t| event(Event::Edit(t)))
             .on_submit(event(Event::Submit))
-            .padding([5, 8])
-            .size(typography::body())
             .font(typography::mono())
             .width(typography::from_default(200.0))
             .style(style::field::validated(typed.is_none()));
@@ -200,13 +201,12 @@ impl App {
                 scale_text(n)
             ),
         };
-        overlay::modal(
-            Frame::new(TITLE)
+        Frame::new(TITLE)
                 .push(
                     column![
                         label::caption("Model gerçek boyutunda kalır. Bu ayar yazıları ve ölçüleri boyutlandırır; pafta ölçeği ayrıdır.")
                             .style(style::text::muted),
-                        row![label::mono("1:"), kentos_ui::widget::focus_ring(field)]
+                        row![label::mono("1:"), field]
                             .spacing(8)
                             .align_y(Center),
                         label::caption(status).style(style::text::muted),
@@ -218,8 +218,7 @@ impl App {
                     "Tamam",
                     typed.is_some().then(|| event(Event::Submit)),
                 ))
-                .width(380.0),
-            event(Event::Close),
-        )
+                .width(380.0)
+.modal(event(Event::Close))
     }
 }

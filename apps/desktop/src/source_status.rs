@@ -9,7 +9,7 @@ use kentos_commands::{CommandResult, SourceKind, SourceNext, SourceState, Source
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::sources::describe;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -185,19 +185,30 @@ impl App {
                 format!("Bulut projesinde gönderilmemiş {n} değişiklik bu cihazın taslağında bekliyor; bağlantı dönünce gider."),
             ));
         }
-        let names: Vec<String> = states.iter().map(|s| self.bound_name(&s.link.layer)).collect();
+        let names: Vec<String> = states
+            .iter()
+            .map(|s| self.bound_name(&s.link.layer))
+            .collect();
         let chosen = w.chosen;
-        let head = row![
-            container(label::caption("Katman")).width(typography::scaled(120.0)),
-            container(label::caption("Kaynak (dosya › tablo)")).width(Fill),
-            container(label::caption("Durum")).width(typography::scaled(170.0)),
-            container(label::caption("Kapsam")).width(typography::scaled(150.0)),
-            container(label::caption("Sistem")).width(typography::scaled(110.0)),
-            container(label::caption("")).width(typography::scaled(116.0)),
-        ]
-        .spacing(8)
-        .padding([4, 8]);
-        let detail = chosen.and_then(|i| states.get(i)).map(|s| detail_words(s, srid));
+        let head = kentos_ui::widget::table::band(
+            row![
+                container(kentos_ui::widget::table::title("Katman"))
+                    .width(typography::scaled(120.0)),
+                container(kentos_ui::widget::table::title("Kaynak (dosya › tablo)")).width(Fill),
+                container(kentos_ui::widget::table::title("Durum"))
+                    .width(typography::scaled(170.0)),
+                container(kentos_ui::widget::table::title("Kapsam"))
+                    .width(typography::scaled(150.0)),
+                container(kentos_ui::widget::table::title("Sistem"))
+                    .width(typography::scaled(110.0)),
+                container(kentos_ui::widget::table::title("")).width(typography::scaled(116.0)),
+            ]
+            .spacing(8)
+            .padding([0, 8]),
+        );
+        let detail = chosen
+            .and_then(|i| states.get(i))
+            .map(|s| detail_words(s, srid));
         let count = states.len();
         let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
             let s = &states[i];
@@ -215,16 +226,20 @@ impl App {
                 // A database that did not answer is asked again (docs/adr/0651 §3).
                 Some(_) if retry => iced::widget::button(label::caption(RETRY))
                     .on_press(msg(Event::Refresh))
-                    .padding([2, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary)
                     .into(),
                 Some(words) => {
                     let blocked = s.next == SourceNext::Write && !s.link.writable;
-                    iced::widget::button(label::caption(if blocked { "Salt okunur" } else { words }))
-                        .on_press_maybe((!blocked).then(|| msg(Event::Act(i))))
-                        .padding([2, 8])
-                        .style(style::button::secondary)
-                        .into()
+                    iced::widget::button(label::caption(if blocked {
+                        "Salt okunur"
+                    } else {
+                        words
+                    }))
+                    .on_press_maybe((!blocked).then(|| msg(Event::Act(i))))
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(style::button::secondary)
+                    .into()
                 }
                 None => label::caption("").into(),
             };
@@ -261,14 +276,12 @@ impl App {
             .spacing(12)
             .push(words::summary(lines))
             .push(words::field("Bağlı katmanlar", table, Some(hint)));
-        overlay::modal(
-            Frame::new(STATUS_TITLE)
-                .push(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .action(words::primary(REFRESH, Some(msg(Event::Refresh))))
-                .width(900.0),
-            msg(Event::Close),
-        )
+        Frame::new(STATUS_TITLE)
+            .push(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .action(words::primary(REFRESH, Some(msg(Event::Refresh))))
+            .width(900.0)
+            .modal(msg(Event::Close))
     }
 
     /// The cloud project's changes waiting in this device's draft (docs/adr/0651 §2); none without one, or none waiting.
@@ -380,7 +393,9 @@ fn held_words(s: &SourceState) -> String {
         (Some(rows), Some(total)) if s.link.extent.is_some() => {
             format!("{} nesne · alan {rows} / {total}", s.objects)
         }
-        (Some(rows), Some(total)) if rows < total => format!("{} nesne · {rows} / {total}", s.objects),
+        (Some(rows), Some(total)) if rows < total => {
+            format!("{} nesne · {rows} / {total}", s.objects)
+        }
         (_, Some(total)) => format!("{} nesne · {total} satır", s.objects),
         _ => format!("{} nesne", s.objects),
     }
@@ -424,7 +439,10 @@ pub fn detail_words(s: &SourceState, project: u32) -> String {
             ),
         }
     } else if s.rows.is_none() {
-        parts.push(format!("“{}” tablosu okunamadı; dosyanın tablolarından birine yeniden bağlayın.", s.link.table));
+        parts.push(format!(
+            "“{}” tablosu okunamadı; dosyanın tablolarından birine yeniden bağlayın.",
+            s.link.table
+        ));
     } else {
         if s.added + s.modified + s.removed > 0 {
             parts.push(format!(

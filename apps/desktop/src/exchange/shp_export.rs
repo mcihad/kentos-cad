@@ -84,7 +84,10 @@ fn event(e: Event) -> Message {
 
 impl App {
     /// What the export would write with `encoding`: every layer with objects.
-    pub(super) fn shp_plan(&self, encoding: ShpEncoding) -> Result<(Vec<Planned>, Vec<String>), String> {
+    pub(super) fn shp_plan(
+        &self,
+        encoding: ShpEncoding,
+    ) -> Result<(Vec<Planned>, Vec<String>), String> {
         let Some(doc) = &self.document else {
             return Err("Açık çizim yok.".into());
         };
@@ -109,10 +112,7 @@ impl App {
                 rows: s.rows,
             })
             .collect();
-        Ok((
-            sets,
-            kentos_headless::shp_export::losses(model, &written),
-        ))
+        Ok((sets, kentos_headless::shp_export::losses(model, &written)))
     }
 
     pub(super) fn shp_export_open(&mut self) -> Task<Message> {
@@ -338,7 +338,8 @@ impl App {
                     ready.then(|| event(Event::Save)),
                 ))
                 .width(640.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

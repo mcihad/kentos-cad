@@ -11,11 +11,12 @@ use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::color::{self, ColorPicker};
 use kentos_ui::widget::number::{self, Dial, units};
+use kentos_ui::widget::property_grid::value;
 use kentos_ui::widget::range::histogram;
 use kentos_ui::widget::timeline::{self, Marker, Scale};
 use kentos_ui::widget::{
-    ChipInput, Choice, Form, InputField, NumberInput, RadioGroup, RangeSlider, Segmented, Select,
-    Switch, Timeline,
+    Cell, ChipInput, Choice, Form, InputField, NumberInput, PropertySheet, RadioGroup, RangeSlider,
+    Segmented, Select, Switch, Timeline,
 };
 
 use super::{entry, pressed};
@@ -321,11 +322,11 @@ impl Showcase {
                 "kentos_ui::widget::InputField",
                 "Metin girişi, önündeki ikon ya da kısa etiket, arkasındaki birim, temizleme \
                  ve eylem düğmeleri tek çerçevede. Çerçeve bütün alanın durumunu gösterir: \
-                 üzerine gelince belirgin çizgi, odakta vurgu çizgisi ve hale, geçersiz \
+                 üzerine gelince belirgin çizgi, odakta vurgu çizgisi, geçersiz \
                  değerde kırmızı. Boş bir yerine tıklamak girişi odaklar. Yükseklik ortak \
                  ölçüdendir: yanındaki seçim kutusu, sayı girişi ve parçalı seçimle aynı \
-                 boydadır. Hücre türü, özellik ızgarasında üzerine gelinene dek düz yazı \
-                 gibi durur.",
+                 boydadır. Hücre türü, özellik ızgarasında hücreyi çizgiden çizgiye doldurur; \
+                 durumlarını hücre çizer.",
                 self.text_fields(),
                 Some(
                     "InputField::new(\"Katman ara\", &self.search)\n    \
@@ -680,50 +681,43 @@ impl Showcase {
         ]
         .spacing(8);
 
-        // Özellik hücreleri: değer düz yazı gibi durur, üzerine gelince çerçeve çıkar.
-        let cell_row = |name: &'static str, cell: Element<'static, Message>| {
-            row![
-                container(label::muted(name))
-                    .padding([0, 8])
-                    .width(typography::scaled(120.0))
-                    .height(Fill)
-                    .align_y(Center)
-                    .style(style::container::surface),
-                container(cell)
-                    .padding([0, 3])
-                    .width(Fill)
-                    .height(Fill)
-                    .align_y(Center)
-                    .style(style::container::surface_alt),
-            ]
-            .spacing(1)
-            .height(typography::from_default(28.0))
-        };
-
+        // Izgara hücresi: düzenleyici hücreyi çizgiden çizgiye doldurur; durumları hücre çizer (docs/adr/0804).
         let cells = container(
-            column![
-                cell_row(
+            PropertySheet::new()
+                .row(
                     "Ad",
-                    InputField::new("", &fields[4])
-                        .on_input(typed(4))
-                        .cell()
-                        .into()
-                ),
-                cell_row(
+                    Cell::new(InputField::new("", &fields[4]).on_input(typed(4)).cell()),
+                )
+                .row(
                     "Yükseklik",
-                    InputField::new("", &fields[5])
-                        .on_input(typed(5))
-                        .suffix("m")
-                        .mono()
-                        .cell()
-                        .into()
-                ),
-            ]
-            .spacing(1),
+                    Cell::new(
+                        InputField::new("", &fields[5])
+                            .on_input(typed(5))
+                            .suffix("m")
+                            .mono()
+                            .cell(),
+                    ),
+                )
+                .row(
+                    "Bölge",
+                    Cell::new(
+                        Select::new(
+                            ["Marmara", "Ege", "Akdeniz"].map(Choice::new),
+                            Some(0),
+                            |_| pressed("Bölge"),
+                        )
+                        .cell(),
+                    ),
+                )
+                .row(
+                    "Görünür",
+                    Cell::new(
+                        Segmented::new(["Evet", "Hayır"], "Evet", |_| pressed("Görünür")).cell(),
+                    ),
+                )
+                .row("Kimlik", value("1204/7", false, None)),
         )
-        .padding([1, 0])
-        .width(typography::scaled(360.0))
-        .style(style::container::grid_lines);
+        .width(typography::scaled(360.0));
 
         let caption = |text: &'static str| label::caption(text);
 
@@ -736,7 +730,7 @@ impl Showcase {
             coordinates,
             caption("Geçersiz değer ve salt okunur alan."),
             states,
-            caption("Özellik hücresi: üzerine gelince çerçeve çıkar."),
+            caption("Izgara hücresi: gömük zeminde yazılabilir, düz yazıyla salt okunur."),
             cells,
         ]
         .spacing(8)

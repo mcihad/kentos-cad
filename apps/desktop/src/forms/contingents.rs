@@ -15,7 +15,7 @@
 //!
 //! The window edits a copy; Kaydet writes it through `cad.layers.contingents` in one step and closes.
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     Cell, Combination, FieldGroup, LayerField, LayerNodeType, LayersContingents,
@@ -25,8 +25,8 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_contingents};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -393,7 +393,7 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(frame.width(940.0), msg(Event::Cancel))
+        frame.width(940.0).modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
@@ -421,11 +421,8 @@ fn group_editor<'a>(
     fields: &[LayerField],
     subtypes: Option<&kentos_commands::LayerSubtypes>,
 ) -> Element<'a, Message> {
-    let name = text_input("Grubun adı", &g.name)
-        .size(typography::body())
-        .on_input(|s| msg(Event::Name(s)))
-        .padding([5, 8])
-        .style(style::field::input);
+    let name =
+        kentos_ui::widget::text_field("Grubun adı", &g.name).on_input(|s| msg(Event::Name(s)));
     let mut chips = Row::new().spacing(4);
     for f in fields.iter().filter(|f| groupable(f)) {
         let on = g.fields.iter().any(|k| k == f.key());
@@ -510,7 +507,7 @@ fn group_editor<'a>(
         line = line.push(kentos_ui::widget::tip(
             button(icon(from_web(Some("close"))).size(14.0))
                 .style(style::button::ghost)
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(14.0))
                 .on_press(msg(Event::RemoveRow(r))),
             kentos_ui::widget::Tip::new("Bileşimi sil"),
             iced::widget::tooltip::Position::Top,
@@ -519,7 +516,7 @@ fn group_editor<'a>(
     }
     column![
         row![
-            words::field("Ad", container(focus_ring(name)).width(280), None),
+            words::field("Ad", container(name).width(280), None),
             container(words::check(
                 g.restrictive,
                 "Kısıtlayıcı",

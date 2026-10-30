@@ -2,7 +2,7 @@
 //! ver ▾, İstisna yap…, Düzelt), the note when the check is old, İstisna yap's question and the table with each row's
 //! menu (docs/adr/0703, 0717, 0732 §5).
 
-use iced::widget::{Column, button, container, row, space, text_input};
+use iced::widget::{Column, button, container, row, space};
 use iced::{Background, Center, Element, Fill, Length};
 use kentos_commands::ArchAuditCheck;
 use kentos_ui::icon::{Tone, icon};
@@ -14,9 +14,10 @@ use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
 use kentos_ui::widget::{Elided, Tip, horizontal_divider, tip};
 
 use super::{
-    ALL, AREAS, AuditScope, BUTTONS, CHECK, CHECK_HINT, CLEAN, COLUMNS, EXCEPT, EXCEPT_HINT, Event, FIX, GAPS, Ink,
-    LENGTHS, LEVELS, Line, NONE_SHOWN, NOT_CHECKED, NOTE_FIELD, RAMP_PROFILES, SCOPES, STAIR_PROFILES, STALE, START,
-    TEXT_ADVANCE, UNEXCEPT, VIEWS, WIDTHS, bar_button, cell, group_icon, msg,
+    ALL, AREAS, AuditScope, BUTTONS, CHECK, CHECK_HINT, CLEAN, COLUMNS, EXCEPT, EXCEPT_HINT, Event,
+    FIX, GAPS, Ink, LENGTHS, LEVELS, Line, NONE_SHOWN, NOT_CHECKED, NOTE_FIELD, RAMP_PROFILES,
+    SCOPES, STAIR_PROFILES, STALE, START, TEXT_ADVANCE, UNEXCEPT, VIEWS, WIDTHS, bar_button, cell,
+    group_icon, msg,
 };
 use crate::app::{App, Message};
 use crate::icons::from_web;
@@ -28,7 +29,8 @@ type Limit = (&'static str, String, Vec<(String, bool, Message)>);
 impl App {
     /// The Denetim tab: its bar, a note when the check is old, the table.
     pub(crate) fn arch_audit_tab(&self) -> Element<'_, Message> {
-        let bar = iced::widget::responsive(move |room| self.arch_audit_bar(room.width)).height(Length::Shrink);
+        let bar = iced::widget::responsive(move |room| self.arch_audit_bar(room.width))
+            .height(Length::Shrink);
         let stale = self.arch_audit_stale();
         let audited = self.arch_audit.audited.as_ref();
         let shown = self.arch_audit_shown();
@@ -59,18 +61,30 @@ impl App {
                     };
                     // An exception's row says so and its note; a lapsed one's says it lapsed (docs/adr/0732 §5).
                     let (message, ink) = if f.exception {
-                        let note = f.note.as_deref().map_or_else(String::new, |n| format!(" — {n}"));
+                        let note = f
+                            .note
+                            .as_deref()
+                            .map_or_else(String::new, |n| format!(" — {n}"));
                         (format!("İstisna · {}{note}", f.message), Ink::Quiet)
                     } else if f.lapsed {
                         (format!("İstisna düştü · {}", f.message), Ink::Warning)
                     } else {
-                        (f.message.clone(), if stale { Ink::Quiet } else { Ink::Plain })
+                        (
+                            f.message.clone(),
+                            if stale { Ink::Quiet } else { Ink::Plain },
+                        )
                     };
                     Line {
                         check: f.check,
-                        cells: [f.check.label().to_owned(), message, f.repair.clone(), objects],
+                        cells: [
+                            f.check.label().to_owned(),
+                            message,
+                            f.repair.clone(),
+                            objects,
+                        ],
                         ink,
-                        chosen: self.arch_audit.selected == Some(i) || self.arch_audit.chosen.contains(&i),
+                        chosen: self.arch_audit.selected == Some(i)
+                            || self.arch_audit.chosen.contains(&i),
                         current: self.arch_audit.selected == Some(i),
                         fix: f.fix.as_ref().map(|x| x.label.clone()),
                         exception: f.exception || f.lapsed,
@@ -85,8 +99,17 @@ impl App {
             .virtualized(count, move |i| {
                 let line = &lines[i];
                 let group = row![
-                    icon(from_web(Some(group_icon(line.check)))).size(13.0).tone(Tone::Muted),
-                    cell(line.cells[0].clone(), if line.ink == Ink::Quiet { Ink::Quiet } else { Ink::Plain })
+                    icon(from_web(Some(group_icon(line.check))))
+                        .size(13.0)
+                        .tone(Tone::Muted),
+                    cell(
+                        line.cells[0].clone(),
+                        if line.ink == Ink::Quiet {
+                            Ink::Quiet
+                        } else {
+                            Ink::Plain
+                        }
+                    )
                 ]
                 .spacing(6)
                 .align_y(Center);
@@ -110,14 +133,23 @@ impl App {
                         .item("Seç ve göster", msg(Event::Press(i)))
                         .icon(from_web(Some("zoomSelection")));
                     if let Some(label) = &menu_fix {
-                        let words = if all { format!("{FIX} (seçililer)") } else { format!("{FIX}: {label}") };
-                        menu = menu.item(words, (!stale).then(|| msg(Event::FixRow(i)))).icon(from_web(Some("topologyFix")));
+                        let words = if all {
+                            format!("{FIX} (seçililer)")
+                        } else {
+                            format!("{FIX}: {label}")
+                        };
+                        menu = menu
+                            .item(words, (!stale).then(|| msg(Event::FixRow(i))))
+                            .icon(from_web(Some("topologyFix")));
                     }
                     menu = menu.separator();
                     if exception {
                         menu = menu.item(UNEXCEPT, msg(Event::Unexcept(Some(i))));
                     } else {
-                        menu = menu.item(format!("{EXCEPT}…"), (!stale).then(|| msg(Event::Except(Some(i)))));
+                        menu = menu.item(
+                            format!("{EXCEPT}…"),
+                            (!stale).then(|| msg(Event::Except(Some(i)))),
+                        );
                     }
                     menu
                 })
@@ -129,7 +161,9 @@ impl App {
             out = out.push(
                 container(
                     row![
-                        icon(from_web(Some("warning"))).size(14.0).tone(Tone::Warning),
+                        icon(from_web(Some("warning")))
+                            .size(14.0)
+                            .tone(Tone::Warning),
                         label::body(STALE),
                         space::horizontal(),
                         bar_button("archAudit", CHECK, CHECK_HINT, Some(msg(Event::Check))),
@@ -140,7 +174,9 @@ impl App {
                 .padding([4, 10])
                 .width(Fill)
                 .style(|theme: &iced::Theme| container::Style {
-                    background: Some(Background::Color(Tokens::of(theme).warning.scale_alpha(0.14))),
+                    background: Some(Background::Color(
+                        Tokens::of(theme).warning.scale_alpha(0.14),
+                    )),
                     ..container::Style::default()
                 }),
             );
@@ -148,18 +184,24 @@ impl App {
         if let Some(note) = &self.arch_audit.note {
             out = out.push(self.arch_audit_note_row(note));
         }
-        out.push(horizontal_divider()).push(table).width(Fill).height(Fill).into()
+        out.push(horizontal_divider())
+            .push(table)
+            .width(Fill)
+            .height(Fill)
+            .into()
     }
 
     /// İstisna yap's question: the note (optional), Tamam and Vazgeç; Enter gives it, Esc leaves it.
     fn arch_audit_note_row<'a>(&'a self, note: &'a str) -> Element<'a, Message> {
-        let n = self.arch_audit_chosen().iter().filter(|f| !f.exception).count();
-        let field = text_input("Neden bırakıldı? (isteğe bağlı)", note)
+        let n = self
+            .arch_audit_chosen()
+            .iter()
+            .filter(|f| !f.exception)
+            .count();
+        let field = kentos_ui::widget::text_field("Neden bırakıldı? (isteğe bağlı)", note)
             .on_input(|t| msg(Event::Note(t)))
             .on_submit(msg(Event::ExceptConfirm))
-            .id(iced::widget::Id::new(NOTE_FIELD))
-            .size(typography::body())
-            .padding([4, 8]);
+            .id(iced::widget::Id::new(NOTE_FIELD));
         container(
             row![
                 icon(from_web(Some("topologyException"))).size(14.0),
@@ -170,11 +212,11 @@ impl App {
                 container(field).width(Length::Fixed(typography::scaled(420.0))),
                 button(label::body("Tamam"))
                     .style(style::button::primary)
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(msg(Event::ExceptConfirm)),
                 button(label::body("Vazgeç"))
                     .style(style::button::secondary)
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(msg(Event::ExceptCancel)),
             ]
             .spacing(8)
@@ -183,7 +225,9 @@ impl App {
         .padding([4, 10])
         .width(Fill)
         .style(|theme: &iced::Theme| container::Style {
-            background: Some(Background::Color(Tokens::of(theme).accent.scale_alpha(0.10))),
+            background: Some(Background::Color(
+                Tokens::of(theme).accent.scale_alpha(0.10),
+            )),
             ..container::Style::default()
         })
         .into()
@@ -194,7 +238,12 @@ impl App {
     fn arch_audit_bar(&self, width: f32) -> Element<'_, Message> {
         let audited = self.arch_audit.audited.as_ref();
         let count_of = |g: Option<ArchAuditCheck>| {
-            audited.map(|a| a.findings.iter().filter(|f| g.is_none_or(|g| f.check == g)).count())
+            audited.map(|a| {
+                a.findings
+                    .iter()
+                    .filter(|f| g.is_none_or(|g| f.check == g))
+                    .count()
+            })
         };
         let mut choices = vec![match count_of(None) {
             Some(n) => Choice::new(ALL).detail(n.to_string()),
@@ -213,7 +262,11 @@ impl App {
             .and_then(|g| ArchAuditCheck::ALL.iter().position(|x| *x == g))
             .map_or(0, |i| i + 1);
         let group = Select::new(choices, Some(picked), |i| {
-            msg(Event::Group(if i == 0 { None } else { Some(ArchAuditCheck::ALL[i - 1]) }))
+            msg(Event::Group(if i == 0 {
+                None
+            } else {
+                Some(ArchAuditCheck::ALL[i - 1])
+            }))
         });
         let scope_now = match self.arch_audit.scope {
             AuditScope::All => 0,
@@ -225,7 +278,9 @@ impl App {
                 .iter()
                 .enumerate()
                 .map(|(i, w)| match (&self.arch_audit.scope, i) {
-                    (AuditScope::Selection(uids), 2) => Choice::new(format!("{w} ({})", uids.len())),
+                    (AuditScope::Selection(uids), 2) => {
+                        Choice::new(format!("{w} ({})", uids.len()))
+                    }
                     _ => Choice::new(*w),
                 })
                 .collect::<Vec<_>>(),
@@ -262,7 +317,11 @@ impl App {
         });
         let stale = self.arch_audit_stale();
         let chosen = self.arch_audit_chosen();
-        let fixes: Vec<&str> = chosen.iter().filter_map(|f| f.fix.as_ref()).map(|f| f.label.as_str()).collect();
+        let fixes: Vec<&str> = chosen
+            .iter()
+            .filter_map(|f| f.fix.as_ref())
+            .map(|f| f.label.as_str())
+            .collect();
         let levels = self.arch_audit_levels_button();
         // One line when the count and the buttons fit beside the controls (their words measured roughly); else the
         // count and the buttons on a line of their own. Düzelt says its one fix when there is room for it.
@@ -274,7 +333,9 @@ impl App {
         };
         let room = |fix: f32| typography::from_default(START + end_of(fix) + words(&count) + 40.0);
         let wide = width >= room(110.0);
-        let long = width >= room(long_fix) || (!wide && width >= typography::from_default(end_of(long_fix) + words(&count) + 40.0));
+        let long = width >= room(long_fix)
+            || (!wide
+                && width >= typography::from_default(end_of(long_fix) + words(&count) + 40.0));
         let count = container(
             Elided::new(count)
                 .size(typography::body())
@@ -301,12 +362,15 @@ impl App {
         };
         let fix = tip(
             button(
-                row![icon(from_web(Some("topologyFix"))).size(14.0), label::body(fix_words)]
-                    .spacing(6)
-                    .align_y(Center),
+                row![
+                    icon(from_web(Some("topologyFix"))).size(14.0),
+                    label::body(fix_words)
+                ]
+                .spacing(6)
+                .align_y(Center),
             )
             .style(style::button::primary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe((!fixes.is_empty() && !stale).then(|| msg(Event::Fix))),
             Tip::new(FIX).body(fix_hint),
             iced::widget::tooltip::Position::Top,
@@ -359,7 +423,10 @@ impl App {
                 menu = menu.radio(*words, *view == now, msg(Event::View(i)));
             }
             menu.separator()
-                .item(format!("Eski istisnaları temizle ({stale})"), (stale > 0).then(|| msg(Event::Prune)))
+                .item(
+                    format!("Eski istisnaları temizle ({stale})"),
+                    (stale > 0).then(|| msg(Event::Prune)),
+                )
                 .detail("Bulgusu artık bulunmayan istisnaları siler. Tek geri alma adımıdır.")
         };
         let mut face = row![
@@ -369,9 +436,17 @@ impl App {
         .spacing(6)
         .align_y(Center);
         if stale > 0 {
-            face = face.push(icon(from_web(Some("warning"))).size(12.0).tone(Tone::Warning));
+            face = face.push(
+                icon(from_web(Some("warning")))
+                    .size(12.0)
+                    .tone(Tone::Warning),
+            );
         }
-        let face = face.push(icon(from_web(Some("chevronDown"))).size(12.0).tone(Tone::Muted));
+        let face = face.push(
+            icon(from_web(Some("chevronDown")))
+                .size(12.0)
+                .tone(Tone::Muted),
+        );
         tip(
             kentos_ui::widget::MenuButton::new(container(face).padding([4, 10]), menu),
             Tip::new("İstisnalar").body(
@@ -388,29 +463,55 @@ impl App {
         let a = &self.arch_audit;
         let length = |v: f64| format.length(v);
         let area = |v: f64| format!("{v:.2} m²");
-        let values = |list: &[f64], now: f64, show: &dyn Fn(f64) -> String, pick: fn(usize) -> Event| {
-            list.iter()
-                .enumerate()
-                .map(|(i, v)| (show(*v), (v - now).abs() < 1e-12, msg(pick(i))))
-                .collect::<Vec<_>>()
-        };
-        let profiles = |list: &[(Option<&'static str>, &'static str)], now: Option<&'static str>, pick: fn(usize) -> Event| {
+        let values =
+            |list: &[f64], now: f64, show: &dyn Fn(f64) -> String, pick: fn(usize) -> Event| {
+                list.iter()
+                    .enumerate()
+                    .map(|(i, v)| (show(*v), (v - now).abs() < 1e-12, msg(pick(i))))
+                    .collect::<Vec<_>>()
+            };
+        let profiles = |list: &[(Option<&'static str>, &'static str)],
+                        now: Option<&'static str>,
+                        pick: fn(usize) -> Event| {
             list.iter()
                 .enumerate()
                 .map(|(i, (id, words))| ((*words).to_owned(), *id == now, msg(pick(i))))
                 .collect::<Vec<_>>()
         };
         let named = |list: &[(Option<&'static str>, &'static str)], now: Option<&'static str>| {
-            list.iter().find(|(id, _)| *id == now).map_or("Yok", |(_, w)| *w).to_owned()
+            list.iter()
+                .find(|(id, _)| *id == now)
+                .map_or("Yok", |(_, w)| *w)
+                .to_owned()
         };
         let groups: Vec<Limit> = vec![
-            ("Uç boşluğu ≤", length(a.max_gap), values(&GAPS, a.max_gap, &length, Event::Gap)),
-            ("Kısa duvar <", length(a.min_length), values(&LENGTHS, a.min_length, &length, Event::Length)),
-            ("Küçük mahal <", area(a.min_area), values(&AREAS, a.min_area, &area, Event::Area)),
-            ("Dar mahal <", length(a.min_width), values(&WIDTHS, a.min_width, &length, Event::Width)),
+            (
+                "Uç boşluğu ≤",
+                length(a.max_gap),
+                values(&GAPS, a.max_gap, &length, Event::Gap),
+            ),
+            (
+                "Kısa duvar <",
+                length(a.min_length),
+                values(&LENGTHS, a.min_length, &length, Event::Length),
+            ),
+            (
+                "Küçük mahal <",
+                area(a.min_area),
+                values(&AREAS, a.min_area, &area, Event::Area),
+            ),
+            (
+                "Dar mahal <",
+                length(a.min_width),
+                values(&WIDTHS, a.min_width, &length, Event::Width),
+            ),
         ];
         let kinds: Vec<Limit> = vec![
-            ("Rampa", named(&RAMP_PROFILES, a.ramp_profile), profiles(&RAMP_PROFILES, a.ramp_profile, Event::RampProfile)),
+            (
+                "Rampa",
+                named(&RAMP_PROFILES, a.ramp_profile),
+                profiles(&RAMP_PROFILES, a.ramp_profile, Event::RampProfile),
+            ),
             (
                 "Merdiven",
                 named(&STAIR_PROFILES, a.stair_profile),
@@ -451,7 +552,9 @@ impl App {
         let face = row![
             icon(from_web(Some("settings"))).size(14.0),
             label::body("Eşikler"),
-            icon(from_web(Some("chevronDown"))).size(12.0).tone(Tone::Muted),
+            icon(from_web(Some("chevronDown")))
+                .size(12.0)
+                .tone(Tone::Muted),
         ]
         .spacing(6)
         .align_y(Center);
@@ -490,7 +593,9 @@ impl App {
         let face = row![
             icon(from_web(Some("archSettings"))).size(14.0),
             label::body(format!("Kata ver ({count})")),
-            icon(from_web(Some("chevronDown"))).size(12.0).tone(Tone::Muted),
+            icon(from_web(Some("chevronDown")))
+                .size(12.0)
+                .tone(Tone::Muted),
         ]
         .spacing(6)
         .align_y(Center);

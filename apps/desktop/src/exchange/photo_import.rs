@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, column, container, row, text_input};
+use iced::widget::{Column, column, container, row};
 use iced::{Element, Fill, Length, Task};
 use kentos_commands::{Bounds, LineError, PhotoExif};
 use kentos_geometry_core::crs::format_dd;
@@ -521,7 +521,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
                 .width(960.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 
@@ -699,16 +700,13 @@ impl App {
         ]
         .spacing(16);
         if s.target.is_none() {
-            let name = text_input("Yeni katmanın adı", &s.name)
+            let name = kentos_ui::widget::text_field("Yeni katmanın adı", &s.name)
                 .on_input(|t| event(Event::Name(t)))
-                .on_submit(event(Event::Run))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(style::field::input);
+                .on_submit(event(Event::Run));
             parts = parts.push(
                 container(words::field(
                     "Yeni katmanın adı",
-                    kentos_ui::widget::focus_ring(name),
+                    name,
                     Some("Bu adda bir katman varsa noktalar ona eklenir.".to_owned()),
                 ))
                 .width(Length::FillPortion(2)),

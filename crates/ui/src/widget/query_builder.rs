@@ -92,7 +92,7 @@ impl<'a, Message: Clone + 'a> QueryBuilder<'a, Message> {
                     .on_input(move |value| on_edit(Edit::Value(index, value)))
                     .font(typography::ui())
                     .size(typography::body())
-                    .padding(metrics::padding(metrics::control(), 8.0))
+                    .padding(metrics::field())
                     .width(Fill)
                     .style(move |theme, status| {
                         let mut style = style::field::input(theme, status);
@@ -232,7 +232,7 @@ impl<'a, Message: Clone + 'a> From<QueryBuilder<'a, Message>> for Element<'a, Me
                         .align_y(Center),
                 )
                 .on_press(builder.emit(Edit::Add))
-                .padding([3, 8])
+                .padding(crate::theme::metrics::action_small())
                 .style(style::button::flat),
             )
             .into()

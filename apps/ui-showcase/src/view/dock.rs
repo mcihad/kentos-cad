@@ -253,7 +253,7 @@ fn step_button<'a>(glyph: Icon, description: &'a str, forward: bool) -> Element<
     tip(
         button(icon(glyph).size(12.0))
             .on_press(Message::SelectionStep(forward))
-            .padding([2, 3])
+            .padding(kentos_ui::theme::metrics::icon_small(12.0))
             .style(style::button::flat),
         Tip::new(description),
         tooltip::Position::Bottom,

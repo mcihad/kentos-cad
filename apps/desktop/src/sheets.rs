@@ -54,7 +54,7 @@ pub fn default_store() -> Option<Store> {
 /// for a map whose layers have no vector form.
 #[derive(Default)]
 pub struct SheetMaps {
-    annotation_scales:RefCell<Vec<f64>>,
+    annotation_scales: RefCell<Vec<f64>>,
     scene: RefCell<Option<MapScene>>,
     /// The styled layers at the scales the maps were last drawn at (a few kept).
     styled: RefCell<Vec<Rc<StyledAt>>>,
@@ -119,7 +119,7 @@ impl SheetMaps {
         }
         self.styled.borrow_mut().clear();
         self.scaled.borrow_mut().clear();
-        *self.annotation_scales.borrow_mut()=doc.model.annotation_scales();
+        *self.annotation_scales.borrow_mut() = doc.model.annotation_scales();
         let paper = palette(Canvas::Paper);
         let origin = scene::scene_origin(doc);
         let fixed = scene::build_fixed(doc, &paper, origin);
@@ -179,16 +179,27 @@ impl SheetMaps {
                 .has_annotative()
                 .then(|| drawing.model.at_scale(annotation))
                 .flatten()
-                .or_else(|| (walls || unscoped || upper.is_some()).then(|| drawing.model.reading_copy()))
+                .or_else(|| {
+                    (walls || unscoped || upper.is_some()).then(|| drawing.model.reading_copy())
+                })
                 .map(|model| {
                     let mut spatial = Spatial::new();
                     spatial.set_wall_scale(Some(at));
                     spatial.reload(&model);
                     if let Some(l) = upper {
-                        spatial.set_level_view(&model, kentos_plot::layers::level_view(l), Some(l.id.clone()));
+                        spatial.set_level_view(
+                            &model,
+                            kentos_plot::layers::level_view(l),
+                            Some(l.id.clone()),
+                        );
                     }
                     // The rows round a bound layer's part hold room in the copy too (docs/adr/0636 §2).
-                    for link in model.settings().sources.iter().filter(|l| l.extent.is_some()) {
+                    for link in model
+                        .settings()
+                        .sources
+                        .iter()
+                        .filter(|l| l.extent.is_some())
+                    {
                         spatial.set_ghosts(&link.layer, main.ghosts_of(&link.layer));
                     }
                     let copy = Document {
@@ -330,7 +341,8 @@ impl SheetMaps {
                     names: &names,
                     styles: &styles,
                 },
-            ).unwrap_or_default();
+            )
+            .unwrap_or_default();
             layers.push((node.id.clone(), node.name.clone(), styled));
         }
         let at = Rc::new(StyledAt {
@@ -521,7 +533,9 @@ pub(crate) struct SheetPainter<'a> {
 }
 
 impl MapPainter for SheetPainter<'_> {
-    fn interaction(&self,r:&MapRequest<'_>,frame:&mut Frame) { crate::sheet_model::paint(self.interaction,r,frame); }
+    fn interaction(&self, r: &MapRequest<'_>, frame: &mut Frame) {
+        crate::sheet_model::paint(self.interaction, r, frame);
+    }
     fn paint(&self, r: &MapRequest<'_>, frame: &mut Frame) -> bool {
         if let Some(primitive) = r.primitive
             && (r.export || !primitive.clip_shape.is_frame() || self.plot_profile(r).is_some())
@@ -710,11 +724,7 @@ impl SheetPainter<'_> {
 
     /// The drawing and store a map at `scale` draws from (docs/adr/0323 §2): the copy at that scale
     /// when an annotative object draws otherwise there; `keep` holds the copy while it is used.
-    fn source<'s>(
-        &'s self,
-        r: &MapRequest<'_>,
-        keep: &'s mut Option<Rc<Scaled>>,
-    ) -> Source<'s> {
+    fn source<'s>(&'s self, r: &MapRequest<'_>, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
         let level = r.primitive.and_then(|m| m.level.as_ref());
         *keep = self
             .drawing
@@ -1198,7 +1208,11 @@ impl App {
         let base = container(column![
             self.ribbon(false),
             self.sheet_body(painter.clone()),
-            if self.sheets.model_scope().is_some() { self.command_line() } else { iced::widget::space().height(0).into() },
+            if self.sheets.model_scope().is_some() {
+                self.command_line()
+            } else {
+                iced::widget::space().height(0).into()
+            },
             self.sheets.tabs().map(Message::Sheet),
             self.status_bar(),
         ])
@@ -1218,7 +1232,7 @@ impl App {
     }
 
     fn sheet_body<'a>(&'a self, painter: Painter<'a>) -> iced::Element<'a, Message> {
-        use iced::widget::{column, container, row, stack, button, scrollable, pin};
+        use iced::widget::{button, column, container, pin, row, scrollable, stack};
         use kentos_ui::{label, style};
         if self.sheets.model_scope().is_none() {
             return self.sheets.body(painter).map(Message::Sheet);
@@ -1248,6 +1262,7 @@ impl App {
                         "Çizim araçları modelde; tekerlek ve orta tuş bu görünümde çalışır."
                     ),
                     button(label::body("Kâğıda dön"))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press(Message::Sheet(kentos_sheet_ui::Message::ReturnPaper))
                         .style(style::button::primary)
                 ]
@@ -1311,7 +1326,9 @@ impl App {
                 .program
                 .map(crate::program::project_types_of)
                 .unwrap_or_default(),
-            exact_plot_scale:settings.map(|s|s.plot_scale).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)),
+            exact_plot_scale: settings
+                .map(|s| s.plot_scale)
+                .filter(|s| s.is_finite() && (1e-6..=1e8).contains(s)),
             capabilities: Capabilities {
                 georeferenced: crs.is_some(),
                 attribute_layers: self.sheet_attributes.get(),
@@ -1342,13 +1359,25 @@ impl App {
                     .unwrap_or(CrsInfo { name, tm: None })
             }),
             center: doc.map(|_| GroundPoint { x: c.x, y: c.y }),
-            annotation_scales:self.sheet_maps.annotation_scales.borrow().clone(),
-            named_views:settings.map_or_else(Vec::new,|s|s.named_views.clone()),
+            annotation_scales: self.sheet_maps.annotation_scales.borrow().clone(),
+            named_views: settings.map_or_else(Vec::new, |s| s.named_views.clone()),
             drawing_bounds: self.sheet_extent.get(),
             level_bounds: self.sheet_level_extent.get(),
             selection_bounds: doc.and_then(|d| {
-                let ids:Vec<_>=self.selection.ids().iter().filter_map(|s|d.model.uid(*s)).map(|u|u.to_string()).collect();
-                if ids.is_empty() {None} else {kentos_native_application::sheets_fit::object_extent(&d.model,Some(&ids)).ok().flatten()}
+                let ids: Vec<_> = self
+                    .selection
+                    .ids()
+                    .iter()
+                    .filter_map(|s| d.model.uid(*s))
+                    .map(|u| u.to_string())
+                    .collect();
+                if ids.is_empty() {
+                    None
+                } else {
+                    kentos_native_application::sheets_fit::object_extent(&d.model, Some(&ids))
+                        .ok()
+                        .flatten()
+                }
             }),
             // The layers a coordinate list may read (docs/adr/0206 §2).
             layers: doc.map_or_else(Vec::new, |d| {
@@ -1374,7 +1403,10 @@ impl App {
             // A map's level (docs/adr/0716): the project's levels.
             levels: settings.map_or_else(Vec::new, |s| {
                 s.arch.as_ref().map_or_else(Vec::new, |a| {
-                    a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect()
+                    a.levels
+                        .iter()
+                        .map(|l| (l.id.clone(), l.name.clone()))
+                        .collect()
                 })
             }),
         }
@@ -1499,7 +1531,10 @@ impl App {
             return;
         }
         self.sheet_data_key = Some(key);
-        let unscoped=self.spatial.draws_otherwise().then(||Spatial::of(&doc.model));
+        let unscoped = self
+            .spatial
+            .draws_otherwise()
+            .then(|| Spatial::of(&doc.model));
         let data = kentos_plot::inputs::sheet_data(
             &doc.model,
             unscoped.as_ref().unwrap_or(&self.spatial),
@@ -1522,18 +1557,21 @@ impl App {
     /// The drawing's and its levels' boxes, as the paper fits them (docs/adr/0718).
     fn refresh_sheet_extents(&self) {
         self.sheet_extent.set(self.document.as_ref().and_then(|d| {
-            kentos_native_application::sheets_fit::object_extent(&d.model, None).ok().flatten()
+            kentos_native_application::sheets_fit::object_extent(&d.model, None)
+                .ok()
+                .flatten()
         }));
-        self.sheet_level_extent.set(self.document.as_ref().and_then(|d| {
-            let levels: std::collections::BTreeSet<String> = d
-                .model
-                .settings()
-                .arch
-                .as_ref()
-                .map(|a| a.levels.iter().map(|l| l.id.clone()).collect())
-                .unwrap_or_default();
-            kentos_native_application::sheets_levels::level_extent(&d.model, &levels)
-        }));
+        self.sheet_level_extent
+            .set(self.document.as_ref().and_then(|d| {
+                let levels: std::collections::BTreeSet<String> = d
+                    .model
+                    .settings()
+                    .arch
+                    .as_ref()
+                    .map(|a| a.levels.iter().map(|l| l.id.clone()).collect())
+                    .unwrap_or_default();
+                kentos_native_application::sheets_levels::level_extent(&d.model, &levels)
+            }));
     }
 
     pub(crate) fn sheet_message(&mut self, m: kentos_sheet_ui::Message) -> Task<Message> {
@@ -1551,7 +1589,11 @@ impl App {
         ) {
             let ctx = self.sheet_context();
             let now = self.sheets.context();
-            if ctx.center != now.center || ctx.view_size != now.view_size || ctx.drawing_bounds != now.drawing_bounds || ctx.selection_bounds != now.selection_bounds {
+            if ctx.center != now.center
+                || ctx.view_size != now.view_size
+                || ctx.drawing_bounds != now.drawing_bounds
+                || ctx.selection_bounds != now.selection_bounds
+            {
                 self.sheets.set_context(ctx);
             }
         }
@@ -1601,7 +1643,12 @@ impl App {
             self.sheet_maps.sync(self.document.as_ref());
         }
         let effects = self.sheets.update(m);
-        if self.sheets.model_scope().is_none() && let Some(camera)=self.viewport.sheet_saved_camera.take() { self.cancel(); self.viewport.camera=camera; }
+        if self.sheets.model_scope().is_none()
+            && let Some(camera) = self.viewport.sheet_saved_camera.take()
+        {
+            self.cancel();
+            self.viewport.camera = camera;
+        }
         self.sheet_effects(effects)
     }
 
@@ -1615,8 +1662,8 @@ impl App {
 
     pub(crate) fn sync_sheet_model_camera(&mut self) {
         if self.sheets.model_scope().is_some() && self.sheets.active_viewport().is_none() {
-            let _=self.sheets.update(kentos_sheet_ui::Message::ReturnPaper);
-            self.sheet_tab=true;
+            let _ = self.sheets.update(kentos_sheet_ui::Message::ReturnPaper);
+            self.sheet_tab = true;
             self.output("Görünüm kaynağı artık çözülemiyor; model düzenlemesi kapatıldı. Kaynak bağını onarın.");
         }
         self.sync_sheet_model_index();
@@ -1652,17 +1699,32 @@ impl App {
                 Effect::ModelPointer(p) => {
                     use kentos_sheet_ui::model_scope::PointerAction;
                     self.sync_sheet_model_camera();
-                    let screen=self.viewport.camera.world_to_screen(Vec2::new(p.world[0],p.world[1]));
-                    let at=Point::new(screen[0] as f32,screen[1] as f32);
-                    let event=match p.action {PointerAction::Move=>crate::viewport::Event::Moved(at),PointerAction::Press=>crate::viewport::Event::Pressed(at),PointerAction::Release=>crate::viewport::Event::Released(at),PointerAction::Leave=>crate::viewport::Event::Left,PointerAction::RightClick=>crate::viewport::Event::RightClick(at)};
-                    task=self.pointer(event);
+                    let screen = self
+                        .viewport
+                        .camera
+                        .world_to_screen(Vec2::new(p.world[0], p.world[1]));
+                    let at = Point::new(screen[0] as f32, screen[1] as f32);
+                    let event = match p.action {
+                        PointerAction::Move => crate::viewport::Event::Moved(at),
+                        PointerAction::Press => crate::viewport::Event::Pressed(at),
+                        PointerAction::Release => crate::viewport::Event::Released(at),
+                        PointerAction::Leave => crate::viewport::Event::Left,
+                        PointerAction::RightClick => crate::viewport::Event::RightClick(at),
+                    };
+                    task = self.pointer(event);
                     self.sheet_maps.sync(self.document.as_ref());
                 }
                 Effect::ShowSheet => {
                     self.sheet_tab = true;
                     self.sheet_maps.sync(self.document.as_ref());
                 }
-                Effect::ShowModel => { self.sheet_tab = false; if let Some(camera)=self.viewport.sheet_saved_camera.take() { self.cancel(); self.viewport.camera=camera; } },
+                Effect::ShowModel => {
+                    self.sheet_tab = false;
+                    if let Some(camera) = self.viewport.sheet_saved_camera.take() {
+                        self.cancel();
+                        self.viewport.camera = camera;
+                    }
+                }
                 Effect::AskExportPath { kind, suggested } => {
                     let (name, ext) = match kind {
                         ExportKind::Pdf => ("PDF belgesi", "pdf"),
@@ -1733,8 +1795,12 @@ impl App {
                     task = Task::done(Message::Run("crs.set"));
                 }
                 // Atlas: the atlas's window (docs/adr/0534), the preview and the PDF with a page for each object.
-                Effect::HostAction(action) if action=="sheet.preflight"=>{task=Task::done(Message::Run("file.preflight.sheets"));}
-                Effect::HostAction(action) if action=="sheet.publish"=>{task=Task::done(Message::Run("file.publish.sheets"));}
+                Effect::HostAction(action) if action == "sheet.preflight" => {
+                    task = Task::done(Message::Run("file.preflight.sheets"));
+                }
+                Effect::HostAction(action) if action == "sheet.publish" => {
+                    task = Task::done(Message::Run("file.publish.sheets"));
+                }
                 Effect::HostAction(action) if action == "sheet.atlas" => {
                     task = Task::done(Message::Run("file.export.atlas"));
                 }
@@ -1770,17 +1836,46 @@ impl App {
         // not the sheet mode followed the drawing since (an agent may have changed the book).
         self.sheets.set_context(self.sheet_context());
         let made = match kind {
-            ExportKind::Pdf => self.sheet_native_pdf().map(|p|(p.bytes,p.findings)),
+            ExportKind::Pdf => self.sheet_native_pdf().map(|p| (p.bytes, p.findings)),
             ExportKind::Png | ExportKind::Svg => (|| {
-                let doc=self.sheet_output_snapshot()?;
-                let id=self.sheets.open_sheet().ok_or("Önce bir pafta açın.")?.id.clone();
-                let drawing=self.document.as_ref().and_then(|d|d.path.as_ref()).map(|p|p.to_string_lossy().into_owned());
-                let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref()).map_err(|e|e.message)?;
-                captured.dpi_override(Some(self.sheets.output_dpi())).map_err(|e|e.message)?;
-                let image=kentos_plot::preview::page_captured(&captured,&id,self.sheets.output_dpi()).map_err(|e|e.message)?;
-                Ok((if kind==ExportKind::Png {image.png} else {image.svg.into_bytes()},Vec::new()))
+                let doc = self.sheet_output_snapshot()?;
+                let id = self
+                    .sheets
+                    .open_sheet()
+                    .ok_or("Önce bir pafta açın.")?
+                    .id
+                    .clone();
+                let drawing = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.path.as_ref())
+                    .map(|p| p.to_string_lossy().into_owned());
+                let mut captured = kentos_plot::provenance::Capture::new(
+                    &doc,
+                    &kentos_plot::book::current_user(),
+                    &kentos_plot::book::today(),
+                    drawing.as_deref(),
+                )
+                .map_err(|e| e.message)?;
+                captured
+                    .dpi_override(Some(self.sheets.output_dpi()))
+                    .map_err(|e| e.message)?;
+                let image =
+                    kentos_plot::preview::page_captured(&captured, &id, self.sheets.output_dpi())
+                        .map_err(|e| e.message)?;
+                Ok((
+                    if kind == ExportKind::Png {
+                        image.png
+                    } else {
+                        image.svg.into_bytes()
+                    },
+                    Vec::new(),
+                ))
             })(),
-            ExportKind::Kpafta => self.sheets.kpafta().map(|text|(text.into_bytes(),Vec::new())),
+            ExportKind::Kpafta => self
+                .sheets
+                .kpafta()
+                .map(|text| (text.into_bytes(), Vec::new())),
         };
         // Whole or not at all (docs/adr/0253 §10): a failed write leaves the old file as it was.
         let written = made.and_then(|(bytes, findings)| {
@@ -1919,9 +2014,12 @@ mod tests {
         };
         main.set_ghosts("parsel", vec![(square, None)]);
         let view: kentos_sheet::display::MapViewPrim =
-            serde_json::from_value(serde_json::json!({"scale": 200.0, "rotation": 0})).expect("a view");
+            serde_json::from_value(serde_json::json!({"scale": 200.0, "rotation": 0}))
+                .expect("a view");
         let maps = SheetMaps::default();
-        let copy = maps.scaled(&doc, &view, None, &main).expect("a copy at 1:200");
+        let copy = maps
+            .scaled(&doc, &view, None, &main)
+            .expect("a copy at 1:200");
         let (_, spatial) = copy.view.as_ref().expect("its drawing");
         assert_eq!(spatial.ghost_total(), 1);
     }
@@ -2595,7 +2693,7 @@ mod tests {
         let span = (b.max_x - b.min_x).max(b.max_y - b.min_y).max(1.0);
         let picture = |rotation: i32, labels: bool| {
             let view = kentos_sheet::display::MapViewPrim {
-                annotation_scale:None,
+                annotation_scale: None,
                 center: Some(GroundPoint {
                     x: (b.min_x + b.max_x) / 2.0,
                     y: (b.min_y + b.max_y) / 2.0,
@@ -2607,7 +2705,7 @@ mod tests {
             };
             let layers = MapLayers::default();
             let r = MapRequest {
-                sheet:None,
+                sheet: None,
                 primitive: None,
                 overrides: &[],
                 item: "m",
@@ -2693,7 +2791,7 @@ mod tests {
         let b = scene::extents(doc).expect("the drawing has objects");
         let span = (b.max_x - b.min_x).max(b.max_y - b.min_y).max(1.0);
         let view = kentos_sheet::display::MapViewPrim {
-                annotation_scale:None,
+            annotation_scale: None,
             center: Some(GroundPoint {
                 x: (b.min_x + b.max_x) / 2.0,
                 y: (b.min_y + b.max_y) / 2.0,
@@ -2703,7 +2801,7 @@ mod tests {
         };
         let layers = MapLayers::default();
         let request = |k: f64| MapRequest {
-            sheet:None,
+            sheet: None,
             primitive: None,
             overrides: &[],
             item: "m",
@@ -3504,7 +3602,7 @@ mod tests {
         let doc = app.document.as_ref().unwrap();
         let b = scene::extents(doc).expect("the drawing has objects");
         let view = kentos_sheet::display::MapViewPrim {
-                annotation_scale:None,
+            annotation_scale: None,
             center: Some(GroundPoint {
                 x: (b.min_x + b.max_x) / 2.0,
                 y: (b.min_y + b.max_y) / 2.0,

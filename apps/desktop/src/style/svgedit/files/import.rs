@@ -386,13 +386,13 @@ pub fn view<'a>(
         .spacing(6)
         .align_y(Center),
     )
-    .padding([5, 14])
+    .padding(kentos_ui::theme::metrics::action())
     .style(ui_style::button::primary)
     .on_press(change(apply));
     let foot = row![
         space::horizontal(),
         button(label::body("Vazgeç"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(ui_style::button::secondary)
             .on_press(change(|ed| ed.files.dialog = None)),
         primary,
@@ -401,6 +401,7 @@ pub fn view<'a>(
     .align_y(Center);
     let _ = ev;
     Dialog::new(format!("SVG içe al: {}", d.name))
+        .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(
             row![
                 preview,

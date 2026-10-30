@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use iced::widget::{Column, container, row, scrollable, text, text_input};
+use iced::widget::{Column, container, row, scrollable, text};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DuplicatePolicy, LatePolicy, LayerNodeType, SensorsIngest, SensorsIngested,
@@ -15,10 +15,9 @@ use kentos_commands::{
 use kentos_geometry_core::time::{self, Window as TimeWindow};
 use kentos_native_application::{ExecutionContext, sensors_ingest, sensors_latest};
 use kentos_ui::label;
-use kentos_ui::style;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};
 
 use super::{Event as TimeEvent, msg as time_msg};
 use crate::app::{App, Dialog, Message};
@@ -384,27 +383,17 @@ impl App {
             },
             |i| msg(Event::Quality(i)),
         );
-        let stale = focus_ring(
-            text_input("60", &w.stale)
-                .on_input(|t| msg(Event::Stale(t)))
-                .padding([5, 8])
-                .size(typography::body())
-                .style(style::field::input),
-        );
-        let at = focus_ring(
-            text_input(
-                if self.time.slider.open {
-                    "Zaman sürgüsünün anı"
-                } else {
-                    "Şimdi"
-                },
-                &w.at,
-            )
-            .on_input(|t| msg(Event::At(t)))
-            .padding([5, 8])
-            .size(typography::body())
-            .style(style::field::input),
-        );
+        let stale =
+            kentos_ui::widget::text_field("60", &w.stale).on_input(|t| msg(Event::Stale(t)));
+        let at = kentos_ui::widget::text_field(
+            if self.time.slider.open {
+                "Zaman sürgüsünün anı"
+            } else {
+                "Şimdi"
+            },
+            &w.at,
+        )
+        .on_input(|t| msg(Event::At(t)));
         let mut body = Column::new()
             .spacing(12)
             .push(
@@ -451,13 +440,8 @@ impl App {
             Some(Err(why)) => body = body.push(words::text_line(Kind::Warn, why.clone())),
             None => {}
         }
-        let asset = focus_ring(
-            text_input("S1", &w.asset)
-                .on_input(|t| msg(Event::Asset(t)))
-                .padding([5, 8])
-                .size(typography::body())
-                .style(style::field::input),
-        );
+        let asset =
+            kentos_ui::widget::text_field("S1", &w.asset).on_input(|t| msg(Event::Asset(t)));
         let duplicates = Select::new(
             DUPLICATES
                 .iter()
@@ -491,17 +475,15 @@ impl App {
                 said.clone(),
             ));
         }
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .action(words::secondary(
-                    "Gözlem al…",
-                    (!w.asset.trim().is_empty() && !w.value.is_empty()).then(|| msg(Event::Take)),
-                ))
-                .action(words::primary("Kapat", Some(msg(Event::Close))))
-                .width(760.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::secondary(
+                "Gözlem al…",
+                (!w.asset.trim().is_empty() && !w.value.is_empty()).then(|| msg(Event::Take)),
+            ))
+            .action(words::primary("Kapat", Some(msg(Event::Close))))
+            .width(760.0)
+            .modal(msg(Event::Close))
     }
 }
 
@@ -538,15 +520,17 @@ fn taken_words(o: &SensorsIngested) -> String {
 /// The assets' latest: Varlık, Değer, Kalite, An, Yaş, Durum; a stale one in the warning's colour.
 fn sensor_table(a: &SensorsLatestAnswer) -> Element<'_, Message> {
     let cell = |s: String, w: f32| container(label::body(s)).width(typography::scaled(w));
-    let head = row![
-        container(label::caption("Varlık")).width(typography::scaled(110.0)),
-        container(label::caption("Değer")).width(Fill),
-        container(label::caption("Kalite")).width(typography::scaled(90.0)),
-        container(label::caption("An")).width(typography::scaled(130.0)),
-        container(label::caption("Yaş")).width(typography::scaled(80.0)),
-        container(label::caption("Durum")).width(typography::scaled(140.0)),
-    ]
-    .spacing(8);
+    let head = kentos_ui::widget::table::band(
+        row![
+            container(kentos_ui::widget::table::title("Varlık")).width(typography::scaled(110.0)),
+            container(kentos_ui::widget::table::title("Değer")).width(Fill),
+            container(kentos_ui::widget::table::title("Kalite")).width(typography::scaled(90.0)),
+            container(kentos_ui::widget::table::title("An")).width(typography::scaled(130.0)),
+            container(kentos_ui::widget::table::title("Yaş")).width(typography::scaled(80.0)),
+            container(kentos_ui::widget::table::title("Durum")).width(typography::scaled(140.0)),
+        ]
+        .spacing(8),
+    );
     let mut rows = Column::new().spacing(4);
     if a.assets.is_empty() {
         rows = rows.push(words::text_line(

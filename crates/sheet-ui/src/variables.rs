@@ -298,7 +298,7 @@ impl Designer {
                     .width(Fill),
                 button(label::body(what))
                     .on_press(vm(VariablesMessage::Add(s)))
-                    .padding([5, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             ]
             .spacing(6)
@@ -335,7 +335,7 @@ impl Designer {
                         .width(Fill),
                     button(label::body("Paftaya ekle"))
                         .on_press(vm(VariablesMessage::AddMissing))
-                        .padding([5, 10])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::secondary),
                 ]
                 .spacing(8)
@@ -357,17 +357,18 @@ impl Designer {
             body = body.push(label::body(p.as_str()).style(style::text::danger));
         }
         Dialog::new("Değişkenler")
+            .on_close(crate::Message::CloseDialog)
             .push(scrollable(container(body).padding([0, 8])).height(420))
             .action(
                 button(label::body("Vazgeç"))
                     .on_press(Message::CloseDialog)
-                    .padding([6, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body("Kaydet"))
                     .on_press(vm(VariablesMessage::Save))
-                    .padding([6, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             )
             .width(540.0)

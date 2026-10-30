@@ -15,8 +15,8 @@ use kentos_commands::{CommandResult, LayerTime, LayersTime};
 use kentos_geometry_core::time::{self, Rule, Unit};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_time};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 
 use super::{Event as TimeEvent, msg as time_msg};
 use crate::app::{App, Dialog, Message};
@@ -443,18 +443,16 @@ impl App {
                 .spacing(10),
             )
             .push(words::summary(lines));
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .action(words::secondary(
-                    REMOVE,
-                    has_time.then(|| msg(Event::Remove)),
-                ))
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
-                .width(640.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::secondary(
+                REMOVE,
+                has_time.then(|| msg(Event::Remove)),
+            ))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
+            .width(640.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): a

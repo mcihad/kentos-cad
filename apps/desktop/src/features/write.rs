@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use iced::widget::{Column, row, text_input};
+use iced::widget::{Column, row};
 use iced::{Element, Length, Task};
 use kentos_commands::{
     CommandResult, EmptyResult, FieldRow, FieldsWrite, FieldsWriteOp, FieldsWritten, WritePolicy,
@@ -17,7 +17,6 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, fields_write};
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::theme::typography;
 use kentos_ui::widget::{Dialog, overlay};
 
 use super::{Event, Rows};
@@ -419,13 +418,7 @@ impl App {
         };
         let mut body = Column::new().spacing(12);
         let field = |placeholder: &'static str, value: &str, on: fn(String) -> WriteEvent| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .size(typography::body())
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value).on_input(move |t| msg(on(t)))
         };
         let title = match &w.mode {
             Mode::Calculate => {
@@ -457,7 +450,7 @@ impl App {
                                 .size(16.0)
                         )
                         .style(style::button::ghost)
-                        .padding(4)
+                        .padding(kentos_ui::theme::metrics::icon_small(16.0))
                         .on_press(msg(WriteEvent::Builder)),
                         kentos_ui::widget::Tip::new("İfade oluşturucu…"),
                         iced::widget::tooltip::Position::Top,

@@ -2,13 +2,12 @@
 //! and its description, written with `cad.blocks.edit`'s `card` as one undo step “Blok değiştir”. Its version is the
 //! drawing's count of the changes to what it draws; the window shows it and its size, unit and attributes.
 
-use iced::widget::{Column, text, text_input};
+use iced::widget::{Column, text};
 use iced::{Element, Task};
 use kentos_commands::{BlockEditOperation, BlockId, BlocksEdit, CommandResult};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, blocks_edit};
-use kentos_ui::style;
-use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};
+use kentos_ui::widget::Dialog as Frame;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -173,13 +172,9 @@ impl App {
                 .map(|a| words::text_line(Kind::Info, a.clone())),
         );
         let field = |value: &str, hint: &'static str, on: fn(String) -> Event| {
-            focus_ring(
-                text_input(hint, value)
-                    .on_input(move |t| msg(on(t)))
-                    .on_submit(msg(Event::Save))
-                    .padding([5, 8])
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(hint, value)
+                .on_input(move |t| msg(on(t)))
+                .on_submit(msg(Event::Save))
         };
         let mut body = Column::new()
             .spacing(12)
@@ -202,13 +197,11 @@ impl App {
         if let Some(why) = &w.refused {
             body = body.push(words::text_line(Kind::Error, why.clone()));
         }
-        overlay::modal(
-            Frame::new(CARD_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Close))))
-                .action(words::primary(SAVE, Some(msg(Event::Save))))
-                .width(440.0),
-            msg(Event::Close),
-        )
+        Frame::new(CARD_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Close))))
+            .action(words::primary(SAVE, Some(msg(Event::Save))))
+            .width(440.0)
+            .modal(msg(Event::Close))
     }
 }

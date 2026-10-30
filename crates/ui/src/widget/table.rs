@@ -1,5 +1,5 @@
-//! Veri tablosu: sabit başlık satırı, sıralanabilir sütunlar ve seçilebilir
-//! satırlar.
+//! Veri tablosu: kendi bandında sabit başlık, sıralanabilir ve boyutlanabilir sütunlar, ince çizgili seçilebilir satırlar
+//! (DESIGN.md §7.6, docs/adr/0805).
 //!
 //! ```ignore
 //! Table::new([
@@ -9,9 +9,10 @@
 //! .push(table::Row::new([name, count]).selected(true).on_press(Message::Select(0)))
 //! ```
 //!
-//! Hücreler sütun genişliğine ve hizasına göre yerleştirilir; başlık ve
-//! satırlar aynı aralıkla dizildiği için sütunlar hizalı kalır. Hücrelerin
-//! içindeki onay kutusu ve düğmeler satır tıklamasından önce olayı alır.
+//! Hücreler sütun genişliğine ve hizasına göre yerleştirilir; başlık ve satırlar aynı kuralla dizildiği için sütunlar
+//! hizalı kalır. Her hücre sütun sınırından sınırına uzanır ve yazısı içeriden başlar; [`Cell`](super::Cell) ise payı
+//! olmadan hücreyi doldurur (düzenlenen değer, koşullu zemin). Hücrelerin içindeki onay kutusu ve düğmeler satır
+//! tıklamasından önce olayı alır.
 //!
 //! Öznitelik tablosu gibi çok sütunlu tablolar [`Table::horizontal`] ile
 //! yatay kaydırılır; başlık dikey kaydırmada yerinde kalır.
@@ -23,33 +24,38 @@
 //! yalnızca görünürken kurulur ([`VirtualList`]), satırların yüksekliği
 //! eşittir ([`row_height`]).
 
+mod head;
+mod row;
+#[cfg(all(test, feature = "snapshot"))]
+mod tests;
+
 use iced::alignment::Horizontal;
 use iced::widget::text::{Fragment, IntoFragment};
-use iced::widget::{button, container, row, scrollable};
-use iced::{Center, Color, Element, Fill, Length, Padding, Point};
+use iced::widget::{container, scrollable};
+use iced::{Center, Color, Element, Fill, Length, Padding, Point, Theme};
 
-use crate::icon::{Icon, icon};
 use crate::label;
 use crate::style;
-use crate::theme::typography;
+use crate::theme::{Tokens, metrics, typography};
+use crate::widget::cell::is_cell;
 use crate::widget::context_menu::{ContextMenu, Menu};
 use crate::widget::virtual_list::VirtualList;
 
-/// Sütunlar arasındaki boşluk.
-pub(crate) const SPACING: f32 = 8.0;
-/// Satırların yatay iç boşluğu.
-pub(crate) const PADDING_X: f32 = 10.0;
-/// Sanal tablonun satır yüksekliği, 12 piksellik gövde metnine göre.
-pub const ROW: f32 = 25.0;
+pub(crate) use row::RowBox;
 
-/// Sanal tablonun satır yüksekliği, geçerli yazı boyutunda.
+use std::borrow::Cow;
+
+use crate::widget::elided::Elided;
+
+/// Hücrenin yazısının sütun sınırına uzaklığı.
+pub const PAD: f32 = 6.0;
+/// Tablonun iki ucundaki hücrenin yazısının kenara uzaklığı.
+pub const PADDING_X: f32 = 10.0;
+/// Tablonun satır yüksekliği, geçerli yazı boyutunda: bütün satırlarınki
+/// ([`metrics::row`](crate::theme::metrics::row)).
 pub fn row_height() -> f32 {
-    typography::scaled(ROW)
+    crate::theme::metrics::row()
 }
-/// Sağa hizalı hücrelerin sağındaki boşluk; ardından gelen sola hizalı
-/// sütunun metnine yapışmasınlar. Sabit genişlikli sütunlarda genişliğe
-/// eklenir, içeriğin alanını daraltmaz.
-const RIGHT_INSET: f32 = 4.0;
 
 /// Sıralama yönü.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -73,6 +79,8 @@ pub struct Column<'a, Message> {
     width: Length,
     align: Horizontal,
     sort: Option<(Option<SortOrder>, Message)>,
+    resize: Option<Box<dyn Fn(f32) -> Message + 'a>>,
+    fit: Option<Message>,
 }
 
 impl<'a, Message> Column<'a, Message> {
@@ -82,6 +90,8 @@ impl<'a, Message> Column<'a, Message> {
             width: Length::Shrink,
             align: Horizontal::Left,
             sort: None,
+            resize: None,
+            fit: None,
         }
     }
 
@@ -102,6 +112,19 @@ impl<'a, Message> Column<'a, Message> {
     /// yönüdür ve başlıkta okla gösterilir.
     pub fn sortable(mut self, order: Option<SortOrder>, on_press: Message) -> Self {
         self.sort = Some((order, on_press));
+        self
+    }
+
+    /// Sütunun sağ kenarı sürüklenir: `on_resize` yeni genişliği [`width`](Self::width)'in birimiyle verir; tablo
+    /// durum tutmaz, genişlik çağıranın saklayıp verdiğidir. Sabit genişlikli sütunlar içindir.
+    pub fn resizable(mut self, on_resize: impl Fn(f32) -> Message + 'a) -> Self {
+        self.resize = Some(Box::new(on_resize));
+        self
+    }
+
+    /// Sağ kenara çift tık: sütunu içeriğine sığdırma isteği.
+    pub fn on_fit(mut self, on_fit: Message) -> Self {
+        self.fit = Some(on_fit);
         self
     }
 }
@@ -145,8 +168,7 @@ impl<'a, Message: 'a> Row<'a, Message> {
         self
     }
 
-    /// Çoklu seçimde birincil satır ayrıca kenarla gösterilir. Verilmezse
-    /// seçili satır birincil sayılır.
+    /// Birkaç satır seçiliyken birincil satır ayrıca kenarla gösterilir.
     pub fn current(mut self, current: bool) -> Self {
         self.current = Some(current);
         self
@@ -174,6 +196,7 @@ pub struct Table<'a, Message> {
     empty: Option<Fragment<'a>>,
     horizontal: bool,
     min_width: f32,
+    grid: bool,
 }
 
 struct Lazy<'a, Message> {
@@ -192,6 +215,7 @@ impl<'a, Message: Clone + 'a> Table<'a, Message> {
             empty: None,
             horizontal: false,
             min_width: 0.0,
+            grid: false,
         }
     }
 
@@ -256,33 +280,48 @@ impl<'a, Message: Clone + 'a> Table<'a, Message> {
         self
     }
 
+    /// Elektronik tablo gibi: sütun çizgileri satırların arasından da geçer. Hücre hücre okunan ve düzenlenen
+    /// tablolar içindir (Öznitelik tablosu, Noktalar).
+    pub fn grid(mut self) -> Self {
+        self.grid = true;
+        self
+    }
+
     /// Yatay kaydırmada tablonun toplam genişliği.
     fn content_width(&self) -> f32 {
-        let columns: f32 = self
+        let count = self.columns.len();
+        let natural: f32 = self
             .columns
             .iter()
-            .map(|column| match cell_width(column.width, column.align) {
-                Length::Fixed(width) => width,
-                _ => typography::scaled(120.0),
+            .enumerate()
+            .map(|(i, column)| {
+                let (left, right) = cell_pads(i, count);
+                let width = match column.width {
+                    Length::Fixed(width) => width,
+                    _ => 120.0,
+                };
+                typography::scaled(width) + left + right
             })
             .sum();
-
-        let natural =
-            columns + SPACING * self.columns.len().saturating_sub(1) as f32 + PADDING_X * 2.0;
 
         natural.max(self.min_width)
     }
 }
 
-/// Hücrenin genişliği: sabit genişlik yazı boyutuyla büyür; sağa hizalı
-/// sabit sütunlarda sağ boşluk eklenir.
-fn cell_width(width: Length, align: Horizontal) -> Length {
-    match (width, align) {
-        (Length::Fixed(width), Horizontal::Right) => {
-            Length::Fixed(typography::scaled(width) + RIGHT_INSET)
-        }
-        (Length::Fixed(width), _) => Length::Fixed(typography::scaled(width)),
-        (width, _) => width,
+/// `count` sütunun `i`'ncisinin sol ve sağ payı: uçtakiler tablonun kenarından daha çok uzak durur. Hücreyi dolduran
+/// [`Cell`](super::Cell)'in yazısı bu paylarla içeriden başlar: düzenlemeye geçince yazı kaymaz.
+pub fn cell_pads(i: usize, count: usize) -> (f32, f32) {
+    (
+        if i == 0 { PADDING_X } else { PAD },
+        if i + 1 == count { PADDING_X } else { PAD },
+    )
+}
+
+/// Hücrenin genişliği, payları dahil: sabit genişlik yazı alanıdır ve yazı boyutuyla büyür.
+fn cell_width(width: Length, pads: (f32, f32)) -> Length {
+    match width {
+        Length::Fixed(width) => Length::Fixed(typography::scaled(width) + pads.0 + pads.1),
+        width => width,
     }
 }
 
@@ -294,69 +333,93 @@ pub(crate) fn layout<Message>(columns: &[Column<'_, Message>]) -> Vec<(Length, H
         .collect()
 }
 
-/// Başlık satırı: sıralanabilir sütunlarda başlık düğmedir ve sıralama yönü
-/// okla gösterilir.
+/// Hücrenin yazısı: tek satır, sığmazsa “…” ile biter (sütun sürüklenerek açılır).
+pub fn text<'a>(value: impl Into<Cow<'a, str>>) -> Elided<'a> {
+    Elided::new(value)
+        .size(typography::body())
+        .font(typography::ui())
+}
+
+/// Sütunda hizalanacak sayı: eş aralıklı, tek satır; sığmazsa son basamakları sessizce gitmez, “…” ile biter.
+pub fn number<'a>(value: impl Into<Cow<'a, str>>) -> Elided<'a> {
+    Elided::new(value)
+        .size(typography::body())
+        .font(typography::mono())
+}
+
+/// Başlığın yazısı, satırlarını kendisi kuran tablolar için ([`band`]'ın içinde).
+pub fn title<'a>(content: impl IntoFragment<'a>) -> iced::widget::Text<'a> {
+    iced::widget::text(content)
+        .size(typography::caption())
+        .font(typography::ui_strong())
+        .wrapping(iced::widget::text::Wrapping::None)
+        .style(|theme: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(theme).text),
+        })
+}
+
+/// Satırlarını kendisi kuran tabloların başlığı (düzenlenen alanlardan oluşan satırlar): [`Table`]'ın bandı ve güçlü
+/// çizgisi, içinde çağıranın sütunları.
+pub fn band<'a, Message: 'a>(columns: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
+    iced::widget::Column::new()
+        .push(
+            container(columns)
+                .width(Fill)
+                .height(metrics::row())
+                .align_y(Center)
+                .style(|theme: &Theme| container::Style {
+                    background: Some(Tokens::of(theme).table_head().into()),
+                    snap: true,
+                    ..container::Style::default()
+                }),
+        )
+        .push(
+            container(iced::widget::space())
+                .width(Fill)
+                .height(1)
+                .style(|theme: &Theme| container::Style {
+                    background: Some(Tokens::of(theme).border_strong().into()),
+                    snap: true,
+                    ..container::Style::default()
+                }),
+        )
+        .width(Fill)
+        .into()
+}
+
+/// Başlık satırı.
 pub(crate) fn header<'a, Message: Clone + 'a>(
     columns: Vec<Column<'a, Message>>,
     layout: &[(Length, Horizontal)],
 ) -> Element<'a, Message> {
-    let titles = columns.into_iter().map(|column| {
-        let title = label::caption(column.title);
-
-        match column.sort {
-            Some((order, on_press)) => {
-                let mut content =
-                    row![title.style(|_theme| iced::widget::text::Style { color: None })]
-                        .spacing(3)
-                        .align_y(Center);
-
-                if let Some(order) = order {
-                    content = content.push(
-                        icon(match order {
-                            SortOrder::Ascending => Icon::ChevronUp,
-                            SortOrder::Descending => Icon::ChevronDown,
-                        })
-                        .size(10.0),
-                    );
-                }
-
-                button(content)
-                    .on_press(on_press)
-                    .padding(0)
-                    .style(style::button::header(order.is_some()))
-                    .into()
-            }
-            None => title.into(),
-        }
-    });
-
-    container(line(layout, titles.collect::<Vec<_>>()))
-        .padding([3.0, PADDING_X])
-        .width(Fill)
-        .style(style::container::surface)
-        .into()
+    head::head(columns, layout).into()
 }
 
-/// Hücreleri sütunların genişliğine ve hizasına yerleştirir.
+/// Hücreleri sütunların genişliğine ve hizasına yerleştirir. Hücreler bitişiktir, payı kendilerindedir; bir
+/// [`Cell`](super::Cell) payını kendisi bilir ve sütunu sınırdan sınıra doldurur.
 pub(crate) fn line<'a, Message: 'a>(
     columns: &[(Length, Horizontal)],
     cells: impl IntoIterator<Item = Element<'a, Message>>,
 ) -> iced::widget::Row<'a, Message> {
-    iced::widget::Row::with_children(columns.iter().zip(cells).map(|(&(width, align), cell)| {
-        let inset = if align == Horizontal::Right {
-            RIGHT_INSET
-        } else {
-            0.0
-        };
+    let count = columns.len();
+    iced::widget::Row::with_children(columns.iter().zip(cells).enumerate().map(
+        |(i, (&(width, align), cell))| {
+            let pads = cell_pads(i, count);
+            // A cell fills its column but for the pixel of the column's line.
+            let padding = if is_cell(&cell) {
+                Padding::ZERO.right(1.0)
+            } else {
+                Padding::ZERO.left(pads.0).right(pads.1)
+            };
 
-        container(cell)
-            .width(cell_width(width, align))
-            .align_x(align)
-            .padding(Padding::ZERO.right(inset))
-            .clip(true)
-            .into()
-    }))
-    .spacing(SPACING)
+            container(cell)
+                .width(cell_width(width, pads))
+                .align_x(align)
+                .padding(padding)
+                .clip(true)
+                .into()
+        },
+    ))
     .align_y(Center)
 }
 
@@ -366,25 +429,16 @@ fn row_element<'a, Message: Clone + 'a>(
     row: Row<'a, Message>,
     layout: &[(Length, Horizontal)],
     height: Option<f32>,
+    grid: bool,
 ) -> Element<'a, Message> {
-    let current = row.current.unwrap_or(row.selected);
-
-    let line = line(layout, row.cells);
-
-    // Sabit yükseklikli satırda hücreler dikeyde ortalanır.
-    let content = match height {
-        Some(height) => button(container(line).center_y(Fill))
-            .height(height)
-            .padding([0.0, PADDING_X]),
-        None => button(line).padding([4.0, PADDING_X]),
-    }
-    .on_press_maybe(row.on_press)
-    .width(Fill)
-    .style(style::button::table_row_tinted(
-        row.selected,
-        current,
-        row.tint,
-    ));
+    let content = RowBox::new(line(layout, row.cells))
+        .height(height)
+        .on_press_maybe(row.on_press)
+        .selected(row.selected)
+        .current(row.current.unwrap_or(false))
+        .tint(row.tint)
+        .ruled(true)
+        .grid(grid);
 
     match row.menu {
         Some(menu) => ContextMenu::new(content, menu).into(),
@@ -396,6 +450,7 @@ impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> 
     fn from(table: Table<'a, Message>) -> Self {
         let width = table.horizontal.then(|| table.content_width());
         let layout = layout(&table.columns);
+        let grid = table.grid;
 
         let header = header(table.columns, &layout);
         let empty = match &table.lazy {
@@ -420,7 +475,7 @@ impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> 
 
                 (
                     VirtualList::new(lazy.count, height, move |index| {
-                        row_element(view(index), &row_layout, Some(height))
+                        row_element(view(index), &row_layout, Some(height), grid)
                     })
                     .reveal(lazy.reveal)
                     .height(table.height.unwrap_or(Length::Fill))
@@ -433,7 +488,7 @@ impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> 
                     table
                         .rows
                         .into_iter()
-                        .map(|row| row_element(row, &layout, None)),
+                        .map(|row| row_element(row, &layout, None, grid)),
                 )
                 .width(Fill)
                 .into(),
@@ -453,9 +508,13 @@ impl<'a, Message: Clone + 'a> From<Table<'a, Message>> for Element<'a, Message> 
         let content = iced::widget::Column::new().push(header).push(body);
 
         match width {
+            // The bar takes its own room while it shows: it never lies over the last row.
             Some(width) => scrollable(content.width(width).height(Fill))
                 .direction(scrollable::Direction::Horizontal(
-                    scrollable::Scrollbar::new().width(6).scroller_width(6),
+                    scrollable::Scrollbar::new()
+                        .width(6)
+                        .scroller_width(6)
+                        .spacing(0),
                 ))
                 .width(Fill)
                 .height(table.height.unwrap_or(Length::Shrink))

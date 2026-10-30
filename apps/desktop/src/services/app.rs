@@ -397,7 +397,7 @@ impl App {
             container(label::strong("Atıflar")).width(Fill),
             button(icon(Icon::Close).size(10.0).tone(Tone::Muted))
                 .on_press(msg(Event::Credits(false)))
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(10.0))
                 .style(style::button::ghost),
         ]
         .align_y(Center);
