@@ -1,0 +1,10 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "kentos-harita",
+  "icon": "harita",
+  "color": "blue",
+  "picture": "harita",
+  "launch": { "kind": "kentos", "module": "harita" },
+  "order": 20,
+  "files": ["kcad", "dxf", "dwg", "ncz"]
+}

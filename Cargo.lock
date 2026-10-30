@@ -2889,6 +2889,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-launcher"
+version = "0.1.0"
+dependencies = [
+ "iced",
+ "kentos-launch",
+ "kentos-ui",
+ "png 0.18.1",
+ "rfd",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-maplibre"
 version = "0.1.0"
 dependencies = [

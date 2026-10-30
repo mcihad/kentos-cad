@@ -1,0 +1,14 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "kurum-portali",
+  "name": "Kurum portalı",
+  "note": "Electron masaüstü uygulaması",
+  "icon": "uygulama",
+  "color": "purple",
+  "picture": "resimler/kurum-portali.png",
+  "launch": {
+    "kind": "program",
+    "program": "/opt/KurumPortali/kurum-portali"
+  },
+  "order": 80
+}

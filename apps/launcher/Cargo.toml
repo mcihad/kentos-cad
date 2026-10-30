@@ -1,0 +1,25 @@
+[package]
+name = "kentos-launcher"
+description = "KentOS Launcher (docs/adr/0800): KentOS's programs and any other program or web address, each from its manifest (kentos.launcher-app/1), started from one window; the recent drawings of the KentOS programs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "kentos-launcher"
+path = "src/main.rs"
+
+[dependencies]
+# The KentOS UI components and theme, and the headless renderer the `snapshot` command draws with.
+kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
+# The KentOS modules, the command line that starts one and the recent drawings (docs/adr/0800, 0801).
+kentos-launch = { path = "../../crates/native/launch" }
+# Cards' pictures as textures (decoded here with png) and SVG icons of manifests: Iced's image
+# support without its codecs and its SVG support, as the sheet designer and the desktop build them.
+iced = { workspace = true, features = ["canvas", "advanced", "image-without-codecs", "svg"] }
+png = { workspace = true }
+# The system's file dialog: a program's place, a file to open with an app.
+rfd = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

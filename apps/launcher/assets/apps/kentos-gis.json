@@ -1,0 +1,10 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "kentos-gis",
+  "icon": "cbs",
+  "color": "green",
+  "picture": "cbs",
+  "launch": { "kind": "kentos", "module": "cbs" },
+  "order": 30,
+  "files": ["kcad"]
+}
