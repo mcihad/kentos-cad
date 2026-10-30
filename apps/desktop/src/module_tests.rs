@@ -137,20 +137,6 @@ fn each_work_shows_its_own_tabs_and_panels() {
             "Oturtma"
         ]
     );
-    // A detail: neither; Ölçme only its Sorgu.
-    let app = cad_drawing(Some(CadWork::Detail));
-    let tabs = ids(app.ribbon_tabs());
-    assert!(
-        !tabs.contains(&"plan") && !tabs.contains(&"arch"),
-        "{tabs:?}"
-    );
-    assert_eq!(panels(&app, "survey"), ["Sorgu"]);
-    assert_eq!(
-        tabs,
-        [
-            "file", "home", "survey", "insert", "annotate", "modify", "view", "manage", "output"
-        ]
-    );
     // A CAD drawing not asked its work: the whole CAD ribbon, as before.
     let app = cad_drawing(None);
     assert_eq!(
@@ -190,8 +176,8 @@ fn the_works_together_show_every_command_and_the_contextual_tabs_stay() {
         );
         assert!(app.selection_tab().is_some(), "{w:?}");
     }
-    // A command a work's ribbon hides still runs (the type is no security boundary).
-    let mut app = cad_drawing(Some(CadWork::Detail));
+    // A command a work's ribbon hides still runs from kentos-cad (the type is no security boundary).
+    let mut app = cad_drawing(Some(CadWork::Map));
     assert!(!commands(app.ribbon_tabs()).contains("tool.wall"));
     let _ = app.update(Message::Run("tool.wall"));
     assert_eq!(app.session.tool_id(), "wall");
@@ -325,11 +311,11 @@ fn a_module_places_its_own_and_hands_another_modules_file_over() {
         &dir,
         "bina.kcad",
         Some(Workspace::Cad),
-        Some(CadWork::Detail),
+        Some(CadWork::Architecture),
     );
     let mut app = program(Some(Module::Architecture));
     open(&mut app, &building);
-    assert!(app.document.is_some(), "a detail is KentOS Mimari's own");
+    assert!(app.document.is_some(), "a building is KentOS Mimari's own");
     assert_eq!(app.asking_hand_over(), None);
     assert_eq!(app.recent.list()[0].module, Some(Module::Architecture));
     let before = app.document.as_ref().map(|d| d.session);
@@ -380,10 +366,10 @@ fn a_cad_module_asks_a_cad_file_without_a_work_before_it_opens_it() {
         app.asking_work() && app.document.is_none(),
         "held until answered"
     );
-    work(&mut app, WorkEvent::Choose(Choice::Work(CadWork::Detail)));
+    work(&mut app, WorkEvent::Choose(Choice::Work(CadWork::Architecture)));
     work(&mut app, WorkEvent::Pick);
     let doc = app.document.as_ref().expect("placed");
-    assert_eq!(doc.settings().cad_work, Some(CadWork::Detail));
+    assert_eq!(doc.settings().cad_work, Some(CadWork::Architecture));
     assert!(doc.dirty());
     assert!(handed().is_empty());
     // The other CAD module's work: handed over, nothing opened here.
@@ -473,10 +459,10 @@ fn kentos_gis_hands_a_cad_drawing_to_either_cad_program_and_a_cad_module_takes_a
     );
     let mut app = program(Some(Module::Architecture));
     open(&mut app, &dxf);
-    // A millimetre drawing is a detail.
+    // A millimetre drawing of its own is a building's: KentOS has two CAD works (docs/adr/0802).
     assert_eq!(
         app.document.as_ref().expect("the DXF").settings().cad_work,
-        Some(CadWork::Detail)
+        Some(CadWork::Architecture)
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -491,28 +477,31 @@ fn wizard(app: &mut App, e: crate::project::wizard::Event) {
 #[test]
 fn a_modules_wizard_makes_its_own_projects() {
     use crate::project::wizard::Event as W;
-    // KentOS Mimari: a CAD project for a building or a detail, never a map or a CBS project.
+    // KentOS Mimari asks nothing (docs/adr/0802): a building in metres at 1:100 on screen at once.
     let mut app = program(Some(Module::Architecture));
     let _ = app.update(Message::Run("file.new"));
-    wizard(&mut app, W::Work(1));
-    wizard(&mut app, W::Type(Workspace::Gis));
-    wizard(&mut app, W::Next);
-    wizard(&mut app, W::Next);
+    assert!(app.project.is_none(), "no wizard");
     let s = app.document.as_ref().expect("a new project").settings();
     assert_eq!(
-        (s.workspace, s.cad_work, s.srid),
-        (Some(Workspace::Cad), Some(CadWork::Architecture), 0)
+        (s.workspace, s.cad_work, s.srid, s.plot_scale),
+        (Some(Workspace::Cad), Some(CadWork::Architecture), 0, 100.0)
     );
-    let mut app = program(Some(Module::Architecture));
-    let _ = app.update(Message::Run("file.new"));
-    wizard(&mut app, W::Work(2));
-    wizard(&mut app, W::Next);
-    wizard(&mut app, W::Next);
-    let s = app.document.as_ref().expect("a new project").settings();
-    assert_eq!(s.cad_work, Some(CadWork::Detail));
-    // KentOS Harita: a map on the province's system.
+    // KentOS Harita: its own window, from the coordinates on; a map on the province's system.
     let mut app = program(Some(Module::Map));
     let _ = app.update(Message::Run("file.new"));
+    match &app.project {
+        Some(crate::project::Window::New(s)) => {
+            assert_eq!(s.first_step(), 1, "no type asked");
+        }
+        _ => panic!("Harita's own window"),
+    }
+    wizard(&mut app, W::Back);
+    match &app.project {
+        Some(crate::project::Window::New(s)) => {
+            assert_eq!(s.step, kentos_project::wizard::Step::Coords, "Geri stops at its first step");
+        }
+        _ => panic!("still open"),
+    }
     wizard(&mut app, W::Work(0));
     wizard(&mut app, W::Province(58));
     wizard(&mut app, W::Next);
@@ -535,12 +524,91 @@ fn a_modules_wizard_makes_its_own_projects() {
     let _ = app.update(Message::Run("file.new"));
     wizard(&mut app, W::Type(Workspace::Cad));
     wizard(&mut app, W::Next);
-    wizard(&mut app, W::Work(2));
+    wizard(&mut app, W::Work(1));
+    wizard(&mut app, W::Province(58));
     wizard(&mut app, W::Next);
     wizard(&mut app, W::Next);
     let s = app.document.as_ref().expect("a new project").settings();
     assert_eq!(
         (s.workspace, s.cad_work),
-        (Some(Workspace::Cad), Some(CadWork::Detail))
+        (Some(Workspace::Cad), Some(CadWork::Map))
     );
+}
+
+// ── What a module's program offers (docs/adr/0802) ─────────────────────────
+
+#[test]
+fn a_module_offers_its_own_commands_and_the_shells() {
+    // KentOS Mimari: walls and the shell's; no basemap, raster, parcel, address or CBS time.
+    let app = program(Some(Module::Architecture));
+    for id in ["tool.wall", "tool.space", "layer.new", "file.save", "tool.line", "pointcloud.add"] {
+        assert!(app.offers(id), "Mimari offers {id}");
+    }
+    for id in ["basemap.osmStandard", "service.add", "raster.add", "tool.parcel", "address.search", "time.slider",
+        "crs.query", "file.import.shp", "file.export.atlas", "tool.netRoute"]
+    {
+        assert!(!app.offers(id), "Mimari does not offer {id}");
+    }
+    // KentOS Harita: basemaps, services and sources as CBS has them, its survey; no walls.
+    let app = program(Some(Module::Map));
+    for id in ["basemap.osmStandard", "service.add", "source.postgis", "layer.crs", "raster.add", "tool.parcel",
+        "calc.traverse", "address.search", "file.import.shp", "file.export.atlas"]
+    {
+        assert!(app.offers(id), "Harita offers {id}");
+    }
+    for id in ["tool.wall", "tool.space", "sheet.levels", "time.slider", "tool.netRoute"] {
+        assert!(!app.offers(id), "Harita does not offer {id}");
+    }
+    // KentOS GIS: CBS's own; no walls, no parcels drawn with the CAD tool.
+    let app = program(Some(Module::Gis));
+    for id in ["time.slider", "tool.netRoute", "basemap.osmStandard", "layer.new", "data.featureTable"] {
+        assert!(app.offers(id), "GIS offers {id}");
+    }
+    for id in ["tool.wall", "tool.space", "tool.blockDefine", "block.panel"] {
+        assert!(!app.offers(id), "GIS does not offer {id}");
+    }
+    // kentos-cad offers every command.
+    let app = program(None);
+    assert!(app.offers("tool.wall") && app.offers("time.slider") && app.offers("basemap.osmStandard"));
+}
+
+#[test]
+fn komut_ara_the_command_line_and_the_shortcuts_find_only_the_modules_own() {
+    let ids = |app: &App| -> Vec<&'static str> {
+        app.hits()
+            .into_iter()
+            .filter_map(|h| match h {
+                crate::ribbon_search::Hit::Command(c) => Some(c.id),
+                crate::ribbon_search::Hit::Model { .. } => None,
+            })
+            .collect()
+    };
+    // Komut ara: Duvar in Mimari, not in Harita; Altlık in Harita, not in Mimari.
+    let mut mimari = program(Some(Module::Architecture));
+    let mut harita = program(Some(Module::Map));
+    mimari.ribbon_search = "duvar".into();
+    harita.ribbon_search = "duvar".into();
+    assert!(ids(&mimari).contains(&"tool.wall"));
+    assert!(!ids(&harita).contains(&"tool.wall"), "{:?}", ids(&harita));
+    mimari.ribbon_search = "adres".into();
+    harita.ribbon_search = "adres".into();
+    assert!(ids(&harita).iter().any(|id| id.starts_with("address.")));
+    assert!(!ids(&mimari).iter().any(|id| id.starts_with("address.")), "{:?}", ids(&mimari));
+    // The command line: a name of another module's command is said, not run.
+    let mut harita = program(Some(Module::Map));
+    let _ = harita.run_typed("duvar");
+    assert_ne!(harita.session.tool_id(), "wall");
+    let said = last_said(&harita);
+    assert!(said.contains("KentOS Harita'da yok") && said.contains("KentOS Mimari'de var"), "{said}");
+    // The line's list holds no other module's command.
+    assert!(!harita.line_commands().iter().any(|l| l.title == "Duvar"));
+    // A shortcut of another module's command runs nothing here.
+    for c in catalog().commands() {
+        if harita.offers(c.id) {
+            continue;
+        }
+        for chord in c.shortcuts {
+            assert_ne!(harita.shortcut(chord), Some(c.id), "{chord}");
+        }
+    }
 }

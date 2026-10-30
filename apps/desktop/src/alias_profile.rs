@@ -189,7 +189,7 @@ pub fn line_command(command: &Command, row: LineCommand<'static>) -> LineCommand
 /// The profile's methods as rows of their own in the command line's list: a
 /// row of the tool would run its name, without the method (JOG is
 /// Ölçülendirme as Kırıklı yarıçap).
-pub fn method_lines() -> Vec<LineCommand<'static>> {
+pub fn method_lines() -> Vec<(&'static str, LineCommand<'static>)> {
     autocad()
         .names
         .iter()
@@ -198,11 +198,12 @@ pub fn method_lines() -> Vec<LineCommand<'static>> {
             let command = catalog().get(n.command)?;
             let title = leak(format!("{} › {}", command.title, entry.label));
             let description = leak(format!("AutoCAD: {}", n.autocad));
-            Some(
+            Some((
+                command.id,
                 LineCommand::new(n.name, title)
                     .description(description)
                     .icon(command.icon),
-            )
+            ))
         })
         .collect()
 }
@@ -277,6 +278,14 @@ impl App {
             .any(|m| fold(&m.label) == folded || fold(&format!("{}…", m.label)) == folded)
         {
             return None;
+        }
+        // A module's program runs only its own commands (docs/adr/0802).
+        if let Some(why) = catalog()
+            .get(name.command)
+            .and_then(|c| self.not_offered(c.id, c.title))
+        {
+            self.error(why);
+            return Some(Task::none());
         }
         self.remember(text);
         let task = match name.option.and_then(|option| method(name.command, option)) {
@@ -402,7 +411,7 @@ mod tests {
             "a method has its own row"
         );
         let jog = method_lines();
-        let jog = jog.iter().find(|l| l.name == "JOG").expect("JOG's row");
+        let (_, jog) = jog.iter().find(|(_, l)| l.name == "JOG").expect("JOG's row");
         assert_eq!(jog.title, "Ölçülendirme › Kırıklı yarıçap");
         assert_eq!(jog.description, "AutoCAD: DIMJOGGED");
     }

@@ -78,14 +78,14 @@ pub fn resolve(app: &Manifest, place: Option<&Path>, finder: &dyn Finder) -> Fou
                     ))
                 };
             }
-            if let Some(own) = finder.find(module.program()) {
-                return Found::Program(kentos_spec(*module, own));
-            }
-            match finder.find(KENTOS_CAD) {
-                Some(cad) => Found::Program(kentos_spec(*module, cad)),
+            // Each module is an application of its own (docs/adr/0802; the owner: “her biri ayrı uygulama
+            // olarak çalışacak”): its own program, never kentos-cad standing in for it.
+            match finder.find(module.program()) {
+                Some(own) => Found::Program(kentos_spec(*module, own)),
                 None => Found::Missing(format!(
-                    "{} ve {KENTOS_CAD} bulunamadı (launcher'ın yanında ve PATH'te arandı). KentOS'u kurun ya da Konumu seç… ile programı gösterin.",
-                    module.program()
+                    "{} bulunamadı (launcher'ın yanında ve PATH'te arandı). {}'yı kurun ya da Konumu seç… ile programı gösterin.",
+                    module.program(),
+                    module.title()
                 )),
             }
         }
@@ -307,7 +307,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn a_module_runs_its_own_program_else_kentos_cad_with_the_module() {
+    fn a_module_runs_its_own_program_and_never_kentos_cad_for_it() {
         let own = Fixed(HashMap::from([
             ("kentos-gis", PathBuf::from("/opt/kentos/kentos-gis")),
             ("kentos-cad", PathBuf::from("/opt/kentos/kentos-cad")),
@@ -327,40 +327,59 @@ pub(crate) mod tests {
             "kentos-cad",
             PathBuf::from("/opt/kentos/kentos-cad"),
         )]));
-        let Found::Program(spec) = resolve(&gis(), None, &cad_only) else {
-            panic!("found");
-        };
-        assert_eq!(spec.program, PathBuf::from("/opt/kentos/kentos-cad"));
-        assert_eq!(spec.with_file(None).args, os(&["--modul", "cbs"]));
-        assert_eq!(
-            spec.with_file(Some(Path::new("/ev/harita.kcad"))).args,
-            os(&["--modul", "cbs", "/ev/harita.kcad"])
-        );
-
-        let Found::Missing(why) = resolve(&gis(), None, &Fixed(HashMap::new())) else {
+        // kentos-cad does not stand in for a module (docs/adr/0802): the card says its program is missing.
+        let Found::Missing(why) = resolve(&gis(), None, &cad_only) else {
             panic!("missing");
         };
-        assert!(why.contains("kentos-gis ve kentos-cad bulunamadı"), "{why}");
+        assert!(
+            why.contains("kentos-gis bulunamadı") && why.contains("KentOS GIS"),
+            "{why}"
+        );
+        // kentos-cad shown with Konumu seç… is the user's own choice: it starts in the module.
+        let Found::Program(spec) = resolve(
+            &gis(),
+            Some(
+                Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("Cargo.toml")
+                    .as_path(),
+            ),
+            &cad_only,
+        ) else {
+            panic!("the place shown");
+        };
+        assert_eq!(
+            spec.with_file(None).args,
+            Vec::<OsString>::new(),
+            "a program not named kentos-cad: no flag"
+        );
     }
 
     #[test]
     fn every_module_builds_the_command_line_the_desktop_reads() {
-        let cad = Fixed(HashMap::from([(
-            "kentos-cad",
-            PathBuf::from("/k/kentos-cad"),
-        )]));
+        let installed = Fixed(
+            Module::ALL
+                .iter()
+                .map(|m| (m.program(), PathBuf::from(format!("/k/{}", m.program()))))
+                .collect(),
+        );
         for module in Module::ALL {
             let text = format!(
                 r#"{{"format": "kentos.launcher-app/1", "id": "m", "launch": {{"kind": "kentos", "module": "{}"}}}}"#,
                 module.id()
             );
-            let Found::Program(spec) = resolve(&app(&text, Origin::Builtin), None, &cad) else {
+            let Found::Program(spec) = resolve(&app(&text, Origin::Builtin), None, &installed)
+            else {
                 panic!("found");
             };
+            assert_eq!(
+                spec.program,
+                PathBuf::from(format!("/k/{}", module.program()))
+            );
             let file = Path::new("/ev/çizim dosyası.kcad");
             let line = spec.with_file(Some(file)).args;
+            // The module's own program: the file alone, as its main reads it (kentos_launch::args).
             let read = kentos_launch::args::parse(line).expect("the desktop reads it");
-            assert_eq!(read.module, Some(module));
+            assert_eq!(read.module, None);
             assert_eq!(read.path.as_deref(), Some(file));
         }
     }

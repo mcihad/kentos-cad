@@ -14,9 +14,14 @@ contextual tabs, the toolbox has every one.
 import json, sys
 from pathlib import Path
 
-def C(i, size='small'): return {"command": i, "size": size}
-def L(i): return C(i, 'large')
-def S(i): return C(i, 'small')
+def C(i, size='small', works=()):
+    c = {"command": i, "size": size}
+    if works: c["works"] = list(works)
+    return c
+def L(i, works=()): return C(i, 'large', works)
+def S(i, works=()): return C(i, 'small', works)
+# A seldom used command of a panel's ▾ only some CAD works have (docs/adr/0802).
+def W(i, works): return {"command": i, "works": list(works)}
 def SP(key, size='small'): return {"split": key, "size": size}
 # Boşluk, Niş, Baca: the openings that are no door or window (docs/adr/0719).
 OPENINGS = {"key": "archOpenings", "size": "small", "split": [
@@ -24,9 +29,15 @@ OPENINGS = {"key": "archOpenings", "size": "small", "split": [
     {"command": "tool.niche", "title": "Boşluk", "label": "Niş"},
     {"command": "tool.flue", "title": "Boşluk", "label": "Baca"},
 ]}
-def M(label, blocks, size='small', checklist=False):
-    m = {"menu": label, "size": size, "blocks": [{"label": t, "items": ids} for t, ids in blocks]}
+def M(label, blocks, size='small', checklist=False, works=()):
+    # A block is (title, ids) or (title, ids, works): a block only some CAD works have (docs/adr/0802).
+    def block(b):
+        out = {"label": b[0], "items": b[1]}
+        if len(b) > 2 and b[2]: out["works"] = list(b[2])
+        return out
+    m = {"menu": label, "size": size, "blocks": [block(b) for b in blocks]}
     if checklist: m["checklist"] = True
+    if works: m["works"] = list(works)
     return m
 def B(name): return {"builtin": name}
 def P(label, icon, items, overflow=(), launcher=None, keep=False, works=()):
@@ -36,8 +47,9 @@ def P(label, icon, items, overflow=(), launcher=None, keep=False, works=()):
     if keep: p["keep"] = True
     if works: p["works"] = list(works)
     return p
-# A CAD tab or panel only some works show (docs/adr/0801): `works` names them (architecture, map, detail); none: every
-# work, and a CAD project not asked its work shows them all. The contextual tabs show whatever the work.
+# A CAD tab, panel, button, menu block or ▾ command only some works show (docs/adr/0801, 0802): `works` names them
+# (architecture, map); none: every work, and a CAD project not asked its work shows them all. A module's program
+# offers only what its works show (docs/adr/0802): Komut ara and the command line find nothing else.
 def T(i, label, panels, works=()):
     t = {"id": i, "label": label, "panels": panels}
     if works: t["works"] = list(works)
@@ -70,16 +82,18 @@ BASEMAPS = M("Altlık", [
     ("Anahtarlı servisler", ["basemap.maptilerStreets", "basemap.maptilerSatellite"]),
     ("", ["basemap.remove"])], size='large')
 
+# Geographic data and survey points come and go with a map (docs/adr/0802); a building's exchange is drawings.
 IMPORT_CAD = M("İçe aktar", [
     ("Çizim", ["file.import.dwg", "file.import.dxf", "file.import.ncz", "file.import.pdf"]),
-    ("Coğrafi veri", ["file.import.shp", "file.import.geojson", "file.import.kml", "file.import.gpkg", "file.import.csv"]),
-    ("Noktalar", ["file.import.ncn", "file.import.gnss", "file.import.photos"])], size='large')
+    ("Coğrafi veri", ["file.import.shp", "file.import.geojson", "file.import.kml", "file.import.gpkg", "file.import.csv"],
+     MAP),
+    ("Noktalar", ["file.import.ncn", "file.import.gnss", "file.import.photos"], MAP)], size='large')
 EXPORT = M("Dışa aktar", [
     ("Çizim", ["file.export.dwg", "file.export.dxf"]),
     ("Coğrafi veri", ["file.export.shp", "file.export.geojson", "file.export.kml", "file.export.gpx",
                       "file.export.gpkg", "file.export.fgb", "file.export.parquet", "file.export.gml",
-                      "file.export.csv"]),
-    ("Noktalar", ["file.export.ncn", "file.export.xyz"])], size='large')
+                      "file.export.csv"], MAP),
+    ("Noktalar", ["file.export.ncn", "file.export.xyz"], MAP)], size='large')
 # A CBS layer holds one kind of object (docs/adr/0622 §5): Yeni katman ▾ asks which; Karışık is any kind.
 NEW_LAYER = M("Yeni katman", [("", ["layer.new"]),
     ("Türüyle", ["layer.newPoint", "layer.newLine", "layer.newArea", "layer.newAnnotation"])])
@@ -109,9 +123,10 @@ def file_tab(cad):
     ])
 
 def survey_tab(cad):
-    query = [P("Sorgu", "measure", [S("tool.measure"), S("tool.area"), S("crs.query"), S("tool.measureAngle"),
-        S("tool.identify"), S("tool.stationOffset")])] if cad else []
-    # A CAD project's survey panels are a map's (docs/adr/0801): a building's and a detail's Ölçme is its Sorgu.
+    # A coordinate system's query and a route's station are a map's (docs/adr/0802).
+    query = [P("Sorgu", "measure", [S("tool.measure"), S("tool.area"), S("crs.query", MAP), S("tool.measureAngle"),
+        S("tool.identify"), S("tool.stationOffset", MAP)])] if cad else []
+    # A CAD project's survey panels are a map's (docs/adr/0801): a building's Ölçme is its Sorgu.
     works = MAP if cad else ()
     return T("survey", "Ölçme", query + [
     P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send")], works=works),
@@ -144,16 +159,19 @@ def view_tab(cad):
         # Kat görünümü (docs/adr/0715): which levels the plan shows, and Üst kat / Alt kat (docs/adr/0720 §5); the
         # status bar's Kat menu has them too.
         panels[2]["items"].insert(4, M("Kat görünümü", [("", ["view.levels.all", "view.levels.active", "view.levels.below"]),
-                                                       ("Etkin kat", ["view.levels.up", "view.levels.down"])]))
+                                                       ("Etkin kat", ["view.levels.up", "view.levels.down"])],
+                                       works=ARCHITECTURE))
         panels.insert(0, P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.zoomWindow"), S("view.zoomSelection"),
             S("tool.pan"), S("view.previous"), S("view.next")], overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]))
     return T("view", "Görünüm", panels)
 
 def output_tab(cad):
     panels = [
+        # A level's plan sheets are a building's, an atlas a map's (docs/adr/0802).
         P("Pafta", "sheet", [L("sheet.new"), S("sheet.fromTemplate"), S("sheet.drawingSet")]
-          + ([S("sheet.levels")] if cad else [])),
-        P("Yayınla", "print", [L("file.publish.sheets"), S("file.preflight.sheets"), S("file.export.atlas")]),
+          + ([S("sheet.levels", ARCHITECTURE)] if cad else [])),
+        P("Yayınla", "print", [L("file.publish.sheets"), S("file.preflight.sheets"),
+            S("file.export.atlas", MAP if cad else ())]),
     ]
     if not cad:
         panels.append(P("Lejant", "legend", [L("style.legend")]))
@@ -166,8 +184,9 @@ CAD = [
         P("Çizim", "line", [L("tool.line"), L("tool.polyline"), SP("circle", "large"), SP("arc", "large"),
             SP("rectangle"), S("tool.polygon"), S("tool.point"), S("tool.ellipse"), S("tool.spline")],
           overflow=["tool.nurbs", "tool.xline", "tool.ray", "tool.parallel", "tool.perpIn", "tool.perpOut", "tool.donut",
-            "tool.revcloud", "tool.wipeout", "tool.sector", "tool.rangeRings", "tool.tangentLine", "tool.fourthCorner",
-            "tool.divide", "tool.pointsBetween", "tool.intersectPoint", "tool.vertexPoints", "tool.adjoin"], keep=True),
+            "tool.revcloud", "tool.wipeout", "tool.sector", W("tool.rangeRings", MAP), "tool.tangentLine",
+            "tool.fourthCorner", "tool.divide", "tool.pointsBetween", "tool.intersectPoint", W("tool.vertexPoints", MAP),
+            W("tool.adjoin", MAP)], keep=True),
         P("Değiştir", "move", [S("tool.move"), S("tool.rotate"), SP("trim"), S("tool.copy"), S("tool.mirror"),
             SP("corner"), S("tool.offset"), S("tool.scale"), S("tool.erase")],
           overflow=["tool.extend", "tool.stretch", "tool.array", "tool.explode", "tool.break", "tool.join",
@@ -200,14 +219,17 @@ CAD = [
             "block.writeFile", "block.redefineFromFile", "block.import", "block.export", "block.purge"]),
         P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
         P("Dış başvuru", "xrefAttach", [L("xref.attach"), S("xref.manager"), S("tool.xclip")]),
-        P("Resim ve raster", "imageInsert", [S("tool.imageInsert"), S("raster.add"), S("pointcloud.add")],
-          overflow=["tool.imageClip", "raster.georef", "raster.mosaic", "raster.gpkgRead", "raster.stac"]),
+        # Rasters, basemaps, map services, a database's tables and addresses are a map's, as in CBS (docs/adr/0802); a
+        # building keeps pictures and point clouds (a scan).
+        P("Resim ve raster", "imageInsert", [S("tool.imageInsert"), S("raster.add", MAP), S("pointcloud.add")],
+          overflow=["tool.imageClip", W("raster.georef", MAP), W("raster.mosaic", MAP), W("raster.gpkgRead", MAP),
+            W("raster.stac", MAP)]),
         P("Harita", "basemap", [BASEMAPS, S("service.add"), S("service.feed")],
-          overflow=["service.info", "service.connections"]),
-        P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("file.import.photos")],
+          overflow=["service.info", "service.connections", "source.postgis"], works=MAP),
+        P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("file.import.photos", MAP)],
           overflow=["layer.info"]),
         P("Adres", "addressSearch", [S("address.search"), S("address.reverse")],
-          overflow=["address.data", "address.compare", "address.providers"]),
+          overflow=["address.data", "address.compare", "address.providers"], works=MAP),
     ]),
     T("annotate", "Açıklama", [
         P("Yazı", "text", [L("tool.text"), S("tool.mtext"), SP("textAlong"), S("tool.placeTextFile"),
@@ -304,7 +326,7 @@ CAD = [
             S("processing.newModel")]),
         P("Kısıtlar", "constraint", [L("tool.constraint"), S("constraint.show"), S("constraint.parameters")],
           overflow=["constraint.relaxNext"]),
-        P("GIS", "exportGis", [S("file.export.gis"), S("gis.derivation")]),
+        P("GIS", "exportGis", [S("file.export.gis"), S("gis.derivation")], works=MAP),
     ]),
     output_tab(True),
 ]
@@ -506,7 +528,8 @@ CONTEXTUAL = [
         edit_panel(),
         P("Tarama", "hatch", [L("tool.hatchEdit"), S("edit.hatchesToBack"), S("hatchPatterns.manage")]),
     ]},
-    {"id": "ctx.block", "label": "Blok", "kinds": ["insert"], "panels": [
+    # Blocks are CAD's (docs/adr/0802: “blok GIS içinde olmasa da olur”): a CBS selection of inserts takes Seçim.
+    {"id": "ctx.block", "label": "Blok", "kinds": ["insert"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
         P("Blok", "blockInsert", [L("block.edit"), S("tool.explode"), S("block.attributes"), S("block.sync"),
@@ -597,12 +620,44 @@ CONTEXTUAL = [
     ]},
 ]
 
+# In a CAD project the contextual tabs' processing tools (İşlemler) and a point's survey panel are a map's
+# (docs/adr/0802): a building's selection offers editing, not CBS analysis. CBS has no works and shows them all.
+# The architectural objects' own panels are a building's (docs/adr/0802): KentOS Harita hands such a drawing to KentOS
+# Mimari, and its search finds no wall or space tool.
+ARCH_TABS = ("ctx.wall", "ctx.opening", "ctx.space", "ctx.slab", "ctx.arch")
+for tab in CONTEXTUAL:
+    for panel in tab["panels"]:
+        if panel["label"] == "İşlemler" or (tab["id"] == "ctx.point" and panel["label"] == "Nokta"):
+            panel["works"] = list(MAP)
+        elif tab["id"] in ARCH_TABS and panel["label"] not in ("Seçim", "Düzenle"):
+            panel["works"] = list(ARCHITECTURE)
+
+# A module's program offers what its ribbon holds and nothing a ribbon of another module alone holds (docs/adr/0802):
+# Komut ara, the command line and the shortcuts find nothing else. These commands only CBS's ribbon holds belong to
+# a CAD module's program too: every module's (a layer made, its labels and filter, the drawing aids of the status bar,
+# a layer's value lists and rules, the processing history), and Harita's (a layer's coordinate system, bound sources,
+# CBS's file formats, the map's system).
+MODULES = {
+    "everywhere": ["layer.new", "layer.newGroup", "layer.showAll", "layer.newPoint", "layer.newLine", "layer.newArea",
+        "layer.newAnnotation", "layer.filter", "layer.filterClear", "layer.labels", "tool.labelMove", "tool.labelPin",
+        "tool.labelHide", "tool.labelRotate", "view.pinnedLabels", "view.unplacedLabels", "draft.overlap.allow",
+        "draft.overlap.layer", "draft.overlap.layers", "draft.topologyPoints", "crs.set", "data.domains", "data.subtypes",
+        "data.layerRules", "data.tableStyles", "data.duplicate", "data.contingents", "chart.bar", "chart.box",
+        "chart.histogram", "chart.line", "chart.pie", "chart.scatter", "processing.history",
+        "processing.run.selection.byExpression", "processing.run.selection.byLocation"],
+    "map": ["layer.crs", "layer.reproject", "view.mapCrs", "file.import.fgb", "file.import.gml", "file.import.parquet",
+        "file.import.maplibre", "file.export.maplibre", "mesh.add", "source.link", "source.read", "source.write",
+        "source.writeTogether", "source.status", "source.reconcile", "source.relink", "source.unlink", "profile.window",
+        "linearRef.eventLinks"],
+}
+
 doc = {
     "format": "kentos.ribbon",
     "version": 1,
     "note": "Masaüstünün şeridi (ADR 0622 §3–§4): her proje türünün sekmeleri ve seçimin türüne göre açılan bağlamsal sekmeler. Bölünmüş düğme {\"split\": \"anahtar\"} envanterdeki aynı anahtarlı düğmeyi yöntemleriyle alır.",
     "tabs": {"cad": CAD, "gis": GIS},
     "contextual": CONTEXTUAL,
+    "modules": MODULES,
 }
 OUT = Path(__file__).resolve().parents[2] / "catalog" / "v1" / "ribbon.json"
 text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

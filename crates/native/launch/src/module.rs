@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Module {
     /// Mimari CAD: buildings, floor plans, details (a CAD project's
-    /// `architecture` and `detail` works).
+    /// `architecture` work).
     #[serde(rename = "mimari")]
     Architecture,
     /// Harita CAD: site plans, zoning, surveys (a CAD project's `map` work).
@@ -80,7 +80,7 @@ impl Module {
     /// one a new project starts with first; a CBS module has none.
     pub const fn cad_works(self) -> &'static [&'static str] {
         match self {
-            Module::Architecture => &["architecture", "detail"],
+            Module::Architecture => &["architecture"],
             Module::Map => &["map"],
             Module::Gis => &[],
         }
@@ -132,7 +132,7 @@ mod tests {
             of(Some("cad"), Some("architecture")),
             Some(Module::Architecture)
         );
-        assert_eq!(of(Some("cad"), Some("detail")), Some(Module::Architecture));
+        assert_eq!(of(Some("cad"), Some("detail")), None, "two CAD works only");
         assert_eq!(of(Some("cad"), Some("map")), Some(Module::Map));
         // Not asked yet, or not known: no module.
         assert_eq!(of(Some("cad"), None), None);

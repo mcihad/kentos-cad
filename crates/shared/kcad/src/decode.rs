@@ -1055,7 +1055,6 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     &[
                         ("architecture", CadWork::Architecture),
                         ("map", CadWork::Map),
-                        ("detail", CadWork::Detail),
                     ],
                 )?)
             }

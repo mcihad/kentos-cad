@@ -84,9 +84,9 @@ pub struct Work {
     pub unit: DrawingUnit,
 }
 
-/// The three a CAD project is made for: a building in metres at 1:100, a map or a zoning plan on the
-/// province's system in metres at 1:1000, a part or a detail in millimetres at 1:1.
-pub const WORKS: [Work; 3] = [
+/// The two a CAD project is made for (docs/adr/0802; the owner: “bizde iki tür cad var mimari ve harita”): a
+/// building in metres at 1:100, a map or a zoning plan on the province's system in metres at 1:1000.
+pub const WORKS: [Work; 2] = [
     Work {
         work: CadWork::Architecture,
         name: "Mimari proje",
@@ -102,14 +102,6 @@ pub const WORKS: [Work; 3] = [
         icon: "parcel",
         coords: Coords::Real,
         unit: DrawingUnit::M,
-    },
-    Work {
-        work: CadWork::Detail,
-        name: "Detay / imalat",
-        note: "Parça, detay ve imalat çizimi. Milimetre, 1:1; çizim 0,0’dan başlar.",
-        icon: "dimLinear",
-        coords: Coords::Local,
-        unit: DrawingUnit::Mm,
     },
 ];
 
@@ -327,13 +319,12 @@ impl Draft {
         if self.kind != Kind::Cad {
             return None;
         }
-        WORKS
-            .iter()
-            .find(|w| w.coords == self.coords && (w.coords == Coords::Real || w.unit == self.unit))
+        // Two CAD works (docs/adr/0802): a drawing of its own is a building's whatever its unit, one on a
+        // coordinate system a map's.
+        WORKS.iter().find(|w| w.coords == self.coords)
     }
 
-    /// The CAD work the project is made for (docs/adr/0801): its work's, none for a CBS draft and a local unit no
-    /// work has.
+    /// The CAD work the project is made for (docs/adr/0801, 0802): its work's, none for a CBS draft.
     pub fn cad_work(&self) -> Option<CadWork> {
         self.work().map(|w| w.work)
     }
@@ -684,7 +675,6 @@ mod tests {
             [
                 ("Mimari proje", LOCAL_SRID, DrawingUnit::M, 100.0, Some(DrawingUnit::M)),
                 ("Harita / imar planı", 5256, DrawingUnit::M, 1000.0, None),
-                ("Detay / imalat", LOCAL_SRID, DrawingUnit::Mm, 1.0, Some(DrawingUnit::Mm)),
             ]
         );
         // Each work names the project's work (docs/adr/0801), the contract's in the same order and words.
@@ -694,21 +684,24 @@ mod tests {
             d.choose_work(w);
             assert_eq!(d.options().cad_work, Some(w.work));
         }
-        // A CBS project has none, and neither has a local unit no work has.
+        // A CBS project has none; a local CAD drawing in any unit is a building's (docs/adr/0802: two CAD works).
         let mut gis = Draft::initial(Workspace::Gis, 5256, DrawingFont::Barlow, None);
         assert_eq!(gis.options().cad_work, None);
         gis.kind = Kind::Cad;
         gis.coords = Coords::Local;
-        gis.unit = DrawingUnit::Cm;
-        assert_eq!(gis.options().cad_work, None);
-        assert_eq!(d.note(Step::Coords), "Detay / imalat · mm · 1:1");
+        gis.unit = DrawingUnit::Mm;
+        assert_eq!(gis.options().cad_work, Some(CadWork::Architecture));
+        d.choose_work(&WORKS[0]);
+        assert_eq!(d.note(Step::Coords), "Mimari proje · m · 1:100");
         assert_eq!(
             d.summary().into_iter().take(2).collect::<Vec<_>>(),
-            [("Tür", "CAD, teknik çizim".to_owned()), ("Çizim", "Detay / imalat".to_owned())]
+            [("Tür", "CAD, teknik çizim".to_owned()), ("Çizim", "Mimari proje".to_owned())]
         );
-        // A unit no work has is the local drawing's own.
         d.unit = DrawingUnit::Cm;
-        assert_eq!((d.work(), d.note(Step::Coords).as_str()), (None, "Yerel · cm · 1:50"));
+        assert_eq!(
+            (d.work().map(|w| w.work), d.note(Step::Coords).as_str()),
+            (Some(CadWork::Architecture), "Mimari proje · cm · 1:50")
+        );
         assert_eq!(
             [Step::Type, Step::Coords, Step::Details].map(|s| s.name(Kind::Cad)),
             ["Proje türü", "Çizim", "Proje adı"]

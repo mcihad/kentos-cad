@@ -908,7 +908,7 @@ impl App {
     /// `allowInInput` bindings, from the inventory); nothing else.
     fn global_chord(&mut self, press: &KeyPress) -> Task<Message> {
         match keys::chord(press).and_then(|chord| shortcut_in_input(&chord)) {
-            Some(id) if !press.repeat => self.run(id),
+            Some(id) if !press.repeat && self.offers(id) => self.run(id),
             _ => Task::none(),
         }
     }
@@ -1198,10 +1198,11 @@ impl App {
         } else {
             chord
         };
+        // A module's program runs only its own commands' shortcuts (docs/adr/0802).
         let command = catalog()
             .commands()
             .iter()
-            .find(|c| c.shortcuts.contains(&chord))?;
+            .find(|c| c.shortcuts.contains(&chord) && self.offers(c.id))?;
         if !keys::is_chorded(chord) && command.standing != Standing::Ported {
             return None;
         }

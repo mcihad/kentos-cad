@@ -48,12 +48,16 @@ const NOW: u64 = 1_793_350_800_000;
 /// The fixed home the rows write as `~`.
 const HOME: &str = "/home/kullanici";
 
-/// KentOS installed as the snapshot says: `kentos-cad` at `/opt/kentos/bin`, the modules' own programs not.
+/// KentOS installed as the snapshot says: `kentos-cad` and each module's own program at `/opt/kentos/bin`.
 struct Installed;
 
 impl Finder for Installed {
     fn find(&self, name: &str) -> Option<PathBuf> {
-        (name == crate::resolve::KENTOS_CAD).then(|| PathBuf::from("/opt/kentos/bin").join(name))
+        (name == crate::resolve::KENTOS_CAD
+            || kentos_launch::Module::ALL
+                .iter()
+                .any(|m| m.program() == name))
+        .then(|| PathBuf::from("/opt/kentos/bin").join(name))
     }
 }
 
@@ -307,7 +311,7 @@ fn icon_sheet<'a>() -> Element<'a, Message> {
             (Glyph::Harita, Tone::Blue, "harita · KentOS Harita"),
             (Glyph::Cbs, Tone::Green, "cbs · KentOS GIS"),
             (Glyph::Yol, Tone::Yellow, "yol · KentOS YOL"),
-            (Glyph::Rapor, Tone::Orange, "rapor · KentOS Rapor"),
+            (Glyph::Rapor, Tone::Orange, "rapor · Belge"),
             (Glyph::Uygulama, Tone::Gray, "uygulama"),
             (Glyph::Terminal, Tone::Teal, "terminal"),
             (Glyph::Web, Tone::Blue, "web"),

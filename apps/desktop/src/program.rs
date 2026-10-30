@@ -14,6 +14,7 @@ use kentos_launch::Module;
 use iced::Task;
 
 use crate::app::{App, Message};
+use crate::catalog::catalog;
 use crate::opening::{Opened, Purpose};
 use crate::project::ask_work::{give_work, guessed_work_in};
 use crate::recent::Recent;
@@ -208,6 +209,34 @@ impl App {
             .collect()
     }
 
+    /// Whether this program offers a command (docs/adr/0802): every one in kentos-cad, a module's own in a
+    /// module's program (Komut ara, the command line and the shortcuts find nothing else).
+    pub(crate) fn offers(&self, id: &str) -> bool {
+        self.program.is_none_or(|m| catalog().module_has(m, id))
+    }
+
+    /// Why a command typed or found is not run here (docs/adr/0802): the programs that have it.
+    pub(crate) fn not_offered(&self, id: &str, title: &str) -> Option<String> {
+        let here = self.program?;
+        if catalog().module_has(here, id) {
+            return None;
+        }
+        let others: Vec<&str> = Module::ALL
+            .into_iter()
+            .filter(|m| *m != here && catalog().module_has(*m, id))
+            .map(in_program)
+            .collect();
+        Some(if others.is_empty() {
+            format!("“{title}” {} yok.", in_program(here))
+        } else {
+            format!(
+                "“{title}” {} yok; {} var.",
+                in_program(here),
+                others.join(" ve ")
+            )
+        })
+    }
+
     /// The program's name in the window's title and on the start screen.
     pub(crate) fn program_title(&self) -> &'static str {
         self.program.map_or("KentOS CAD", Module::title)
@@ -243,10 +272,6 @@ mod tests {
             Some(Module::Architecture)
         );
         assert_eq!(
-            of(Some(Workspace::Cad), Some(CadWork::Detail)),
-            Some(Module::Architecture)
-        );
-        assert_eq!(
             of(Some(Workspace::Cad), Some(CadWork::Map)),
             Some(Module::Map)
         );
@@ -271,10 +296,7 @@ mod tests {
         for w in CadWork::ALL {
             assert!(works_of(module_of_work(w)).contains(&w));
         }
-        assert_eq!(
-            works_of(Module::Architecture),
-            [CadWork::Architecture, CadWork::Detail]
-        );
+        assert_eq!(works_of(Module::Architecture), [CadWork::Architecture]);
         assert_eq!(works_of(Module::Map), [CadWork::Map]);
         assert!(works_of(Module::Gis).is_empty());
         assert_eq!(

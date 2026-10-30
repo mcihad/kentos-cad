@@ -4,11 +4,11 @@ import type { MapContent } from "./MapContent";
 /**
  * A map frame's content and, for GeoPDF in a system the core cannot invert, its corners.
  */
-export type PdfMap = {
+export type PdfMap = { 
 /**
  * A page-specific rendering of a master map; absent is the legacy shared fallback.
  */
-sheet?: string, item: string, content: MapContent,
+sheet?: string, item: string, content: MapContent, 
 /**
  * Latitude and longitude (degrees) of the content box's corners: top left, top right,
  * bottom right, bottom left. Only where `RenderInputs.crs.tm` is none (the core works them

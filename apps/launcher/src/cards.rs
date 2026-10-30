@@ -159,7 +159,7 @@ mod tests {
         assert_eq!(found("HARİTA"), ["kentos-harita"]);
         assert_eq!(found("kat planı"), ["kentos-mimari"], "the note too");
         assert_eq!(found("kentos yol"), ["kentos-yol"], "every word");
-        assert_eq!(found("").len(), 5);
+        assert_eq!(found("").len(), 4);
         assert!(found("uzay").is_empty());
     }
 

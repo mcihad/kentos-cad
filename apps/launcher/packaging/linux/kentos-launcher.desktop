@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=KentOS
+GenericName=Uygulama merkezi
+Comment=KentOS uygulamaları tek merkezde
+Exec=kentos-launcher
+Icon=kentos-launcher
+Terminal=false
+Categories=Graphics;Engineering;
+StartupWMClass=kentos-launcher

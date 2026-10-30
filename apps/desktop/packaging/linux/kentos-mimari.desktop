@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=KentOS Mimari
+GenericName=Mimari CAD
+Comment=Bina, kat planı ve detay çizimi
+Exec=kentos-mimari %f
+Icon=kentos-mimari
+Terminal=false
+Categories=Graphics;Engineering;
+StartupWMClass=kentos-mimari
+MimeType=application/x-kentos-kcad;

@@ -643,7 +643,11 @@ mod tests {
     fn answers_are_envelopes() {
         assert_eq!(value(&engine_info())["bookSchema"], "kentos.sheet/1");
         assert_eq!(value(&standard_scales())[0], 100);
-        assert_eq!(value(&system_templates()).as_array().unwrap().len(), 10);
+        assert_eq!(
+            value(&system_templates()).as_array().unwrap().len(),
+            kentos_sheet::template::system_templates().len(),
+            "the binding answers every system template of the core"
+        );
         assert_eq!(error(&apply_op("{", "{}"))["code"], "bad_json");
         assert_eq!(
             error(&read_book(

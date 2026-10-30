@@ -1,7 +1,7 @@
-//! The cards' pictures (docs/adr/0800 §3): screenshots of KentOS itself,
-//! taken by `scripts/launcher/pictures.py` from the repository's own
-//! drawings and bundled with the launcher, 720 × 360 PNG (a card's picture
-//! at twice its size). A manifest names one (`"picture": "mimari"`) or
+//! The cards' pictures (docs/adr/0800 §3): the owner's pictures of each
+//! program (30 October 2026), cut to a card's 2:1 and scaled to twice its
+//! size by `scripts/launcher/pictures.py --fit` (720 × 360, 256-colour PNG),
+//! bundled with the launcher. A manifest names one (`"picture": "mimari"`) or
 //! gives a PNG of its own. Pictures are decoded once and kept as textures.
 
 use std::collections::HashMap;
@@ -9,29 +9,21 @@ use std::path::{Path, PathBuf};
 
 use iced::widget::image::Handle;
 
-/// A bundled screenshot.
+/// A bundled picture.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Shot {
-    /// A house's floor plan (samples/konut-3-1.kcad).
+    /// A floor plan of two flats around a central core.
     Mimari,
-    /// Parcels, blocks and contours (fixtures/interaction/v1/label-engine.kcad).
+    /// A zoning plan: blocks with their uses and floor-area ratios, parks, roads.
     Harita,
-    /// Thematic maps: heat, clusters, charts (fixtures/interaction/v1/renderers.kcad).
+    /// A city on its aerial image with parcels, roads and a highlighted area.
     Cbs,
-    /// A junction drawn with Plan yolu (the plan-road trace).
+    /// A road: its plan, cross-sections and long profile.
     Yol,
-    /// The statistics of a parcel layer as a chart (the charts trace).
-    Rapor,
 }
 
 impl Shot {
-    pub const ALL: [Shot; 5] = [
-        Shot::Mimari,
-        Shot::Harita,
-        Shot::Cbs,
-        Shot::Yol,
-        Shot::Rapor,
-    ];
+    pub const ALL: [Shot; 4] = [Shot::Mimari, Shot::Harita, Shot::Cbs, Shot::Yol];
 
     pub const fn key(self) -> &'static str {
         match self {
@@ -39,7 +31,6 @@ impl Shot {
             Shot::Harita => "harita",
             Shot::Cbs => "cbs",
             Shot::Yol => "yol",
-            Shot::Rapor => "rapor",
         }
     }
 
@@ -58,7 +49,6 @@ impl Shot {
             Shot::Harita => include_bytes!("../assets/pictures/harita.png"),
             Shot::Cbs => include_bytes!("../assets/pictures/cbs.png"),
             Shot::Yol => include_bytes!("../assets/pictures/yol.png"),
-            Shot::Rapor => include_bytes!("../assets/pictures/rapor.png"),
         }
     }
 }

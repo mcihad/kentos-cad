@@ -197,11 +197,11 @@
       "name": "CAD, yerel, mm",
       "notes": [
         "CAD · teknik çizim",
-        "Detay / imalat · mm · 1:1",
+        "Mimari proje · mm · 1:1",
         "Mil plakası"
       ],
       "options": {
-        "cadWork": "detail",
+        "cadWork": "architecture",
         "drawingFont": "barlow",
         "drawingUnit": "mm",
         "name": "Mil plakası",
@@ -219,7 +219,7 @@
         ],
         [
           "Çizim",
-          "Detay / imalat"
+          "Mimari proje"
         ],
         [
           "Koordinatlar",
@@ -260,10 +260,11 @@
       "name": "CAD, yerel, cm, 1:20",
       "notes": [
         "CAD · teknik çizim",
-        "Yerel · cm · 1:20",
+        "Mimari proje · cm · 1:20",
         "Yeni proje"
       ],
       "options": {
+        "cadWork": "architecture",
         "drawingFont": "barlow",
         "drawingUnit": "cm",
         "name": "Yeni proje",
@@ -278,6 +279,10 @@
         [
           "Tür",
           "CAD, teknik çizim"
+        ],
+        [
+          "Çizim",
+          "Mimari proje"
         ],
         [
           "Koordinatlar",

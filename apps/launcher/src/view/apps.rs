@@ -33,7 +33,7 @@ pub fn page(launcher: &Launcher) -> Element<'_, Message> {
         .into()
 }
 
-/// “5 uygulama • 3 kurulu • 2 yakında”, Uygulama ekle, and Tümünü güncelle
+/// “4 uygulama • 3 kurulu • 1 yakında”, Uygulama ekle, and Tümünü güncelle
 /// off with its reason: there is nothing to check updates with yet.
 fn strip(launcher: &Launcher) -> Element<'_, Message> {
     let counts = Counts::of(launcher.registry.apps.iter().map(|a| launcher.status(a)));

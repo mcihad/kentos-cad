@@ -698,6 +698,13 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
         min_size: Some(iced::Size::new(1100.0, 650.0)),
         // A drawing with unsaved changes asks before the window closes.
         exit_on_close_request: false,
+        // Each program is an application of its own to the desktop (docs/adr/0802): its window's class and
+        // Wayland application id is its program's name, as its .desktop file is named (apps/desktop/packaging).
+        #[cfg(target_os = "linux")]
+        platform_specific: iced::window::settings::PlatformSpecific {
+            application_id: program.map_or("kentos-cad", Module::program).to_owned(),
+            ..Default::default()
+        },
         ..iced::window::Settings::default()
     })
     .antialiasing(true)

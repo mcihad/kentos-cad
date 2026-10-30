@@ -8,43 +8,43 @@ import type { MapView } from "./MapView";
 import type { Source } from "./Source";
 import type { Stroke } from "./Stroke";
 
-export type MapItem = {
+export type MapItem = { 
 /**
  * None: the physical viewport scale; Some: explicitly choose this annotation representation.
  */
-annotationScale?: number, view: MapView, source?: Source, viewLocked?: boolean,
+annotationScale?: number, view: MapView, source?: Source, viewLocked?: boolean, 
 /**
  * Boundary in content-frame coordinates, independent of camera scale.
  */
-clip?: Clip, framePlot?: boolean, layers: MapLayers,
+clip?: Clip, framePlot?: boolean, layers: MapLayers, 
 /**
  * Another coordinate system for the map (EPSG code text); none: the project's.
  */
-crs?: string,
+crs?: string, 
 /**
  * Coordinate grids (karelaj).
  */
-grids: Array<MapGrid>,
+grids: Array<MapGrid>, 
 /**
  * An overview: this map shows where that map's frame is.
  */
-overviewOf?: string,
+overviewOf?: string, 
 /**
  * How the overview draws the other map's frame.
  */
-overviewFrame: Stroke,
+overviewFrame: Stroke, 
 /**
  * The host clips the content to the atlas object.
  */
-clipToAtlasFeature: boolean,
+clipToAtlasFeature: boolean, 
 /**
  * A band inside the frame and around the content for the grid's outside labels: the frame holds them (design §3.1).
  */
-labelBand: number,
+labelBand: number, 
 /**
  * Layers drawn otherwise in this map (docs/adr/0314 §1), at most one per layer.
  */
-layerOverrides?: Array<LayerOverride>,
+layerOverrides?: Array<LayerOverride>, 
 /**
  * The project's level this map draws (docs/adr/0716): a level's plan. None: every level.
  */

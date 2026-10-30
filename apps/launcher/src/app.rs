@@ -646,8 +646,8 @@ impl Launcher {
         )
     }
 
-    /// The program a recent drawing opens in: its module's app (own program
-    /// or `kentos-cad --modul`), else `kentos-cad` alone.
+    /// The program a recent drawing opens in: its module's own program (docs/adr/0802), else `kentos-cad` alone
+    /// for a drawing kept before modules.
     pub fn recent_spec(&self, row: &Row) -> Result<Spec, String> {
         if let Some(module) = row.module {
             let app = self
@@ -850,7 +850,7 @@ mod tests {
 
     #[test]
     fn states_follow_what_is_found_and_the_summary_counts_them() {
-        let launcher = launcher(kentos(&["kentos-cad"]));
+        let launcher = launcher(kentos(&["kentos-mimari", "kentos-harita", "kentos-gis"]));
         let states: Vec<Status> = launcher
             .registry
             .apps
@@ -863,21 +863,23 @@ mod tests {
                 Status::Installed,
                 Status::Installed,
                 Status::Installed,
-                Status::Soon,
                 Status::Soon
             ]
         );
         assert_eq!(
             cards::Counts::of(states).parts(),
-            ["5 uygulama", "3 kurulu", "2 yakında"]
+            ["4 uygulama", "3 kurulu", "1 yakında"]
         );
         let none = super::tests::launcher(Fixed(HashMap::new()));
         assert_eq!(none.status(&none.registry.apps[0]), Status::Missing);
+        // kentos-cad alone does not make a module installed: each is a program of its own (docs/adr/0802).
+        let cad = super::tests::launcher(kentos(&["kentos-cad"]));
+        assert_eq!(cad.status(&cad.registry.apps[0]), Status::Missing);
     }
 
     #[test]
     fn a_recent_drawing_opens_in_its_module() {
-        let launcher = launcher(kentos(&["kentos-cad", "kentos-gis"]));
+        let launcher = launcher(kentos(&["kentos-cad", "kentos-mimari", "kentos-gis"]));
         let row = |module: Option<Module>| Row {
             name: "a.kcad".into(),
             folder: "~".into(),
@@ -892,8 +894,15 @@ mod tests {
         let mimari = launcher
             .recent_spec(&row(Some(Module::Architecture)))
             .expect("opens");
-        assert_eq!(mimari.program, PathBuf::from("/opt/kentos/kentos-cad"));
-        assert_eq!(mimari.args, os(&["--modul", "mimari", "/ev/a.kcad"]));
+        assert_eq!(mimari.program, PathBuf::from("/opt/kentos/kentos-mimari"));
+        assert_eq!(mimari.args, os(&["/ev/a.kcad"]));
+        let harita = launcher.recent_spec(&row(Some(Module::Map)));
+        assert!(
+            harita
+                .expect_err("not installed")
+                .contains("kentos-harita bulunamadı"),
+            "kentos-cad does not stand in for KentOS Harita"
+        );
         let gis = launcher
             .recent_spec(&row(Some(Module::Gis)))
             .expect("opens");
@@ -924,17 +933,17 @@ mod tests {
             Some("kentos-mimari"),
             "the first at first"
         );
-        let _ = launcher.update(Message::Move(1, 0));
         let _ = launcher.update(Message::Move(0, 1));
         assert_eq!(
             launcher.selected.as_deref(),
-            Some("kentos-rapor"),
+            Some("kentos-yol"),
             "down a row of three"
         );
+        let _ = launcher.update(Message::Move(-1, 0));
         let _ = launcher.update(Message::Move(5, 5));
         assert_eq!(
             launcher.selected.as_deref(),
-            Some("kentos-rapor"),
+            Some("kentos-yol"),
             "the last at most"
         );
         let _ = launcher.update(Message::Search("gis".into()));
@@ -959,8 +968,7 @@ mod tests {
             .collect();
         assert_eq!(said.len(), 1);
         assert!(
-            said[0]
-                .starts_with("KentOS Harita başlatılamadı: kentos-harita ve kentos-cad bulunamadı"),
+            said[0].starts_with("KentOS Harita başlatılamadı: kentos-harita bulunamadı"),
             "{}",
             said[0]
         );

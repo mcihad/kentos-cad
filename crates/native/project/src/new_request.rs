@@ -275,8 +275,8 @@ mod tests {
         );
     }
 
-    /// A new CAD project's work is the wizard's (docs/adr/0801): a building in metres, a plan on a system, a detail
-    /// in millimetres; a local unit no work has none, nor has a CBS project.
+    /// A new CAD project's work is the wizard's (docs/adr/0801, 0802): a drawing of its own a building's whatever
+    /// its unit, one on a system a map's; a CBS project has none.
     #[test]
     fn a_new_cad_project_takes_its_works_work() {
         use kentos_contracts::CadWork;
@@ -295,11 +295,11 @@ mod tests {
         );
         assert_eq!(
             work(json!({ "workspace": "cad", "drawingUnit": "mm" })),
-            Some(CadWork::Detail)
+            Some(CadWork::Architecture)
         );
         assert_eq!(
             work(json!({ "workspace": "cad", "drawingUnit": "cm" })),
-            None
+            Some(CadWork::Architecture)
         );
         assert_eq!(work(json!({ "srid": 5256 })), None);
         // The project it makes carries it.
@@ -307,7 +307,7 @@ mod tests {
             &made(json!({ "workspace": "cad", "drawingUnit": "mm" })).expect("a project"),
         )
         .expect("a drawing");
-        assert_eq!(snapshot.settings.cad_work, Some(CadWork::Detail));
+        assert_eq!(snapshot.settings.cad_work, Some(CadWork::Architecture));
     }
 
     #[test]

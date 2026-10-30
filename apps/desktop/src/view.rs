@@ -1257,8 +1257,11 @@ impl App {
         // Every command; none is suggested while one runs: what is typed is
         // the running command's (line_commands).
         // The catalog's commands, then the user's models (borrowed from the library).
-        let mut commands: Vec<LineCommand<'_>> =
-            all_line_commands(self.autocad_names()).collect::<Vec<_>>();
+        // A module's program lists only its own commands (docs/adr/0802).
+        let mut commands: Vec<LineCommand<'_>> = all_line_commands(self.autocad_names())
+            .filter(|(id, _)| self.offers(id))
+            .map(|(_, line)| line)
+            .collect::<Vec<_>>();
         commands.extend(self.model_line_commands());
         let line = line
             .commands(commands)
@@ -2161,7 +2164,10 @@ impl App {
         if self.session.is_running() {
             return Vec::new();
         }
-        all_line_commands(self.autocad_names()).collect()
+        all_line_commands(self.autocad_names())
+            .filter(|(id, _)| self.offers(id))
+            .map(|(_, line)| line)
+            .collect()
     }
 }
 
@@ -2179,22 +2185,31 @@ impl App {
     }
 }
 
-/// Every command as the command line lists it, made once; with AutoCAD's
+/// A row of the command line's list with the id of the command it runs.
+type Line = (&'static str, LineCommand<'static>);
+
+/// Every command as the command line lists it, with its command's id, made once; with AutoCAD's
 /// names too when that profile is on (alias_profile.rs, docs/adr/0282).
-fn all_line_commands(autocad: bool) -> impl Iterator<Item = LineCommand<'static>> {
-    static ALL: std::sync::OnceLock<Vec<LineCommand<'static>>> = std::sync::OnceLock::new();
-    static AUTOCAD: std::sync::OnceLock<Vec<LineCommand<'static>>> = std::sync::OnceLock::new();
+fn all_line_commands(autocad: bool) -> impl Iterator<Item = Line> {
+    static ALL: std::sync::OnceLock<Vec<Line>> = std::sync::OnceLock::new();
+    static AUTOCAD: std::sync::OnceLock<Vec<Line>> = std::sync::OnceLock::new();
     let list = if autocad {
         AUTOCAD.get_or_init(|| {
             catalog()
                 .commands()
                 .iter()
-                .map(|c| crate::alias_profile::line_command(c, line_command(c)))
+                .map(|c| (c.id, crate::alias_profile::line_command(c, line_command(c))))
                 .chain(crate::alias_profile::method_lines())
                 .collect()
         })
     } else {
-        ALL.get_or_init(|| catalog().commands().iter().map(line_command).collect())
+        ALL.get_or_init(|| {
+            catalog()
+                .commands()
+                .iter()
+                .map(|c| (c.id, line_command(c)))
+                .collect()
+        })
     };
     list.iter().copied()
 }

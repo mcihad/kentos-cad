@@ -79,6 +79,11 @@ impl App {
         match id {
             "file.new" => {
                 let state = wizard::State::new(self);
+                // KentOS Mimari asks nothing (docs/adr/0802): a building in metres at 1:100, its coordinates
+                // local; Proje ayarları changes them later.
+                if self.program == Some(kentos_launch::Module::Architecture) {
+                    return self.new_project_at_once(state);
+                }
                 self.open_project_window(Window::New(Box::new(state)));
             }
             "file.settings" | "crs.set" | "arch.settings" => match &self.document {

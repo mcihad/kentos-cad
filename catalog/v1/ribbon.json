@@ -120,6 +120,9 @@
            "file.import.kml",
            "file.import.gpkg",
            "file.import.csv"
+          ],
+          "works": [
+           "map"
           ]
          },
          {
@@ -128,6 +131,9 @@
            "file.import.ncn",
            "file.import.gnss",
            "file.import.photos"
+          ],
+          "works": [
+           "map"
           ]
          }
         ]
@@ -155,6 +161,9 @@
            "file.export.parquet",
            "file.export.gml",
            "file.export.csv"
+          ],
+          "works": [
+           "map"
           ]
          },
          {
@@ -162,6 +171,9 @@
           "items": [
            "file.export.ncn",
            "file.export.xyz"
+          ],
+          "works": [
+           "map"
           ]
          }
         ]
@@ -248,14 +260,29 @@
        "tool.revcloud",
        "tool.wipeout",
        "tool.sector",
-       "tool.rangeRings",
+       {
+        "command": "tool.rangeRings",
+        "works": [
+         "map"
+        ]
+       },
        "tool.tangentLine",
        "tool.fourthCorner",
        "tool.divide",
        "tool.pointsBetween",
        "tool.intersectPoint",
-       "tool.vertexPoints",
-       "tool.adjoin"
+       {
+        "command": "tool.vertexPoints",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "tool.adjoin",
+        "works": [
+         "map"
+        ]
+       }
       ],
       "keep": true
      },
@@ -557,7 +584,10 @@
        },
        {
         "command": "crs.query",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        },
        {
         "command": "tool.measureAngle",
@@ -569,7 +599,10 @@
        },
        {
         "command": "tool.stationOffset",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        }
       ]
      },
@@ -772,7 +805,10 @@
        },
        {
         "command": "raster.add",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        },
        {
         "command": "pointcloud.add",
@@ -781,10 +817,30 @@
       ],
       "overflow": [
        "tool.imageClip",
-       "raster.georef",
-       "raster.mosaic",
-       "raster.gpkgRead",
-       "raster.stac"
+       {
+        "command": "raster.georef",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "raster.mosaic",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "raster.gpkgRead",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "raster.stac",
+        "works": [
+         "map"
+        ]
+       }
       ]
      },
      {
@@ -860,7 +916,11 @@
       ],
       "overflow": [
        "service.info",
-       "service.connections"
+       "service.connections",
+       "source.postgis"
+      ],
+      "works": [
+       "map"
       ]
      },
      {
@@ -877,7 +937,10 @@
        },
        {
         "command": "file.import.photos",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        }
       ],
       "overflow": [
@@ -901,6 +964,9 @@
        "address.data",
        "address.compare",
        "address.providers"
+      ],
+      "works": [
+       "map"
       ]
      }
     ]
@@ -1845,6 +1911,9 @@
            "view.levels.down"
           ]
          }
+        ],
+        "works": [
+         "architecture"
         ]
        },
        {
@@ -2065,6 +2134,9 @@
         "command": "gis.derivation",
         "size": "small"
        }
+      ],
+      "works": [
+       "map"
       ]
      }
     ]
@@ -2091,7 +2163,10 @@
        },
        {
         "command": "sheet.levels",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "architecture"
+        ]
        }
       ]
      },
@@ -2109,7 +2184,10 @@
        },
        {
         "command": "file.export.atlas",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        }
       ]
      }
@@ -2235,6 +2313,9 @@
            "file.export.parquet",
            "file.export.gml",
            "file.export.csv"
+          ],
+          "works": [
+           "map"
           ]
          },
          {
@@ -2242,6 +2323,9 @@
           "items": [
            "file.export.ncn",
            "file.export.xyz"
+          ],
+          "works": [
+           "map"
           ]
          }
         ]
@@ -3758,6 +3842,9 @@
        "command": "tool.copyToLayer",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ]
     },
     {
@@ -3840,6 +3927,9 @@
         }
        ]
       }
+     ],
+     "works": [
+      "map"
      ]
     }
    ]
@@ -4069,6 +4159,9 @@
         }
        ]
       }
+     ],
+     "works": [
+      "map"
      ]
     }
    ]
@@ -4308,6 +4401,9 @@
         }
        ]
       }
+     ],
+     "works": [
+      "map"
      ]
     }
    ]
@@ -4739,6 +4835,9 @@
    "label": "Blok",
    "kinds": [
     "insert"
+   ],
+   "modes": [
+    "cad"
    ],
    "panels": [
     {
@@ -5337,6 +5436,9 @@
        "command": "processing.run.pointcloud.areaStats",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ]
     }
    ]
@@ -5448,6 +5550,9 @@
        "command": "arch.wallJoinCheck",
        "size": "small"
       }
+     ],
+     "works": [
+      "architecture"
      ]
     },
     {
@@ -5487,6 +5592,9 @@
        "command": "tool.tag",
        "size": "small"
       }
+     ],
+     "works": [
+      "architecture"
      ]
     }
    ]
@@ -5570,6 +5678,9 @@
        "command": "tool.scheduleOpenings",
        "size": "small"
       }
+     ],
+     "works": [
+      "architecture"
      ]
     }
    ]
@@ -5669,6 +5780,9 @@
        "command": "tool.scheduleSpaces",
        "size": "small"
       }
+     ],
+     "works": [
+      "architecture"
      ]
     }
    ]
@@ -5756,6 +5870,9 @@
        "command": "tool.space",
        "size": "small"
       }
+     ],
+     "works": [
+      "architecture"
      ]
     }
    ]
@@ -5844,9 +5961,73 @@
        "command": "arch.viewRefs",
        "size": "small"
       }
+     ],
+     "works": [
+      "architecture"
      ]
     }
    ]
   }
- ]
+ ],
+ "modules": {
+  "everywhere": [
+   "layer.new",
+   "layer.newGroup",
+   "layer.showAll",
+   "layer.newPoint",
+   "layer.newLine",
+   "layer.newArea",
+   "layer.newAnnotation",
+   "layer.filter",
+   "layer.filterClear",
+   "layer.labels",
+   "tool.labelMove",
+   "tool.labelPin",
+   "tool.labelHide",
+   "tool.labelRotate",
+   "view.pinnedLabels",
+   "view.unplacedLabels",
+   "draft.overlap.allow",
+   "draft.overlap.layer",
+   "draft.overlap.layers",
+   "draft.topologyPoints",
+   "crs.set",
+   "data.domains",
+   "data.subtypes",
+   "data.layerRules",
+   "data.tableStyles",
+   "data.duplicate",
+   "data.contingents",
+   "chart.bar",
+   "chart.box",
+   "chart.histogram",
+   "chart.line",
+   "chart.pie",
+   "chart.scatter",
+   "processing.history",
+   "processing.run.selection.byExpression",
+   "processing.run.selection.byLocation"
+  ],
+  "map": [
+   "layer.crs",
+   "layer.reproject",
+   "view.mapCrs",
+   "file.import.fgb",
+   "file.import.gml",
+   "file.import.parquet",
+   "file.import.maplibre",
+   "file.export.maplibre",
+   "mesh.add",
+   "source.link",
+   "source.read",
+   "source.write",
+   "source.writeTogether",
+   "source.status",
+   "source.reconcile",
+   "source.relink",
+   "source.unlink",
+   "profile.window",
+   "linearRef.eventLinks"
+  ]
+ }
 }

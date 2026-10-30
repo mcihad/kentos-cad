@@ -53,9 +53,9 @@ impl App {
     }
 
     /// The contextual tabs of the drawing's mode (the web's Seçim, shown
-    /// while something is selected).
+    /// while something is selected), a CAD project's cut to its work (docs/adr/0802).
     pub(crate) fn contextual_tabs(&self) -> impl Iterator<Item = &'static Tab> {
-        catalog().contextual_in(self.work_mode())
+        catalog().contextual_for_work(self.work_mode(), self.ribbon_work())
     }
 
     /// The contextual tab the selection opens (docs/adr/0622 §4): its
@@ -85,7 +85,7 @@ impl App {
                     }
                 }
                 let id = catalog()
-                    .contextual_for(self.work_mode(), &kinds)
+                    .contextual_for(self.work_mode(), self.ribbon_work(), &kinds)
                     .map(|t| t.id);
                 self.selection_tab_cache
                     .set(Some((key.0, key.1, key.2, key.3, id)));

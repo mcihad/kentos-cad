@@ -51,6 +51,12 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0801: CAD projesinin işi `cadWork` (`.kcad` şema 135; Mimari proje, Harita / imar planı, Detay / imalat); web'in
+  sihirbazı onu yazar (ortak `fixtures/project/v1/wizard.json` değişti), `cad.settings.set`'in 16 yeni `cadWork`
+  durumu web'in işleyicisinde de geçer, şerit `catalog/v1/ribbon.json`'un `works`'üne uyar, işi olmayan CAD çiziminde
+  “Bu CAD çizimi hangi iş için?” sorusu ve durum çubuğunun işi; şema 135 WASM yeniden derlenince ortak kodekle okunur.
+  Ayrı programlar (`kentos-mimari`, `kentos-harita`, `kentos-gis`) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
+  karşılığı yoktur.
 - ADR 0755: bağlı tablonun CHECK ve tekil kısıtları bağın `checks` ve `uniques`'inde (`.kcad` şema 134), alanın
   `column.check`'i; CHECK SQL'in kendi anlamıyla formda ve komutta sorulur, tek sütunlu IN listesi açılır liste,
   birden çok sütunlu tekil kısıt `not_unique`, tablonun reddi `source_check` ve benzerleriyle; Alanlar'da “Tablonun
@@ -3546,6 +3552,18 @@ Kabul: her teslimin test komutu, veri seti, revision ve ölçüm ortamı bellidi
 - [ ] `OPS-07` PostgreSQL backup/PITR, object store revision retention ve `.kcad` artifact restore'u birlikte planla; restore denemesi yapmadan backup'ın çalıştığı kabul edilmesin. — **26 Ekim, kısmen ([ADR 0650](docs/adr/0650-server-backup-and-restore-drill.md)):** tek anlı döküm ve nesneler, `kentosd backup` ve `backup check`, geçici veritabanında geri yükleme tatbikatı. **29 Ekim ([ADR 0739](docs/adr/0739-job-user-share-result-cache-full-disk-rotated-backups.md)):** düzenli yedek (`kentosd backup --into KÖK --keep N`, değişmeyen nesneler önceki yedekten bağlanır, döndürme, systemd zamanlayıcısı örneği), dolu disk tatbikatı. **29 Ekim ([ADR 0744](docs/adr/0744-job-cache-gain-and-point-in-time-recovery.md)):** PITR tatbikatı (`scripts/ops/pitr_drill.sh`: WAL arşivi, temel yedek, hedef an; RPO `archive_timeout`, RTO ölçüldü) ve nesne deposunun döndürülen yedeklerle geri getirilmesinin yolu. Açık: gerçek KentOS veritabanıyla uçtan uca PITR, nesne deposunun saklama süresi.
 - [ ] `OPS-08` RPO/RTO ve disaster recovery prosedürünü ölçümle belirle; DB revision manifest'i ile object store dosyaları restore sonrası tutarlı olsun.
 - [ ] `OPS-09` Cloud dosya/asset erişiminde yetkili kısa ömürlü indirme bağlantısı, audit ve doğrulanmış hash kullan; URL token'larını log veya proje dosyasına yazma. Doğrudan object-store signed URL'nin süre bitene kadar çalışabileceğini politika/UI'da açıkla; anlık iptal gereken akışta her isteği güncel yetkiye bağlayan gateway/token denetimi kullan. Cache/304 ve devam eden aktarımın iptal davranışını da sınayarak doğrula.
+- [x] `OPS-16` KentOS Launcher — **30 Ekim, [ADR 0800](docs/adr/0800-kentos-launcher.md)** (sahibin isteği: görseldeki gibi
+  bir launcher; “ileride rust ile yazılmamış yazılımlar da entegre edebiliriz”): ayrı program `kentos-launcher`
+  (`apps/launcher`); uygulamalar `kentos.launcher-app/1` manifestleri (gömülü KentOS Mimari, Harita, GIS; Yakında YOL; kullanıcının ve kurumun klasörleri; herhangi bir dilde program ya da web adresi; Uygulama ekle, Düzenle, Kaldır),
+  ayrı süreç ve günlük, Son dosyalar, dürüst Güncellemeler/İndirmeler (güncelleme servisi yok), `snapshot` komutu.
+  Ortak sözleşme `crates/native/launch` (modüller, komut satırı, programın bulunması, son dosyalar). Açık: gerçek pencerede
+  fare ve klavye kabulü, Windows ve macOS, güncelleme servisi (`OPS-10`).
+- [x] `OPS-17` KentOS Mimari, Harita ve GIS ayrı programlar — **30 Ekim, [ADR 0801](docs/adr/0801-kentos-modules-and-their-programs.md)**
+  (sahibin sözleri: “Mimari CAD, Harita CAD ve GIS ayrımı”, “Uygulamaların her biri ayrı binary olacak değil mi”):
+  masaüstü kütüphane (`kentos_desktop`) ve programlar (`kentos-cad` hepsi, `--modul`; `kentos-mimari`, `kentos-harita`,
+  `kentos-gis`, `--features module-programs`); CAD projesinin işi `cadWork` (`.kcad` şema 135), işe göre şerit, eski
+  CAD çiziminde bir kez sorulan iş, başka modülün dosyası o modülün programına devredilir. Açık: her programın yalnız
+  kendi kodunu taşıması (özellik kapılarıyla kırpma), modül başına sürüm ve paket (`OPS-10`), gerçek pencerede devir kabulü.
 - [ ] `OPS-10` Desktop Windows/macOS/Linux paketleri, dosya association, installer/uninstaller, code signing/notarization uygunluğu ve güvenli update/rollback planını kur.
 - [ ] `OPS-11` CPython, font, shader, native format/CRS kütüphanesi ve grid asset'lerinin paket/ABI/lisans envanterini tut; bundle boyutu ve offline çalışmayı test et.
 - [ ] `OPS-12` Web asset/WASM sürümlerini content hash ve protokol uyumluluğuyla dağıt; eski service worker/cache yeni schema ile karışmasın. Güncelleme aktif çizimi kaybettirmesin.

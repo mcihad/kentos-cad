@@ -14,7 +14,7 @@ use crate::files;
 use crate::manifest::{self, Folder, Manifest, Origin};
 
 /// The bundled manifests, by file name.
-const BUILTINS: [(&str, &str); 5] = [
+const BUILTINS: [(&str, &str); 4] = [
     (
         "kentos-mimari.json",
         include_str!("../assets/apps/kentos-mimari.json"),
@@ -30,10 +30,6 @@ const BUILTINS: [(&str, &str); 5] = [
     (
         "kentos-yol.json",
         include_str!("../assets/apps/kentos-yol.json"),
-    ),
-    (
-        "kentos-rapor.json",
-        include_str!("../assets/apps/kentos-rapor.json"),
     ),
 ];
 
@@ -284,13 +280,7 @@ mod tests {
         let ids: Vec<&str> = registry.apps.iter().map(|a| a.id.as_str()).collect();
         assert_eq!(
             ids,
-            [
-                "kentos-mimari",
-                "kentos-harita",
-                "kentos-gis",
-                "kentos-yol",
-                "kentos-rapor"
-            ]
+            ["kentos-mimari", "kentos-harita", "kentos-gis", "kentos-yol"]
         );
         for module in Module::ALL {
             let app = registry
@@ -308,7 +298,7 @@ mod tests {
             .filter(|a| a.state == State::Soon)
             .map(|a| a.name.as_str())
             .collect();
-        assert_eq!(soon, ["KentOS YOL", "KentOS Rapor"]);
+        assert_eq!(soon, ["KentOS YOL"]);
     }
 
     #[test]
@@ -348,7 +338,6 @@ mod tests {
                 "kentos-harita",
                 "kentos-gis",
                 "kentos-yol",
-                "kentos-rapor",
                 "rapor"
             ]
         );
@@ -383,7 +372,7 @@ mod tests {
             beside: Some(root.join("yok")),
             user: None,
         });
-        assert_eq!(none.apps.len(), 5);
+        assert_eq!(none.apps.len(), 4);
         assert!(none.problems.is_empty());
         let _ = std::fs::remove_dir_all(&root);
     }

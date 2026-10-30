@@ -6,23 +6,23 @@ import type { MapLevel } from "./MapLevel";
 import type { MapViewPrim } from "./MapViewPrim";
 import type { RectUm } from "./RectUm";
 
-export type MapPrim = { clipShape?: Clip, item: string,
+export type MapPrim = { clipShape?: Clip, item: string, 
 /**
  * The content's rectangle, before the frame's turn about its own centre.
  */
-clip: RectUm, rotation: number, view: MapViewPrim, layers: MapLayers,
+clip: RectUm, rotation: number, view: MapViewPrim, layers: MapLayers, 
 /**
  * Layers drawn otherwise in this map (docs/adr/0314 §1).
  */
-layerOverrides?: Array<LayerOverride>,
+layerOverrides?: Array<LayerOverride>, 
 /**
  * The level the map draws (docs/adr/0716); none: every level.
  */
-level?: MapLevel, crs?: string,
+level?: MapLevel, crs?: string, 
 /**
  * The ground the clip covers: min east, min north, max east, max north.
  */
-extent?: [number, number, number, number],
+extent?: [number, number, number, number], 
 /**
  * Clip the content to this atlas object.
  */

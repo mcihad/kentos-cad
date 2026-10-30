@@ -16,7 +16,7 @@ use iced::widget::operation;
 use kentos_ui::widget::search_box::Found;
 
 use crate::app::{App, Message};
-use crate::catalog::{Command, Item, Panel, Standing, catalog};
+use crate::catalog::{Command, Panel, Standing, catalog};
 use crate::exchange::apply::fold_turkish;
 use crate::input::release_keyboard;
 
@@ -82,17 +82,7 @@ fn scored_commands(q: &str) -> Vec<(f64, &'static Command)> {
 /// Every command a panel offers: its buttons, a family's tools, a menu's
 /// items and its seldom used ones (the web's `panelCommands`).
 fn panel_commands(panel: &Panel) -> Vec<&'static str> {
-    let mut ids = Vec::new();
-    for item in &panel.items {
-        match item {
-            Item::Command { id, .. } => ids.push(*id),
-            Item::Split { entries, .. } => ids.extend(entries.iter().map(|e| e.id)),
-            Item::Menu { ids: menu, .. } => ids.extend(menu.iter().copied()),
-            Item::Builtin(_) => {}
-        }
-    }
-    ids.extend(panel.overflow.iter().copied());
-    ids
+    panel.commands()
 }
 
 impl App {
@@ -121,8 +111,10 @@ impl App {
     /// ties keep the web's order, the models registered after).
     pub(crate) fn hits(&self) -> Vec<Hit> {
         let q = fold_turkish(&self.ribbon_search);
+        // A module's program finds only its own commands (docs/adr/0802).
         let mut scored: Vec<(f64, Hit)> = scored_commands(&q)
             .into_iter()
+            .filter(|(_, c)| self.offers(c.id))
             .map(|(score, c)| (score, Hit::Command(c)))
             .collect();
         if !q.is_empty() {

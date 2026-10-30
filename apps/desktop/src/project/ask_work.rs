@@ -85,14 +85,11 @@ fn event(e: Event) -> Message {
     message(ProjectEvent::Work(e))
 }
 
-/// The work a drawing looks drawn for, as the wizard's works make them: a
-/// drawing on a coordinate system a map, one in millimetres a detail, any other
-/// a building.
+/// The work a drawing looks drawn for, as the wizard's works make them (docs/adr/0802): a drawing on a
+/// coordinate system a map, any other a building.
 pub(crate) fn guessed_work(s: &ProjectSettings) -> CadWork {
     if s.has_system() {
         CadWork::Map
-    } else if s.unit() == kentos_commands::DrawingUnit::Mm {
-        CadWork::Detail
     } else {
         CadWork::Architecture
     }

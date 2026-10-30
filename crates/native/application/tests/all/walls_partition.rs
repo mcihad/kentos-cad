@@ -143,8 +143,9 @@ fn locked_destination_missing_source_and_stale_revision_refuse_without_a_partial
     }
 }
 
+/// A curved source is partitioned too since ADR 0734: the partition is a concentric arc.
 #[test]
-fn source_height_and_architecture_survive_and_curved_edges_are_explicitly_refused() {
+fn source_height_and_architecture_survive_on_straight_and_curved_sources() {
     let (mut doc, _) = room();
     for bulges in [None, Some(vec![0.2])] {
         let made = completed(kentos_native_application::walls_create::execute(
@@ -158,16 +159,18 @@ fn source_height_and_architecture_survive_and_curved_edges_are_explicitly_refuse
         let mut i = request(made["uids"][0].as_str().unwrap());
         i.extent = PartitionExtent::Source;
         let before = doc.to_snapshot_v2();
-        if bulges.is_none() {
-            let p = completed(walls_partition::plan_in(&doc, &i));
-            assert_eq!(p["wall"]["walls"][0]["height"], 3.1);
-            assert_eq!(p["wall"]["walls"][0]["arch"]["discipline"], "architecture");
-        } else {
-            let refused = walls_partition::execute(&mut ExecutionContext::new(&mut doc), i);
-            assert!(
-                matches!(refused,CommandResult::Failed{ref error} if error.code=="invalid_wall" && error.path.as_deref()==Some("source"))
-            );
-        }
-        assert_eq!(doc.to_snapshot_v2(), before);
+        let p = completed(walls_partition::plan_in(&doc, &i));
+        let wall = &p["wall"]["walls"][0];
+        assert_eq!(wall["height"], 3.1);
+        assert_eq!(wall["arch"]["discipline"], "architecture");
+        let curved = wall["bulges"]
+            .as_array()
+            .is_some_and(|b| b.iter().any(|v| v.as_f64().is_some_and(|v| v != 0.0)));
+        assert_eq!(
+            curved,
+            bulges.is_some(),
+            "a curved source gives a curved partition: {wall}"
+        );
+        assert_eq!(doc.to_snapshot_v2(), before, "a plan writes nothing");
     }
 }

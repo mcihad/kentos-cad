@@ -3446,6 +3446,11 @@ impl App {
         if let Some(method) = catalog().method_by_alias(text)
             && let Some(option) = method.option
         {
+            // A module's program runs only its own commands (docs/adr/0802).
+            if let Some(why) = self.not_offered(method.id, method.title) {
+                self.error(why);
+                return Task::none();
+            }
             self.remember(text);
             let task = self.run_method(method.id, option, method.label);
             if self.session.is_running() {
@@ -3492,6 +3497,11 @@ impl App {
         };
         match found {
             Some(command) => {
+                // A module's program runs only its own commands (docs/adr/0802).
+                if let Some(why) = self.not_offered(command.id, command.title) {
+                    self.error(why);
+                    return Task::none();
+                }
                 // As on the web (`CommandLine.run`): the line's ↑ brings it back; the
                 // typed name is not said, a tool says its own as it starts.
                 self.remember(text);

@@ -81,7 +81,7 @@ pub enum State {
 /// How an app starts.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Launch {
-    /// A KentOS module (docs/adr/0801): its own program, else `kentos-cad --modul`.
+    /// A KentOS module (docs/adr/0801, 0802): its own program.
     Kentos(Module),
     /// Any program: a path (relative to the manifest's folder) or a name on `PATH`.
     Program {

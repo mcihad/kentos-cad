@@ -2,7 +2,7 @@
 //! Placement belongs to the desktop's `catalog/v1/ribbon.json` (ADR 0622): project-specific tabs and the selected
 //! object's contextual tab. `PORTED` records working desktop handlers; a pending command keeps its reason.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::sync::OnceLock;
 
 use kentos_ui::icon::Icon;
@@ -935,6 +935,13 @@ pub struct Tab {
     pub panels: Vec<Panel>,
 }
 
+impl Tab {
+    /// Every command the tab offers: its panels' (`Panel::commands`).
+    pub fn commands(&self) -> impl Iterator<Item = &'static str> + '_ {
+        self.panels.iter().flat_map(Panel::commands)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Panel {
     pub label: &'static str,
@@ -947,6 +954,31 @@ pub struct Panel {
     pub keep: bool,
     /// The corner button of the title (↘): another tab, or a command.
     pub launcher: Option<Launcher>,
+}
+
+impl Panel {
+    /// Every command the panel offers: its buttons, a family's tools, a menu's items, its seldom used ones and its
+    /// launcher's command (the web's `panelCommands`).
+    pub fn commands(&self) -> Vec<&'static str> {
+        let mut ids = Vec::new();
+        for item in &self.items {
+            match item {
+                Item::Command { id, .. } => ids.push(*id),
+                Item::Split { entries, .. } => ids.extend(entries.iter().map(|e| e.id)),
+                Item::Menu { ids: menu, .. } => ids.extend(menu.iter().copied()),
+                Item::Builtin(_) => {}
+            }
+        }
+        ids.extend(self.overflow.iter().copied());
+        if let Some(Launcher {
+            target: LauncherTarget::Command(id),
+            ..
+        }) = &self.launcher
+        {
+            ids.push(id);
+        }
+        ids
+    }
 }
 
 /// A panel's launcher (the web's `RibbonLauncher`).
@@ -1041,6 +1073,11 @@ pub struct Catalog {
     mode_tabs: Vec<(kentos_commands::Workspace, Vec<Tab>)>,
     /// The CAD ribbon cut to each work (docs/adr/0801): the tabs and panels whose `works` name it, or none.
     work_tabs: Vec<(kentos_commands::CadWork, Vec<Tab>)>,
+    /// The commands each KentOS module's program offers (docs/adr/0802): its ribbon's, contextual tabs too, and the
+    /// ones the ribbon file gives it beyond them.
+    module_commands: Vec<(kentos_launch::Module, HashSet<&'static str>)>,
+    /// Every command some ribbon holds: one no ribbon holds is the shell's (Geri al, Komut ara …), every module's.
+    ribbon_commands: HashSet<&'static str>,
     quick: Vec<&'static str>,
     modes: Vec<Mode>,
     /// The menu bar's menus by id: their blocks of command ids, in order.
@@ -1140,8 +1177,44 @@ impl Catalog {
         .filter(|tab| !tab.contextual)
     }
 
-    /// The contextual ribbon tabs of a project type (the web's Seçim, shown
-    /// while something is selected).
+    /// Whether a module's program offers a command (docs/adr/0802): its ribbon holds it (for one of its works,
+    /// contextual tabs too), the ribbon file gives it to the module, or no ribbon holds it (the shell's).
+    pub fn module_has(&self, module: kentos_launch::Module, id: &str) -> bool {
+        !self.ribbon_commands.contains(id)
+            || self
+                .module_commands
+                .iter()
+                .any(|(m, ids)| *m == module && ids.contains(id))
+    }
+
+    /// The contextual tabs of a project type cut to a CAD work (docs/adr/0802), as `tabs_for` cuts the others.
+    pub fn contextual_for_work(
+        &self,
+        mode: kentos_commands::Workspace,
+        work: Option<kentos_commands::CadWork>,
+    ) -> impl Iterator<Item = &Tab> {
+        let cut = match (mode, work) {
+            (kentos_commands::Workspace::Cad, Some(work)) => self
+                .work_tabs
+                .iter()
+                .find(|(w, _)| *w == work)
+                .map(|(_, tabs)| tabs),
+            _ => None,
+        };
+        cut.or_else(|| {
+            self.mode_tabs
+                .iter()
+                .find(|(m, _)| *m == mode)
+                .map(|(_, tabs)| tabs)
+        })
+        .unwrap_or(&self.tabs)
+        .iter()
+        .filter(|tab| tab.contextual)
+    }
+
+    /// The contextual ribbon tabs of a project type, every CAD work's at once (the window shows
+    /// `contextual_for_work`; the tests hold the whole one).
+    #[cfg(test)]
     pub fn contextual_in(&self, mode: kentos_commands::Workspace) -> impl Iterator<Item = &Tab> {
         self.mode_tabs
             .iter()
@@ -1157,15 +1230,19 @@ impl Catalog {
     pub fn contextual_for(
         &self,
         mode: kentos_commands::Workspace,
+        work: Option<kentos_commands::CadWork>,
         kinds: &[&str],
     ) -> Option<&Tab> {
         if kinds.is_empty() {
             return None;
         }
         let fits = |tab: &&Tab| kinds.iter().all(|k| tab.kinds.contains(k));
-        self.contextual_in(mode)
+        self.contextual_for_work(mode, work)
             .find(fits)
-            .or_else(|| self.contextual_in(mode).find(|tab| tab.kinds.contains(&"*")))
+            .or_else(|| {
+                self.contextual_for_work(mode, work)
+                    .find(|tab| tab.kinds.contains(&"*"))
+            })
     }
 
     /// Quick access bar (Kaydet, Geri al, Yinele).
@@ -1299,10 +1376,9 @@ impl Catalog {
             let Ok(mode) = serde_json::from_value(serde_json::Value::String(name.clone())) else {
                 continue;
             };
-            // A tab or panel shows for a work its `works` name, or for every work without them (docs/adr/0801).
-            let shown = |works: &[String], work: Option<&str>| {
-                work.is_none_or(|w| works.is_empty() || works.iter().any(|x| x == w))
-            };
+            // A tab or panel shows for a work its `works` name, or for every work without them (docs/adr/0801);
+            // so do its buttons, menu blocks and ▾ commands (docs/adr/0802).
+            let shown = shows;
             let build = |work: Option<&str>| {
                 let mut tabs: Vec<Tab> = raw_tabs
                     .iter()
@@ -1312,7 +1388,7 @@ impl Catalog {
                             .panels
                             .iter()
                             .filter(|p| shown(&p.works, work))
-                            .cloned()
+                            .map(|p| cut(p, work))
                             .collect();
                         tab(
                             t.id.clone(),
@@ -1334,7 +1410,11 @@ impl Catalog {
                         c.label.clone(),
                         true,
                         c.kinds.clone(),
-                        c.panels.clone(),
+                        c.panels
+                            .iter()
+                            .filter(|p| shown(&p.works, work))
+                            .map(|p| cut(p, work))
+                            .collect(),
                         &splits,
                     ));
                 }
@@ -1377,7 +1457,11 @@ impl Catalog {
                             .into_iter()
                             .map(|raw| item(resolve(raw, splits)))
                             .collect(),
-                        overflow: panel.overflow.into_iter().map(leak).collect(),
+                        overflow: panel
+                            .overflow
+                            .into_iter()
+                            .map(|o| leak(o.command()))
+                            .collect(),
                         keep: panel.keep,
                         launcher: panel.launcher.map(|l| Launcher {
                             title: leak(l.title),
@@ -1410,12 +1494,55 @@ impl Catalog {
             .collect();
         modes.sort_by_key(|m| m.id as u8);
 
+        // What each module's program offers (docs/adr/0802): its type's ribbon cut to its works, contextual tabs too,
+        // and the commands the ribbon file gives it beyond them; every command some ribbon holds.
+        let ribbon_commands: HashSet<&'static str> = mode_tabs
+            .iter()
+            .flat_map(|(_, tabs)| tabs.iter())
+            .chain(work_tabs.iter().flat_map(|(_, tabs)| tabs.iter()))
+            .flat_map(Tab::commands)
+            .collect();
+        let everywhere: Vec<&'static str> = ribbon
+            .modules
+            .everywhere
+            .iter()
+            .map(|id| leak(id.clone()))
+            .collect();
+        let map_only: Vec<&'static str> =
+            ribbon.modules.map.iter().map(|id| leak(id.clone())).collect();
+        let module_commands = kentos_launch::Module::ALL
+            .into_iter()
+            .map(|module| {
+                let tabs: Vec<&Tab> = match module.project_type() {
+                    "gis" => mode_tabs
+                        .iter()
+                        .filter(|(m, _)| *m == kentos_commands::Workspace::Gis)
+                        .flat_map(|(_, tabs)| tabs.iter())
+                        .collect(),
+                    _ => work_tabs
+                        .iter()
+                        .filter(|(w, _)| module.cad_works().contains(&w.id()))
+                        .flat_map(|(_, tabs)| tabs.iter())
+                        .collect(),
+                };
+                let mut ids: HashSet<&'static str> =
+                    tabs.into_iter().flat_map(Tab::commands).collect();
+                ids.extend(everywhere.iter().copied());
+                if module == kentos_launch::Module::Map {
+                    ids.extend(map_only.iter().copied());
+                }
+                (module, ids)
+            })
+            .collect();
+
         Ok(Self {
             commands,
             by_id,
             tabs,
             mode_tabs,
             work_tabs,
+            module_commands,
+            ribbon_commands,
             quick: raw.layout.quick_access.into_iter().map(leak).collect(),
             menus: raw
                 .layout
@@ -1526,13 +1653,38 @@ fn added_command(c: &kentos_commands::AddedCommand) -> Command {
 
 /// A split button named by its key, made the inventory's with this size
 /// (docs/adr/0622 §3); any other item as it is.
+/// Whether something that names `works` shows for a CAD work (docs/adr/0801): it names it or no work; everything
+/// shows without a work (a CAD project not asked its work, CBS).
+fn shows(works: &[String], work: Option<&str>) -> bool {
+    work.is_none_or(|w| works.is_empty() || works.iter().any(|x| x == w))
+}
+
+/// A panel as a CAD work shows it (docs/adr/0802): its buttons, menu blocks and ▾ commands that name the work or
+/// none; a menu with no block left goes.
+fn cut(panel: &RawPanel, work: Option<&str>) -> RawPanel {
+    let mut panel = panel.clone();
+    panel.items.retain_mut(|item| match item {
+        RawItem::Command { works, .. }
+        | RawItem::SplitRef { works, .. }
+        | RawItem::Split { works, .. } => shows(works, work),
+        RawItem::Menu { works, blocks, .. } => {
+            blocks.retain(|b| shows(&b.works, work));
+            shows(works, work) && !blocks.is_empty()
+        }
+        RawItem::Builtin { .. } => true,
+    });
+    panel.overflow.retain(|o| shows(o.works(), work));
+    panel
+}
+
 fn resolve(raw: RawItem, splits: &HashMap<String, RawItem>) -> RawItem {
     match raw {
-        RawItem::SplitRef { split, size } => match splits.get(&split) {
+        RawItem::SplitRef { split, size, works } => match splits.get(&split) {
             Some(RawItem::Split { split: entries, key, .. }) => RawItem::Split {
                 split: entries.clone(),
                 key: key.clone(),
                 size,
+                works,
             },
             // A key the inventory lacks: a test keeps every key known; a broken build still opens.
             _ => RawItem::Builtin {
@@ -1550,7 +1702,9 @@ fn item(raw: RawItem) -> Item {
         _ => Size::Small,
     };
     match raw {
-        RawItem::Command { command, size: s } => Item::Command {
+        RawItem::Command {
+            command, size: s, ..
+        } => Item::Command {
             id: leak(command),
             size: size(&s),
         },
@@ -1558,6 +1712,7 @@ fn item(raw: RawItem) -> Item {
             split,
             key,
             size: s,
+            ..
         } => Item::Split {
             entries: split
                 .into_iter()
@@ -1582,6 +1737,7 @@ fn item(raw: RawItem) -> Item {
             size: s,
             blocks,
             checklist,
+            ..
         } => {
             let blocks: Vec<(&'static str, Vec<&'static str>)> = blocks
                 .into_iter()
@@ -1735,6 +1891,20 @@ struct RawRibbon {
     /// The tabs a selection opens, by the kinds of its objects (docs/adr/0622 §4).
     #[serde(default)]
     contextual: Vec<RawContextual>,
+    /// The commands a module's program offers beyond its ribbon (docs/adr/0802).
+    #[serde(default)]
+    modules: RawModules,
+}
+
+/// Commands only CBS's ribbon holds that a CAD module's program offers too (docs/adr/0802): every module's
+/// (`everywhere`: a new layer, a layer's labels and filter …) and Harita's (`map`: a layer's coordinate system,
+/// bound sources, CBS's file formats).
+#[derive(Deserialize, Default)]
+struct RawModules {
+    #[serde(default)]
+    everywhere: Vec<String>,
+    #[serde(default)]
+    map: Vec<String>,
 }
 
 #[derive(Deserialize)]
@@ -1768,11 +1938,38 @@ struct RawPanel {
     icon: Option<String>,
     items: Vec<RawItem>,
     #[serde(default)]
-    overflow: Vec<String>,
+    overflow: Vec<RawOverflow>,
     #[serde(default)]
     keep: bool,
     #[serde(default)]
     launcher: Option<RawLauncher>,
+}
+
+/// A seldom used command under a panel's ▾: its id, or its id and the CAD works it shows for (docs/adr/0802).
+#[derive(Deserialize, Clone)]
+#[serde(untagged)]
+enum RawOverflow {
+    Id(String),
+    Entry {
+        command: String,
+        #[serde(default)]
+        works: Vec<String>,
+    },
+}
+
+impl RawOverflow {
+    fn works(&self) -> &[String] {
+        match self {
+            RawOverflow::Id(_) => &[],
+            RawOverflow::Entry { works, .. } => works,
+        }
+    }
+
+    fn command(self) -> String {
+        match self {
+            RawOverflow::Id(id) | RawOverflow::Entry { command: id, .. } => id,
+        }
+    }
 }
 
 #[derive(Deserialize, Clone)]
@@ -1788,11 +1985,16 @@ enum RawItem {
     Command {
         command: String,
         size: String,
+        /// The CAD works it shows for (docs/adr/0802); none: every work.
+        #[serde(default)]
+        works: Vec<String>,
     },
     /// The inventory's split button with this key (docs/adr/0622 §3).
     SplitRef {
         split: String,
         size: String,
+        #[serde(default)]
+        works: Vec<String>,
     },
     Split {
         split: Vec<RawSplit>,
@@ -1800,6 +2002,8 @@ enum RawItem {
         #[serde(default)]
         key: String,
         size: String,
+        #[serde(default)]
+        works: Vec<String>,
     },
     Menu {
         menu: String,
@@ -1807,6 +2011,8 @@ enum RawItem {
         blocks: Vec<RawBlock>,
         #[serde(default)]
         checklist: bool,
+        #[serde(default)]
+        works: Vec<String>,
     },
     Builtin {
         builtin: String,
@@ -1835,6 +2041,9 @@ struct RawBlock {
     #[serde(default)]
     label: String,
     items: Vec<RawEntry>,
+    /// The CAD works it shows for (docs/adr/0802); none: every work.
+    #[serde(default)]
+    works: Vec<String>,
 }
 
 #[derive(Deserialize, Clone)]

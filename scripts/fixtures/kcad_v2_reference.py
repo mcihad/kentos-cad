@@ -299,7 +299,7 @@ def settings(s):
                 "plotScale": (f64, True),
                 "workspace": (enum(("hybrid", "cad", "gis", "plan3d", "disaster")), False),
                 # Schema 135 (docs/adr/0801): what a CAD project is drawn for.
-                "cadWork": (enum(("architecture", "map", "detail")), False),
+                "cadWork": (enum(("architecture", "map")), False),
                 "drawingFont": (enum(("barlow", "arimo", "overpass", "quicksand", "architects-daughter", "courier-prime", "plex-mono")), False),
                 # Schema 50 (docs/adr/0262 §1): inches and feet too, written only in schema 50.
                 "drawingUnit": (enum(("mm", "cm", "m", "in", "ft")), False),

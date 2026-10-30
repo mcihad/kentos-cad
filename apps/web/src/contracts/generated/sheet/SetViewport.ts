@@ -8,11 +8,11 @@ import type { MapLevelChoice } from "./MapLevelChoice";
 import type { PaperScaleRatio } from "./PaperScaleRatio";
 import type { Source } from "./Source";
 
-export type SetViewport = { annotation?: AnnotationScale, layers?: MapLayers, layerOverrides?: Array<LayerOverride>,
+export type SetViewport = { annotation?: AnnotationScale, layers?: MapLayers, layerOverrides?: Array<LayerOverride>, 
 /**
  * The level the map draws (docs/adr/0716).
  */
-level?: MapLevelChoice, id: string, source?: Source, center?: GroundPoint,
+level?: MapLevelChoice, id: string, source?: Source, center?: GroundPoint, 
 /**
  * Canonical metres; an unrotated model-space rectangle to fit exactly.
  */

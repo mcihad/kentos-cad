@@ -17,7 +17,7 @@ pub enum Glyph {
     Cbs,
     /// A road running off to the horizon: KentOS YOL.
     Yol,
-    /// A page (the web's `document`): KentOS Rapor.
+    /// A page (the web's `document`): a report or a document.
     Rapor,
     /// Four tiles: any program.
     #[default]

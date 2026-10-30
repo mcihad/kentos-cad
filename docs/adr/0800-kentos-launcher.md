@@ -16,7 +16,7 @@
 ## Bağlam
 
 Bugün KentOS tek bir programdır: `kentos-cad`. ADR 0801 onu modüllere ayırır (KentOS Mimari, KentOS Harita, KentOS GIS; her biri kendi
-programı, `kentos-cad --modul <id>` de olur); KentOS YOL ve KentOS Rapor henüz yoktur. Kullanıcının modüllerini bulup başlatacağı,
+programı, `kentos-cad --modul <id>` de olur); KentOS YOL henüz yoktur. Kullanıcının modüllerini bulup başlatacağı,
 son çizimlerine döneceği bir yer yoktu. Sahip bu yerin KentOS'un dışındaki programları da (Python betikleri, Java ya da Electron
 programları, web uygulamaları) taşımasını istiyor.
 
@@ -88,7 +88,7 @@ KentOS'un çıkardığı:
     klasörü).
   - `url`: `http://` ya da `https://`; sistemin açıcısıyla (`xdg-open`, `open`, `explorer`).
   - `kentos`: `module` `mimari`, `harita`, `cbs`. Adı ve notu modülün, sürümü launcher'ın (aynı çalışma alanından derlenirler).
-- **Üç yer, bu sırayla:** launcher'ın içindekiler (`apps/launcher/assets/apps`: KentOS Mimari, Harita, GIS; YOL ve Rapor “yakında”),
+- **Üç yer, bu sırayla:** launcher'ın içindekiler (`apps/launcher/assets/apps`: KentOS Mimari, Harita, GIS; YOL “yakında”),
   kurulumun klasörü (launcher'ın yanındaki `uygulamalar/`), kullanıcının klasörü (`$XDG_DATA_HOME/kentos/uygulamalar`). Aynı `id`
   sonraki yerde geçerse öncekinin yerine geçer: bir kurum ya da kullanıcı bir KentOS modülünü kendi kurulumuna yöneltebilir. Aynı
   klasörde ikinci kez geçen `id` yok sayılır ve söylenir. Kartlar `order`'a, eşitse ada göre (KentOS UI'ın Türkçe metin sırası).
@@ -111,12 +111,14 @@ KentOS'un çıkardığı:
   satır kaydırmasız, 1100 × 650'de iki sütun ve kaydırma. Bir kartın parçaları sabit boylu: aynı satırın kartları aynı hizadadır.
 - **Kart:** resim (2:1), renkli karo ve simge, ad ve not (sığmayan “…” ile kısalır, bütünü ipucunda), ⋯ menüsü, sürüm ve durum,
   ana düğme. Ana düğme üzerine gelinen ya da seçili kartta dolu, öbürlerinde çizgilidir (taslakta seçili kart doludur).
-- **Resimler gerçek ekranlardır:** `scripts/launcher/pictures.py` KentOS'un kendisini (`kentos-cad snapshot`) deponun çizimleriyle
-  çalıştırır: Mimari için `samples/konut-3-1.kcad`'in planı, Harita için etiket motorunun parselleri, GIS için tematik haritalar,
-  YOL için Plan yolu'nun kavşağı, Rapor için bir parsel katmanının grafiği. 720 × 360 PNG, beşi birlikte 489 859 bayt. Taslağın üç
-  boyutlu bina resmi gibi KentOS'un yapamadığı bir şey gösterilmez.
+- **Resimler:** ilk sürümde KentOS'un gerçek ekranlarıydı (`scripts/launcher/pictures.py --kentos`: deponun çizimleriyle
+  `kentos-cad snapshot`). 30 Ekim'de sahip dört kartın resmini kendisi verdi (1672 × 941); `pictures.py --fit` her birini ortasından
+  kartın 2:1'ine keser, 720 × 360'a küçültür ve 256 renkli PNG yazar: dördü birlikte 869 370 bayt (özgünleri 12 MB). `--kentos`
+  sahibin resimlerinin üstüne yazar; yalnız onları değiştirmek için çalıştırılır.
+- **KentOS Rapor kartı yok:** sahibin sözü (30 Ekim) “rapor launch olmasın şimdilik”. Yerleşiklerden ve resimlerden çıktı; belge
+  simgesi (`rapor`, “Belge”) kullanıcının uygulamaları için kalır.
 - **Simgeler:** web'in 20 × 20 çizgi simge kümesinden (`stakeout` Harita'nın ölçme aleti, `modeGis` GIS'in haritası, `document`
-  Rapor, `crs` web, `chart` grafik, ayarlar, dışarıda açma); kümede olmayanlar (bina, yol, dört karo, zil) aynı ızgarada yeni çizildi.
+  belge, `crs` web, `chart` grafik, ayarlar, dışarıda açma); kümede olmayanlar (bina, yol, dört karo, zil) aynı ızgarada yeni çizildi.
   Karonun sekiz rengi (`blue`, `teal`, `green`, `yellow`, `orange`, `red`, `purple`, `gray`) yukarıdan aşağı açılan bir geçişle
   boyanır; simge ile karo arasında her renkte en az 3:1 karşıtlık (test). Simge karonun içinde tam piksellere oturur.
 - **Tema ve yazı:** Sistem (işletim sisteminin teması izlenir), Açık, Koyu; yazı boyutu 11–18 px, bütün ölçüler onunla büyür. 18 px'te
@@ -181,7 +183,7 @@ KentOS'un çıkardığı:
   günlükler, açıcı), `locations.rs` (Konumu seç…), `notices.rs`, `recent.rs`, `settings.rs`, `files.rs` (XDG ve bütün yazma),
   `cards.rs` (kartın durumu, arama, ızgara), `glyphs.rs`, `tones.rs`, `pictures.rs`, `snapshot.rs`; `src/view/` (`mod.rs`,
   `style.rs`, `sidebar.rs`, `header.rs`, `apps.rs`, `pages.rs`, `dialog.rs`, `notices.rs`, `status.rs`).
-- `apps/launcher/assets/apps/*.json` (beş yerleşik manifest), `apps/launcher/assets/pictures/*.png` (beş resim),
+- `apps/launcher/assets/apps/*.json` (dört yerleşik manifest), `apps/launcher/assets/pictures/*.png` (dört resim),
   `scripts/launcher/pictures.py`.
 - `docs/launcher/README.md` (biçim) ve `docs/launcher/ornekler/` (Python betiği, Java programı, Electron programı, web adresi,
   yerleşik bir modülün yerine geçen kurum manifesti).

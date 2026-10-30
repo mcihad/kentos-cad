@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=KentOS GIS
+GenericName=Coğrafi bilgi sistemi
+Comment=Coğrafi bilgi sistemi
+Exec=kentos-gis %f
+Icon=kentos-gis
+Terminal=false
+Categories=Graphics;Engineering;
+StartupWMClass=kentos-gis
+MimeType=application/x-kentos-kcad;

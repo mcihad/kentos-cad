@@ -9,19 +9,19 @@ import type { Variable } from "./Variable";
 /**
  * Every sheet of a project.
  */
-export type SheetBook = { plotProfiles?: Array<PlotProfile>, pageSetups?: Array<NamedPageSetup>,
+export type SheetBook = { plotProfiles?: Array<PlotProfile>, pageSetups?: Array<NamedPageSetup>, 
 /**
  * `kentos.sheet/1`.
  */
-schema: string, sheets: Array<Sheet>,
+schema: string, sheets: Array<Sheet>, 
 /**
  * Master pages (ana sayfalar).
  */
-masters: Array<Master>,
+masters: Array<Master>, 
 /**
  * Pictures by the SHA-256 of their bytes; the bytes are the host's asset store's.
  */
-assets: Array<AssetMeta>,
+assets: Array<AssetMeta>, 
 /**
  * The project's own variables (`@proje_no`, `@idare` …).
  */

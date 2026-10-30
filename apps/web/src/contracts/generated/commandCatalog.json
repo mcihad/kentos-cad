@@ -75258,7 +75258,7 @@
       "type": "object"
     },
     "CadWork": {
-      "description": "What a CAD project is drawn for (docs/adr/0801; the Yeni proje wizard's\nworks, docs/adr/0626 §1): a building, a map or zoning plan, a detail. It\ndecides the KentOS program the project belongs to (KentOS Mimari for a\nbuilding and a detail, KentOS Harita for a map) and the ribbon's tabs and\npanels; it never changes what the data means, and every command still\nruns. Only a CAD project has one; one written before works has none and the\ndesktop asks it once. Like its type, a project keeps the work it has.",
+      "description": "What a CAD project is drawn for (docs/adr/0801, 0802; the Yeni proje\nwizard's works, docs/adr/0626 §1): a building or a map and zoning plan, the\ntwo CAD programs KentOS has (the owner: “bizde iki tür cad var mimari ve\nharita”). It decides the KentOS program the project belongs to (KentOS\nMimari, KentOS Harita) and the ribbon's tabs and panels; it never changes\nwhat the data means, and every command still runs. Only a CAD project has one; one written before works has none and the\ndesktop asks it once. Like its type, a project keeps the work it has.",
       "oneOf": [
         {
           "const": "architecture",
@@ -75268,11 +75268,6 @@
         {
           "const": "map",
           "description": "Harita / imar planı: site plans, zoning, surveys and infrastructure.",
-          "type": "string"
-        },
-        {
-          "const": "detail",
-          "description": "Detay / imalat: parts, details and manufacturing drawings.",
           "type": "string"
         }
       ]

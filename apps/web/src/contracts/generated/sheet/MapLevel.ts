@@ -4,11 +4,11 @@
  * A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
  * no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.
  */
-export type MapLevel = {
+export type MapLevel = { 
 /**
  * The level's id among the project's levels.
  */
-id: string,
+id: string, 
 /**
  * The level under it drawn faint too.
  */

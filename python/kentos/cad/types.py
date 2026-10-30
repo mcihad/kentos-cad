@@ -794,24 +794,22 @@ BreakLineName = Literal["dimension", "first", "second"]
 
 
 class CadWork(_StrEnum):
-    """What a CAD project is drawn for (docs/adr/0801; the Yeni proje wizard's
-    works, docs/adr/0626 §1): a building, a map or zoning plan, a detail. It
-    decides the KentOS program the project belongs to (KentOS Mimari for a
-    building and a detail, KentOS Harita for a map) and the ribbon's tabs and
-    panels; it never changes what the data means, and every command still
-    runs. Only a CAD project has one; one written before works has none and the
+    """What a CAD project is drawn for (docs/adr/0801, 0802; the Yeni proje
+    wizard's works, docs/adr/0626 §1): a building or a map and zoning plan, the
+    two CAD programs KentOS has (the owner: “bizde iki tür cad var mimari ve
+    harita”). It decides the KentOS program the project belongs to (KentOS
+    Mimari, KentOS Harita) and the ribbon's tabs and panels; it never changes
+    what the data means, and every command still runs. Only a CAD project has one; one written before works has none and the
     desktop asks it once. Like its type, a project keeps the work it has.
 
     - ``architecture``: Mimari proje: buildings, floor plans, sections and elevations.
     - ``map``: Harita / imar planı: site plans, zoning, surveys and infrastructure.
-    - ``detail``: Detay / imalat: parts, details and manufacturing drawings.
     """
     ARCHITECTURE = "architecture"
     MAP = "map"
-    DETAIL = "detail"
 
 
-CadWorkName = Literal["architecture", "map", "detail"]
+CadWorkName = Literal["architecture", "map"]
 """The names of :class:`CadWork`, for a plain string."""
 
 

@@ -17,7 +17,7 @@ dosyası. KentOS'un kendi modülleri de birer manifesttir (launcher'ın içinde,
 
 Üç yerden, bu sırayla:
 
-1. **Yerleşikler:** launcher'ın içinde. KentOS Mimari, KentOS Harita, KentOS GIS; KentOS YOL ve KentOS Rapor “yakında”.
+1. **Yerleşikler:** launcher'ın içinde. KentOS Mimari, KentOS Harita, KentOS GIS; KentOS YOL “yakında”.
 2. **Kurulumla gelenler:** launcher'ın yanındaki `uygulamalar/` klasörü (ör. `/opt/kentos/bin/uygulamalar/`). Bir kurum
    kendi programlarını ya da bir KentOS modülünün başka bir kurulumunu buraya koyar.
 3. **Kullanıcının uygulamaları:** `$XDG_DATA_HOME/kentos/uygulamalar/` (değişken yoksa `~/.local/share/kentos/uygulamalar/`).
@@ -103,7 +103,7 @@ ile karo arasında en az 3:1 karşıtlık vardır.
 
 ### Resimler (`picture`)
 
-Yerleşikler: `mimari`, `harita`, `cbs`, `yol`, `rapor` (KentOS'un gerçek ekran görüntüleri). Kartın resim alanı 2:1'dir;
+Yerleşikler: `mimari`, `harita`, `cbs`, `yol` (sahibin resimleri; `scripts/launcher/pictures.py --fit` ile). Kartın resim alanı 2:1'dir;
 kendi resminiz için kartın iki katı boyda, 2:1 bir PNG verin (ör. 720 × 360). Oranı başka olan resim alanı doldurur,
 taşan kenarları kesilir. En çok 4096 × 4096 piksel. Okunamayan resim bildirilir, kart resim yerine karonun renginde
 simgeyle çıkar.

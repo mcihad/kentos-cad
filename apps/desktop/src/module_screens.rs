@@ -130,7 +130,6 @@ fn ribbons() {
     for (work, word, tabs) in [
         (CadWork::Architecture, "mimari", ["arch", "survey"]),
         (CadWork::Map, "harita", ["plan", "survey"]),
-        (CadWork::Detail, "detay", ["home", "survey"]),
     ] {
         let path = saved_as(
             &dir,

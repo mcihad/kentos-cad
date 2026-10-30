@@ -78,7 +78,7 @@ pub struct State {
     draft: Draft,
     /// A module's program makes its own projects only (docs/adr/0801): its type, and a CAD module's works.
     limit: Option<kentos_launch::Module>,
-    step: Step,
+    pub(crate) step: Step,
     /// The province search, kept while the wizard is open.
     query: String,
     /// Why the step could not be left forward, said in the footer.
@@ -161,6 +161,15 @@ impl State {
             query: String::new(),
             status: None,
             pending: None,
+        }
+    }
+
+    /// The first step the wizard shows: a module's program asks no type (docs/adr/0802).
+    pub(crate) fn first_step(&self) -> usize {
+        if self.limit.is_some() {
+            Step::Coords.index()
+        } else {
+            0
         }
     }
 
@@ -314,13 +323,29 @@ impl App {
                 return focus(s);
             }
             Event::Back => {
-                s.go(s.step.index().saturating_sub(1));
+                s.go(s.step.index().saturating_sub(1).max(s.first_step()));
                 return focus(s);
             }
             Event::Next => return self.new_project_next(),
         }
         s.status = None;
         Task::none()
+    }
+
+    /// KentOS Mimari's Yeni proje (docs/adr/0802): no wizard, the project as its first work makes it (a building in
+    /// metres at 1:100, local coordinates); the drawing on screen is left as Oluştur leaves it.
+    pub(crate) fn new_project_at_once(&mut self, mut state: State) -> Task<Message> {
+        match new_document(&state.draft.options()) {
+            Err(e) => {
+                self.error(e);
+                Task::none()
+            }
+            Ok(doc) => {
+                state.pending = Some(Box::new(doc));
+                self.project = Some(Window::New(Box::new(state)));
+                self.leave(Then::NewProject)
+            }
+        }
     }
 
     /// İleri: the next step, if this one can be left; Oluştur on the last.
@@ -395,7 +420,12 @@ impl App {
     pub(crate) fn new_project_declined(&mut self) {
         if let Some(Window::New(s)) = &mut self.project {
             s.pending = None;
-            self.dialog = Some(Asking::Project);
+            // KentOS Mimari opened no wizard (docs/adr/0802): there is nothing to come back to.
+            if s.limit == Some(kentos_launch::Module::Architecture) {
+                self.close_project_window();
+            } else {
+                self.dialog = Some(Asking::Project);
+            }
         }
     }
 
@@ -453,11 +483,20 @@ impl App {
             Step::Coords => pages::coords(s),
             Step::Details => pages::details(s, self.new_project_note()),
         };
-        let mut wizard = Wizard::new("Yeni proje", STEPS.map(|step| step.name(s.draft.kind)))
-            .rail(STEPS.map(|step| s.draft.note(step)))
-            .current(s.step.index())
+        // A module's program asks no type (docs/adr/0802): its own window, its coordinates and its name only.
+        let first = s.first_step();
+        let steps = &STEPS[first..];
+        let title = match s.limit {
+            Some(kentos_launch::Module::Map) => "Yeni harita projesi",
+            Some(kentos_launch::Module::Gis) => "Yeni CBS projesi",
+            Some(kentos_launch::Module::Architecture) => "Yeni mimari proje",
+            None => "Yeni proje",
+        };
+        let mut wizard = Wizard::new(title, steps.iter().map(|step| step.name(s.draft.kind)))
+            .rail(steps.iter().map(|step| s.draft.note(*step)))
+            .current(s.step.index() - first)
             .body(page)
-            .on_step(|i| event(Event::Go(i)))
+            .on_step(move |i| event(Event::Go(i + first)))
             .back(event(Event::Back))
             .next(Some(event(Event::Next)))
             .finish("Oluştur", Some(event(Event::Next)))

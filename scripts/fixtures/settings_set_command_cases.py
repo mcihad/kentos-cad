@@ -303,7 +303,7 @@ def cases():
     return out
 
 
-# What a CAD project is drawn for (docs/adr/0801): `architecture`, `map` or `detail`; a CAD project's only (a project
+# What a CAD project is drawn for (docs/adr/0801, 0802): `architecture` or `map`; a CAD project's only (a project
 # without a type takes it with `projectType: cad`), chosen once like the type; the same work again changes nothing. The
 # refusals come after the type's and before the decimals': `cad_work_needs_cad`, then `cad_work_locked`.
 NEEDS_CAD = ("İş (cadWork) yalnız CAD projesinin ayarıdır; bu proje CAD projesi değil. Türü seçilmemiş eski projede "
@@ -315,7 +315,7 @@ TYPE_LOCKED = "Proje türü projeyle başlar ve değişmez; CAD ile CBS arasınd
 
 def work_cases():
     out = []
-    for work in ("architecture", "map", "detail"):
+    for work in ("architecture", "map"):
         out.append({"name": f"İş: işi sorulmamış CAD projesine bir kez verilir ({work}); aynısı bir şey değiştirmez",
                     "setup": setup(workspace="cad"),
                     "steps": [step("execute", {"cadWork": work}, done(["cadWork"]),
@@ -323,10 +323,10 @@ def work_cases():
                               step("execute", {"cadWork": work}, done([]),
                                    {"settings": {"cadWork": work}, "revision": "same", "canUndo": False})]})
     for before in (None, "hybrid"):
-        out.append({"name": f"Tür ve iş birlikte: türü sorulmamış proje ({before}) CAD ve detay olur",
+        out.append({"name": f"Tür ve iş birlikte: türü sorulmamış proje ({before}) CAD ve harita olur",
                     "setup": setup(workspace=before),
-                    "steps": [step("execute", {"projectType": "cad", "cadWork": "detail"}, done(["projectType", "cadWork"]),
-                                   {**FLAGS, "settings": {"workspace": "cad", "cadWork": "detail"}})]})
+                    "steps": [step("execute", {"projectType": "cad", "cadWork": "map"}, done(["projectType", "cadWork"]),
+                                   {**FLAGS, "settings": {"workspace": "cad", "cadWork": "map"}})]})
     out.append({"name": "İş: plan yazmaz",
                 "setup": setup(workspace="cad"),
                 "steps": [step("plan", {"cadWork": "map"}, done(["cadWork"]),
@@ -337,10 +337,10 @@ def work_cases():
                     "steps": [step(op, {"cadWork": "architecture", "name": "Değişmesin"},
                                    failed("cad_work_locked", WORK_LOCKED, "cadWork"),
                                    {**UNCHANGED, "name": "Ayarlar", "settings": {"workspace": "cad", "cadWork": "map"}})]})
-    out.append({"name": "İş kilidi: detay → mimari de değişmez (aynı programın işleri)",
-                "setup": setup(workspace="cad", cadWork="detail"),
-                "steps": [step("execute", {"cadWork": "architecture"}, failed("cad_work_locked", WORK_LOCKED, "cadWork"),
-                               {**UNCHANGED, "settings": {"cadWork": "detail"}})]})
+    out.append({"name": "İş kilidi: mimari → harita da değişmez",
+                "setup": setup(workspace="cad", cadWork="architecture"),
+                "steps": [step("execute", {"cadWork": "map"}, failed("cad_work_locked", WORK_LOCKED, "cadWork"),
+                               {**UNCHANGED, "settings": {"cadWork": "architecture"}})]})
     for name, over, input_ in (
             ("CBS projesine iş verilmez", {"workspace": "gis"}, {"cadWork": "architecture"}),
             ("türü sorulmamış projeye iş tek başına verilmez", {"workspace": None}, {"cadWork": "map"}),
