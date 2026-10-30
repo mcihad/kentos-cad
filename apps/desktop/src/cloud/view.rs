@@ -14,7 +14,7 @@ use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
 use crate::cloud::forms_plan::fields;
-use crate::cloud::plan::{PROJECT_TYPES, TYPE_HINT, type_label};
+use crate::cloud::plan::type_label;
 use crate::cloud::revisions::AnswerKind;
 use crate::cloud::{Event, words};
 
@@ -210,11 +210,13 @@ impl App {
                 RadioGroup::new(u.storage, |s| cloud(Event::UploadStorage(s))),
                 |g, s| g.option(s, words::storage_title(s), words::storage_detail(s)),
             );
-        let kind = Select::new(
-            PROJECT_TYPES.map(|t| Choice::new(type_label(t))),
-            PROJECT_TYPES.iter().position(|t| *t == u.project_type),
-            |i| cloud(Event::UploadType(PROJECT_TYPES[i])),
-        )
+        // A module's program offers its own module's types alone (kinds.rs, docs/adr/0802).
+        let types = self.cloud_types();
+        let choices: Vec<Choice> = types.iter().map(|t| Choice::new(type_label(*t))).collect();
+        let chosen = types.iter().position(|t| *t == u.project_type);
+        let kind = Select::new(choices, chosen, move |i| {
+            cloud(Event::UploadType(types.get(i).copied().unwrap_or_default()))
+        })
         .searchable(false);
         let description = text_editor(&u.description)
             .placeholder(fields::DESCRIPTION_PLACEHOLDER)
@@ -244,7 +246,10 @@ impl App {
             .row(label::body("Saklama biçimi (sonradan değişmez)").font(typography::ui_strong()))
             .row(storage)
             .field(fields::TYPE, kind)
-            .row(label::caption(TYPE_HINT).style(style::text::muted))
+            .row(
+                label::caption(crate::cloud::kinds::type_hint(self.program))
+                    .style(style::text::muted),
+            )
             .field(fields::DESCRIPTION, description)
             .field(fields::TAGS, tags)
             .row(label::caption(hint));

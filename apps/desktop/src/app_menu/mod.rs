@@ -100,7 +100,7 @@ struct Format {
     badge: &'static str,
 }
 
-const IMPORTS: [Format; 8] = [
+const IMPORTS: [Format; 9] = [
     Format { id: "file.import.dwg", label: "DWG", detail: "R14–2018 binary biçimleri; temel 2D kapsamı ve kayıp raporu", badge: "DWG" },
     Format {
         id: "file.import.dxf",
@@ -119,6 +119,13 @@ const IMPORTS: [Format; 8] = [
         label: "Netcad çizimi",
         detail: "Netcad NCZ dosyası",
         badge: "NCZ",
+    },
+    // Every program's: a drawing's sheet into the drawing (docs/adr/0352, 0802).
+    Format {
+        id: "file.import.pdf",
+        label: "PDF",
+        detail: "Sayfanın çizgileri, dolguları ve yazıları; ölçekle ve katmanlarıyla",
+        badge: "PDF",
     },
     Format {
         id: "file.import.shp",
@@ -199,6 +206,9 @@ const TILES: [(&str, Icon, &str); 4] = [
 const RECENT: usize = 5;
 /// The account's recent cloud projects it lists.
 const PROJECTS: u32 = 5;
+/// A module's program with several catalog types (KentOS Harita's) picks its own among this many times as many of
+/// the account's recent projects (docs/adr/0802).
+const PICKED_FROM: u32 = 4;
 
 /// Commands that need a drawing on screen.
 const NEEDS_DRAWING: [&str; 8] = [
@@ -306,14 +316,16 @@ impl App {
                 return self.leave(Then::OpenCloud { tenant, project });
             }
             Event::Projects { id, result } => {
+                // The program's own projects (docs/adr/0802).
+                let projects = match *result {
+                    Ok(page) => Projects::Loaded(self.own_recent(page.projects)),
+                    Err(_) => Projects::Failed,
+                };
                 if let Some(s) = &mut self.app_menu
                     && s.request == id
                 {
                     s.loading = None;
-                    s.projects = match *result {
-                        Ok(page) => Projects::Loaded(page.projects),
-                        Err(_) => Projects::Failed,
-                    };
+                    s.projects = projects;
                 }
             }
         }
@@ -324,6 +336,7 @@ impl App {
     fn show_pane(&mut self, pane: Pane, focus: Option<Focus>) -> Task<Message> {
         let id = self.cloud.next_id();
         let client = self.cloud.signed_in().cloned();
+        let query = self.recent_projects_query();
         let Some(s) = &mut self.app_menu else {
             return Task::none();
         };
@@ -337,9 +350,6 @@ impl App {
         let Some(client) = client else {
             return Task::none();
         };
-        let mut query = CatalogQuery::new(CatalogView::Recent);
-        query.sort = Some(words::view(CatalogView::Recent).sorts[0]);
-        query.limit = Some(PROJECTS);
         s.projects = Projects::Loading;
         s.request = id;
         let (task, handle) = Task::perform(client.catalog(&query), move |result| {
@@ -351,6 +361,36 @@ impl App {
         .abortable();
         s.loading = Some(handle.abort_on_drop());
         task
+    }
+
+    /// The query of the account's recent cloud projects the Bulut pane lists: a module's program asks for its own
+    /// catalog type (KentOS Mimari, KentOS GIS) or, with several (KentOS Harita's CAD types), for more of every type
+    /// to pick its own from (`cloud_types`, docs/adr/0802); kentos-cad for every type.
+    pub(crate) fn recent_projects_query(&self) -> CatalogQuery {
+        let mut query = CatalogQuery::new(CatalogView::Recent);
+        query.sort = Some(words::view(CatalogView::Recent).sorts[0]);
+        query.limit = Some(PROJECTS);
+        if self.program.is_some() {
+            match self.cloud_types().as_slice() {
+                [only] => query.project_type = Some(*only),
+                _ => query.limit = Some(PROJECTS * PICKED_FROM),
+            }
+        }
+        query
+    }
+
+    /// The recent projects this program lists of those the server gave: a module's program its own types', at
+    /// most [`PROJECTS`] (docs/adr/0802); kentos-cad every one.
+    fn own_recent(&self, projects: Vec<ProjectSummary>) -> Vec<ProjectSummary> {
+        if self.program.is_none() {
+            return projects;
+        }
+        let types = self.cloud_types();
+        projects
+            .into_iter()
+            .filter(|p| types.contains(&p.project_type))
+            .take(PROJECTS as usize)
+            .collect()
     }
 
     /// The formats of İçe aktar or Dışa aktar this program lists (module_surfaces.rs): KentOS Mimari its

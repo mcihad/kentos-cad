@@ -81,6 +81,8 @@ pub mod texts {
     pub const SHOW: &str = "Göster";
     pub const ACTIONS: &str = "İşlemler";
     pub const ACTIONS_HINT: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar, Cihaza gönder. İçe aktar koordinat listesinden nokta alır.";
+    /// The same in a program without Cihaza gönder (docs/adr/0802).
+    pub const ACTIONS_HINT_NO_SEND: &str = "Seçili satırlara, seçim yoksa tablodaki bütün satırlara: Yeniden adlandır, Sıralı numara ver, Katmana taşı, Çift noktaları ayıkla, Dışa aktar. İçe aktar koordinat listesinden nokta alır.";
     pub const RENAME: &str = "Yeniden adlandır…";
     pub const RENAME_HINT: &str = "Adların başına önek ekler ya da baştaki öneki kaldırır";
     pub const NUMBER: &str = "Sıralı numara ver…";
@@ -581,6 +583,10 @@ impl App {
     /// Cihaza gönder (docs/adr/0169 §4): the target rows, in the table's
     /// order, as an instrument's coordinate file.
     fn send_point_rows(&mut self) -> Task<Message> {
+        // Where the program offers it alone (docs/adr/0802).
+        if !self.offers("field.send") {
+            return Task::none();
+        }
         let shown = self.shown_points();
         let selected = shown.iter().any(|&s| self.selection.contains(s));
         let (slots, _) = batch::targets(&shown, |s| self.selection.contains(s));

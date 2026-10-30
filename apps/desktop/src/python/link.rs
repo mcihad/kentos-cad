@@ -5,9 +5,12 @@
 //!
 //! The user opens it (the Python tab's link button) and closes it; it is a
 //! Unix socket in the user's runtime folder (`$XDG_RUNTIME_DIR/kentos-cad`,
-//! 0700), itself 0600: only this user's processes reach it. Requests are
-//! JSON lines `{"id", "method", "params"}`; answers `{"id", "ok", "result"}`
-//! or `{"id", "ok": false, "code", "message"}`.
+//! 0700), itself 0600: only this user's processes reach it. Each program has
+//! its own (docs/adr/0802): kentos-cad's `masaustu.sock`, KentOS Mimari's
+//! `masaustu-mimari.sock`, KentOS Harita's `masaustu-harita.sock`, KentOS
+//! GIS's `masaustu-cbs.sock`. Requests are JSON lines `{"id", "method",
+//! "params"}`; answers `{"id", "ok", "result"}` or `{"id", "ok": false,
+//! "code", "message"}`.
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::{Path, PathBuf};
@@ -18,6 +21,7 @@ use std::time::Duration;
 
 use iced::Task;
 use iced::futures::channel::mpsc as channel;
+use kentos_launch::Module;
 use serde_json::Value;
 
 use crate::app::Message;
@@ -79,17 +83,42 @@ impl Drop for Link {
     }
 }
 
-/// `$XDG_RUNTIME_DIR/kentos-cad/masaustu.sock`, else under the temporary
-/// folder in a folder of this user's own.
-pub fn default_path() -> PathBuf {
-    let base = std::env::var_os("XDG_RUNTIME_DIR")
+/// The links' folder: `$XDG_RUNTIME_DIR/kentos-cad`, else under the
+/// temporary folder in a folder of this user's own.
+pub fn folder() -> PathBuf {
+    std::env::var_os("XDG_RUNTIME_DIR")
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
         .map_or_else(
             || std::env::temp_dir().join(format!("kentos-cad-{}", user_id())),
             |d| d.join("kentos-cad"),
-        );
-    base.join("masaustu.sock")
+        )
+}
+
+/// A program's link in `folder` (docs/adr/0802): kentos-cad's
+/// `masaustu.sock`, a module's program's `masaustu-<modül>.sock`
+/// (`masaustu-mimari.sock`, `masaustu-harita.sock`, `masaustu-cbs.sock`).
+/// Every program opens its own while the others keep theirs, and an agent
+/// names the one it wants (MCP's `desktop.attach`, `program`).
+pub fn path_in(folder: &Path, program: Option<Module>) -> PathBuf {
+    folder.join(match program {
+        None => "masaustu.sock".to_owned(),
+        Some(m) => format!("masaustu-{}.sock", m.id()),
+    })
+}
+
+/// The program's link in the user's runtime folder.
+pub fn default_path(program: Option<Module>) -> PathBuf {
+    path_in(&folder(), program)
+}
+
+/// What an agent passes to `desktop.attach` to reach this program's link:
+/// nothing for kentos-cad's, `program: "harita"` for KentOS Harita's.
+pub fn attach_words(program: Option<Module>) -> String {
+    program.map_or_else(
+        || "desktop.attach".to_owned(),
+        |m| format!("desktop.attach, program: \"{}\"", m.id()),
+    )
 }
 
 /// This process's user (the owner of `/proc/self`).

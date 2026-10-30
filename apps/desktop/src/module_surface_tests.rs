@@ -60,6 +60,18 @@ fn drawn(module: Option<Module>) -> App {
     app
 }
 
+/// `look` over `make(program)`'s app in a frame of its own: an app is large, and a test that keeps several in its
+/// own frame (a build without optimisations gives each one its place) overflows a test thread's stack.
+#[inline(never)]
+fn with<T>(
+    make: fn(Option<Module>) -> App,
+    program: Option<Module>,
+    look: impl FnOnce(&mut App) -> T,
+) -> T {
+    let mut app = make(program);
+    look(&mut app)
+}
+
 /// `module`'s program with the layout kept in `dir`, as main.rs opens it.
 fn opened_with(module: Option<Module>, dir: &Path) -> App {
     let mut app = started(module);
@@ -390,12 +402,14 @@ fn each_program_has_its_own_settings_sections() {
             "{program:?}"
         );
     }
-    // Uygulama ayarları: Yeni projeler is not KentOS Mimari's; the type is kentos-cad's alone.
+    // Uygulama ayarları: Yeni projeler is not KentOS Mimari's; the type is kentos-cad's alone, and so is the unit
+    // (a map's works are in metres).
     let rows = [
         AppSetting::Geographic,
         AppSetting::FormOnCreate,
         AppSetting::NewProjects,
         AppSetting::NewProjectType,
+        AppSetting::NewProjectUnit,
     ];
     for (program, shown) in [
         (None, &rows[..]),
@@ -522,6 +536,7 @@ fn each_program_lists_its_own_file_formats() {
         "file.import.dwg",
         "file.import.dxf",
         "file.import.ncz",
+        "file.import.pdf",
         "file.export.dwg",
         "file.export.dxf",
         "file.export.pdf",
@@ -550,10 +565,19 @@ fn each_program_lists_its_own_file_formats() {
             let listed = imports.contains(&id) || exports.contains(&id);
             assert_eq!(listed, program != MIMARI, "{program:?} {id}");
         }
+        // PDF right after NCZ, in every program.
+        let ncz = imports.iter().position(|id| *id == "file.import.ncz");
+        let pdf = imports.iter().position(|id| *id == "file.import.pdf");
+        assert_eq!(pdf, ncz.map(|i| i + 1), "{program:?} {imports:?}");
     }
     assert_eq!(
         started(MIMARI).listed_formats(false),
-        ["file.import.dwg", "file.import.dxf", "file.import.ncz"]
+        [
+            "file.import.dwg",
+            "file.import.dxf",
+            "file.import.ncz",
+            "file.import.pdf"
+        ]
     );
     assert_eq!(
         started(MIMARI).listed_formats(true),
@@ -901,5 +925,627 @@ fn kentos_mimari_s_point_calculator_has_no_survey_constructions() {
         let _ = other.update(Message::Run("tool.line"));
         let _ = other.update(Message::PointCalc(CalcKind::Km));
         assert!(other.session.nested(), "{module:?}");
+    }
+}
+
+/// The status bar at 1440×900 shows every program's drafting aids as lamps: KentOS Harita folded them into
+/// Yardımcılar where they fit, its lamps' estimate guessing the names from their letters (some 40 px too wide at
+/// 13 px). The estimate is never narrower than the lamps drawn, nor much wider.
+#[test]
+fn the_status_bar_shows_the_lamps_at_1440() {
+    let dir = scratch("yuzey-durum");
+    let size = iced::Size::new(1440.0, 900.0);
+    for (program, word, kind, work) in [
+        (None, "cad", Workspace::Cad, Some(CadWork::Map)),
+        (
+            MIMARI,
+            "mimari",
+            Workspace::Cad,
+            Some(CadWork::Architecture),
+        ),
+        (HARITA, "harita", Workspace::Cad, Some(CadWork::Map)),
+        (GIS, "gis", Workspace::Gis, None),
+    ] {
+        let path = saved_as(&dir, &format!("{word}.kcad"), kind, work);
+        let mut app = started(program);
+        let _ = app.settings.choose(&[("appearance.textSize", json!(13))]);
+        app.apply_settings();
+        app.window_size = size;
+        let task = app.start_opening(path, crate::opening::Purpose::File);
+        drive(&mut app, task);
+        assert!(app.document.is_some(), "{word}");
+        // The cursor over the drawing: its coordinates as wide as they get.
+        app.viewport.cursor = Some(kentos_render_wgpu::Vec2::new(487_009.0, 4_419_999.0));
+        let (fit, _) = app.status_fit(size.width);
+        assert!(fit < 8, "{word}: the lamps folded at step {fit}");
+        let mut shot = kentos_ui::snapshot::Snapshot::software(size).expect("a renderer");
+        shot.settle(&mut app, App::view, &mut |app: &mut App, message| {
+            let _ = app.update(message);
+        });
+        let in_bar = |shot: &mut kentos_ui::snapshot::Snapshot, app: &App, name: &str| {
+            crate::files_testing::find_texts(shot, app, name)
+                .into_iter()
+                .find(|r| r.y > 860.0)
+                .unwrap_or_else(|| panic!("{word}: {name}'s lamp"))
+        };
+        assert!(
+            crate::files_testing::find_texts(&mut shot, &app, "Yardımcılar").is_empty(),
+            "{word}"
+        );
+        let first = in_bar(&mut shot, &app, "Kenet");
+        let last = in_bar(&mut shot, &app, "Kalınlık");
+        // From the first lamp's left (its padding, lamp and gap before the name) to the last's padding and the
+        // row's spacing (kentos-ui's `Toggle`).
+        let compact = fit >= 7;
+        let (pad, gap) = if compact { (6.0, 4.0) } else { (9.0, 6.0) };
+        let drawn = (last.x + last.width + pad + 2.0) - (first.x - gap - 6.0 - pad);
+        let estimate = app.status_aids_width(compact);
+        assert!(
+            estimate >= drawn && estimate <= drawn + 30.0,
+            "{word}: {estimate} px estimated for {drawn} px drawn"
+        );
+    }
+}
+
+// ── The tools' options and the windows' choices (docs/adr/0802, 2. kısım) ─────────
+
+/// The tools' options each program offers: KentOS Mimari none of a survey's, KentOS GIS no blocks' nor a polyline's
+/// widths, kentos-cad and KentOS Harita every one; the drafting aids carry them to the tools, a program set after
+/// the settings were applied followed after the next message.
+#[test]
+fn each_program_offers_its_own_tool_options() {
+    use kentos_interaction::{Offers, ToolOption::*};
+    for (program, left_out) in [
+        (None, &[][..]),
+        (MIMARI, &[Bearing, PointNames, Recorded][..]),
+        (HARITA, &[][..]),
+        (GIS, &[Blocks, Widths][..]),
+    ] {
+        with(started, program, |app| {
+            assert_eq!(app.draft.offers, Offers::without(left_out), "{program:?}");
+            for option in kentos_interaction::ToolOption::ALL {
+                assert_eq!(
+                    app.offers_tool_option(option),
+                    !left_out.contains(&option),
+                    "{program:?} {option:?}"
+                );
+            }
+        });
+        with(drawn, program, |app| {
+            assert_eq!(app.draft.offers, Offers::without(left_out), "{program:?}");
+            // The settings applied again keep them.
+            app.apply_settings();
+            assert_eq!(app.draft.offers, Offers::without(left_out), "{program:?}");
+        });
+    }
+}
+
+/// A tool started in the program takes its options: KentOS Mimari's Ölçülendirme lists no Semt, its Nokta neither Ad
+/// nor Kod; KentOS GIS's Böl no Blok, its Çoklu çizgi no Genişlik; kentos-cad and KentOS Harita every one.
+#[test]
+fn the_tools_started_in_a_program_offer_its_options() {
+    let keys = |app: &App| app.session.prompt().keys();
+    for program in PROGRAMS {
+        with(drawn, program, |app| {
+            let offers = app.draft.offers;
+            let _ = app.update(Message::Run("tool.dimension"));
+            if app.session.tool_id() == "dimension" {
+                assert_eq!(
+                    keys(app).contains(&"T"),
+                    offers.has(kentos_interaction::ToolOption::Bearing),
+                    "{program:?}"
+                );
+            }
+            let _ = app.update(Message::Run("tool.point"));
+            if app.session.tool_id() == "point" {
+                assert_eq!(
+                    keys(app).contains(&"A"),
+                    offers.has(kentos_interaction::ToolOption::PointNames),
+                    "{program:?}"
+                );
+            }
+            let _ = app.update(Message::Run("tool.divide"));
+            if app.session.tool_id() == "divide" {
+                assert_eq!(
+                    keys(app).contains(&"B"),
+                    offers.has(kentos_interaction::ToolOption::Blocks),
+                    "{program:?}"
+                );
+            }
+            let _ = app.update(Message::Run("tool.polyline"));
+            if app.session.tool_id() == "polyline" {
+                assert_eq!(
+                    keys(app).contains(&"E"),
+                    offers.has(kentos_interaction::ToolOption::Widths),
+                    "{program:?}"
+                );
+            }
+        });
+    }
+    // The commands the programs offer: each tool is somewhere it was asked about above.
+    assert!(with(drawn, MIMARI, |app| app.offers("tool.dimension")
+        && app.offers("tool.point")));
+    assert!(with(drawn, GIS, |app| app.offers("tool.divide")
+        && app.offers("tool.polyline")));
+}
+
+/// Öznitelikler of a polyline and of an area: Genişlik and Maske where the program has a polyline's widths and
+/// masks, none in KentOS GIS.
+#[test]
+fn a_polyline_s_width_and_an_area_s_mask_are_a_drawing_s() {
+    let rows_of = |app: &App| -> Vec<String> {
+        let doc = app.document.as_ref().expect("a drawing");
+        app.properties_panel(doc)
+            .sections
+            .iter()
+            .flat_map(|s| s.rows.iter().map(|r| r.label.to_string()))
+            .collect()
+    };
+    for (program, own) in [(None, true), (MIMARI, true), (HARITA, true), (GIS, false)] {
+        let mut app = drawn(program);
+        let doc = app.document.as_mut().expect("a drawing");
+        let line: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind": "polyline", "id": 0, "layerId": doc.model.layers().active(), "attrs": {},
+            "pts": [{ "x": 487000.0, "y": 4420000.0 }, { "x": 487010.0, "y": 4420000.0 }, { "x": 487010.0, "y": 4420010.0 }]
+        }))
+        .expect("a polyline");
+        let slot = doc.model.add(line).expect("added");
+        app.selection.set([slot]);
+        let rows = rows_of(&app);
+        assert_eq!(
+            rows.iter().any(|r| r == "Genişlik"),
+            own,
+            "{program:?} {rows:?}"
+        );
+        assert!(rows.iter().any(|r| r == "Kapalı"), "{program:?} {rows:?}");
+        // The sample's parcel 4, an area.
+        app.selection.set([kentos_domain::Slot(4)]);
+        let rows = rows_of(&app);
+        assert_eq!(
+            rows.iter().any(|r| r == "Maske"),
+            own,
+            "{program:?} {rows:?}"
+        );
+        assert!(
+            rows.iter().any(|r| r == "Saydamlık"),
+            "{program:?} {rows:?}"
+        );
+        assert_eq!(
+            app.shows_property_rows(PropertyRows::Mask),
+            own,
+            "{program:?}"
+        );
+    }
+}
+
+/// Şablon düzenleyici's Araç: Blok ekle where the program has blocks; a block template keeps its tool listed.
+#[test]
+fn the_template_editor_lists_blok_ekle_where_blocks_are() {
+    use crate::template_editor::tool_choices;
+    for (program, blocks) in [(None, true), (MIMARI, true), (HARITA, true), (GIS, false)] {
+        let app = started(program);
+        let own = app.offers_tool_option(kentos_interaction::ToolOption::Blocks);
+        assert_eq!(own, blocks, "{program:?}");
+        let tools: Vec<&str> = tool_choices(own, "point").iter().map(|t| t.0).collect();
+        assert_eq!(
+            tools.contains(&"blockInsert"),
+            blocks,
+            "{program:?} {tools:?}"
+        );
+        assert!(tools.contains(&"point") && tools.contains(&"text"));
+        let kept: Vec<&str> = tool_choices(own, "blockInsert")
+            .iter()
+            .map(|t| t.0)
+            .collect();
+        assert!(kept.contains(&"blockInsert"), "{program:?}");
+    }
+}
+
+/// Yeni projeler' Çizim birimi is kentos-cad's; Karelaj's spacings are titled by the program's axes, X east in a
+/// CAD, Y east in a CBS, the settings' keys the same.
+#[test]
+fn the_settings_name_karelaj_by_the_program_s_axes() {
+    let cad = ["Karelaj aralığı X (doğu)", "Karelaj aralığı Y (kuzey)"];
+    let gis = ["Karelaj aralığı Y (doğu)", "Karelaj aralığı X (kuzey)"];
+    for (program, titles) in [(MIMARI, cad), (HARITA, cad), (GIS, gis)] {
+        // Without a drawing and with its own.
+        for make in [started, drawn] {
+            with(make, program, |app| {
+                let [east, north] = app.grid_titles();
+                assert_eq!([east.0, north.0], titles, "{program:?}");
+                assert!(east.1.contains("doğu") && north.1.contains("kuzey"));
+            });
+        }
+    }
+    // kentos-cad by its drawing: a CAD drawing's X east, else a CBS's.
+    with(drawn, None, |app| {
+        let [east, _] = app.grid_titles();
+        assert_eq!(east.0, gis[0]);
+        crate::files_testing::make_cad(app);
+        let [east, north] = app.grid_titles();
+        assert_eq!([east.0, north.0], cad);
+    });
+    // The unit row: kentos-cad's alone.
+    for (program, unit) in [(None, true), (HARITA, false), (GIS, false)] {
+        let shown = with(started, program, |app| {
+            app.shows_setting(AppSetting::NewProjectUnit)
+        });
+        assert_eq!(shown, unit, "{program:?}");
+    }
+}
+
+/// Katman stili lists the thematic renderers in KentOS GIS (and kentos-cad); KentOS Mimari and KentOS Harita list the
+/// classic ones, and a layer drawn with a thematic one keeps it and shows it there.
+#[test]
+fn katman_stili_lists_the_thematic_renderers_in_a_gis() {
+    use crate::style::layer_style::{Event as Ls, KINDS, Kind};
+    let classic = [
+        Kind::Simple,
+        Kind::Single,
+        Kind::Categorized,
+        Kind::Graduated,
+        Kind::Rules,
+    ];
+    let open = |app: &mut App| {
+        let _ = app.update(Message::LayerStyle(Ls::Open(Some("parsel".into()))));
+        app.styles.layer_style.as_ref().expect("the window").kinds()
+    };
+    for (program, thematic) in [(None, true), (MIMARI, false), (HARITA, false), (GIS, true)] {
+        with(drawn, program, |app| {
+            assert_eq!(app.shows_thematic_renderers(), thematic, "{program:?}");
+            let kinds = open(app);
+            if thematic {
+                assert_eq!(kinds, KINDS, "{program:?}");
+            } else {
+                assert_eq!(kinds, classic, "{program:?}");
+                // A thematic kind is not taken here.
+                let _ = app.update(Message::LayerStyle(Ls::Kind(Kind::Heatmap)));
+                assert_eq!(
+                    app.styles.layer_style.as_ref().map(|w| w.kind),
+                    Some(Kind::Simple)
+                );
+                // Arrows step through the listed ones: Kurallar is the last.
+                for _ in 0..8 {
+                    let _ = app.update(Message::LayerStyle(Ls::Step(true)));
+                }
+                assert_eq!(
+                    app.styles.layer_style.as_ref().map(|w| w.kind),
+                    Some(Kind::Rules)
+                );
+            }
+        });
+    }
+    // A layer drawn with Ters alan in kentos-cad keeps it in KentOS Harita, listed after the classic ones.
+    with(drawn, None, |app| {
+        let _ = open(app);
+        let _ = app.update(Message::LayerStyle(Ls::Kind(Kind::Inverted)));
+        let _ = app.update(Message::LayerStyle(Ls::Done));
+        assert!(app.styles.layer_style.is_none(), "{}", last_said(app));
+        app.program = HARITA;
+        let _ = app.update(Message::Swallowed);
+        let kinds = open(app);
+        assert_eq!(
+            app.styles.layer_style.as_ref().map(|w| w.kind),
+            Some(Kind::Inverted)
+        );
+        let mut expected = classic.to_vec();
+        expected.push(Kind::Inverted);
+        assert_eq!(kinds, expected);
+    });
+}
+
+/// Stil yöneticisi in KentOS Mimari has no MPYY (a zoning plan's legends): not in the tree, the list or a search;
+/// the others have it.
+#[test]
+fn kentos_mimari_s_style_library_has_no_zoning_legends() {
+    use kentos_native_style::library::Source;
+    for (program, mpyy) in [(None, true), (MIMARI, false), (HARITA, true), (GIS, true)] {
+        let mut app = drawn(program);
+        let _ = app.open_style_manager(None, None);
+        let lib = &app.styles.library;
+        let manager = app.styles.manager.as_mut().expect("the window");
+        let trees = manager.trees(lib);
+        let system: Vec<&str> = trees
+            .iter()
+            .find(|(s, _)| *s == Source::System)
+            .map(|(_, t)| t.iter().map(|c| c.name.as_str()).collect())
+            .unwrap_or_default();
+        assert_eq!(system.contains(&"MPYY"), mpyy, "{program:?} {system:?}");
+        assert!(system.contains(&"Temel"), "{program:?}");
+        // A search finds the zoning plan's symbols where MPYY is.
+        manager.query = "imar planı".into();
+        let found = manager.listed(lib);
+        let zoning = found.iter().any(|(id, source)| {
+            *source == Source::System
+                && lib
+                    .get(id)
+                    .is_some_and(|(item, _)| item.path().first() == Some(&"MPYY"))
+        });
+        assert_eq!(zoning, mpyy, "{program:?}");
+        // The whole system source.
+        manager.query.clear();
+        manager.at = (Source::System, Vec::new());
+        let all = manager.listed(lib);
+        assert!(!all.is_empty(), "{program:?}");
+        assert_eq!(
+            all.iter().any(|(id, _)| lib
+                .get(id)
+                .is_some_and(|(item, _)| item.path().first() == Some(&"MPYY"))),
+            mpyy,
+            "{program:?}"
+        );
+        assert_eq!(app.library_hidden().is_empty(), mpyy, "{program:?}");
+    }
+}
+
+/// Noktalar' Cihaza gönder where the program offers `field.send`: its window opens there alone.
+#[test]
+fn cihaza_gonder_is_where_the_program_offers_it() {
+    let mut offered = Vec::new();
+    for program in [None, HARITA, GIS] {
+        let mut app = drawn(program);
+        let doc = app.document.as_mut().expect("a drawing");
+        let point: kentos_commands::Entity = serde_json::from_value(json!({
+            "kind": "point", "id": 0, "layerId": doc.model.layers().active(), "attrs": {}, "label": "101",
+            "p": { "x": 487000.0, "y": 4420000.0 }
+        }))
+        .expect("a point");
+        doc.model.add(point).expect("added");
+        let own = app.offers("field.send");
+        offered.push(own);
+        let task = app.update(Message::Points(crate::points::Event::Send));
+        drive(&mut app, task);
+        assert_eq!(
+            matches!(app.exchange, Some(crate::exchange::Window::FieldSend(_))),
+            own,
+            "{program:?}"
+        );
+    }
+    assert!(offered[0], "kentos-cad offers it");
+}
+
+/// A program's window on a road (a polyline), a parcel and two points, its drawing of the program's own type
+/// (KentOS Mimari's on its own coordinates, the others' in TUREF / TM36), 1440×900, `theme`.
+fn ground(program: Option<Module>, theme: &str) -> App {
+    use crate::tools_scenes::{E, N, Objects, open_edited};
+    let mut app = started(program);
+    let _ = app.settings.choose(&[
+        ("appearance.theme", json!(theme)),
+        ("appearance.textSize", json!(13)),
+    ]);
+    app.apply_settings();
+    app.window_size = iced::Size::new(1440.0, 900.0);
+    let mut o = Objects::new();
+    o.path("yol", &[[0.0, 0.0], [20.0, 0.0], [30.0, 8.0]], false);
+    o.path(
+        "parsel",
+        &[[0.0, 4.0], [14.0, 4.0], [14.0, 14.0], [0.0, 14.0]],
+        true,
+    );
+    let first = o.point("cizim", [22.0, 12.0], Some(101.25));
+    o.data(first, &[("Kod", "SN")], Some("101"));
+    let second = o.point("cizim", [26.0, 14.0], Some(101.5));
+    o.data(second, &[("Kod", "SN")], Some("102"));
+    open_edited(&mut app, o, |d| {
+        let (kind, work) = match program {
+            Some(Module::Architecture) => ("cad", Some("architecture")),
+            Some(Module::Gis) => ("gis", None),
+            _ => ("cad", Some("map")),
+        };
+        d["settings"]["workspace"] = json!(kind);
+        if let Some(work) = work {
+            d["settings"]["cadWork"] = json!(work);
+        }
+        if program == MIMARI {
+            d["settings"]["srid"] = json!(0);
+        }
+    });
+    assert!(app.document.is_some(), "{program:?}: the drawing opens");
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 4.0,
+            min_y: N - 10.0,
+            max_x: E + 34.0,
+            max_y: N + 18.0,
+        },
+        24.0,
+    );
+    crate::tools_scenes::hover(&mut app, [8.0, -6.0]);
+    app
+}
+
+/// `name`'s window in a snapshot, then `act` over it (a click opening a menu), then the picture.
+fn shoot_after(
+    app: &mut App,
+    name: &str,
+    act: impl FnOnce(&mut kentos_ui::snapshot::Snapshot, &mut App),
+) {
+    if !wanted(name) {
+        return;
+    }
+    let size = app.window_size;
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let mut snapshot = kentos_ui::snapshot::Snapshot::new(size).expect("a renderer");
+    snapshot.settle(app, App::view, &mut |app: &mut App, message| {
+        let _ = app.update(message);
+    });
+    act(&mut snapshot, app);
+    snapshot.settle(app, App::view, &mut |app: &mut App, message| {
+        let _ = app.update(message);
+    });
+    let file = out.join(format!("{name}.png"));
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes the picture");
+    println!("{}", file.display());
+}
+
+/// The second part's pictures (docs/adr/0802, the tools' options and the windows' choices): `.run/shots/ayrim2-*`,
+/// 1440×900, dark (and a few light, `-acik`). Not a correctness test (the tests above are).
+///
+/// ```text
+/// KENTOS_SHOTS_ONLY=ayrim2 cargo test -p kentos-desktop --lib module_surface_tests::pictures_of_the_options -- --ignored --nocapture --test-threads=1
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn pictures_of_the_options() {
+    use crate::app_menu::{Event as MenuEvent, Pane};
+    use crate::tools_scenes::{at, click, run};
+    use crate::tools_screens::press_caption;
+    for (theme, suffix) in [("dark", ""), ("light", "-acik")] {
+        // The window as it opens: the status bar's lamps, KentOS Harita's too.
+        for (program, word) in [(MIMARI, "mimari"), (HARITA, "harita"), (GIS, "gis")] {
+            let mut app = ground(program, theme);
+            shoot_after(
+                &mut app,
+                &format!("ayrim2-{word}-pencere{suffix}"),
+                |_, _| {},
+            );
+        }
+        if !suffix.is_empty() {
+            continue;
+        }
+        // KentOS Mimari: Ölçülendirme without Semt, Nokta with Kot alone, Kuzey oku without Coğrafi kuzey.
+        let mut app = ground(MIMARI, theme);
+        run(&mut app, "tool.dimension");
+        shoot_after(&mut app, "ayrim2-mimari-olcu", |_, _| {});
+        run(&mut app, "tool.point");
+        shoot_after(&mut app, "ayrim2-mimari-nokta", |_, _| {});
+        run(&mut app, "tool.northArrow");
+        shoot_after(&mut app, "ayrim2-mimari-kuzey-oku", |shot, app| {
+            press_caption(shot, app, "Plan kuzeyi", false, false);
+        });
+        app.cancel();
+        // KentOS Harita: the same tools with every option.
+        let mut harita = ground(HARITA, theme);
+        run(&mut harita, "tool.dimension");
+        shoot_after(&mut harita, "ayrim2-harita-olcu", |_, _| {});
+        run(&mut harita, "tool.northArrow");
+        shoot_after(&mut harita, "ayrim2-harita-kuzey-oku", |shot, app| {
+            press_caption(shot, app, "Plan kuzeyi", false, false);
+        });
+        // KentOS GIS: Böl without Blok, Çoklu çizgi without Genişlik.
+        let mut gis = ground(GIS, theme);
+        run(&mut gis, "tool.divide");
+        shoot_after(&mut gis, "ayrim2-gis-bol", |_, _| {});
+        run(&mut gis, "tool.polyline");
+        click(&mut gis, [2.0, -6.0]);
+        crate::tools_scenes::hover(&mut gis, [12.0, -6.0]);
+        shoot_after(&mut gis, "ayrim2-gis-coklu-cizgi", |_, _| {});
+        gis.cancel();
+        // The road's edge's grip menu and Öznitelikler: KentOS Harita's with widths, KentOS GIS's without.
+        for (program, word) in [(HARITA, "harita"), (GIS, "gis")] {
+            let mut app = ground(program, theme);
+            // The road (object 1) selected: a click in KentOS GIS takes the active layer's objects alone.
+            app.selection.set([kentos_domain::Slot(1)]);
+            // Genel closed: Geometri's rows in view.
+            let general = Message::Properties(crate::properties::Event::Toggle("general"));
+            let _ = app.update(general.clone());
+            shoot_after(
+                &mut app,
+                &format!("ayrim2-{word}-oznitelik-cizgi"),
+                |_, _| {},
+            );
+            let _ = app.update(general);
+            let middle = at(&app, [10.0, 0.0]);
+            let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(middle)));
+            let _ = app.update(Message::Viewport(crate::viewport::Event::RightPressed(
+                middle,
+            )));
+            let _ = app.update(Message::Viewport(crate::viewport::Event::RightClick(
+                middle,
+            )));
+            shoot_after(&mut app, &format!("ayrim2-{word}-tutamac"), |_, _| {});
+            let _ = app.update(Message::DrawingMenu(crate::drawing_menus::Event::Closed));
+            // The parcel (object 2).
+            app.selection.set([kentos_domain::Slot(2)]);
+            shoot_after(
+                &mut app,
+                &format!("ayrim2-{word}-oznitelik-alan"),
+                |_, _| {},
+            );
+        }
+        // İçe aktar: PDF after NCZ.
+        for (program, word) in [(MIMARI, "mimari"), (HARITA, "harita")] {
+            let mut app = ground(program, theme);
+            let _ = app.update(Message::AppMenu(MenuEvent::Toggle));
+            let _ = app.update(Message::AppMenu(MenuEvent::Show(Pane::Import)));
+            shoot_after(&mut app, &format!("ayrim2-{word}-ice-aktar"), |_, _| {});
+        }
+        // Uygulama ayarları: Yeni projeler without the unit in KentOS Harita, Karelaj by the program's axes.
+        let mut harita = ground(HARITA, theme);
+        harita.open_settings_at(SettingsSection::NewProjects);
+        shoot_after(&mut harita, "ayrim2-harita-yeni-projeler", |_, _| {});
+        let _ = harita.update(Message::DialogClosed);
+        for (program, word) in [(MIMARI, "mimari"), (GIS, "gis")] {
+            let mut app = ground(program, theme);
+            app.open_settings_at(SettingsSection::Snap);
+            shoot_after(
+                &mut app,
+                &format!("ayrim2-{word}-kenetleme"),
+                |shot, app| {
+                    let page = iced::Point::new(820.0, 500.0);
+                    shot.input(
+                        app,
+                        App::view,
+                        &mut |app: &mut App, message| {
+                            let _ = app.update(message);
+                        },
+                        kentos_ui::snapshot::Input::Scroll(page, -9.0),
+                    );
+                },
+            );
+            let _ = app.update(Message::DialogClosed);
+        }
+        // Katman stili's list: the classic renderers in KentOS Harita, the thematic ones too in KentOS GIS.
+        for (program, word) in [(HARITA, "harita"), (GIS, "gis")] {
+            let mut app = ground(program, theme);
+            let _ = app.update(Message::LayerStyle(crate::style::layer_style::Event::Open(
+                Some("parsel".into()),
+            )));
+            shoot_after(
+                &mut app,
+                &format!("ayrim2-{word}-katman-stili"),
+                |shot, app| {
+                    press_caption(shot, app, "Basit", false, false);
+                },
+            );
+        }
+        // Stil yöneticisi: KentOS Mimari's without MPYY, KentOS Harita's with it.
+        for (program, word) in [(MIMARI, "mimari"), (HARITA, "harita")] {
+            let mut app = ground(program, theme);
+            let _ = app.open_style_manager(None, None);
+            if let Some(m) = app.styles.manager.as_mut() {
+                m.at = (kentos_native_style::library::Source::System, Vec::new());
+            }
+            shoot_after(
+                &mut app,
+                &format!("ayrim2-{word}-stil-yoneticisi"),
+                |_, _| {},
+            );
+        }
+        // Noktalar' İşlemler ▾: Cihaza gönder where the program offers it.
+        for (program, word) in [(HARITA, "harita"), (GIS, "gis")] {
+            let mut app = ground(program, theme);
+            app.show_bottom(BottomTab::Points);
+            shoot_after(&mut app, &format!("ayrim2-{word}-noktalar"), |shot, app| {
+                // The bottom panel's İşlemler ▾, not the dock's İşlemler.
+                let at = crate::files_testing::find_texts(shot, app, "İşlemler")
+                    .into_iter()
+                    .find(|r| r.y > 600.0 && r.x < 1100.0)
+                    .expect("İşlemler ▾ in the bar")
+                    .center();
+                shot.input(
+                    app,
+                    App::view,
+                    &mut |app: &mut App, message| {
+                        let _ = app.update(message);
+                    },
+                    kentos_ui::snapshot::Input::Click(at),
+                );
+            });
+        }
     }
 }

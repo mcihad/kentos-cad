@@ -6,7 +6,9 @@
 //! right. System items are read-only and copyable; the user's (Kitaplığım,
 //! kept in `kitaplik.kstil`) and the project's (kept in the drawing) can be
 //! edited, moved and deleted. The same window picks a symbol for a slot of
-//! Katman stili or for the selected objects (`Pick`).
+//! Katman stili or for the selected objects (`Pick`). The system library's
+//! branches the program leaves out are not in the tree, the list or a search
+//! (KentOS Mimari: MPYY's zoning plan legends, docs/adr/0802).
 //!
 //! Files travel as .kstil (read, checked and cleaned by
 //! `kentos_native_style::file`, held to `fixtures/style/v1/kstil.json`), or
@@ -226,6 +228,8 @@ pub struct Manager {
     pub deleting: Option<String>,
     /// The chosen item's Açıklama box: whose it is, and its text.
     pub notes: Option<(String, text_editor::Content)>,
+    /// The system library's branches left out here (module_surfaces.rs `library_hidden`).
+    pub hidden: &'static [&'static str],
     last_press: Option<(String, Instant)>,
     cache: RefCell<Cache>,
 }
@@ -283,6 +287,7 @@ impl Manager {
             geometry: HashMap::new(),
             deleting: None,
             notes: None,
+            hidden: &[],
             last_press: None,
             cache: RefCell::new(Cache::default()),
         };
@@ -298,6 +303,23 @@ impl Manager {
             m.at = (Source::User, Vec::new());
         }
         m
+    }
+
+    /// The window without the system library's `branches` (module_surfaces.rs): the middle shows the system's top
+    /// rather than one of them.
+    pub fn hiding(mut self, branches: &'static [&'static str]) -> Manager {
+        self.hidden = branches;
+        let (source, path) = &self.at;
+        let names: Vec<&str> = path.iter().map(String::as_str).collect();
+        if !crate::module_surfaces::library_shows(branches, *source, &names) {
+            self.at = (Source::System, Vec::new());
+        }
+        self
+    }
+
+    /// Whether an item from `source` shows here: not under a branch left out.
+    fn shows(&self, item: &kentos_native_style::library::Item, source: Source) -> bool {
+        crate::module_surfaces::library_shows(self.hidden, source, &item.path())
     }
 
     pub fn say(&mut self, text: impl Into<String>, warn: bool) {
@@ -327,9 +349,13 @@ impl Manager {
                 SOURCES
                     .into_iter()
                     .map(|source| {
-                        let tree = lib.tree(TreeFilter {
+                        let mut tree = lib.tree(TreeFilter {
                             source: Some(source),
                             ..TreeFilter::default()
+                        });
+                        // The branches left out here (docs/adr/0802).
+                        tree.retain(|c| {
+                            crate::module_surfaces::library_shows(self.hidden, source, &[&c.name])
                         });
                         (source, tree)
                     })
@@ -354,7 +380,7 @@ impl Manager {
         let mut items: Vec<(String, Source)> = Vec::new();
         let mut take = |c: &CategoryNode| {
             for (item, source) in c.all_items() {
-                if self.kind.takes(item.kind(), item.symbol()) {
+                if self.kind.takes(item.kind(), item.symbol()) && self.shows(item, *source) {
                     items.push((item.id().to_owned(), *source));
                 }
             }

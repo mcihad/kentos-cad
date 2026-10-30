@@ -22,7 +22,9 @@
 //!   the point on the arc, then where the jog goes, or its distance typed;
 //! - Semt and Eğim: two points, or with Kenardan a straight edge, then where
 //!   the arrow goes, or its distance typed (left positive); Eğim takes each
-//!   point's elevation from the vertex it snapped to, else asks for it.
+//!   point's elevation from the vertex it snapped to, else asks for it. Semt
+//!   is a survey's: a program without its options (KentOS Mimari,
+//!   docs/adr/0802) neither offers nor takes it.
 //!
 //! The style changes only while nothing is picked. The style, the lock and
 //! Köşeden stay for as long as the app lives (`Memory`). The text is 2.5
@@ -64,8 +66,8 @@ use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::styles;
 use crate::tool::{
-    Context, DimensionMode as Mode, Flow, Memory, OptionChoice, Pointer, Preview, Stroke, Tag,
-    Tone, Tool,
+    Context, DimensionMode as Mode, Flow, Memory, Offers, OptionChoice, Pointer, Preview, Stroke,
+    Tag, Tone, Tool, ToolOption,
 };
 
 /// The tool's id: its command is `tool.dimension`.
@@ -268,6 +270,8 @@ pub struct Dimension {
     asking_style: bool,
     /// What the session remembered, as of the last call.
     memory: Memory,
+    /// The options the program offers, as of the last call: Semt is a survey's (docs/adr/0802).
+    offers: Offers,
 }
 
 impl Dimension {
@@ -283,6 +287,12 @@ impl Dimension {
         self.styles = styles::Seen::dimension(cx);
         self.memory = *cx.memory;
         self.format = cx.format();
+        self.offers = cx.draft.offers;
+    }
+
+    /// Whether the program offers `mode`: Semt only where a survey's options are (docs/adr/0802).
+    fn offered(offers: Offers, mode: Mode) -> bool {
+        mode != Mode::Azimuth || offers.has(ToolOption::Bearing)
     }
 
     fn mode(&self) -> Mode {
@@ -364,6 +374,7 @@ impl Dimension {
             if let Some(&(mode, _)) = MODES
                 .iter()
                 .find(|(_, k)| *k == key || (*k == "Ç" && key == "C"))
+                .filter(|(mode, _)| Self::offered(cx.draft.offers, *mode))
             {
                 cx.memory.dimension_mode = mode;
                 return true;
@@ -1039,7 +1050,7 @@ impl Tool for Dimension {
         }
         if self.fresh() {
             for (mode, key) in MODES {
-                if mode != self.mode() {
+                if mode != self.mode() && Self::offered(self.offers, mode) {
                     prompt = prompt.option(mode.label(), key);
                 }
             }
@@ -1052,6 +1063,10 @@ impl Tool for Dimension {
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        // A style the program does not offer is not kept for it (docs/adr/0802).
+        if !Self::offered(cx.draft.offers, cx.memory.dimension_mode) {
+            cx.memory.dimension_mode = Mode::Aligned;
+        }
         self.see(cx);
         self.refresh(cx);
         Flow::Stay

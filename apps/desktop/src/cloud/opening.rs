@@ -125,6 +125,9 @@ impl App {
     /// Opens a cloud project into the drawing (the question about the
     /// drawing on screen was asked before). An open under way gives way.
     pub(crate) fn start_cloud_open(&mut self, tenant: Uuid, project: Uuid) -> Task<Message> {
+        // What was known of its type is spent; a question about another project gives way (kinds.rs).
+        self.cloud.open_kind = None;
+        self.cloud.open_check = None;
         let (name, storage) = self
             .cloud
             .open_hint

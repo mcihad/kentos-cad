@@ -51,16 +51,16 @@ fn bar_button<'a>(
 }
 
 /// The batch operations as a menu lists them (İşlemler ▾, a row's menu):
-/// each sends `on(kind)`, then Dışa aktar `export` and Cihaza gönder `send`;
-/// none without rows.
+/// each sends `on(kind)`, then Dışa aktar `export` and Cihaza gönder `send`
+/// where the program offers it (`field.send`, docs/adr/0802); none without rows.
 fn batch_items(
     menu: Menu<Message>,
     on: impl Fn(Kind) -> Message,
     export: Message,
-    send: Message,
+    send: Option<Message>,
     any: bool,
 ) -> Menu<Message> {
-    [
+    let menu = [
         (
             Kind::Rename,
             texts::RENAME,
@@ -90,10 +90,14 @@ fn batch_items(
     .separator()
     .item(texts::EXPORT, any.then_some(export))
     .icon(from_web(Some("export")))
-    .detail(texts::EXPORT_HINT)
-    .item(texts::SEND, any.then_some(send))
-    .icon(from_web(Some("fieldSend")))
-    .detail(texts::SEND_HINT)
+    .detail(texts::EXPORT_HINT);
+    match send {
+        Some(send) => menu
+            .item(texts::SEND, any.then_some(send))
+            .icon(from_web(Some("fieldSend")))
+            .detail(texts::SEND_HINT),
+        None => menu,
+    }
 }
 
 /// A row's menu's header when the row is not selected: the point by its
@@ -114,7 +118,7 @@ pub fn row_header(p: &kentos_commands::PointEntity) -> String {
 /// A row's menu (the web's `rowItems`): Göster, the batch operations, Sil;
 /// over the selected rows when the row is one of them, else over that row (a
 /// command selects it alone first). The right click leaves the selection.
-fn row_menu(at: usize, header: String) -> Menu<Message> {
+fn row_menu(at: usize, header: String, send: bool) -> Menu<Message> {
     let on = move |a| msg(Event::Row(at, a));
     let menu = Menu::new()
         .header(header)
@@ -125,7 +129,7 @@ fn row_menu(at: usize, header: String) -> Menu<Message> {
         menu,
         |k| on(RowAction::Batch(k)),
         on(RowAction::Export),
-        on(RowAction::Send),
+        send.then(|| on(RowAction::Send)),
         true,
     )
     .separator()
@@ -142,7 +146,8 @@ impl App {
     /// The bar: the filters on the left, the count and the buttons on the
     /// right; a narrow panel takes the right group to a second line, to the
     /// right, rather than cut it (the web's bar wraps the same way). The
-    /// panel is as wide as the drawing area above it.
+    /// panel is as wide as the drawing area above it. Cihaza gönder with `send`
+    /// (the program offers `field.send`, docs/adr/0802).
     #[allow(clippy::too_many_arguments)]
     fn points_bar<'a>(
         search: String,
@@ -153,6 +158,7 @@ impl App {
         some: bool,
         header: String,
         width: f32,
+        send: bool,
     ) -> Element<'a, Message> {
         let names: Vec<String> = rows.layers.iter().map(|(name, _)| name.clone()).collect();
         let labels: Vec<String> = rows
@@ -242,14 +248,18 @@ impl App {
                         Menu::new().header(header.clone()),
                         |k| msg(Event::Batch(k)),
                         msg(Event::Export),
-                        msg(Event::Send),
+                        send.then(|| msg(Event::Send)),
                         any,
                     )
                     .item(texts::IMPORT, Some(msg(Event::Import)))
                     .icon(from_web(Some("import")))
                     .detail(texts::IMPORT_HINT)
                 }),
-                Tip::new(texts::ACTIONS).body(texts::ACTIONS_HINT),
+                Tip::new(texts::ACTIONS).body(if send {
+                    texts::ACTIONS_HINT
+                } else {
+                    texts::ACTIONS_HINT_NO_SEND
+                }),
                 iced::widget::tooltip::Position::Top,
             );
             let actions = row![
@@ -301,6 +311,8 @@ impl App {
         let rows = self.point_rows(doc);
         let format = Format::of(doc.model.settings());
         let panel = &self.points;
+        // Cihaza gönder where the program offers it (docs/adr/0802).
+        let send = self.offers("field.send");
 
         let bar = Self::points_bar(
             panel.search.clone(),
@@ -311,6 +323,7 @@ impl App {
             !self.selection.is_empty(),
             batch::targets(&rows.shown, |s| self.selection.contains(s)).1,
             self.viewport.bounds.width,
+            send,
         );
         // A row's menu names the selected rows; a row not selected, itself alone.
         let selected_header = batch::targets(&rows.shown, |s| self.selection.contains(s)).1;
@@ -447,7 +460,7 @@ impl App {
                     } else {
                         row_header(p)
                     };
-                    move |_| row_menu(i, header.clone())
+                    move |_| row_menu(i, header.clone(), send)
                 })
             })
             .reveal(match editing {

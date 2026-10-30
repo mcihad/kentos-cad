@@ -121,8 +121,13 @@ pub struct Catalog {
     pub search: String,
     /// When the typed search goes to the server.
     pub search_at: Option<Instant>,
-    /// The type filter (“Tüm türler” when none).
+    /// The type filter (“Tüm türler” when none: every type this program lists).
     pub kind: Option<ProjectType>,
+    /// The types this program lists and its filter offers (kinds.rs, docs/adr/0802): a module's own, every one in
+    /// kentos-cad; a page's rows of other types are left out.
+    pub types: Vec<ProjectType>,
+    /// The module whose program this is: its own projects alone are listed (none: kentos-cad, every one).
+    pub program: Option<kentos_launch::Module>,
     /// The list's order: one of its view's (the first when a list is chosen).
     pub sort: CatalogSort,
     /// “Kurum projeleri”'s organisation (its tenant id).
@@ -174,6 +179,25 @@ impl App {
 impl Catalog {
     pub fn loading(&self) -> bool {
         self.loading.is_some()
+    }
+
+    /// The type the server is asked for: the chosen one, else the program's only one (KentOS Mimari, KentOS GIS).
+    pub fn asked_type(&self) -> Option<ProjectType> {
+        self.kind.or(match self.types.as_slice() {
+            [only] => Some(*only),
+            _ => None,
+        })
+    }
+
+    /// Whether the rows of the server's pages are sifted here: a module's program of several types listing them
+    /// all (KentOS Harita; the server takes one type), so the server's count is not this list's.
+    pub fn sifted(&self) -> bool {
+        self.asked_type().is_none() && self.types.len() < plan::PROJECT_TYPES.len()
+    }
+
+    /// Whether the user narrowed the list to one type of several (an empty list says to try without it).
+    pub fn narrowed(&self) -> bool {
+        self.kind.is_some() && self.types.len() > 1
     }
 
     /// The page on its way (tests answer it).
@@ -293,13 +317,17 @@ impl App {
             List::View(v) => words::view(*v).sorts[0],
             List::Device => CatalogSort::Updated,
         };
-        // The program's own projects first (module_surfaces.rs): KentOS Mimari's and KentOS GIS's by their type.
-        let kind = self.cloud_kind();
+        // The program's own projects first (module_surfaces.rs): KentOS Mimari's and KentOS GIS's by their type; a
+        // module's program lists no other module's (kinds.rs, docs/adr/0802).
+        let types = self.cloud_types();
+        let kind = self.cloud_kind().filter(|k| types.contains(k));
         self.cloud.catalog = Some(Catalog {
             list,
             search: String::new(),
             search_at: None,
             kind,
+            types,
+            program: self.program,
             sort,
             org,
             projects: Vec::new(),
@@ -372,7 +400,7 @@ impl App {
         let mut query = CatalogQuery::new(view);
         query.tenant = tenant;
         query.text = Some(c.search.trim().to_owned()).filter(|t| !t.is_empty());
-        query.project_type = c.kind;
+        query.project_type = c.asked_type();
         query.sort = Some(c.sort);
         query.limit = Some(PAGE);
         query.after = if more { c.next.clone() } else { None };
@@ -390,10 +418,15 @@ impl App {
         task
     }
 
-    /// The projects this device keeps for the account (the signed-in one, or the last).
+    /// The projects this device keeps for the account (the signed-in one, or the last); in a module's program its
+    /// own module's and those of no module, by their drawing (their catalog type is not kept, kinds.rs).
     fn kept_projects(&self) -> Vec<Kept> {
         match (&self.cloud.replicas, self.cloud_identity()) {
-            (Some(store), Some((server, user))) => store.list(&server, &user),
+            (Some(store), Some((server, user))) => store
+                .list(&server, &user)
+                .into_iter()
+                .filter(|k| self.lists_copy(&k.info))
+                .collect(),
             _ => Vec::new(),
         }
     }
@@ -485,7 +518,8 @@ impl App {
                 c.search = text;
                 c.search_at = Some(Instant::now() + SEARCH_DELAY);
             }
-            Event::CatalogKind(kind) => {
+            // Only a type this program lists (docs/adr/0802).
+            Event::CatalogKind(kind) if kind.is_none_or(|k| c.types.contains(&k)) => {
                 c.kind = kind;
                 return self.catalog_load(false);
             }
@@ -553,6 +587,7 @@ impl App {
                 if c.list == List::View(CatalogView::Trash) {
                     return self.catalog_act(Act::Restore);
                 }
+                // A row's catalog type is known; this device's copy's is not (kinds.rs).
                 let picked = match &c.list {
                     List::Device => c.picked_kept().map(|k| {
                         (
@@ -560,13 +595,20 @@ impl App {
                             k.info.id.clone(),
                             k.info.name.clone(),
                             k.info.storage,
+                            None,
                         )
                     }),
-                    List::View(_) => c
-                        .picked()
-                        .map(|p| (p.tenant_id.clone(), p.id.clone(), p.name.clone(), p.storage)),
+                    List::View(_) => c.picked().map(|p| {
+                        (
+                            p.tenant_id.clone(),
+                            p.id.clone(),
+                            p.name.clone(),
+                            p.storage,
+                            Some(p.project_type),
+                        )
+                    }),
                 };
-                let Some((tenant, project, name, storage)) = picked else {
+                let Some((tenant, project, name, storage, kind)) = picked else {
                     c.status = Some(Said::info("Önce listeden bir proje seçin."));
                     return Task::none();
                 };
@@ -577,6 +619,7 @@ impl App {
                     return Task::none();
                 };
                 self.cloud.open_hint = Some((name, storage));
+                self.cloud.open_kind = kind.map(|k| (project, Some(k)));
                 return self.leave(Then::OpenCloud { tenant, project });
             }
             Event::CatalogRemove => {
@@ -629,9 +672,17 @@ impl App {
                     self.went_offline();
                     return self.catalog_load(false);
                 }
+                let (before, answered) = (c.projects.len(), result.is_ok());
                 page(c, more, result);
+                // A sifted page that left nothing of this program's: the next one is asked at once (kinds.rs).
+                let further =
+                    if answered && c.sifted() && c.projects.len() == before && c.next.is_some() {
+                        self.catalog_load(true)
+                    } else {
+                        Task::none()
+                    };
                 let made = self.catalog_listed();
-                return Task::batch([made, self.tabs_follow(), self.came_online()]);
+                return Task::batch([further, made, self.tabs_follow(), self.came_online()]);
             }
             _ => {}
         }
@@ -723,14 +774,23 @@ impl App {
 /// The selection stays while its project is listed.
 fn page(c: &mut Catalog, more: bool, result: Result<ProjectPage, ApiFailure>) {
     match result {
-        Ok(page) => {
+        Ok(mut page) => {
+            // Another module's projects are not this program's (kinds.rs, docs/adr/0802).
+            page.projects.retain(|p| c.types.contains(&p.project_type));
             if more {
                 c.projects.extend(page.projects);
             } else {
                 c.projects = page.projects;
             }
-            c.total = page.total;
             c.next = page.next;
+            // Sifted here, the server's count is every type's: this list's is known once its last page is in.
+            c.total = if !c.sifted() {
+                page.total
+            } else if c.next.is_none() {
+                u32::try_from(c.projects.len()).unwrap_or(u32::MAX)
+            } else {
+                0
+            };
             c.retention = page.trash_retention_days;
             let listed = |id: &String| c.projects.iter().any(|p| &p.id == id);
             let keep = c
@@ -761,18 +821,25 @@ pub(crate) fn empty_text(c: &Catalog, orgs: usize) -> String {
     }
     let searched = !c.search.trim().is_empty();
     // The type filter is the server's lists' (a module's program sets it at first, module_surfaces.rs); this
-    // device's copies are searched by name alone.
-    let filtered = searched || c.kind.is_some();
-    match &c.list {
+    // device's copies are searched by name alone. A module's program's own types are no filter to take off.
+    let filtered = searched || c.narrowed();
+    let text = match &c.list {
         List::Device => {
             if searched {
-                plan::EMPTY_SEARCH.to_owned()
-            } else {
-                "Bu bilgisayarda kopyası tutulan bir proje yok. Bir bulut projesini bir kez açınca kopyası burada tutulur.".to_owned()
+                return plan::EMPTY_SEARCH.to_owned();
             }
+            "Bu bilgisayarda kopyası tutulan bir proje yok. Bir bulut projesini bir kez açınca kopyası burada tutulur."
         }
-        _ if filtered => plan::EMPTY_SEARCH.to_owned(),
-        List::View(CatalogView::Organization) if orgs == 0 => plan::NO_ORGANIZATION.to_owned(),
-        List::View(v) => words::view(*v).empty.to_owned(),
+        _ if filtered => return plan::EMPTY_SEARCH.to_owned(),
+        List::View(CatalogView::Organization) if orgs == 0 => plan::NO_ORGANIZATION,
+        List::View(v) => words::view(*v).empty,
+    };
+    // A module's program says whose projects it lists (docs/adr/0802).
+    match c.program {
+        Some(m) => format!(
+            "{text} Burada yalnız {} projeleri listelenir; başka türdeki projeler kendi programlarında açılır.",
+            m.title()
+        ),
+        None => text.to_owned(),
     }
 }

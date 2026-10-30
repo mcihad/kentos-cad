@@ -2309,3 +2309,40 @@ fn kat_plani_paftalari_make_a_sheet_per_level() {
     d.update(Message::Undo);
     assert!(d.book().sheets.is_empty(), "one step");
 }
+
+/// docs/adr/0802: a program whose projects have some catalog types (a KentOS module's) starts Yeni pafta with its
+/// own template, the gallery opening on it; without types (kentos-cad, the web) with the mode's, as before.
+#[test]
+fn yeni_pafta_starts_with_the_programs_own_template() {
+    use kentos_contracts::ProjectType::*;
+    for (types, made) in [
+        (Vec::new(), "Teknik çizim paftası"),
+        (vec![Architecture], "Mimari pafta"),
+        (
+            vec![Cad, LandReadjustment, ZoningPlan, Subdivision, Road],
+            "Genel pafta, sağda antet şeridi",
+        ),
+    ] {
+        let mut d = Designer::new(Context {
+            workspace: Some(kentos_contracts::Workspace::Cad),
+            project_types: types.clone(),
+            ..context()
+        });
+        let _ = d.update(Message::NewSheet);
+        if d.questions().is_some() {
+            let _ = d.update(Message::Questions(QuestionsMessage::Make));
+        }
+        assert_eq!(
+            d.undo_label(),
+            Some(format!("Şablondan pafta: {made}").as_str()),
+            "{types:?}"
+        );
+        // The gallery opens on it, and shows no template made for another type alone.
+        d.update(Message::Gallery(GalleryMessage::Open));
+        let shown: Vec<String> = d.gallery_cards().into_iter().map(|c| c.id).collect();
+        assert!(!shown.is_empty());
+        if types == [Architecture] {
+            assert!(!shown.iter().any(|s| s == "sys:imar-plani"), "{shown:?}");
+        }
+    }
+}

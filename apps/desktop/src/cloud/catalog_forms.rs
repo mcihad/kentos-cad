@@ -178,6 +178,8 @@ impl App {
             Event::Submit => self.project_form_submit(),
             Event::Done { id, result } => self.project_form_done(id, result),
             edit => {
+                // A module's program offers its own module's types alone (kinds.rs, docs/adr/0802).
+                let types = self.cloud_types();
                 let Some(form) = self
                     .cloud
                     .catalog
@@ -191,7 +193,11 @@ impl App {
                 let fits = |t: &str, max: usize| t.encode_utf16().count() <= max;
                 match (form, edit) {
                     (Form::Metadata(f), Event::Name(t)) if fits(&t, plan::NAME_MAX) => f.name = t,
-                    (Form::Metadata(f), Event::Type(t)) => f.project_type = t,
+                    (Form::Metadata(f), Event::Type(t))
+                        if types.contains(&t) || t == f.project.project_type =>
+                    {
+                        f.project_type = t;
+                    }
                     (Form::Metadata(f), Event::Description(action)) => {
                         let before = action.is_edit().then(|| f.description.text());
                         f.description.perform(action);

@@ -110,6 +110,9 @@ pub enum Say {
 pub struct Context {
     pub workspace: Option<Workspace>,
     pub project_type: Option<ProjectType>,
+    /// The catalog types of the program's projects (a KentOS module's program, docs/adr/0802): a new sheet starts
+    /// with its own template and the gallery shows its types' templates; empty: every type (kentos-cad, as before).
+    pub project_types: Vec<ProjectType>,
     pub capabilities: Capabilities,
     /// Exact project plotting denominator; the profile capability retains legacy integer defaults.
     pub exact_plot_scale:Option<f64>,
@@ -331,7 +334,8 @@ impl Default for Designer {
 
 impl Designer {
     pub fn new(ctx: Context) -> Self {
-        let profile = profile::profile_for(ctx.workspace, &ctx.capabilities);
+        let profile =
+            profile::profile_for_types(ctx.workspace, &ctx.capabilities, &ctx.project_types);
         let mut d = Designer {
             book: SheetBook::default(),
             open: None,
@@ -455,7 +459,11 @@ impl Designer {
     pub fn set_context(&mut self, ctx: Context) {
         if ctx != self.ctx {
             self.ctx = ctx;
-            self.profile = profile::profile_for(self.ctx.workspace, &self.ctx.capabilities);
+            self.profile = profile::profile_for_types(
+                self.ctx.workspace,
+                &self.ctx.capabilities,
+                &self.ctx.project_types,
+            );
             self.refresh();
             // An open gallery's cards: what a template needs that the project lacks may have changed.
             self.ensure_thumbs();

@@ -131,13 +131,19 @@ impl App {
         let tenant = open
             .and_then(|t| tenants.iter().position(|m| m.tenant_id == t))
             .unwrap_or(0);
+        // The program's own type first (module_surfaces.rs); kentos-cad's, Genel CAD. A module's program offers its
+        // own types alone (kinds.rs, docs/adr/0802).
+        let types = self.cloud_types();
+        let project_type = Some(self.upload_kind())
+            .filter(|k| types.contains(k))
+            .or_else(|| types.first().copied())
+            .unwrap_or_default();
         self.cloud.upload = Some(Upload {
             tenants,
             tenant,
             name: doc.name().to_owned(),
             storage,
-            // The program's own type first (module_surfaces.rs); kentos-cad's, Genel CAD.
-            project_type: self.upload_kind(),
+            project_type,
             description: text_editor::Content::new(),
             tags: String::new(),
             key: Uuid::new_v4(),
@@ -174,7 +180,8 @@ impl App {
                 }
             }
             // The catalog's fields are part of what the upload asks for: a change is a new upload.
-            Event::UploadType(kind) => {
+            // Only a type this program offers (kinds.rs, docs/adr/0802).
+            Event::UploadType(kind) if self.cloud_types().contains(&kind) => {
                 if let Some(u) = self.cloud.upload.as_mut().filter(|u| !u.working()) {
                     u.project_type = kind;
                     u.changed();

@@ -8,7 +8,7 @@
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 
-use kentos_commands::{CadWork, ProjectSettings, Workspace};
+use kentos_commands::{CadWork, ProjectSettings, ProjectType, Workspace};
 use kentos_launch::Module;
 
 use iced::Task;
@@ -34,6 +34,20 @@ pub(crate) fn works_of(m: Module) -> Vec<CadWork> {
         .iter()
         .filter_map(|id| CadWork::from_id(id))
         .collect()
+}
+
+/// The cloud catalog's types of a module's projects (kentos-launch's `Module::project_types`, docs/adr/0802), in
+/// its order: the first is a new cloud project's.
+pub(crate) fn project_types_of(m: Module) -> Vec<ProjectType> {
+    m.project_types()
+        .iter()
+        .filter_map(|name| ProjectType::from_name(name))
+        .collect()
+}
+
+/// The module a cloud project of catalog type `t` belongs to.
+pub(crate) fn module_of_project_type(t: ProjectType) -> Option<Module> {
+    Module::of_project_type(t.name())
 }
 
 /// The type a module's projects have.
@@ -64,6 +78,15 @@ pub(crate) fn in_program(m: Module) -> &'static str {
         Module::Architecture => "KentOS Mimari'de",
         Module::Map => "KentOS Harita'da",
         Module::Gis => "KentOS GIS'te",
+    }
+}
+
+/// “KentOS Harita'nın”: whose something is, a module's program in a sentence.
+pub(crate) fn of_program(m: Module) -> &'static str {
+    match m {
+        Module::Architecture => "KentOS Mimari'nin",
+        Module::Map => "KentOS Harita'nın",
+        Module::Gis => "KentOS GIS'in",
     }
 }
 
@@ -242,6 +265,69 @@ impl App {
     pub(crate) fn program_title(&self) -> &'static str {
         self.program.map_or("KentOS CAD", Module::title)
     }
+
+    /// Why this program does not run a tool's method typed by its name (`SEMT`: Ölçülendirme's Semt), none
+    /// when it does (docs/adr/0802): a module's program runs a method its own ribbon shows, or one no
+    /// ribbon shows of a tool it offers; kentos-cad every one.
+    pub(crate) fn method_not_offered(&self, id: &str, option: &str, label: &str) -> Option<String> {
+        let here = self.program?;
+        if let Some(why) = self.not_offered(id, label) {
+            return Some(why);
+        }
+        let mine = self.ribbon_tabs().chain(self.contextual_tabs());
+        if splits_hold(mine, id, option) {
+            return None;
+        }
+        let anywhere = catalog().every_tab().chain(
+            catalog()
+                .contextual_for_work(Workspace::Cad, None)
+                .chain(catalog().contextual_for_work(Workspace::Gis, None)),
+        );
+        if !splits_hold(anywhere, id, option) {
+            return None;
+        }
+        let others: Vec<&str> = Module::ALL
+            .into_iter()
+            .filter(|m| {
+                let mode = type_of(*m);
+                let work = works_of(*m).first().copied();
+                *m != here
+                    && splits_hold(
+                        catalog()
+                            .tabs_for(mode, work)
+                            .chain(catalog().contextual_for_work(mode, work)),
+                        id,
+                        option,
+                    )
+            })
+            .map(in_program)
+            .collect();
+        Some(if others.is_empty() {
+            format!("“{label}” {} yok.", in_program(here))
+        } else {
+            format!(
+                "“{label}” {} yok; {} var.",
+                in_program(here),
+                others.join(" ve ")
+            )
+        })
+    }
+}
+
+/// Whether a split button of these tabs holds the tool `id`'s method `option`.
+fn splits_hold<'a>(
+    tabs: impl Iterator<Item = &'a crate::catalog::Tab>,
+    id: &str,
+    option: &str,
+) -> bool {
+    tabs.flat_map(|tab| tab.panels.iter())
+        .flat_map(|panel| panel.items.iter())
+        .any(|item| match item {
+            crate::catalog::Item::Split { entries, .. } => entries
+                .iter()
+                .any(|e| e.id == id && e.option == Some(option)),
+            _ => false,
+        })
 }
 
 #[cfg(test)]

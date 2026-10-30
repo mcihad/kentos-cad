@@ -47,6 +47,14 @@ impl App {
         if self.cloud.leaving.is_some() {
             return Task::none();
         }
+        // A module's program opens only its own module's cloud projects (kinds.rs, docs/adr/0802): one of
+        // another module's is refused before the drawing on screen is left, and one whose type it does not
+        // know yet is asked of the server first.
+        if let Then::OpenCloud { tenant, project } = then
+            && let Some(task) = self.cloud_open_check(tenant, project)
+        {
+            return task;
+        }
         self.cloud.leave_failure = None;
         // The signed-in account, or the one kept for work without a connection.
         let user = self.cloud_identity().map(|(_, user)| user);

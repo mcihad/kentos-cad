@@ -123,9 +123,11 @@ impl App {
         let list: Element<'_, Message> = match &s.projects {
             Projects::NotAsked | Projects::Loading => column![skeleton(), skeleton(), skeleton()].spacing(4).into(),
             Projects::Failed => label::caption("Son projeler okunamadı.").into(),
-            Projects::Loaded(projects) if projects.is_empty() => label::caption(
-                "Henüz açtığınız bir bulut projesi yok. “Proje aç” ile açın ya da açık çizimi “Buluta yükle” ile gönderin.",
-            )
+            // A module's program lists its own projects (docs/adr/0802).
+            Projects::Loaded(projects) if projects.is_empty() => label::caption(format!(
+                "Henüz açtığınız bir {} projesi yok. “Proje aç” ile açın ya da açık çizimi “Buluta yükle” ile gönderin.",
+                self.program.map_or("bulut", kentos_launch::Module::title)
+            ))
             .into(),
             Projects::Loaded(projects) => {
                 let open = self

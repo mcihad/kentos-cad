@@ -1391,7 +1391,8 @@ impl Catalog {
                 continue;
             };
             // A tab or panel shows for a work its `works` name, or for every work without them (docs/adr/0801);
-            // so do its buttons, menu blocks and ▾ commands (docs/adr/0802), and in a project type its `modes` name.
+            // so do its buttons, a split's entries, menu blocks and ▾ commands (docs/adr/0802), and in a project
+            // type its `modes` name.
             let shown =
                 |p: &RawPanel, work: Option<&str>| shows(&p.works, work) && in_mode(&p.modes, name);
             let build = |work: Option<&str>| {
@@ -1403,7 +1404,7 @@ impl Catalog {
                             .panels
                             .iter()
                             .filter(|p| shown(p, work))
-                            .map(|p| cut(p, work, name))
+                            .map(|p| cut(p, work, name, &splits))
                             .collect();
                         tab(
                             t.id.clone(),
@@ -1428,7 +1429,7 @@ impl Catalog {
                         c.panels
                             .iter()
                             .filter(|p| shown(p, work))
-                            .map(|p| cut(p, work, name))
+                            .map(|p| cut(p, work, name, &splits))
                             .collect(),
                         &splits,
                     ));
@@ -1679,8 +1680,6 @@ fn added_command(c: &kentos_commands::AddedCommand) -> Command {
     }
 }
 
-/// A split button named by its key, made the inventory's with this size
-/// (docs/adr/0622 §3); any other item as it is.
 /// Whether something that names `works` shows for a CAD work (docs/adr/0801): it names it or no work; everything
 /// shows without a work (a CAD project not asked its work, CBS).
 fn shows(works: &[String], work: Option<&str>) -> bool {
@@ -1693,15 +1692,37 @@ fn in_mode(modes: &[String], mode: &str) -> bool {
     modes.is_empty() || modes.iter().any(|m| m == mode)
 }
 
-/// A panel as a CAD work of a project type (`cad`, `gis`) shows it (docs/adr/0802): its buttons, menu blocks and ▾
-/// commands that name the work (or none) and the type (or none); a menu with no block left goes.
-fn cut(panel: &RawPanel, work: Option<&str>, mode: &str) -> RawPanel {
+/// A panel as a CAD work of a project type (`cad`, `gis`) shows it (docs/adr/0802): its name in the work, its buttons,
+/// a split's entries, menu blocks and ▾ commands that name the work (or none) and the type (or none); a menu with no
+/// block left goes, and a split with no entry. A split named by its key is the inventory's (`splits`) from here on.
+fn cut(
+    panel: &RawPanel,
+    work: Option<&str>,
+    mode: &str,
+    splits: &HashMap<String, RawItem>,
+) -> RawPanel {
     let mut panel = panel.clone();
+    if let Some(label) = work.and_then(|w| panel.work_labels.get(w)) {
+        panel.label.clone_from(label);
+    }
     let keeps = |works: &[String], modes: &[String]| shows(works, work) && in_mode(modes, mode);
+    panel.items = std::mem::take(&mut panel.items)
+        .into_iter()
+        .map(|item| resolve(item, splits))
+        .collect();
     panel.items.retain_mut(|item| match item {
-        RawItem::Command { works, modes, .. }
-        | RawItem::SplitRef { works, modes, .. }
-        | RawItem::Split { works, modes, .. } => keeps(works, modes),
+        RawItem::Command { works, modes, .. } | RawItem::SplitRef { works, modes, .. } => {
+            keeps(works, modes)
+        }
+        RawItem::Split {
+            works,
+            modes,
+            split,
+            ..
+        } => {
+            split.retain(|e| shows(&e.works, work));
+            keeps(works, modes) && !split.is_empty()
+        }
         RawItem::Menu {
             works,
             modes,
@@ -1717,6 +1738,8 @@ fn cut(panel: &RawPanel, work: Option<&str>, mode: &str) -> RawPanel {
     panel
 }
 
+/// A split button named by its key made the inventory's, with this size and its entries' works (docs/adr/0622 §3,
+/// 0802); any other item as it is.
 fn resolve(raw: RawItem, splits: &HashMap<String, RawItem>) -> RawItem {
     match raw {
         RawItem::SplitRef {
@@ -1724,9 +1747,19 @@ fn resolve(raw: RawItem, splits: &HashMap<String, RawItem>) -> RawItem {
             size,
             works,
             modes,
+            entry_works,
         } => match splits.get(&split) {
             Some(RawItem::Split { split: entries, key, .. }) => RawItem::Split {
-                split: entries.clone(),
+                split: entries
+                    .iter()
+                    .map(|e| {
+                        let mut e = e.clone();
+                        if let Some(only) = entry_works.get(&e.label) {
+                            e.works.clone_from(only);
+                        }
+                        e
+                    })
+                    .collect(),
                 key: key.clone(),
                 size,
                 works,
@@ -1995,6 +2028,9 @@ struct RawPanel {
     keep: bool,
     #[serde(default)]
     launcher: Option<RawLauncher>,
+    /// Its name in a CAD work that holds other things than `label` says (docs/adr/0802), by the work.
+    #[serde(default, rename = "workLabels")]
+    work_labels: std::collections::BTreeMap<String, String>,
 }
 
 /// A seldom used command under a panel's ▾: its id, or its id and the CAD works (and project types) it shows for
@@ -2062,6 +2098,9 @@ enum RawItem {
         works: Vec<String>,
         #[serde(default)]
         modes: Vec<String>,
+        /// The CAD works some of its entries show for, by their labels (docs/adr/0802); the others: every work.
+        #[serde(default, rename = "entryWorks")]
+        entry_works: std::collections::BTreeMap<String, Vec<String>>,
     },
     Split {
         split: Vec<RawSplit>,
@@ -2104,6 +2143,9 @@ struct RawSplit {
     aliases: Vec<String>,
     #[serde(default)]
     icon: Option<String>,
+    /// The CAD works it shows for (docs/adr/0802: a split by key takes them from its `entryWorks`); none: every work.
+    #[serde(default)]
+    works: Vec<String>,
 }
 
 #[derive(Deserialize, Clone)]

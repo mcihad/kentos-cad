@@ -23,7 +23,9 @@ use kentos_sheet::cloud::{DeviceCloudState, TemplateRole};
 use kentos_sheet::display::{self, DisplayList, Prim, RenderMode};
 use kentos_sheet::model::{Orientation, Paper, SheetBook};
 use kentos_sheet::preflight::Finding;
-use kentos_sheet::profile::{RankedTemplate, TemplateFit, rank_templates};
+use kentos_sheet::profile::{
+    RankedTemplate, TemplateFit, rank_templates, rank_templates_for_types,
+};
 use kentos_sheet::template::{
     InstanceIds, InstanceOptions, PaperChoice, Template, instantiate, system_templates,
 };
@@ -518,8 +520,12 @@ impl Designer {
                 m
             })
             .collect();
-        let ranked: Vec<RankedTemplate> =
-            rank_templates(&metas, self.ctx.workspace, self.ctx.project_type);
+        // A program of some types (a KentOS module's, docs/adr/0802) ranks by them; kentos-cad by the project's type.
+        let ranked: Vec<RankedTemplate> = if self.ctx.project_types.is_empty() {
+            rank_templates(&metas, self.ctx.workspace, self.ctx.project_type)
+        } else {
+            rank_templates_for_types(&metas, self.ctx.workspace, &self.ctx.project_types)
+        };
         let mut out = Vec::with_capacity(cards.len());
         for r in ranked {
             let slot = cards

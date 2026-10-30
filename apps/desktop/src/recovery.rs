@@ -19,6 +19,11 @@
 //!   KentOS that crashed or was killed) are offered one by one: Geri yükle
 //!   opens the copy as unsaved work without a file (Save asks where; no file is
 //!   written over by itself), Sonra keeps it for the next start, Sil deletes it.
+//! - Every program keeps its copies in the same folder; a copy says the module
+//!   its drawing belongs to (docs/adr/0802). A module's program offers its own
+//!   module's copies and those of no module (a copy written before modules
+//!   were kept too); the others wait for their own program. kentos-cad offers
+//!   every one.
 
 use std::fs::{File, OpenOptions};
 use std::io::Write as _;
@@ -30,6 +35,7 @@ use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt as _, Stream};
 use iced::widget::{button, row, space};
 use iced::{Element, Task};
+use kentos_launch::Module;
 use kentos_ui::widget::{Dialog, overlay};
 use kentos_ui::{label, style};
 use serde::{Deserialize, Serialize};
@@ -53,6 +59,9 @@ struct Facts {
     file: Option<String>,
     saved_at: u64,
     objects: usize,
+    /// The module the drawing belongs to (`mimari`, `harita`, `cbs`); none: no module, or a copy written before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    module: Option<Module>,
 }
 
 /// A copy another KentOS left, to offer.
@@ -64,6 +73,8 @@ pub struct Offer {
     /// When it was written (seconds since the epoch).
     pub saved_at: u64,
     pub objects: usize,
+    /// The module its drawing belongs to; none: no module (or a copy that did not say).
+    pub module: Option<Module>,
     /// The drawing: KCAD v2 bytes.
     pub data: PathBuf,
     facts: PathBuf,
@@ -207,6 +218,14 @@ impl Recovery {
         self.unavailable.as_deref()
     }
 
+    /// Keeps the copies `program` offers (docs/adr/0802): a module's program its own module's and those of no
+    /// module; kentos-cad (none) every one. The others are left where they are, for their own program.
+    pub fn offer_only(&mut self, program: Option<Module>) {
+        if let Some(here) = program {
+            self.offers.retain(|o| o.module.is_none_or(|m| m == here));
+        }
+    }
+
     /// Whether copies are kept.
     pub fn on(&self) -> bool {
         self.folder.is_some()
@@ -298,6 +317,7 @@ fn gone_copies(root: &Path, own: &Path) -> Vec<Offer> {
                     file: f.file,
                     saved_at: f.saved_at,
                     objects: f.objects,
+                    module: f.module,
                     data,
                     facts,
                     folder: folder.clone(),
@@ -510,6 +530,8 @@ impl App {
                 .unwrap_or_default()
                 .as_secs(),
             objects: doc.entity_count(),
+            // Which program offers it again (docs/adr/0802).
+            module: crate::program::module_of(doc.settings()),
         };
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let result = (|| -> Result<(), String> {
@@ -721,6 +743,98 @@ mod tests {
         let third = Recovery::open(&root).expect("folder");
         assert!(third.offers.is_empty());
         drop((first, second, third));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    /// A gone KentOS's copy of a drawing of `module`'s (none: of no module).
+    fn left_by(root: &Path, module: Option<Module>) {
+        let mut crashed = editing(root);
+        if let Some(m) = module {
+            let doc = crashed.document.as_mut().expect("a drawing");
+            let mut s = doc.model.settings().clone();
+            s.workspace = Some(crate::program::type_of(m));
+            s.cad_work = crate::program::works_of(m).first().copied();
+            doc.model.set_settings(s);
+        }
+        write_copy(&mut crashed);
+        crashed.recovery.lock = None;
+    }
+
+    #[test]
+    fn a_modules_program_offers_its_own_modules_copies_and_those_of_no_module() {
+        let root = scratch("recovery-programs");
+        left_by(&root, Some(Module::Architecture));
+        left_by(&root, Some(Module::Gis));
+        left_by(&root, None);
+        // A copy says its drawing's module; one of no module says none.
+        let said: Vec<Option<Module>> = {
+            let mut m: Vec<Option<Module>> = Recovery::open(&root)
+                .expect("folder")
+                .offers
+                .iter()
+                .map(|o| o.module)
+                .collect();
+            m.sort_by_key(|m| m.map(Module::id));
+            m
+        };
+        assert_eq!(said, [None, Some(Module::Gis), Some(Module::Architecture)]);
+        let offered = |program: Option<Module>| {
+            let mut r = Recovery::open(&root).expect("folder");
+            r.offer_only(program);
+            let mut m: Vec<Option<Module>> = r.offers.iter().map(|o| o.module).collect();
+            m.sort_by_key(|m| m.map(Module::id));
+            m
+        };
+        assert_eq!(offered(None).len(), 3, "kentos-cad offers every one");
+        assert_eq!(
+            offered(Some(Module::Architecture)),
+            [None, Some(Module::Architecture)]
+        );
+        assert_eq!(offered(Some(Module::Gis)), [None, Some(Module::Gis)]);
+        assert_eq!(
+            offered(Some(Module::Map)),
+            [None],
+            "a map's program has none of its own here"
+        );
+
+        // KentOS Harita at its start asks about the one of no module; the others stay for their programs.
+        let (mut app, _) = App::start_in(
+            Some(Module::Map),
+            None,
+            Settings::memory(),
+            Recovery::open(&root).expect("folder"),
+        );
+        assert_eq!(app.dialog, Some(Asking::Recovery));
+        assert_eq!(app.recovery.offers.len(), 1);
+        let _ = app.update(Message::Recovery(Event::Answer(Answer::Delete)));
+        assert!(app.recovery.offers.is_empty());
+        drop(app);
+        assert_eq!(
+            offered(None).len(),
+            2,
+            "the building's and the CBS project's wait"
+        );
+        // A copy written before modules were kept says none: every program offers it.
+        let facts = Facts {
+            version: 1,
+            name: "Eski.kcad".into(),
+            file: None,
+            saved_at: 1,
+            objects: 0,
+            module: None,
+        };
+        let text = serde_json::to_string(&facts).expect("JSON");
+        assert!(!text.contains("module"), "{text}");
+        let read: Facts = serde_json::from_str(
+            r#"{"version": 1, "name": "x", "file": null, "savedAt": 1, "objects": 0}"#,
+        )
+        .expect("an older copy's facts");
+        assert_eq!(read.module, None);
+        let read: Facts = serde_json::from_str(
+            r#"{"version": 1, "name": "x", "file": null, "savedAt": 1, "objects": 0, "module": "harita"}"#,
+        )
+        .expect("a module's");
+        assert_eq!(read.module, Some(Module::Map));
         let _ = std::fs::remove_dir_all(&root);
     }
 

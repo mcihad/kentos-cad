@@ -14,6 +14,14 @@
 //!
 //! What a tool needs comes from the project, not the mode: a coordinate
 //! system (`georeferenced`), layers with attributes (`attributeLayers`).
+//!
+//! A program whose projects have only some catalog types (a KentOS module's
+//! program, docs/adr/0802: KentOS Mimari a building's, KentOS Harita a map's)
+//! starts a new sheet with its own template when the mode's row names one for
+//! its types (`programs`, [`profile_for_types`]), and its gallery shows the
+//! templates made for its types and those made for no type, another type's
+//! only with “Bütün türlerin şablonları” ([`rank_templates_for_types`]).
+//! Without types (kentos-cad, the web) both are as before.
 
 use std::collections::BTreeMap;
 use std::sync::OnceLock;
@@ -76,6 +84,14 @@ struct PresetDef {
     item: serde_json::Value,
 }
 
+/// The template a program whose projects have one of these catalog types starts its sheets with.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct ProgramDef {
+    project_types: Vec<ProjectType>,
+    default_template: String,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct ProfileDef {
@@ -97,6 +113,9 @@ struct ProfileDef {
     default_template: Option<String>,
     #[serde(default)]
     gallery: Vec<String>,
+    /// What a program of some project types starts its sheets with (docs/adr/0802), the first that shares a type.
+    #[serde(default)]
+    programs: Vec<ProgramDef>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -198,6 +217,7 @@ struct Resolved {
     gallery: Vec<String>,
     /// The workspaces whose templates are this mode's own.
     workspaces: Vec<Workspace>,
+    programs: Vec<ProgramDef>,
 }
 
 fn row(id: &str) -> Option<&'static ProfileDef> {
@@ -230,6 +250,7 @@ fn resolve(workspace: Option<Workspace>) -> Resolved {
             default_template: String::new(),
             gallery: Vec::new(),
             workspaces: Vec::new(),
+            programs: Vec::new(),
         };
     };
     if def.union.is_empty() {
@@ -243,6 +264,7 @@ fn resolve(workspace: Option<Workspace>) -> Resolved {
             default_template: def.default_template.clone().unwrap_or_default(),
             gallery: def.gallery.clone(),
             workspaces: def.workspaces.clone(),
+            programs: def.programs.clone(),
         };
     }
     // A union: groups and tools of every member in first-seen order, presets joined, a tool hidden only where every member hides it.
@@ -315,6 +337,11 @@ fn resolve(workspace: Option<Workspace>) -> Resolved {
             def.gallery.clone()
         },
         workspaces,
+        programs: if def.programs.is_empty() {
+            members.iter().flat_map(|m| m.programs.clone()).collect()
+        } else {
+            def.programs.clone()
+        },
     }
 }
 
@@ -401,6 +428,26 @@ pub fn profile_for(workspace: Option<Workspace>, caps: &Capabilities) -> Profile
         default_template: r.default_template,
         gallery: r.gallery,
     }
+}
+
+/// `profile_for` in a program whose projects have `project_types` (a KentOS module's program, docs/adr/0802): a
+/// new sheet starts with the program's own template when the mode's row names one for a type of its (`programs`,
+/// the first that shares one), else the mode's. No types: `profile_for`'s, as before.
+pub fn profile_for_types(
+    workspace: Option<Workspace>,
+    caps: &Capabilities,
+    project_types: &[ProjectType],
+) -> Profile {
+    let mut profile = profile_for(workspace, caps);
+    if !project_types.is_empty()
+        && let Some(own) = resolve(workspace)
+            .programs
+            .iter()
+            .find(|p| p.project_types.iter().any(|t| project_types.contains(t)))
+    {
+        profile.default_template.clone_from(&own.default_template);
+    }
+    profile
 }
 
 /// Every tool of the mode's profile with its state, flat, in the ribbon's order.
@@ -582,6 +629,34 @@ fn is_common(t: &TemplateMeta) -> bool {
     t.workspaces.contains(&Workspace::Cad) && t.workspaces.contains(&Workspace::Gis)
 }
 
+/// A catalog type as a badge names it (the catalog's words: the web's `TYPE_LABEL`).
+fn type_label(t: ProjectType) -> &'static str {
+    match t {
+        ProjectType::Cad => "Genel CAD",
+        ProjectType::Gis => "CBS",
+        ProjectType::LandReadjustment => "18 uygulaması",
+        ProjectType::ZoningPlan => "İmar planı",
+        ProjectType::Subdivision => "İfraz / tevhit",
+        ProjectType::Road => "Yol",
+        ProjectType::Architecture => "Mimari",
+    }
+}
+
+/// “CBS şablonu”: another mode's template, by its first mode's profile.
+fn mode_badge(t: &TemplateMeta) -> String {
+    let mode = t
+        .workspaces
+        .first()
+        .and_then(|w| {
+            data()
+                .profiles
+                .iter()
+                .find(|p| p.union.is_empty() && p.workspaces.contains(w))
+        })
+        .map_or("Başka kip", |p| p.label.as_str());
+    format!("{mode} şablonu")
+}
+
 /// The gallery's order for a project: its type's templates, then its mode's, then the common ones, then the rest (not shown by default, with a badge).
 pub fn rank_templates(
     templates: &[TemplateMeta],
@@ -606,18 +681,66 @@ pub fn rank_templates(
             } else {
                 TemplateFit::Other
             };
-            let badge = (fit == TemplateFit::Other).then(|| {
-                let mode = t
-                    .workspaces
-                    .first()
-                    .and_then(|w| {
-                        data()
-                            .profiles
-                            .iter()
-                            .find(|p| p.union.is_empty() && p.workspaces.contains(w))
-                    })
-                    .map_or("Başka kip", |p| p.label.as_str());
-                format!("{mode} şablonu")
+            let badge = (fit == TemplateFit::Other).then(|| mode_badge(t));
+            let order = r
+                .gallery
+                .iter()
+                .position(|g| *g == t.id)
+                .unwrap_or(usize::MAX);
+            (
+                fit,
+                order,
+                i,
+                RankedTemplate {
+                    id: t.id.clone(),
+                    fit,
+                    matches: fit != TemplateFit::Other,
+                    badge,
+                },
+            )
+        })
+        .collect();
+    ranked.sort_by_key(|a| (a.0, a.1, a.2));
+    ranked.into_iter().map(|(.., r)| r).collect()
+}
+
+/// The gallery's order in a program whose projects have `project_types` (a KentOS module's program,
+/// docs/adr/0802): the templates made for one of its types, then those made for no type (its mode's and the
+/// common ones, as `rank_templates` ranks them); a template made for other types only is not shown by default, as
+/// another mode's is, badged with its type (“İmar planı şablonu”). No types: `rank_templates` for none, as before.
+pub fn rank_templates_for_types(
+    templates: &[TemplateMeta],
+    workspace: Option<Workspace>,
+    project_types: &[ProjectType],
+) -> Vec<RankedTemplate> {
+    if project_types.is_empty() {
+        return rank_templates(templates, workspace, None);
+    }
+    let r = resolve(workspace);
+    let every_mode = r.id == "common";
+    let mut ranked: Vec<(TemplateFit, usize, usize, RankedTemplate)> = templates
+        .iter()
+        .enumerate()
+        .map(|(i, t)| {
+            let own_type = t.project_types.iter().any(|p| project_types.contains(p));
+            let other_type = !own_type && !t.project_types.is_empty();
+            let own_mode = t.workspaces.iter().any(|w| r.workspaces.contains(w));
+            let fit = if own_type {
+                TemplateFit::ProjectType
+            } else if other_type {
+                TemplateFit::Other
+            } else if is_common(t) {
+                TemplateFit::Common
+            } else if own_mode {
+                TemplateFit::Workspace
+            } else if every_mode {
+                TemplateFit::Common
+            } else {
+                TemplateFit::Other
+            };
+            let badge = (fit == TemplateFit::Other).then(|| match t.project_types.first() {
+                Some(p) if other_type => format!("{} şablonu", type_label(*p)),
+                _ => mode_badge(t),
             });
             let order = r
                 .gallery
@@ -798,6 +921,132 @@ mod tests {
             .code,
             "unknown_tool"
         );
+    }
+
+    /// docs/adr/0802: a program of some catalog types (a KentOS module's) starts a new sheet with its own template
+    /// and its gallery shows its types' templates and those made for no type; without types nothing changes.
+    #[test]
+    fn a_programs_types_choose_its_first_template_and_its_gallery() {
+        use ProjectType::*;
+        let harita = [Cad, LandReadjustment, ZoningPlan, Subdivision, Road];
+        let first = |ws, types: &[ProjectType]| {
+            profile_for_types(Some(ws), &caps(true), types).default_template
+        };
+        assert_eq!(first(Workspace::Cad, &[Architecture]), "sys:cad-mimari");
+        assert_eq!(
+            first(Workspace::Cad, &harita),
+            "sys:genel-a3-yatay",
+            "a map sheet, not the ISO technical one"
+        );
+        assert_eq!(
+            first(Workspace::Gis, &[Gis]),
+            "sys:gis-tematik",
+            "unchanged"
+        );
+        for ws in [Some(Workspace::Cad), Some(Workspace::Gis), None] {
+            assert_eq!(
+                profile_for_types(ws, &caps(true), &[]),
+                profile_for(ws, &caps(true)),
+                "{ws:?}"
+            );
+        }
+        assert_eq!(
+            profile_for(Some(Workspace::Cad), &caps(true)).default_template,
+            "sys:cad-teknik"
+        );
+        // Every program's first template is a system template made for one of its types or for none.
+        for p in data().profiles.iter().flat_map(|p| &p.programs) {
+            let t =
+                crate::template::system_template(&p.default_template).expect("a system template");
+            assert!(
+                t.meta.project_types.is_empty()
+                    || t.meta
+                        .project_types
+                        .iter()
+                        .any(|x| p.project_types.contains(x)),
+                "{}",
+                p.default_template
+            );
+        }
+
+        let metas: Vec<TemplateMeta> = crate::template::system_templates()
+            .iter()
+            .map(|t| t.meta.clone())
+            .collect();
+        let shown = |ws, types: &[ProjectType]| -> Vec<String> {
+            rank_templates_for_types(&metas, Some(ws), types)
+                .into_iter()
+                .filter(|r| r.matches)
+                .map(|r| r.id)
+                .collect()
+        };
+        let mimari = shown(Workspace::Cad, &[Architecture]);
+        assert_eq!(
+            mimari.first().map(String::as_str),
+            Some("sys:cad-mimari"),
+            "{mimari:?}"
+        );
+        for id in [
+            "sys:genel-a3-yatay",
+            "sys:genel-a4-dikey",
+            "sys:rapor-sayfasi",
+        ] {
+            assert!(mimari.iter().any(|m| m == id), "{id}: {mimari:?}");
+        }
+        for id in [
+            "sys:aplikasyon-krokisi",
+            "sys:ifraz-paftasi",
+            "sys:imar-plani",
+            "sys:cad-teknik",
+            "sys:gis-tematik",
+        ] {
+            assert!(!mimari.iter().any(|m| m == id), "{id}: {mimari:?}");
+        }
+        let map = shown(Workspace::Cad, &harita);
+        for id in [
+            "sys:cad-teknik",
+            "sys:aplikasyon-krokisi",
+            "sys:ifraz-paftasi",
+            "sys:imar-plani",
+            "sys:genel-a3-yatay",
+        ] {
+            assert!(map.iter().any(|m| m == id), "{id}: {map:?}");
+        }
+        for id in ["sys:cad-mimari", "sys:gis-tematik", "sys:gis-atlas"] {
+            assert!(!map.iter().any(|m| m == id), "{id}: {map:?}");
+        }
+        let gis = shown(Workspace::Gis, &[Gis]);
+        assert_eq!(&gis[..2], ["sys:gis-tematik", "sys:gis-atlas"]);
+        assert!(
+            !gis.iter().any(|m| m == "sys:imar-plani"),
+            "a zoning plan's: {gis:?}"
+        );
+        assert!(gis.iter().any(|m| m == "sys:rapor-sayfasi"));
+        // Another type's template waits for “Bütün türlerin şablonları”, badged with its type.
+        let badge = |id: &str| {
+            rank_templates_for_types(&metas, Some(Workspace::Cad), &[Architecture])
+                .into_iter()
+                .find(|r| r.id == id)
+                .and_then(|r| r.badge)
+        };
+        assert_eq!(
+            badge("sys:imar-plani").as_deref(),
+            Some("İmar planı şablonu")
+        );
+        assert_eq!(
+            badge("sys:aplikasyon-krokisi").as_deref(),
+            Some("İfraz / tevhit şablonu")
+        );
+        assert_eq!(badge("sys:gis-tematik").as_deref(), Some("CBS şablonu"));
+        assert_eq!(badge("sys:cad-mimari"), None);
+        // Without types, the ranking is the old one's for no type.
+        for ws in [Some(Workspace::Cad), Some(Workspace::Gis), None] {
+            assert_eq!(
+                rank_templates_for_types(&metas, ws, &[]),
+                rank_templates(&metas, ws, None),
+                "{ws:?}"
+            );
+        }
     }
 
     #[test]

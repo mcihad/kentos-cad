@@ -6,6 +6,7 @@
 use iced::widget::text::Wrapping;
 use iced::widget::{Column, column, container, row, text_editor, text_input};
 use iced::{Element, Fill, Length, Theme};
+use kentos_commands::ProjectType;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Choice, Dialog, Select, overlay};
 use kentos_ui::{label, style};
@@ -14,7 +15,7 @@ use crate::app::{App, Message};
 use crate::cloud::catalog::Said;
 use crate::cloud::catalog_forms::{Event, FORM_NAME, Form, MadeForm, MetadataForm, msg};
 use crate::cloud::forms_plan::{self as plan, Place, convert, duplicate, fields, metadata};
-use crate::cloud::plan::{PROJECT_TYPES, TYPE_HINT, type_label};
+use crate::cloud::plan::type_label;
 use crate::cloud::view::{primary, secondary};
 
 impl App {
@@ -22,14 +23,22 @@ impl App {
     pub(super) fn project_form_overlay(&self) -> Option<Element<'_, Message>> {
         let form = self.cloud.catalog.as_ref()?.form.as_ref()?;
         let window = match form {
-            Form::Metadata(f) => metadata_window(f),
+            Form::Metadata(f) => metadata_window(f, self.cloud_types(), self.program),
             Form::Made(f) => made_window(f),
         };
         Some(overlay::modal(window, msg(Event::Close)))
     }
 }
 
-fn metadata_window(f: &MetadataForm) -> Dialog<'_, Message> {
+/// Proje bilgileri; its type one of `types`, this program's (kinds.rs, docs/adr/0802), or the project's own.
+fn metadata_window(
+    f: &MetadataForm,
+    mut types: Vec<ProjectType>,
+    program: Option<kentos_launch::Module>,
+) -> Dialog<'_, Message> {
+    if !types.contains(&f.project_type) {
+        types.insert(0, f.project_type);
+    }
     let on = !f.busy;
     let name = text_input(metadata::NAME, &f.name)
         .id(iced::widget::Id::new(FORM_NAME))
@@ -39,11 +48,11 @@ fn metadata_window(f: &MetadataForm) -> Dialog<'_, Message> {
         .padding([5, 8])
         .style(style::field::input);
     let name = kentos_ui::widget::focus_ring(name);
-    let kind = Select::new(
-        PROJECT_TYPES.map(|t| Choice::new(type_label(t))),
-        PROJECT_TYPES.iter().position(|t| *t == f.project_type),
-        |i| msg(Event::Type(PROJECT_TYPES[i])),
-    )
+    let choices: Vec<Choice> = types.iter().map(|t| Choice::new(type_label(*t))).collect();
+    let chosen = types.iter().position(|t| *t == f.project_type);
+    let kind = Select::new(choices, chosen, move |i| {
+        msg(Event::Type(types.get(i).copied().unwrap_or_default()))
+    })
     .searchable(false);
     let description = text_editor(&f.description)
         .placeholder(fields::DESCRIPTION_PLACEHOLDER)
@@ -62,7 +71,7 @@ fn metadata_window(f: &MetadataForm) -> Dialog<'_, Message> {
     let mut body = column![
         labelled(metadata::NAME, name),
         labelled(fields::TYPE, kind),
-        label::caption(TYPE_HINT)
+        label::caption(crate::cloud::kinds::type_hint(program))
             .style(style::text::muted)
             .width(Fill),
         labelled(fields::DESCRIPTION, description),

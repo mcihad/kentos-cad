@@ -414,20 +414,34 @@ impl App {
         .style(style::container::field_box);
         let mut tools = Row::new().spacing(8).align_y(Center).push(search);
         if let List::View(view) = c.list {
-            // “Tüm türler”, then each type in the web's order.
-            let kinds = std::iter::once(Choice::new("Tüm türler")).chain(
-                PROJECT_TYPES
+            // “Tüm türler”, then each type in the web's order; a module's program offers its own types alone,
+            // all of them first when it has more than one (docs/adr/0802).
+            let types = c.types.clone();
+            let all = types.len() > 1;
+            let every = match c.program {
+                Some(m) if types.len() < PROJECT_TYPES.len() => {
+                    format!("Tüm {} türleri", m.title())
+                }
+                _ => "Tüm türler".to_owned(),
+            };
+            let kinds: Vec<Choice> = all
+                .then(|| Choice::new(every))
+                .into_iter()
+                .chain(types.iter().map(|t| Choice::new(plan::type_label(*t))))
+                .collect();
+            let chosen = match c.kind {
+                Some(k) => types
                     .iter()
-                    .map(|t| Choice::new(plan::type_label(*t))),
-            );
-            let chosen = c
-                .kind
-                .and_then(|k| PROJECT_TYPES.iter().position(|t| *t == k))
-                .map_or(0, |i| i + 1);
-            let kind = Select::new(kinds, Some(chosen), |i| {
-                cloud(Event::CatalogKind(
-                    i.checked_sub(1).map(|i| PROJECT_TYPES[i]),
-                ))
+                    .position(|t| *t == k)
+                    .map(|i| i + usize::from(all)),
+                None => Some(0),
+            };
+            let kind = Select::new(kinds, chosen, move |i| {
+                cloud(Event::CatalogKind(if all {
+                    i.checked_sub(1).and_then(|i| types.get(i).copied())
+                } else {
+                    types.get(i).copied()
+                }))
             })
             .searchable(false);
             let sorts = words::view(view).sorts;
@@ -479,7 +493,12 @@ impl App {
             let caption = if c.loading() {
                 "Yükleniyor…".to_owned()
             } else {
-                format!("Daha fazla göster ({} / {})", c.projects.len(), c.total)
+                // Sifted here (kinds.rs), the list's count is not known before its last page.
+                if c.total > 0 {
+                    format!("Daha fazla göster ({} / {})", c.projects.len(), c.total)
+                } else {
+                    "Daha fazla göster".to_owned()
+                }
             };
             main = main.push(
                 container(

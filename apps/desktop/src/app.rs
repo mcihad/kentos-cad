@@ -1572,6 +1572,8 @@ impl App {
             server_quiet: false,
             server_health: None,
         };
+        // A module's program offers its own module's copies and those of no module (docs/adr/0802).
+        app.recovery.offer_only(program);
         if !app.recovery.offers.is_empty() {
             app.dialog = Some(Dialog::Recovery);
         }
@@ -2393,6 +2395,8 @@ impl App {
             // Seçim süzgeci's kinds are the session's (docs/adr/0187 §5).
             select_kinds: s.bool("drafting.selectFilter").then_some(self.select_kinds),
             unplaced_labels: s.bool("graphics.unplacedLabels"),
+            // The program's, not a setting: a module's program leaves out what is not its work (docs/adr/0802).
+            offers: crate::module_surfaces::tool_offers_in(self.program),
         };
         self.cursor_input = s.bool("drafting.cursorInput");
         self.command_bar = s.bool("drafting.commandBar");
@@ -3478,8 +3482,8 @@ impl App {
         if let Some(method) = catalog().method_by_alias(text)
             && let Some(option) = method.option
         {
-            // A module's program runs only its own commands (docs/adr/0802).
-            if let Some(why) = self.not_offered(method.id, method.title) {
+            // A module's program runs only its own commands and methods (docs/adr/0802).
+            if let Some(why) = self.method_not_offered(method.id, option, method.label) {
                 self.error(why);
                 return Task::none();
             }

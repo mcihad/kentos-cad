@@ -62,18 +62,18 @@ fn a_north_arrow_takes_a_typed_angle_a_size_and_the_true_north() {
     let i = insert(b.newest()).clone();
     assert!(i.rotation < 0.0 && i.rotation > -0.01, "{}", i.rotation);
     assert!(b.last_text().is_some_and(|t| t.contains("meridyen yakınsaması")));
-    // A local project has no meridian: refused and said, nothing written, the tool stays.
+    // A local project has no meridian: Coğrafi kuzey is not offered, chosen it is refused and said, the plan's north
+    // kept (docs/adr/0802).
     let mut b = bench();
     let mut s = b.doc.settings().clone();
     s.srid = 0;
     b.doc.set_settings(s);
     b.start("northArrow");
-    assert!(b.run(|s, cx| s.configure("Y", "coğrafi", cx)));
-    let before = b.doc.revision();
-    b.click(5.0, 5.0);
-    assert_eq!(b.doc.revision(), before);
+    assert!(!b.run(|s, cx| s.configure("Y", "coğrafi", cx)));
     assert!(b.last_text().is_some_and(|t| t.contains("coğrafi kuzey bulunamaz")));
     assert_eq!(b.session.tool_id(), "northArrow");
+    b.click(5.0, 5.0);
+    assert_eq!(insert(b.newest()).rotation, 0.0, "the plan's north");
 }
 
 #[test]

@@ -156,7 +156,11 @@ impl App {
             (Some(_), crate::cloud::copy::Link::Offline) => {
                 "Sunucuya ulaşılamıyor; bu cihazdaki projeler açılır".to_owned()
             }
-            (None, _) => "Kurumunuzun projeleri; önce giriş yapılır".to_owned(),
+            // A module's program lists its own module's projects alone (docs/adr/0802).
+            (None, _) => match self.program {
+                Some(m) => format!("Kurumunuzun {} projeleri; önce giriş yapılır", m.title()),
+                None => "Kurumunuzun projeleri; önce giriş yapılır".to_owned(),
+            },
         };
         // A module's program says what it makes and opens (docs/adr/0801).
         let (new_sub, open_sub) = match self.program {

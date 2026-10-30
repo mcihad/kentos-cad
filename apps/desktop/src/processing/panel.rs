@@ -85,9 +85,15 @@ impl App {
     }
 
     /// Whether this program offers a model (docs/adr/0802): its `processing.model.<model>` command (the user's
-    /// models where İşlem araç kutusu is).
+    /// models where İşlem araç kutusu is), and every tool its steps run: a model of KentOS GIS's analysis is not
+    /// KentOS Harita's.
     pub(crate) fn offers_model(&self, model: &str) -> bool {
         self.offers(&format!("{}{model}", crate::catalog::PROCESSING_MODEL))
+            && self
+                .processing
+                .registry
+                .model(model)
+                .is_none_or(|m| m.steps.iter().all(|s| self.offers_tool(&s.tool)))
     }
 
     /// The tab's header note: “4 araç” (those this program offers) or “3 kayıt”.

@@ -13,7 +13,9 @@
 //!
 //! Every kind keeps its own draft, so switching back and forth loses
 //! nothing. The counts follow the drawing (`kentos_native_style::tally`):
-//! what each category, class and rule will draw.
+//! what each category, class and rule will draw. The thematic kinds are a
+//! GIS's analysis: KentOS Mimari and KentOS Harita list the classic ones, and
+//! a layer drawn with a thematic one keeps it and shows it (docs/adr/0802).
 
 mod compose;
 mod panels;
@@ -133,16 +135,34 @@ impl Kind {
         }
     }
 
-    /// The list's group it starts (docs/adr/0213 §4).
+    /// The list's group it is in (docs/adr/0213 §4): none for Basit and Tek sembol. The list heads each group
+    /// where its first kind shown starts it.
     pub fn group(self) -> Option<&'static str> {
         match self {
-            Kind::Categorized => Some("Değere göre"),
+            Kind::Categorized
+            | Kind::Graduated
+            | Kind::Unclassed
+            | Kind::Proportional
+            | Kind::Bivariate => Some("Değere göre"),
             Kind::Rules => Some("Kurallar"),
-            Kind::DotDensity => Some("Tematik"),
-            Kind::Cluster => Some("Noktalar"),
+            Kind::DotDensity | Kind::Chart | Kind::Heatmap => Some("Tematik"),
+            Kind::Cluster | Kind::Displacement => Some("Noktalar"),
             Kind::Inverted => Some("Alanlar"),
-            _ => None,
+            Kind::Simple | Kind::Single | Kind::Unknown => None,
         }
+    }
+
+    /// Whether it is a thematic renderer (docs/adr/0213): a GIS's analysis (docs/adr/0802).
+    pub fn thematic(self) -> bool {
+        !matches!(
+            self,
+            Kind::Simple
+                | Kind::Single
+                | Kind::Categorized
+                | Kind::Graduated
+                | Kind::Rules
+                | Kind::Unknown
+        )
     }
 }
 
@@ -380,6 +400,10 @@ pub struct LayerStyleWindow {
     /// Katman çizimi's draft (docs/adr/0226 §3, §4) and what the layer has.
     pub compose: Option<kentos_commands::LayerCompose>,
     applied_compose: Option<kentos_commands::LayerCompose>,
+    /// Whether the program lists the thematic kinds (module_surfaces.rs): a GIS's.
+    pub thematic: bool,
+    /// The kind the layer was drawn with as the window opened: listed whatever it is.
+    own: Kind,
     /// The last thing the window said, and whether it warns.
     said: Option<(String, bool)>,
     /// Closing asked about the changes not applied (the web's `askUnsaved`).
@@ -452,6 +476,8 @@ impl LayerStyleWindow {
             applied: current,
             compose: compose.clone(),
             applied_compose: compose,
+            thematic: true,
+            own: kind,
             said: None,
             asking: false,
             typed: HashMap::new(),
@@ -503,6 +529,15 @@ impl LayerStyleWindow {
     /// The renderer the window stands for now (None: the simple look).
     pub fn renderer(&self) -> Option<Value> {
         self.draft_of(self.kind)
+    }
+
+    /// The kinds the list offers, in its order: the classic ones everywhere, the thematic ones where the program
+    /// has them, and the one the layer is drawn with whatever it is (docs/adr/0802).
+    pub fn kinds(&self) -> Vec<Kind> {
+        KINDS
+            .into_iter()
+            .filter(|k| self.thematic || !k.thematic() || *k == self.own)
+            .collect()
     }
 
     /// A kind's draft as the renderer it writes.
@@ -760,15 +795,21 @@ impl LayerStyleWindow {
     pub fn edit(&mut self, e: Event, src: &Source<'_>) {
         match e {
             Event::Compose(c) => self.compose_edit(c),
-            Event::Kind(k) => self.kind = k,
+            // A kind the list does not offer here is not taken (docs/adr/0802).
+            Event::Kind(k) => {
+                if self.kinds().contains(&k) {
+                    self.kind = k;
+                }
+            }
             Event::Step(next) => {
-                if let Some(i) = KINDS.iter().position(|k| *k == self.kind) {
+                let kinds = self.kinds();
+                if let Some(i) = kinds.iter().position(|k| *k == self.kind) {
                     let j = if next {
-                        (i + 1).min(KINDS.len() - 1)
+                        (i + 1).min(kinds.len() - 1)
                     } else {
                         i.saturating_sub(1)
                     };
-                    self.kind = KINDS[j];
+                    self.kind = kinds[j];
                 }
             }
             Event::Expr(field, text) => self.set_expr(&field, text),
@@ -1210,7 +1251,9 @@ impl App {
         };
         let id = id.unwrap_or_else(|| doc.model.layers().active().to_owned());
         match LayerStyleWindow::open(&doc.model, &id) {
-            Ok(window) => {
+            Ok(mut window) => {
+                // The program's own kinds (module_surfaces.rs).
+                window.thematic = self.shows_thematic_renderers();
                 self.styles.layer_style = Some(window);
                 self.dialog = Some(Dialog::LayerStyle);
             }

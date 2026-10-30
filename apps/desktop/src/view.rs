@@ -1400,31 +1400,38 @@ impl App {
                 .into();
         }
         container(iced::widget::responsive(move |size| {
-            // A short message: ten letters' room and more (what the bar left it before its
-            // estimate counted the drafting aids' lamps right, docs/adr/0167 §2).
-            let least = 10.0 * kentos_ui::theme::typography::body();
-            // The message's room holds the second system's values too (docs/adr/0167 §2): the
-            // cells give way until it is as wide as they are; they show while no message does,
-            // or there is room for both. The steps do not follow the message: the bar stays still.
-            // The map system's cell goes with the second system's (docs/adr/0583 §3).
-            let second_width = self.second_width() + self.map_width();
-            // The widths are estimates: room for a few letters more keeps the bar's end in view.
-            let need = least.max(second_width + 4.0 * kentos_ui::theme::typography::body());
-            let last = if self.work_mode() == kentos_commands::Workspace::Cad {
-                8
-            } else {
-                STATUS_STEPS
-            };
-            let fit = (0..=last)
-                .find(|&level| self.status_width(level) + need <= size.width)
-                .unwrap_or(last);
-            let room = size.width - self.status_width(fit);
-            let second = second_width > 0.0
-                && room >= second_width + if self.flashing() { least } else { 0.0 };
+            let (fit, second) = self.status_fit(size.width);
             self.status_bar_at(fit, second)
         }))
         .height(kentos_ui::widget::status_bar::height())
         .into()
+    }
+
+    /// The narrow-window steps the status bar takes at `width` (`status_bar`), and whether the second system's
+    /// values show.
+    pub(crate) fn status_fit(&self, width: f32) -> (u8, bool) {
+        // A short message: ten letters' room and more (what the bar left it before its
+        // estimate counted the drafting aids' lamps right, docs/adr/0167 §2).
+        let least = 10.0 * kentos_ui::theme::typography::body();
+        // The message's room holds the second system's values too (docs/adr/0167 §2): the
+        // cells give way until it is as wide as they are; they show while no message does,
+        // or there is room for both. The steps do not follow the message: the bar stays still.
+        // The map system's cell goes with the second system's (docs/adr/0583 §3).
+        let second_width = self.second_width() + self.map_width();
+        // The widths are estimates: room for a few letters more keeps the bar's end in view.
+        let need = least.max(second_width + 4.0 * kentos_ui::theme::typography::body());
+        let last = if self.work_mode() == kentos_commands::Workspace::Cad {
+            8
+        } else {
+            STATUS_STEPS
+        };
+        let fit = (0..=last)
+            .find(|&level| self.status_width(level) + need <= width)
+            .unwrap_or(last);
+        let room = width - self.status_width(fit);
+        let second =
+            second_width > 0.0 && room >= second_width + if self.flashing() { least } else { 0.0 };
+        (fit, second)
     }
 
     /// The status bar with `fit` of its narrow-window steps taken, and the
@@ -1744,7 +1751,7 @@ impl App {
     /// taken, the message left out: from their texts at the interface's
     /// type size (the cells hold text, an icon and their padding), as the
     /// tab row estimates its own.
-    fn status_width(&self, fit: u8) -> f32 {
+    pub(crate) fn status_width(&self, fit: u8) -> f32 {
         let size = kentos_ui::theme::typography::body();
         // The interface's face averages about half its size a letter; the
         // coordinates' figures, 0.6 (measured on the pictures).
@@ -1756,18 +1763,10 @@ impl App {
         if !self.selection.is_empty() {
             width += SEPARATOR + cell(&format!("{} seçili", self.selection.len()), false);
         }
-        // A lamp, its gap and the row's spacing (14, measured on the pictures),
-        // and the padding (less once the bar is tight).
-        let pad = if fit >= 7 { 12.0 } else { 18.0 };
         width += if fit >= 8 {
             SEPARATOR + cell("Yardımcılar", true) + 16.0
         } else {
-            SEPARATOR
-                + STATUS_AIDS
-                    .iter()
-                    .filter(|(id, _)| self.shows_aid(id))
-                    .map(|(_, name)| text(name) + 14.0 + pad)
-                    .sum::<f32>()
+            SEPARATOR + self.status_aids_width(fit >= 7)
         };
         if let Some(doc) = &self.document {
             // The one scale (docs/adr/0626 §3), its icon, and a CAD project's unit beside the coordinates.
@@ -1795,6 +1794,23 @@ impl App {
         }
         width += self.cloud_cells_width(fit < 4, size);
         width + SEPARATOR + if fit < 1 { cell("wgpu", true) } else { 35.0 }
+    }
+
+    /// How wide the drafting aids' lamps are, `compact` once the bar is tight: each its name as the interface's
+    /// face sets it (measured, two pixels more for its rounding, as Yardımcılar's), its lamp, the gap, its padding
+    /// and the row's spacing (kentos-ui's `Toggle`: 9 px a side and a 6 px gap, 6 and 4 compact). The program's own
+    /// lamps alone (module_surfaces.rs). Guessed from their letters the names came out some 40 px too wide at 13 px,
+    /// and KentOS Harita's bar folded its lamps into Yardımcılar at 1440 px where they fit (docs/adr/0802).
+    pub(crate) fn status_aids_width(&self, compact: bool) -> f32 {
+        let size = kentos_ui::theme::typography::body();
+        let (pad, gap) = if compact { (6.0, 4.0) } else { (9.0, 6.0) };
+        STATUS_AIDS
+            .iter()
+            .filter(|(id, _)| self.shows_aid(id))
+            .map(|(_, name)| {
+                typography::measured_width(name, size, false) + 2.0 + 2.0 * pad + 6.0 + gap + 2.0
+            })
+            .sum()
     }
 
     /// What the drawing engine did in the last frame, or why it could not draw.

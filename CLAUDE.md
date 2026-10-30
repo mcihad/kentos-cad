@@ -51,7 +51,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   başka modülün komutu `not_offered`'ın cümlesiyle reddedilir; kabuk komutları da modüle göre (`ribbon.json`'un
   `modules`'ü). Modülün yüzeyleri (`module_surfaces.rs`): alt panelin sekmeleri, sağ panelin bölmeleri, durum çubuğu,
   ayar pencerelerinin bölümleri, katman menüsü, uygulama menüsünün biçimleri, Kaynaklar, bırakılan dosyalar.
-  `kentos-cad` her şeyi sunar.
+  Araçların seçenekleri `Draft.offers`'tan (`ToolOption`: Mimari'de Semt, nokta adları, kayıtlı ölçü yok; GIS'te blok ve
+  genişlik yok). Her programın kendi yerleşim dosyası (`yerlesim-<modül>.json`) ve ajan soketi (`masaustu-<modül>.sock`,
+  MCP `desktop.attach`'ın `program`'ı); bulut kataloğu, kurtarma kopyaları ve pafta galerisi programa göre. CBS analizi
+  GIS'in, çizim standardı Mimari'nin; Mimari'de Ölçme sekmesi yok (sorgu Görünüm'de). `kentos-cad` her şeyi sunar.
 
 - **KentOS Launcher ve ayrı modül programları (30 Ekim 2026; [ADR 0800](docs/adr/0800-kentos-launcher.md), [ADR 0801](docs/adr/0801-kentos-modules-and-their-programs.md)).**
   Sahibin isteği: görseldeki gibi bir launcher, Mimari CAD, Harita CAD ve GIS ayrı programlar, ileride Rust olmayan

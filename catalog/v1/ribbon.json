@@ -364,7 +364,12 @@
        },
        {
         "split": "dimension",
-        "size": "lead"
+        "size": "lead",
+        "entryWorks": {
+         "Semt": [
+          "map"
+         ]
+        }
        },
        {
         "command": "tool.leader",
@@ -547,6 +552,9 @@
         "command": "tool.vertexPoints",
         "size": "small"
        }
+      ],
+      "overflow": [
+       "processing.model.builtin.parcelSheet"
       ]
      },
      {
@@ -602,10 +610,7 @@
        },
        {
         "command": "tool.stationOffset",
-        "size": "small",
-        "works": [
-         "map"
-        ]
+        "size": "small"
        }
       ]
      },
@@ -625,9 +630,6 @@
         "command": "field.send",
         "size": "small"
        }
-      ],
-      "works": [
-       "map"
       ]
      },
      {
@@ -646,9 +648,6 @@
         "command": "calc.stakeout",
         "size": "large"
        }
-      ],
-      "works": [
-       "map"
       ]
      },
      {
@@ -671,9 +670,6 @@
         "command": "calc.levelNetwork",
         "size": "small"
        }
-      ],
-      "works": [
-       "map"
       ]
      },
      {
@@ -696,9 +692,6 @@
         "command": "cogo.update",
         "size": "small"
        }
-      ],
-      "works": [
-       "map"
       ]
      },
      {
@@ -717,11 +710,11 @@
         "command": "crs.transform",
         "size": "small"
        }
-      ],
-      "works": [
-       "map"
       ]
      }
+    ],
+    "works": [
+     "map"
     ]
    },
    {
@@ -837,14 +830,11 @@
         "works": [
          "map"
         ]
-       },
-       {
-        "command": "raster.stac",
-        "works": [
-         "map"
-        ]
        }
-      ]
+      ],
+      "workLabels": {
+       "architecture": "Resim ve nokta bulutu"
+      }
      },
      {
       "label": "Harita",
@@ -1035,7 +1025,12 @@
       "items": [
        {
         "split": "dimension",
-        "size": "lead"
+        "size": "lead",
+        "entryWorks": {
+         "Semt": [
+          "map"
+         ]
+        }
        },
        {
         "command": "tool.dimContinue",
@@ -1997,6 +1992,46 @@
       "overflow": [
        "view.keyTips"
       ]
+     },
+     {
+      "label": "Sorgu",
+      "icon": "measure",
+      "items": [
+       {
+        "key": "archQuery",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.measure",
+          "title": "Mesafe ölç",
+          "label": "Mesafe ölç"
+         },
+         {
+          "command": "tool.area",
+          "title": "Alan hesapla",
+          "label": "Alan hesapla"
+         },
+         {
+          "command": "crs.query",
+          "title": "Koordinat oku",
+          "label": "Koordinat oku"
+         },
+         {
+          "command": "tool.measureAngle",
+          "title": "Açı ölç",
+          "label": "Açı ölç"
+         },
+         {
+          "command": "tool.identify",
+          "title": "Bilgi",
+          "label": "Bilgi"
+         }
+        ]
+       }
+      ],
+      "works": [
+       "architecture"
+      ]
      }
     ]
    },
@@ -2041,11 +2076,17 @@
       "items": [
        {
         "command": "standards.check",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "architecture"
+        ]
        },
        {
         "command": "standards.apply",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "architecture"
+        ]
        },
        {
         "command": "layer.impact",
@@ -3163,14 +3204,6 @@
        {
         "command": "profile.window",
         "size": "small"
-       },
-       {
-        "command": "standards.check",
-        "size": "small"
-       },
-       {
-        "command": "standards.apply",
-        "size": "small"
        }
       ],
       "overflow": [
@@ -3867,10 +3900,36 @@
         {
          "label": "",
          "items": [
-          "processing.run.generate.delaunay",
-          "processing.run.generate.voronoi",
-          "processing.run.generate.bounding",
-          "processing.run.generate.concaveHull",
+          "processing.run.generate.delaunay"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.generate.voronoi"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.generate.bounding"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.generate.concaveHull"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.convert.pointsToPath"
          ]
         }
@@ -3883,10 +3942,23 @@
         {
          "label": "",
          "items": [
-          "processing.run.interpolation.idw",
+          "processing.run.interpolation.idw"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.interpolation.naturalNeighbor",
           "processing.run.interpolation.spline",
-          "processing.run.interpolation.kriging",
+          "processing.run.interpolation.kriging"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.interpolation.tin"
          ]
         },
@@ -3938,14 +4010,10 @@
         {
          "label": "",
          "items": [
-          "processing.run.proximity.nearest"
-         ]
-        },
-        {
-         "label": "",
-         "items": [
+          "processing.run.proximity.nearest",
           "processing.run.proximity.matrix",
-          "processing.run.proximity.hub"
+          "processing.run.proximity.hub",
+          "processing.run.proximity.shortestLine"
          ],
          "modes": [
           "gis"
@@ -3954,7 +4022,6 @@
         {
          "label": "",
          "items": [
-          "processing.run.proximity.shortestLine",
           "processing.run.attributes.fromEnclosing"
          ]
         }
@@ -4176,13 +4243,13 @@
           "processing.run.convert.densify",
           "processing.run.convert.vertices",
           "processing.run.convert.toPoints",
-          "processing.run.sample.alongLines",
-          "processing.run.generalize.smooth"
+          "processing.run.sample.alongLines"
          ]
         },
         {
          "label": "",
          "items": [
+          "processing.run.generalize.smooth",
           "processing.run.density.line"
          ],
          "modes": [
@@ -4357,9 +4424,6 @@
        "size": "small",
        "works": [
         "map"
-       ],
-       "modes": [
-        "cad"
        ]
       },
       {
@@ -4371,10 +4435,7 @@
       },
       {
        "command": "tool.hatchSelected",
-       "size": "small",
-       "modes": [
-        "cad"
-       ]
+       "size": "small"
       }
      ],
      "overflow": [
@@ -4384,6 +4445,9 @@
         "map"
        ]
       }
+     ],
+     "modes": [
+      "cad"
      ]
     },
     {
@@ -4418,8 +4482,21 @@
         {
          "label": "",
          "items": [
-          "processing.run.generate.bounding",
-          "processing.run.generate.pole",
+          "processing.run.generate.bounding"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.generate.pole"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.sample.grid",
           "processing.run.sample.regular"
          ]
@@ -4460,6 +4537,9 @@
           "processing.run.generalize.coverageSimplify"
          ]
         }
+       ],
+       "modes": [
+        "gis"
        ]
       },
       {
@@ -4470,13 +4550,47 @@
          "label": "",
          "items": [
           "processing.run.attributes.fromInside",
-          "processing.run.attributes.fromEnclosing",
+          "processing.run.attributes.fromEnclosing"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.proximity.neighbors",
-          "processing.run.proximity.nearest",
-          "processing.run.statistics.summary",
-          "processing.run.raster.zonalStatistics",
-          "processing.run.raster.clipByMask",
+          "processing.run.proximity.nearest"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.statistics.summary"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.raster.zonalStatistics"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.raster.clipByMask"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.raster.rasterize"
+         ],
+         "modes": [
+          "gis"
          ]
         }
        ]
@@ -4574,7 +4688,10 @@
       },
       {
        "command": "style.textStyles",
-       "size": "small"
+       "size": "small",
+       "modes": [
+        "cad"
+       ]
       }
      ],
      "overflow": [
@@ -5283,10 +5400,18 @@
           "processing.run.surface.aspect",
           "processing.run.surface.hillshade",
           "processing.run.surface.colorRelief",
-          "processing.run.surface.contours",
+          "processing.run.surface.contours"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.surface.curvature",
           "processing.run.surface.ruggedness",
           "processing.run.surface.insolation"
+         ],
+         "modes": [
+          "gis"
          ]
         }
        ]
@@ -5308,6 +5433,9 @@
           "processing.run.hydrology.streams"
          ]
         }
+       ],
+       "modes": [
+        "gis"
        ]
       },
       {
@@ -5323,6 +5451,9 @@
           "processing.run.distance.corridor"
          ]
         }
+       ],
+       "modes": [
+        "gis"
        ]
       }
      ],
@@ -5342,7 +5473,15 @@
          "label": "",
          "items": [
           "processing.run.raster.calculator",
-          "processing.run.raster.reclassify",
+          "processing.run.raster.reclassify"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.raster.clipByMask",
           "processing.run.raster.mosaic",
           "processing.run.raster.resample"
@@ -5363,6 +5502,9 @@
           "processing.run.raster.focalStatistics"
          ]
         }
+       ],
+       "modes": [
+        "gis"
        ]
       },
       {
@@ -5372,9 +5514,22 @@
         {
          "label": "",
          "items": [
-          "processing.run.raster.toPolygons",
+          "processing.run.raster.toPolygons"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.raster.toLines",
-          "processing.run.raster.toPoints",
+          "processing.run.raster.toPoints"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.scan.captureLine",
           "processing.run.scan.closeArea",
           "processing.run.scan.contourElevations"

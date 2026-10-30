@@ -43,10 +43,15 @@ impl App {
             .svg_editor
             .as_ref()
             .and_then(|e| e.original.as_ref().map(|o| o.id.clone()));
+        // The program's own library (KentOS Mimari's without MPYY, module_surfaces.rs).
+        let hidden = self.library_hidden();
         let items: Vec<_> = lib
             .items(None)
             .into_iter()
             .filter(|(item, _)| item.kind() == ItemKind::Asset && item.format() == Some("svg"))
+            .filter(|(item, source)| {
+                crate::module_surfaces::library_shows(hidden, *source, &item.path())
+            })
             .filter(|(item, _)| {
                 q.is_empty()
                     || kentos_expression::js::text::lower_tr(item.name()).contains(&q)

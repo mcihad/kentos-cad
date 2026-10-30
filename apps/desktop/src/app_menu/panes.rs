@@ -131,7 +131,7 @@ impl App {
             // The program's own formats (module_surfaces.rs): kentos-cad's line as it was.
             "İçe aktar" if self.program.is_some() => self.formats_line(&IMPORTS),
             "Dışa aktar" if self.program.is_some() => self.formats_line(&EXPORTS),
-            "İçe aktar" => "DXF, NCN, NCZ, SHP, GeoJSON, KML".to_owned(),
+            "İçe aktar" => "DXF, NCN, NCZ, PDF, SHP, GeoJSON, KML".to_owned(),
             "Dışa aktar" => "DXF, NCN, GeoJSON, KML, GPX, PDF".to_owned(),
             "Bulut" => self.cloud_line(),
             "Yazdır ve pafta" => "Pafta düzeni ve çıktı".to_owned(),

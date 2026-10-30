@@ -13,7 +13,9 @@
 //!   each point written (101 → 102; a name not ending in a number stays).
 //!   Where a point already is (1 µm) it asks first: Düzelt gives that point
 //!   the name, code and elevation given (one step “Nokta düzelt”), Ekle
-//!   writes the new one too, Atla (Esc) passes;
+//!   writes the new one too, Atla (Esc) passes. Ad, Kod and the question are
+//!   a survey's: a program without them (KentOS Mimari, docs/adr/0802)
+//!   writes every point as it is given, its elevation with it;
 //! - Kot noktası: after each point the elevation is typed (clicks wait
 //!   meanwhile; “Kot?” beside the point); the point goes on the spot
 //!   elevations' layer (`kot`) with the elevation, its text (two decimals)
@@ -44,7 +46,8 @@ use crate::log::Level;
 use crate::points::{self, Taken, wire};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Flow, Memory, Name, Pointer, Preview, Tag, TextField, Tool, ViewChange,
+    Context, Flow, Memory, Name, Offers, Pointer, Preview, Tag, TextField, Tool, ToolOption,
+    ViewChange,
 };
 
 /// The point tool's id: its command is `tool.point`.
@@ -199,6 +202,9 @@ pub struct Point {
     given_back: Option<Name>,
     /// The session's values and the project's units when last seen: what the prompt shows.
     seen: Option<(Memory, Format)>,
+    /// The options the program offers, when last seen: Ad, Kod and the question are a survey's
+    /// (docs/adr/0802).
+    offers: Offers,
 }
 
 impl Point {
@@ -216,6 +222,13 @@ impl Point {
 
     fn see(&mut self, cx: &Context<'_>) {
         self.seen = Some((*cx.memory, cx.format()));
+        self.offers = cx.draft.offers;
+    }
+
+    /// Whether the program offers Nokta's names: Ad, Kod and the question where a point already is
+    /// (docs/adr/0152); a building's points have none (KentOS Mimari, docs/adr/0802).
+    fn named(cx: &Context<'_>) -> bool {
+        cx.draft.offers.has(ToolOption::PointNames)
     }
 
     /// The web's `accept`: the point is echoed, and a new point makes what
@@ -225,7 +238,9 @@ impl Point {
         self.d.begin(p, cx);
         if self.spot {
             self.pending_z = Some(p);
-        } else if let Some((there, name)) = point_at(cx.doc, p) {
+        } else if Self::named(cx)
+            && let Some((there, name)) = point_at(cx.doc, p)
+        {
             self.stage = Stage::Question { at: p, there, name };
         } else {
             self.write_point(p, cx);
@@ -247,7 +262,7 @@ impl Point {
                 self.back();
                 self.write_point(at, cx);
             }
-            (Stage::Points, "A" | "K") => {
+            (Stage::Points, "A" | "K") if Self::named(cx) => {
                 let Some(field) = Field::of_key(key) else {
                     return false;
                 };
@@ -268,7 +283,13 @@ impl Point {
     /// then the name moves on.
     fn write_point(&mut self, p: Vec2, cx: &mut Context<'_>) {
         let m = *cx.memory;
-        let (name, code) = (m.point_name.as_str(), m.point_code.as_str());
+        // Without Ad and Kod (docs/adr/0802) the session's are not written.
+        let named = Self::named(cx);
+        let (name, code) = if named {
+            (m.point_name.as_str(), m.point_code.as_str())
+        } else {
+            ("", "")
+        };
         let input = PointCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             p: wire(p),
@@ -286,7 +307,9 @@ impl Point {
         let result = point::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(written) = points::written(result, cx) {
             self.d.note(written.id, cx);
-            self.advance(cx);
+            if named {
+                self.advance(cx);
+            }
         }
     }
 
@@ -505,8 +528,14 @@ impl Tool for Point {
                 let z = m
                     .point_z
                     .map_or_else(|| "yok".to_owned(), |z| format.length(z));
-                with_options(Prompt::new(LABEL, "nokta konumunu belirtin"), &m)
-                    .option_with("Kot", "Z", z)
+                let prompt = Prompt::new(LABEL, "nokta konumunu belirtin");
+                // Ad and Kod where the program offers them (docs/adr/0802).
+                let prompt = if self.offers.has(ToolOption::PointNames) {
+                    with_options(prompt, &m)
+                } else {
+                    prompt
+                };
+                prompt.option_with("Kot", "Z", z)
             }
         }
     }
@@ -642,7 +671,9 @@ impl Tool for Point {
                 at,
                 lines: vec!["Kot?".to_owned()],
             }),
-            (None, Stage::Points, Some(at), Some((m, _))) if !self.spot => {
+            (None, Stage::Points, Some(at), Some((m, _)))
+                if !self.spot && self.offers.has(ToolOption::PointNames) =>
+            {
                 let name = m.point_name.as_str();
                 (!name.is_empty()).then(|| Tag {
                     at,

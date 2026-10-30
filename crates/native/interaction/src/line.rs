@@ -33,7 +33,7 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points::{self, SAME, wire};
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool};
+use crate::tool::{Context, Flow, Pointer, Preview, Tag, Tool, ToolOption};
 
 /// The line tool's id: its command is `tool.line`.
 pub const ID: &str = "line";
@@ -100,8 +100,13 @@ impl Line {
     fn create(&mut self, a: Vec2, b: Vec2, cx: &mut Context<'_>) -> Option<Slot> {
         // A polar point typed as `d<a` records its values as the line's Kayıtlı
         // uzunluk and, in a GIS project with grads, Kayıtlı semt: the texts as
-        // typed (docs/adr/0180 §2). A clicked point records nothing.
-        let recorded = self.typed.as_deref().and_then(|text| {
+        // typed (docs/adr/0180 §2). A clicked point records nothing, and a
+        // program without a survey's options (KentOS Mimari, docs/adr/0802) none.
+        let typed = self
+            .typed
+            .as_deref()
+            .filter(|_| cx.draft.offers.has(ToolOption::Recorded));
+        let recorded = typed.and_then(|text| {
             let format = cx.format();
             let angles = format.angles();
             let convention = if angles.from == AngleFrom::North {

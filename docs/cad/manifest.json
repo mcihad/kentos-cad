@@ -7217,7 +7217,7 @@
    "python": "kentos.cad.stac.search, kentos.cad.stac.prepare",
    "mcp": "cad.stac.search, cad.stac.prepare",
    "note": "Aramayı cad.stac.search, hazırlamayı cad.stac.prepare yapar; pencere seçimleri ve planı gösterir (ADR 0528 §7).",
-   "scope": "shared",
+   "scope": "gis",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8502,7 +8502,7 @@
    "python": "kentos.cad.standards.apply",
    "mcp": "cad.standards.apply",
    "note": "Standart ve dört seçenek komuta verilir; pencerenin önizlemesi komutun planıdır (ADR 0312 §3).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -8518,7 +8518,7 @@
    "python": "kentos.cad.standards.check",
    "mcp": "cad.standards.check",
    "note": "Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2).",
-   "scope": "shared",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

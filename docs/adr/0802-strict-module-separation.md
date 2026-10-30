@@ -135,16 +135,61 @@ Uygulama bölümündedir. `kentos-cad` her şeyi gösterir.
 - **Ortak fikstürler:** `fixtures/shell/v1/ribbon.json`'da CBS'nin seçim sekmelerinden CAD'inkiler (Ölçü, Kılavuz, Tarama, Blok,
   Tablo, Resim) çıktı; `fixtures/shell/v1/layout.json` (`layout_cases.py`). Web dönünce uyar (TODOS.md §0.2).
 
+### İkinci inceleme (30 Ekim)
+
+Sahibin sözü: “tekrar gözden geçir mantıksal olarak da her şeyi olması gereken yere koy”, “sen de bir incele ve gözden geçir
+senin kararında önemli”. Bu tur, eleştirmenlerin kaçırılanlar ve yüzey düzeltmeleri listelerini tek tek ele aldı. Her programın
+sunduğu komutlar şeritteki yerleriyle döküldü (`module_tests::dump_module_commands`) ve satır satır okundu. Kararlar:
+
+- **KentOS Harita harita yapar, ölçer ve sayısal arazi modeli kurar; CBS analizi KentOS GIS'indir.** Harita'dan GIS'e geçenler:
+  genelleştirme, yakınlık analizi, kriging, spline, doğal komşu, Voronoi, içbükey zarf, ulaşılmazlık kutbu, raster hesaplayıcı ve
+  istatistikleri, yeniden sınıflandırma, rasterleştirme, rasterden çizgi ve nokta, eğrilik, pürüzlülük, güneşlenme, hidroloji,
+  uzaklık ve maliyet, STAC'ta ara. Harita'da kalanlar: TIN ve IDW, eğim, bakı, kabartmalar ve eş yükselti eğrileri, mozaik,
+  maskeyle kırpma, yeniden örnekleme, taranmış harita araçları, örtüşme araçları, dönüşümler, doğrusal referanslama. Harita 705 →
+  662 komut, GIS 664 → 659.
+- **Çizim standardı yalnız Mimari'dedir:** tek hazır standart “Mimari ofis”tir (A-DUVAR …). Değişikliğin etkisi her yerde.
+- **KentOS Mimari'nin “Ölçme” sekmesi yoktur** (Ölçme, ölçmecilik demektir). Sorgu araçları (Mesafe ölç, Alan hesapla, Açı ölç,
+  Koordinat oku, Bilgi) Görünüm'de tek bir “Mesafe ölç ▾” düğmesidir (AutoCAD'in Measure düğmesi gibi). Giriş 1440 px'te bütün
+  adlarını göstererek sığmıyor.
+- **Ekle'nin resim paneli** Mimari'de “Resim ve nokta bulutu”dur, raster yoktur (panelin iş başına adı `workLabels`).
+- **Bölünmüş düğmenin girdileri de işe göredir** (`entryWorks`): Ölçülendirme ▾'in Semt'i (kerteriz, bir ölçme ölçüsü) Harita'nındır.
+  Yöntemin yazılan adı (SEMT) da programın şeridine bakar (`App::method_not_offered`).
+- **Kullanıcının modeli**, adımlarının kullandığı her aracı sunan programdadır.
+- **CBS'de** Yazı stilleri ve “Yaz ve tara” paneli yoktur (ADR 0183: yazı stilleri CAD'in). Parsel ölçü yazıları Harita'nın Plan ›
+  Plan yazıları ▾'indedir.
+- **Her programın kendi ajan bağlantısı:** kentos-cad `masaustu.sock`, modüller `masaustu-mimari.sock`, `masaustu-harita.sock`,
+  `masaustu-cbs.sock`. MCP'nin `desktop.attach`'ı isteğe bağlı `program` alır (`mimari`, `harita`, `cbs`). İki program bağlantılarını
+  aynı anda açabilir.
+- **Bulut:** modül programının kataloğu yalnız kendi proje türlerini listeler (`Module::project_types`: Mimari `architecture`;
+  Harita `cad`, `landReadjustment`, `zoningPlan`, `subdivision`, `road`; GIS `gis`). Başka modülün projesi, programın adı
+  söylenerek açılmaz (kimlikle devir açıktır). Buluta yükle yalnız kendi türlerini sunar.
+- **Kurtarma kopyaları:** her kopya çiziminin modülünü yazar. Modül programı yalnız kendi modülünün ve modülsüz kopyaları sunar.
+- **Pafta:** galeri ve Yeni pafta modüle göredir (çekirdeğin `profile_for_types`, `rank_templates_for_types`'ı; eski işlevler aynı
+  anlamda). Mimari'nin öntanımlısı `sys:cad-mimari`, Harita'nınki `sys:genel-a3-yatay` (ızgaralı harita, kuzey oku, ölçek, lejant,
+  antet). Başka türlerin şablonları rozetle ve öntanımlı olarak gizli.
+- **Launcher:** Mimari'nin notu “Mimari CAD: bina, kat planı, kesit ve görünüş”.
+- **Araçların seçenekleri programa göredir:** araç oturumu, `Draft.offers`'tan (`kentos_interaction::ToolOption`, `Offers`) neyin
+  sunulduğunu bilir. Başsız sunucu, Python ve MCP hepsini sunar.
+  - KentOS Mimari'de Ölçülendirme'nin Semt'i (T) yok; hatırlanan Semt Hizalı'ya döner. Nokta'nın Ad ve Kod'u ve aynı yer sorusu
+    yok (Kot kalır). Çizgi kayıtlı uzunluk ve semt yazmaz.
+  - KentOS GIS'te Böl'ün Blok ve Hizala'sı, Çoklu çizgi'nin Genişlik'i, tutamaç menüsünün Kenar genişliği, Öznitelikler'in
+    Genişlik ve Maske satırları ve Şablon düzenleyici'nin Blok ekle'si yok.
+  - Kuzey oku'nun Coğrafi kuzey'i yalnız koordinat sistemli çizimde var.
+- **Yüzeylerin kalanı:** İçe aktar'da PDF her programda var. Yeni projeler'in birim satırı yalnız kentos-cad'de. Karelaj aralıkları
+  programın eksenleriyle adlanır (CAD'de X doğu, Y kuzey). Katman stili'nin tematik işleyicileri (Sürekli renk, Orantılı sembol,
+  İki değişkenli renk, Nokta yoğunluğu, Grafik, Isı haritası, Kümeleme, Yayma, Ters alan) GIS'te ve kentos-cad'de; bir katman
+  onlardan biriyle çiziliyorsa her yerde kalır. Mimari'nin Stil yöneticisi ve sembol seçicileri imar planı simgelerini (MPYY) göstermez.
+  Noktalar'ın Cihaza gönder'i yalnız `field.send`'i sunan programda. Uygulama menüsünün Bulut listesi programın kendi projelerini
+  listeler. Öznitelikler'in Mahal ayırıcı satırı Mimari'nin.
+- **Durum çubuğu:** yardımcıların genişliği artık ölçülür (`status_aids_width`): harf başına tahmin 13 px'te 40 px fazlaydı ve KentOS
+  Harita 1440 px'te lambalarını “Yardımcılar”a katlıyordu.
+
 ### Açık kalanlar
 
-- **Araçların seçenekleri:** GIS'te Böl'ün Blok seçeneği. Araç oturumu programı bilmez; seçenek düzeyinde ayrım `Context`'e bir
-  yetenek alanı ister.
-- **Yalnız Mimari'de anlamsız görünüşler:** Stil yöneticisinin MPYY dalı, Katman stili'nin tematik işleyicileri, Karelaj'ın Y/X adları.
-- **Ajan bağlantısı:** her program aynı soketi açar (`masaustu.sock`). Aynı anda ikincisi açamaz ve nedenini söyler. Program başına
-  soket ve MCP'nin `desktop.attach`'ında program seçimi açıktır.
-- **Pafta profilleri:** iş başına satır yoktur; pafta araçları CAD ve CBS'ye göredir.
 - Her programın yalnız kendi kodunu taşıması (özellik kapılarıyla kırpma), paketleme ve modül başına sürüm (`OPS-10`), gerçek
   pencerede fare ve klavye kabulü.
+- Bulut projesinin kimlikle başka programa devri (ADR 0801 §8).
+- `scripts/cad/manifest.py` kapsamı sayarken `modes`'u bilmez: yalnız CBS'nin araçları “shared” sayılır.
 
 ## Doğrulama
 

@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 /// write: short, lowercase Turkish, never translated.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Module {
-    /// Mimari CAD: buildings, floor plans, details (a CAD project's
-    /// `architecture` work).
+    /// Mimari CAD: buildings, floor plans, sections and elevations (a CAD
+    /// project's `architecture` work).
     #[serde(rename = "mimari")]
     Architecture,
     /// Harita CAD: site plans, zoning, surveys (a CAD project's `map` work).
@@ -62,7 +62,7 @@ impl Module {
     /// One line on what it is for.
     pub const fn note(self) -> &'static str {
         match self {
-            Module::Architecture => "Mimari CAD: bina, kat planı ve detay",
+            Module::Architecture => "Mimari CAD: bina, kat planı, kesit ve görünüş",
             Module::Map => "Harita CAD: vaziyet, imar ve halihazır",
             Module::Gis => "Coğrafi bilgi sistemi",
         }
@@ -84,6 +84,32 @@ impl Module {
             Module::Map => &["map"],
             Module::Gis => &[],
         }
+    }
+
+    /// The cloud catalog's project types its projects have (docs/adr/0802), as the server names them (`type`,
+    /// `ProjectType::name`), the one a new cloud project starts with first: KentOS Mimari's a building's; KentOS
+    /// Harita's every CAD type that is not a building's (general CAD, land readjustment, zoning plan, subdivision,
+    /// road); KentOS GIS's CBS. No type is two modules'.
+    pub const fn project_types(self) -> &'static [&'static str] {
+        match self {
+            Module::Architecture => &["architecture"],
+            Module::Map => &[
+                "cad",
+                "landReadjustment",
+                "zoningPlan",
+                "subdivision",
+                "road",
+            ],
+            Module::Gis => &["gis"],
+        }
+    }
+
+    /// The module a cloud project of this catalog type belongs to (`ProjectType::name`); none for a type no
+    /// module has.
+    pub fn of_project_type(name: &str) -> Option<Module> {
+        Module::ALL
+            .into_iter()
+            .find(|m| m.project_types().contains(&name))
     }
 
     /// The module a project belongs to (docs/adr/0801), by its type and CAD work as the project file writes them:
@@ -147,6 +173,67 @@ mod tests {
             for w in m.cad_works() {
                 assert_eq!(of(Some(m.project_type()), Some(w)), Some(m));
             }
+        }
+    }
+
+    #[test]
+    fn a_cloud_projects_type_is_one_modules() {
+        assert_eq!(Module::Architecture.project_types(), ["architecture"]);
+        assert_eq!(
+            Module::Map.project_types(),
+            [
+                "cad",
+                "landReadjustment",
+                "zoningPlan",
+                "subdivision",
+                "road"
+            ]
+        );
+        assert_eq!(Module::Gis.project_types(), ["gis"]);
+        // The seven catalog types the server knows, each one module's; a type it does not know, none's.
+        let every = [
+            "cad",
+            "gis",
+            "landReadjustment",
+            "zoningPlan",
+            "subdivision",
+            "road",
+            "architecture",
+        ];
+        for t in every {
+            let owners: Vec<Module> = Module::ALL
+                .into_iter()
+                .filter(|m| m.project_types().contains(&t))
+                .collect();
+            assert_eq!(owners.len(), 1, "{t}: {owners:?}");
+            assert_eq!(Module::of_project_type(t), Some(owners[0]));
+        }
+        let listed: usize = Module::ALL.iter().map(|m| m.project_types().len()).sum();
+        assert_eq!(listed, every.len(), "no type is listed twice");
+        assert_eq!(
+            Module::of_project_type("Architecture"),
+            None,
+            "names are exact"
+        );
+        assert_eq!(Module::of_project_type("hybrid"), None);
+        // A module's projects are of its own kind: a CBS module's of the CBS type, a CAD module's never.
+        for m in Module::ALL {
+            assert_eq!(
+                m.project_types().contains(&"gis"),
+                m.project_type() == "gis"
+            );
+        }
+    }
+
+    #[test]
+    fn the_notes_say_what_each_module_draws() {
+        assert_eq!(
+            Module::Architecture.note(),
+            "Mimari CAD: bina, kat planı, kesit ve görünüş"
+        );
+        // The detail work is gone (docs/adr/0802 §2): no note promises it.
+        for m in Module::ALL {
+            assert!(!m.note().contains("detay"), "{m:?}: {}", m.note());
         }
     }
 }

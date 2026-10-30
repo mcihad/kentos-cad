@@ -20,7 +20,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, Menu, MenuButton, Tip, horizontal_divider, overlay, tip};
 
 use super::widgets::{Env, check, ev, expression, help, input, number, problem, slots, tool};
-use super::{Event, Field, KINDS, Kind, LayerStyleWindow, SetAt, Source, bound_key};
+use super::{Event, Field, Kind, LayerStyleWindow, SetAt, Source, bound_key};
 use crate::app::{App, Message};
 use crate::style::thumbs::Look;
 
@@ -71,7 +71,7 @@ impl App {
         };
         let fields = window.fields(model);
         let top = row![
-            kind_picker(window.kind),
+            kind_picker(window.kind, window.kinds()),
             label::caption(objects_text(model.count(&window.layer), window))
                 .style(style::text::muted),
         ]
@@ -140,9 +140,9 @@ impl App {
     }
 }
 
-/// The renderer kinds in a list by group, each with its icon and what it does (the web's
+/// The renderer kinds `kinds` in a list by group, each with its icon and what it does (the web's
 /// `Dropdown`, docs/adr/0213 §4); the field shows the chosen one.
-fn kind_picker<'a>(kind: Kind) -> Element<'a, Message> {
+fn kind_picker<'a>(kind: Kind, kinds: Vec<Kind>) -> Element<'a, Message> {
     let face = container(
         row![
             icon(crate::icons::from_web(Some(kind.icon()))).size(16.0),
@@ -157,9 +157,14 @@ fn kind_picker<'a>(kind: Kind) -> Element<'a, Message> {
     .style(style::container::field_box);
     let menu = move || {
         let mut m = Menu::new();
-        for k in KINDS {
-            if let Some(g) = k.group() {
-                m = m.header(g);
+        let mut group = None;
+        for &k in &kinds {
+            // A group's header over its first kind listed.
+            if k.group() != group {
+                group = k.group();
+                if let Some(g) = group {
+                    m = m.header(g);
+                }
             }
             m = m
                 .radio(k.to_string(), k == kind, ev(Event::Kind(k)))

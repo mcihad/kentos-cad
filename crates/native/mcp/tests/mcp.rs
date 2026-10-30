@@ -988,6 +988,167 @@ fn a_desktop_handle_sends_the_tools_to_the_drawing_on_the_screen() {
     let _ = std::fs::remove_dir_all(dir);
 }
 
+/// A program's link standing in for it (docs/adr/0802): every connection's `hello` answered with `name`, for
+/// `connections` connections, each on a thread of its own while it lasts.
+#[cfg(unix)]
+fn named_link(path: &std::path::Path, name: &'static str, connections: usize) {
+    use std::os::unix::net::UnixListener;
+    let listener = UnixListener::bind(path).expect("the socket");
+    std::thread::spawn(move || {
+        for _ in 0..connections {
+            let Ok((stream, _)) = listener.accept() else {
+                return;
+            };
+            std::thread::spawn(move || {
+                let mut writer = stream.try_clone().expect("its writer");
+                for line in BufReader::new(stream).lines() {
+                    let Ok(line) = line else { break };
+                    let request: Value = serde_json::from_str(&line).expect("JSON");
+                    let answer = match request["method"].as_str() {
+                        Some("hello") => json!({ "id": request["id"], "ok": true,
+                            "result": { "name": name, "document": 1, "objects": 0 } }),
+                        _ => {
+                            json!({ "id": request["id"], "ok": false, "code": "unknown_method", "message": "?" })
+                        }
+                    };
+                    if writeln!(writer, "{answer}").is_err() {
+                        break;
+                    }
+                }
+            });
+        }
+    });
+}
+
+/// docs/adr/0802: every KentOS program opens a link of its own beside the others, and `desktop.attach` names the
+/// program; none named, kentos-cad's. `path` stands for every program's, and so does `KENTOS_DESKTOP` (the real
+/// process, its environment of its own: a runtime folder made here).
+#[cfg(unix)]
+#[test]
+fn desktop_attach_names_the_program_whose_link_it_takes() {
+    let base = std::env::temp_dir().join(format!("kentos-mcp-programlar-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&base);
+    let folder = base.join("kentos-cad");
+    std::fs::create_dir_all(&folder).expect("a folder");
+    named_link(&folder.join("masaustu.sock"), "kentos-cad'in çizimi", 1);
+    named_link(
+        &folder.join("masaustu-harita.sock"),
+        "KentOS Harita'nın çizimi",
+        2,
+    );
+
+    // In the process: a program it does not know is refused; a path wins, the refusal says where to open it.
+    let mut server = Server::new();
+    let unknown = call(&mut server, "desktop.attach", json!({ "program": "detay" }));
+    assert_eq!(unknown["isError"], true);
+    assert_eq!(
+        unknown["structuredContent"]["error"]["code"],
+        "invalid_input"
+    );
+    let message = unknown["structuredContent"]["error"]["message"]
+        .as_str()
+        .expect("why");
+    assert!(
+        message.contains("mimari") && message.contains("cbs"),
+        "{message}"
+    );
+    let none = call(
+        &mut server,
+        "desktop.attach",
+        json!({ "program": "mimari", "path": folder.join("yok.sock") }),
+    );
+    assert_eq!(none["structuredContent"]["error"]["code"], "no_desktop");
+    let message = none["structuredContent"]["error"]["message"]
+        .as_str()
+        .expect("why");
+    assert!(
+        message.contains("yok.sock") && message.contains("KentOS Mimari'de Python sekmesinden"),
+        "{message}"
+    );
+    // The tool says it takes a program, one of the three.
+    let listed = ask(&mut server, 2, "tools/list", json!({}));
+    let attach = listed["result"]["tools"]
+        .as_array()
+        .and_then(|t| t.iter().find(|t| t["name"] == "desktop.attach"))
+        .expect("the tool")
+        .clone();
+    assert_eq!(
+        attach["inputSchema"]["properties"]["program"]["enum"],
+        json!(["mimari", "harita", "cbs"])
+    );
+
+    // The real process in a runtime folder of its own.
+    let run = |desktop: Option<&std::path::Path>, calls: &[Value]| -> Vec<Value> {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_kentos-mcp"));
+        command
+            .env("XDG_RUNTIME_DIR", &base)
+            .env_remove("KENTOS_DESKTOP")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        if let Some(path) = desktop {
+            command.env("KENTOS_DESKTOP", path);
+        }
+        let mut child = command.spawn().expect("the server starts");
+        let mut stdin = child.stdin.take().expect("its input");
+        let mut lines = BufReader::new(child.stdout.take().expect("its output")).lines();
+        let mut out = Vec::new();
+        for (i, arguments) in calls.iter().enumerate() {
+            let request = json!({ "jsonrpc": "2.0", "id": i + 1, "method": "tools/call",
+                "params": { "_meta": meta(), "name": "desktop.attach", "arguments": arguments } });
+            writeln!(stdin, "{request}").expect("written");
+            stdin.flush().expect("flushed");
+            let line = lines.next().expect("a line").expect("read");
+            let answer: Value = serde_json::from_str(&line).expect("JSON");
+            assert_eq!(answer["id"], i + 1);
+            out.push(answer["result"].clone());
+        }
+        child.kill().expect("stopped");
+        let _ = child.wait();
+        out
+    };
+    let answers = run(
+        None,
+        &[
+            json!({}),
+            json!({ "program": "harita" }),
+            json!({ "program": "cbs" }),
+        ],
+    );
+    assert_eq!(answers[0]["isError"], false, "{}", answers[0]);
+    assert_eq!(
+        answers[0]["structuredContent"]["desktop"]["name"], "kentos-cad'in çizimi",
+        "none named: kentos-cad's"
+    );
+    assert_eq!(answers[1]["isError"], false, "{}", answers[1]);
+    assert_eq!(
+        answers[1]["structuredContent"]["desktop"]["name"],
+        "KentOS Harita'nın çizimi"
+    );
+    // KentOS GIS's link is not open: the refusal names its socket and where to open it.
+    assert_eq!(
+        answers[2]["structuredContent"]["error"]["code"],
+        "no_desktop"
+    );
+    let message = answers[2]["structuredContent"]["error"]["message"]
+        .as_str()
+        .expect("why");
+    assert!(
+        message.contains(&folder.join("masaustu-cbs.sock").display().to_string())
+            && message.contains("KentOS GIS'te Python sekmesinden"),
+        "{message}"
+    );
+    // KENTOS_DESKTOP stands for every program's link.
+    let harita = folder.join("masaustu-harita.sock");
+    let answers = run(Some(&harita), &[json!({ "program": "cbs" })]);
+    assert_eq!(
+        answers[0]["structuredContent"]["desktop"]["name"], "KentOS Harita'nın çizimi",
+        "{}",
+        answers[0]
+    );
+    let _ = std::fs::remove_dir_all(base);
+}
+
 /// The label engine's commands as tools (docs/adr/0212 §5): a layer's labelling written in rules, an
 /// object's label pinned by hand, a pin against the rules refused with its reason.
 #[test]

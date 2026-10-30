@@ -29,6 +29,7 @@
 //! | `catalog_jobs.rs` | the Sunucu işleri tab: the project's server jobs, asked and polled; export, stop, download (docs/adr/0547) |
 //! | `catalog_jobs_view.rs` | the Sunucu işleri tab's rows |
 //! | `opening.rs` | a project opened into the drawing, its progress |
+//! | `kinds.rs` | a program's cloud projects: a module's types listed, offered and opened (docs/adr/0802) |
 //! | `leaving.rs` | leaving a project: its draft first, or the question |
 //! | `copy.rs` | the project's local copy, work without a connection |
 //! | `live.rs` | a database project's autosave and device draft |
@@ -71,6 +72,9 @@ mod file;
 mod file_follow;
 #[cfg(test)]
 mod file_follow_tests;
+pub(crate) mod kinds;
+#[cfg(test)]
+mod kinds_tests;
 mod follow;
 pub mod forms_plan;
 #[cfg(test)]
@@ -294,6 +298,13 @@ pub enum Event {
         result: Result<Once<kentos_cloud::Opened>, ApiFailure>,
     },
     OpenCancel,
+    /// A project to open by its id in a module's program: what the server says of it (kinds.rs, docs/adr/0802).
+    OpenChecked {
+        id: u64,
+        tenant: Uuid,
+        project: Uuid,
+        result: Result<kinds::Entry, ApiFailure>,
+    },
     /// The project read from the server with its copy rewritten, or read
     /// from the copy; or why it could not be (the copy comes back).
     Read {
@@ -483,6 +494,11 @@ pub struct CloudState {
     pub leave_failure: Option<String>,
     /// The name and storage of the project about to be opened (its progress says them).
     pub open_hint: Option<(String, kentos_commands::ProjectStorage)>,
+    /// The catalog type of the project about to be opened, by its id, when this program knows it (a catalog row's,
+    /// the server's answer); none inside: asked, not answered (kinds.rs, docs/adr/0802).
+    pub open_kind: Option<(Uuid, Option<kentos_commands::ProjectType>)>,
+    /// The question about a project to open on its way: its id, and the drawing on screen when it was asked.
+    pub open_check: Option<(u64, Option<(u64, u64)>)>,
     /// Yeniden adlandır's window (actions.rs).
     pub rename: Option<actions::Rename>,
     /// What waits for the open database project's autosave to send everything first.
@@ -682,6 +698,12 @@ impl App {
             | Event::Opened { .. }
             | Event::OpenCancel
             | Event::Read { .. } => self.opening_cloud_event(event),
+            Event::OpenChecked {
+                id,
+                tenant,
+                project,
+                result,
+            } => self.cloud_open_checked(id, tenant, project, result),
             Event::DraftWritten { .. } | Event::Committed { .. } => self.live_event(event),
             Event::Events { .. }
             | Event::Fetched { .. }

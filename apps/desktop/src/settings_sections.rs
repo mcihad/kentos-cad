@@ -266,6 +266,10 @@ impl App {
             {
                 "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, fare yardımcıları, şeridin bağlamsal sekmeleri, sağ tık, komut satırının AutoCAD adları ve işlemlerin Python kodu."
             }
+            // A map's programs: their works are in metres (docs/adr/0802).
+            Section::NewProjects if !self.shows_setting(AppSetting::NewProjectUnit) => {
+                "Oluşturacağınız her yeni projede başlangıçta önerilecek çizim yazı tipi ve koordinat sistemi."
+            }
             Section::NewProjects if !self.shows_setting(AppSetting::NewProjectType) => {
                 "Oluşturacağınız her yeni projede başlangıçta önerilecek çizim birimi, çizim yazı tipi ve koordinat sistemi."
             }
@@ -324,7 +328,7 @@ impl App {
         let fields = Fields { app: self, draft };
         let page = match current {
             Section::Appearance => self.appearance_section(&fields),
-            Section::Snap => snap_section(&fields),
+            Section::Snap => snap_section(&fields, self.grid_titles()),
             Section::NewProjects => self.new_projects_section(&fields),
             Section::Engine => self.engine_section(&fields),
             Section::File => self.file_section(draft),
@@ -503,8 +507,9 @@ impl App {
         } else {
             form
         };
-        let mut form = form
-            .field(
+        // The unit where the program's works take one: a map's are in metres (module_surfaces.rs).
+        let form = if self.shows_setting(AppSetting::NewProjectUnit) {
+            form.field(
                 Fields::title("newProjects.drawingUnit"),
                 choices(
                     "newProjects.drawingUnit",
@@ -512,6 +517,10 @@ impl App {
                 ),
             )
             .help(Fields::help("newProjects.drawingUnit"))
+        } else {
+            form
+        };
+        let mut form = form
             .field(
                 Fields::title("newProjects.drawingFont"),
                 listed(
@@ -626,23 +635,50 @@ impl App {
     }
 }
 
-fn snap_section<'a>(f: &Fields<'a>) -> Element<'a, Message> {
+/// Karelaj's spacings' titles and helps, east then north, named by the program's axes (docs/adr/0802): a CAD's X
+/// east and Y north, a CBS's Y east and X north; the settings' keys stay.
+pub(crate) type GridTitles = [(&'static str, &'static str); 2];
+
+const CAD_GRID: GridTitles = [
+    (
+        "Karelaj aralığı X (doğu)",
+        "Karelaj düğümleri arasındaki doğu (X) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
+    ),
+    (
+        "Karelaj aralığı Y (kuzey)",
+        "Karelaj düğümleri arasındaki kuzey (Y) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
+    ),
+];
+
+const GIS_GRID: GridTitles = [
+    (
+        "Karelaj aralığı Y (doğu)",
+        "Karelaj düğümleri arasındaki doğu (Y) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
+    ),
+    (
+        "Karelaj aralığı X (kuzey)",
+        "Karelaj düğümleri arasındaki kuzey (X) uzaklığı; düğümler bu aralığın katı olan koordinatlardadır.",
+    ),
+];
+
+impl App {
+    /// Karelaj's spacings' titles and helps here (module_surfaces.rs `cad_axes`).
+    pub(crate) fn grid_titles(&self) -> GridTitles {
+        if self.cad_axes() { CAD_GRID } else { GIS_GRID }
+    }
+}
+
+fn snap_section<'a>(f: &Fields<'a>, [east, north]: GridTitles) -> Element<'a, Message> {
     let form = Form::new().label_width(170.0).section("Kenet türleri");
     let form = SNAP_KINDS
         .iter()
         .fold(form, |form, key| f.switch_field(form, key, None))
         // Karelaj's spacings and where snapping works (docs/adr/0163 §1, §3, §5).
         .section("Karelaj")
-        .field(
-            Fields::title("snap.gridEast"),
-            f.metres("snap.gridEast", 1.0),
-        )
-        .help(Fields::help("snap.gridEast"))
-        .field(
-            Fields::title("snap.gridNorth"),
-            f.metres("snap.gridNorth", 1.0),
-        )
-        .help(Fields::help("snap.gridNorth"))
+        .field(east.0, f.metres("snap.gridEast", 1.0))
+        .help(east.1)
+        .field(north.0, f.metres("snap.gridNorth", 1.0))
+        .help(north.1)
         .section("Kenedin kapsamı");
     let form = f
         .switch_field(form, "snap.self", None)

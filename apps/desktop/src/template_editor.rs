@@ -120,9 +120,14 @@ fn msg(event: Event) -> Message {
     Message::TemplateEditor(event)
 }
 
-/// The tools a template draws with, as the select lists them.
-fn tool_choices() -> Vec<(&'static str, &'static str)> {
-    TEMPLATE_TOOLS.to_vec()
+/// The tools a template draws with, as the select lists them: Blok ekle where the program has blocks (KentOS GIS
+/// has none, docs/adr/0802), and the template's own tool whatever it is.
+pub(crate) fn tool_choices(blocks: bool, current: &str) -> Vec<(&'static str, &'static str)> {
+    TEMPLATE_TOOLS
+        .iter()
+        .filter(|(id, _)| blocks || *id != "blockInsert" || *id == current)
+        .copied()
+        .collect()
 }
 
 /// A text's alignments by their names (the web's `textAlignName`), the left of the baseline first.
@@ -647,9 +652,12 @@ impl App {
         .align_y(iced::alignment::Vertical::Top);
         // The tool and its method as wide as their words need (the web's selects).
         let narrow = |e: Element<'static, Message>| container(e).width(Length::Fixed(240.0));
+        let blocks = self.offers_tool_option(kentos_interaction::ToolOption::Blocks);
         let mut tool_row = row![narrow(labelled(
             "Araç",
-            form_fields::select(&tool_choices(), &f.tool, |t| msg(Event::Tool(t))),
+            form_fields::select(&tool_choices(blocks, &f.tool), &f.tool, |t| {
+                msg(Event::Tool(t))
+            }),
             None
         ))]
         .spacing(12);

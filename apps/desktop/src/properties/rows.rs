@@ -224,13 +224,25 @@ pub(crate) fn layer_path(layers: &LayerTree, id: &str) -> String {
     names.join(" / ")
 }
 
-/// What the panel shows for this selection; `crs`: the drawing's coordinate system with nothing selected (a map's
-/// programs and kentos-cad, module_surfaces.rs).
+/// The rows only some programs show (module_surfaces.rs; kentos-cad every one).
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct Shown {
+    /// The drawing's coordinate system with nothing selected: a map's programs'.
+    pub crs: bool,
+    /// A polyline's Genişlik (docs/adr/0258): not a GIS's.
+    pub widths: bool,
+    /// An area's Maske (docs/adr/0310 §5): not a GIS's.
+    pub mask: bool,
+    /// A polyline's Mahal ayırıcı (docs/adr/0679): KentOS Mimari's.
+    pub separators: bool,
+}
+
+/// What the panel shows for this selection, the rows `shown` says.
 pub(crate) fn panel(
     doc: &Document,
     selected: &[Slot],
     totals: impl Fn(&[Slot]) -> (f64, f64),
-    crs: bool,
+    shown: Shown,
 ) -> Panel {
     let objects: Vec<&Entity> = selected.iter().filter_map(|s| doc.model.get(*s)).collect();
     let layers = doc.model.layers();
@@ -238,7 +250,7 @@ pub(crate) fn panel(
         [] => Panel {
             summary: Summary::Empty,
             meta: None,
-            sections: vec![document_section(doc, crs)],
+            sections: vec![document_section(doc, shown.crs)],
         },
         [one] => {
             let base = one.base();
@@ -251,7 +263,7 @@ pub(crate) fn panel(
                         .map(|n| (n.style.color.clone(), layer_path(layers, &n.id))),
                 },
                 meta: Some(format!("#{}", base.id)),
-                sections: entity_sections(doc, one),
+                sections: entity_sections(doc, one, shown),
             }
         }
         many => {
@@ -275,7 +287,7 @@ pub(crate) fn panel(
                     kinds,
                 },
                 meta: Some(format!("{} nesne", many.len())),
-                sections: many_sections(doc, many, totals(selected)),
+                sections: many_sections(doc, many, totals(selected), shown),
             }
         }
     }
@@ -899,7 +911,7 @@ fn space_length(e: &Entity, f: &Format) -> Option<Row> {
 }
 
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
-fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
+fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     let base = e.base();
     let slot = Slot(base.id);
     let layers = doc.model.layers();
@@ -946,8 +958,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     if drawn {
         general.push(transparency_row(&ids, Some(base.look.transparency)).editor_if(!locked));
     }
-    // An area's mask (docs/adr/0310 §5).
-    if matches!(e, Entity::Polygon(_)) {
+    // An area's mask (docs/adr/0310 §5), where the program has masks.
+    if shown.mask && matches!(e, Entity::Polygon(_)) {
         general.push(wipeout_row(&ids, Some(base.look.wipeout)).editor_if(!locked));
     }
     if drawn && takes_symbol(e) {
@@ -1031,7 +1043,11 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         }
         Entity::Polyline(p) | Entity::Polygon(p) => {
             let polygon = matches!(e, Entity::Polygon(_));
-            if !polygon && (doc.settings().workspace==Some(kentos_commands::Workspace::Cad) || p.space_separator.is_some()) {
+            if !polygon
+                && ((shown.separators
+                    && doc.settings().workspace == Some(kentos_commands::Workspace::Cad))
+                    || p.space_separator.is_some())
+            {
                 geo.extend(arch::separator_rows(doc,slot,p,locked));
             }
             // A multi-part area's corners, parts and holes are every part's (docs/adr/0143).
@@ -1076,11 +1092,18 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                         .collect(),
                 };
                 geo.push(Row::text("Kapalı", yes_no(line.closed)).editor(edit(closings)));
-                let width = if line.space_separator.is_some(){None}else{number(Field::PolylineWidth(slot))};
-                geo.push(match constant_width(line) {
-                    Some(w) => metres("Genişlik", w).editor(width),
-                    None => Row::text("Genişlik", "Değişken").editor(width),
-                });
+                // Its widths where the program has a polyline's widths (docs/adr/0802).
+                if shown.widths {
+                    let width = if line.space_separator.is_some() {
+                        None
+                    } else {
+                        number(Field::PolylineWidth(slot))
+                    };
+                    geo.push(match constant_width(line) {
+                        Some(w) => metres("Genişlik", w).editor(width),
+                        None => Row::text("Genişlik", "Değişken").editor(width),
+                    });
+                }
                 if line.closed {
                     geo.extend(area(kentos_interaction::enclosed(e).unwrap_or(0.0)));
                 }
@@ -3378,7 +3401,12 @@ fn looks_numeric(value: &str) -> bool {
 
 /// Several objects: what they share, editable unless one is on a locked
 /// layer, and their totals (the web's `multiSections`).
-fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)) -> Vec<Section> {
+fn many_sections(
+    doc: &Document,
+    objects: &[&Entity],
+    (length, area): (f64, f64),
+    shown: Shown,
+) -> Vec<Section> {
     let ids: Vec<Slot> = objects.iter().map(|e| Slot(e.base().id)).collect();
     let first = objects[0].base();
     let same = |f: &dyn Fn(&kentos_commands::EntityBase) -> Option<&str>| {
@@ -3459,8 +3487,8 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
             .all(|e| e.base().look.transparency == objects[0].base().look.transparency)
             .then(|| objects[0].base().look.transparency);
         rows.push(transparency_row(&all, t).editor_if(!any_locked));
-        // Areas' masks (docs/adr/0310 §5): when every object is an area.
-        if objects.iter().all(|e| matches!(e, Entity::Polygon(_))) {
+        // Areas' masks (docs/adr/0310 §5): when every object is an area, where the program has masks.
+        if shown.mask && objects.iter().all(|e| matches!(e, Entity::Polygon(_))) {
             let w = objects
                 .iter()
                 .all(|e| e.base().look.wipeout == objects[0].base().look.wipeout)

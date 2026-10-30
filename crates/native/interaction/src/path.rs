@@ -15,7 +15,8 @@
 //!   Çoklu çizgi's Kapat (K) in arc mode closes with an arc tangent to the
 //!   last edge; Genişlik (E) asks the start width, then the end width (Enter:
 //!   the same), the next edge tapers and the ones after keep the end width,
-//!   each edge keeping the widths it was drawn with;
+//!   each edge keeping the widths it was drawn with (not in a program without
+//!   a polyline's widths, KentOS GIS, docs/adr/0802);
 //!   in line mode U continues the last direction by a typed length; G takes
 //!   the last point back;
 //! - closed: giving the first corner again closes and finishes the area:
@@ -97,8 +98,8 @@ use crate::prompt::{Prompt, upper_tr};
 use crate::reshape_by;
 use crate::second::Second;
 use crate::tool::{
-    Area, Context, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone,
-    Tool,
+    Area, Context, Flow, Label, Marker, MarkerShape, Memory, Offers, Pointer, Preview, Stroke, Tag,
+    Tone, Tool, ToolOption,
 };
 use crate::trace_work::WorkCache;
 use crate::wall;
@@ -280,6 +281,8 @@ pub struct Path {
     pressed_at: Option<[f64; 2]>,
     /// What the session remembered, as of the last call (the prompt sees no context).
     memory: Memory,
+    /// The options the program offers, as of the last call: Genişlik is a CAD's (docs/adr/0802).
+    offers: Offers,
     /// The project's units, as of the last call (Adım boyu's value in the prompt).
     format: Format,
     /// İçine tıkla: where the pointer is and the region around it.
@@ -352,6 +355,7 @@ impl Path {
             closing: 0.0,
             pressed_at: None,
             memory: Memory::default(),
+            offers: Offers::ALL,
             format: Format::default(),
             inside: None,
             faces: FaceCache::default(),
@@ -407,10 +411,17 @@ impl Path {
     fn see(&mut self, cx: &Context<'_>) {
         if let Some(level)=&mut self.separator_level {level.see(cx.doc.settings()); level.follow_where_walls(cx.level, cx.doc);}
         self.memory = *cx.memory;
+        self.offers = cx.draft.offers;
         self.format = cx.format();
         if self.shape == Shape::Wall {
             self.wall_offer = wall::offered(cx.doc.settings());
         }
+    }
+
+    /// Whether Çoklu çizgi offers Genişlik (docs/adr/0258): not a room's separator, nor where the program has no
+    /// polyline widths (KentOS GIS, docs/adr/0802).
+    fn takes_widths(&self) -> bool {
+        self.separator_level.is_none() && self.offers.has(ToolOption::Widths)
     }
 
     /// Duvar: the wall the path to the cursor would make, from the command's plan.
@@ -1127,7 +1138,7 @@ impl Path {
                 self.close_line(cx);
                 return true;
             }
-            if key == "E" && self.separator_level.is_none() {
+            if key == "E" && self.takes_widths() {
                 self.ask_width = true;
                 return true;
             }
@@ -1497,6 +1508,9 @@ impl Path {
     /// Every edge's widths: those it was drawn with, the session's for the ones to come (docs/adr/0258 §2,
     /// 0288); none when all are 0.
     fn widths(&self, edges: usize) -> Option<Vec<[f64; 2]>> {
+        if !self.offers.has(ToolOption::Widths) {
+            return None;
+        }
         let pair = [self.memory.polyline_width, self.memory.polyline_width_end];
         let all: Vec<[f64; 2]> = (0..edges)
             .map(|i| self.edge_widths.get(i).copied().unwrap_or(pair))
@@ -1669,7 +1683,9 @@ impl Path {
         }
         // Çoklu çizgi's width and Kapat in arc mode too (docs/adr/0288).
         if self.shape == Shape::Open {
-            if self.separator_level.is_none(){prompt = prompt.option_with("Genişlik", "E", self.width_text());}
+            if self.takes_widths() {
+                prompt = prompt.option_with("Genişlik", "E", self.width_text());
+            }
             if self.pts.len() >= 2 {
                 prompt = prompt.option("Kapat", "K");
             }
@@ -1744,7 +1760,9 @@ impl Path {
                 }
             }
             // Çoklu çizgi's width can be set before its first point (docs/adr/0258 §2).
-            Shape::Open if self.separator_level.is_none()=> prompt.option_with("Genişlik", "E", self.width_text()),
+            Shape::Open if self.takes_widths() => {
+                prompt.option_with("Genişlik", "E", self.width_text())
+            }
             // Maske's frame and Nesne (docs/adr/0310 §5).
             Shape::Wipeout => prompt
                 .toggle("Çerçeve", "Ç", !self.memory.wipeout_no_frame)
@@ -2043,7 +2061,9 @@ impl Tool for Path {
             }
             // Çoklu çizgi's width and Kapat (docs/adr/0258).
             if self.shape == Shape::Open {
-                if self.separator_level.is_none(){prompt = prompt.option_with("Genişlik", "E", self.width_text());}
+                if self.takes_widths() {
+                    prompt = prompt.option_with("Genişlik", "E", self.width_text());
+                }
                 if n >= 2 {
                     prompt = prompt.option("Kapat", "K");
                 }

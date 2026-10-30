@@ -2,7 +2,7 @@
 Type=Application
 Name=KentOS Mimari
 GenericName=Mimari CAD
-Comment=Bina, kat planı ve detay çizimi
+Comment=Bina, kat planı, kesit ve görünüş çizimi
 Exec=kentos-mimari %f
 Icon=kentos-mimari
 Terminal=false

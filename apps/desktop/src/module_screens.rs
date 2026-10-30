@@ -122,13 +122,14 @@ fn open(app: &mut App, path: &Path) {
     drive(app, task);
 }
 
-/// Each CAD work's ribbon, on its own tabs and on Ölçme: `moduller-serit-<iş>-<sekme>`.
+/// Each CAD work's ribbon, on its own tab and where its queries are (KentOS Mimari's on Görünüm, it has no
+/// Ölçme, docs/adr/0802; KentOS Harita's on Ölçme): `moduller-serit-<iş>-<sekme>`.
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn ribbons() {
     let dir = scratch("moduller-serit");
     for (work, word, tabs) in [
-        (CadWork::Architecture, "mimari", ["arch", "survey"]),
+        (CadWork::Architecture, "mimari", ["arch", "view"]),
         (CadWork::Map, "harita", ["plan", "survey"]),
     ] {
         let path = saved_as(

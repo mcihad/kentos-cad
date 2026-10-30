@@ -304,6 +304,71 @@ pub struct Draft {
     /// Yerleşmeyen etiketleri göster (`graphics.unplacedLabels`, docs/adr/0212
     /// §4): the label tools take the unplaced labels it draws.
     pub unplaced_labels: bool,
+    /// The tools' options the program running them offers (docs/adr/0802): a
+    /// module's program leaves out what is not its work; every one here.
+    pub offers: Offers,
+}
+
+/// A tool option only some programs offer (docs/adr/0802): KentOS Mimari, a
+/// building on its own coordinates, has no survey's; KentOS GIS no blocks'
+/// and no polyline widths'. The desktop leaves its program's out of
+/// [`Draft::offers`] (module_surfaces.rs); kentos-cad, the headless server,
+/// Python, MCP and the shared traces offer every one.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ToolOption {
+    /// Ölçülendirme's Semt (T, docs/adr/0147).
+    Bearing,
+    /// Nokta's Ad (A) and Kod (K), and its question where a point already is
+    /// (docs/adr/0152): a building's points have neither.
+    PointNames,
+    /// Çizgi's recorded measurements: a polar point typed writes Kayıtlı
+    /// uzunluk and Kayıtlı semt (docs/adr/0180).
+    Recorded,
+    /// Blocks: Böl's Blok (B), with its Nokta (N) and Hizala (H) (docs/adr/0299).
+    Blocks,
+    /// A polyline's widths: Çoklu çizgi's Genişlik (E, docs/adr/0258) and the
+    /// grip menu's Kenar genişliği… (docs/adr/0288).
+    Widths,
+}
+
+impl ToolOption {
+    pub const ALL: [ToolOption; 5] = [
+        ToolOption::Bearing,
+        ToolOption::PointNames,
+        ToolOption::Recorded,
+        ToolOption::Blocks,
+        ToolOption::Widths,
+    ];
+
+    const fn bit(self) -> u8 {
+        1 << self as u8
+    }
+}
+
+/// The tool options a program offers (docs/adr/0802): every one but those
+/// left out.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Offers(u8);
+
+impl Offers {
+    /// Every option: kentos-cad's and every host's but a module's program.
+    pub const ALL: Offers = Offers((1 << ToolOption::ALL.len()) - 1);
+
+    /// Every option but `left_out`.
+    pub fn without(left_out: &[ToolOption]) -> Offers {
+        Offers(left_out.iter().fold(Self::ALL.0, |bits, o| bits & !o.bit()))
+    }
+
+    /// Whether `option` is offered.
+    pub fn has(self, option: ToolOption) -> bool {
+        self.0 & option.bit() != 0
+    }
+}
+
+impl Default for Offers {
+    fn default() -> Self {
+        Self::ALL
+    }
 }
 
 impl Default for Draft {
@@ -336,6 +401,7 @@ impl Default for Draft {
             geographic: crate::second::Notation::Dms,
             select_kinds: None,
             unplaced_labels: false,
+            offers: Offers::ALL,
         }
     }
 }

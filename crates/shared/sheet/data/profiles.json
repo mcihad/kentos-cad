@@ -131,7 +131,11 @@
       },
       "whenMissing": { "northArrow": "hide", "grid": "hide", "atlas": "hide" },
       "defaultTemplate": "sys:cad-teknik",
-      "gallery": ["sys:cad-teknik", "sys:cad-mimari", "sys:aplikasyon-krokisi", "sys:ifraz-paftasi", "sys:genel-a3-yatay", "sys:genel-a4-dikey", "sys:imar-plani", "sys:rapor-sayfasi"]
+      "gallery": ["sys:cad-teknik", "sys:cad-mimari", "sys:aplikasyon-krokisi", "sys:ifraz-paftasi", "sys:genel-a3-yatay", "sys:genel-a4-dikey", "sys:imar-plani", "sys:rapor-sayfasi"],
+      "programs": [
+        { "projectTypes": ["architecture"], "defaultTemplate": "sys:cad-mimari" },
+        { "projectTypes": ["cad", "landReadjustment", "zoningPlan", "subdivision", "road"], "defaultTemplate": "sys:genel-a3-yatay" }
+      ]
     },
     {
       "id": "gis",

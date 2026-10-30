@@ -5,29 +5,60 @@
 //!
 //! The handle holds the drawing it was given (`document`, docs/adr/0351 §3): every request names it, so the user
 //! bringing another drawing in front does not move the agent to it; a drawing closed is `document_closed`.
+//!
+//! Every KentOS program opens a link of its own (docs/adr/0802): kentos-cad's `masaustu.sock`, KentOS Mimari's
+//! `masaustu-mimari.sock`, KentOS Harita's `masaustu-harita.sock`, KentOS GIS's `masaustu-cbs.sock`, side by side in
+//! the user's runtime folder; `desktop.attach` names the program (`program`), else it is kentos-cad's.
 
 use std::io::{BufRead, BufReader, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 #[cfg(unix)]
 use std::time::Duration;
 
 use serde_json::{Value, json};
 
-/// The link's default place, as the desktop makes it: `KENTOS_DESKTOP`, else
-/// `$XDG_RUNTIME_DIR/kentos-cad/masaustu.sock`, else under the temporary
-/// folder in this user's own folder.
-pub fn default_path() -> PathBuf {
-    if let Some(path) = std::env::var_os("KENTOS_DESKTOP").filter(|v| !v.is_empty()) {
-        return PathBuf::from(path);
+/// The programs an agent may name, by their modules' ids (kentos-launch's `Module::id`): KentOS Mimari, KentOS
+/// Harita and KentOS GIS. None named: kentos-cad, every module at once.
+pub const PROGRAMS: [&str; 3] = ["mimari", "harita", "cbs"];
+
+/// Where the program is in a sentence (“KentOS Harita'da”): what to open says where; kentos-cad's, the desktop.
+pub fn in_program(program: Option<&str>) -> &'static str {
+    match program {
+        Some("mimari") => "KentOS Mimari'de",
+        Some("harita") => "KentOS Harita'da",
+        Some("cbs") => "KentOS GIS'te",
+        _ => "KentOS masaüstünde",
     }
-    let base = std::env::var_os("XDG_RUNTIME_DIR")
+}
+
+/// A program's link in `folder`, as the desktop names it: kentos-cad's `masaustu.sock`, a module's program's
+/// `masaustu-<modül>.sock`.
+pub fn path_in(folder: &Path, program: Option<&str>) -> PathBuf {
+    folder.join(match program {
+        None => "masaustu.sock".to_owned(),
+        Some(id) => format!("masaustu-{id}.sock"),
+    })
+}
+
+/// The links' folder, as the desktop makes it: `$XDG_RUNTIME_DIR/kentos-cad`, else under the temporary folder in
+/// this user's own folder.
+fn folder() -> PathBuf {
+    std::env::var_os("XDG_RUNTIME_DIR")
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
         .map_or_else(
             || std::env::temp_dir().join(format!("kentos-cad-{}", user_id())),
             |d| d.join("kentos-cad"),
-        );
-    base.join("masaustu.sock")
+        )
+}
+
+/// Where `program`'s link is (none: kentos-cad's): `KENTOS_DESKTOP` when it is set, which stands for every
+/// program's; else the program's own in the links' folder.
+pub fn default_path(program: Option<&str>) -> PathBuf {
+    if let Some(path) = std::env::var_os("KENTOS_DESKTOP").filter(|v| !v.is_empty()) {
+        return PathBuf::from(path);
+    }
+    path_in(&folder(), program)
 }
 
 #[cfg(unix)]
@@ -54,15 +85,16 @@ pub struct Desktop {
 }
 
 impl Desktop {
-    /// Connects to the link at `path`.
+    /// Connects to the link at `path`, `program`'s (none: kentos-cad's): a refusal says where to open it.
     #[cfg(unix)]
-    pub fn connect(path: PathBuf) -> Result<Self, (String, String)> {
+    pub fn connect(path: PathBuf, program: Option<&str>) -> Result<Self, (String, String)> {
         let stream = std::os::unix::net::UnixStream::connect(&path).map_err(|e| {
             (
                 "no_desktop".to_owned(),
                 format!(
-                    "{} açılamadı ({e}): KentOS masaüstünde Python sekmesinden “Ajanlara aç” ile bağlantıyı açın.",
-                    path.display()
+                    "{} açılamadı ({e}): {} Python sekmesinden “Ajanlara aç” ile bağlantıyı açın.",
+                    path.display(),
+                    in_program(program)
                 ),
             )
         })?;
@@ -81,7 +113,7 @@ impl Desktop {
     }
 
     #[cfg(not(unix))]
-    pub fn connect(_path: PathBuf) -> Result<Self, (String, String)> {
+    pub fn connect(_path: PathBuf, _program: Option<&str>) -> Result<Self, (String, String)> {
         Err((
             "no_desktop".to_owned(),
             "Masaüstü bağlantısı bu işletim sisteminde henüz yok.".to_owned(),
@@ -148,5 +180,34 @@ impl Desktop {
             "no_desktop".to_owned(),
             "Masaüstü bağlantısı yok.".to_owned(),
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn every_program_has_a_link_of_its_own_beside_the_others() {
+        let folder = Path::new("/run/user/1000/kentos-cad");
+        let names: Vec<PathBuf> = [None, Some("mimari"), Some("harita"), Some("cbs")]
+            .into_iter()
+            .map(|p| path_in(folder, p))
+            .collect();
+        assert_eq!(
+            names,
+            [
+                "masaustu.sock",
+                "masaustu-mimari.sock",
+                "masaustu-harita.sock",
+                "masaustu-cbs.sock"
+            ]
+            .map(|n| folder.join(n))
+        );
+        // The programs an agent names are the modules', in the launcher's order.
+        assert_eq!(PROGRAMS, ["mimari", "harita", "cbs"]);
+        assert_eq!(in_program(Some("harita")), "KentOS Harita'da");
+        assert_eq!(in_program(Some("cbs")), "KentOS GIS'te");
+        assert_eq!(in_program(None), "KentOS masaüstünde");
     }
 }

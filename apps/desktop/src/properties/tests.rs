@@ -2967,6 +2967,28 @@ fn cad_element_lengths_keep_physical_units_and_nonlength_fields() {
     }
 }
 
+/// Mahal ayırıcı is a building's (docs/adr/0802): KentOS Harita's and KentOS GIS's polylines have no such row,
+/// KentOS Mimari's and kentos-cad's have.
+#[test]
+fn a_maps_polyline_has_no_space_separator_row() {
+    for (program, shown) in [
+        (Some(kentos_launch::Module::Map), false),
+        (Some(kentos_launch::Module::Gis), false),
+        (Some(kentos_launch::Module::Architecture), true),
+        (None, true),
+    ] {
+        let mut app = objects();
+        app.program = program;
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.workspace = Some(kentos_commands::Workspace::Cad);
+        doc.set_settings(settings);
+        let id = path_z(&mut app, None);
+        select(&mut app, &[id]);
+        assert_eq!(has_row(&app, "Geometri", "Mahal ayırıcı"), shown, "{program:?}");
+    }
+}
+
 #[test]
 fn virtual_separator_property_role_phase_lock_and_single_undo_use_the_semantic_command() {
     let mut app=objects();

@@ -317,8 +317,9 @@ pub use spatial::{
 pub use tool::{Area, CellGhost, ImageFile, Label, TextGhost, frame_of};
 pub use tool::{
     Context, Corners, Cursor, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,
-    MarkerShape, Memory, Name, OptionChoice, Overlap, ParagraphField, Pointer, Preview, Stroke,
-    Tag, TextField, Tone, Tool, View, ViewChange, default_snap_kinds, screen_scale, snap_kinds,
+    MarkerShape, Memory, Name, Offers, OptionChoice, Overlap, ParagraphField, Pointer, Preview,
+    Stroke, Tag, TextField, Tone, Tool, ToolOption, View, ViewChange, default_snap_kinds,
+    screen_scale, snap_kinds,
 };
 pub use view_history::{ViewHistory, Viewpoint};
 

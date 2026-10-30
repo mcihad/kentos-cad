@@ -3,9 +3,10 @@
 //! place (the drawing's, or KentOS's library's it would add) as it would be placed. Revizyon işaretle is Revizyon
 //! bulutu with a revision's number (`revcloud.rs`).
 //!
-//! - **Kuzey oku**: Yön (Y): Plan kuzeyi (the drawing's up), Coğrafi kuzey (the project's meridian at the point) or
-//!   Açı (A, degrees counter-clockwise from the plan's north); Boyut (B): its width on paper, mm. The tool leaves once
-//!   the arrow is placed.
+//! - **Kuzey oku**: Yön (Y): Plan kuzeyi (the drawing's up), Coğrafi kuzey (the project's meridian at the point; only
+//!   in a drawing with a coordinate system, as `cad.north.create` refuses it without one, docs/adr/0802) or Açı (A,
+//!   degrees counter-clockwise from the plan's north); Boyut (B): its width on paper, mm. The tool leaves once the
+//!   arrow is placed.
 //! - **Malzeme lejandı**: a click places the legend's top left corner; Yükseklik (H): its text's height on paper, mm;
 //!   Yenile (Y), when the drawing has a legend: made again in its place, nothing placed. The tool leaves after it.
 
@@ -82,6 +83,8 @@ pub struct NorthArrow {
     hover: Option<Vec2>,
     ghost: Vec<Stroke>,
     done: bool,
+    /// The drawing has a coordinate system, so true north is known: Coğrafi kuzey is offered (as of the last call).
+    true_north: bool,
 }
 
 impl Default for NorthArrow {
@@ -94,13 +97,28 @@ impl Default for NorthArrow {
             hover: None,
             ghost: Vec::new(),
             done: false,
+            true_north: true,
         }
     }
+}
+
+/// Whether the drawing knows true north: it has a coordinate system the transforms read (`cad.north.create` refuses
+/// Coğrafi kuzey without one, `no_true_north`).
+fn knows_true_north(cx: &Context<'_>) -> bool {
+    kentos_project::systems::own(cx.doc.settings()).is_some_and(|named| named.system.is_some())
 }
 
 impl NorthArrow {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Takes in whether the drawing knows true north; Coğrafi kuzey chosen goes back to the plan's without it.
+    fn see_drawing(&mut self, cx: &Context<'_>) {
+        self.true_north = knows_true_north(cx);
+        if !self.true_north && self.way == Way::True {
+            self.way = Way::Plan;
+        }
     }
 
     fn north(&self) -> NorthDirection {
@@ -163,7 +181,17 @@ impl NorthArrow {
             Way::True => "coğrafi",
             Way::Angle => "açı",
         };
-        choices(&[("plan", "Plan kuzeyi"), ("coğrafi", "Coğrafi kuzey"), ("açı", "Açı")], selected)
+        // Coğrafi kuzey in a drawing with a coordinate system alone.
+        let ways: &[(&str, &str)] = if self.true_north {
+            &[
+                ("plan", "Plan kuzeyi"),
+                ("coğrafi", "Coğrafi kuzey"),
+                ("açı", "Açı"),
+            ]
+        } else {
+            &[("plan", "Plan kuzeyi"), ("açı", "Açı")]
+        };
+        choices(ways, selected)
     }
 }
 
@@ -203,7 +231,8 @@ impl Tool for NorthArrow {
         0
     }
 
-    fn activate(&mut self, _cx: &mut Context<'_>) -> Flow {
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see_drawing(cx);
         Flow::Stay
     }
 
@@ -237,11 +266,19 @@ impl Tool for NorthArrow {
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let text = js_trim(value).trim_end_matches(['°', ' ']).trim_end_matches("mm").trim();
+        self.see_drawing(cx);
         match key {
             "Y" => {
                 self.way = match js_trim(value) {
                     "plan" => Way::Plan,
-                    "coğrafi" => Way::True,
+                    "coğrafi" if self.true_north => Way::True,
+                    "coğrafi" => {
+                        cx.say(
+                            Level::Warn,
+                            "Çizimin koordinat sistemi yok: coğrafi kuzey bulunamaz. Plan kuzeyini ya da bir açı seçin.",
+                        );
+                        return false;
+                    }
                     "açı" => Way::Angle,
                     _ => return false,
                 };
@@ -275,10 +312,11 @@ impl Tool for NorthArrow {
         }
         match upper_tr(js_trim(text)).as_str() {
             "Y" => {
-                // Yön steps through its three choices.
+                // Yön steps through its choices: Coğrafi kuzey where the drawing knows it.
+                self.see_drawing(cx);
                 self.way = match self.way {
-                    Way::Plan => Way::True,
-                    Way::True => Way::Angle,
+                    Way::Plan if self.true_north => Way::True,
+                    Way::Plan | Way::True => Way::Angle,
                     Way::Angle => Way::Plan,
                 };
                 self.see(self.hover, cx);

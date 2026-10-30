@@ -436,7 +436,13 @@ impl App {
 
     fn work_out_panel(&self, doc: &Document) -> Panel {
         let selected: Vec<Slot> = self.selection.ids().to_vec();
-        let crs = self.shows_property_rows(crate::module_surfaces::PropertyRows::Crs);
+        // The program's own rows (module_surfaces.rs).
+        let shown = rows::Shown {
+            crs: self.shows_property_rows(crate::module_surfaces::PropertyRows::Crs),
+            widths: self.offers_tool_option(kentos_interaction::ToolOption::Widths),
+            mask: self.shows_property_rows(crate::module_surfaces::PropertyRows::Mask),
+            separators: self.shows_property_rows(crate::module_surfaces::PropertyRows::Separators),
+        };
         let mut panel = rows::panel(
             doc,
             &selected,
@@ -445,7 +451,7 @@ impl App {
                 let ids: Vec<f64> = ids.iter().map(|s| f64::from(s.0)).collect();
                 self.spatial.store().measure(&ids)
             },
-            crs,
+            shown,
         );
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).

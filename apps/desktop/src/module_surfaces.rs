@@ -1,17 +1,22 @@
 //! What each KentOS program shows of its window (docs/adr/0802 §5): the bottom panel's tabs, the dock's
 //! panels, the status bar's cells, Proje ayarları' and Uygulama ayarları' sections and rows, the layer menu's
 //! entries, the application menu's file formats, Kaynaklar's sections, the files it takes when they are
-//! dropped on the window, the properties' rows, the hover card's parcel rows, and the project type the sheet
-//! mode and the cloud start with. kentos-cad, every module at once, shows every one; a module's program its
-//! own:
+//! dropped on the window, the properties' rows, the hover card's parcel rows, the project type the sheet mode
+//! and the cloud start with, the tools' options, Katman stili's renderers and the style library's branches.
+//! kentos-cad, every module at once, shows every one; a module's program its own:
 //!
 //! - KentOS Mimari, a building on its own coordinates: Komut geçmişi, Koordinat listesi, Arama (Veride ara
 //!   finds the texts of a building too), Denetim, Uyarılar and Python; Katmanlar, Öznitelikler, Bloklar and
 //!   Şablonlar; the Kat cell; Mimari in Proje ayarları;
-//!   drawings (KCAD, DWG, DXF, NCZ, PDF) in and out.
+//!   drawings (KCAD, DWG, DXF, NCZ, PDF) in and out; no survey's tool options (Ölçülendirme's Semt, Nokta's Ad,
+//!   Kod and its question, Çizgi's recorded measurements) and no zoning plan's legends (the library's MPYY).
 //! - KentOS Harita, a map on real coordinates: every tab but Grafik and Denetim; every panel; the map system,
-//!   the second system, Topoloji and Çakışma; Kotlar ve epok and Ölçme; GIS files, sources and services.
-//! - KentOS GIS: every tab but Denetim; every panel but Bloklar; Senaryo too; time, scenarios and typed layers.
+//!   the second system, Topoloji and Çakışma; Kotlar ve epok and Ölçme; GIS files, sources and services; its
+//!   new projects in metres.
+//! - KentOS GIS: every tab but Denetim; every panel but Bloklar; Senaryo too; time, scenarios and typed layers;
+//!   Katman stili's thematic renderers; no blocks and no polyline widths in the tools (Böl's Blok, Çoklu
+//!   çizgi's Genişlik, the grip menu's Kenar genişliği…), nor a polyline's Genişlik and an area's Maske in
+//!   Öznitelikler; its new projects in metres.
 //!
 //! The commands a program offers are catalog.rs's (`App::offers`). Each program keeps its own layout
 //! (layout.rs: kentos-cad's yerlesim.json, a module's yerlesim-<modül>.json, the first run starting from
@@ -21,8 +26,9 @@
 use std::path::{Path, PathBuf};
 
 use iced::Task;
-use kentos_commands::ProjectType;
+use kentos_commands::{ProjectType, Workspace};
 use kentos_interaction::point_calc::{CalcDef, CalcKind};
+use kentos_interaction::{Offers, ToolOption};
 use kentos_launch::Module;
 
 use crate::app::{App, Message, Panel};
@@ -59,6 +65,8 @@ pub(crate) enum AppSetting {
     NewProjects,
     /// Yeni projeler › Yeni projelerin türü (`newProjects.workspace`): a module's program fixes the type.
     NewProjectType,
+    /// Yeni projeler › Çizim birimi (`newProjects.drawingUnit`): a map's works are in metres (docs/adr/0802).
+    NewProjectUnit,
 }
 
 /// An entry of a layer's right-click menu only some programs show. İstatistik and Grafik follow the bottom
@@ -108,13 +116,19 @@ pub(crate) enum SourceSection {
     Services,
 }
 
-/// Rows of Öznitelikler only some programs show (Etkin aracın ayarları' Kat row is `Cell::Level`'s).
+/// Rows of Öznitelikler only some programs show (Etkin aracın ayarları' Kat row is `Cell::Level`'s; a polyline's
+/// Genişlik is `ToolOption::Widths`'s).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum PropertyRows {
     /// Çizim's Koordinat sistemi and SRID with nothing selected.
     Crs,
     /// Servis katmanı and Veri kaynağı of the layer chosen (docs/adr/0208 §14).
     Services,
+    /// An area's Maske (docs/adr/0310 §5): a drawing's, not a GIS's.
+    Mask,
+    /// A polyline's Mahal ayırıcı (docs/adr/0679): a building's, KentOS Mimari's (one that is a separator shows
+    /// it everywhere, to be turned off).
+    Separators,
 }
 
 /// What one module's program shows.
@@ -142,6 +156,15 @@ pub(crate) struct Surfaces {
     pub upload: ProjectType,
     /// Nokta hesapla's constructions it has not: a survey's (a route's km, a named point) in a building's.
     pub hidden_calc: &'static [CalcKind],
+    /// The tools' options it leaves out (Draft::offers): a survey's in a building's, blocks' and a polyline's
+    /// widths in a GIS.
+    pub left_out: &'static [ToolOption],
+    /// Katman stili's thematic renderers (docs/adr/0213): a GIS's analysis; a layer drawn with one keeps it
+    /// everywhere.
+    pub thematic: bool,
+    /// The system style library's branches Stil yöneticisi and the symbol pickers leave out: a zoning plan's
+    /// legends (MPYY) in a building's.
+    pub library_hidden: &'static [&'static str],
 }
 
 /// KentOS Mimari: a building on its own coordinates.
@@ -172,12 +195,19 @@ const ARCHITECTURE: Surfaces = Surfaces {
     layer_menu: &[],
     formats: Formats::Drawings,
     sources: &[],
-    rows: &[],
+    rows: &[PropertyRows::Mask, PropertyRows::Separators],
     parcels: false,
     sheet: ProjectType::Architecture,
     cloud: Some(ProjectType::Architecture),
     upload: ProjectType::Architecture,
     hidden_calc: &[CalcKind::Km, CalcKind::Name],
+    left_out: &[
+        ToolOption::Bearing,
+        ToolOption::PointNames,
+        ToolOption::Recorded,
+    ],
+    thematic: false,
+    library_hidden: &["MPYY"],
 };
 
 /// KentOS Harita: a map on real coordinates; GIS's sources and services, not its time, scenarios and charts.
@@ -229,12 +259,19 @@ const MAP: Surfaces = Surfaces {
     ],
     formats: Formats::All,
     sources: &[SourceSection::Databases, SourceSection::Services],
-    rows: &[PropertyRows::Crs, PropertyRows::Services],
+    rows: &[
+        PropertyRows::Crs,
+        PropertyRows::Services,
+        PropertyRows::Mask,
+    ],
     parcels: true,
     sheet: ProjectType::ZoningPlan,
     cloud: None,
     upload: ProjectType::Cad,
     hidden_calc: &[],
+    left_out: &[],
+    thematic: false,
+    library_hidden: &[],
 };
 
 /// KentOS GIS: no blocks and no architectural audit.
@@ -301,6 +338,9 @@ const GIS: Surfaces = Surfaces {
     cloud: Some(ProjectType::Gis),
     upload: ProjectType::Gis,
     hidden_calc: &[],
+    left_out: &[ToolOption::Blocks, ToolOption::Widths],
+    thematic: true,
+    library_hidden: &[],
 };
 
 /// What `module`'s program shows.
@@ -315,6 +355,23 @@ pub(crate) fn surfaces(module: Module) -> &'static Surfaces {
 /// Whether `program` (none: kentos-cad) shows `panel`: the dock is laid out by it before the app is.
 pub(crate) fn shows_panel_in(program: Option<Module>, panel: Panel) -> bool {
     program.is_none_or(|m| surfaces(m).panels.contains(&panel))
+}
+
+/// The tools' options `program` (none: kentos-cad, every one) offers: what the drafting aids give the tools
+/// (app.rs fills them with the settings).
+pub(crate) fn tool_offers_in(program: Option<Module>) -> Offers {
+    program.map_or(Offers::ALL, |m| Offers::without(surfaces(m).left_out))
+}
+
+/// Whether a style library item from `source` at `path` shows with the system branches `hidden` left out
+/// (Stil yöneticisi, the symbol pickers; `App::library_hidden`).
+pub(crate) fn library_shows(
+    hidden: &[&str],
+    source: kentos_native_style::library::Source,
+    path: &[&str],
+) -> bool {
+    source != kentos_native_style::library::Source::System
+        || path.first().is_none_or(|branch| !hidden.contains(branch))
 }
 
 /// The application menu's drawing formats: every program lists them.
@@ -444,6 +501,28 @@ impl App {
         self.surfaces().is_none_or(|s| s.parcels)
     }
 
+    /// Whether the tools here offer `option` (Draft::offers), and what goes with it outside them: Şablon
+    /// düzenleyici's Blok ekle with Blocks, Öznitelikler' Genişlik of a polyline with Widths.
+    pub(crate) fn offers_tool_option(&self, option: ToolOption) -> bool {
+        tool_offers_in(self.program).has(option)
+    }
+
+    /// Whether Katman stili lists the thematic renderers (docs/adr/0213).
+    pub(crate) fn shows_thematic_renderers(&self) -> bool {
+        self.surfaces().is_none_or(|s| s.thematic)
+    }
+
+    /// The system style library's branches Stil yöneticisi and the symbol pickers leave out here.
+    pub(crate) fn library_hidden(&self) -> &'static [&'static str] {
+        self.surfaces().map_or(&[], |s| s.library_hidden)
+    }
+
+    /// Whether the program names the axes as a CAD does, X east and Y north (KentOS Mimari, KentOS Harita,
+    /// kentos-cad with a CAD drawing), or as a CBS, Y east and X north (docs/adr/0165 §4).
+    pub(crate) fn cad_axes(&self) -> bool {
+        self.program_type().unwrap_or_else(|| self.work_mode()) == Workspace::Cad
+    }
+
     /// The project type the sheet mode ranks its templates by; none in kentos-cad (the drawing's type).
     pub(crate) fn sheet_project_type(&self) -> Option<ProjectType> {
         self.surfaces().map(|s| s.sheet)
@@ -521,6 +600,8 @@ impl App {
     /// After every message (layout.rs): what this program does not show is not on screen, whichever way it
     /// came (a remembered tab of another program, an opener, a test setting the program late).
     pub(crate) fn keep_own_surfaces(&mut self) {
+        // The tools' options too: a program set after the settings were applied (a test) is followed.
+        self.draft.offers = tool_offers_in(self.program);
         if self.program.is_none() {
             return;
         }

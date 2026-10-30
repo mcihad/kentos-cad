@@ -9,7 +9,8 @@
 //!   bowing out of a ring or to the right of an open path;
 //! - a path's edge middle, also (docs/adr/0288): Yay… (the edge, straight or
 //!   an arc, becomes the arc through a point clicked or of a radius typed) and,
-//!   on a polyline, Kenar genişliği… (its start and end widths typed): both
+//!   on a polyline, Kenar genişliği… (its start and end widths typed; not in a
+//!   program without a polyline's widths, KentOS GIS, docs/adr/0802): both
 //!   start Kenar düzenle (`segment_edit`) on the edge;
 //! - every grip: Esnet (the grip turns hot, the next click places it), then
 //!   Taşı, Döndür, Ölçekle and Aynala with the grip as their base point, on
@@ -37,7 +38,7 @@ use kentos_native_application::{ExecutionContext, entities_vertex};
 use crate::log::Level;
 use crate::points;
 use crate::select::grip_at;
-use crate::tool::Context;
+use crate::tool::{Context, ToolOption};
 
 /// The grip a menu is about: its object, the grip and where it stands.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -57,11 +58,12 @@ pub struct GripMenu {
 pub enum Target {
     /// The vertex's index (from 0).
     Vertex(usize),
-    /// The edge's index (from 0), whether it is an arc and whether its object is a polyline (it takes widths).
+    /// The edge's index (from 0), whether it is an arc and whether it takes widths: a one-part polyline's, where
+    /// the program offers a polyline's widths (docs/adr/0802).
     Edge {
         segment: usize,
         arc: bool,
-        polyline: bool,
+        widths: bool,
     },
     /// A grip with no vertex action: a hole's vertex, a line's end, a circle's centre, a text's point.
     Grip,
@@ -177,7 +179,7 @@ impl GripMenu {
             Target::Vertex(_) => &[GripAction::RemoveVertex],
             Target::Edge {
                 arc: true,
-                polyline: true,
+                widths: true,
                 ..
             } => &[
                 GripAction::AddVertex,
@@ -187,7 +189,7 @@ impl GripMenu {
             ],
             Target::Edge {
                 arc: false,
-                polyline: true,
+                widths: true,
                 ..
             } => &[
                 GripAction::AddVertex,
@@ -236,7 +238,9 @@ pub fn at(screen: [f64; 2], cx: &Context<'_>) -> Option<GripMenu> {
             Some(segment) => Target::Edge {
                 segment,
                 arc: is_arc_bulge(bulge_at(bulges, segment)),
-                polyline: matches!(s, Shape::Polyline { .. }) && parts.len() == 1,
+                widths: matches!(s, Shape::Polyline { .. })
+                    && parts.len() == 1
+                    && cx.draft.offers.has(ToolOption::Widths),
             },
         },
         None => Target::Grip,
@@ -295,9 +299,16 @@ pub fn segment_tool(
     cx: &Context<'_>,
 ) -> Option<crate::segment_edit::SegmentEdit> {
     let ask = action.segment_edit()?;
-    let Target::Edge { segment, .. } = menu.target else {
+    // Kenar genişliği… on an edge that takes widths alone (docs/adr/0802).
+    let Target::Edge {
+        segment, widths, ..
+    } = menu.target
+    else {
         return None;
     };
+    if action == GripAction::EdgeWidth && !widths {
+        return None;
+    }
     let input = request(menu, action, cx)?;
     let whole = shape(cx.doc.get(menu.slot)?);
     let parts = area_parts(&whole);

@@ -57,7 +57,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   “Bu CAD çizimi hangi iş için?” sorusu ve durum çubuğunun işi; şema 135 WASM yeniden derlenince ortak kodekle okunur.
   ADR 0802: ortak şerit fikstüründe CBS'nin seçim sekmelerinde Ölçü, Kılavuz, Tarama, Blok, Tablo ve Resim yok (CAD'in);
   yerleşimin `bottomTab` kuralı `audit` ve `python`'u da alır (`fixtures/shell/v1/layout.json`): web'in `layoutPlan.ts`'i ve
-  şeridi bunlara uyar.
+  şeridi bunlara uyar. Pafta çekirdeğinin `profile_for_types` ve `rank_templates_for_types`'ı ile profillerin `programs`'ı
+  (modül başına galeri ve öntanımlı pafta) web'de de kullanılabilir; web'in pafta kipi bugünkü gibi türe göre çalışır.
   Ayrı programlar (`kentos-mimari`, `kentos-harita`, `kentos-gis`) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
   karşılığı yoktur.
 - ADR 0755: bağlı tablonun CHECK ve tekil kısıtları bağın `checks` ve `uniques`'inde (`.kcad` şema 134), alanın
@@ -3570,9 +3571,11 @@ Kabul: her teslimin test komutu, veri seti, revision ve ölçüm ortamı bellidi
   her derlemede, kendi pencere kimlikleri ve `.desktop` kayıtlarıyla; launcher modülü yalnız kendi programıyla başlatır;
   iki CAD işi; Mimari'de sihirbazsız yeni proje, Harita ve GIS'te türsüz sihirbaz; modülün komutları her girişte
   (Komut ara, komut satırı, kısayollar, `App::run`, hızlı erişim, F1, menüler) ve yüzeyleri (alt panel, sağ panel,
-  durum çubuğu, ayar pencereleri, katman ve uygulama menüleri, Kaynaklar). Açık: her programın yalnız kendi kodunu
-  taşıması (özellik kapılarıyla kırpma), modül başına sürüm ve paket (`OPS-10`), gerçek pencerede fare ve klavyeyle
-  kabul, programlar arası ayrı yerleşim dosyası.
+  durum çubuğu, ayar pencereleri, katman ve uygulama menüleri, Kaynaklar), her programın kendi yerleşim dosyası. İkinci
+  inceleme (sahibin “her şeyi olması gereken yere koy”u): CBS analizleri Harita'dan GIS'e, çizim standardı Mimari'ye,
+  Mimari'de Ölçme sekmesi yok, araçların seçenekleri programa göre, her programın kendi ajan soketi, bulut, kurtarma kopyaları
+  ve pafta galerisi programa göre. Açık: her programın yalnız kendi kodunu taşıması (özellik kapılarıyla kırpma), modül
+  başına sürüm ve paket (`OPS-10`), gerçek pencerede fare ve klavyeyle kabul, bulut projesinin kimlikle başka programa devri.
 - [ ] `OPS-10` Desktop Windows/macOS/Linux paketleri, dosya association, installer/uninstaller, code signing/notarization uygunluğu ve güvenli update/rollback planını kur.
 - [ ] `OPS-11` CPython, font, shader, native format/CRS kütüphanesi ve grid asset'lerinin paket/ABI/lisans envanterini tut; bundle boyutu ve offline çalışmayı test et.
 - [ ] `OPS-12` Web asset/WASM sürümlerini content hash ve protokol uyumluluğuyla dağıt; eski service worker/cache yeni schema ile karışmasın. Güncelleme aktif çizimi kaybettirmesin.

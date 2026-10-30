@@ -22,6 +22,15 @@ fn refused(code: &str, message: &str) -> (String, String) {
 }
 
 impl App {
+    /// Where this program's link opens (docs/adr/0802): its own socket in the user's runtime folder, beside the
+    /// other programs'.
+    pub(crate) fn agents_path(&self) -> std::path::PathBuf {
+        match &self.python.link_folder {
+            Some(folder) => link::path_in(folder, self.program),
+            None => link::default_path(self.program),
+        }
+    }
+
     /// The Python tab's link button: opens the link, or closes it.
     pub(crate) fn agents_toggle(&mut self) -> Task<Message> {
         if self.python.link.take().is_some() {
@@ -29,14 +38,19 @@ impl App {
             self.python.push(Kind::Note, "Ajan bağlantısı kapatıldı.");
             return super::view::follow();
         }
-        let path = link::default_path();
+        let path = self.agents_path();
         match Link::open(&path, |heard| Message::Python(Event::Agent(heard))) {
             Ok((open, task)) => {
+                // A module's program says whose drawing it is and how an agent names this link.
+                let whose = self.program.map_or_else(String::new, |m| {
+                    format!(" {}", crate::program::in_program(m))
+                });
                 self.python.push(
                     Kind::Note,
                     format!(
-                        "Ajan bağlantısı açık: {}. Bu kullanıcının programları (MCP'de desktop.attach) açık çizimi okuyup komutlarla yazabilir; her yazma bir geri alma adımıdır.",
-                        path.display()
+                        "Ajan bağlantısı açık: {}. Bu kullanıcının programları (MCP'de {}){whose} açık çizimi okuyup komutlarla yazabilir; her yazma bir geri alma adımıdır.",
+                        path.display(),
+                        link::attach_words(self.program)
                     ),
                 );
                 self.python.link = Some(open);

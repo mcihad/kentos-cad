@@ -111,21 +111,22 @@ fn cad_drawing(work: Option<CadWork>) -> App {
 
 #[test]
 fn each_work_shows_its_own_tabs_and_panels() {
-    // A building: Mimari, no Plan; Ölçme only its Sorgu.
+    // A building: Mimari, no Plan and no Ölçme (docs/adr/0802); its Sorgu is the last of Görünüm's panels.
     let app = cad_drawing(Some(CadWork::Architecture));
     let tabs = ids(app.ribbon_tabs());
     assert!(
-        tabs.contains(&"arch") && !tabs.contains(&"plan"),
+        tabs.contains(&"arch") && !tabs.contains(&"plan") && !tabs.contains(&"survey"),
         "{tabs:?}"
     );
-    assert_eq!(panels(&app, "survey"), ["Sorgu"]);
-    // A map: Plan and the whole Ölçme, no Mimari.
+    assert_eq!(panels(&app, "view").last(), Some(&"Sorgu"));
+    // A map: Plan and the whole Ölçme, no Mimari; Görünüm has no Sorgu, Ölçme starts with it.
     let app = cad_drawing(Some(CadWork::Map));
     let tabs = ids(app.ribbon_tabs());
     assert!(
         tabs.contains(&"plan") && !tabs.contains(&"arch"),
         "{tabs:?}"
     );
+    assert!(!panels(&app, "view").contains(&"Sorgu"));
     assert_eq!(
         panels(&app, "survey"),
         [
@@ -679,12 +680,21 @@ fn kentos_mimari_offers_a_buildings_commands_and_no_maps() {
             "template.panel",
             "tool.northArrow",
             "pointcloud.style",
+            // Its queries on Giriş, its office standard.
+            "tool.measure",
+            "tool.area",
+            "tool.measureAngle",
+            "standards.check",
+            "standards.apply",
+            "layer.impact",
         ],
         &[
             // The raster contextual tab's look and analysis.
             "raster.style",
             "raster.georef",
             "raster.mosaic",
+            "raster.stac",
+            "tool.stationOffset",
             "processing.run.raster.cog",
             "processing.run.surface.slope",
             "processing.run.hydrology.watershed",
@@ -754,17 +764,17 @@ fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() 
     offers_as(
         Some(Module::Map),
         &[
-            // Its north arrow, the KentOS block library (Kuzey oku, antet) and STAC's band composite.
+            // Its north arrow, the KentOS block library (Kuzey oku, antet) and a scene's band composite.
             "tool.northArrow",
             "block.library",
-            "raster.stac",
             "processing.run.remote.composite",
-            // A map's terrain and infrastructure analysis.
+            // A map's terrain, its scanned sheets and its overlays.
             "processing.run.surface.slope",
-            "processing.run.hydrology.watershed",
-            "processing.run.distance.cost",
+            "processing.run.surface.contours",
             "processing.run.interpolation.idw",
-            "processing.run.proximity.nearest",
+            "processing.run.interpolation.tin",
+            "processing.run.raster.mosaic",
+            "processing.run.scan.captureLine",
             "processing.run.geometry.buffer",
             // CBS's layers, labels, filter and data, and the toolbox's tools no ribbon holds.
             "layer.labels",
@@ -797,7 +807,8 @@ fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() 
             "edit.selectFilter.space",
             "edit.selectFilter.slab",
             "edit.selectFilter.viewmark",
-            // CBS's spatial statistics, sampling, suitability, remote sensing and meshes.
+            // CBS's spatial statistics, sampling, suitability, remote sensing and meshes, its geostatistics, raster
+            // analysis, hydrology, distance and generalization.
             "processing.run.stats.meanCenter",
             "processing.run.stats.moransI",
             "processing.run.stats.dbscan",
@@ -805,14 +816,24 @@ fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() 
             "processing.run.density.line",
             "processing.run.proximity.matrix",
             "processing.run.proximity.hub",
+            "processing.run.proximity.nearest",
             "processing.run.sample.random",
             "processing.run.sample.subdivide",
             "processing.run.suitability.roc",
             "processing.run.remote.index",
             "processing.run.remote.qaMask",
             "processing.run.multidim.meshCalculator",
+            "processing.run.interpolation.kriging",
+            "processing.run.hydrology.watershed",
+            "processing.run.distance.cost",
+            "processing.run.raster.calculator",
+            "processing.run.generalize.smooth",
+            "raster.stac",
             "mesh.query",
             "mesh.add",
+            // The drawing standard is KentOS Mimari's.
+            "standards.check",
+            "standards.apply",
             // Charts, network analysis and the type's switch.
             "data.chart",
             "chart.pie",
@@ -849,7 +870,6 @@ fn kentos_gis_offers_cbs_and_no_cad_drafting() {
             "data.chart",
             "chart.bar",
             "tool.vertexPoints",
-            "map.edgeLengths",
             "map.profile",
             "analysis.volume",
             "sheet.atlas",
@@ -879,6 +899,13 @@ fn kentos_gis_offers_cbs_and_no_cad_drafting() {
             "tool.subdivide",
             "tool.stakeout",
             "map.parcelReport",
+            // A parcel's edge lengths and sheet are Harita's writing; the text styles CAD's, the drawing standard
+            // KentOS Mimari's.
+            "map.edgeLengths",
+            "processing.model.builtin.parcelSheet",
+            "style.textStyles",
+            "standards.check",
+            "standards.apply",
             // CAD's constraints, dimensions, leaders, tables, hatches, annotative scales, pictures and blocks.
             "tool.constraint",
             "dimension.space",
@@ -948,18 +975,13 @@ fn komut_ara_finds_no_other_modules_work() {
     assert_eq!(hits, ["attachment.addLink"]);
     let hits = found(&mut mimari, "eğim");
     assert_eq!(hits, ["tool.dimension"], "the slope dimension, by its EĞİM");
-    // KentOS GIS: no wall, space, block or dimension tool, nor Harita's parcels (Parsel oluştur, İfraz).
+    // KentOS GIS: no wall, space, block or dimension tool, nor Harita's parcels (Parsel oluştur, İfraz, the parcel
+    // sheet's corner numbers and edges).
     let mut gis = program(Some(Module::Gis));
-    for query in ["duvar", "mahal", "km yaz", "kısıt", "ifraz"] {
+    for query in ["duvar", "mahal", "km yaz", "kısıt", "ifraz", "parsel"] {
         let hits = found(&mut gis, query);
         assert!(hits.is_empty(), "GIS: {query}: {hits:?}");
     }
-    let hits = found(&mut gis, "parsel");
-    assert_eq!(
-        hits,
-        ["processing.model.builtin.parcelSheet"],
-        "a layer's parcel sheet, not the CAD tool"
-    );
     for query in ["blok", "ölçü", "kılavuz", "tarama"] {
         let hits = found(&mut gis, query);
         assert!(
@@ -1021,6 +1043,30 @@ fn run_refuses_another_modules_command_and_says_which_program_has_it() {
     let mut all = cad_drawing(Some(CadWork::Architecture));
     let _ = all.update(Message::Run("tool.parcel"));
     assert_eq!(all.session.tool_id(), "parcel");
+}
+
+/// A tool's method typed by its own name follows the program's ribbon (docs/adr/0802): Ölçülendirme's Semt,
+/// a survey's bearing, is KentOS Harita's; KentOS Mimari's Ölçülendirme has no Semt to start.
+#[test]
+fn a_method_typed_by_its_name_is_the_programs_own() {
+    let mut mimari = cad_drawing(Some(CadWork::Architecture));
+    mimari.program = Some(Module::Architecture);
+    let _ = mimari.run_typed("SEMT");
+    assert!(!mimari.session.is_running(), "no Semt in KentOS Mimari");
+    assert_eq!(
+        last_said(&mimari),
+        "“Semt” KentOS Mimari'de yok; KentOS Harita'da var."
+    );
+    // Its own methods start: Ölçülendirme's Koordinat (DOR).
+    let _ = mimari.run_typed("DOR");
+    assert_eq!(mimari.session.tool_id(), "dimension");
+    let mut harita = cad_drawing(Some(CadWork::Map));
+    harita.program = Some(Module::Map);
+    let _ = harita.run_typed("SEMT");
+    assert_eq!(harita.session.tool_id(), "dimension");
+    let mut all = cad_drawing(Some(CadWork::Architecture));
+    let _ = all.run_typed("SEMT");
+    assert_eq!(all.session.tool_id(), "dimension", "kentos-cad starts it");
 }
 
 #[test]
@@ -1120,4 +1166,594 @@ fn the_toolbox_its_tools_and_the_users_models_are_where_islem_arac_kutusu_is() {
             && count(&harita) < count(&gis)
             && count(&gis) <= count(&all)
     );
+}
+
+// ── Where each command belongs (docs/adr/0802, the owner's later decisions) ────
+
+/// What `read` finds in the app `make` gives, dropped after: one app at a time on a test's stack (an app is large).
+fn with_app<T>(make: impl FnOnce() -> App, read: impl FnOnce(&mut App) -> T) -> T {
+    let mut app = make();
+    read(&mut app)
+}
+
+/// The sample drawing on screen as a CAD project of `work` in `module`'s program.
+fn cad_in(module: Module, work: CadWork) -> App {
+    let mut app = cad_drawing(Some(work));
+    app.program = Some(module);
+    app
+}
+
+/// The sample drawing on screen as a CBS project in KentOS GIS.
+fn gis_drawing() -> App {
+    let mut app = app_with_drawing();
+    app.program = Some(Module::Gis);
+    app
+}
+
+/// The commands of a program's panel by its tab (a contextual one too) and its name.
+fn panel_commands(app: &App, tab: &str, panel: &str) -> Option<Vec<&'static str>> {
+    app.ribbon_tabs()
+        .chain(app.contextual_tabs())
+        .find(|t| t.id == tab)
+        .and_then(|t| t.panels.iter().find(|p| p.label == panel))
+        .map(crate::catalog::Panel::commands)
+}
+
+/// KentOS Harita keeps map making, survey and terrain: TIN and IDW, the terrain's surfaces and contours, a mosaic,
+/// a clip and a resampling, the scanned sheet's tools, overlays, conversions, routes and point clouds. Geostatistics,
+/// raster analysis, hydrology, distance, generalization, proximity, Voronoi, remote sensing, STAC and meshes are
+/// KentOS GIS's analysis; GIS and kentos-cad offer every one.
+#[test]
+fn kentos_harita_keeps_its_terrain_and_leaves_the_analysis_to_kentos_gis() {
+    let keeps = [
+        "processing.run.interpolation.tin",
+        "processing.run.interpolation.idw",
+        "processing.run.surface.slope",
+        "processing.run.surface.aspect",
+        "processing.run.surface.hillshade",
+        "processing.run.surface.colorRelief",
+        "processing.run.surface.contours",
+        "processing.run.raster.mosaic",
+        "processing.run.raster.clipByMask",
+        "processing.run.raster.resample",
+        "processing.run.raster.toPolygons",
+        "processing.run.raster.cog",
+        "processing.run.scan.captureLine",
+        "processing.run.scan.closeArea",
+        "processing.run.scan.contourElevations",
+        "processing.run.generate.delaunay",
+        "processing.run.generate.bounding",
+        "processing.run.attributes.fromInside",
+        "processing.run.attributes.fromEnclosing",
+        "processing.run.statistics.summary",
+        "processing.run.geometry.buffer",
+        "processing.run.geometry.dissolve",
+        "processing.run.geometry.symDifference",
+        "processing.run.convert.pointsToPath",
+        "processing.run.convert.densify",
+        "processing.run.sample.alongLines",
+        "processing.run.linearRef.createRoutes",
+        "processing.run.pointcloud.ground",
+        "processing.run.remote.composite",
+        "raster.add",
+        "raster.mosaic",
+        "basemap.osmStandard",
+        "service.add",
+        "source.postgis",
+        "address.search",
+    ];
+    let analysis = [
+        "processing.run.interpolation.kriging",
+        "processing.run.interpolation.spline",
+        "processing.run.interpolation.naturalNeighbor",
+        "processing.run.generate.concaveHull",
+        "processing.run.generate.pole",
+        "processing.run.generate.voronoi",
+        "processing.run.proximity.nearest",
+        "processing.run.proximity.neighbors",
+        "processing.run.proximity.shortestLine",
+        "processing.run.generalize.smooth",
+        "processing.run.generalize.orthogonalize",
+        "processing.run.generalize.building",
+        "processing.run.generalize.aggregate",
+        "processing.run.generalize.dropParts",
+        "processing.run.generalize.eliminate",
+        "processing.run.generalize.coverageSimplify",
+        "processing.run.raster.calculator",
+        "processing.run.raster.reclassify",
+        "processing.run.raster.focalStatistics",
+        "processing.run.raster.cellStatistics",
+        "processing.run.raster.histogram",
+        "processing.run.raster.zonalStatistics",
+        "processing.run.raster.toLines",
+        "processing.run.raster.toPoints",
+        "processing.run.raster.rasterize",
+        "processing.run.surface.curvature",
+        "processing.run.surface.ruggedness",
+        "processing.run.surface.insolation",
+        "processing.run.hydrology.fill",
+        "processing.run.hydrology.flowDirection",
+        "processing.run.hydrology.flowAccumulation",
+        "processing.run.hydrology.wetness",
+        "processing.run.hydrology.pourPoint",
+        "processing.run.hydrology.watershed",
+        "processing.run.hydrology.basins",
+        "processing.run.hydrology.streams",
+        "processing.run.distance.euclidean",
+        "processing.run.distance.cost",
+        "processing.run.distance.path",
+        "processing.run.distance.corridor",
+        "processing.run.remote.index",
+        "processing.run.remote.supervised",
+        "processing.run.remote.unsupervised",
+        "processing.run.remote.accuracy",
+        "processing.run.remote.change",
+        "processing.run.remote.qaMask",
+        "processing.run.remote.pansharpen",
+        "processing.run.remote.split",
+        "processing.run.stats.meanCenter",
+        "processing.run.stats.hotSpot",
+        "raster.stac",
+        "mesh.query",
+    ];
+    offers_as(Some(Module::Map), &keeps, &analysis);
+    let every: Vec<&str> = keeps.iter().chain(&analysis).copied().collect();
+    offers_as(Some(Module::Gis), &every, &[]);
+    offers_as(None, &every, &[]);
+    // By name too: Komut ara finds none of them in KentOS Harita, KentOS GIS finds Kriging.
+    let queries = ["kriging", "havza", "stac", "voronoi", "genelleştir"];
+    let harita = with_app(
+        || program(Some(Module::Map)),
+        |app| queries.iter().map(|q| found(app, q)).collect::<Vec<_>>(),
+    );
+    for (query, hits) in queries.iter().zip(&harita) {
+        assert!(
+            !hits.iter().any(|id| analysis.contains(&id.as_str())),
+            "Harita: {query}: {hits:?}"
+        );
+    }
+    let gis = with_app(|| program(Some(Module::Gis)), |app| found(app, "kriging"));
+    assert!(
+        gis.contains(&"processing.run.interpolation.kriging".to_owned()),
+        "{gis:?}"
+    );
+}
+
+/// The drawing standard (Mimari ofis: A-DUVAR …) is KentOS Mimari's; Değişikliğin etkisi stays everywhere, and a CBS
+/// project's standard is its data profile.
+#[test]
+fn the_drawing_standard_is_kentos_mimaris() {
+    let standard = ["standards.check", "standards.apply"];
+    offers_as(Some(Module::Architecture), &standard, &[]);
+    offers_as(Some(Module::Map), &["layer.impact"], &standard);
+    offers_as(
+        Some(Module::Gis),
+        &["layer.impact", "profile.window"],
+        &standard,
+    );
+    let standart = |module: Module, tab: &'static str| {
+        with_app(
+            || program(Some(module)),
+            |app| panel_commands(app, tab, "Standart"),
+        )
+    };
+    assert_eq!(
+        standart(Module::Architecture, "manage").expect("Yönet › Standart"),
+        ["standards.check", "standards.apply", "layer.impact"]
+    );
+    assert_eq!(
+        standart(Module::Map, "manage").expect("Yönet › Standart"),
+        ["layer.impact"]
+    );
+    assert_eq!(
+        standart(Module::Gis, "data").expect("Veri › Standart"),
+        ["profile.window", "lineTypes.manage", "layer.impact"]
+    );
+}
+
+/// Yazı stilleri and an area's Yaz ve tara (corner coordinates, edge lengths, Çoklu tara, the parcel sheet) are
+/// CAD's: KentOS GIS shows neither; KentOS Harita keeps the edge lengths and the parcel sheet in Plan › Plan
+/// yazıları too.
+#[test]
+fn kentos_gis_has_no_text_styles_and_no_yaz_ve_tara() {
+    with_app(
+        || program(Some(Module::Gis)),
+        |gis| {
+            assert!(panel_commands(gis, "ctx.area", "Alan").is_some());
+            assert_eq!(panel_commands(gis, "ctx.area", "Yaz ve tara"), None);
+            let text = panel_commands(gis, "ctx.text", "Yazı").expect("a text's Yazı");
+            assert!(!text.contains(&"style.textStyles"), "{text:?}");
+            for id in [
+                "style.textStyles",
+                "map.edgeLengths",
+                "processing.model.builtin.parcelSheet",
+            ] {
+                assert!(!gis.offers(id), "GIS does not offer {id}");
+            }
+            assert!(!gis.offers_model("builtin.parcelSheet"));
+        },
+    );
+    with_app(
+        || program(Some(Module::Map)),
+        |harita| {
+            assert!(panel_commands(harita, "ctx.area", "Yaz ve tara").is_some());
+            let text = panel_commands(harita, "ctx.text", "Yazı").expect("a text's Yazı");
+            assert!(text.contains(&"style.textStyles"));
+            let writing =
+                panel_commands(harita, "plan", "Plan yazıları").expect("Plan › Plan yazıları");
+            for id in ["map.edgeLengths", "processing.model.builtin.parcelSheet"] {
+                assert!(writing.contains(&id), "{id}");
+                assert!(harita.offers(id), "Harita offers {id}");
+            }
+            assert!(harita.offers_model("builtin.parcelSheet"));
+        },
+    );
+}
+
+/// KentOS Mimari has no tab of surveying: its queries (Mesafe ölç, Alan hesapla, Koordinat oku, Açı ölç, Bilgi) are
+/// Görünüm's Sorgu, one button that runs the last used as AutoCAD's Home › Utilities › Measure (Giriş has no room
+/// for a panel at 1440 px), and Komut ara says so. KentOS Harita keeps its Ölçme, Sorgu first.
+#[test]
+fn kentos_mimari_has_no_olcme_and_its_queries_are_gorunums() {
+    let query = [
+        "tool.measure",
+        "tool.area",
+        "crs.query",
+        "tool.measureAngle",
+        "tool.identify",
+    ];
+    with_app(
+        || cad_in(Module::Architecture, CadWork::Architecture),
+        |app| {
+            let tabs = ids(app.ribbon_tabs());
+            assert!(!tabs.contains(&"survey"), "{tabs:?}");
+            assert!(!app.ribbon_tabs().any(|t| t.label == "Ölçme"));
+            assert_eq!(
+                panel_commands(app, "view", "Sorgu").expect("Görünüm › Sorgu"),
+                query
+            );
+            let sorgu = app
+                .ribbon_tabs()
+                .find(|t| t.id == "view")
+                .and_then(|t| t.panels.iter().find(|p| p.label == "Sorgu"))
+                .expect("Görünüm › Sorgu");
+            assert!(
+                matches!(sorgu.items.as_slice(), [Item::Split { key, entries, .. }]
+                    if *key == "archQuery" && entries[0].title == "Mesafe ölç"),
+                "one split: {:?}",
+                sorgu.items
+            );
+            assert_eq!(panel_commands(app, "home", "Sorgu"), None);
+            for id in query {
+                assert!(app.offers(id), "Mimari offers {id}");
+            }
+            let _ = app.update(Message::RibbonSearch("mesafe ölç".into()));
+            let rows = app.search_rows();
+            let row = rows
+                .iter()
+                .find(|r| r.title == "Mesafe ölç")
+                .expect("Komut ara finds Mesafe ölç");
+            assert_eq!(row.detail, "Görünüm › Sorgu");
+            let _ = app.update(Message::Run("tool.measure"));
+            assert_eq!(app.session.tool_id(), "measure");
+        },
+    );
+    // KentOS Harita: Ölçme with its Sorgu first, none on Görünüm.
+    with_app(
+        || program(Some(Module::Map)),
+        |harita| {
+            let survey = harita
+                .ribbon_tabs()
+                .find(|t| t.id == "survey")
+                .expect("Harita's Ölçme");
+            assert_eq!((survey.label, survey.panels[0].label), ("Ölçme", "Sorgu"));
+            assert!(survey.panels[0].commands().contains(&"tool.stationOffset"));
+            assert_eq!(panel_commands(harita, "view", "Sorgu"), None);
+        },
+    );
+}
+
+/// Ekle's picture panel is named for what it holds: KentOS Mimari's pictures and point clouds, no raster; KentOS
+/// Harita's pictures, rasters and point clouds; STAC is KentOS GIS's.
+#[test]
+fn ekle_s_picture_panel_is_named_for_what_it_holds() {
+    let (named, rasters) = with_app(
+        || program(Some(Module::Architecture)),
+        |app| {
+            (
+                panel_commands(app, "insert", "Resim ve nokta bulutu"),
+                panel_commands(app, "insert", "Resim ve raster"),
+            )
+        },
+    );
+    assert_eq!(
+        named.expect("Mimari's panel"),
+        ["tool.imageInsert", "pointcloud.add", "tool.imageClip"]
+    );
+    assert_eq!(rasters, None);
+    let harita = with_app(
+        || program(Some(Module::Map)),
+        |app| panel_commands(app, "insert", "Resim ve raster"),
+    )
+    .expect("Harita's panel");
+    for id in [
+        "tool.imageInsert",
+        "raster.add",
+        "pointcloud.add",
+        "raster.georef",
+        "raster.gpkgRead",
+    ] {
+        assert!(harita.contains(&id), "{id}");
+    }
+    assert!(!harita.contains(&"raster.stac"));
+    // A CAD drawing not asked its work shows the whole panel by its own name.
+    let whole = with_app(
+        || cad_drawing(None),
+        |app| panel_commands(app, "insert", "Resim ve raster"),
+    );
+    assert!(whole.is_some_and(|ids| ids.contains(&"raster.add")));
+}
+
+/// The labels of each Ölçülendirme ▾ a program's ribbon shows.
+fn dimension_entries(app: &App) -> Vec<Vec<&'static str>> {
+    app.ribbon_tabs()
+        .flat_map(|t| t.panels.iter())
+        .flat_map(|p| p.items.iter())
+        .filter_map(|i| match i {
+            Item::Split { key, entries, .. } if *key == "dimension" => {
+                Some(entries.iter().map(|e| e.label).collect())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// Ölçülendirme ▾'s Semt, a bearing (docs/adr/0147), is a map's: KentOS Mimari's splits have no Semt entry, its other
+/// kinds stay; KentOS Harita's and a CAD drawing not asked its work have it.
+#[test]
+fn the_semt_dimension_is_kentos_haritas() {
+    let mimari = with_app(
+        || program(Some(Module::Architecture)),
+        |app| dimension_entries(app),
+    );
+    assert_eq!(mimari.len(), 2, "Giriş › Açıklama and Açıklama › Ölçü");
+    for labels in &mimari {
+        assert!(
+            !labels.contains(&"Semt") && labels.contains(&"Eğim"),
+            "{labels:?}"
+        );
+    }
+    let harita = with_app(|| program(Some(Module::Map)), |app| dimension_entries(app));
+    let whole = with_app(|| cad_drawing(None), |app| dimension_entries(app));
+    for splits in [harita, whole] {
+        assert_eq!(splits.len(), 2);
+        assert!(
+            splits.iter().all(|labels| labels.contains(&"Semt")),
+            "{splits:?}"
+        );
+    }
+}
+
+/// A model of the user's, Parsel ölçü yazıları's copy whose second step runs `tool`, kept in the program's library.
+fn add_model(app: &mut App, id: &str, label: &str, tool: &str) {
+    let mut model = app
+        .processing
+        .registry
+        .model("builtin.parcelSheet")
+        .cloned()
+        .expect("the built-in model");
+    model.id = id.into();
+    model.label = label.into();
+    model.steps[1].tool = tool.into();
+    app.processing
+        .registry
+        .save_model(model)
+        .expect("a user's model");
+}
+
+/// A model is offered where the program offers every tool its steps run: a model of the user's that fills a DEM's
+/// sinks (hydrology) is KentOS GIS's, not KentOS Harita's; one that writes edge lengths is both's (docs/adr/0802).
+#[test]
+fn a_model_is_offered_where_every_tool_of_its_steps_is() {
+    for (module, sinks, edges) in [
+        (Some(Module::Map), false, true),
+        (Some(Module::Gis), true, true),
+        (Some(Module::Architecture), false, false),
+        (None, true, true),
+    ] {
+        let (offered, listed, typed) = with_app(
+            || program(module),
+            |app| {
+                add_model(app, "user.havzam", "Havzam", "hydrology.fill");
+                add_model(
+                    app,
+                    "user.kenarlarim",
+                    "Kenarlarım",
+                    "annotation.edgeLengths",
+                );
+                let offered = (
+                    app.offers_model("user.havzam"),
+                    app.offers_model("user.kenarlarim"),
+                );
+                // The ribbon's model buttons and the command line's names read the user's models; Komut ara too.
+                let listed = app.user_models().any(|m| m.id == "user.havzam");
+                let typed = found(app, "havzam") == ["processing.model.user.havzam"];
+                (offered, listed, typed)
+            },
+        );
+        assert_eq!(offered, (sinks, edges), "{module:?}");
+        assert_eq!((listed, typed), (sinks, sinks), "{module:?}");
+    }
+    // Typed in KentOS Harita, its name opens nothing.
+    let opened = with_app(
+        || cad_in(Module::Map, CadWork::Map),
+        |app| {
+            add_model(app, "user.havzam", "Havzam", "hydrology.fill");
+            let _ = app.run_typed("Havzam");
+            app.dialog == Some(crate::app::Dialog::Processing)
+        },
+    );
+    assert!(!opened);
+}
+
+/// The tabs of a program's ribbon, its selection's too, that do not fit 1100 px at this text size (DESIGN.md
+/// §7.3.1).
+fn misfits(app: &mut App, size: u32) -> Vec<String> {
+    use kentos_ui::widget::ribbon::{self, Group};
+    let _ = app
+        .settings
+        .choose(&[("appearance.textSize", serde_json::json!(size))]);
+    app.apply_settings();
+    let tabs: Vec<&'static Tab> = app.ribbon_tabs().chain(app.contextual_tabs()).collect();
+    let mut wrong = Vec::new();
+    for tab in tabs {
+        let groups: Vec<Group<'static, Message>> = tab
+            .panels
+            .iter()
+            .filter_map(|p| app.ribbon_group(tab.id, p))
+            .collect();
+        let widths: Vec<[f32; 4]> = groups.iter().map(Group::widths).collect();
+        let keep: Vec<bool> = groups.iter().map(Group::keeps).collect();
+        let (levels, overflow) = ribbon::fit(&widths, &keep, 1100.0);
+        if overflow {
+            wrong.push(format!(
+                "{:?} {} {size} px: {levels:?}",
+                app.program, tab.id
+            ));
+        }
+    }
+    wrong
+}
+
+/// Every program's ribbon fits a 1100 px window at 13 and 18 px text without scrolling (DESIGN.md §7.3.1), its
+/// selection's tabs too: KentOS Mimari's Görünüm with its Sorgu, Ekle with its pictures (docs/adr/0802).
+#[test]
+fn each_programs_ribbon_fits_1100_pixels_at_small_and_large_text() {
+    use kentos_ui::theme::typography::{self, Typography};
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    typography::load();
+    let mut wrong = Vec::new();
+    for size in [13, 18] {
+        wrong.extend(with_app(
+            || cad_in(Module::Architecture, CadWork::Architecture),
+            |app| misfits(app, size),
+        ));
+        wrong.extend(with_app(
+            || cad_in(Module::Map, CadWork::Map),
+            |app| misfits(app, size),
+        ));
+        wrong.extend(with_app(gis_drawing, |app| misfits(app, size)));
+    }
+    typography::set(Typography::DEFAULT);
+    assert!(wrong.is_empty(), "does not fit 1100 px: {wrong:?}");
+}
+
+/// One picture of a CAD program's tab at a window size and text size.
+fn ribbon_picture(
+    module: Module,
+    work: CadWork,
+    tab: &'static str,
+    size: iced::Size,
+    text: u32,
+    file: &Path,
+) {
+    use kentos_ui::snapshot::Snapshot;
+    let mut app = cad_in(module, work);
+    let _ = app
+        .settings
+        .choose(&[("appearance.textSize", serde_json::json!(text))]);
+    app.apply_settings();
+    let _ = app.update(Message::WindowResized(size));
+    app.choose_tab(tab);
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    snapshot.settle(&mut app, App::view, &mut |app, message| {
+        let _ = app.update(message);
+    });
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(file)
+        .expect("writes the picture");
+    println!("{}", file.display());
+}
+
+/// Pictures of the tabs these decisions changed, for the owner: KentOS Mimari's Görünüm (its Sorgu) and Ekle (Resim
+/// ve nokta bulutu), KentOS Harita's Ölçme and Ekle; 1440×900 at 13 px, 1100×650 at 13 and 18 px, dark;
+/// `.run/shots/ayrim-serit-*`. Not a correctness test:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib module_tests::ribbon_pictures -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn ribbon_pictures() {
+    use iced::Size;
+    let _typography = crate::appearance::tests::TYPOGRAPHY.lock();
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (module, work, word, tabs) in [
+        (
+            Module::Architecture,
+            CadWork::Architecture,
+            "mimari",
+            ["view", "insert"],
+        ),
+        (Module::Map, CadWork::Map, "harita", ["survey", "insert"]),
+    ] {
+        for (size, text, tag) in [
+            (Size::new(1440.0, 900.0), 13, ""),
+            (Size::new(1100.0, 650.0), 13, "-dar"),
+            (Size::new(1100.0, 650.0), 18, "-dar-buyuk"),
+        ] {
+            for tab in tabs {
+                let file = out.join(format!("ayrim-serit-{word}-{tab}{tag}.png"));
+                ribbon_picture(module, work, tab, size, text, &file);
+            }
+        }
+    }
+    kentos_ui::theme::typography::set(kentos_ui::theme::typography::Typography::DEFAULT);
+}
+
+/// Each program's commands with their titles and the ribbon places that hold them, as Markdown, for a review
+/// of where every command belongs (docs/adr/0802); not run by default:
+///
+/// ```text
+/// KENTOS_MODULE_DUMP=/tmp/moduller.md cargo test -p kentos-desktop --lib module_tests::dump_module_commands -- --ignored
+/// ```
+#[test]
+#[ignore = "a review's dump, run by hand"]
+fn dump_module_commands() {
+    use std::fmt::Write;
+    let Ok(out) = std::env::var("KENTOS_MODULE_DUMP") else {
+        return;
+    };
+    let mut text = String::new();
+    for module in Module::ALL {
+        let app = program(Some(module));
+        let tabs: Vec<&Tab> = app.ribbon_tabs().chain(app.contextual_tabs()).collect();
+        let offered: Vec<&crate::catalog::Command> = crate::catalog::catalog()
+            .commands()
+            .iter()
+            .filter(|c| app.offers(c.id))
+            .collect();
+        let _ = writeln!(text, "# {} ({} komut)\n", module.title(), offered.len());
+        for c in offered {
+            let places: Vec<String> = tabs
+                .iter()
+                .flat_map(|t| {
+                    t.panels
+                        .iter()
+                        .filter(|p| p.commands().contains(&c.id) || p.overflow.contains(&c.id))
+                        .map(move |p| format!("{} › {}", t.label, p.label))
+                })
+                .collect();
+            let places = if places.is_empty() {
+                "(şeritte değil)".to_owned()
+            } else {
+                places.join("; ")
+            };
+            let _ = writeln!(text, "- `{}` {} — {}", c.id, c.title, places);
+        }
+        text.push('\n');
+    }
+    std::fs::write(&out, text).expect("the dump is written");
 }

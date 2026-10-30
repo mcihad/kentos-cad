@@ -157,16 +157,19 @@ fn the_keyboard_walks_the_rows_and_enter_runs_one() {
     // NCZ runs here too (docs/adr/0138): the keyboard stops on it.
     key(&mut app, Named::ArrowDown);
     assert_eq!(state(&app).focus, Some(Focus::Pane(3)), "NCZ");
+    // PDF after it, in every program (docs/adr/0352, 0802).
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(4)), "Shapefile");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(4)), "PDF");
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(5)), "GeoJSON");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(5)), "Shapefile");
+    key(&mut app, Named::ArrowDown);
+    assert_eq!(state(&app).focus, Some(Focus::Pane(6)), "GeoJSON");
     // KML/KMZ too (docs/adr/0222).
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(6)), "KML/KMZ");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(7)), "KML/KMZ");
     // GNSS (GPX, NMEA) too (docs/adr/0169 §6).
     key(&mut app, Named::ArrowDown);
-    assert_eq!(state(&app).focus, Some(Focus::Pane(7)), "GNSS");
+    assert_eq!(state(&app).focus, Some(Focus::Pane(8)), "GNSS");
     key(&mut app, Named::ArrowDown);
     assert_eq!(state(&app).focus, Some(Focus::Pane(0)), "round to DWG");
     key(&mut app, Named::ArrowLeft);
@@ -264,6 +267,96 @@ fn opened_and_saved_files_go_first_in_the_recent_files() {
     assert_eq!(app.recent.list()[0].path, c);
     assert_eq!(app.recent.list().len(), 3);
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// A module's program lists its own module's recent cloud projects alone (`cloud_types`, docs/adr/0802): KentOS
+/// Mimari a building's and KentOS GIS a CBS project's, asked of the server by their type; KentOS Harita its CAD types,
+/// picked from four times as many of the account's; kentos-cad every one, as before.
+#[test]
+fn the_cloud_pane_lists_the_programs_own_recent_projects() {
+    use kentos_commands::ProjectType;
+    use kentos_launch::Module;
+    let typed = |name: &str, t: ProjectType| {
+        let mut p = summary(PROJECT, name, ProjectStorage::Database);
+        p.project_type = t;
+        p
+    };
+    let mixed = || {
+        vec![
+            typed("Konut", ProjectType::Architecture),
+            typed("İmar planı", ProjectType::ZoningPlan),
+            typed("Parseller", ProjectType::Gis),
+            typed("Genel", ProjectType::Cad),
+            typed("Yol", ProjectType::Road),
+        ]
+    };
+    for (program, listed, project_type, limit) in [
+        (
+            None,
+            &["Konut", "İmar planı", "Parseller", "Genel", "Yol"][..],
+            None,
+            5,
+        ),
+        (
+            Some(Module::Architecture),
+            &["Konut"][..],
+            Some(ProjectType::Architecture),
+            5,
+        ),
+        (
+            Some(Module::Map),
+            &["İmar planı", "Genel", "Yol"][..],
+            None,
+            20,
+        ),
+        (
+            Some(Module::Gis),
+            &["Parseller"][..],
+            Some(ProjectType::Gis),
+            5,
+        ),
+    ] {
+        let mut app = signed_in();
+        app.program = program;
+        let query = app.recent_projects_query();
+        assert_eq!(
+            (query.project_type, query.limit),
+            (project_type, Some(limit)),
+            "{program:?}"
+        );
+        let _ = menu(&mut app, Event::Toggle);
+        let _ = menu(&mut app, Event::Show(Pane::Cloud));
+        let id = state(&app).request;
+        let _ = menu(
+            &mut app,
+            Event::Projects {
+                id,
+                result: Box::new(Ok(page(mixed(), 5, None))),
+            },
+        );
+        let Projects::Loaded(projects) = &state(&app).projects else {
+            panic!("{program:?}: the projects are listed");
+        };
+        let names: Vec<&str> = projects.iter().map(|p| p.name.as_str()).collect();
+        assert_eq!(names, listed, "{program:?}");
+    }
+    // KentOS Harita keeps five of its own however many the server gave.
+    let mut app = signed_in();
+    app.program = Some(Module::Map);
+    let _ = menu(&mut app, Event::Toggle);
+    let _ = menu(&mut app, Event::Show(Pane::Cloud));
+    let id = state(&app).request;
+    let many: Vec<_> = (0..12)
+        .map(|i| typed(&format!("Plan {i}"), ProjectType::ZoningPlan))
+        .collect();
+    let _ = menu(
+        &mut app,
+        Event::Projects {
+            id,
+            result: Box::new(Ok(page(many, 12, None))),
+        },
+    );
+    assert!(matches!(&state(&app).projects, Projects::Loaded(p) if p.len() == 5));
 }
 
 #[test]
@@ -416,4 +509,105 @@ fn screens() {
         picture(&mut app, &format!("baslangic-{mode}"));
     }
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Bulut in each module's program, its own recent projects alone (docs/adr/0802), dark, 1440×900:
+/// `.run/shots/ayrim2-{mimari,harita,gis}-bulut.png` (KentOS GIS's with none of its own among them).
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib app_menu::tests::program_cloud_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn program_cloud_screens() {
+    use iced::Size;
+    use kentos_commands::ProjectType;
+    use kentos_launch::Module;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let recent = |gis: bool| {
+        let mut list = vec![
+            (
+                "Konut A Blok",
+                ProjectType::Architecture,
+                ProjectStorage::File,
+            ),
+            (
+                "Moda imar planı",
+                ProjectType::ZoningPlan,
+                ProjectStorage::Database,
+            ),
+            (
+                "Ada 1244 ifraz",
+                ProjectType::Subdivision,
+                ProjectStorage::File,
+            ),
+            ("Çevre yolu", ProjectType::Road, ProjectStorage::Database),
+            (
+                "Ofis katı",
+                ProjectType::Architecture,
+                ProjectStorage::Database,
+            ),
+        ];
+        if gis {
+            list.insert(
+                2,
+                (
+                    "Kent parselleri",
+                    ProjectType::Gis,
+                    ProjectStorage::Database,
+                ),
+            );
+        }
+        list.into_iter()
+            .enumerate()
+            .map(|(k, (name, t, storage))| {
+                let mut p = summary(
+                    &format!("0199aaaa-0000-7000-8000-0000000001{k:02}"),
+                    name,
+                    storage,
+                );
+                p.project_type = t;
+                p.opened_at = Some(format!("2026-10-{:02}T09:00:00Z", 28 - k));
+                p
+            })
+            .collect::<Vec<_>>()
+    };
+    for (program, word, gis) in [
+        (Module::Architecture, "mimari", true),
+        (Module::Map, "harita", true),
+        (Module::Gis, "gis", false),
+    ] {
+        let mut app = signed_in();
+        app.program = Some(program);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from("dark"))]);
+        app.apply_settings();
+        let task = app.update(Message::Swallowed);
+        drive(&mut app, task);
+        let _ = menu(&mut app, Event::Toggle);
+        let _ = menu(&mut app, Event::Show(Pane::Cloud));
+        let id = state(&app).request;
+        let _ = menu(
+            &mut app,
+            Event::Projects {
+                id,
+                result: Box::new(Ok(page(recent(gis), 6, None))),
+            },
+        );
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("ayrim2-{word}-bulut.png"));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
+        println!("{}", file.display());
+    }
 }

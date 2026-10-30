@@ -14,7 +14,9 @@
 //!   inserts with the object, Uçlar (U) also marks the object's own start,
 //!   end or both, İlk (İ) asks a step's first distance (Enter alone: at the
 //!   step again);
-//! - the choices stay for as long as the app lives ([`Memory`]);
+//! - the choices stay for as long as the app lives ([`Memory`]); a program
+//!   without blocks (KentOS GIS, docs/adr/0802) offers neither Blok nor
+//!   its Nokta and Hizala, and places points;
 //! - Esc drops the picked object; with none, the tool leaves.
 //!
 //! The product command `cad.entities.divide` does the work (docs/adr/0254
@@ -37,7 +39,8 @@ use crate::modify::ghosts;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Cursor, Flow, Marker, MarkerShape, Memory, Pointer, Preview, Tone, Tool,
+    Context, Cursor, Flow, Marker, MarkerShape, Memory, Offers, Pointer, Preview, Tone, Tool,
+    ToolOption,
 };
 
 /// The divide tool's id: its command is `tool.divide`.
@@ -93,6 +96,8 @@ pub struct Divide {
     seen: Option<(Memory, Format, String)>,
     /// The picked object and its points to come, as of the last call.
     drawn: Preview,
+    /// The options the program offers, as of the last call: Blok is a CAD's (docs/adr/0802).
+    offers: Offers,
 }
 
 impl Divide {
@@ -103,8 +108,8 @@ impl Divide {
     /// Takes in what the session remembers and redraws the places to come (the command's plan).
     fn see(&mut self, cx: &Context<'_>) {
         let m = *cx.memory;
-        let name = m
-            .divide_block
+        self.offers = cx.draft.offers;
+        let name = Self::block_of(cx)
             .and_then(|id| cx.doc.block(id))
             .map_or_else(String::new, |b| b.name.clone());
         self.seen = Some((m, cx.format(), name));
@@ -163,11 +168,18 @@ impl Divide {
         }
     }
 
+    /// The block the places take: the session's, where the program offers blocks (docs/adr/0802).
+    fn block_of(cx: &Context<'_>) -> Option<kentos_commands::BlockId> {
+        cx.memory
+            .divide_block
+            .filter(|_| cx.draft.offers.has(ToolOption::Blocks))
+    }
+
     /// The command's input for the picked object, with what the session remembers.
     fn request(target: Target, cx: &Context<'_>) -> Option<EntitiesDivide> {
         let m = *cx.memory;
         let uid = cx.doc.uid(target.slot)?;
-        let block = match m.divide_block {
+        let block = match Self::block_of(cx) {
             Some(id) => Some(DivideBlock {
                 name: cx.doc.block(id)?.name.clone(),
                 align: m.divide_align,
@@ -295,14 +307,22 @@ impl Tool for Divide {
                 .note(mode)
                 .then(),
         };
-        let base = base.option(other, key).option_with("Blok", "B", block);
-        let base = if m.divide_block.is_some() {
+        // Blok, and Nokta and Hizala with a block, where the program offers blocks (docs/adr/0802).
+        let blocks = self.offers.has(ToolOption::Blocks);
+        let with_block = blocks && m.divide_block.is_some();
+        let base = base.option(other, key);
+        let base = if blocks {
+            base.option_with("Blok", "B", block)
+        } else {
+            base
+        };
+        let base = if with_block {
             base.option("Nokta", "N")
         } else {
             base
         };
         base.option_if(
-            m.divide_block.is_some(),
+            with_block,
             "Hizala",
             "H",
             if m.divide_align { "açık" } else { "kapalı" },
@@ -351,20 +371,21 @@ impl Tool for Divide {
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         let key = upper_tr(js_trim(text));
+        let blocks = cx.draft.offers.has(ToolOption::Blocks);
         let chosen = match key.as_str() {
             "A" | "P" => {
                 cx.memory.divide_by_step = key == "A";
                 true
             }
-            "B" => {
+            "B" if blocks => {
                 Self::next_block(cx);
                 true
             }
-            "N" => {
+            "N" if blocks => {
                 cx.memory.divide_block = None;
                 true
             }
-            "H" => {
+            "H" if blocks => {
                 cx.memory.divide_align = !cx.memory.divide_align;
                 true
             }

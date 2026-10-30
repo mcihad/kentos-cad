@@ -99,11 +99,14 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             "Masaüstündeki çizime bağlan",
             "KentOS masaüstünde açık çizime bağlanır; tutamacını verir. drawing.* ve cad.* araçları bu \
              tutamaçla ekrandaki çizimi okur ve komutlarla yazar; her yazma masaüstünde bir geri alma \
-             adımıdır, kullanıcı hemen görür. Kullanıcı önce Python sekmesinden “Ajanlara aç” demelidir. \
+             adımıdır, kullanıcı hemen görür. Kullanıcı önce o programın Python sekmesinden “Ajanlara aç” \
+             demelidir. Her KentOS programının kendi bağlantısı vardır: program hangisine bağlanılacağını \
+             söyler (mimari: KentOS Mimari, harita: KentOS Harita, cbs: KentOS GIS; yoksa kentos-cad). \
              Kaydetmek ve geri almak kullanıcınındır.",
             object(
                 json!({
-                    "path": { "type": "string", "description": "Bağlantının yolu; yoksa masaüstünün varsayılanı." },
+                    "program": { "type": "string", "enum": desktop::PROGRAMS, "description": "Hangi KentOS programının açık çizimi: mimari (KentOS Mimari), harita (KentOS Harita) ya da cbs (KentOS GIS); yoksa kentos-cad. Bağlantı programın kendi soketidir (masaustu-<program>.sock); KENTOS_DESKTOP ortam değişkeni verilmişse o kullanılır." },
+                    "path": { "type": "string", "description": "Bağlantının yolu; verilirse program ve KENTOS_DESKTOP'ın yerine geçer." },
                     "document": { "type": "integer", "minimum": 0, "description": "Masaüstünde birden çok çizim açıksa hangisi: hello'nun documents listesindeki numara; yoksa öndeki. Tutamaç bu çizimde kalır, kullanıcı başka sekmeye geçse de." }
                 }),
                 &[],
@@ -1149,10 +1152,26 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
     }
     match name {
         "desktop.attach" => {
-            let path =
-                text(args, "path").map_or_else(desktop::default_path, std::path::PathBuf::from);
-            let mut link =
-                Desktop::connect(path).map_err(|(code, message)| refused(&code, message))?;
+            // The program whose link it is (docs/adr/0802): each KentOS program opens its own.
+            let program = match args.get("program").filter(|v| !v.is_null()) {
+                None => None,
+                Some(v) => Some(
+                    v.as_str()
+                        .filter(|p| desktop::PROGRAMS.contains(p))
+                        .ok_or_else(|| {
+                            refused(
+                                "invalid_input",
+                                format!(
+                                    "program {v} olamaz: mimari (KentOS Mimari), harita (KentOS Harita) ya da cbs (KentOS GIS); kentos-cad için verilmez."
+                                ),
+                            )
+                        })?,
+                ),
+            };
+            let path = text(args, "path")
+                .map_or_else(|| desktop::default_path(program), std::path::PathBuf::from);
+            let mut link = Desktop::connect(path, program)
+                .map_err(|(code, message)| refused(&code, message))?;
             // The drawing asked for by its number, else the one in front: the handle keeps it (docs/adr/0351 §3).
             let asked = args.get("document").cloned().filter(|v| !v.is_null());
             let hello = link

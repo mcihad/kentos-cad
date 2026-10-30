@@ -14,7 +14,8 @@
 //! - The server's commands (`project.*`) go to the KentOS server with the
 //!   account the environment names (`cloud`, docs/adr/0134).
 //! - `desktop.attach` gives a handle on the drawing open in the KentOS
-//!   desktop, through the link the user opens there (`desktop`, docs/adr/0137).
+//!   desktop, through the link the user opens there (`desktop`, docs/adr/0137);
+//!   every KentOS program has its own, named by `program` (docs/adr/0802).
 #![forbid(unsafe_code)]
 #![cfg_attr(
     not(test),

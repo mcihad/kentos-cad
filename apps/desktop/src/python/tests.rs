@@ -1310,3 +1310,104 @@ fn an_agent_stays_on_its_drawing_when_another_comes_in_front() {
     assert_eq!(gone["code"], "document_closed", "{gone}");
     assert_eq!(objects(&app), front);
 }
+
+/// docs/adr/0802: every program opens a link of its own, so kentos-cad and the modules' programs keep theirs at once
+/// and an agent names the one it wants; a second window of the same program is refused; the console says how an
+/// agent reaches it.
+#[cfg(unix)]
+#[test]
+fn every_program_opens_a_link_of_its_own() {
+    use kentos_launch::Module;
+    let dir = crate::files_testing::scratch("ajan-programlar");
+    let link = super::link::path_in;
+    assert_eq!(link(&dir, None), dir.join("masaustu.sock"));
+    assert_eq!(
+        link(&dir, Some(Module::Architecture)),
+        dir.join("masaustu-mimari.sock")
+    );
+    assert_eq!(
+        link(&dir, Some(Module::Map)),
+        dir.join("masaustu-harita.sock")
+    );
+    assert_eq!(link(&dir, Some(Module::Gis)), dir.join("masaustu-cbs.sock"));
+    // In the user's runtime folder, beside one another.
+    for program in [None, Some(Module::Map)] {
+        assert_eq!(
+            super::link::default_path(program),
+            link(&super::link::folder(), program)
+        );
+    }
+
+    let programs = [
+        None,
+        Some(Module::Architecture),
+        Some(Module::Map),
+        Some(Module::Gis),
+    ];
+    let mut open: Vec<App> = programs
+        .into_iter()
+        .map(|program| {
+            let mut app = app_with_drawing();
+            app.program = program;
+            app.python.link_folder = Some(dir.clone());
+            assert_eq!(app.agents_path(), link(&dir, program));
+            let _ = app.update(Message::Python(Event::Link));
+            app
+        })
+        .collect();
+    for (app, program) in open.iter().zip(programs) {
+        let path = link(&dir, program);
+        assert_eq!(
+            app.python.link.as_ref().map(|l| l.path.clone()),
+            Some(path.clone()),
+            "{program:?} opens its own while the others keep theirs"
+        );
+        assert!(path.exists(), "{}", path.display());
+        let (_, note) = entries(app).pop().expect("a note");
+        assert!(
+            note.starts_with(&format!("Ajan bağlantısı açık: {}.", path.display())),
+            "{note}"
+        );
+        match program {
+            None => assert!(
+                note.contains("(MCP'de desktop.attach) açık çizimi"),
+                "{note}"
+            ),
+            Some(m) => assert!(
+                note.contains(&format!(
+                    "(MCP'de desktop.attach, program: \"{}\") {} açık çizimi",
+                    m.id(),
+                    crate::program::in_program(m)
+                )),
+                "{note}"
+            ),
+        }
+    }
+    assert!(
+        entries(&open[2])
+            .last()
+            .is_some_and(|(_, n)| n.contains("program: \"harita\") KentOS Harita'da açık çizimi")),
+        "{:?}",
+        entries(&open[2]).last()
+    );
+
+    // A second KentOS Harita window finds the link in use: refused, and said.
+    let mut second = app_with_drawing();
+    second.program = Some(Module::Map);
+    second.python.link_folder = Some(dir.clone());
+    let _ = second.update(Message::Python(Event::Link));
+    assert!(second.python.link.is_none());
+    let (kind, said) = entries(&second).pop().expect("why");
+    assert_eq!(kind, EntryKind::Error);
+    assert!(
+        said.contains("başka bir KentOS penceresinin bağlantısı"),
+        "{said}"
+    );
+
+    // Closing each takes its own socket only.
+    let _ = open[2].update(Message::Python(Event::Link));
+    assert!(!link(&dir, Some(Module::Map)).exists());
+    assert!(link(&dir, None).exists() && link(&dir, Some(Module::Gis)).exists());
+    drop(open);
+    let _ = std::fs::remove_dir_all(dir);
+}

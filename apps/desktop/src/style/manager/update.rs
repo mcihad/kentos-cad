@@ -24,7 +24,9 @@ impl App {
         pick: Option<super::Pick>,
         select: Option<String>,
     ) -> Task<Message> {
-        self.styles.manager = Some(Manager::new(&self.styles.library, pick, select));
+        // The program's own library: KentOS Mimari's without MPYY (module_surfaces.rs).
+        self.styles.manager =
+            Some(Manager::new(&self.styles.library, pick, select).hiding(self.library_hidden()));
         self.dialog = Some(Dialog::StyleManager);
         iced::widget::operation::focus(SEARCH)
     }

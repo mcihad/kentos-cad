@@ -1305,6 +1305,12 @@ impl App {
             // The module's type in a module's program (module_surfaces.rs): its templates first, as the profile
             // lists them; kentos-cad's drawing carries none yet.
             project_type: self.sheet_project_type(),
+            // A module's program's own catalog types (docs/adr/0802): a new sheet starts with its own template and
+            // the gallery shows its types' templates and those made for no type; kentos-cad's, none (every type).
+            project_types: self
+                .program
+                .map(crate::program::project_types_of)
+                .unwrap_or_default(),
             exact_plot_scale:settings.map(|s|s.plot_scale).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)),
             capabilities: Capabilities {
                 georeferenced: crs.is_some(),
@@ -3561,6 +3567,91 @@ mod tests {
             app.sheet_maps.revision(),
             before,
             "nothing changed, nothing built"
+        );
+    }
+
+    /// docs/adr/0802: a module's program gives the sheet mode its own catalog types. KentOS Mimari's new sheet is the
+    /// architectural sheet and its gallery has no survey or zoning sheet; KentOS Harita's is a map sheet (not the ISO
+    /// technical one) and its gallery has no building or CBS sheet; KentOS GIS's and kentos-cad's are as before.
+    #[test]
+    fn each_programs_sheets_start_with_its_own_template_and_gallery() {
+        use kentos_launch::Module;
+        use kentos_sheet_ui::gallery::GalleryMessage;
+        let of = |program: Option<Module>| {
+            let mut app = app_with_drawing();
+            app.program = program;
+            let doc = app.document.as_mut().expect("a drawing");
+            let mut s = doc.model.settings().clone();
+            s.workspace =
+                Some(program.map_or(kentos_commands::Workspace::Cad, crate::program::type_of));
+            s.cad_work = program.and_then(|m| crate::program::works_of(m).first().copied());
+            doc.model.set_settings(s);
+            let ctx = app.sheet_context();
+            let mut d = kentos_sheet_ui::Designer::new(ctx.clone());
+            let _ = d.update(Sheet::Gallery(GalleryMessage::Open));
+            let shown: Vec<String> = d.gallery_cards().into_iter().map(|c| c.id).collect();
+            (
+                ctx.project_types,
+                d.profile().default_template.clone(),
+                shown,
+            )
+        };
+        use kentos_commands::ProjectType::*;
+        let (types, first, _) = of(None);
+        assert!(types.is_empty(), "kentos-cad: every type");
+        assert_eq!(
+            first, "sys:cad-teknik",
+            "kentos-cad's CAD drawing as before"
+        );
+
+        let (types, first, shown) = of(Some(Module::Architecture));
+        assert_eq!(types, [Architecture]);
+        assert_eq!(first, "sys:cad-mimari");
+        assert_eq!(
+            shown.first().map(String::as_str),
+            Some("sys:cad-mimari"),
+            "{shown:?}"
+        );
+        for id in [
+            "sys:aplikasyon-krokisi",
+            "sys:ifraz-paftasi",
+            "sys:imar-plani",
+            "sys:gis-tematik",
+        ] {
+            assert!(!shown.iter().any(|s| s == id), "{id}: {shown:?}");
+        }
+        assert!(
+            shown.iter().any(|s| s == "sys:genel-a3-yatay"),
+            "the common ones: {shown:?}"
+        );
+
+        let (types, first, shown) = of(Some(Module::Map));
+        assert_eq!(
+            types,
+            [Cad, LandReadjustment, ZoningPlan, Subdivision, Road]
+        );
+        assert_eq!(first, "sys:genel-a3-yatay", "a map sheet");
+        for id in [
+            "sys:imar-plani",
+            "sys:ifraz-paftasi",
+            "sys:aplikasyon-krokisi",
+            "sys:genel-a3-yatay",
+        ] {
+            assert!(shown.iter().any(|s| s == id), "{id}: {shown:?}");
+        }
+        for id in ["sys:cad-mimari", "sys:gis-tematik", "sys:gis-atlas"] {
+            assert!(!shown.iter().any(|s| s == id), "{id}: {shown:?}");
+        }
+
+        let (types, first, shown) = of(Some(Module::Gis));
+        assert_eq!(types, [Gis]);
+        assert_eq!(first, "sys:gis-tematik", "unchanged");
+        assert_eq!(&shown[..2], ["sys:gis-tematik", "sys:gis-atlas"]);
+        assert!(
+            !shown
+                .iter()
+                .any(|s| s == "sys:imar-plani" || s == "sys:cad-teknik"),
+            "{shown:?}"
         );
     }
 }

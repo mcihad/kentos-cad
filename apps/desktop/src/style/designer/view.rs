@@ -256,10 +256,21 @@ impl App {
             None => d.kind(),
         };
         let lib = &self.styles.library;
+        // The program's own library (KentOS Mimari's without MPYY, module_surfaces.rs); the drawing the layer has
+        // stays listed.
+        let hidden = self.library_hidden();
+        let used = |id: &str| {
+            layer
+                .as_object()
+                .is_some_and(|o| o.values().any(|v| v.as_str() == Some(id)))
+        };
         let assets: Vec<(String, String, bool)> = lib
             .items(None)
             .into_iter()
             .filter(|(i, _)| i.kind() == ItemKind::Asset)
+            .filter(|(i, source)| {
+                crate::module_surfaces::library_shows(hidden, *source, &i.path()) || used(i.id())
+            })
             .map(|(i, source)| {
                 let whose = match source {
                     kentos_native_style::Source::System => "",

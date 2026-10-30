@@ -78,16 +78,22 @@ fn small(glyph: Icon, about: Tip, message: Option<Message>) -> Element<'static, 
     )
 }
 
-/// The agents' link: open (lit, with its socket and connections in its tip) or closed.
-fn link_toggle(c: &super::Console) -> Element<'_, Message> {
+/// The agents' link: open (lit, with its socket and connections in its tip) or closed; a module's program says how
+/// an agent names its link (docs/adr/0802).
+fn link_toggle(c: &super::Console, program: Option<kentos_launch::Module>) -> Element<'_, Message> {
     let about = match &c.link {
         Some(open) => Tip::new("Ajan bağlantısını kapat").detail(format!(
             "{} · {} ajan bağlı",
             open.path.display(),
             c.agents.len()
         )),
-        None => Tip::new("Ajanlara aç")
-            .detail("MCP'deki bir ajan açık çizimi okuyup komutlarla yazabilir"),
+        None => Tip::new("Ajanlara aç").detail(match program {
+            None => "MCP'deki bir ajan açık çizimi okuyup komutlarla yazabilir".to_owned(),
+            Some(_) => format!(
+                "MCP'deki bir ajan ({}) açık çizimi okuyup komutlarla yazabilir",
+                super::link::attach_words(program)
+            ),
+        }),
     };
     tip(
         button(icon(Icon::Link).size(15.0))
@@ -151,7 +157,7 @@ impl App {
                 restart_tip,
                 (c.started() || running).then_some(ev(Event::Restart)),
             ))
-            .push(link_toggle(c));
+            .push(link_toggle(c, self.program));
         if let Some(signature) = &c.signature
             && !running
         {

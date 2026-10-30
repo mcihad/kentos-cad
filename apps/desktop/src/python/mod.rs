@@ -118,6 +118,8 @@ pub struct Console {
     asked_signature: u64,
     /// The agents' link, while the user keeps it open (link.rs, agents.rs).
     pub link: Option<link::Link>,
+    /// The folder the link opens in: none, the user's runtime folder (`link::folder`); tests give one of their own.
+    pub link_folder: Option<PathBuf>,
     /// The programs connected through it, by connection.
     agents: std::collections::BTreeMap<u64, link::Answerer>,
     /// The commands the agents run as jobs (docs/adr/0253 §9): computed on
@@ -142,6 +144,7 @@ impl Default for Console {
             asked_completion: None,
             asked_signature: 0,
             link: None,
+            link_folder: None,
             agents: std::collections::BTreeMap::new(),
             jobs: kentos_headless::rpc::Jobs::default(),
             echo: echo::Echo::default(),
