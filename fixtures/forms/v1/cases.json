@@ -41719,5 +41719,7418 @@
     "layers"
    ]
   }
+ ],
+ "picks": [
+  {
+   "name": "kimlikle anahtarlı liste: seçilen parselin kimliği, etiketi numarası",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak"
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "code": "p-b",
+    "label": "101/12"
+   }
+  },
+  {
+   "name": "numarayla anahtarlı liste: seçilen parselin numarası, etiketi maliki",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "no",
+       "label": "malik"
+      }
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "code": "101/5",
+    "label": "Ayşe Kaya"
+   }
+  },
+  {
+   "name": "yinelenen numaranın ikinci nesnesi: kod aynı, etiket ilkinin",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "no",
+       "label": "malik"
+      }
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-d",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1201",
+     "malik": "Veli Can",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "code": "101/12",
+    "label": "Ali Can"
+   }
+  },
+  {
+   "name": "anahtarı boş nesne değer vermez",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "malik"
+      }
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-c",
+    "attrs": {
+     "ada": "102",
+     "parsel": "1",
+     "mahalle": "kızılay",
+     "mkod": "7",
+     "alan": "80.25",
+     "no": "102/1"
+    }
+   },
+   "out": {
+    "miss": "noKey"
+   }
+  },
+  {
+   "name": "anahtarı dolu nesne verir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "malik"
+      }
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "code": "Ayşe Kaya",
+    "label": "Ayşe Kaya"
+   }
+  },
+  {
+   "name": "süzgecin dışındaki parsel seçilemez",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "filter": "alan > 100"
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-c",
+    "attrs": {
+     "ada": "102",
+     "parsel": "1",
+     "mahalle": "kızılay",
+     "mkod": "7",
+     "alan": "80.25",
+     "no": "102/1"
+    }
+   },
+   "out": {
+    "miss": "filtered"
+   }
+  },
+  {
+   "name": "süzgeçten geçen parsel seçilir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "filter": "alan > 100"
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "code": "p-b",
+    "label": "101/12"
+   }
+  },
+  {
+   "name": "zincirin alanı boşken seçilemez",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "matches": [
+        {
+         "field": "mkod",
+         "record": "MahKod"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mk",
+      "field": "MahKod"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "miss": "chainEmpty"
+   }
+  },
+  {
+   "name": "zincir sayıyla: 6, 06'nın parselini alır",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "matches": [
+        {
+         "field": "mkod",
+         "record": "MahKod"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mk",
+      "field": "MahKod"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {
+    "MahKod": "6"
+   },
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "code": "p-a",
+    "label": "101/5"
+   }
+  },
+  {
+   "name": "zincirin dışındaki mahallenin parseli seçilemez",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "matches": [
+        {
+         "field": "mkod",
+         "record": "MahKod"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mk",
+      "field": "MahKod"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {
+    "MahKod": "7"
+   },
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "miss": "chain"
+   }
+  },
+  {
+   "name": "katlanmadan: Kızılay, kızılay yazılan kayda uymaz",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "matches": [
+        {
+         "field": "mahalle",
+         "record": "Mahalle"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mah",
+      "field": "Mahalle"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {
+    "Mahalle": "kızılay"
+   },
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "miss": "chain"
+   }
+  },
+  {
+   "name": "katlanmadan: aynı yazılan mahalle uyar",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "matches": [
+        {
+         "field": "mahalle",
+         "record": "Mahalle"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mah",
+      "field": "Mahalle"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {
+    "Mahalle": "kızılay"
+   },
+   "item": "parsel",
+   "pick": {
+    "uid": "p-c",
+    "attrs": {
+     "ada": "102",
+     "parsel": "1",
+     "mahalle": "kızılay",
+     "mkod": "7",
+     "alan": "80.25",
+     "no": "102/1"
+    }
+   },
+   "out": {
+    "code": "p-c",
+    "label": "102/1"
+   }
+  },
+  {
+   "name": "katlanarak: Kızılay, KIZILAY yazılan kayda uyar",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "matches": [
+        {
+         "field": "mahalle",
+         "record": "Mahalle",
+         "fold": true
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "mah",
+      "field": "Mahalle"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {
+    "Mahalle": "KIZILAY"
+   },
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "code": "p-b",
+    "label": "101/12"
+   }
+  },
+  {
+   "name": "binayı içeren parsel seçilir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "contains"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420030
+      },
+      {
+       "x": 487010,
+       "y": 4420030
+      }
+     ]
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "code": "p-a",
+    "label": "101/5"
+   }
+  },
+  {
+   "name": "binayı içermeyen parsel uzakta",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "contains"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420030
+      },
+      {
+       "x": 487010,
+       "y": 4420030
+      }
+     ]
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "miss": "apart"
+   }
+  },
+  {
+   "name": "geometrisiz kayda mekânsal listeden seçilemez",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "contains"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "miss": "noShape"
+   }
+  },
+  {
+   "name": "iki parsele taşan bina: kesişen ikincisi de seçilir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "intersects"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487090,
+       "y": 4420010
+      },
+      {
+       "x": 487110,
+       "y": 4420010
+      },
+      {
+       "x": 487110,
+       "y": 4420030
+      },
+      {
+       "x": 487090,
+       "y": 4420030
+      }
+     ]
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "code": "p-b",
+    "label": "101/12"
+   }
+  },
+  {
+   "name": "iki parsele taşan bina: kesişmeyen üçüncü uzakta",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "intersects"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487090,
+       "y": 4420010
+      },
+      {
+       "x": 487110,
+       "y": 4420010
+      },
+      {
+       "x": 487110,
+       "y": 4420030
+      },
+      {
+       "x": 487090,
+       "y": 4420030
+      }
+     ]
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-c",
+    "attrs": {
+     "ada": "102",
+     "parsel": "1",
+     "mahalle": "kızılay",
+     "mkod": "7",
+     "alan": "80.25",
+     "no": "102/1"
+    }
+   },
+   "out": {
+    "miss": "apart"
+   }
+  },
+  {
+   "name": "en yakın: eşit uzaklıktakilerden listenin ilki seçilir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "nearest"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "point",
+     "p": {
+      "x": 487150,
+      "y": 4420150
+     }
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "code": "p-b",
+    "label": "101/12"
+   }
+  },
+  {
+   "name": "en yakın: eşit uzaklıktaki ikincisi uzakta, en yakını söylenir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "nearest"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "point",
+     "p": {
+      "x": 487150,
+      "y": 4420150
+     }
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-c",
+    "attrs": {
+     "ada": "102",
+     "parsel": "1",
+     "mahalle": "kızılay",
+     "mkod": "7",
+     "alan": "80.25",
+     "no": "102/1"
+    }
+   },
+   "out": {
+    "miss": "apart",
+    "nearest": "101/12"
+   }
+  },
+  {
+   "name": "en yakın: uzaktaki parsel uzakta, en yakını söylenir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "nearest"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "point",
+     "p": {
+      "x": 487150,
+      "y": 4420150
+     }
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-a",
+    "attrs": {
+     "ada": "101",
+     "parsel": "5",
+     "mahalle": "İNÖNÜ",
+     "mkod": "06",
+     "alan": "450.50",
+     "malik": "Ayşe Kaya",
+     "tarih": "2024-03-01",
+     "no": "101/5"
+    }
+   },
+   "out": {
+    "miss": "apart",
+    "nearest": "101/12"
+   }
+  },
+  {
+   "name": "en yakın, toleransın dışında: söylenecek en yakın yok",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "nearest",
+        "tolerance": 40
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "point",
+     "p": {
+      "x": 487150,
+      "y": 4420150
+     }
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "miss": "apart"
+   }
+  },
+  {
+   "name": "kaydın içinde kalan parsel seçilir",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "within"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 486990,
+       "y": 4419990
+      },
+      {
+       "x": 487110,
+       "y": 4419990
+      },
+      {
+       "x": 487110,
+       "y": 4420210
+      },
+      {
+       "x": 486990,
+       "y": 4420210
+      }
+     ]
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-c",
+    "attrs": {
+     "ada": "102",
+     "parsel": "1",
+     "mahalle": "kızılay",
+     "mkod": "7",
+     "alan": "80.25",
+     "no": "102/1"
+    }
+   },
+   "out": {
+    "code": "p-c",
+    "label": "102/1"
+   }
+  },
+  {
+   "name": "kaydın içinde kalmayan parsel uzakta",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "within"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 486990,
+       "y": 4419990
+      },
+      {
+       "x": 487110,
+       "y": 4419990
+      },
+      {
+       "x": 487110,
+       "y": 4420210
+      },
+      {
+       "x": 486990,
+       "y": 4420210
+      }
+     ]
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "miss": "apart"
+   }
+  },
+  {
+   "name": "şekilsiz dünyada mekânsal liste daraltmaz",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak",
+       "spatial": {
+        "relation": "contains"
+       }
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1",
+    "entity": {
+     "kind": "polygon",
+     "pts": [
+      {
+       "x": 487010,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420010
+      },
+      {
+       "x": 487030,
+       "y": 4420030
+      },
+      {
+       "x": 487010,
+       "y": 4420030
+      }
+     ]
+    }
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-b",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1200",
+     "malik": "Ali Can",
+     "tarih": "2023-11-20",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "code": "p-b",
+    "label": "101/12"
+   }
+  },
+  {
+   "name": "yinelenen numaranın ilk nesnesi kayda uymuyor: ikincisi de değer veremez",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "no",
+       "matches": [
+        {
+         "field": "malik",
+         "record": "Malik"
+        }
+       ]
+      }
+     },
+     {
+      "type": "field",
+      "id": "malik",
+      "field": "Malik"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {
+    "Malik": "Veli Can"
+   },
+   "item": "parsel",
+   "pick": {
+    "uid": "p-d",
+    "attrs": {
+     "ada": "101",
+     "parsel": "12",
+     "mahalle": "Kızılay",
+     "mkod": "7",
+     "alan": "1201",
+     "malik": "Veli Can",
+     "no": "101/12"
+    }
+   },
+   "out": {
+    "miss": "duplicate"
+   }
+  },
+  {
+   "name": "listenin yapıldığı katmanda olmayan nesne",
+   "fields": [
+    {
+     "name": "Parsel",
+     "kind": "text"
+    },
+    {
+     "name": "Ada",
+     "kind": "integer"
+    },
+    {
+     "name": "Alan",
+     "kind": "decimal"
+    },
+    {
+     "name": "Malik",
+     "kind": "text"
+    },
+    {
+     "name": "Kaynak",
+     "kind": "text"
+    },
+    {
+     "name": "Mahalle",
+     "kind": "text"
+    },
+    {
+     "name": "MahKod",
+     "kind": "integer"
+    },
+    {
+     "name": "Kat",
+     "kind": "integer"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "parsel",
+      "field": "Parsel",
+      "lookup": {
+       "layer": "parsel",
+       "key": "$uid",
+       "label": "no",
+       "columns": [
+        "alan",
+        "malik",
+        "tarih"
+       ],
+       "sort": {
+        "field": "alan",
+        "descending": true
+       },
+       "copy": [
+        {
+         "from": "ada",
+         "to": "Ada"
+        },
+        {
+         "from": "alan",
+         "to": "Alan"
+        },
+        {
+         "from": "malik",
+         "to": "Malik"
+        }
+       ],
+       "stamp": "Kaynak"
+      }
+     },
+     {
+      "type": "field",
+      "id": "kat",
+      "field": "Kat"
+     }
+    ]
+   },
+   "variables": [],
+   "world": {
+    "parsel": {
+     "name": "Parsel",
+     "fields": [
+      {
+       "name": "ada",
+       "kind": "integer"
+      },
+      {
+       "name": "parsel",
+       "kind": "integer"
+      },
+      {
+       "name": "mahalle",
+       "kind": "text"
+      },
+      {
+       "name": "mkod",
+       "kind": "integer"
+      },
+      {
+       "name": "alan",
+       "alias": "Yüzölçümü",
+       "kind": "decimal",
+       "scale": 2
+      },
+      {
+       "name": "malik",
+       "kind": "text"
+      },
+      {
+       "name": "tarih",
+       "kind": "date"
+      },
+      {
+       "name": "no",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "p-a",
+       {
+        "ada": "101",
+        "parsel": "5",
+        "mahalle": "İNÖNÜ",
+        "mkod": "06",
+        "alan": "450.50",
+        "malik": "Ayşe Kaya",
+        "tarih": "2024-03-01",
+        "no": "101/5"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487000,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-b",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1200",
+        "malik": "Ali Can",
+        "tarih": "2023-11-20",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487100,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420000
+         },
+         {
+          "x": 487200,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         }
+        ]
+       }
+      ],
+      [
+       "p-c",
+       {
+        "ada": "102",
+        "parsel": "1",
+        "mahalle": "kızılay",
+        "mkod": "7",
+        "alan": "80.25",
+        "no": "102/1"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420100
+         },
+         {
+          "x": 487100,
+          "y": 4420200
+         },
+         {
+          "x": 487000,
+          "y": 4420200
+         }
+        ]
+       }
+      ],
+      [
+       "p-d",
+       {
+        "ada": "101",
+        "parsel": "12",
+        "mahalle": "Kızılay",
+        "mkod": "7",
+        "alan": "1201",
+        "malik": "Veli Can",
+        "no": "101/12"
+       },
+       {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487300,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420300
+         },
+         {
+          "x": 487310,
+          "y": 4420310
+         },
+         {
+          "x": 487300,
+          "y": 4420310
+         }
+        ]
+       }
+      ]
+     ]
+    }
+   },
+   "object": {
+    "uid": "bina-1"
+   },
+   "attrs": {},
+   "item": "parsel",
+   "pick": {
+    "uid": "p-z",
+    "attrs": {
+     "ada": "103",
+     "parsel": "1",
+     "no": "103/1"
+    }
+   },
+   "out": {
+    "miss": "notListed"
+   }
+  }
  ]
 }

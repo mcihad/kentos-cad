@@ -226,10 +226,83 @@ async fn earlier_copies(
         .collect())
 }
 
+/// The shapes a form's spatial lists read (docs/adr/0759 §2): of each layer in `around`, its objects
+/// within the written records' box grown by the list's distance and the projection's tolerance (a
+/// GiST lookup: `&&` against a box in the project's own system), or all of them for a nearest list
+/// without a tolerance. A record without a shape narrows nothing: nothing is read for it.
+async fn spatial_shapes(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    around: &[(String, Option<f64>)],
+    written: &[(usize, &str, &kentos_contracts::Entity)],
+    srid: u32,
+) -> AppResult<HashMap<String, std::sync::Arc<kentos_geometry_core::entity::Shape>>> {
+    use kentos_geometry_core::ops::spatial_query::geometry_of;
+    let mut boxed: Option<[f64; 4]> = None;
+    for (_, _, e) in written {
+        let Some(b) = kentos_forms::object_of(e, "", 0.0)
+            .shape
+            .as_deref()
+            .and_then(geometry_of)
+            .map(|g| g.bounds)
+        else {
+            continue;
+        };
+        boxed = Some(match boxed {
+            None => [b.min_x, b.min_y, b.max_x, b.max_y],
+            Some([x0, y0, x1, y1]) => [
+                x0.min(b.min_x),
+                y0.min(b.min_y),
+                x1.max(b.max_x),
+                y1.max(b.max_y),
+            ],
+        });
+    }
+    let mut out = HashMap::new();
+    for (layer, reach) in around {
+        let rows: Vec<FeatureRow> = match (reach, boxed) {
+            (_, None) => continue,
+            (None, Some(_)) => sqlx::query_as(sqlx::AssertSqlSafe(format!(
+                "select {FEATURE_COLUMNS} from kentos.feature where tenant_id=$1 and project_id=$2 and layer_id=$3"
+            )))
+            .bind(access.tenant)
+            .bind(access.project)
+            .bind(layer)
+            .fetch_all(&mut **tx)
+            .await?,
+            (Some(d), Some([x0, y0, x1, y1])) => {
+                let pad = d + crate::cad::PROJECTION_TOLERANCE;
+                sqlx::query_as(sqlx::AssertSqlSafe(format!(
+                    "select {FEATURE_COLUMNS} from kentos.feature where tenant_id=$1 and project_id=$2 and layer_id=$3 \
+                     and geom && public.st_makeenvelope($4,$5,$6,$7,$8)"
+                )))
+                .bind(access.tenant)
+                .bind(access.project)
+                .bind(layer)
+                .bind(x0 - pad)
+                .bind(y0 - pad)
+                .bind(x1 + pad)
+                .bind(y1 + pad)
+                .bind(srid as i32)
+                .fetch_all(&mut **tx)
+                .await?
+            }
+        };
+        for row in rows {
+            let r = record(row)?;
+            if let Some(shape) = kentos_forms::object_of(&r.entity, "", 0.0).shape {
+                out.insert(r.id, shape);
+            }
+        }
+    }
+    Ok(out)
+}
+
 /// The forms' guard over the commit's object changes (docs/adr/0411 §2, §4): a Veri girişi's
 /// (`entry`) change is its record's attributes through its layer's published form; a write to a
 /// layer whose form enforces its rules keeps them. The forms judge with the project's variables (the
 /// moment's left out), its reading unit and the stored objects of the layers they read.
+#[allow(clippy::too_many_arguments)]
 async fn guard_forms(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
@@ -238,6 +311,7 @@ async fn guard_forms(
     tree: &[LayerNode],
     changes: &[FeatureChange],
     entry: bool,
+    srid: u32,
 ) -> AppResult<()> {
     let written: Vec<(usize, &str, &kentos_contracts::Entity)> = changes
         .iter()
@@ -274,6 +348,22 @@ async fn guard_forms(
         }
     }
     let variables = crate::form_guard::variables_for(name, settings, &access.actor);
+    // The spatial lists' layers and how far around the written records their shapes are needed
+    // (docs/adr/0759 §2).
+    let unit = kentos_expression::Unit::per_metre(settings.unit().per_metre());
+    let mut around: Vec<(String, Option<f64>)> = Vec::new();
+    for f in &forms {
+        if let Some(r) = f.releases.last() {
+            for (layer, a) in crate::form_guard::spatial_reach(&r.body, unit) {
+                match around.iter_mut().find(|(l, _)| *l == layer) {
+                    Some((_, was)) => *was = was.zip(a).map(|(x, y)| x.max(y)),
+                    None => around.push((layer, a)),
+                }
+            }
+        }
+    }
+    let mut shapes: HashMap<String, std::sync::Arc<kentos_geometry_core::entity::Shape>> =
+        HashMap::new();
     // A Veri girişi writes only the records its forms reach (docs/adr/0539, 0550).
     let reach = entry.then(|| {
         crate::form_guard::reach_with(
@@ -304,6 +394,11 @@ async fn guard_forms(
                 continue;
             }
             let entity = crate::form_guard::projected(r.entity, reach);
+            if around.iter().any(|(l, _)| *l == entity.base().layer_id)
+                && let Some(shape) = kentos_forms::object_of(&entity, "", 0.0).shape
+            {
+                shapes.insert(r.id.clone(), shape);
+            }
             rows.push((
                 entity.base().layer_id.clone(),
                 r.id,
@@ -334,12 +429,16 @@ async fn guard_forms(
             rows.push((layer, id.to_string(), attrs));
         }
     }
+    if reach.is_none() && !around.is_empty() {
+        shapes = spatial_shapes(tx, access, &around, &written, srid).await?;
+    }
+    let spatial: Vec<String> = around.into_iter().map(|(l, _)| l).collect();
     let judge = crate::form_guard::Judge {
         settings,
         tree,
         variables,
-        unit: kentos_expression::Unit::per_metre(settings.unit().per_metre()),
-        world: crate::form_guard::world_of(tree, &rows),
+        unit,
+        world: crate::form_guard::world_of(tree, &rows, &spatial, &shapes),
     };
     let ids: Vec<Uuid> = written
         .iter()
@@ -1718,6 +1817,7 @@ pub(crate) async fn commit_in(
         &tree,
         &input.features,
         entry,
+        new_srid,
     )
     .await?;
     // What a Veri girişi will need of each changed record's earlier copy to tell whether it had reached it

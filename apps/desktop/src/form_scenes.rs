@@ -1009,7 +1009,7 @@ fn chosen_facilities(app: &mut App) {
 /// Parcels and buildings (docs/adr/0439): a building's parcel chosen from the parcels holding it, their
 /// area, owner and day shown beside it and under it, copied into the building with a stamp; the
 /// neighbourhoods searched a page at a time; the project's value lists.
-fn sources(app: &mut App) {
+pub(crate) fn sources(app: &mut App) {
     let mut o = Objects::new();
     // Ada, parsel, the square, area, owner and day.
     type Parcel<'a> = (&'a str, &'a str, [f64; 4], &'a str, &'a str, &'a str);
@@ -1199,6 +1199,35 @@ fn sources_entry(app: &mut App) {
     app.selection.set([Slot(5)]);
     run(app, "data.formEdit");
     entry(app, entry::Event::Value("Parsel".into(), "101/5".into()));
+}
+
+/// Formla düzenle on the first building with Haritadan seç beside its parcel (docs/adr/0759 §1).
+fn map_pick_offered(app: &mut App) {
+    sources(app);
+    app.selection.set([Slot(5)]);
+    run(app, "data.formEdit");
+}
+
+/// Haritadan seç pressed: the window steps aside, the prompt asks for a parcel; the pointer over
+/// 101/5 lights it.
+fn map_picking(app: &mut App) {
+    map_pick_offered(app);
+    entry(app, entry::Event::PickOnMap("parsel".into()));
+    crate::tools_scenes::hover(app, [3.0, 21.0]);
+}
+
+/// The parcel holding the building clicked: its value, copies and stamp in the form.
+fn map_picked(app: &mut App) {
+    map_pick_offered(app);
+    entry(app, entry::Event::PickOnMap("parsel".into()));
+    crate::tools_scenes::click(app, [3.0, 21.0]);
+}
+
+/// The neighbouring parcel clicked: it does not hold the building; the value stays, why is said.
+fn map_apart(app: &mut App) {
+    map_pick_offered(app);
+    entry(app, entry::Event::PickOnMap("parsel".into()));
+    crate::tools_scenes::click(app, [45.0, 12.0]);
 }
 
 /// The neighbourhoods searched: “ka” typed, a page of suggestions with their district, Daha fazla.
@@ -2975,6 +3004,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-deger-gunleri", permit_values),
         ("form-kural-baglari", permit_designer),
         ("form-kaynak-giris", sources_entry),
+        ("form-haritadan-dugme", map_pick_offered),
+        ("form-haritadan-seciliyor", map_picking),
+        ("form-haritadan-secildi", map_picked),
+        ("form-haritadan-uzakta", map_apart),
         ("form-iliski-kartlar", meters_cards),
         ("form-iliski-bekleyen", meters_pending),
         ("form-iliski-yigini", meters_nested),

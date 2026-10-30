@@ -66,6 +66,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (modül başına galeri ve öntanımlı pafta) web'de de kullanılabilir; web'in pafta kipi bugünkü gibi türe göre çalışır.
   Modül programları (tek `kentos-cad` dosyası, modül adlarıyla; ADR 0802 §1) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
   karşılığı yoktur.
+- ADR 0759: Formla düzenle'de Haritadan seç (`Prepared::picked`, `PickMiss`). Web'in formunda aynı düğme ve haritadan bir nesne
+  seçen kip; kararı çekirdekten (`kentos_forms`'un `picked`'i WASM'a bağlanınca), ortak durumlar `fixtures/forms/v1/cases.json`'un
+  `picks` grubu. Sunucunun mekânsal daraltması web'in yazmalarına da uygulanır, web'de iş yok.
 - ADR 0758: katmanın dizinleri ve anahtarları (`LayerNode.indexes`, `.kcad` şema 136; `cad.layers.indexes`). Web'in
   işleyicisi ve Dizinler penceresi; web'in yazma yolları (tablo, form, Yapıştır) tekil dizini çekirdeğin kuralıyla sormalı
   (`kentos_forms`'un `with_indexes`'i WASM'a bağlanınca formda da); web'in GeoPackage alışverişi `kentos_geopackage::indexes`'i

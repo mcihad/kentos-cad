@@ -544,6 +544,21 @@ impl Prepared {
         Some(b.lookup.as_ref()?.choices(attrs, object))
     }
 
+    /// The value an object picked on the map gives the record's list item `item` (docs/adr/0759 §1): the
+    /// object `uid` with its attributes `values`, judged as the list judges it; its code and label, else
+    /// why not. None for an item without a list from another layer.
+    pub fn picked(
+        &self,
+        item: &str,
+        attrs: &Attrs,
+        object: &Object,
+        uid: &str,
+        values: &Attrs,
+    ) -> Option<Result<(String, String), crate::lookup::PickMiss>> {
+        let b = self.items.iter().find(|n| n.id == item)?.field.as_ref()?;
+        Some(b.lookup.as_ref()?.picked(uid, values, attrs, object))
+    }
+
     /// The listed values a field item offers for the record, in the list's order: none when the item
     /// has no filter (every listed value is offered).
     pub fn choices(&self, item: &str, attrs: &Attrs, object: &Object) -> Option<Vec<String>> {

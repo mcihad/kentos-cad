@@ -289,3 +289,36 @@ fn a_form_s_needs_and_a_host_s_lacks_are_as_the_cases_say() {
         assert_eq!(lacking, want, "{name}");
     }
 }
+
+/// The value an object picked on the map gives a list item, or why it gives none (docs/adr/0759 §1).
+#[test]
+fn a_picked_object_gives_the_list_s_value_as_the_cases_say() {
+    for c in cases("picks") {
+        let name = c["name"].as_str().unwrap_or_default();
+        let form = prepared(&c);
+        let item = c["item"].as_str().expect("an item");
+        let uid = c["pick"]["uid"].as_str().expect("a uid");
+        let got = form
+            .picked(
+                item,
+                &attrs(&c["attrs"]),
+                &object(&c),
+                uid,
+                &attrs(&c["pick"]["attrs"]),
+            )
+            .expect("a list item");
+        let got = match got {
+            Ok((code, label)) => json!({ "code": code, "label": label }),
+            Err(miss) => {
+                assert!(!miss.message().is_empty(), "{name}");
+                match miss {
+                    kentos_forms::PickMiss::Apart {
+                        nearest: Some(n), ..
+                    } => json!({ "miss": "apart", "nearest": n }),
+                    miss => json!({ "miss": miss.key() }),
+                }
+            }
+        };
+        assert_eq!(got, c["out"], "{name}");
+    }
+}

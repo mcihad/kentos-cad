@@ -12,7 +12,9 @@
 //!
 //! [`PickObjects::one`] picks a single object (the expression builder's
 //! preview object): a click on one takes it and ends the pick; there is no
-//! box.
+//! box. [`PickObjects::on_layer`] picks one object of a layer (a form's list
+//! from that layer, docs/adr/0759 §1): the selection filter and Otomatik
+//! seçim do not narrow it, the layer does.
 
 use kentos_domain::Slot;
 use kentos_geometry_core::jsmath::js_hypot;
@@ -50,6 +52,8 @@ pub struct PickObjects {
     count: usize,
     /// One object only: a click takes it and ends the pick.
     one: bool,
+    /// Only this layer's objects, whatever the selection filter says.
+    layer: Option<String>,
     done: bool,
 }
 
@@ -61,6 +65,7 @@ impl PickObjects {
             press: None,
             count: 0,
             one: false,
+            layer: None,
             done: false,
         }
     }
@@ -73,8 +78,23 @@ impl PickObjects {
         }
     }
 
+    /// A single object of `layer`: the first click on one takes it.
+    pub fn on_layer(field: impl Into<String>, layer: impl Into<String>) -> Self {
+        Self {
+            one: true,
+            layer: Some(layer.into()),
+            ..Self::new(field, None)
+        }
+    }
+
     /// Whether the field takes this object.
     fn takes(&self, slot: Slot, cx: &Context<'_>) -> bool {
+        if let Some(layer) = &self.layer {
+            return cx
+                .doc
+                .get(slot)
+                .is_some_and(|e| e.base().layer_id == *layer);
+        }
         // The selection filter's kinds and Otomatik seçim's layer too, as every selecting step (docs/adr/0278,
         // 0622 §5).
         let filtered = cx

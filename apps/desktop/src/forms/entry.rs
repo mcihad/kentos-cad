@@ -258,6 +258,8 @@ pub enum Event {
     Group(String),
     /// A related object's form opens (docs/adr/0404 §4).
     OpenRelated(String),
+    /// Haritadan seç (docs/adr/0759 §1): a list item's value picked on the map, by its item.
+    PickOnMap(String),
     /// A related object, or the one a reference names, is shown in the drawing.
     ShowObject(String),
     /// A related item's object linked to the record, or its link to it broken (docs/adr/0405 §4):
@@ -387,6 +389,40 @@ impl Entry {
     #[cfg(test)]
     pub(crate) fn after_value(&self, name: &str) -> Option<String> {
         self.after.get(name).cloned()
+    }
+
+    /// What Haritadan seç needs of a list item (docs/adr/0759 §1): its list layer, its field's key and
+    /// its label; none for an item without a list from another layer, a many-valued field, or where
+    /// nothing is written (the preview, the many-record mode).
+    pub(crate) fn map_pick_of(&self, item: &str) -> Option<(String, String, String)> {
+        if self.preview || !self.members.is_empty() {
+            return None;
+        }
+        let FormItem::Field(f) = crate::forms::designer::find(&self.body.items, item)? else {
+            return None;
+        };
+        let lookup = f.lookup.as_ref()?;
+        let field = self.fields.iter().find(|x| x.key() == f.field)?;
+        if field.holds_many() {
+            return None;
+        }
+        let label = self
+            .words_of(&f.id, f.label.as_ref())
+            .unwrap_or_else(|| field.label().to_owned());
+        Some((lookup.layer.clone(), f.field.clone(), label))
+    }
+
+    /// The value the object `uid` (its attributes `values`) picked on the map gives the list item
+    /// `item`, judged on the record as it is typed now (docs/adr/0759 §1).
+    pub(crate) fn map_picked(
+        &self,
+        item: &str,
+        uid: &str,
+        values: &Attrs,
+    ) -> Option<Result<(String, String), kentos_forms::PickMiss>> {
+        self.screen
+            .prepared
+            .picked(item, &self.after, &self.screen.object, uid, values)
     }
 
     /// Whether the field's item is an overridable calculation (docs/adr/0417).
@@ -1560,6 +1596,7 @@ impl App {
                 }
             }
             Event::OpenRelated(uid) => return self.open_related(&uid),
+            Event::PickOnMap(item) => return self.pick_on_map(&item),
             Event::RunAction(item) => {
                 use kentos_commands::ActionKind as K;
                 let Some(FormItem::Action {
@@ -3130,6 +3167,30 @@ impl App {
                     } else {
                         control
                     };
+                    // Haritadan seç (docs/adr/0759 §1): a list from another layer takes its value from
+                    // an object clicked on the map.
+                    let control: Element<'a, Message> =
+                        match (!read_only).then(|| e.map_pick_of(&f.id)).flatten() {
+                            Some(_) => {
+                                let pick = kentos_ui::widget::tip(
+                                    iced::widget::button(icon(Icon::Target).size(12.0))
+                                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
+                                        .style(style::button::tool(false))
+                                        .on_press(e.msg(Event::PickOnMap(f.id.clone()))),
+                                    kentos_ui::widget::Tip::new("Haritadan seç").body(
+                                        "Değeri, listenin katmanından bir nesneye tıklayarak verin",
+                                    ),
+                                    iced::widget::tooltip::Position::Top,
+                                );
+                                Row::new()
+                                    .spacing(4)
+                                    .align_y(Center)
+                                    .push(container(control).width(Fill))
+                                    .push(pick)
+                                    .into()
+                            }
+                            None => control,
+                        };
                     // Alanlara not: the field's note for the next step (docs/adr/0442 §4).
                     let control: Element<'a, Message> = if e.reviewing && !f.mirror {
                         let key = f.field.clone();

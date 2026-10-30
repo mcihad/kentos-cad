@@ -28,6 +28,16 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Formda haritadan seçilen değer ve sunucuda mekânsal liste (30 Ekim 2026; [ADR 0759](docs/adr/0759-map-pick-and-spatial-guard.md)).**
+  Formla düzenle'de başka katmandan listesi olan, tek değerli, yazılabilir alanın yanında Haritadan seç: pencere çekilir (bağlı
+  form yerinde kalır), `PickObjects::on_layer` yalnız listenin katmanından tek nesne alır (seçim süzgeci ve Otomatik seçim sayılmaz),
+  Esc vazgeçer, gizli ya da dondurulmuş katman seçimi başlatmaz (`forms/map_pick.rs`). Değer çekirdekte listenin kuralıyla bulunur
+  (`Prepared::picked`, `List::picked`): liste o kodu bu kayda sunuyorsa yazılır, sunmuyorsa neden (`PickMiss`: boş anahtar, süzgeç,
+  zincirin boş alanı, zincir, listede olmayan, geometrisiz kayıt, konuma uymayan ve en yakının etiketi, ilk nesnesi uymayan yinelenen
+  kod). Sunucunun bekçisi mekânsal listenin katmanının şekillerini yazılan kayıtların kutusuyla, toleransla genişletilmiş `&&`
+  sorgusuyla okur (toleranssız en yakın bütün katmanı; `form_guard::spatial_reach`, `changes::spatial_shapes`); masaüstünün reddettiği
+  parsel buluta da yazılamaz. 27 ortak durum (`forms_cases.py`'nin `picked`'i), PostGIS'te `project_form_spatial`. FORM-SRC-08 [x].
+
 - **Katmanın dizinleri ve anahtarları (30 Ekim 2026; [ADR 0758](docs/adr/0758-layer-keys-and-indexes.md)).**
   Katman düğümünün `indexes`'i (`.kcad` şema 136 opt-in; ad, 1–32 alanın kararlı anahtarı, `unique`, `nullsEqual`;
   `layer_indexes_problem`), `cad.layers.indexes` (tek adım “Dizinler”, `invalid_indexes`, kayıtların zaten bozduğu yeni ya da

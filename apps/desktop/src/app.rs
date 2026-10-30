@@ -1116,6 +1116,8 @@ pub struct App {
     pub(crate) layer_rules: Option<crate::forms::layer_rules::Window>,
     /// Dizinler (docs/adr/0758).
     pub(crate) layer_indexes: Option<crate::forms::layer_indexes::Window>,
+    /// Haritadan seç while it runs (docs/adr/0759 §1): the form's item and the window put aside.
+    pub(crate) form_pick: Option<crate::forms::map_pick::FormPick>,
     pub(crate) domains: Option<crate::forms::domains::Window>,
     /// Kayıtları denetle (forms/audit.rs, docs/adr/0406).
     pub(crate) form_audit: Option<crate::forms::audit::Window>,
@@ -1512,6 +1514,7 @@ impl App {
             contingents: None,
             layer_rules: None,
             layer_indexes: None,
+            form_pick: None,
             domains: None,
             form_audit: None,
             form_memory: Default::default(),

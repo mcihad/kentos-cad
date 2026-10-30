@@ -761,7 +761,7 @@ class Form:
             v = val(uid, attrs, k)
             return "" if v is None else display_value(field(k), v)
 
-        # The server's world reads no shapes: a spatial list is not narrowed there.
+        # A world without the layer's shapes (a host that read none) does not narrow by geometry.
         shapes = other.get("shapes")
         spatial = lk.get("spatial") if shapes is not None and len(shapes) == len(other["rows"]) else None
         rows, seen, counts = [], set(), {}
@@ -824,6 +824,7 @@ class Form:
         tol = (spatial.get("tolerance") or 0) / unit if spatial else 0
         return {"rows": [r for r, _ in rows], "chain": chain, "dups": {c: n for c, n in counts.items() if n > 1},
                 "lookup": lk, "layer": other["name"], "spatial": spatial, "tolerance": tol,
+                "val": val, "still": still, "other": other,
                 "copyTo": [next(f["name"] for f in self.fields if key_of(f) == c["to"]) for c in lk.get("copy", [])],
                 "stamp": next((f["name"] for f in self.fields if key_of(f) == lk["stamp"]), None) if "stamp" in lk else None,
                 "columns": [(field(k)["alias"] if field(k) and field(k).get("alias") else (field(k)["name"] if field(k) else "Kimlik"))
@@ -869,6 +870,42 @@ class Form:
             if ok:
                 out.append(r)
         return out
+
+    def picked(self, x, attrs, obj, uid, values):
+        """docs/adr/0759 §1: the value an object picked on the map gives the list item `x` of the record
+        (`attrs`, its object `obj`): {"code", "label"} when the list offers the object's code, else why not:
+        noKey, filtered, chainEmpty, chain, noShape, apart (with the nearest offered value's label for a
+        nearest list), notListed (an object the list was not made of), duplicate (the code's first object
+        does not fit)."""
+        lst = self.lists[x["id"]]
+        lk = lst["lookup"]
+        code = lst["val"](uid, values, lk["key"])
+        if code is None:
+            return {"miss": "noKey"}
+        if "filter" in lk and not holds(lk["filter"], lst["other"]["fields"], values,
+                                        {"variables": lst["still"], "object": {}}):
+            return {"miss": "filtered"}
+        wanted = [attrs.get(n, "").strip(JS_SPACE) or None for n, _, _ in lst["chain"]]
+        if any(w is None for w in wanted):
+            return {"miss": "chainEmpty"}
+        keys = [lst["val"](uid, values, m["field"]) for m in lk.get("matches", [])
+                if any(key_of(f) == m["record"] for f in self.fields)]
+        if not all(k is not None and same_key(num, fo, k, w) for k, w, (_, num, fo) in zip(keys, wanted, lst["chain"])):
+            return {"miss": "chain"}
+        if not any(r[0] == code for r in lst["rows"]):
+            return {"miss": "notListed"}
+        offered = self.offered(x, attrs, obj)
+        row = next((r for r in offered if r[0] == code), None)
+        if row is not None:
+            return {"code": row[0], "label": row[1]}
+        if lst["spatial"]:
+            if (obj or {}).get("shape") is None:
+                return {"miss": "noShape"}
+            out = {"miss": "apart"}
+            if lst["spatial"]["relation"] == "nearest" and offered:
+                out["nearest"] = offered[0][1]
+            return out
+        return {"miss": "duplicate"}
 
     def code_of(self, x, text):
         rows = self.lists[x["id"]]["rows"]
@@ -1635,6 +1672,7 @@ def core():
         "defaults": defaults,
         "generate": gen,
         "needs": needs,
+        "picks": picks_core(),
     }
 
 
@@ -1991,6 +2029,80 @@ def sources_core():
     guard("formun göstermediği kopya hedefleri kopyanın değeriyle yazılabilir", {}, copied)
     guard("kopya hedefine başka değer yazılamaz", {}, {**copied, "Malik": "Başkası"})
     return pre, records, assess, enforce
+
+
+def picks_core():
+    """docs/adr/0759 §1: the value an object picked on the map gives a list item, or why it gives none."""
+    out = []
+    wj, wp = src_world()
+    rows = {u: a for u, a, _ in SRC_PARCELS}
+
+    def pick(name, body, uid, attrs=None, obj=None, world=(wj, wp), values=None):
+        oj, op = obj if obj is not None else src_object()
+        form = Form(body, SRC_OWN, (), world[1])
+        x = body["items"][0]
+        given = values if values is not None else rows[uid]
+        out.append({"name": name, "fields": SRC_OWN, "body": copy.deepcopy(body), "variables": [], "world": world[0],
+                    "object": oj, "attrs": attrs or {}, "item": x["id"], "pick": {"uid": uid, "attrs": given},
+                    "out": form.picked(x, attrs or {}, op, uid, given)})
+
+    plain = src_body(limit=None)
+    pick("kimlikle anahtarlı liste: seçilen parselin kimliği, etiketi numarası", plain, "p-b")
+    by_no = {"revision": 1, "items": [{"type": "field", "id": "parsel", "field": "Parsel",
+                                       "lookup": {"layer": "parsel", "key": "no", "label": "malik"}}]}
+    pick("numarayla anahtarlı liste: seçilen parselin numarası, etiketi maliki", by_no, "p-a")
+    pick("yinelenen numaranın ikinci nesnesi: kod aynı, etiket ilkinin", by_no, "p-d")
+    by_owner = {"revision": 1, "items": [{"type": "field", "id": "parsel", "field": "Parsel",
+                                          "lookup": {"layer": "parsel", "key": "malik"}}]}
+    pick("anahtarı boş nesne değer vermez", by_owner, "p-c")
+    pick("anahtarı dolu nesne verir", by_owner, "p-a")
+    big = src_body(limit=None, filter="alan > 100")
+    pick("süzgecin dışındaki parsel seçilemez", big, "p-c")
+    pick("süzgeçten geçen parsel seçilir", big, "p-b")
+    chain = {"revision": 1, "items": [
+        {"type": "field", "id": "parsel", "field": "Parsel",
+         "lookup": {"layer": "parsel", "key": "$uid", "label": "no", "matches": [{"field": "mkod", "record": "MahKod"}]}},
+        {"type": "field", "id": "mk", "field": "MahKod"}]}
+    pick("zincirin alanı boşken seçilemez", chain, "p-a")
+    pick("zincir sayıyla: 6, 06'nın parselini alır", chain, "p-a", {"MahKod": "6"})
+    pick("zincirin dışındaki mahallenin parseli seçilemez", chain, "p-a", {"MahKod": "7"})
+    folded = copy.deepcopy(chain)
+    folded["items"][0]["lookup"]["matches"] = [{"field": "mahalle", "record": "Mahalle"}]
+    folded["items"][1] = {"type": "field", "id": "mah", "field": "Mahalle"}
+    pick("katlanmadan: Kızılay, kızılay yazılan kayda uymaz", folded, "p-b", {"Mahalle": "kızılay"})
+    pick("katlanmadan: aynı yazılan mahalle uyar", folded, "p-c", {"Mahalle": "kızılay"})
+    folded["items"][0]["lookup"]["matches"][0]["fold"] = True
+    pick("katlanarak: Kızılay, KIZILAY yazılan kayda uyar", folded, "p-b", {"Mahalle": "KIZILAY"})
+    building = src_object(_sq("bina", 10, 10, 30, 30))
+    contains = src_body(spatial={"relation": "contains"}, limit=None)
+    pick("binayı içeren parsel seçilir", contains, "p-a", obj=building)
+    pick("binayı içermeyen parsel uzakta", contains, "p-b", obj=building)
+    pick("geometrisiz kayda mekânsal listeden seçilemez", contains, "p-a")
+    straddle = src_object(_sq("bina", 90, 10, 110, 30))
+    crossing = src_body(spatial={"relation": "intersects"}, limit=None)
+    pick("iki parsele taşan bina: kesişen ikincisi de seçilir", crossing, "p-b", obj=straddle)
+    pick("iki parsele taşan bina: kesişmeyen üçüncü uzakta", crossing, "p-c", obj=straddle)
+    near = src_object(sq.point("kuyu", sq.P(150, 150))[1])
+    nearest = src_body(spatial={"relation": "nearest"}, sort=None, limit=None)
+    pick("en yakın: eşit uzaklıktakilerden listenin ilki seçilir", nearest, "p-b", obj=near)
+    pick("en yakın: eşit uzaklıktaki ikincisi uzakta, en yakını söylenir", nearest, "p-c", obj=near)
+    pick("en yakın: uzaktaki parsel uzakta, en yakını söylenir", nearest, "p-a", obj=near)
+    far = src_body(spatial={"relation": "nearest", "tolerance": 40}, sort=None, limit=None)
+    pick("en yakın, toleransın dışında: söylenecek en yakın yok", far, "p-b", obj=near)
+    within = src_body(spatial={"relation": "within"}, limit=None)
+    block = src_object(_sq("ada", -10, -10, 110, 210))
+    pick("kaydın içinde kalan parsel seçilir", within, "p-c", obj=block)
+    pick("kaydın içinde kalmayan parsel uzakta", within, "p-b", obj=block)
+    pick("şekilsiz dünyada mekânsal liste daraltmaz", contains, "p-b", obj=building, world=src_world(False))
+    owners = {"revision": 1, "items": [
+        {"type": "field", "id": "parsel", "field": "Parsel",
+         "lookup": {"layer": "parsel", "key": "no", "matches": [{"field": "malik", "record": "Malik"}]}},
+        {"type": "field", "id": "malik", "field": "Malik"}]}
+    pick("yinelenen numaranın ilk nesnesi kayda uymuyor: ikincisi de değer veremez", owners, "p-d",
+         {"Malik": "Veli Can"})
+    pick("listenin yapıldığı katmanda olmayan nesne", plain, "p-z",
+         values={"ada": "103", "parsel": "1", "no": "103/1"})
+    return out
 
 
 def calc_cases():

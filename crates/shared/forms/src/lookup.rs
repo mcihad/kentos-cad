@@ -41,6 +41,101 @@ pub struct OtherLayer {
 /// The other layers a form reads, by their ids.
 pub type World = BTreeMap<String, OtherLayer>;
 
+/// Why an object picked on the map gives a list no value (docs/adr/0759 §1), in the order asked.
+#[derive(Clone, Debug, PartialEq)]
+pub enum PickMiss {
+    /// The object's key field is empty.
+    NoKey,
+    /// The list's filter leaves the object out.
+    Filtered,
+    /// A chained field of the record is empty: the record's fields named.
+    ChainEmpty(String),
+    /// The object does not match the record's chained fields, named.
+    Chain(String),
+    /// The object was not in its layer when the list was made.
+    NotListed,
+    /// A spatial list offers nothing to a record without geometry.
+    NoShape,
+    /// The object does not stand as the relation asks to the record; for a nearest list, the label
+    /// of the value nearest instead.
+    Apart {
+        relation: LookupRelation,
+        nearest: Option<String>,
+    },
+    /// The code's first object, the one the list holds, does not fit the record.
+    Duplicate,
+}
+
+impl PickMiss {
+    /// The reason's key, as the shared cases write it.
+    pub fn key(&self) -> &'static str {
+        match self {
+            PickMiss::NoKey => "noKey",
+            PickMiss::Filtered => "filtered",
+            PickMiss::ChainEmpty(_) => "chainEmpty",
+            PickMiss::Chain(_) => "chain",
+            PickMiss::NotListed => "notListed",
+            PickMiss::NoShape => "noShape",
+            PickMiss::Apart { .. } => "apart",
+            PickMiss::Duplicate => "duplicate",
+        }
+    }
+
+    /// What it says, the reason and what to do.
+    pub fn message(&self) -> String {
+        match self {
+            PickMiss::NoKey => {
+                "Seçilen nesnenin anahtar alanı boş; listeye değer vermez. Başka bir nesne seçin."
+                    .to_owned()
+            }
+            PickMiss::Filtered => {
+                "Seçilen nesne listenin süzgecinden geçmiyor; listede olan bir nesne seçin."
+                    .to_owned()
+            }
+            PickMiss::ChainEmpty(fields) => {
+                format!("Önce {fields} doldurun: liste kaydın bu değerine göre daralır.")
+            }
+            PickMiss::Chain(fields) => {
+                format!("Seçilen nesne kaydın {fields} değerine uymuyor; uyan bir nesne seçin.")
+            }
+            PickMiss::NotListed => {
+                "Seçilen nesne form açıldığında katmanda yoktu; formu kapatıp yeniden açın."
+                    .to_owned()
+            }
+            PickMiss::NoShape => {
+                "Kaydın geometrisi yok; konuma göre daralan listeden seçilemez. Önce kaydı çizin."
+                    .to_owned()
+            }
+            PickMiss::Apart { relation, nearest } => {
+                let why = match relation {
+                    LookupRelation::Contains => "kaydı içermiyor",
+                    LookupRelation::Within => "kaydın içinde kalmıyor",
+                    LookupRelation::Intersects => "kayıtla kesişmiyor",
+                    LookupRelation::Nearest => "kayda en yakın değil",
+                };
+                match nearest {
+                    Some(label) => format!("Seçilen nesne {why}; en yakını “{label}”."),
+                    None => format!("Seçilen nesne {why}; listenin konumuna uyan bir nesne seçin."),
+                }
+            }
+            PickMiss::Duplicate => {
+                "Bu değeri taşıyan ilk nesne kayda uymuyor (yinelenen değer ilk nesnenindir); \
+                                    katmandaki yinelenen değeri düzeltin."
+                    .to_owned()
+            }
+        }
+    }
+}
+
+/// What a picked object is judged by (docs/adr/0759 §1): the list's key, filter and matched fields.
+#[derive(Clone, Debug)]
+pub(crate) struct PickRule {
+    by_uid: bool,
+    key: Option<String>,
+    filter: Option<kentos_expression::Expr>,
+    matched: Vec<Option<String>>,
+}
+
 /// A value of a list: its code, its label, its matched fields' values, its columns shown, its copied
 /// fields' values and its geometry for a spatial list.
 #[derive(Clone, Debug)]
@@ -80,6 +175,8 @@ pub(crate) struct List {
     layer: String,
     /// The relation and the tolerance in metres.
     spatial: Option<(LookupRelation, f64)>,
+    /// What a picked object is judged by (docs/adr/0759 §1).
+    pick: PickRule,
 }
 
 impl List {
@@ -130,6 +227,73 @@ impl List {
                     .is_some_and(|place| stands(relation, tolerance, place, &record))
             })
             .collect()
+    }
+
+    /// The value the object `uid` (its attributes `values`) picked on the map gives the record, as
+    /// the list would offer it (docs/adr/0759 §1): its code and label, else why not.
+    pub(crate) fn picked(
+        &self,
+        uid: &str,
+        values: &Attrs,
+        attrs: &Attrs,
+        object: &Object,
+    ) -> Result<(String, String), PickMiss> {
+        let rule = &self.pick;
+        let Some(code) = value(uid, values, rule.key.as_deref(), rule.by_uid) else {
+            return Err(PickMiss::NoKey);
+        };
+        if rule
+            .filter
+            .as_ref()
+            .is_some_and(|e| !holds(e, values, &Object::default()))
+        {
+            return Err(PickMiss::Filtered);
+        }
+        let named = |links: &[&Link]| {
+            links
+                .iter()
+                .map(|l| format!("“{}”", l.name))
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let empty: Vec<&Link> = self
+            .chain
+            .iter()
+            .filter(|l| attrs.get(&l.name).is_none_or(|v| js_trim(v).is_empty()))
+            .collect();
+        if !empty.is_empty() {
+            return Err(PickMiss::ChainEmpty(named(&empty)));
+        }
+        let apart: Vec<&Link> = self
+            .chain
+            .iter()
+            .zip(&rule.matched)
+            .filter(|(l, name)| {
+                let wanted = attrs.get(&l.name).map_or("", |v| js_trim(v));
+                !value(uid, values, name.as_deref(), false).is_some_and(|k| same(l, k, wanted))
+            })
+            .map(|(l, _)| l)
+            .collect();
+        if !apart.is_empty() {
+            return Err(PickMiss::Chain(named(&apart)));
+        }
+        if self.row(code).is_none() {
+            return Err(PickMiss::NotListed);
+        }
+        let offered = self.offered(attrs, object);
+        if let Some(r) = offered.iter().find(|r| r.code == code) {
+            return Ok((r.code.clone(), r.label.clone()));
+        }
+        if let Some((relation, _)) = self.spatial {
+            if object.shape.is_none() {
+                return Err(PickMiss::NoShape);
+            }
+            let nearest = (relation == LookupRelation::Nearest)
+                .then(|| offered.first().map(|r| r.label.clone()))
+                .flatten();
+            return Err(PickMiss::Apart { relation, nearest });
+        }
+        Err(PickMiss::Duplicate)
     }
 
     /// The record's offered values as choices, a value's columns its description.
@@ -424,7 +588,8 @@ pub(crate) fn list_of(
         .filter
         .as_deref()
         .and_then(|src| compile_with(src, &schema_in(&other.fields, variables, unit)).ok());
-    // A world without the layer's shapes (the server's) does not narrow by geometry.
+    // A world without the layer's shapes (a host that read none) does not narrow by geometry; the server reads
+    // them around the written records (docs/adr/0759 §2).
     let spatial = lookup
         .spatial
         .as_ref()
@@ -504,19 +669,23 @@ pub(crate) fn list_of(
         }),
         None => rows.sort_by(|(a, _), (b, _)| natural(a, b)),
     }
-    let chain = lookup
+    // The chain's links and, in the same order, the list layer's field each reads.
+    let (chain, picked_names): (Vec<Link>, Vec<Option<String>>) = lookup
         .matches
         .iter()
         .filter_map(|m| {
             let ours = field_of(fields, &m.record)?;
             let theirs = field_of(&other.fields, &m.field);
-            Some(Link {
-                name: ours.name.clone(),
-                numeric: numeric(ours.kind) && theirs.is_some_and(|t| numeric(t.kind)),
-                fold: m.fold,
-            })
+            Some((
+                Link {
+                    name: ours.name.clone(),
+                    numeric: numeric(ours.kind) && theirs.is_some_and(|t| numeric(t.kind)),
+                    fold: m.fold,
+                },
+                theirs.map(|t| t.name.clone()),
+            ))
         })
-        .collect();
+        .unzip();
     counts.retain(|_, n| *n > 1);
     Some(List {
         rows: rows.into_iter().map(|(r, _)| r).collect(),
@@ -544,6 +713,12 @@ pub(crate) fn list_of(
             .map(str::to_owned),
         layer: other.name.clone(),
         spatial,
+        pick: PickRule {
+            by_uid,
+            key: key.map(str::to_owned),
+            filter,
+            matched: picked_names,
+        },
     })
 }
 

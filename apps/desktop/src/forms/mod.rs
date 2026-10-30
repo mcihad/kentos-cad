@@ -20,6 +20,7 @@ pub mod layer_indexes;
 pub mod layer_rules;
 pub mod library;
 pub mod location;
+pub mod map_pick;
 pub mod package;
 pub mod relations;
 pub mod subtypes;

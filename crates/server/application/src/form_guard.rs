@@ -3,15 +3,17 @@
 //! layer whose form enforces them. Pure: the caller reads the stored settings, objects and other
 //! layers, and turns an answer into its refusal.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
+use std::sync::Arc;
 
 use kentos_contracts::{
-    Entity, FormBody, FormIssue, FormItem, FormSeverity, LayerField, LayerNode, ProjectForm,
-    ProjectPermission, ProjectSettings, forms_problem, relations_problem,
+    Entity, FormBody, FormIssue, FormItem, FormSeverity, LayerField, LayerNode, LookupRelation,
+    ProjectForm, ProjectPermission, ProjectSettings, forms_problem, relations_problem,
 };
 use kentos_expression::{Unit, Variable};
 use kentos_forms::reach::{Caller, Reach};
 use kentos_forms::{OtherLayer, Prepared, World};
+use kentos_geometry_core::entity::Shape;
 
 /// The permissions a settings change from `before` to `after` needs besides `project.edit`: a
 /// release added, changed or removed `forms.publish`; anything else of the forms, or the relations,
@@ -122,9 +124,42 @@ pub fn world_layers(body: &FormBody) -> Vec<String> {
     out
 }
 
+/// The layers a form's spatial lists read (docs/adr/0759 §2), each with how far around a written
+/// record its objects' shapes are needed, in metres (`unit` turns the list's tolerance from the
+/// drawing's unit); none: the whole layer (a nearest list without a tolerance).
+pub fn spatial_reach(body: &FormBody, unit: Unit) -> Vec<(String, Option<f64>)> {
+    let mut out: Vec<(String, Option<f64>)> = Vec::new();
+    for (_, item) in body.walk() {
+        let FormItem::Field(f) = item else { continue };
+        let Some((layer, spatial)) = f
+            .lookup
+            .as_ref()
+            .and_then(|l| Some((&l.layer, l.spatial.as_ref()?)))
+        else {
+            continue;
+        };
+        let tolerance = spatial.tolerance.unwrap_or(0.0).max(0.0) / unit.factor();
+        let around = match spatial.relation {
+            LookupRelation::Nearest if tolerance <= 0.0 => None,
+            _ => Some(tolerance),
+        };
+        match out.iter_mut().find(|(l, _)| l == layer) {
+            Some((_, was)) => *was = was.zip(around).map(|(a, b)| a.max(b)),
+            None => out.push((layer.clone(), around)),
+        }
+    }
+    out
+}
+
 /// The world a form reads: each of `layers` with its name, fields and stored objects (`rows`: a
-/// layer id, a persistent id and its attributes).
-pub fn world_of(tree: &[LayerNode], rows: &[(String, String, BTreeMap<String, String>)]) -> World {
+/// layer id, a persistent id and its attributes). A layer named in `spatial` carries its objects'
+/// shapes from `shapes` by their ids (docs/adr/0759 §2); one not read there has none.
+pub fn world_of(
+    tree: &[LayerNode],
+    rows: &[(String, String, BTreeMap<String, String>)],
+    spatial: &[String],
+    shapes: &HashMap<String, Arc<Shape>>,
+) -> World {
     let mut world = World::new();
     for (layer, uid, attrs) in rows {
         let entry = world.entry(layer.clone()).or_insert_with(|| {
@@ -133,11 +168,19 @@ pub fn world_of(tree: &[LayerNode], rows: &[(String, String, BTreeMap<String, St
                 name: node.map(|n| n.name.clone()).unwrap_or_default(),
                 fields: node.map(|n| n.fields.clone()).unwrap_or_default(),
                 rows: Vec::new(),
-                // The server reads no shapes: a spatial list is not narrowed here (docs/adr/0439 §5).
                 shapes: Vec::new(),
             }
         });
         entry.rows.push((uid.clone(), attrs.clone()));
+    }
+    for id in spatial {
+        if let Some(layer) = world.get_mut(id) {
+            layer.shapes = layer
+                .rows
+                .iter()
+                .map(|(uid, _)| shapes.get(uid).cloned())
+                .collect();
+        }
     }
     world
 }

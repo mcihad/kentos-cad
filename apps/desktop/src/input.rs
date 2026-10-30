@@ -241,6 +241,7 @@ impl App {
                         && !self.edgematch_picked_objects(keep)
                         && !self.table_insert_picked(keep)
                         && !self.text_tools_picked(keep)
+                        && !self.form_entry_picked(keep)
                     {
                         let _ = self.builder_picked(keep);
                     }
