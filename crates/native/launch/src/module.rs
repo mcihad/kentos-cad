@@ -62,7 +62,7 @@ impl Module {
     /// One line on what it is for.
     pub const fn note(self) -> &'static str {
         match self {
-            Module::Architecture => "Mimari CAD: bina, kat planı, kesit ve görünüş",
+            Module::Architecture => "Mimari CAD: plan, kesit ve görünüş",
             Module::Map => "Harita CAD: vaziyet, imar ve halihazır",
             Module::Gis => "Coğrafi bilgi sistemi",
         }
@@ -229,7 +229,7 @@ mod tests {
     fn the_notes_say_what_each_module_draws() {
         assert_eq!(
             Module::Architecture.note(),
-            "Mimari CAD: bina, kat planı, kesit ve görünüş"
+            "Mimari CAD: plan, kesit ve görünüş"
         );
         // The detail work is gone (docs/adr/0802 §2): no note promises it.
         for m in Module::ALL {

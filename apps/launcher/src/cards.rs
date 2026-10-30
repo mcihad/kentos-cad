@@ -157,7 +157,7 @@ mod tests {
         assert_eq!(found("gis"), ["kentos-gis"]);
         assert_eq!(found("harita"), ["kentos-harita"]);
         assert_eq!(found("HARİTA"), ["kentos-harita"]);
-        assert_eq!(found("kat planı"), ["kentos-mimari"], "the note too");
+        assert_eq!(found("plan, kesit"), ["kentos-mimari"], "the note too");
         // KentOS Mimari draws a building's sections and elevations; the detail work is gone (docs/adr/0802 §2).
         assert_eq!(found("kesit"), ["kentos-mimari"]);
         assert_eq!(found("GÖRÜNÜŞ"), ["kentos-mimari"]);

@@ -167,7 +167,7 @@ sunduğu komutlar şeritteki yerleriyle döküldü (`module_tests::dump_module_c
 - **Pafta:** galeri ve Yeni pafta modüle göredir (çekirdeğin `profile_for_types`, `rank_templates_for_types`'ı; eski işlevler aynı
   anlamda). Mimari'nin öntanımlısı `sys:cad-mimari`, Harita'nınki `sys:genel-a3-yatay` (ızgaralı harita, kuzey oku, ölçek, lejant,
   antet). Başka türlerin şablonları rozetle ve öntanımlı olarak gizli.
-- **Launcher:** Mimari'nin notu “Mimari CAD: bina, kat planı, kesit ve görünüş”.
+- **Launcher:** Mimari'nin notu “Mimari CAD: plan, kesit ve görünüş” (kartın tek satırına sığar).
 - **Araçların seçenekleri programa göredir:** araç oturumu, `Draft.offers`'tan (`kentos_interaction::ToolOption`, `Offers`) neyin
   sunulduğunu bilir. Başsız sunucu, Python ve MCP hepsini sunar.
   - KentOS Mimari'de Ölçülendirme'nin Semt'i (T) yok; hatırlanan Semt Hizalı'ya döner. Nokta'nın Ad ve Kod'u ve aynı yer sorusu
