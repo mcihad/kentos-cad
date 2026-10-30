@@ -1,11 +1,10 @@
-//! The status bar (docs/adr/0800 §3): on the left whether anything runs
-//! (“Hazır”, “2 uygulama çalışıyor”); on the right, honestly, that updates
-//! are not checked, and the launcher's version.
+//! The status line under the sheet (docs/adr/0803): on the left whether
+//! anything runs (“Hazır”, “2 uygulama çalışıyor”), on the right the launcher's
+//! version. What is not checked is said where it matters, in the update centre.
 
-use iced::widget::{Space, column, container, row, space, text};
-use iced::{Alignment, Element, Fill, Length};
+use iced::widget::{Space, container, row, space, text};
+use iced::{Alignment, Element, Fill, Length, Padding};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::horizontal_divider;
 
 use crate::app::{Launcher, Message};
 use crate::view::style::{self, px};
@@ -17,7 +16,7 @@ pub fn bar(launcher: &Launcher) -> Element<'_, Message> {
         1 => ("1 uygulama çalışıyor".to_owned(), true),
         n => (format!("{n} uygulama çalışıyor"), true),
     };
-    let dot = px(8.0);
+    let dot = px(6.0);
     let lamp = container(Space::new())
         .width(dot)
         .height(dot)
@@ -25,30 +24,23 @@ pub fn bar(launcher: &Launcher) -> Element<'_, Message> {
             let t = Tokens::of(theme);
             style::dot(if busy { t.accent_hover } else { t.success })(theme)
         });
-    let words = |w: String| text(w).size(typography::caption());
-    let content = row![
-        lamp,
-        words(said),
-        space::horizontal(),
-        words("Güncelleme denetimi yok".to_owned()),
-        container(Space::new())
-            .width(1)
-            .height(px(12.0))
-            .style(|theme: &iced::Theme| container::Style {
-                background: Some(iced::Background::Color(Tokens::of(theme).border)),
-                ..container::Style::default()
-            }),
-        words(format!("KentOS Launcher {}", env!("CARGO_PKG_VERSION"))),
-    ]
-    .spacing(px(10.0))
-    .align_y(Alignment::Center);
-    column![
-        horizontal_divider(),
-        container(content)
-            .padding([0.0, px(16.0)])
-            .width(Fill)
-            .center_y(Length::Fixed(px(style::STATUS)))
-            .style(style::status_bar),
-    ]
+    let words = |w: String| text(w).size(typography::caption()).style(style::soft);
+    container(
+        row![
+            lamp,
+            words(said),
+            space::horizontal(),
+            words(format!("KentOS Launcher {}", env!("CARGO_PKG_VERSION"))),
+        ]
+        .spacing(px(8.0))
+        .align_y(Alignment::Center),
+    )
+    .padding(Padding {
+        left: px(style::PAGE_X) + px(style::INSET),
+        right: px(style::MARGIN) + px(style::PAGE_X) + px(style::INSET),
+        ..Padding::ZERO
+    })
+    .width(Fill)
+    .center_y(Length::Fixed(px(style::STATUS)))
     .into()
 }

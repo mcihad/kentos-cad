@@ -544,6 +544,18 @@ Alt panelin iki sekmesi ([ADR 0227](docs/adr/0227-charts-and-field-statistics.md
 - **Kaydedilen resim** açık temanın renkleriyle beyaz kâğıtta, seçim vurgusuz.
 - **Katmanlar'ın sağ tıkı:** Alanlar…'ın altında İstatistik ve Grafik. **İşlemler penceresi:** sonuç tablosunun başlığında Panoya kopyala'nın önünde Grafik.
 
+### 7.18 KentOS Launcher
+
+Bütün uygulamaların paneli ([ADR 0803](docs/adr/0803-launcher-sheet-and-plates.md)). Kurallar yalnız launcher içindir; çizim alanı olan programlar §1'in yoğun iş istasyonu kuralıyla kalır.
+
+- **Masa ve pafta.** Kenar çubuğu ve durum satırı masadadır (koyu temada pencereden bir ton derin, açık temada `--c-menubar` grisi). Sayfa onun üstünde yatan paftadır: köşeleri `--r-lg` + 2, kenarı çok ince, gölgesiz. Koyu temada pafta pencereden bir ton açık, açık temada kâğıt beyazına yakındır.
+- **Levha, kart değil.** Uygulamanın resmi kutusuz durur, adı ve notu altında yazar (atlas levhası gibi). Zemin yalnız imleç üstündeyken belirir; yarıçapı resminkine iç boşluk eklenmişidir, iki eğri yan yana akar. Levhalar arası boşluk paftanın iç boşluğuyla aynıdır.
+- **Tek dolu düğme.** Başlat dinlenirken nötr katmandır; yalnız başlatılacak levhada (üzerine gelinen, yoksa seçili) vurgu rengine geçer. Pencerede aynı anda en çok bir dolu düğme olur.
+- **Hiyerarşi boyla.** Çıkmış uygulama büyük levhada, gelecek olan küçük ve soluk resimle; "Yakında" sözü bölüm başlığında bir kez yazılır.
+- **Tablolar çizgiyle.** Son dosyalar ve sürümler tek satırlık sütunlardır; satır aralarında ince çizgi vardır, çevrelerinde kutu yoktur.
+- **Yazı.** Sayfa başlığı 28 px normal ağırlıkta, gerisi §4'ün ölçeğinde. Soluk bilgi `--c-text-3` değil, onunla `--c-text-2` arasındaki tondur (en az 4,5:1).
+- **Masadaki çizim.** Boş kalan yerde bir imar planı parçası, ince çizgilerle, yazı rengi %22–26 opaklıkta; üstten ve alttan masaya karışır. Yazının altına girmez. Launcher'ın tek süsüdür, ikincisi eklenmez.
+
 ### 7.13 Kontroller (genel)
 
 | Kontrol | Kural |

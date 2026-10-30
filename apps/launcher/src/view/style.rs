@@ -1,11 +1,11 @@
-//! The launcher's own looks, from KentOS UI's tokens (docs/adr/0800 §3): the
-//! page and its panels, the cards and the one under the pointer, the tiles,
-//! the picture's frame, the navigation, the outlined button. Sizes are KentOS
-//! UI's (`theme::metrics`, `theme::shape`) or designed at the default text
-//! size and grown with it ([`px`]); every one a whole pixel.
+//! The launcher's own looks, from KentOS UI's tokens (docs/adr/0803): the
+//! table and the sheet that lies on it, the plates and the one under the
+//! pointer, the tiles, the navigation, the quiet button and the hairlines.
+//! Sizes are KentOS UI's (`theme::metrics`, `theme::shape`) or designed at the
+//! default text size and grown with it ([`px`]); every one a whole pixel.
 
-use iced::widget::{button, container};
-use iced::{Background, Border, Color, Shadow, Theme, Vector, gradient};
+use iced::widget::{button, container, scrollable};
+use iced::{Background, Border, Color, Theme, gradient};
 use kentos_ui::theme::{Tokens, shape, typography};
 
 use crate::tones::Paint;
@@ -61,72 +61,161 @@ pub fn around(inner: f32, outer: f32) -> f32 {
 }
 
 /// The navigation's width.
-pub const SIDEBAR: f32 = 224.0;
-/// The status bar's height.
-pub const STATUS: f32 = 30.0;
-/// The page's padding, across and down.
+pub const SIDEBAR: f32 = 216.0;
+/// The status line's height.
+pub const STATUS: f32 = 28.0;
+/// Between the sheet and the window's top and right edges.
+pub const MARGIN: f32 = 8.0;
+/// The sheet's padding: across, above and below.
 pub const PAGE_X: f32 = 24.0;
-pub const PAGE_Y: f32 = 20.0;
-/// Between the grid's cards, and between the page's parts.
-pub const GAP: f32 = 16.0;
-/// A card's padding and the space between its parts.
-pub const CARD_PAD: f32 = 12.0;
-pub const CARD_SPACING: f32 = 12.0;
-/// A card is at least this wide: the grid has as many columns as fit (two to four).
-pub const CARD_LEAST: f32 = 320.0;
-/// The tile beside a card's name, and its version line.
-pub const TILE: f32 = 48.0;
-pub const META: f32 = 18.0;
-/// The summary strip's height and a navigation item's.
-pub const STRIP: f32 = 44.0;
-pub const NAV_ITEM: f32 = 40.0;
-/// The scroll bar and its space beside the grid (KentOS UI's body scroll bar).
+pub const PAGE_TOP: f32 = 22.0;
+pub const PAGE_BOTTOM: f32 = 14.0;
+/// The widest the page's content grows: past it the plates would blur and the eye would travel.
+pub const PAGE_MOST: f32 = 1480.0;
+/// Between a plate's ground and what is on it, and what lines up with it
+/// (the header, the sections' heads, the hairlines).
+pub const INSET: f32 = 8.0;
+/// Between two plates' grounds: with their insets the same as the sheet's padding.
+pub const GAP: f32 = 8.0;
+/// Between the page's sections, and between the header and the first of them.
+pub const SECTION: f32 = 24.0;
+/// A plate is comfortable from this wide, and fits its caption from this wide.
+pub const PLATE_COMFORTABLE: f32 = 300.0;
+pub const PLATE_LEAST: f32 = 220.0;
+/// The tile beside a plate's name; a table row's height and its tile; a section's head.
+pub const TILE: f32 = 40.0;
+pub const ROW: f32 = 40.0;
+pub const ROW_TILE: f32 = 24.0;
+pub const HEAD: f32 = 28.0;
+/// A coming app's thumbnail.
+pub const THUMB_WIDTH: f32 = 128.0;
+pub const THUMB_HEIGHT: f32 = 72.0;
+/// A navigation item's height.
+pub const NAV_ITEM: f32 = 34.0;
+/// The scroll bar and its space beside the content (KentOS UI's body scroll bar).
 pub const SCROLLBAR: f32 = 14.0;
 
-/// What the panels stand on: the window's colour.
-pub fn page(theme: &Theme) -> container::Style {
-    container::Style {
-        background: Some(Background::Color(Tokens::of(theme).window)),
-        text_color: Some(Tokens::of(theme).text),
-        ..container::Style::default()
+fn blend(color: Color, other: Color, amount: f32) -> Color {
+    Color {
+        r: color.r + (other.r - color.r) * amount,
+        g: color.g + (other.g - color.g) * amount,
+        b: color.b + (other.b - color.b) * amount,
+        a: color.a,
     }
 }
 
-/// A panel's colour: the surface in the dark, paper white in the light.
-pub fn panel_color(t: &Tokens) -> Color {
-    if t.is_dark { t.surface } else { t.field }
+/// The table: the window's ground, a tone under the window's in the dark, the
+/// window's grey in the light.
+pub fn table_color(t: &Tokens) -> Color {
+    if t.is_dark {
+        blend(t.window, Color::BLACK, 0.18)
+    } else {
+        t.window
+    }
 }
 
-/// The navigation and the status bar.
-pub fn sidebar(theme: &Theme) -> container::Style {
+/// The sheet the page is on: a tone over the window in the dark, paper in the light.
+pub fn sheet_color(t: &Tokens) -> Color {
+    if t.is_dark {
+        blend(t.window, t.surface, 0.4)
+    } else {
+        t.popover
+    }
+}
+
+/// The hairlines on the sheet.
+pub fn rule_color(t: &Tokens) -> Color {
+    t.layer(if t.is_dark { 0.07 } else { 0.09 })
+}
+
+/// Words that come second on the sheet: quieter than the muted tone, still
+/// easy to read (at least 4.5:1, which the faint tone is not).
+pub fn soft(theme: &Theme) -> iced::widget::text::Style {
+    iced::widget::text::Style {
+        color: Some(soft_color(&Tokens::of(theme))),
+    }
+}
+
+fn soft_color(t: &Tokens) -> Color {
+    blend(t.muted, t.faint, 0.33)
+}
+
+/// The table's colour fading to nothing: downward where `from_top`, else upward.
+pub fn fade(from_top: bool) -> impl Fn(&Theme) -> container::Style {
+    move |theme| {
+        let ground = table_color(&Tokens::of(theme));
+        let (start, end) = if from_top {
+            (ground, ground.scale_alpha(0.0))
+        } else {
+            (ground.scale_alpha(0.0), ground)
+        };
+        container::Style {
+            background: Some(Background::Gradient(
+                gradient::Linear::new(std::f32::consts::PI)
+                    .add_stop(0.0, start)
+                    .add_stop(1.0, end)
+                    .into(),
+            )),
+            ..container::Style::default()
+        }
+    }
+}
+
+/// The table.
+pub fn table(theme: &Theme) -> container::Style {
     let t = Tokens::of(theme);
     container::Style {
-        background: Some(Background::Color(panel_color(&t))),
+        background: Some(Background::Color(table_color(&t))),
+        text_color: Some(t.text),
         ..container::Style::default()
     }
 }
 
-/// A card, the summary strip: the panel's colour, a hairline edge, the
-/// card's corner. The card to start (`hot`) has the accent's edge and a
-/// faint glow of it.
-pub fn card(hot: bool) -> impl Fn(&Theme) -> container::Style {
+/// The sheet: a hairline edge, the large corner.
+pub fn sheet(theme: &Theme) -> container::Style {
+    let t = Tokens::of(theme);
+    container::Style {
+        background: Some(Background::Color(sheet_color(&t))),
+        border: Border {
+            color: t.layer(if t.is_dark { 0.06 } else { 0.08 }),
+            width: 1.0,
+            radius: (shape::lg() + 2.0).into(),
+        },
+        text_color: Some(t.text),
+        ..container::Style::default()
+    }
+}
+
+/// A hairline across the sheet.
+pub fn hairline(theme: &Theme) -> container::Style {
+    container::Style {
+        background: Some(Background::Color(rule_color(&Tokens::of(theme)))),
+        ..container::Style::default()
+    }
+}
+
+/// A plate's corner, and its ground's around it: the same centre, so the two
+/// curves run side by side.
+pub fn plate_radius() -> f32 {
+    shape::lg()
+}
+
+/// A plate's ground: nothing at rest, a faint layer under the pointer, the
+/// accent's line around the selected one.
+pub fn plate(hovered: bool, selected: bool) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let t = Tokens::of(theme);
         container::Style {
-            background: Some(Background::Color(panel_color(&t))),
+            background: (hovered || selected)
+                .then(|| Background::Color(t.layer(if t.is_dark { 0.045 } else { 0.035 }))),
             border: Border {
-                color: if hot { t.accent } else { t.border },
+                color: if selected {
+                    t.accent_line()
+                } else {
+                    Color::TRANSPARENT
+                },
                 width: 1.0,
-                radius: shape::lg().into(),
-            },
-            shadow: if hot {
-                Shadow {
-                    color: t.accent.scale_alpha(if t.is_dark { 0.32 } else { 0.22 }),
-                    offset: Vector::ZERO,
-                    blur_radius: 14.0,
-                }
-            } else {
-                Shadow::default()
+                radius: (plate_radius() + px(INSET)).into(),
             },
             text_color: Some(t.text),
             ..container::Style::default()
@@ -134,35 +223,24 @@ pub fn card(hot: bool) -> impl Fn(&Theme) -> container::Style {
     }
 }
 
-/// A box inside a card (the update centre's lists): sunk into it.
-pub fn inset(theme: &Theme) -> container::Style {
-    let t = Tokens::of(theme);
-    container::Style {
-        background: Some(Background::Color(t.well())),
-        border: Border {
-            color: t.border,
-            width: 1.0,
-            radius: shape::md().into(),
-        },
-        ..container::Style::default()
-    }
-}
-
-/// The edge drawn over a card's picture.
-pub fn picture_edge(theme: &Theme) -> container::Style {
-    let t = Tokens::of(theme);
-    container::Style {
-        border: Border {
-            color: t.border,
-            width: 1.0,
-            radius: shape::md().into(),
-        },
-        ..container::Style::default()
+/// The edge drawn over a picture: it holds a dark picture on a dark sheet and
+/// a pale one on paper, and takes nothing from either.
+pub fn picture_edge(radius: f32) -> impl Fn(&Theme) -> container::Style {
+    move |theme| {
+        let t = Tokens::of(theme);
+        container::Style {
+            border: Border {
+                color: t.layer(if t.is_dark { 0.09 } else { 0.12 }),
+                width: 1.0,
+                radius: radius.into(),
+            },
+            ..container::Style::default()
+        }
     }
 }
 
 /// A picture's place when the app has none: its tone, faint.
-pub fn placeholder(paint: Paint) -> impl Fn(&Theme) -> container::Style {
+pub fn placeholder(paint: Paint, radius: f32) -> impl Fn(&Theme) -> container::Style {
     move |theme| {
         let t = Tokens::of(theme);
         container::Style {
@@ -170,20 +248,20 @@ pub fn placeholder(paint: Paint) -> impl Fn(&Theme) -> container::Style {
                 gradient::Linear::new(std::f32::consts::PI)
                     .add_stop(
                         0.0,
-                        paint.top.scale_alpha(if t.is_dark { 0.22 } else { 0.18 }),
+                        paint.top.scale_alpha(if t.is_dark { 0.14 } else { 0.16 }),
                     )
                     .add_stop(
                         1.0,
                         paint
                             .bottom
-                            .scale_alpha(if t.is_dark { 0.08 } else { 0.06 }),
+                            .scale_alpha(if t.is_dark { 0.04 } else { 0.05 }),
                     )
                     .into(),
             )),
             border: Border {
-                color: t.border,
+                color: t.layer(if t.is_dark { 0.09 } else { 0.12 }),
                 width: 1.0,
-                radius: shape::md().into(),
+                radius: radius.into(),
             },
             ..container::Style::default()
         }
@@ -200,9 +278,8 @@ pub fn tile(paint: Paint, side: f32) -> impl Fn(&Theme) -> container::Style {
                 .into(),
         )),
         border: Border {
-            color: Color::WHITE.scale_alpha(0.12),
-            width: 1.0,
             radius: tile_radius(side).into(),
+            ..Border::default()
         },
         text_color: Some(paint.ink),
         ..container::Style::default()
@@ -214,7 +291,7 @@ pub fn tile_radius(side: f32) -> f32 {
     (side * 0.24).round()
 }
 
-/// A dot of a colour (a card's state, the bell's unread mark).
+/// A dot of a colour (an app's state, the bell's unread mark).
 pub fn dot(color: Color) -> impl Fn(&Theme) -> container::Style {
     move |_| container::Style {
         background: Some(Background::Color(color)),
@@ -226,13 +303,13 @@ pub fn dot(color: Color) -> impl Fn(&Theme) -> container::Style {
     }
 }
 
-/// The bell's dot: the accent, ringed in the page's colour so it stands off the bell.
+/// The bell's dot: the accent, ringed in the sheet's colour so it stands off the bell.
 pub fn bell_dot(theme: &Theme) -> container::Style {
     let t = Tokens::of(theme);
     container::Style {
         background: Some(Background::Color(t.accent)),
         border: Border {
-            color: t.window,
+            color: sheet_color(&t),
             width: 2.0,
             radius: 999.0.into(),
         },
@@ -240,15 +317,16 @@ pub fn bell_dot(theme: &Theme) -> container::Style {
     }
 }
 
-/// A navigation item: the selected one on the accent's soft ground; under
-/// the pointer a faint layer; the words muted until then.
+/// A navigation item: the selected one on a neutral layer of the table (its
+/// mark in the accent says it is the one); under the pointer a fainter layer;
+/// the words muted until then.
 pub fn nav(selected: bool) -> impl Fn(&Theme, button::Status) -> button::Style {
     move |theme, status| {
         let t = Tokens::of(theme);
         let (background, text) = match (selected, status) {
-            (true, _) => (t.selection(), t.text),
-            (false, button::Status::Hovered) => (t.layer(0.05), t.text),
-            (false, button::Status::Pressed) => (t.layer(0.09), t.text),
+            (true, _) => (t.layer(0.07), t.text),
+            (false, button::Status::Hovered) => (t.layer(0.04), t.text),
+            (false, button::Status::Pressed) => (t.layer(0.08), t.text),
             (false, _) => (Color::TRANSPARENT, t.muted),
         };
         button::Style {
@@ -263,56 +341,67 @@ pub fn nav(selected: bool) -> impl Fn(&Theme, button::Status) -> button::Style {
     }
 }
 
-/// The selected item's bar at its left edge.
-pub fn nav_bar(theme: &Theme) -> container::Style {
-    container::Style {
-        background: Some(Background::Color(Tokens::of(theme).accent)),
-        border: Border {
-            radius: 2.0.into(),
-            ..Border::default()
-        },
-        ..container::Style::default()
-    }
-}
-
-/// A card's button when it is not the card to start: the accent's line,
-/// the text's colour; under the pointer the accent's soft ground.
-pub fn outline(theme: &Theme, status: button::Status) -> button::Style {
+/// A plate's button when it is not the plate to start: a neutral layer, the
+/// text's colour; the accent is for the one that will start (DESIGN.md §1.2).
+pub fn quiet(theme: &Theme, status: button::Status) -> button::Style {
     let t = Tokens::of(theme);
-    let (background, edge, text) = match status {
-        button::Status::Active => (Color::TRANSPARENT, t.accent_line(), t.text),
-        button::Status::Hovered => (t.selection(), t.accent, t.text),
-        button::Status::Pressed => (t.accent.scale_alpha(0.3), t.accent, t.text),
-        button::Status::Disabled => (t.layer(0.03), t.border, t.disabled()),
+    let (background, text) = match status {
+        button::Status::Active => (t.layer(0.06), t.text),
+        button::Status::Hovered => (t.layer(0.1), t.text),
+        button::Status::Pressed => (t.layer(0.14), t.text),
+        button::Status::Disabled => (t.layer(0.03), t.disabled()),
     };
     button::Style {
         background: Some(Background::Color(background)),
         text_color: text,
         border: Border {
-            color: edge,
-            width: 1.0,
             radius: shape::sm().into(),
+            ..Border::default()
         },
         ..button::Style::default()
     }
 }
 
-/// A button that says something it cannot do yet (Yakında): no edge of the accent.
-pub fn idle(theme: &Theme, _status: button::Status) -> button::Style {
+/// A table's row that opens something: nothing at rest, a faint layer under the pointer.
+pub fn row(theme: &Theme, status: button::Status) -> button::Style {
     let t = Tokens::of(theme);
+    let background = match status {
+        button::Status::Hovered => t.layer(0.04),
+        button::Status::Pressed => t.layer(0.07),
+        _ => Color::TRANSPARENT,
+    };
     button::Style {
-        background: Some(Background::Color(t.layer(0.04))),
-        text_color: t.disabled(),
+        background: Some(Background::Color(background)),
+        text_color: t.text,
         border: Border {
-            color: t.border,
-            width: 1.0,
             radius: shape::sm().into(),
+            ..Border::default()
         },
         ..button::Style::default()
     }
 }
 
-/// A link-like button in the accent's text (Uygulama ekle, İndirmeleri görüntüle).
+/// A word beside a section's head that leads to its page: muted until the pointer is on it.
+pub fn aside(theme: &Theme, status: button::Status) -> button::Style {
+    let t = Tokens::of(theme);
+    let (background, text) = match status {
+        button::Status::Active => (Color::TRANSPARENT, t.muted),
+        button::Status::Hovered => (t.layer(0.05), t.text),
+        button::Status::Pressed => (t.layer(0.09), t.text),
+        button::Status::Disabled => (Color::TRANSPARENT, t.disabled()),
+    };
+    button::Style {
+        background: Some(Background::Color(background)),
+        text_color: text,
+        border: Border {
+            radius: shape::sm().into(),
+            ..Border::default()
+        },
+        ..button::Style::default()
+    }
+}
+
+/// A link-like button in the accent's text (Tümünü temizle).
 pub fn link(theme: &Theme, status: button::Status) -> button::Style {
     let t = Tokens::of(theme);
     let (background, text) = match status {
@@ -364,12 +453,107 @@ pub fn choice(chosen: bool) -> impl Fn(&Theme, button::Status) -> button::Style 
     }
 }
 
-/// The status bar's top hairline is a rule; its ground.
-pub fn status_bar(theme: &Theme) -> container::Style {
+/// The scroll bar on the sheet: no rail, a neutral handle that the pointer
+/// wakes; the accent is not for moving about (DESIGN.md §1.2).
+pub fn scroller(theme: &Theme, status: scrollable::Status) -> scrollable::Style {
+    let t = Tokens::of(theme);
+    let handle = match status {
+        scrollable::Status::Active { .. } => t.layer(0.14),
+        scrollable::Status::Hovered {
+            is_vertical_scrollbar_hovered: true,
+            ..
+        } => t.layer(0.26),
+        scrollable::Status::Hovered { .. } => t.layer(0.18),
+        scrollable::Status::Dragged { .. } => t.layer(0.32),
+    };
+    let rail = scrollable::Rail {
+        background: None,
+        border: Border::default(),
+        scroller: scrollable::Scroller {
+            background: Background::Color(handle),
+            border: Border {
+                radius: 999.0.into(),
+                ..Border::default()
+            },
+        },
+    };
+    scrollable::Style {
+        container: container::Style::default(),
+        vertical_rail: rail,
+        horizontal_rail: rail,
+        gap: None,
+        auto_scroll: scrollable::AutoScroll {
+            background: Background::Color(t.popover),
+            border: Border {
+                color: t.border,
+                width: 1.0,
+                radius: 999.0.into(),
+            },
+            shadow: iced::Shadow::default(),
+            icon: t.text,
+        },
+    }
+}
+
+/// The add dialog's preview of the app: a faint layer of the dialog.
+pub fn preview(theme: &Theme) -> container::Style {
     let t = Tokens::of(theme);
     container::Style {
-        background: Some(Background::Color(panel_color(&t))),
-        text_color: Some(t.muted),
+        background: Some(Background::Color(t.layer(0.03))),
+        border: Border {
+            radius: shape::md().into(),
+            ..Border::default()
+        },
+        text_color: Some(t.text),
         ..container::Style::default()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn luminance(c: Color) -> f32 {
+        let f = |v: f32| {
+            if v <= 0.040_45 {
+                v / 12.92
+            } else {
+                ((v + 0.055) / 1.055).powf(2.4)
+            }
+        };
+        0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b)
+    }
+
+    fn contrast(a: Color, b: Color) -> f32 {
+        let (x, y) = (luminance(a), luminance(b));
+        (x.max(y) + 0.05) / (x.min(y) + 0.05)
+    }
+
+    #[test]
+    fn the_sheet_and_the_table_part_and_the_words_read_on_them() {
+        for t in [Tokens::DARK, Tokens::LIGHT] {
+            let sheet = sheet_color(&t);
+            let table = table_color(&t);
+            assert!(
+                contrast(sheet, table) > 1.08,
+                "{:?}: the sheet shows",
+                t.mode
+            );
+            for (name, words) in [
+                ("text", t.text),
+                ("muted", t.muted),
+                ("soft", soft_color(&t)),
+            ] {
+                let on_sheet = contrast(words, sheet);
+                assert!(on_sheet >= 4.5, "{:?} {name}: {on_sheet}", t.mode);
+            }
+            // The status line's words, on the table.
+            let on_table = contrast(soft_color(&t), table);
+            assert!(
+                on_table >= 4.5,
+                "{:?} soft on the table: {on_table}",
+                t.mode
+            );
+        }
     }
 }

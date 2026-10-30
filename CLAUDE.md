@@ -28,6 +28,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Launcher'ın görünüşü: masa, pafta ve levhalar (30 Ekim 2026; [ADR 0803](docs/adr/0803-launcher-sheet-and-plates.md), dal `launcher-zarif`).**
+  Sahibin isteği: “daha estetik ve zarif”, “tüm uygulamalarımızın paneli”, “daha şık ve kaliteli”. Kenar çubuğu masada, sayfa üstünde yatan
+  paftada; kart kutuları kalktı: resim (özgün 16:9, 800 × 450, `pictures.py`) ve altında yazı, zemin yalnız imleç üstündeyken, pencerede en çok bir
+  dolu Başlat. Sayfa: çıkmış uygulamalar, Son dosyalar ile Güncelleme merkezi, Yakında (küçük ve soluk). Özet şeridi başlığın altında cümle, Uygulama
+  ekle başlıkta, Tümünü güncelle Güncellemeler sayfasında. Üç uygulama her pencerede tek satırda (`cards::columns`), artan pikseller aralıklara
+  (`Plan::gap_before`). Masada imar planı çizimi (`scripts/launcher/art.py`, `assets/art/imar.svg`). Kurallar DESIGN.md §7.18. Fare ve yazı olayları
+  gerçek pencere ağacında sınanır (`view/interaction_tests.rs`); gerçek pencerede el ile denenmedi. Yeni bağımlılık yok.
+
 - **Bağlı tablonun CHECK ve tekil kısıtları (30 Ekim 2026; [ADR0755](docs/adr/0755-bound-table-check-and-unique-constraints.md)).**
   Bağın `checks`'i (ad, SQL metni, sütunlar, `tableOnly`) ve `uniques`'i (sütunlar, `nullsEqual`), alanın `column.check`'i
   (KCAD 134 opt-in); bağlamada ve her okumada tablodan (GeoPackage `CREATE TABLE` metni ve `PRAGMA index_list`,
@@ -2590,7 +2598,7 @@ python3 scripts/fixtures/cad_open_cases.py --check; cargo test -p kentos-native-
 KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.dxf cargo test --release -p kentos-desktop --lib label_probe -- --ignored --nocapture; KENTOS_PERF_FILE=… cargo test --release -p kentos-desktop --lib perf::file -- --ignored --nocapture --test-threads=1   # kendi dosyanda yazıların kaybolup belirmesi, deponun cevabı, resimler .run/shots/yazi-boyu-*; karenin parçaları (ADR 0626); aynı ortamla `label_quality` hareket ederken ve durunca çizilen pencereyi piksel piksel karşılaştırır, resimler .run/shots/yazi-kalite-*
 KENTOS_SHOTS_ONLY=duzen-python cargo test -p kentos-desktop ux_screens::python_echo -- --ignored --nocapture   # işlemlerin Python kodu konsolda: seçim ve Taşı, .run/shots/duzen-python* (ADR 0622 §7)
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
-cargo test -p kentos-launcher; ./target/debug/kentos-launcher snapshot .run/shots/launcher.png --sayfa uygulamalar --tema koyu --boyut 1440x900   # KentOS Launcher: testler ve pencere açmadan resim (ADR 0800); kart resimleri scripts/launcher/pictures.py
+cargo test -p kentos-launcher; ./target/debug/kentos-launcher snapshot .run/shots/launcher.png --sayfa uygulamalar --tema koyu --boyut 1440x900   # KentOS Launcher: testler ve pencere açmadan resim (ADR 0800, 0803; --imlec, --tik, --ara, --ilk); levha resimleri scripts/launcher/pictures.py, masadaki çizim scripts/launcher/art.py
 cargo build -p kentos-desktop && python3 scripts/desktop/module_links.py target/debug   # tek program, modül adları ona bağlantı (ADR 0801, 0802 §1; release'te target/release); cargo test -p kentos-desktop --lib module modüllerin komutları ve yüzeyleri; KENTOS_SHOTS_ONLY=… cargo test -p kentos-desktop --lib module_screens -- --ignored --nocapture modül resimleri, .run/shots/moduller-*
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer

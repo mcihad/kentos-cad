@@ -163,7 +163,7 @@ pub fn edit<'a>(launcher: &'a Launcher, draft: &'a Draft) -> Element<'a, Message
     )
     .padding(px(12.0))
     .width(Fill)
-    .style(style::card(false));
+    .style(style::preview);
 
     let mut body = column![preview, form].spacing(px(16.0));
     if let Some(refusal) = &draft.refusal {

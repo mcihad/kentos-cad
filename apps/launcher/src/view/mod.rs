@@ -1,20 +1,25 @@
-//! The launcher's window (docs/adr/0800 §3): the navigation on the left,
-//! the page's header and content, the status bar along the bottom; the
+//! The launcher's window (docs/adr/0803): the navigation on the table, the
+//! sheet with the page's header and content, the status line under it; the
 //! notices and the dialogs over them.
 
+mod app_menu;
 mod apps;
 mod dialog;
 mod header;
+#[cfg(test)]
+mod interaction_tests;
 mod notices;
 mod pages;
+mod plates;
 mod sidebar;
 mod status;
 pub mod style;
+mod tables;
 
 use iced::widget::{column, container, row, stack, svg};
-use iced::{Element, Fill, Length};
+use iced::{Element, Fill, Length, Padding};
 use kentos_ui::icon::{Icon, icon};
-use kentos_ui::widget::{overlay, vertical_divider};
+use kentos_ui::widget::overlay;
 
 use crate::app::{Dialog, Launcher, Message, Page};
 use crate::glyphs::Glyph;
@@ -31,20 +36,36 @@ pub fn view(launcher: &Launcher) -> Element<'_, Message> {
         Page::Downloads => pages::downloads(launcher),
         Page::Settings => pages::settings(launcher),
     };
-    let main = column![header::header(launcher), body]
-        .spacing(px(style::GAP))
-        .padding([px(style::PAGE_Y), px(style::PAGE_X)])
-        .width(Fill)
+    let content = column![header::header(launcher), body]
+        .spacing(px(style::SECTION))
+        .max_width(px(style::PAGE_MOST))
         .height(Fill);
-    let window = column![
-        row![sidebar::sidebar(launcher), vertical_divider(), main].height(Fill),
+    let sheet = container(content)
+        .center_x(Fill)
+        .height(Fill)
+        .padding(Padding {
+            top: px(style::PAGE_TOP),
+            right: px(style::PAGE_X),
+            bottom: px(style::PAGE_BOTTOM),
+            left: px(style::PAGE_X),
+        })
+        .style(style::sheet);
+    let main = column![
+        container(sheet).width(Fill).height(Fill).padding(Padding {
+            top: px(style::MARGIN),
+            right: px(style::MARGIN),
+            ..Padding::ZERO
+        }),
         status::bar(launcher),
-    ];
+    ]
+    .width(Fill)
+    .height(Fill);
+    let window = row![sidebar::sidebar(launcher), main].height(Fill);
     let mut layers = stack![
         container(window)
             .width(Fill)
             .height(Fill)
-            .style(style::page)
+            .style(style::table)
     ];
     if launcher.notices_open {
         layers = layers.push(notices::panel(launcher));

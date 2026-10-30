@@ -78,8 +78,8 @@ pub fn panel(launcher: &Launcher) -> Element<'_, Message> {
         .height(Fill)
         .align_right(Fill)
         .padding(Padding {
-            top: px(style::PAGE_Y) + px(46.0),
-            right: px(style::PAGE_X),
+            top: px(style::MARGIN) + px(style::PAGE_TOP) + px(50.0),
+            right: px(style::MARGIN) + px(style::PAGE_X) + px(style::INSET),
             ..Padding::ZERO
         });
     stack![dismiss, placed].into()
