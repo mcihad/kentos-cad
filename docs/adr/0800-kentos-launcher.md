@@ -220,3 +220,22 @@ KentOS'un çıkardığı:
 - **Denenmeyenler:** gerçek pencerede fare ve klavyeyle kullanım (güncelleme mantığı birim testlerinde, görünüş `snapshot`'ta);
   KentOS programlarını launcher'dan gerçekten başlatmak (ADR 0801'in programları bu dalda yok); Windows ve macOS (açıcı, süreç grubu,
   yollar); sistemin temasının pencere açıkken değişmesi; dosya seçme pencereleri (`rfd`); güncelleme, paketleme, imzalama (§7).
+
+## Ek (30 Ekim 2026): KentOS 3D ve KentOS Afet kartları
+
+- Sahip gelecek iki modülün resmini verdi (`3d.png`, `afet.png`, 1672 × 941). KentOS YOL'dan sonra iki “Yakında” kartı
+  (`state: soon`, `launch` yok): **KentOS 3D** (“3B şehir modeli ve dijital ikiz”, `order` 50, petrol) ve **KentOS Afet** (“Afet ve
+  acil durum yönetimi”, `order` 60, kırmızı). Masaüstünün duyurulan proje türleri 3D Plan (`Workspace::Plan3d`) ve Afet Analizi
+  (`Workspace::Disaster`) bu programlarındır; kartlar bir şey başlatmaz. Manifestler `apps/launcher/assets/apps/kentos-3d.json` ve
+  `kentos-afet.json`; yerleşik manifest altı.
+- **Simgeler** web'in kümesinden olduğu gibi, masaüstünün bu iki türün işaretleri: `modePlan3d` (`3d`, “3B şehir”) ve
+  `modeDisaster` (`afet`, “Sismograf”). Uygulama ekle'de on üç simge iki satırda (7 + 6; 18 px'te de sığar).
+- **Resimler** öbürleri gibi `pictures.py --fit` ile (ortasından 2:1, 720 × 360, 256 renk). `--fit` artık altı adı alır; `--kentos`'un
+  ekran görüntüleri dört karttır (3D ve Afet'in çizilecek bir programı yok). Altı resim birlikte 1 316 743 bayt; 1,5 MB'lık sınır
+  değişmedi. Özgünler depoya girmez (`.run/launcher-originals/`).
+- **Izgara:** altı kart ve Güncelleme merkezi yedi hücredir. 1440 × 900'de üç sütun ve üç satır, ızgara kayar (§3'ün kaydırmasız iki
+  satırı dört kart içindi): iki satır kart görünür, Güncelleme merkezi aşağıdadır. 1100 × 650'de iki sütun, dört satır.
+- **Doğrulama:** `cargo test -p kentos-launcher` 44 test geçti (yerleşiklerin sırası; her kartın kendi resmi, simgesi ve başka hiçbir
+  kartta olmayan rengi; “6 uygulama • 3 kurulu • 3 yakında”; oklar altı kartta; aramada “3B ŞEHİR” ve “afet”; altı resmin boyu);
+  clippy temiz. Resimler (`.run/shots/`): Uygulamalar koyu ve açık 1440 × 900, koyu 1100 × 650 ve bütün ızgara 1440 × 1240; Uygulama
+  ekle 13 ve 18 px; simge sayfası (`--boyut 1440x1280`: on sekiz satır 900 piksele sığmaz).

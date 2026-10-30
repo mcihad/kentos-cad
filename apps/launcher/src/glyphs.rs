@@ -3,8 +3,9 @@
 //! the web's 20 × 20 grid, as KentOS's icons are (DESIGN.md §6): 1.4 unit
 //! lines in the tile's ink, round ends, fills only as deliberate faint
 //! areas. Those of KentOS's icon set are reused as they are (the
-//! instrument, the folded map, the page, the globe…); the building, the
-//! road, the four tiles and the bell are the launcher's own.
+//! instrument, the folded map, the blocks in 3D, the seismograph's trace, the
+//! page, the globe…); the building, the road, the four tiles and the bell are
+//! the launcher's own.
 
 /// A built-in glyph.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
@@ -17,6 +18,12 @@ pub enum Glyph {
     Cbs,
     /// A road running off to the horizon: KentOS YOL.
     Yol,
+    /// A city's blocks on their ground, seen from above (the web's
+    /// `modePlan3d`, the mark of the announced 3D Plan type): KentOS 3D.
+    Model3d,
+    /// A seismograph's trace (the web's `modeDisaster`, the mark of the
+    /// announced Afet Analizi type): KentOS Afet.
+    Afet,
     /// A page (the web's `document`): a report or a document.
     Rapor,
     /// Four tiles: any program.
@@ -36,7 +43,7 @@ pub enum Glyph {
 
 impl Glyph {
     /// Every glyph, the add dialog's order.
-    pub const ALL: [Glyph; 11] = [
+    pub const ALL: [Glyph; 13] = [
         Glyph::Uygulama,
         Glyph::Terminal,
         Glyph::Web,
@@ -48,6 +55,8 @@ impl Glyph {
         Glyph::Harita,
         Glyph::Cbs,
         Glyph::Yol,
+        Glyph::Model3d,
+        Glyph::Afet,
     ];
 
     /// The manifest's word for it.
@@ -57,6 +66,8 @@ impl Glyph {
             Glyph::Harita => "harita",
             Glyph::Cbs => "cbs",
             Glyph::Yol => "yol",
+            Glyph::Model3d => "3d",
+            Glyph::Afet => "afet",
             Glyph::Rapor => "rapor",
             Glyph::Uygulama => "uygulama",
             Glyph::Web => "web",
@@ -74,6 +85,8 @@ impl Glyph {
             Glyph::Harita => "Ölçme aleti",
             Glyph::Cbs => "Harita",
             Glyph::Yol => "Yol",
+            Glyph::Model3d => "3B şehir",
+            Glyph::Afet => "Sismograf",
             Glyph::Rapor => "Belge",
             Glyph::Uygulama => "Uygulama",
             Glyph::Web => "Web",
@@ -100,6 +113,8 @@ impl Glyph {
             Glyph::Harita => INSTRUMENT,
             Glyph::Cbs => FOLDED_MAP,
             Glyph::Yol => ROAD,
+            Glyph::Model3d => CITY_3D,
+            Glyph::Afet => SEISMOGRAPH,
             Glyph::Rapor => DOCUMENT,
             Glyph::Uygulama => APPS,
             Glyph::Web => GLOBE,
@@ -137,6 +152,17 @@ const ROAD: &str = concat!(
     r#"<path d="M2.5 17.5 7.6 2.5M17.5 17.5 12.4 2.5"/>"#,
     r#"<path d="M10 3.4v2M10 8.2v2.6M10 13.8v3.7"/>"#,
 );
+
+/// The web's `modePlan3d`: a tall block and a lower one on their ground, seen
+/// from above at an angle, the tall one's roof faintly filled.
+const CITY_3D: &str = concat!(
+    r#"<path d="m3 13.2 7 3.8 7-3.8"/>"#,
+    r#"<path d="M5 6.2 8.5 4.4 12 6.2 8.5 8z" fill="currentColor" fill-opacity=".14"/>"#,
+    r#"<path d="M5 6.2v6.4l3.5 1.9 3.5-1.9V6.2M8.5 8v6.5M12 9.6l2.8-1.4 2.2 1.1v3.6l-5 2.6"/>"#,
+);
+
+/// The web's `modeDisaster`: a seismograph's trace, still, then shaking.
+const SEISMOGRAPH: &str = r#"<path d="M2 11h3l1.5-4 2.2 8.5 2.1-11 2 9.3 1.5-2.8H18"/>"#;
 
 /// The web's `document`.
 const DOCUMENT: &str =

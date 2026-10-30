@@ -1,0 +1,11 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "kentos-afet",
+  "name": "KentOS Afet",
+  "note": "Afet ve acil durum yönetimi",
+  "icon": "afet",
+  "color": "red",
+  "picture": "afet",
+  "state": "soon",
+  "order": 60
+}

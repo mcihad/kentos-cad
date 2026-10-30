@@ -14,7 +14,7 @@ use crate::files;
 use crate::manifest::{self, Folder, Manifest, Origin};
 
 /// The bundled manifests, by file name.
-const BUILTINS: [(&str, &str); 4] = [
+const BUILTINS: [(&str, &str); 6] = [
     (
         "kentos-mimari.json",
         include_str!("../assets/apps/kentos-mimari.json"),
@@ -30,6 +30,14 @@ const BUILTINS: [(&str, &str); 4] = [
     (
         "kentos-yol.json",
         include_str!("../assets/apps/kentos-yol.json"),
+    ),
+    (
+        "kentos-3d.json",
+        include_str!("../assets/apps/kentos-3d.json"),
+    ),
+    (
+        "kentos-afet.json",
+        include_str!("../assets/apps/kentos-afet.json"),
     ),
 ];
 
@@ -265,7 +273,7 @@ pub fn new_id(name: &str, taken: impl Fn(&str) -> bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::manifest::{Launch, State};
+    use crate::manifest::{Icon, Launch, Picture, State};
     use kentos_launch::Module;
 
     fn write(dir: &Path, name: &str, text: &str) {
@@ -280,7 +288,14 @@ mod tests {
         let ids: Vec<&str> = registry.apps.iter().map(|a| a.id.as_str()).collect();
         assert_eq!(
             ids,
-            ["kentos-mimari", "kentos-harita", "kentos-gis", "kentos-yol"]
+            [
+                "kentos-mimari",
+                "kentos-harita",
+                "kentos-gis",
+                "kentos-yol",
+                "kentos-3d",
+                "kentos-afet"
+            ]
         );
         for module in Module::ALL {
             let app = registry
@@ -298,7 +313,24 @@ mod tests {
             .filter(|a| a.state == State::Soon)
             .map(|a| a.name.as_str())
             .collect();
-        assert_eq!(soon, ["KentOS YOL"]);
+        assert_eq!(soon, ["KentOS YOL", "KentOS 3D", "KentOS Afet"]);
+        // Each card has the picture and the glyph of its own, and a tone no other has.
+        let mut tones = Vec::new();
+        for app in &registry.apps {
+            let key = app.id.trim_start_matches("kentos-");
+            let picture = match &app.picture {
+                Some(Picture::Builtin(shot)) => shot.key(),
+                other => panic!("{}: {other:?}", app.id),
+            };
+            let glyph = match &app.icon {
+                Icon::Glyph(glyph) => glyph.key(),
+                other => panic!("{}: {other:?}", app.id),
+            };
+            let own = if key == "gis" { "cbs" } else { key };
+            assert_eq!((picture, glyph), (own, own), "{}", app.id);
+            assert!(!tones.contains(&app.tone), "{}: {:?}", app.id, app.tone);
+            tones.push(app.tone);
+        }
     }
 
     #[test]
@@ -338,6 +370,8 @@ mod tests {
                 "kentos-harita",
                 "kentos-gis",
                 "kentos-yol",
+                "kentos-3d",
+                "kentos-afet",
                 "rapor"
             ]
         );
@@ -372,7 +406,7 @@ mod tests {
             beside: Some(root.join("yok")),
             user: None,
         });
-        assert_eq!(none.apps.len(), 4);
+        assert_eq!(none.apps.len(), 6);
         assert!(none.problems.is_empty());
         let _ = std::fs::remove_dir_all(&root);
     }

@@ -863,12 +863,14 @@ mod tests {
                 Status::Installed,
                 Status::Installed,
                 Status::Installed,
+                Status::Soon,
+                Status::Soon,
                 Status::Soon
             ]
         );
         assert_eq!(
             cards::Counts::of(states).parts(),
-            ["4 uygulama", "3 kurulu", "1 yakında"]
+            ["6 uygulama", "3 kurulu", "3 yakında"]
         );
         let none = super::tests::launcher(Fixed(HashMap::new()));
         assert_eq!(none.status(&none.registry.apps[0]), Status::Missing);
@@ -939,12 +941,29 @@ mod tests {
             Some("kentos-yol"),
             "down a row of three"
         );
-        let _ = launcher.update(Message::Move(-1, 0));
+        let _ = launcher.update(Message::Move(1, 0));
+        assert_eq!(
+            launcher.selected.as_deref(),
+            Some("kentos-3d"),
+            "along the row"
+        );
+        let _ = launcher.update(Message::Move(0, -1));
+        assert_eq!(
+            launcher.selected.as_deref(),
+            Some("kentos-harita"),
+            "up a row"
+        );
         let _ = launcher.update(Message::Move(5, 5));
         assert_eq!(
             launcher.selected.as_deref(),
-            Some("kentos-yol"),
+            Some("kentos-afet"),
             "the last at most"
+        );
+        let _ = launcher.update(Message::Move(-5, -5));
+        assert_eq!(
+            launcher.selected.as_deref(),
+            Some("kentos-mimari"),
+            "the first at least"
         );
         let _ = launcher.update(Message::Search("gis".into()));
         let _ = launcher.update(Message::Move(-1, 0));
@@ -972,7 +991,9 @@ mod tests {
             "{}",
             said[0]
         );
-        let _ = launcher.update(Message::Launch("kentos-yol".into()));
+        for soon in ["kentos-yol", "kentos-3d", "kentos-afet"] {
+            let _ = launcher.update(Message::Launch(soon.into()));
+        }
         assert_eq!(
             launcher.notices.len(),
             1,

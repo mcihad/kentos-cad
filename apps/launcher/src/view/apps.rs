@@ -592,6 +592,8 @@ mod tests {
         // three columns, two rows, no scroll bar.
         assert_eq!(card_height(378.0), 335.0);
         assert_eq!(grid_layout(1167.0, 698.0, 6), (3, 378.0, false));
+        // The six bundled apps and the update centre: a third row, the grid scrolls.
+        assert_eq!(grid_layout(1167.0, 698.0, 7), (3, 373.0, true));
         // At 1100 × 650: two columns, three rows that scroll; the cards leave the bar its room.
         assert_eq!(grid_layout(827.0, 405.0, 6), (2, 398.0, true));
         // Every row's cards are the same: a card's height is its parts'.

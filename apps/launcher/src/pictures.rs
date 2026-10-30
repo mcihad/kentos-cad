@@ -1,8 +1,9 @@
 //! The cards' pictures (docs/adr/0800 §3): the owner's pictures of each
-//! program (30 October 2026), cut to a card's 2:1 and scaled to twice its
-//! size by `scripts/launcher/pictures.py --fit` (720 × 360, 256-colour PNG),
-//! bundled with the launcher. A manifest names one (`"picture": "mimari"`) or
-//! gives a PNG of its own. Pictures are decoded once and kept as textures.
+//! program, those still to come too (30 October 2026), cut to a card's 2:1
+//! and scaled to twice its size by `scripts/launcher/pictures.py --fit`
+//! (720 × 360, 256-colour PNG), bundled with the launcher. A manifest names
+//! one (`"picture": "mimari"`) or gives a PNG of its own. Pictures are
+//! decoded once and kept as textures.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -20,10 +21,24 @@ pub enum Shot {
     Cbs,
     /// A road: its plan, cross-sections and long profile.
     Yol,
+    /// A city at dusk in 3D: its blocks, a river and its bridges, the digital
+    /// twin's sensors marked on it (KentOS 3D, still to come).
+    Model3d,
+    /// A town's hazards on its map: a fault and a quake's epicentre with the
+    /// blocks it struck, the river's flood, a landslide, a forest fire, the
+    /// assembly points (KentOS Afet, still to come).
+    Afet,
 }
 
 impl Shot {
-    pub const ALL: [Shot; 4] = [Shot::Mimari, Shot::Harita, Shot::Cbs, Shot::Yol];
+    pub const ALL: [Shot; 6] = [
+        Shot::Mimari,
+        Shot::Harita,
+        Shot::Cbs,
+        Shot::Yol,
+        Shot::Model3d,
+        Shot::Afet,
+    ];
 
     pub const fn key(self) -> &'static str {
         match self {
@@ -31,6 +46,8 @@ impl Shot {
             Shot::Harita => "harita",
             Shot::Cbs => "cbs",
             Shot::Yol => "yol",
+            Shot::Model3d => "3d",
+            Shot::Afet => "afet",
         }
     }
 
@@ -49,6 +66,8 @@ impl Shot {
             Shot::Harita => include_bytes!("../assets/pictures/harita.png"),
             Shot::Cbs => include_bytes!("../assets/pictures/cbs.png"),
             Shot::Yol => include_bytes!("../assets/pictures/yol.png"),
+            Shot::Model3d => include_bytes!("../assets/pictures/3d.png"),
+            Shot::Afet => include_bytes!("../assets/pictures/afet.png"),
         }
     }
 }

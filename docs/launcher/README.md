@@ -17,7 +17,8 @@ dosyası. KentOS'un kendi modülleri de birer manifesttir (launcher'ın içinde,
 
 Üç yerden, bu sırayla:
 
-1. **Yerleşikler:** launcher'ın içinde. KentOS Mimari, KentOS Harita, KentOS GIS; KentOS YOL “yakında”.
+1. **Yerleşikler:** launcher'ın içinde. KentOS Mimari, KentOS Harita, KentOS GIS; KentOS YOL, KentOS 3D ve KentOS Afet
+   “yakında”.
 2. **Kurulumla gelenler:** launcher'ın yanındaki `uygulamalar/` klasörü (ör. `/opt/kentos/bin/uygulamalar/`). Bir kurum
    kendi programlarını ya da bir KentOS modülünün başka bir kurulumunu buraya koyar.
 3. **Kullanıcının uygulamaları:** `$XDG_DATA_HOME/kentos/uygulamalar/` (değişken yoksa `~/.local/share/kentos/uygulamalar/`).
@@ -63,7 +64,7 @@ yine bildirilir.
 | `version` | metin | | Kartta `v1.2` diye yazılır, en çok 32 harf. KentOS modüllerinde launcher'ın sürümü. |
 | `state` | metin | | `ready` (öntanımlı) ya da `soon`: henüz çıkmamış; kart “Yakında” der, bir şey başlatmaz. |
 | `launch` | nesne | zorunlu² | Nasıl başlar: aşağıdaki üç türden biri. |
-| `order` | tam sayı | | Kartların sırası (küçük önce), eşitse ad. Yoksa `100`; KentOS'unkiler 10–50. |
+| `order` | tam sayı | | Kartların sırası (küçük önce), eşitse ad. Yoksa `100`; KentOS'unkiler 10–60. |
 | `files` | metin dizisi | | Açtığı dosyaların uzantıları, noktasız (`["csv", "xlsx"]`). Kartın ⋯ menüsündeki **Dosya aç…** bunlarla açılır. |
 
 ¹ `kind: kentos` ise yazılmayabilir: modülün adı ve notu kullanılır. ² `state: soon` ise yazılmayabilir.
@@ -91,9 +92,10 @@ yanında, sonra `PATH`'te aranır. Bir dosya `kentos-cad`'e `--modul <modül> <d
 
 ### Simgeler (`icon`)
 
-`mimari` (bina), `harita` (ölçme aleti), `cbs` (katlanmış harita), `yol` (yol), `rapor` (belge), `uygulama` (dört karo),
-`terminal`, `web` (küre), `tablo`, `grafik`, `klasor`. Hepsi KentOS'un 20 × 20 çizgi simgeleridir; karonun rengindeki
-mürekkeple çizilir. Bir SVG ya da PNG dosyası verilirse karonun yerine olduğu gibi çizilir.
+`mimari` (bina), `harita` (ölçme aleti), `cbs` (katlanmış harita), `yol` (yol), `3d` (3B şehir), `afet` (sismograf),
+`rapor` (belge), `uygulama` (dört karo), `terminal`, `web` (küre), `tablo`, `grafik`, `klasor`. Hepsi KentOS'un 20 × 20
+çizgi simgeleridir; karonun rengindeki mürekkeple çizilir. Bir SVG ya da PNG dosyası verilirse karonun yerine olduğu gibi
+çizilir.
 
 ### Renkler (`color`)
 
@@ -103,7 +105,7 @@ ile karo arasında en az 3:1 karşıtlık vardır.
 
 ### Resimler (`picture`)
 
-Yerleşikler: `mimari`, `harita`, `cbs`, `yol` (sahibin resimleri; `scripts/launcher/pictures.py --fit` ile). Kartın resim alanı 2:1'dir;
+Yerleşikler: `mimari`, `harita`, `cbs`, `yol`, `3d`, `afet` (sahibin resimleri; `scripts/launcher/pictures.py --fit` ile). Kartın resim alanı 2:1'dir;
 kendi resminiz için kartın iki katı boyda, 2:1 bir PNG verin (ör. 720 × 360). Oranı başka olan resim alanı doldurur,
 taşan kenarları kesilir. En çok 4096 × 4096 piksel. Okunamayan resim bildirilir, kart resim yerine karonun renginde
 simgeyle çıkar.
@@ -160,8 +162,10 @@ Hepsi [`ornekler/`](ornekler) klasöründe; bir test hepsinin uyarısız okundu�
 ```sh
 kentos-launcher snapshot çıktı.png [--sayfa uygulamalar|son|guncellemeler|indirmeler|ayarlar|ekle|ikonlar]
                 [--tema koyu|acik] [--boyut 1440x900] [--yazi 13|18] [--secili kentos-harita] [--bildirimler]
-python3 scripts/launcher/pictures.py /yol/kentos-cad     # kartların resimlerini KentOS'un kendisiyle yeniden çeker
+python3 scripts/launcher/pictures.py --fit 3d=sehir.png afet=afet.png   # sahibin resimlerini kartlara uydurur (altı ad)
+python3 scripts/launcher/pictures.py --kentos /yol/kentos-cad   # dört kartın resmini KentOS'un kendisiyle yeniden çeker
 ```
 
 `snapshot` sabit veriyle çizer (yerleşik uygulamalar, `/opt/kentos/bin`'de bulunan `kentos-cad`, sabit bir son dosyalar
 listesi, çalışan program yok): resimler her makinede aynıdır; kullanıcının hiçbir dosyası okunmaz ya da yazılmaz.
+Simge sayfasının (`--sayfa ikonlar`) on sekiz satırı 900 piksele sığmaz; `--boyut 1440x1280` ile çizin.

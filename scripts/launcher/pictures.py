@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The KentOS Launcher cards' pictures (docs/adr/0800 §3): a card's picture
 at twice its size, 720 × 360, cut to the card's 2:1 and kept as a 256-colour
-PNG so the four stay well under 1.5 MB together.
+PNG so the six stay under 1.5 MB together.
 
     python3 scripts/launcher/pictures.py --fit mimari=plan.png harita=imar.png …
     python3 scripts/launcher/pictures.py --kentos target/release/kentos-cad
@@ -10,9 +10,11 @@ PNG so the four stay well under 1.5 MB together.
 2026): each is cut about its middle to 2:1 and scaled. `--kentos` draws real
 screenshots instead, without a window, with the desktop program's own
 `snapshot` command from the repository's drawings and traces; it overwrites
-the owner's pictures, so run it only to replace them. The pictures are
-written into apps/launcher/assets/pictures (or --out), and their sizes are
-said.
+the owner's pictures of the four programs KentOS can draw (mimari, harita,
+cbs, yol), so run it only to replace them. The coming programs' pictures (3d,
+afet) are the owner's alone: there is nothing of theirs to draw yet. The
+pictures are written into apps/launcher/assets/pictures (or --out), and their
+sizes are said.
 """
 
 from __future__ import annotations
@@ -46,6 +48,11 @@ PICTURES: dict[str, tuple[list[str], tuple[int, int, int, int]]] = {
     # A junction drawn with Plan yolu: roads, kerbs rounded, a median closed.
     "yol": (["--iz", "plan-road"], (118, 236, 1026, 690)),
 }
+
+# Every card's picture, the names --fit takes: the four above and those of the
+# programs still to come (KentOS 3D, KentOS Afet), which only the owner's
+# pictures give.
+FIT: list[str] = [*PICTURES, "3d", "afet"]
 
 
 def save(picture: Image.Image, path: Path) -> int:
@@ -91,7 +98,7 @@ def screenshots(kentos: Path, out: Path) -> int | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--fit", nargs="+", metavar="AD=RESİM", help="the owner's pictures, by card: mimari, harita, cbs, yol")
+    parser.add_argument("--fit", nargs="+", metavar="AD=RESİM", help=f"the owner's pictures, by card: {', '.join(FIT)}")
     parser.add_argument("--kentos", type=Path, help="the kentos-cad program (target/release/kentos-cad), for screenshots")
     parser.add_argument("--out", type=Path, default=OUT, help="where the pictures go")
     args = parser.parse_args()
@@ -108,12 +115,12 @@ def main() -> int:
     else:
         for item in args.fit:
             name, _, source = item.partition("=")
-            if name not in PICTURES or not source:
-                print(f"“{item}”: AD=RESİM yazın; adlar {', '.join(PICTURES)}.", file=sys.stderr)
+            if name not in FIT or not source:
+                print(f"“{item}”: AD=RESİM yazın; adlar {', '.join(FIT)}.", file=sys.stderr)
                 return 2
             with Image.open(source) as picture:
                 save(picture, args.out / f"{name}.png")
-    total = sum((args.out / f"{name}.png").stat().st_size for name in PICTURES if (args.out / f"{name}.png").is_file())
+    total = sum((args.out / f"{name}.png").stat().st_size for name in FIT if (args.out / f"{name}.png").is_file())
     print(f"toplam {total:,} bayt (sınır {BUDGET:,})")
     if total > BUDGET:
         print("Resimler çok büyük: kesitleri küçültün ya da renkleri azaltın.", file=sys.stderr)

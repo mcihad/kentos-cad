@@ -1,0 +1,11 @@
+{
+  "format": "kentos.launcher-app/1",
+  "id": "kentos-3d",
+  "name": "KentOS 3D",
+  "note": "3B şehir modeli ve dijital ikiz",
+  "icon": "3d",
+  "color": "teal",
+  "picture": "3d",
+  "state": "soon",
+  "order": 50
+}

@@ -105,9 +105,9 @@ pub fn edit<'a>(launcher: &'a Launcher, draft: &'a Draft) -> Element<'a, Message
                 Position::Top,
             ))
         });
-    // The glyphs in two rows: a row of eleven does not fit the field.
+    // The glyphs in two rows: a row of thirteen does not fit the field.
     let glyphs = Glyph::ALL
-        .chunks(6)
+        .chunks(7)
         .fold(Column::new().spacing(px(6.0)), |rows, chunk| {
             rows.push(
                 chunk
