@@ -10,7 +10,7 @@ use std::sync::Arc;
 
 use iced::widget::tooltip::Position;
 use iced::widget::{
-    Column, Row, button, column, container, responsive, row, scrollable, space, stack, text_input,
+    Column, Row, button, column, container, responsive, row, scrollable, space, stack,
 };
 use iced::{Border, Center, Element, Fill, Length, Theme};
 use kentos_native_style::library::{CategoryNode, Source, StyleLibrary};
@@ -168,6 +168,7 @@ impl App {
         .height(Fill);
         let frame = container(cols).height(Fill).clip(true).style(frame);
         Dialog::new(title)
+            .on_close(ev(Event::Close))
             .push(bar(m, width - 2.0 * MARGIN))
             .push(frame)
             .push(footer(m, lib))
@@ -311,12 +312,9 @@ fn search_width(width: f32) -> f32 {
 fn bar<'a>(m: &Manager, width: f32) -> Element<'a, Message> {
     let search = row![
         icon(Icon::Search).size(14.0).tone(Tone::Muted),
-        text_input("Sembol ara: konut, sınır, tarama…", &m.query)
+        kentos_ui::widget::bare_field("Sembol ara: konut, sınır, tarama…", &m.query)
             .id(SEARCH)
             .on_input(|t| ev(Event::Search(t)))
-            .padding([5, 0])
-            .size(typography::body())
-            .style(style::field::bare_input)
             .width(Fill),
     ]
     .spacing(6)
@@ -419,7 +417,7 @@ fn footer<'a>(m: &Manager, lib: &StyleLibrary) -> Element<'a, Message> {
     let mut footer = row![
         container(status).width(Fill),
         button(label::body("Kapat"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(Event::Close)),
     ]
@@ -435,7 +433,7 @@ fn footer<'a>(m: &Manager, lib: &StyleLibrary) -> Element<'a, Message> {
             .spacing(6)
             .align_y(Center),
         )
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::primary)
         .on_press_maybe(can.then(|| ev(Event::Choose)));
         footer = footer.push(if can {

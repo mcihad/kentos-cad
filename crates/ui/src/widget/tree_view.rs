@@ -79,17 +79,15 @@ use crate::widget::{Tip, tip};
 
 pub use crate::widget::table::Column;
 
-/// Satır yüksekliği, 12 piksellik gövde metninde; girinti çizgileri satırlar
-/// boyunca kesintisiz uzanır. Yazı boyutuyla büyür ([`row_height`]).
-pub const ROW_HEIGHT: f32 = 24.0;
 /// Her derinlik düzeyinin girintisi; açma/kapama oku da bu genişliktedir.
 pub const INDENT: f32 = 16.0;
 /// Onay kutusunun kenarı.
 const CHECK_SIZE: f32 = 13.0;
 
-/// Geçerli yazı boyutundaki satır yüksekliği.
+/// Satır yüksekliği, geçerli yazı boyutunda: bütün satırlarınki; girinti
+/// çizgileri satırlar boyunca kesintisiz uzanır.
 pub fn row_height() -> f32 {
-    typography::scaled(ROW_HEIGHT)
+    crate::theme::metrics::row()
 }
 
 /// Onay kutusunun durumu.
@@ -612,15 +610,13 @@ fn node_row<'a, Message: Clone + 'a>(
         tree = tree.push(row_toggle(toggle));
     }
 
-    let content = button(table::line(
+    let content = table::RowBox::new(table::line(
         layout,
         std::iter::once(tree.into()).chain(cells),
     ))
     .on_press_maybe(on_press)
-    .width(Fill)
-    .height(row_height())
-    .padding([0.0, table::PADDING_X])
-    .style(style::button::table_row(selected, selected));
+    .height(Some(row_height()))
+    .selected(selected);
 
     // The active node's accent bar at the row's left edge, over its padding.
     let content: Element<'a, Message> = if active {
@@ -653,7 +649,7 @@ fn row_toggle<'a, Message: Clone + 'a>(toggle: Toggle<Message>) -> Element<'a, M
     tip(
         button(icon(glyph).size(13.0))
             .on_press(toggle.message)
-            .padding([2, 3])
+            .padding(crate::theme::metrics::icon_small(13.0))
             .style(style::button::row_toggle(toggle.pressed)),
         Tip::new(description),
         tooltip::Position::Left,
@@ -677,7 +673,7 @@ pub fn rename<'a, Message: Clone + 'a>(
             .on_submit(on_submit.clone())
             .font(typography::ui())
             .size(typography::body())
-            .padding([1, 4])
+            .padding(crate::theme::metrics::padding(row_height(), 4.0))
             .style(style::field::input)
             .into(),
         on_submit,

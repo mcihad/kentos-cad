@@ -8,7 +8,7 @@ use iced::widget::{column, container, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_ui::label;
 use kentos_ui::widget::property_grid::{self, PropertySheet};
-use kentos_ui::widget::{EditCell, Menu, Switch};
+use kentos_ui::widget::{Cell, EditCell, Menu, Switch};
 
 pub(crate) const PROPERTIES_SCROLL: &str = "drawing-properties";
 
@@ -33,13 +33,16 @@ impl App {
     ) -> Element<'a, Message> {
         // The inspector owns its existing single scroll. A new tool can
         // reveal the controls without resetting edits, previews or other docks.
-        scrollable(column![self.architecture_settings_view(), self.properties_view(doc)])
-            .id(PROPERTIES_SCROLL)
-            .direction(kentos_ui::style::field::thin_scrollbar())
-            .spacing(0)
-            .width(Fill)
-            .height(Fill)
-            .into()
+        scrollable(column![
+            self.architecture_settings_view(),
+            self.properties_view(doc)
+        ])
+        .id(PROPERTIES_SCROLL)
+        .direction(kentos_ui::style::field::thin_scrollbar())
+        .spacing(0)
+        .width(Fill)
+        .height(Fill)
+        .into()
     }
 
     pub(crate) fn architecture_settings_view(&self) -> Element<'_, Message> {
@@ -55,14 +58,20 @@ impl App {
         }
         for setting in rows {
             if setting.note {
-                sheet = sheet.note(column![
-                    label::strong(setting.label),
-                    label::body(setting.value).style(if setting.warn {
-                        kentos_ui::style::text::warning
-                    } else {
-                        kentos_ui::style::text::muted
-                    }).width(Fill),
-                ].spacing(4).width(Fill));
+                sheet = sheet.note(
+                    column![
+                        label::strong(setting.label),
+                        label::body(setting.value)
+                            .style(if setting.warn {
+                                kentos_ui::style::text::warning
+                            } else {
+                                kentos_ui::style::text::muted
+                            })
+                            .width(Fill),
+                    ]
+                    .spacing(4)
+                    .width(Fill),
+                );
                 continue;
             }
             let key = setting.key;
@@ -73,13 +82,13 @@ impl App {
                     .choices
                     .iter()
                     .any(|choice| choice.typed == "yes" && choice.checked);
-                Switch::new(on, move |on| {
+                Cell::padded(Switch::new(on, move |on| {
                     Message::ToolSetting(Commit {
                         tool,
                         key,
                         value: if on { "yes" } else { "no" }.into(),
                     })
-                })
+                }))
                 .into()
             } else if setting.choices.is_empty() {
                 EditCell::new(setting.value, move |value| {
@@ -456,7 +465,10 @@ mod tests {
             before
         );
         let _ = app.update(Message::Viewport(Event::Moved(target)));
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
         let _ = app.update(Message::Viewport(Event::Pressed(target)));
         let Entity::Opening(o) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
             panic!("opening")
@@ -488,5 +500,4 @@ mod tests {
         assert!(raw.snap.is_none());
         assert_eq!(raw.world.x, 5.0);
     }
-
 }

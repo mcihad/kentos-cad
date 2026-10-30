@@ -144,7 +144,8 @@ pub fn view<'a, M: Clone + 'a>(
                 "Boyları korunsun",
                 Some(answer(Some(UnitGeometry::Keep))),
             ))
-            .width(560.0),
+            .width(560.0)
+            .on_close(Some(answer(None))),
     )
 }
 

@@ -5,7 +5,7 @@
 
 use iced::widget::text::IntoFragment;
 use iced::widget::tooltip::Position;
-use iced::widget::{Column, Row, button, column, container, row, text_input};
+use iced::widget::{Column, Row, button, column, container, row};
 use iced::{Center, Element, Fill, Length};
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, icon};
@@ -13,6 +13,7 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::select::{Choice, Select};
+use kentos_ui::widget::table::{self, Table};
 use kentos_ui::widget::{Dialog, Tip, tip};
 
 use super::read::{self, Known};
@@ -47,14 +48,10 @@ pub(crate) fn known_field<'a>(
     text: &'a str,
     hint: Option<&'a str>,
 ) -> Element<'a, Message> {
-    let input = text_input("Nokta adı ya da Y,X", text)
+    let input = kentos_ui::widget::text_field("Nokta adı ya da Y,X", text)
         .on_input(move |t| event(Event::Known(field, t)))
-        .padding([5, 8])
-        .width(Fill)
-        .font(typography::ui())
-        .size(typography::body())
-        .style(style::field::input);
-    let input = kentos_ui::widget::focus_ring(input);
+        .width(Fill);
+    let input = input;
     let pick = tip(
         button(
             row![icon(Icon::Magnet).size(14.0), label::body("Çizimden")]
@@ -62,7 +59,7 @@ pub(crate) fn known_field<'a>(
                 .align_y(Center),
         )
         .on_press(event(Event::Pick(field)))
-        .padding([5, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary),
         Tip::new("Çizimde gösterin (bir noktaya kenetlenirse adı alınır)"),
         Position::Bottom,
@@ -126,18 +123,15 @@ fn labelled<'a>(
     numeric: bool,
     on_input: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    let input = text_input(placeholder, value)
+    let input = kentos_ui::widget::text_field(placeholder, value)
         .on_input(on_input)
-        .padding([5, 8])
         .width(Length::Fixed(typography::scaled(width)))
         .font(if numeric {
             typography::mono()
         } else {
             typography::ui()
-        })
-        .size(typography::body())
-        .style(style::field::input);
-    let input = kentos_ui::widget::focus_ring(input);
+        });
+    let input = input;
     column![label::caption(title), input].spacing(4).into()
 }
 
@@ -171,49 +165,30 @@ pub(crate) fn result_table_marked<'a>(
     numeric: &[bool],
     marked: &[bool],
 ) -> Element<'a, Message> {
-    let cell = |t: String, n: bool, strong: bool| -> Element<'a, Message> {
-        let text = if n { label::mono(t) } else { label::body(t) };
-        let text = if strong {
-            text.font(typography::ui_strong())
-        } else {
-            text
-        };
-        cell_of(text, n)
-    };
-    let flagged = |t: String, n: bool| -> Element<'a, Message> {
-        let text = if n { label::mono(t) } else { label::body(t) };
-        cell_of(text.style(style::text::danger), n)
-    };
-    let head_row = row(head
-        .iter()
-        .zip(numeric)
-        .map(|(h, &n)| cell((*h).to_owned(), n, true)));
-    let mut table = Column::new().push(
-        container(head_row)
-            .width(Fill)
-            .style(style::container::header),
-    );
-    for (i, r) in rows.into_iter().enumerate() {
-        let on = marked.get(i).copied().unwrap_or(false);
-        table = table
-            .push(row(r.into_iter().zip(numeric).map(|(t, &n)| {
-                if on { flagged(t, n) } else { cell(t, n, false) }
-            })));
-    }
-    container(table)
+    let columns = head.iter().zip(numeric).map(|(title, &number)| {
+        let column = table::Column::new(*title).width(Fill);
+        if number { column.align_right() } else { column }
+    });
+    let lines = rows.into_iter().enumerate().map(|(i, line)| {
+        let flagged = marked.get(i).copied().unwrap_or(false);
+        table::Row::new(line.into_iter().zip(numeric).map(|(value, &number)| {
+            let text = if number {
+                table::number(value)
+            } else {
+                table::text(value)
+            };
+            let text = if flagged {
+                text.style(style::text::danger)
+            } else {
+                text
+            };
+            text.into()
+        }))
+    });
+    container(Table::new(columns).extend(lines))
         .width(Fill)
         .style(style::container::bordered)
         .into()
-}
-
-/// A results cell: its text padded, a number at the right.
-fn cell_of<'a>(text: iced::widget::Text<'a>, numeric: bool) -> Element<'a, Message> {
-    let c = container(text).width(Fill).padding([4, 8]);
-    if numeric {
-        c.align_x(iced::Right).into()
-    } else {
-        c.into()
-    }
 }
 
 /// The layer select of the footer (the web's `layerChoice`): locked layers marked.

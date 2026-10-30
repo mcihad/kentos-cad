@@ -228,15 +228,15 @@ impl<'a, Message: Clone + 'a> From<PropertiesDialog<'a, Message>> for Element<'a
             note,
             button(label::body("İptal"))
                 .on_press_maybe(dialog.on_cancel)
-                .padding([5, 16])
+                .padding(crate::theme::metrics::action())
                 .style(style::button::secondary),
             button(label::body("Uygula"))
                 .on_press_maybe(dialog.on_apply.filter(|_| dialog.dirty))
-                .padding([5, 16])
+                .padding(crate::theme::metrics::action())
                 .style(style::button::secondary),
             button(label::body("Tamam"))
                 .on_press_maybe(dialog.on_accept)
-                .padding([5, 16])
+                .padding(crate::theme::metrics::action())
                 .style(style::button::primary),
         ]
         .spacing(6)

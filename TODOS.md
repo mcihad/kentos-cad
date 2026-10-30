@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0805, 0806: veri tablosu (başlık bandı `table_head`, satır çizgisi, tıklanmayan satırın da aydınlanması, bütün başlık hücresinin basılması, ok kuralı, sürüklenen sütun, `Table::grid`) ve sekmeler (daralmaz, `‹ ›` ve liste,
+  tekerlek, kesilen kenar solar, eylemlerin kendi satırı). Web dönünce `ui/` tablolarına ve sekmelerine aynı kural.
+- ADR 0804: bileşenlerin tek dili masaüstünde (tek kontrol yüksekliği 28, `Cell`, tek ızgara satırı, pencerenin × ve köşe kavisi, seçili satır yalnız
+  yumuşak zemin, `Tokens::soft`, `cell`, `cell_hover`, `rule`, `border_grip`). Web dönünce `--ctl-h` 28'e iner, Öznitelikler hücreleri ve pencere başlığı aynı dile geçer,
+  `tokens.css` yeni jetonları alır.
 - ADR 0801, 0802: CAD projesinin işi `cadWork` (`.kcad` şema 135; Mimari proje, Harita / imar planı); web'in
   sihirbazı onu yazar (ortak `fixtures/project/v1/wizard.json` değişti), `cad.settings.set`'in 16 yeni `cadWork`
   durumu web'in işleyicisinde de geçer, şerit `catalog/v1/ribbon.json`'un `works`'üne uyar, işi olmayan CAD çiziminde
@@ -3560,8 +3565,8 @@ Kabul: her teslimin test komutu, veri seti, revision ve ölçüm ortamı bellidi
   bir launcher; “ileride rust ile yazılmamış yazılımlar da entegre edebiliriz”): ayrı program `kentos-launcher`
   (`apps/launcher`); uygulamalar `kentos.launcher-app/1` manifestleri (gömülü KentOS Mimari, Harita, GIS; Yakında YOL, 3D, Afet; kullanıcının ve kurumun klasörleri; herhangi bir dilde program ya da web adresi; Uygulama ekle, Düzenle, Kaldır),
   ayrı süreç ve günlük, Son dosyalar, dürüst Güncellemeler/İndirmeler (güncelleme servisi yok), `snapshot` komutu.
-  Ortak sözleşme `crates/native/launch` (modüller, komut satırı, programın bulunması, son dosyalar). Açık: gerçek pencerede
-  fare ve klavye kabulü, Windows ve macOS, güncelleme servisi (`OPS-10`).
+  Ortak sözleşme `crates/native/launch` (modüller, komut satırı, programın bulunması, son dosyalar). Görünüşü **[ADR 0803](docs/adr/0803-launcher-sheet-and-plates.md)**
+  (masa, pafta, levhalar; DESIGN.md §7.18). Açık: gerçek pencerede fare ve klavye kabulü, Windows ve macOS, güncelleme servisi (`OPS-10`).
 - [x] `OPS-17` KentOS Mimari, Harita ve GIS ayrı programlar — **30 Ekim, [ADR 0801](docs/adr/0801-kentos-modules-and-their-programs.md)**
   (sahibin sözleri: “Mimari CAD, Harita CAD ve GIS ayrımı”, “Uygulamaların her biri ayrı binary olacak değil mi”):
   masaüstü kütüphane (`kentos_desktop`) ve programlar (`kentos-cad` hepsi, `--modul`; `kentos-mimari`, `kentos-harita`,

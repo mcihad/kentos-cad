@@ -8,7 +8,7 @@
 use std::collections::BTreeSet;
 use std::fmt;
 
-use iced::widget::{Column, button, column, container, row, scrollable, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable};
 use iced::{Alignment, Center, Element, Fill};
 use kentos_processing::registry::CategoryNode;
 use kentos_processing::text::fold_turkish;
@@ -141,12 +141,8 @@ impl App {
         let search = container(
             row![
                 icon(Icon::Search).size(13.0).tone(Tone::Muted),
-                text_input("İşlem ara: numara, kenar, parsel…", &state.search)
-                    .on_input(|t| ev(Event::Search(t)))
-                    .font(typography::ui())
-                    .size(typography::body())
-                    .padding([3, 0])
-                    .style(style::field::bare_input),
+                kentos_ui::widget::bare_field("İşlem ara: numara, kenar, parsel…", &state.search)
+                    .on_input(|t| ev(Event::Search(t))),
             ]
             .spacing(6)
             .align_y(Center),
@@ -195,7 +191,7 @@ impl App {
                 };
                 let edit = tip(
                     button(icon(crate::icons::from_web(Some("edit"))).size(14.0))
-                        .padding(3)
+                        .padding(kentos_ui::theme::metrics::icon_small(14.0))
                         .style(style::button::ghost)
                         .on_press(ev(Event::EditModel(m.id.clone()))),
                     Tip::new(words),
@@ -298,7 +294,7 @@ impl App {
         if alive > 0 {
             actions = actions.push(tip(
                 button(label::caption(format!("{alive} nesneyi seç")))
-                    .padding([3, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::ghost)
                     .on_press(ev(Event::SelectRun(r.seq))),
                 Tip::new("Bu çalıştırmanın eklediği nesneleri seçer"),
@@ -307,7 +303,7 @@ impl App {
         }
         actions = actions.push(tip(
             button(label::caption("Yeniden aç"))
-                .padding([3, 8])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary)
                 .on_press_maybe(known.then_some(ev(Event::Reopen(r.seq)))),
             Tip::new("Aynı değerlerle pencereyi açar"),
@@ -327,9 +323,7 @@ impl App {
         .spacing(8)
         .align_y(Center);
         let foot = row![
-            label::mono_caption(took)
-                .style(style::text::muted)
-                .width(Fill),
+            label::caption(took).style(style::text::muted).width(Fill),
             actions
         ]
         .align_y(Center);
@@ -338,7 +332,7 @@ impl App {
         let mut body = column![head, label::caption(r.summary.clone())].spacing(4);
         if r.status == Status::Ok && (r.records_in > 0 || r.records_out > 0) {
             body = body.push(
-                label::mono_caption(format!("{} → {} kayıt", r.records_in, r.records_out))
+                label::caption(format!("{} → {} kayıt", r.records_in, r.records_out))
                     .style(style::text::muted),
             );
         }
@@ -346,8 +340,8 @@ impl App {
             body = body.push(
                 row![
                     label::caption(format!("{}. {}", i + 1, s.label)).width(Fill),
-                    label::mono_caption(format!(
-                        "{} → {} kayıt · {} ms",
+                    label::caption(format!(
+                        "{} → {} kayıt, {} ms",
                         s.records_in, s.records_out, s.ms
                     ))
                     .style(style::text::muted),

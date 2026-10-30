@@ -10,7 +10,7 @@ use std::time::Duration;
 
 use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt, Stream};
-use iced::widget::{Row as UiRow, button, column, container, row, scrollable, text_input};
+use iced::widget::{Row as UiRow, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     BatchOnError, CAD_PROCESSING_BATCH, CallAnswer, CallEnvelope, CallOp, CommandResult, JobPhase,
@@ -26,7 +26,7 @@ use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::table::{self as ui_table, Table as UiTable};
-use kentos_ui::widget::{Dialog, Menu, MenuButton, Segmented, horizontal_divider, overlay};
+use kentos_ui::widget::{Dialog, Menu, MenuButton, Segmented, horizontal_divider};
 
 use super::{Event as ProcessingEvent, Processing};
 use crate::app::{App, Message};
@@ -132,7 +132,10 @@ pub enum RowState {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Line {
     Idle,
-    Running { share: Option<f64>, stopping: bool },
+    Running {
+        share: Option<f64>,
+        stopping: bool,
+    },
     Done(String),
     /// Finished with rows that stopped and were taken back (Devam et): the summary says which.
     Partial(String),
@@ -379,9 +382,10 @@ impl App {
             b.line = Line::Failed(why.to_owned());
             return;
         }
-        let common = window
-            .sink
-            .read_whole(command_values(&doc.model, &window.tool, &window.values));
+        let common =
+            window
+                .sink
+                .read_whole(command_values(&doc.model, &window.tool, &window.values));
         let selection: Vec<String> = self
             .selection
             .ids()
@@ -486,20 +490,18 @@ impl App {
         ]
         .spacing(12)
         .padding([4, 8]);
-        overlay::modal(
-            Dialog::new(format!("Toplu çalıştır: {}", tool.label))
-                .push(
-                    scrollable(body)
-                        .direction(style::field::body_scrollbar())
-                        .width(Fill)
-                        .height(Fill),
-                )
-                .push(horizontal_divider())
-                .push(footer(b))
-                .width(WIDTH)
-                .max_height(HEIGHT),
-            ev(Event::Back),
-        )
+        Dialog::new(format!("Toplu çalıştır: {}", tool.label))
+            .push(
+                scrollable(body)
+                    .direction(style::field::body_scrollbar())
+                    .width(Fill)
+                    .height(Fill),
+            )
+            .push(horizontal_divider())
+            .push(footer(b))
+            .width(WIDTH)
+            .max_height(HEIGHT)
+            .modal(ev(Event::Back))
     }
 }
 
@@ -654,7 +656,7 @@ fn toolbar<'a>(b: &'a BatchState, tool: &'a kentos_processing::Tool) -> Element<
         .spacing(6)
         .align_y(Center),
     )
-    .padding([4, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press_maybe(
         (idle && b.table.rows.len() < batch_table::MAX_BATCH_ROWS).then(|| ev(Event::AddRow)),
@@ -675,10 +677,7 @@ fn input<'a>(
     value: &str,
     on: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    text_input(placeholder, value)
-        .padding([3, 6])
-        .font(typography::ui())
-        .size(typography::body())
+    kentos_ui::widget::text_field(placeholder, value)
         .style(style::field::validated(false))
         .on_input(on)
         .width(Fill)
@@ -735,7 +734,7 @@ fn grid<'a>(b: &'a BatchState, tool: &'a kentos_processing::Tool) -> Element<'a,
             cells.push(state_cell(b.rows.get(i)));
             cells.push(
                 button(icon(crate::icons::from_web(Some("tableRowDelete"))).size(14.0))
-                    .padding([2, 6])
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
                     .style(style::button::ghost)
                     .on_press_maybe(
                         (idle && b.table.rows.len() > 1).then(|| ev(Event::RemoveRow(i))),
@@ -860,9 +859,10 @@ fn record_panel<'a>(b: &'a BatchState) -> Element<'a, Message> {
             "Sonuç: {} · {}{}",
             sink.path,
             tables.join(", "),
-            sink.sha256
-                .as_deref()
-                .map_or_else(String::new, |s| format!(" · SHA-256 {}…", &s[..s.len().min(12)])),
+            sink.sha256.as_deref().map_or_else(String::new, |s| format!(
+                " · SHA-256 {}…",
+                &s[..s.len().min(12)]
+            )),
         )));
     }
     if let Some(sentence) = &b.rerun {
@@ -879,7 +879,7 @@ fn record_panel<'a>(b: &'a BatchState) -> Element<'a, Message> {
 fn footer<'a>(b: &'a BatchState) -> Element<'a, Message> {
     let running = b.running();
     let back = button(label::body("Forma dön"))
-        .padding([5, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::ghost)
         .on_press_maybe((!running).then(|| ev(Event::Back)));
     let mut status = UiRow::new().spacing(8).align_y(Center).width(Fill);
@@ -920,7 +920,7 @@ fn footer<'a>(b: &'a BatchState) -> Element<'a, Message> {
         }
     }
     let close = button(label::body(if running { "Durdur" } else { "Kapat" }))
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press(if running {
             ev(Event::Stop)
@@ -932,7 +932,7 @@ fn footer<'a>(b: &'a BatchState) -> Element<'a, Message> {
             .spacing(6)
             .align_y(Center),
     )
-    .padding([5, 14])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::primary)
     .on_press_maybe((!running).then(|| ev(Event::Run)));
     row![back, status, close, run]

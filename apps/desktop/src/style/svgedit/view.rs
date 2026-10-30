@@ -9,7 +9,7 @@
 
 use iced::widget::{
     Column, button, canvas, column, container, pin, responsive, row, scrollable, shader, space,
-    stack, text_input,
+    stack,
 };
 use iced::{Center, Element, Fill, Length, Rectangle, Renderer, Theme};
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -155,7 +155,7 @@ fn guide_popup<'a>(ed: &SvgEditor, size: iced::Size) -> Option<Element<'a, Messa
             row![
                 container(label::caption(words.to_owned()).style(style::text::muted))
                     .width(typography::scaled(52.0)),
-                text_input("", value)
+                kentos_ui::widget::text_field("", value)
                     .id(iced::widget::Id::from(format!("svge:guide-{key_s}")))
                     .on_input(move |t| {
                         change(move |ed| {
@@ -169,8 +169,6 @@ fn guide_popup<'a>(ed: &SvgEditor, size: iced::Size) -> Option<Element<'a, Messa
                         })
                     })
                     .on_submit(change(|ed| ed.guide_apply()))
-                    .padding([3, 6])
-                    .size(typography::body())
                     .style(style::field::validated(false))
                     .width(Fill),
             ]
@@ -186,12 +184,12 @@ fn guide_popup<'a>(ed: &SvgEditor, size: iced::Size) -> Option<Element<'a, Messa
         field("a", "Açı (°)", &pop.angle),
         row![
             button(label::caption("Sil").style(style::text::danger))
-                .padding([3, 10])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary)
                 .on_press(change(move |ed| ed.remove_guide(&id))),
             space::horizontal(),
             button(label::caption("Tamam").style(style::text::on_accent))
-                .padding([3, 10])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::primary)
                 .on_press(change(|ed| ed.guide_apply())),
         ]
@@ -306,11 +304,9 @@ fn source_sash<'a>(ed: &SvgEditor, s: &files::source::SourcePanel) -> Element<'a
 /// does not jump as messages come and go.
 fn footer<'a>(ed: &'a SvgEditor, narrow: bool) -> Element<'a, Message> {
     let field = |id: &str, hint: &str, value: &str, width: f32, on: fn(String) -> Event| {
-        text_input(hint, value)
+        kentos_ui::widget::text_field(hint, value)
             .id(iced::widget::Id::from(format!("svge:{id}")))
             .on_input(move |t| ev(on(t)))
-            .padding([4, 7])
-            .size(typography::body())
             .style(style::field::validated(false))
             .width(Length::Fixed(typography::from_default(width)))
     };
@@ -359,12 +355,12 @@ fn footer<'a>(ed: &'a SvgEditor, narrow: bool) -> Element<'a, Message> {
         .align_y(Center),
         inline,
         button(label::body("Vazgeç"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(Event::Close)),
         tip(
             button(label::body("Farklı kaydet…"))
-                .padding([5, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(ev(Event::File(files::Event::Cmd(files::FileCmd::SaveAs)))),
             Tip::new("Yeni bir ad ve kategoriyle kitaplığa kaydeder (Ctrl+Shift+S)".to_owned()),
@@ -378,7 +374,7 @@ fn footer<'a>(ed: &'a SvgEditor, narrow: bool) -> Element<'a, Message> {
             .spacing(6)
             .align_y(Center),
         )
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::primary)
         .on_press(ev(Event::Save)),
     ]
@@ -414,7 +410,7 @@ fn question<'a>(ed: &SvgEditor, q: &Question) -> Element<'a, Message> {
     .width(Fill);
     let answer = |words: String, e: Event| {
         button(label::body(words))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(e))
     };
@@ -423,7 +419,7 @@ fn question<'a>(ed: &SvgEditor, q: &Question) -> Element<'a, Message> {
         space::horizontal(),
         answer("Vazgeç".to_owned(), Event::Stay),
         button(label::body(format!("Kaydet ve {verb}")).style(style::text::on_accent))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
             .on_press(ev(Event::SaveAndClose)),
     ]
@@ -442,12 +438,10 @@ fn save_as<'a>(form: &files::SaveAs) -> Element<'a, Message> {
     let field = |id: &'static str, words: &str, value: &str, on: fn(&mut files::SaveAs, String)| {
         crate::style::fields::labelled(
             words,
-            text_input("", value)
+            kentos_ui::widget::text_field("", value)
                 .id(iced::widget::Id::from(id))
                 .on_input(move |t| files::save_as_change(move |f| on(f, t.clone())))
                 .on_submit(ev(Event::File(files::Event::SaveAs)))
-                .padding([4, 7])
-                .size(typography::body())
                 .style(style::field::validated(false))
                 .width(Fill),
             None,
@@ -485,12 +479,13 @@ fn save_as<'a>(form: &files::SaveAs) -> Element<'a, Message> {
     ]
     .spacing(12);
     Dialog::new("Farklı kaydet")
+        .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(body)
         .push(
             row![
                 space::horizontal(),
                 button(label::body("Vazgeç"))
-                    .padding([5, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary)
                     .on_press(change(|ed| ed.files.dialog = None)),
                 button(
@@ -501,7 +496,7 @@ fn save_as<'a>(form: &files::SaveAs) -> Element<'a, Message> {
                     .spacing(6)
                     .align_y(Center)
                 )
-                .padding([5, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::primary)
                 .on_press(ev(Event::File(files::Event::SaveAs))),
             ]
@@ -522,7 +517,7 @@ fn dropped<'a>(name: &str) -> Element<'a, Message> {
             ]
             .spacing(2),
         )
-        .padding([6, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .width(Fill)
         .style(style::button::secondary)
         .on_press(e)
@@ -686,6 +681,7 @@ impl App {
                 ..container::Style::default()
             });
         Dialog::new(ed.title())
+            .on_close(ev(Event::Close))
             .push(frame)
             .push(footer(ed, width < typography::from_default(1250.0)))
             .width(typography::unscaled(width))

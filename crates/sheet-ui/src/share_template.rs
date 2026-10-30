@@ -20,7 +20,7 @@ use kentos_sheet::cloud::{
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::widget::{Choice, Confirm, Dialog, Select, Suggest, Suggestion, Tip, overlay, tip};
+use kentos_ui::widget::{Choice, Confirm, Dialog, Select, Suggest, Suggestion, Tip, tip};
 
 use crate::designer::{Designer, Effect};
 use crate::library::{self, CardSource, LibraryRequest, TemplateAction};
@@ -462,11 +462,7 @@ impl Designer {
         .detail("Şablon “Benimle paylaşılanlar” listesinden kalkar. Ondan yaptığı paftalar kalır; onlar şablonun kopyasıdır.")
         .confirm("Paylaşımı kaldır")
         .destructive();
-        stack![
-            window,
-            overlay::modal(question, sm(ShareMessage::Answer(false)))
-        ]
-        .into()
+        stack![window, question.modal(sm(ShareMessage::Answer(false)))].into()
     }
 
     /// The window itself.
@@ -536,7 +532,7 @@ impl Designer {
                 .align_y(Center),
             )
             .on_press_maybe((away.is_none() && !d.uploading).then(|| sm(ShareMessage::Sync)))
-            .padding([5, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary);
             let mut line = row![sync].spacing(8).align_y(Center);
             if let Some(why) = away {
@@ -590,7 +586,7 @@ impl Designer {
         let ready = live && d.picked.is_some();
         let add = button(label::body(texts::SHARE))
             .on_press_maybe(ready.then(|| sm(ShareMessage::Add)))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary);
         let add: Element<'a, Message> = if ready {
             add.into()
@@ -666,11 +662,12 @@ impl Designer {
             );
         }
         Dialog::new(texts::TITLE)
+            .on_close(Message::Share(ShareMessage::Close))
             .push(body)
             .action(
                 button(label::body(texts::CLOSE))
                     .on_press(sm(ShareMessage::Close))
-                    .padding([6, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .width(680.0)
@@ -740,7 +737,7 @@ fn grant_row<'a>(g: &'a SheetTemplateGrant, live: bool) -> Element<'a, Message> 
     };
     let remove = button(label::caption(texts::REMOVE))
         .on_press_maybe(live.then(|| sm(ShareMessage::Remove { user, person })))
-        .padding([3, 8])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::ghost);
     let sub = [
         g.email.clone().unwrap_or_default(),

@@ -248,7 +248,7 @@ pub fn tab(theme: &Theme, status: Status) -> Style {
     }
 }
 
-/// Araç düğmesi: etkin araç vurgu zemini ve kenarıyla gösterilir.
+/// Araç düğmesi: etkin araç yumuşak vurgu zemininde, vurgu yazısıyla (docs/adr/0804).
 pub fn tool(active: bool) -> impl Fn(&Theme, Status) -> Style {
     move |theme, status| {
         if !active {
@@ -257,25 +257,17 @@ pub fn tool(active: bool) -> impl Fn(&Theme, Status) -> Style {
 
         let t = Tokens::of(theme);
 
-        style(
-            t.selection(),
-            t.text,
-            Border {
-                color: t.accent,
-                width: 1.0,
-                radius: radius().into(),
-            },
-        )
+        style(t.selection(), t.accent_hover, border::rounded(radius()))
     }
 }
 
-/// Tablo satırı: seçili satır vurgu zemini ve kenarıyla gösterilir.
+/// Tablo, ağaç ve liste satırı: seçili satır yumuşak vurgu zeminindedir (DESIGN.md §3.3, docs/adr/0804).
 pub fn row(selected: bool) -> impl Fn(&Theme, Status) -> Style {
-    table_row(selected, selected)
+    table_row(selected, false)
 }
 
-/// Çoklu seçimli tablo satırı: seçili satırlar vurgu zeminiyle, birincil
-/// (`current`) satır ayrıca vurgu kenarıyla gösterilir.
+/// Çoklu seçimli tablo satırı: seçili satırlar yumuşak vurgu zemininde, birkaçı
+/// seçiliyken birincil (`current`) satır ayrıca vurgu kenarında.
 pub fn table_row(selected: bool, current: bool) -> impl Fn(&Theme, Status) -> Style {
     table_row_tinted(selected, current, None)
 }
@@ -290,8 +282,9 @@ pub fn table_row_tinted(
         let t = Tokens::of(theme);
 
         let background = match (selected, is_hovered(status)) {
-            (true, _) => t.selection(),
-            (false, true) => t.surface_hover,
+            (true, true) => t.selection_hover(),
+            (true, false) => t.selection(),
+            (false, true) => t.layer(0.04),
             (false, false) => tint.unwrap_or(Color::TRANSPARENT),
         };
 
@@ -469,6 +462,37 @@ pub fn segment_accent(selected: bool) -> impl Fn(&Theme, Status) -> Style {
     }
 }
 
+/// Hücreyi dolduran parçalı seçimin parçası (docs/adr/0804): seçili parça
+/// yumuşak vurgu zemininde, öbürleri zeminsiz; köşesiz, hücrenin bir parçası.
+pub fn segment_cell(selected: bool) -> impl Fn(&Theme, Status) -> Style {
+    move |theme, status| {
+        let t = Tokens::of(theme);
+        let (background, text) = match (selected, status) {
+            (_, Status::Disabled) => (Color::TRANSPARENT, t.disabled()),
+            (true, _) => (t.selection(), t.text),
+            (false, Status::Pressed) => (t.layer(0.1), t.text),
+            (false, Status::Hovered) => (t.layer(0.06), t.text),
+            (false, Status::Active) => (Color::TRANSPARENT, t.muted),
+        };
+
+        style(background, text, Border::default())
+    }
+}
+
+/// Hücrenin içindeki küçük düğme (takvim, artırma oku, başvuruya git): zeminsiz
+/// ve köşesiz, hücre yüksekliğinde; imleçte hafif bir katman.
+pub fn cell_tool(theme: &Theme, status: Status) -> Style {
+    let t = Tokens::of(theme);
+    let (background, text) = match status {
+        Status::Disabled => (Color::TRANSPARENT, t.disabled()),
+        Status::Pressed => (t.layer(0.14), t.text),
+        Status::Hovered => (t.layer(0.08), t.text),
+        Status::Active => (Color::TRANSPARENT, t.muted),
+    };
+
+    style(background, text, Border::default())
+}
+
 fn unselected_segment(t: &Tokens, status: Status) -> Style {
     let (background, text) = match status {
         Status::Disabled => (Color::TRANSPARENT, t.disabled()),
@@ -478,23 +502,6 @@ fn unselected_segment(t: &Tokens, status: Status) -> Style {
     };
 
     style(background, text, border::rounded(radius()))
-}
-
-/// Tablo başlığı: sıralanabilir sütun adları; sıralı sütun belirgin.
-pub fn header(sorted: bool) -> impl Fn(&Theme, Status) -> Style {
-    move |theme, status| {
-        let t = Tokens::of(theme);
-
-        Style {
-            background: None,
-            text_color: if sorted || is_hovered(status) {
-                t.text
-            } else {
-                t.muted
-            },
-            ..Style::default()
-        }
-    }
 }
 
 /// Zemini ve kenarı olmayan küçük ikon düğmesi (ör. komut kutusunun

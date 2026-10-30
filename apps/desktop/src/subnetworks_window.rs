@@ -15,7 +15,7 @@ use kentos_native_application::{ExecutionContext, subnetworks, subnetworks_updat
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -296,16 +296,20 @@ impl App {
                     .collect()
             })
             .unwrap_or_default();
-        let head = row![
-            container(label::caption("Alt ağ")).width(Fill),
-            container(label::caption("Denetleyici")).width(typography::scaled(90.0)),
-            container(label::caption("Kenar")).width(typography::scaled(60.0)),
-            container(label::caption("Düğüm")).width(typography::scaled(60.0)),
-            container(label::caption("Uzunluk")).width(typography::scaled(110.0)),
-            container(label::caption("")).width(typography::scaled(24.0)),
-        ]
-        .spacing(8)
-        .padding([4, 8]);
+        let head = kentos_ui::widget::table::band(
+            row![
+                container(kentos_ui::widget::table::title("Alt ağ")).width(Fill),
+                container(kentos_ui::widget::table::title("Denetleyici"))
+                    .width(typography::scaled(90.0)),
+                container(kentos_ui::widget::table::title("Kenar")).width(typography::scaled(60.0)),
+                container(kentos_ui::widget::table::title("Düğüm")).width(typography::scaled(60.0)),
+                container(kentos_ui::widget::table::title("Uzunluk"))
+                    .width(typography::scaled(110.0)),
+                container(kentos_ui::widget::table::title("")).width(typography::scaled(24.0)),
+            ]
+            .spacing(8)
+            .padding([0, 8]),
+        );
         let count = rows.len();
         let list = VirtualList::new(count, typography::scaled(ROW), move |i| {
             let (name, controllers, edges, junctions, length, unverified) = &rows[i];
@@ -402,14 +406,12 @@ impl App {
             .push(words::field("Alt ağlar", table, Some(hint)))
             .push(under)
             .push(words::summary(preview));
-        overlay::modal(
-            Frame::new(SUBNETWORKS_TITLE)
-                .push(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .action(words::primary(UPDATE, ready.then(|| msg(Event::Update))))
-                .width(720.0),
-            msg(Event::Close),
-        )
+        Frame::new(SUBNETWORKS_TITLE)
+            .push(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .action(words::primary(UPDATE, ready.then(|| msg(Event::Update))))
+            .width(720.0)
+            .modal(msg(Event::Close))
     }
 
     /// A line under the table: how many objects, pressed to select them.

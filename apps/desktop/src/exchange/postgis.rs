@@ -21,8 +21,8 @@ use kentos_postgis::connections;
 #[cfg(test)]
 use kentos_postgis::connections::DbConnection;
 use kentos_postgis::probe::{self, Catalog, Diagnosis, Problem, Relation};
-use kentos_ui::widget::{Choice, Dialog, InputField, Select, overlay};
 use kentos_ui::label;
+use kentos_ui::widget::{Choice, Dialog, InputField, Select, overlay};
 
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Window, message};
@@ -215,14 +215,16 @@ impl App {
                 s.listing = false;
                 match result {
                     Ok(catalog) => {
-                        s.chosen.retain(|t| catalog.relations.iter().any(|r| r.table() == *t));
+                        s.chosen
+                            .retain(|t| catalog.relations.iter().any(|r| r.table() == *t));
                         s.status = Some((false, format!("Bağlandı: {}", catalog.facts.line())));
                         s.catalog = Some(catalog);
                     }
                     Err(d) => {
                         s.catalog = None;
                         s.chosen.clear();
-                        let password = matches!(d.problem, Problem::PasswordNeeded | Problem::Password);
+                        let password =
+                            matches!(d.problem, Problem::PasswordNeeded | Problem::Password);
                         s.status = Some((true, d.message.clone()));
                         if ask && password {
                             self.ask_db_password(&name, d.message, Retry::Postgis(name.clone()));
@@ -240,9 +242,16 @@ impl App {
                 let Some(catalog) = &s.catalog else {
                     return Task::none();
                 };
-                let c = s.connection.as_deref().and_then(|n| self.db_store.get(n)).unwrap_or_default();
+                let c = s
+                    .connection
+                    .as_deref()
+                    .and_then(|n| self.db_store.get(n))
+                    .unwrap_or_default();
                 for (_, relations) in catalog.schemas(&c) {
-                    for r in relations.into_iter().filter(|r| shown(r, &s.filter) && r.why_not().is_none()) {
+                    for r in relations
+                        .into_iter()
+                        .filter(|r| shown(r, &s.filter) && r.why_not().is_none())
+                    {
                         if all {
                             s.chosen.insert(r.table());
                         } else {
@@ -273,7 +282,10 @@ impl App {
         area: Option<[f64; 4]>,
     ) -> Result<Bound, String> {
         let Some(doc) = &mut self.document else {
-            return Err("Açık çizim yok. Önce bir çizim açın (Ctrl+O) ya da yeni proje oluşturun.".to_owned());
+            return Err(
+                "Açık çizim yok. Önce bir çizim açın (Ctrl+O) ya da yeni proje oluşturun."
+                    .to_owned(),
+            );
         };
         let first = doc.model.next_slot();
         let (mut names, mut objects, mut warnings) = (Vec::new(), 0u32, Vec::new());
@@ -365,7 +377,11 @@ impl App {
                     done.warnings.join(" ")
                 };
                 self.announce(
-                    if done.warnings.is_empty() { Level::Success } else { Level::Warn },
+                    if done.warnings.is_empty() {
+                        Level::Success
+                    } else {
+                        Level::Warn
+                    },
                     format!(
                         "{} ({}) bağlı katman oldu, {} nesne. {body}",
                         done.names.join(", "),
@@ -403,6 +419,7 @@ impl App {
                 );
             return overlay::blocking(
                 Dialog::new("PostGIS'e bağlan")
+                    .on_close(message(Exchange::Close))
                     .push(body)
                     .action(words::secondary("Kapat", Some(message(Exchange::Close))))
                     .width(560.0),
@@ -423,7 +440,11 @@ impl App {
         let bar = row![
             iced::widget::container(picker).width(iced::Fill),
             words::secondary(
-                if s.catalog.is_some() { "Yenile" } else { "Bağlan" },
+                if s.catalog.is_some() {
+                    "Yenile"
+                } else {
+                    "Bağlan"
+                },
                 (chosen.is_some() && !s.listing).then(|| event(Event::List)),
             ),
             words::secondary("Yeni…", Some(event(Event::New))),
@@ -431,9 +452,16 @@ impl App {
         ]
         .spacing(6)
         .align_y(Center);
-        body = body.push(words::field("Bağlantı", bar, chosen.map(|_| connection.summary())));
+        body = body.push(words::field(
+            "Bağlantı",
+            bar,
+            chosen.map(|_| connection.summary()),
+        ));
         if s.listing {
-            body = body.push(words::text_line(Line::Info, "Bağlanılıyor, tablolar okunuyor…"));
+            body = body.push(words::text_line(
+                Line::Info,
+                "Bağlanılıyor, tablolar okunuyor…",
+            ));
         }
         if let Some((error, text)) = &s.status {
             body = body.push(words::text_line(
@@ -456,7 +484,10 @@ impl App {
             let mut tables = Column::new().spacing(4).push(tools);
             let mut any = false;
             for (schema, relations) in catalog.schemas(&connection) {
-                let relations: Vec<&Relation> = relations.into_iter().filter(|r| shown(r, &s.filter)).collect();
+                let relations: Vec<&Relation> = relations
+                    .into_iter()
+                    .filter(|r| shown(r, &s.filter))
+                    .collect();
                 if relations.is_empty() {
                     continue;
                 }
@@ -495,10 +526,9 @@ impl App {
                 format!("{hidden} geometrisiz tablo gizli; göstermek için Düzenle… ile “Geometrisiz tabloları da listele”yi açın.")
             });
             body = body.push(words::field("Tablolar", tables, hint));
-            other = catalog
-                .relations
-                .iter()
-                .any(|r| s.chosen.contains(&r.table()) && r.srid.is_some_and(|srid| srid != project));
+            other = catalog.relations.iter().any(|r| {
+                s.chosen.contains(&r.table()) && r.srid.is_some_and(|srid| srid != project)
+            });
             body = body.push(words::field(
                 "Alan",
                 words::check(
@@ -537,9 +567,10 @@ impl App {
             .style(kentos_ui::style::button::ghost);
             body = body.push(advanced);
             if s.advanced {
-                let query = InputField::new("SELECT fid, ad, geom FROM şema.tablo WHERE …", &s.query)
-                    .mono()
-                    .on_input(|t| event(Event::Query(t)));
+                let query =
+                    InputField::new("SELECT fid, ad, geom FROM şema.tablo WHERE …", &s.query)
+                        .mono()
+                        .on_input(|t| event(Event::Query(t)));
                 body = body.push(words::field(
                     "Sorgu katmanı",
                     query,
@@ -561,11 +592,12 @@ impl App {
                 .action(
                     iced::widget::button(label::body(add))
                         .on_press_maybe(ready.then(|| event(Event::Run)))
-                        .padding([5, 16])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(kentos_ui::style::button::primary),
                 )
                 .width(680.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }
@@ -576,7 +608,12 @@ fn message_db(e: Db) -> Message {
 
 /// A relation as the list says it: `çok parçalı alan · ≈200 satır · EPSG:5256`, `view · nokta`.
 pub(crate) fn describe(r: &Relation) -> String {
-    let geometry = match r.geometry.as_deref().map(str::to_ascii_uppercase).as_deref() {
+    let geometry = match r
+        .geometry
+        .as_deref()
+        .map(str::to_ascii_uppercase)
+        .as_deref()
+    {
         None => "geometrisiz".to_owned(),
         Some("POINT") => "nokta".to_owned(),
         Some("MULTIPOINT") => "çok noktalı".to_owned(),

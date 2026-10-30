@@ -279,7 +279,9 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
         if let Some(title) = self.title {
             let mut header = row![
                 icon(Icon::Document).size(16.0),
-                text(title).font(strong_font()).size(typography::body()),
+                text(title)
+                    .font(typography::ui_strong())
+                    .size(typography::body()),
             ]
             .spacing(9)
             .align_y(iced::Center);
@@ -291,10 +293,14 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
             header = header.push(space::horizontal());
             if let Some(save) = self.save {
                 header = header.push(
-                    button(text("Kaydet").font(font()).size(typography::caption()))
-                        .on_press(save)
-                        .padding([5, 9])
-                        .style(style::button::flat),
+                    button(
+                        text("Kaydet")
+                            .font(typography::ui())
+                            .size(typography::body()),
+                    )
+                    .on_press(save)
+                    .padding(crate::theme::metrics::action())
+                    .style(style::button::flat),
                 );
             }
             if let Some(run) = self.run {
@@ -302,13 +308,15 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
                     button(
                         row![
                             icon(Icon::Play).size(12.0),
-                            text("Çalıştır").font(font()).size(typography::caption())
+                            text("Çalıştır")
+                                .font(typography::ui())
+                                .size(typography::body())
                         ]
                         .spacing(6)
                         .align_y(iced::Center),
                     )
                     .on_press(run)
-                    .padding([5, 10])
+                    .padding(crate::theme::metrics::action())
                     .style(style::button::secondary),
                 );
             }
@@ -328,7 +336,7 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
             let status = self.status;
             let footer = row![
                 text(format!("●  {}", status.label()))
-                    .font(font())
+                    .font(typography::ui())
                     .size(typography::caption())
                     .style(move |theme: &Theme| text::Style {
                         color: Some(status_color(status, &Tokens::of(theme)))
@@ -339,11 +347,13 @@ impl<'a, Message: Clone + 'a> PythonEditor<'a, Message> {
                     position.line + 1,
                     character_column + 1
                 ))
-                .font(font())
+                .font(typography::ui())
                 .size(typography::caption()),
-                text("UTF-8").font(font()).size(typography::caption()),
+                text("UTF-8")
+                    .font(typography::ui())
+                    .size(typography::caption()),
                 text("Python")
-                    .font(strong_font())
+                    .font(typography::ui_strong())
                     .size(typography::caption()),
             ]
             .spacing(16)

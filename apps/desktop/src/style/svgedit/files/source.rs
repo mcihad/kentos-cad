@@ -502,7 +502,7 @@ pub fn view<'a>(ed: &'a SvgEditor, s: &'a SourcePanel) -> Element<'a, Message> {
         label::caption("SVG kaynağı").font(typography::ui_strong()),
         container(note).width(Fill),
         button(label::caption("Geri al"))
-            .padding([3, 9])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(ui_style::button::secondary)
             .on_press_maybe(edited.then(|| source_change(|ed| ed.source_revert()))),
         button(
@@ -513,15 +513,15 @@ pub fn view<'a>(ed: &'a SvgEditor, s: &'a SourcePanel) -> Element<'a, Message> {
             .spacing(4)
             .align_y(Center)
         )
-        .padding([3, 9])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(ui_style::button::primary)
         .on_press_maybe(edited.then(|| source_change(|ed| ed.source_apply()))),
         button(icon(crate::icons::from_web(Some("copy"))).size(14.0))
-            .padding([3, 6])
+            .padding(kentos_ui::theme::metrics::icon_small(14.0))
             .style(ui_style::button::ghost)
             .on_press(ev(EdEvent::File(Event::CopySource))),
         button(icon(Icon::Close).size(14.0))
-            .padding([3, 6])
+            .padding(kentos_ui::theme::metrics::icon_small(14.0))
             .style(ui_style::button::ghost)
             .on_press(ev(EdEvent::File(Event::Cmd(FileCmd::ToggleSource)))),
     ]

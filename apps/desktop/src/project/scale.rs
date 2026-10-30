@@ -5,7 +5,7 @@
 //! Varsayılanlara dön gives every kind its default (no heights written).
 //! Kaydet sets them and the annotations at the old general height follow.
 
-use iced::widget::{Column, button, column, row, text_input};
+use iced::widget::{Column, button, column, row};
 use iced::{Center, Element};
 use kentos_commands::{AnnotationHeights, AnnotationKind, paper_height};
 use kentos_interaction::Format;
@@ -57,20 +57,25 @@ pub(super) fn view<'a>(
     let list = Select::new(
         offered.iter().map(|s| Choice::new(scale_text(*s))),
         chosen,
-        move |i| on_scale(project_scales(cad, unit, scale).get(i).copied().unwrap_or(scale)),
+        move |i| {
+            on_scale(
+                project_scales(cad, unit, scale)
+                    .get(i)
+                    .copied()
+                    .unwrap_or(scale),
+            )
+        },
     )
     .searchable(false);
-    let field = text_input("N", typed)
+    let field = kentos_ui::widget::text_field("N", typed)
         .on_input(on_typed)
-        .padding([5, 8])
-        .size(typography::body())
         .font(typography::mono())
         .width(96)
         .style(style::field::validated(typed_plot_scale(typed).is_none()));
     let picker = row![
         iced::widget::container(list).width(140),
         label::mono("1:"),
-        kentos_ui::widget::focus_ring(field)
+        field
     ]
     .spacing(8)
     .align_y(Center);
@@ -103,7 +108,7 @@ pub(super) fn view<'a>(
         });
     let reset = button(label::body("Varsayılanlara dön"))
         .on_press_maybe(heights.is_some().then_some(on_reset))
-        .padding([5, 16])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary);
     (
         group(

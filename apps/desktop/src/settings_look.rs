@@ -404,14 +404,9 @@ pub(crate) fn accent_swatches(current: &str) -> Element<'static, Message> {
     } else {
         ""
     };
-    let field = kentos_ui::widget::focus_ring(
-        iced::widget::text_input("#RRGGBB", typed)
-            .on_input(|text| set("appearance.accent", text))
-            .font(typography::mono())
-            .size(typography::caption())
-            .padding([3, 6])
-            .style(style::field::input),
-    );
+    let field = kentos_ui::widget::text_field("#RRGGBB", typed)
+        .on_input(|text| set("appearance.accent", text))
+        .font(typography::mono());
     let own = container(
         column![
             swatch(own.and_then(tones), own.is_some()),

@@ -710,15 +710,18 @@ impl App {
         };
         let classes: Vec<String> = findings.iter().map(|f| class_title(&f.class)).collect();
         let chosen = w.chosen;
-        let head = row![
-            container(label::caption("Tür")).width(typography::scaled(150.0)),
-            container(label::caption("Sınıf")).width(typography::scaled(120.0)),
-            container(label::caption("Konu")).width(Fill),
-            container(label::caption("Nesne")).width(typography::scaled(56.0)),
-            container(label::caption("")).width(typography::scaled(24.0)),
-        ]
-        .spacing(8)
-        .padding([4, 8]);
+        let head = kentos_ui::widget::table::band(
+            row![
+                container(kentos_ui::widget::table::title("Tür")).width(typography::scaled(150.0)),
+                container(kentos_ui::widget::table::title("Sınıf"))
+                    .width(typography::scaled(120.0)),
+                container(kentos_ui::widget::table::title("Konu")).width(Fill),
+                container(kentos_ui::widget::table::title("Nesne")).width(typography::scaled(56.0)),
+                container(kentos_ui::widget::table::title("")).width(typography::scaled(24.0)),
+            ]
+            .spacing(8)
+            .padding([0, 8]),
+        );
         let detail = chosen
             .and_then(|i| findings.get(i))
             .map(|f| f.message.clone());
@@ -800,19 +803,17 @@ impl App {
         if let Some(m) = migration {
             body = body.push(m);
         }
-        let window = overlay::modal(
-            Frame::new(PROFILE_TITLE)
-                .scroll(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .action(words::secondary(
-                    MIGRATE,
-                    can_migrate.then(|| msg(Event::Migrate)),
-                ))
-                .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
-                .width(820.0)
-                .max_height(760.0),
-            msg(Event::Close),
-        );
+        let window = Frame::new(PROFILE_TITLE)
+            .scroll(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .action(words::secondary(
+                MIGRATE,
+                can_migrate.then(|| msg(Event::Migrate)),
+            ))
+            .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
+            .width(820.0)
+            .max_height(760.0)
+            .modal(msg(Event::Close));
         let Some(removal) = &w.removing else {
             return window;
         };
@@ -844,7 +845,9 @@ impl App {
                 msg(Event::Removed(true)),
                 msg(Event::Removed(false)),
             )
-            .message(format!("“{name}” {what} çizimden kaldırılsın mı?{with}{then}"))
+            .message(format!(
+                "“{name}” {what} çizimden kaldırılsın mı?{with}{then}"
+            ))
             .confirm("Kaldır")
             .destructive(),
             msg(Event::Removed(false)),
@@ -877,9 +880,15 @@ impl App {
         let drawing = self.profile_drawing().is_some();
         let can_import = drawing || w.keep == Keep::Drawing;
         let hint = match (w.keep, drawing) {
-            (Keep::Drawing, _) => "Çizimin içine alınan profil ve eşleme çizimin kendi dosyasıyla gider (bulut projesi de); eşleme profili kurumun katman, alan ve kod adlarıyla okutur, hiçbir ad kendiliğinden değişmez.",
-            (Keep::Folder, true) => "Profiller klasörü çizimin dosyasının yanındadır; aynı adlı profil çizimin içinde de varsa çizimin içindeki okunur.",
-            (Keep::Folder, false) => "Çizim henüz bir dosya değil: klasöre almak için önce çizimi kaydedin ya da çizimin içine alın.",
+            (Keep::Drawing, _) => {
+                "Çizimin içine alınan profil ve eşleme çizimin kendi dosyasıyla gider (bulut projesi de); eşleme profili kurumun katman, alan ve kod adlarıyla okutur, hiçbir ad kendiliğinden değişmez."
+            }
+            (Keep::Folder, true) => {
+                "Profiller klasörü çizimin dosyasının yanındadır; aynı adlı profil çizimin içinde de varsa çizimin içindeki okunur."
+            }
+            (Keep::Folder, false) => {
+                "Çizim henüz bir dosya değil: klasöre almak için önce çizimi kaydedin ya da çizimin içine alın."
+            }
         };
         let bring = row![
             words::ghost(IMPORT, can_import.then(|| msg(Event::Import))),
@@ -1135,10 +1144,10 @@ fn applied_words(p: &ProfilesApplied) -> String {
 
 /// What a file that came in is, in a sentence.
 fn imported_words(p: &ProfileImported) -> String {
-    let place = p
-        .path
-        .as_ref()
-        .map_or_else(|| "çizimin içine".to_owned(), |path| format!("{path} dosyasına"));
+    let place = p.path.as_ref().map_or_else(
+        || "çizimin içine".to_owned(),
+        |path| format!("{path} dosyasına"),
+    );
     match p.kind {
         ProfileFileKind::Profile => format!(
             "“{}” profili {place} alındı (sürüm {}, {} sınıf, {} göç).",

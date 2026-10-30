@@ -8,7 +8,7 @@
 
 use std::fmt;
 
-use iced::widget::{Id, column, container, row, space, text, text_input};
+use iced::widget::{Id, column, container, row, space, text};
 use iced::{Center, Color, Element, Fill, Task};
 use kentos_commands::{Entity, LayerNode, LayerNodeType};
 use kentos_domain::Slot;
@@ -18,7 +18,7 @@ use kentos_interaction::Level;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
 use kentos_ui::widget::segmented::Segmented;
-use kentos_ui::widget::{Dialog as Frame, Menu, MenuButton, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Menu, MenuButton};
 use kentos_ui::{label, style};
 
 use super::batch::{self, Kind, Op};
@@ -435,14 +435,10 @@ impl App {
         .width(Fill)
         .style(style::container::tile);
         let field = |placeholder: &str| {
-            focus_ring(
-                text_input(placeholder, &w.text)
-                    .id(Id::new(FIELD))
-                    .on_input(|t| msg(WindowEvent::Text(t)))
-                    .on_submit(msg(WindowEvent::Apply))
-                    .padding([5, 8])
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, &w.text)
+                .id(Id::new(FIELD))
+                .on_input(|t| msg(WindowEvent::Text(t)))
+                .on_submit(msg(WindowEvent::Apply))
         };
         let values: Element<'_, Message> = match w.kind {
             Kind::Rename => row![
@@ -464,15 +460,11 @@ impl App {
             ),
             Kind::Layer => words::field("Katman", self.batch_layer_field(doc, &w.layer), None),
             Kind::Dedupe => {
-                let tolerance = focus_ring(
-                    text_input("metre", &w.text)
-                        .id(Id::new(FIELD))
-                        .on_input_maybe((!w.by_name).then_some(|t| msg(WindowEvent::Text(t))))
-                        .on_submit(msg(WindowEvent::Apply))
-                        .font(typography::mono())
-                        .padding([5, 8])
-                        .style(style::field::input),
-                );
+                let tolerance = kentos_ui::widget::text_field("metre", &w.text)
+                    .id(Id::new(FIELD))
+                    .on_input_maybe((!w.by_name).then_some(|t| msg(WindowEvent::Text(t))))
+                    .on_submit(msg(WindowEvent::Apply))
+                    .font(typography::mono());
                 let kept_hint = kept_hint(w.imported, self.points.follow);
                 column![
                     row![
@@ -519,21 +511,19 @@ impl App {
                 lines.push(words::text_line(Line::Warn, plain(refused)));
             }
             let can = plan.error.is_none() && !plan.groups.is_empty();
-            return overlay::modal(
-                Frame::new(w.kind.step())
-                    .push(column![chip, values, words::summary(lines)].spacing(12))
-                    .action(words::secondary(
-                        "Çiftleri göster",
-                        can.then(|| msg(WindowEvent::ShowGroups)),
-                    ))
-                    .action(words::secondary("Vazgeç", Some(msg(WindowEvent::Close))))
-                    .action(words::primary(
-                        "Ayıkla",
-                        can.then(|| msg(WindowEvent::Apply)),
-                    ))
-                    .width(540.0),
-                msg(WindowEvent::Close),
-            );
+            return Frame::new(w.kind.step())
+                .push(column![chip, values, words::summary(lines)].spacing(12))
+                .action(words::secondary(
+                    "Çiftleri göster",
+                    can.then(|| msg(WindowEvent::ShowGroups)),
+                ))
+                .action(words::secondary("Vazgeç", Some(msg(WindowEvent::Close))))
+                .action(words::primary(
+                    "Ayıkla",
+                    can.then(|| msg(WindowEvent::Apply)),
+                ))
+                .width(540.0)
+                .modal(msg(WindowEvent::Close));
         }
         let plan = batch::plan(model, &w.slots, &w.op());
         let mut lines = Vec::new();
@@ -579,16 +569,14 @@ impl App {
             lines.push(words::text_line(Line::Warn, plain(refused)));
         }
         let can = plan.error.is_none() && !plan.changes.is_empty();
-        overlay::modal(
-            Frame::new(w.kind.step())
-                .push(column![chip, values, words::summary(lines)].spacing(12))
-                .action(words::secondary("Vazgeç", Some(msg(WindowEvent::Close))))
-                .action(words::primary(
-                    "Uygula",
-                    can.then(|| msg(WindowEvent::Apply)),
-                ))
-                .width(480.0),
-            msg(WindowEvent::Close),
-        )
+        Frame::new(w.kind.step())
+            .push(column![chip, values, words::summary(lines)].spacing(12))
+            .action(words::secondary("Vazgeç", Some(msg(WindowEvent::Close))))
+            .action(words::primary(
+                "Uygula",
+                can.then(|| msg(WindowEvent::Apply)),
+            ))
+            .width(480.0)
+            .modal(msg(WindowEvent::Close))
     }
 }

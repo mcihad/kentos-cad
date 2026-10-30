@@ -483,12 +483,7 @@ impl<'a, Message: Clone + 'a> From<Task<'a, Message>> for Element<'a, Message> {
             style::text::default
         });
 
-        let note = if matches!(task.state, State::Running(Some(_))) {
-            label::mono_caption(note)
-        } else {
-            label::caption(note)
-        }
-        .style(move |theme: &Theme| {
+        let note = label::caption(note).style(move |theme: &Theme| {
             let t = Tokens::of(theme);
 
             iced::widget::text::Style {
@@ -566,7 +561,7 @@ fn control<'a, Message: Clone + 'a>(
     tip(
         button(icon(glyph).size(12.0))
             .on_press(message)
-            .padding(4)
+            .padding(crate::theme::metrics::icon_small(12.0))
             .style(style::button::ghost),
         Tip::new(description),
         tooltip::Position::Left,

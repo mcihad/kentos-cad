@@ -7,7 +7,7 @@
 
 use iced::widget::text::Wrapping;
 use iced::widget::{
-    Column, Row, Space, button, column, container, rich_text, row, span, stack, text, text_input,
+    Column, Row, Space, button, column, container, rich_text, row, span, stack, text,
 };
 use iced::{Background, Border, Bottom, Center, Element, Fill, Length, Theme};
 use kentos_commands::{InvitationState, ProjectInvitation};
@@ -323,7 +323,7 @@ fn person_row<'a>(r: &PersonRow, changing: Option<&str>, busy: bool) -> Element<
         tip(
             button(label::caption(people::REMOVE))
                 .on_press_maybe((!busy).then(|| msg(Event::Revoke(r.user_id.clone()))))
-                .padding([3, 8])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::ghost),
             Tip::new(people::remove_label(&r.name)),
             iced::widget::tooltip::Position::Top,
@@ -349,15 +349,11 @@ fn person_row<'a>(r: &PersonRow, changing: Option<&str>, busy: bool) -> Element<
 /// Davetler: the form, the role's note, the new link, the invitations and the rules.
 fn invites_panel(s: &Share) -> Element<'_, Message> {
     let on = s.open_to_input();
-    let email = text_input(invites::PLACEHOLDER, &s.email)
+    let email = kentos_ui::widget::text_field(invites::PLACEHOLDER, &s.email)
         .id(EMAIL_FIELD)
         .on_input_maybe(on.then_some(|t| msg(Event::Email(t))))
         .on_submit_maybe(on.then(|| msg(Event::Invite)))
-        .padding([3, 8])
-        .size(typography::body())
-        .font(typography::ui())
-        .width(Fill)
-        .style(style::field::input);
+        .width(Fill);
     let role: Element<'_, Message> = if on {
         Select::new(
             plan::INVITE_ROLES.map(|r| Choice::new(plan::grant_label(r))),
@@ -472,7 +468,7 @@ fn link_panel<'a>(said: &plan::Invited, link: Option<&str>, copied: bool) -> Ele
                 .align_y(Center),
             )
             .on_press(msg(Event::Copy))
-            .padding([4, 12])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary);
             column![
                 head("success", Tone::Success),
@@ -516,7 +512,7 @@ fn invitation_row<'a>(i: &ProjectInvitation, may: bool) -> Element<'a, Message> 
         tip(
             button(label::caption(invites::REVOKE))
                 .on_press(msg(Event::InvitationRevoke(i.id.clone())))
-                .padding([3, 8])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::ghost),
             Tip::new(invites::revoke_label(&i.email)),
             iced::widget::tooltip::Position::Top,
@@ -717,7 +713,7 @@ fn boxed(theme: &Theme) -> container::Style {
 fn form_button<'a>(caption: &'static str, on: Option<Message>) -> Element<'a, Message> {
     button(label::body(caption).wrapping(Wrapping::None))
         .on_press_maybe(on)
-        .padding([3, 14])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::primary)
         .into()
 }

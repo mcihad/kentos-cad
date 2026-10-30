@@ -1,58 +1,58 @@
-//! Öznitelikler ızgarasının bir satırı: adı ve değeri birlikte (docs/adr/0747).
+//! Izgaranın bir satırı (docs/adr/0747, 0804): ad hücresi, sütun çizgisi, değer hücresi ve altında çizgi.
 //!
 //! ```text
-//!   Yazı yüksekliği   2.500                 m     ← düz satır
-//!   Ötelenme          0.800                 m     ← üzerine gelince bütün satır hafifçe aydınlanır
-//! ┃ Yazı             [Ada 5|               ]      ← düzenlenirken: solda vurgu çubuğu, satır biraz daha aydınlık
+//!   Yazı yüksekliği │ 2.500                 m
+//! ──────────────────┼───────────────────────
 //! ```
 //!
-//! Satır göz için bir birimdir: üzerine gelinen satırın adı ile değeri birlikte aydınlanır; değeri düzenlenen satır
-//! solundaki 2 piksellik vurgu çubuğuyla (katman ağacındaki etkin katmanın ve komut satırının odağının işareti)
-//! gösterilir. Düzenleme, satırın içindeki odaklı metin girişinden anlaşılır: hücre ayrıca bir şey bildirmez.
+//! Satır göz için bir birimdir: üzerine gelinen satırın adı ile değeri birlikte aydınlanır. Düzenlenen değerin işareti
+//! hücrenin kendi kenarıdır ([`Cell`](super::cell::Cell)). Sütunlar tam pikselde durur: çizgiler ve kenarlar hiçbir
+//! genişlikte bulanmaz.
 
 use iced::advanced::layout::{self, Layout, Node};
 use iced::advanced::renderer::{self, Quad, Renderer as _};
-use iced::advanced::widget::operation::Focusable;
-use iced::advanced::widget::{Id, Operation, Tree, Widget, tree};
+use iced::advanced::widget::{Operation, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell, overlay};
-use iced::{Background, Element, Event, Length, Rectangle, Renderer, Size, Theme, Vector, mouse};
+use iced::{
+    Background, Element, Event, Length, Point, Rectangle, Renderer, Size, Theme, Vector, mouse,
+};
 
 use crate::theme::Tokens;
 
-/// Vurgu çubuğunun genişliği.
-const BAR: f32 = 2.0;
-
-/// Satırın içinde odaklı bir metin girişi var mı.
-struct Focused(bool);
-
-impl Operation for Focused {
-    fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn Operation)) {
-        operate(self);
-    }
-
-    fn focusable(&mut self, _id: Option<&Id>, _bounds: Rectangle, state: &mut dyn Focusable) {
-        self.0 |= state.is_focused();
-    }
+/// Ad sütununun genişliği.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum KeyWidth {
+    /// Satırın yüzde kaçı.
+    Share(u16),
+    /// Piksel (kullanıcının sürüklediği).
+    Fixed(f32),
 }
 
 #[derive(Default)]
 struct State {
     hovered: bool,
-    editing: bool,
 }
 
-/// Adı ve değeri olan satır: üzerine gelince aydınlanır, değeri düzenlenirken vurgu çubuğunu taşır.
-pub struct SheetRow<'a, Message> {
-    content: Element<'a, Message>,
-    /// Satırın yalnız bu üst kısmı aydınlanır (altındaki ince çizgi değil).
+/// Adı ve değeri olan satır: üzerine gelince aydınlanır.
+pub(crate) struct SheetRow<'a, Message> {
+    key: Element<'a, Message>,
+    value: Element<'a, Message>,
+    width: KeyWidth,
+    /// Satırın yüksekliği; altındaki çizgi hariç.
     height: f32,
 }
 
 impl<'a, Message: 'a> SheetRow<'a, Message> {
-    /// `content`: satırın kendisi; `height`: aydınlanan kısmın yüksekliği (altındaki çizgi hariç).
-    pub fn new(content: impl Into<Element<'a, Message>>, height: f32) -> Self {
+    pub(crate) fn new(
+        key: impl Into<Element<'a, Message>>,
+        value: impl Into<Element<'a, Message>>,
+        width: KeyWidth,
+        height: f32,
+    ) -> Self {
         Self {
-            content: content.into(),
+            key: key.into(),
+            value: value.into(),
+            width,
             height,
         }
     }
@@ -68,23 +68,42 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for SheetRow<'a, Message>
     }
 
     fn children(&self) -> Vec<Tree> {
-        vec![Tree::new(&self.content)]
+        vec![Tree::new(&self.key), Tree::new(&self.value)]
     }
 
     fn diff(&self, tree: &mut Tree) {
-        tree.diff_children(std::slice::from_ref(&self.content));
+        tree.diff_children(&[&self.key, &self.value]);
     }
 
     fn size(&self) -> Size<Length> {
-        self.content.as_widget().size()
+        Size::new(Length::Fill, Length::Fixed(self.height + 1.0))
     }
 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) -> Node {
-        let content = self
-            .content
-            .as_widget_mut()
-            .layout(&mut tree.children[0], renderer, limits);
-        Node::with_children(content.size(), vec![content])
+        let whole = self.height + 1.0;
+        let size = limits.resolve(Length::Fill, whole, Size::new(0.0, whole));
+        // Whole pixels: the lines and the cells' edges stay sharp at every width.
+        let width = size.width.floor();
+        let key_width = match self.width {
+            KeyWidth::Share(share) => (width * f32::from(share) / 100.0).floor(),
+            KeyWidth::Fixed(fixed) => fixed.round(),
+        }
+        .clamp(0.0, width);
+        let value_width = (width - key_width - 1.0).max(0.0);
+        let cell =
+            |w: f32| layout::Limits::new(Size::new(w, self.height), Size::new(w, self.height));
+        let key =
+            self.key
+                .as_widget_mut()
+                .layout(&mut tree.children[0], renderer, &cell(key_width));
+        let value =
+            self.value
+                .as_widget_mut()
+                .layout(&mut tree.children[1], renderer, &cell(value_width));
+        Node::with_children(
+            Size::new(size.width, whole),
+            vec![key, value.move_to(Point::new(key_width + 1.0, 0.0))],
+        )
     }
 
     fn operate(
@@ -94,13 +113,14 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for SheetRow<'a, Message>
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
-        if let Some(content) = layout.children().next() {
-            self.content.as_widget_mut().operate(
-                &mut tree.children[0],
-                content,
-                renderer,
-                operation,
-            );
+        let mut parts = layout.children();
+        if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+            self.key
+                .as_widget_mut()
+                .operate(&mut tree.children[0], key, renderer, operation);
+            self.value
+                .as_widget_mut()
+                .operate(&mut tree.children[1], value, renderer, operation);
         }
     }
 
@@ -115,13 +135,24 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for SheetRow<'a, Message>
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
-        let Some(content) = layout.children().next() else {
+        let mut parts = layout.children();
+        let (Some(key), Some(value)) = (parts.next(), parts.next()) else {
             return;
         };
-        self.content.as_widget_mut().update(
+        self.key.as_widget_mut().update(
             &mut tree.children[0],
             event,
-            content,
+            key,
+            cursor,
+            renderer,
+            clipboard,
+            shell,
+            viewport,
+        );
+        self.value.as_widget_mut().update(
+            &mut tree.children[1],
+            event,
+            value,
             cursor,
             renderer,
             clipboard,
@@ -129,28 +160,9 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for SheetRow<'a, Message>
             viewport,
         );
         let hovered = cursor.is_over(lit(layout.bounds(), self.height));
-        // The focus is asked only when the pointer or the keyboard did something: a press starts or ends an edit,
-        // a key (Tab, Enter, Esc) moves it.
-        let asks = matches!(
-            event,
-            Event::Mouse(mouse::Event::ButtonPressed(_) | mouse::Event::ButtonReleased(_))
-                | Event::Keyboard(_)
-        );
-        let mut editing = tree.state.downcast_ref::<State>().editing;
-        if asks {
-            let mut focused = Focused(false);
-            self.content.as_widget_mut().operate(
-                &mut tree.children[0],
-                content,
-                renderer,
-                &mut focused,
-            );
-            editing = focused.0;
-        }
         let state = tree.state.downcast_mut::<State>();
-        if hovered != state.hovered || editing != state.editing {
+        if hovered != state.hovered {
             state.hovered = hovered;
-            state.editing = editing;
             shell.request_redraw();
         }
     }
@@ -163,18 +175,20 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for SheetRow<'a, Message>
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        layout
-            .children()
-            .next()
-            .map_or_else(mouse::Interaction::default, |content| {
-                self.content.as_widget().mouse_interaction(
-                    &tree.children[0],
-                    content,
-                    cursor,
-                    viewport,
-                    renderer,
-                )
-            })
+        let mut parts = layout.children();
+        let (Some(key), Some(value)) = (parts.next(), parts.next()) else {
+            return mouse::Interaction::default();
+        };
+        self.key
+            .as_widget()
+            .mouse_interaction(&tree.children[0], key, cursor, viewport, renderer)
+            .max(self.value.as_widget().mouse_interaction(
+                &tree.children[1],
+                value,
+                cursor,
+                viewport,
+                renderer,
+            ))
     }
 
     fn draw(
@@ -187,43 +201,63 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for SheetRow<'a, Message>
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        let Some(content) = layout.children().next() else {
+        let mut parts = layout.children();
+        let (Some(key), Some(value)) = (parts.next(), parts.next()) else {
             return;
         };
-        let state = tree.state.downcast_ref::<State>();
         let t = Tokens::of(theme);
-        let row = lit(layout.bounds(), self.height);
-        if state.editing || state.hovered {
+        let bounds = layout.bounds();
+        let row = lit(bounds, self.height);
+        if tree.state.downcast_ref::<State>().hovered {
             renderer.fill_quad(
                 Quad {
                     bounds: row,
                     ..Quad::default()
                 },
-                Background::Color(if state.editing {
-                    t.surface_hover
-                } else {
-                    t.layer(0.035)
-                }),
+                Background::Color(t.layer(0.035)),
             );
         }
-        self.content.as_widget().draw(
+        self.key.as_widget().draw(
             &tree.children[0],
             renderer,
             theme,
             style,
-            content,
+            key,
             cursor,
             viewport,
         );
-        if state.editing {
-            renderer.fill_quad(
-                Quad {
-                    bounds: Rectangle { width: BAR, ..row },
-                    ..Quad::default()
+        self.value.as_widget().draw(
+            &tree.children[1],
+            renderer,
+            theme,
+            style,
+            value,
+            cursor,
+            viewport,
+        );
+        let rule = Background::Color(t.rule());
+        renderer.fill_quad(
+            Quad {
+                bounds: Rectangle {
+                    x: value.bounds().x - 1.0,
+                    width: 1.0,
+                    ..row
                 },
-                Background::Color(t.accent),
-            );
-        }
+                ..Quad::default()
+            },
+            rule,
+        );
+        renderer.fill_quad(
+            Quad {
+                bounds: Rectangle {
+                    y: row.y + row.height,
+                    height: 1.0,
+                    ..bounds
+                },
+                ..Quad::default()
+            },
+            rule,
+        );
     }
 
     fn overlay<'b>(
@@ -234,13 +268,22 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for SheetRow<'a, Message>
         viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
-        self.content.as_widget_mut().overlay(
-            &mut tree.children[0],
-            layout.children().next()?,
+        let mut parts = layout.children();
+        let (key, value) = (parts.next()?, parts.next()?);
+        let (first, second) = tree.children.split_at_mut(1);
+        let from_value = self.value.as_widget_mut().overlay(
+            &mut second[0],
+            value,
             renderer,
             viewport,
             translation,
-        )
+        );
+        if from_value.is_some() {
+            return from_value;
+        }
+        self.key
+            .as_widget_mut()
+            .overlay(&mut first[0], key, renderer, viewport, translation)
     }
 }
 
@@ -286,17 +329,27 @@ mod tests {
     }
 
     #[test]
-    fn the_row_edited_carries_the_accent_bar_and_a_row_under_the_pointer_is_lit() {
+    fn the_cell_edited_has_the_accent_edge_and_a_row_under_the_pointer_is_lit() {
         let mut snapshot = Snapshot::new(Size::new(320.0, 120.0)).expect("çizici kurulamadı");
         let mut update = |_: &mut (), _: ()| {};
         let theme = Theme::Dark;
-        let accent = Tokens::of(&theme).accent;
+        let t = Tokens::of(&theme);
+        // Rows of 28 px and a 1 px line; the values from 42 % of the width and a 1 px line.
+        let middle_x = 250;
         let image = snapshot.render(view(&()), &theme);
         assert!(
-            !near(pixel(&image, 0, 14), accent),
-            "no bar before the edit"
+            near(pixel(&image, middle_x, 14), t.cell()),
+            "a writable cell's ground at rest"
         );
-        // A press on the value starts the edit: the bar at the row's left.
+        assert!(
+            !near(pixel(&image, middle_x, 43), t.cell()),
+            "a read-only one has none"
+        );
+        assert!(
+            !(0..320).any(|x| near(pixel(&image, x, 14), t.accent)),
+            "no edge before the edit"
+        );
+        // A press on the value starts the edit: the field's ground from line to line, the accent on its edge.
         snapshot.input(
             &mut (),
             view,
@@ -304,13 +357,28 @@ mod tests {
             Input::Click(Point::new(250.0, 14.0)),
         );
         let image = snapshot.render(view(&()), &theme);
-        assert!(near(pixel(&image, 0, 14), accent), "the bar while editing");
-        assert!(near(pixel(&image, 1, 14), accent));
+        let edge_x = (120..150)
+            .find(|&x| near(pixel(&image, x, 14), t.accent))
+            .expect("the edge while editing");
         assert!(
-            !near(pixel(&image, 0, 43), accent),
+            (130..=138).contains(&edge_x),
+            "at the column's line: {edge_x}"
+        );
+        assert!(
+            near(pixel(&image, 319, 14), t.accent),
+            "to the cell's right end"
+        );
+        assert!(near(pixel(&image, middle_x, 0), t.accent), "from its top");
+        assert!(near(pixel(&image, middle_x, 27), t.accent), "to its bottom");
+        assert!(
+            near(pixel(&image, 300, 14), t.field),
+            "on the field's ground"
+        );
+        assert!(
+            !near(pixel(&image, edge_x, 43), t.accent),
             "the other row has none"
         );
-        // Esc ends it: no bar.
+        // Esc ends it: no edge.
         snapshot.input(&mut (), view, &mut update, Input::Key(Named::Escape));
         snapshot.input(
             &mut (),
@@ -319,8 +387,34 @@ mod tests {
             Input::Move(Point::new(100.0, 43.0)),
         );
         let image = snapshot.render(view(&()), &theme);
-        assert!(!near(pixel(&image, 0, 14), accent), "no bar after Esc");
+        assert!(
+            !near(pixel(&image, edge_x, 14), t.accent),
+            "no edge after Esc"
+        );
         // The second row is lit under the pointer, the first is not.
         assert_ne!(pixel(&image, 60, 43), pixel(&image, 60, 14));
+    }
+
+    #[test]
+    fn a_text_stays_where_it_is_when_its_cell_is_edited() {
+        let mut snapshot = Snapshot::new(Size::new(320.0, 120.0)).expect("çizici kurulamadı");
+        let mut update = |_: &mut (), _: ()| {};
+        let theme = Theme::Dark;
+        let t = Tokens::of(&theme);
+        // Where the first letter's ink starts, on the row's middle lines.
+        let first_ink = |image: &Image, ground: iced::Color| {
+            (136..320).find(|&x| (8..20).any(|y| !near(pixel(image, x, y), ground)))
+        };
+        let image = snapshot.render(view(&()), &theme);
+        let at_rest = first_ink(&image, t.cell()).expect("the value's letters");
+        snapshot.input(
+            &mut (),
+            view,
+            &mut update,
+            Input::Click(Point::new(250.0, 14.0)),
+        );
+        let image = snapshot.render(view(&()), &theme);
+        let editing = first_ink(&image, t.field).expect("the value's letters");
+        assert_eq!(at_rest, editing);
     }
 }

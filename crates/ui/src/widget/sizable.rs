@@ -1,11 +1,14 @@
 //! Boyutlandırılan, tam ekran yapılan ve boyunu hatırlayan iletişim kutusu (docs/adr/0746).
 //!
 //! ```text
-//! ┌ Formla düzenle ──────────────── [⤢] ┐   kenarlardan ve köşelerden çekilir;
-//! │ …                                     │   [⤢] ya da başlığa çift tık: tam ekran
-//! │                        [Vazgeç] [Kaydet]│   (arkadaki pencereyi kenarlarda
-//! └───────────────────────────────────────◢┘   biraz boşluk bırakarak doldurur)
+//! ┌ Formla düzenle ─────────────── [⤢] [×] ┐  kenarlardan ve köşelerden çekilir;
+//! │ …                                       │  [⤢] ya da başlığa çift tık: tam ekran
+//! │                        [Vazgeç] [Kaydet]│  (arkadaki pencereyi kenarlarda
+//! └──────────────────────────────────────╯    biraz boşluk bırakarak doldurur)
 //! ```
+//!
+//! Çekilebildiğini kutunun kendi çerçevesi söyler (docs/adr/0804): ayrı bir kulakçık yok, sağ alt köşenin kavisi biraz
+//! kalındır; imleç bir kenara gelince o kenarın çerçevesi vurgu rengiyle aydınlanır ([`frame_mark`]).
 //!
 //! Kutu ortadadır: kenarı çekilen kutu iki yana birlikte büyür, kenar imleci izler. Her kutunun boyu ve tam ekran
 //! olup olmadığı anahtarıyla (öntanımlı olarak başlığı) [`sizes`]'ta tutulur: kutu bir sonraki açılışta aynı boyda
@@ -30,8 +33,20 @@ pub const MARGIN: f32 = 16.0;
 /// Kutunun iç boşluğu (dialog'un `padding`'i): düğme onun köşesinde durur.
 pub const PAD: f32 = 18.0;
 
-/// Başlıkta tam ekran düğmesine ayrılan kare.
-pub const TOGGLE: f32 = 22.0;
+/// Başlıkta tam ekran düğmesine ayrılan kare, varsayılan yazı boyutunda; kapatma düğmesi de bu boydadır.
+pub const TOGGLE: f32 = crate::theme::metrics::INLINE;
+
+/// Başlıktaki düğmelerin arası.
+pub const TOGGLE_GAP: f32 = 2.0;
+
+/// Aydınlanan çerçevenin kalınlığı.
+const MARK: f32 = 1.5;
+
+/// Dinlenen köşe kavisinin kenar boyunca uzantısı.
+const MARK_TAIL: f32 = 3.0;
+
+/// Üzerine gelinen köşede kavisin kenar boyunca uzantısı.
+const MARK_TAIL_HOT: f32 = 10.0;
 
 /// Kenarın içinde çekilen bandın kalınlığı.
 const GRIP: f32 = 6.0;
@@ -175,6 +190,59 @@ fn edges_at(bounds: Rectangle, point: Point) -> Edges {
     e
 }
 
+/// Çerçevenin çekilebilen yerini söyler: dinlenirken yalnız sağ alt köşenin kavisi (`rest` tonunda), imleç bir kenara
+/// ya da köşeye gelince o kenar ya da köşe vurgu renginde. Kutunun kendi kenarının üstüne çizilir; kutu `radius`
+/// köşeli. Yüzen pencereler de aynısını kullanır.
+pub(crate) fn frame_mark(
+    renderer: &mut Renderer,
+    t: &Tokens,
+    bounds: Rectangle,
+    radius: f32,
+    (left, right, top, bottom): (bool, bool, bool, bool),
+) {
+    let any = left || right || top || bottom;
+    // Which part of the frame shows: one edge wholly, a corner with short tails, the arc alone at rest.
+    let corner = (left || right) && (top || bottom);
+    let reach = radius + if corner { MARK_TAIL_HOT } else { MARK_TAIL };
+    let along = |low: bool, high: bool, start: f32, length: f32| -> (f32, f32) {
+        match (low, high) {
+            (true, _) => (start, reach.min(length)),
+            (_, true) => (start + (length - reach).max(0.0), reach.min(length)),
+            _ => (start, length),
+        }
+    };
+    let (x, width) = if any {
+        along(left, right, bounds.x, bounds.width)
+    } else {
+        along(false, true, bounds.x, bounds.width)
+    };
+    let (y, height) = if any {
+        along(top, bottom, bounds.y, bounds.height)
+    } else {
+        along(false, true, bounds.y, bounds.height)
+    };
+    let clip = Rectangle {
+        x,
+        y,
+        width,
+        height,
+    };
+    renderer.with_layer(clip, |renderer| {
+        renderer.fill_quad(
+            Quad {
+                bounds,
+                border: iced::Border {
+                    color: if any { t.accent } else { t.border_grip() },
+                    width: MARK,
+                    radius: radius.into(),
+                },
+                ..Quad::default()
+            },
+            Background::Color(iced::Color::TRANSPARENT),
+        );
+    });
+}
+
 #[derive(Default)]
 struct State {
     /// Çekilen kenarlar, basılan yer ve o andaki boy.
@@ -191,6 +259,8 @@ pub struct Sizable<'a, Message> {
     content: Element<'a, Message>,
     toggle: Element<'a, Message>,
     maximized: bool,
+    /// Başlıkta tam ekran düğmesinin sağında bir düğme daha var: kapatma.
+    closable: bool,
 }
 
 impl<'a, Message: 'a> Sizable<'a, Message> {
@@ -204,12 +274,36 @@ impl<'a, Message: 'a> Sizable<'a, Message> {
             } else {
                 Icon::Maximize
             })
-            .size(typography::scaled(14.0))
+            .size(14.0)
             .into(),
             key,
             content: content.into(),
             maximized,
+            closable: false,
         }
+    }
+
+    /// Başlıkta tam ekran düğmesinin sağında kapatma düğmesi durur: tam ekran düğmesi onun yanına çekilir.
+    pub fn closable(mut self, closable: bool) -> Self {
+        self.closable = closable;
+        self
+    }
+
+    /// Tam ekran düğmesinin karesi.
+    fn toggle_bounds(&self, bounds: Rectangle) -> Rectangle {
+        let side = typography::from_default(TOGGLE);
+        let beside = if self.closable {
+            side + TOGGLE_GAP
+        } else {
+            0.0
+        };
+        Rectangle::new(
+            Point::new(
+                bounds.x + bounds.width - PAD - side - beside,
+                bounds.y + PAD,
+            ),
+            Size::new(side, side),
+        )
     }
 }
 
@@ -233,15 +327,6 @@ fn clamp(size: Size, room: Size) -> Size {
         size.height
             .max(min.height.min(room.height))
             .min(room.height),
-    )
-}
-
-/// Tam ekran düğmesinin karesi.
-fn toggle_bounds(bounds: Rectangle) -> Rectangle {
-    let side = typography::scaled(TOGGLE);
-    Rectangle::new(
-        Point::new(bounds.x + bounds.width - PAD - side, bounds.y + PAD),
-        Size::new(side, side),
     )
 }
 
@@ -284,16 +369,17 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Sizable<'a, Message> 
                 .as_widget_mut()
                 .layout(&mut tree.children[0], renderer, &child_limits);
         let size = content.size();
-        let side = typography::scaled(TOGGLE);
+        let side = typography::from_default(TOGGLE);
         let glyph = self.toggle.as_widget_mut().layout(
             &mut tree.children[1],
             renderer,
             &layout::Limits::new(Size::ZERO, Size::new(side, side)),
         );
         let g = glyph.size();
+        let square = self.toggle_bounds(Rectangle::with_size(size));
         let glyph = glyph.move_to(Point::new(
-            size.width - PAD - side + (side - g.width) / 2.0,
-            PAD + (side - g.height) / 2.0,
+            square.x + (side - g.width) / 2.0,
+            square.y + (side - g.height) / 2.0,
         ));
         Node::with_children(size, vec![content, glyph])
     }
@@ -327,7 +413,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Sizable<'a, Message> 
         viewport: &Rectangle,
     ) {
         let bounds = layout.bounds();
-        let toggle = toggle_bounds(bounds);
+        let toggle = self.toggle_bounds(bounds);
         let state = tree.state.downcast_mut::<State>();
         match event {
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
@@ -396,7 +482,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Sizable<'a, Message> 
                 // Başlığa çift tık: tam ekran ya da önceki boy.
                 let header = Rectangle::new(
                     Point::new(bounds.x, bounds.y),
-                    Size::new(bounds.width, PAD + typography::scaled(TOGGLE)),
+                    Size::new(bounds.width, PAD + typography::from_default(TOGGLE)),
                 );
                 if header.contains(at) {
                     let click = iced::advanced::mouse::Click::new(
@@ -458,7 +544,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Sizable<'a, Message> 
                 return edges.interaction();
             }
         }
-        if cursor.is_over(toggle_bounds(bounds)) {
+        if cursor.is_over(self.toggle_bounds(bounds)) {
             return mouse::Interaction::Pointer;
         }
         layout
@@ -502,7 +588,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Sizable<'a, Message> 
         sizes::note_shown(&self.key, [b.x, b.y, b.width, b.height]);
         let t = Tokens::of(theme);
         let state = tree.state.downcast_ref::<State>();
-        let square = toggle_bounds(layout.bounds());
+        let square = self.toggle_bounds(layout.bounds());
         if state.toggle_hovered {
             renderer.fill_quad(
                 Quad {
@@ -528,36 +614,16 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Sizable<'a, Message> 
             mouse::Cursor::Unavailable,
             viewport,
         );
-        // Çekilebilen köşe: sağ altta iki kısa çizgi; çekilen ya da üstünde durulan kenar vurgu renginde.
+        // Çekilebildiğini çerçevenin kendisi söyler (docs/adr/0804).
         if !self.maximized {
-            let b = layout.bounds();
-            let edges = state.drag.map_or(state.hover, |(e, ..)| e);
-            let color = if edges.any() { t.accent } else { t.faint };
-            for (len, inset) in [(10.0, 4.0), (5.0, 4.0)] {
-                let x = b.x + b.width - inset - len;
-                let y = b.y + b.height - inset - len;
-                // Köşegen yerine iki kısa kenar: sağ ve alt.
-                renderer.fill_quad(
-                    Quad {
-                        bounds: Rectangle::new(
-                            Point::new(b.x + b.width - inset - 1.0, y),
-                            Size::new(1.0, len),
-                        ),
-                        ..Quad::default()
-                    },
-                    Background::Color(color),
-                );
-                renderer.fill_quad(
-                    Quad {
-                        bounds: Rectangle::new(
-                            Point::new(x, b.y + b.height - inset - 1.0),
-                            Size::new(len, 1.0),
-                        ),
-                        ..Quad::default()
-                    },
-                    Background::Color(color),
-                );
-            }
+            let e = state.drag.map_or(state.hover, |(e, ..)| e);
+            frame_mark(
+                renderer,
+                &t,
+                layout.bounds(),
+                crate::theme::shape::lg(),
+                (e.left, e.right, e.top, e.bottom),
+            );
         }
     }
 

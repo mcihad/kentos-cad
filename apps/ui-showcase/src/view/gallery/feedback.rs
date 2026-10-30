@@ -263,7 +263,7 @@ impl Showcase {
                 .size(560.0, 72.0),
             button(label::body("Gerçek sihirbazı aç"))
                 .on_press(Message::ImportOpened)
-                .padding([4, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         ]
         .spacing(12)
@@ -320,7 +320,7 @@ impl Showcase {
                 .size(640.0, 200.0),
             button(label::body("Şehirler katmanının özelliklerini aç"))
                 .on_press(Message::PropertiesOpened(1))
-                .padding([4, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         ]
         .spacing(12)
@@ -427,7 +427,7 @@ fn bar_row<'a>(name: &'a str, bar: Element<'a, Message>, value: &'a str) -> Elem
     row![
         label::muted(name).width(typography::scaled(120.0)),
         container(bar).width(typography::scaled(280.0)),
-        label::mono_caption(value),
+        label::caption(value),
     ]
     .spacing(12)
     .align_y(Center)
@@ -438,7 +438,7 @@ fn bar_row<'a>(name: &'a str, bar: Element<'a, Message>, value: &'a str) -> Elem
 fn demo_button<'a>(name: &'a str, index: usize) -> Element<'a, Message> {
     button(label::body(name))
         .on_press(Message::Gallery(Demo::Notify(index)))
-        .padding([4, 12])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .into()
 }

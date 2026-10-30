@@ -2,9 +2,7 @@
 //! “Bulut projeleri”, “Buluta yükle”, the conflict windows and an open's
 //! progress. The status bar's cells are cells.rs's.
 
-use iced::widget::{
-    Column, button, column, container, row, scrollable, text, text_editor, text_input,
-};
+use iced::widget::{Column, button, column, container, row, scrollable, text, text_editor};
 use iced::{Element, Fill, Length};
 
 use kentos_commands::ProjectStorage;
@@ -25,7 +23,7 @@ fn cloud(event: Event) -> Message {
 pub(super) fn primary(caption: &'static str, on: Option<Message>) -> Element<'static, Message> {
     button(label::body(caption))
         .on_press_maybe(on)
-        .padding([5, 16])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::primary)
         .into()
 }
@@ -33,7 +31,7 @@ pub(super) fn primary(caption: &'static str, on: Option<Message>) -> Element<'st
 pub(super) fn secondary(caption: &'static str, on: Option<Message>) -> Element<'static, Message> {
     button(label::body(caption))
         .on_press_maybe(on)
-        .padding([5, 16])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .into()
 }
@@ -43,9 +41,7 @@ fn field<'a>(
     value: &'a str,
     on_input: Option<fn(String) -> Event>,
 ) -> iced::widget::TextInput<'a, Message> {
-    let input = text_input(placeholder, value)
-        .padding([5, 8])
-        .style(style::field::input);
+    let input = kentos_ui::widget::text_field(placeholder, value);
     match on_input {
         Some(event) => input.on_input(move |t| cloud(event(t))),
         None => input,
@@ -71,11 +67,7 @@ impl App {
             .secure(true)
             .on_submit_maybe(submit.clone());
         // A halo round the field that has the keyboard (docs/adr/0127).
-        let (server, login, password) = (
-            kentos_ui::widget::focus_ring(server),
-            kentos_ui::widget::focus_ring(login),
-            kentos_ui::widget::focus_ring(password),
-        );
+        let (server, login, password) = (server, login, password);
         let mut form = Form::new()
             .label_width(90.0)
             .field("Sunucu", server)
@@ -104,7 +96,8 @@ impl App {
                     },
                     submit,
                 ))
-                .width(440.0),
+                .width(440.0)
+                .on_close(Some(cloud(Event::Close))),
         )
     }
 
@@ -166,7 +159,8 @@ impl App {
             Dialog::new("Bulut projesi açılıyor")
                 .push(body)
                 .action(secondary("Vazgeç", Some(cloud(Event::OpenCancel))))
-                .width(460.0),
+                .width(460.0)
+                .on_close(Some(cloud(Event::OpenCancel))),
         ))
     }
 
@@ -196,13 +190,10 @@ impl App {
             );
             form = form.field("Çalışma alanı", group);
         }
-        let name = text_input("Proje adı", &u.name)
+        let name = kentos_ui::widget::text_field("Proje adı", &u.name)
             .on_input_maybe((!working).then_some(|t| cloud(Event::UploadName(t))))
-            .on_submit(cloud(Event::UploadSubmit))
-            .size(typography::body())
-            .padding([5, 8])
-            .style(style::field::input);
-        let name = kentos_ui::widget::focus_ring(name);
+            .on_submit(cloud(Event::UploadSubmit));
+        let name = name;
         // The storage mode, for good (docs/adr/0031): each option says what it means.
         let storage = [ProjectStorage::Database, ProjectStorage::File]
             .into_iter()
@@ -225,13 +216,10 @@ impl App {
             .size(typography::body())
             .padding([5, 8])
             .style(style::field::text_area);
-        let tags = text_input(fields::TAGS_PLACEHOLDER, &u.tags)
+        let tags = kentos_ui::widget::text_field(fields::TAGS_PLACEHOLDER, &u.tags)
             .on_input_maybe((!working).then_some(|t| cloud(Event::UploadTags(t))))
-            .on_submit(cloud(Event::UploadSubmit))
-            .size(typography::body())
-            .padding([5, 8])
-            .style(style::field::input);
-        let tags = kentos_ui::widget::focus_ring(tags);
+            .on_submit(cloud(Event::UploadSubmit));
+        let tags = tags;
         let count = doc.entity_count();
         let hint = match u.storage {
             ProjectStorage::File => format!(
@@ -351,7 +339,7 @@ impl App {
         for a in &q.answers {
             let answer = button(label::body(a.label))
                 .on_press(cloud(Event::RevisionAnswer(a.value)))
-                .padding([5, 16])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(match a.kind {
                     Some(AnswerKind::Primary) => style::button::primary,
                     Some(AnswerKind::Danger) => style::button::danger_outline,
@@ -363,7 +351,9 @@ impl App {
                 dialog.action(answer)
             };
         }
-        overlay::modal(dialog.width(600.0), cloud(Event::RevisionAnswer(q.cancel)))
+        dialog
+            .width(600.0)
+            .modal(cloud(Event::RevisionAnswer(q.cancel)))
     }
 }
 

@@ -4,7 +4,7 @@
 //! elsewhere keeps too), and dragging a row moves the shape in the stack
 //! (a line shows where it goes).
 
-use iced::widget::{Column, button, column, container, mouse_area, row, space, text_input};
+use iced::widget::{Column, button, column, container, mouse_area, row, space};
 use iced::{Center, Element, Fill, Theme};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
@@ -154,7 +154,7 @@ fn flag_button<'a>(glyph: Icon, words: &str, on: bool, press: Message) -> Elemen
         .center_x(side)
         .center_y(side),
     )
-    .padding(0)
+    .padding(kentos_ui::theme::metrics::icon_small(13.0))
     .style(ui_style::button::ghost)
     .on_press(press);
     kentos_ui::widget::tip(
@@ -208,7 +208,7 @@ pub fn shape_list<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
             )
         };
         let name: Element<'a, Message> = match &ed.renaming {
-            Some((rid, text)) if *rid == id => text_input(
+            Some((rid, text)) if *rid == id => kentos_ui::widget::text_field(
                 &shape_name(&{
                     let mut c = s.clone();
                     c.remove("name");
@@ -225,8 +225,6 @@ pub fn shape_list<'a>(ed: &'a SvgEditor) -> Element<'a, Message> {
                 })
             })
             .on_submit(change(|ed| ed.finish_rename(true)))
-            .padding([2, 6])
-            .size(typography::body())
             .style(ui_style::field::validated(false))
             .width(Fill)
             .into(),

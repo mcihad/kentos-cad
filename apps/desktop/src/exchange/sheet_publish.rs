@@ -1,19 +1,19 @@
 //! Sheet publication is a normal cancellable protocol job; the window only gathers options and shows its report.
-use std::{path::PathBuf, time::Duration};
+use super::{Event as Exchange, Window, message};
+use crate::app::{App, Message};
+use iced::futures::{SinkExt, Stream, channel::mpsc};
+use iced::widget::{button, column, progress_bar, row, scrollable};
 use iced::{Element, Fill, Task};
-use iced::widget::{button, column, row, scrollable, text_input, progress_bar};
-use iced::futures::{channel::mpsc, SinkExt, Stream};
 use kentos_commands::{
-    PublishSheets, SheetsPublished, SheetPublishMode, CallEnvelope, CallOp, CommandResult,
-    FILE_PUBLISH_SHEETS,
+    CallEnvelope, CallOp, CommandResult, FILE_PUBLISH_SHEETS, PublishSheets, SheetPublishMode,
+    SheetsPublished,
 };
 use kentos_native_application::jobs::Job;
 use kentos_ui::{
     label, style,
     widget::{Dialog, Switch},
 };
-use crate::app::{App, Message};
-use super::{Window, Event as Exchange, message};
+use std::{path::PathBuf, time::Duration};
 #[derive(Clone, Debug)]
 pub struct Row {
     pub id: String,
@@ -283,7 +283,7 @@ impl App {
                     let Some(report) = &s.report else {
                         return Task::none();
                     };
-                    if !report.ready || doc.model.generation()!=s.generation {
+                    if !report.ready || doc.model.generation() != s.generation {
                         return Task::none();
                     }
                     input.pin = Some(report.source.clone());
@@ -407,7 +407,10 @@ impl App {
                                         .as_ref()
                                         .is_none_or(|d| d.model.generation() != s.generation)
                                     {
-                                        s.status=format!("Çizim bu sırada değişti. Bu sonuç yakalanan {} revizyonuna aittir. Yeni çizim için yeniden denetleyin.",report.source.revision);
+                                        s.status = format!(
+                                            "Çizim bu sırada değişti. Bu sonuç yakalanan {} revizyonuna aittir. Yeni çizim için yeniden denetleyin.",
+                                            report.source.revision
+                                        );
                                     }
                                     s.report = Some(report);
                                 }
@@ -454,9 +457,11 @@ impl App {
                     check,
                     iced::widget::space().width(Fill),
                     button(label::caption("Yukarı"))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press_maybe((!busy && i > 0).then_some(event(Event::Move(i, -1))))
                         .style(style::button::secondary),
                     button(label::caption("Aşağı"))
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press_maybe(
                             (!busy && i + 1 < s.rows.len()).then_some(event(Event::Move(i, 1)))
                         )
@@ -474,9 +479,11 @@ impl App {
             }),
             row![
                 button(label::caption("Hepsini seç"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press_maybe((!busy).then_some(event(Event::All(true))))
                     .style(style::button::secondary),
                 button(label::caption("Seçimi kaldır"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press_maybe((!busy).then_some(event(Event::All(false))))
                     .style(style::button::secondary)
             ]
@@ -513,23 +520,26 @@ impl App {
                 body = body.push(label::caption(
                     "Dosya adı · {index}, {sheet}, {number}, {revision}",
                 ));
-                let mut field =
-                    text_input("{index}-{sheet}", &s.input.naming).style(style::field::input);
+                let mut field = kentos_ui::widget::text_field("{index}-{sheet}", &s.input.naming);
                 if !busy {
                     field = field.on_input(|v| event(Event::Naming(v)));
                 }
                 body = body.push(field);
             } else {
                 body = body.push(label::caption("Tek PDF'in dosya adı"));
-                let mut field = text_input("paftalar", s.input.name.as_deref().unwrap_or(""))
-                    .style(style::field::input);
+                let mut field = kentos_ui::widget::text_field(
+                    "paftalar",
+                    s.input.name.as_deref().unwrap_or(""),
+                );
                 if !busy {
                     field = field.on_input(|v| event(Event::Name(v)));
                 }
                 body = body.push(field);
             }
-            let mut path = text_input("Yeni veya boş teslim klasörünün tam yolu", &s.input.path)
-                .style(style::field::input);
+            let mut path = kentos_ui::widget::text_field(
+                "Yeni veya boş teslim klasörünün tam yolu",
+                &s.input.path,
+            );
             if !busy {
                 path = path.on_input(|v| event(Event::Path(v)));
             }
@@ -541,6 +551,7 @@ impl App {
                     row![
                         path,
                         button(label::body("Seç…"))
+                            .padding(kentos_ui::theme::metrics::action())
                             .on_press_maybe((!busy).then_some(event(Event::Pick)))
                             .style(style::button::secondary)
                     ]
@@ -551,8 +562,16 @@ impl App {
             body = body.push(progress_bar(0.0..=1.0, s.progress));
         }
         if !s.status.is_empty() {
-            let stale=s.report.is_some() && self.document.as_ref().is_none_or(|d|d.model.generation()!=s.generation);
-            body = body.push(if stale {label::body(&s.status).style(style::text::warning)} else {label::body(&s.status)});
+            let stale = s.report.is_some()
+                && self
+                    .document
+                    .as_ref()
+                    .is_none_or(|d| d.model.generation() != s.generation);
+            body = body.push(if stale {
+                label::body(&s.status).style(style::text::warning)
+            } else {
+                label::body(&s.status)
+            });
         }
         if let Some(report) = &s.report {
             let mut results = column![label::caption(format!(
@@ -612,23 +631,23 @@ impl App {
         .aside(
             button(label::body(if busy { "Durdur" } else { "Kapat" }))
                 .on_press(event(if busy { Event::Stop } else { Event::Close }))
-                .padding([6, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         )
         .action(
             button(label::body("Denetle"))
                 .on_press_maybe((!busy).then_some(event(Event::Plan)))
-                .padding([6, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         );
         if !s.check_only {
             window = window.action(
                 button(label::body("Yayınla"))
                     .on_press_maybe(ready.then_some(event(Event::Publish)))
-                    .padding([6, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             );
         }
-        kentos_ui::widget::overlay::modal(window, event(Event::Close))
+        window.modal(event(Event::Close))
     }
 }

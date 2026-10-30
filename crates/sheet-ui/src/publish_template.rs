@@ -280,12 +280,15 @@ impl Designer {
         let publish = button(label::body(texts::PUBLISH))
             .on_press_maybe(ready.then_some(pm(PublishMessage::Publish)))
             .padding([6, 16]);
-        let mut window = Dialog::new(texts::TITLE).push(body).aside(
-            button(label::body(texts::CANCEL))
-                .on_press(pm(PublishMessage::Close))
-                .padding([6, 14])
-                .style(style::button::secondary),
-        );
+        let mut window = Dialog::new(texts::TITLE)
+            .on_close(Message::Publish(PublishMessage::Close))
+            .push(body)
+            .aside(
+                button(label::body(texts::CANCEL))
+                    .on_press(pm(PublishMessage::Close))
+                    .padding(kentos_ui::theme::metrics::action())
+                    .style(style::button::secondary),
+            );
         // One primary: Kurumdakini güncelle where the organisation has a copy, else Yayımla.
         window = if copy.is_some() {
             window
@@ -300,7 +303,7 @@ impl Designer {
                         .align_y(Center),
                     )
                     .on_press_maybe(ready.then_some(pm(PublishMessage::Update)))
-                    .padding([6, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
                 )
         } else {

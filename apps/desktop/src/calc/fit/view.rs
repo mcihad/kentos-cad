@@ -48,6 +48,7 @@ impl Form {
         let can_apply = self.plan(model, format).is_some() && self.has_targets(model, selected);
         let can_report = self.method == Method::Points || self.plan(model, format).is_some();
         let mut dialog = Dialog::new(TITLE)
+            .on_close(crate::calc::event(crate::calc::Event::Close))
             .scroll(body)
             .action(footer_button(
                 "Raporu kopyala",
@@ -269,7 +270,7 @@ fn row_button<'a>(
     tip(
         button(icon(crate::icons::from_web(Some(glyph))).size(14.0))
             .on_press(fit_event(on))
-            .padding(6)
+            .padding(kentos_ui::theme::metrics::icon(14.0))
             .style(style::button::ghost),
         Tip::new(title).body(body),
         Position::Top,

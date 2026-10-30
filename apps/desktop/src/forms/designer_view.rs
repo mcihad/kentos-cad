@@ -1,7 +1,7 @@
 //! Formlar's view (docs/adr/0401): the forms' list and the layer's free fields, the item tree with
 //! its toolbar and the preflight's issues, the chosen item's inspector and the footer.
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill};
 use kentos_commands::{
     FormBody, FormIssue, FormItem, FormSeverity, FormWidget, LayerField, LayerNodeType, ProjectForm,
@@ -10,9 +10,7 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::panes::Side as PaneSide;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{
-    Dialog as Frame, Elided, Panes, Segmented, fallback, focus_ring, overlay, segmented,
-};
+use kentos_ui::widget::{Dialog as Frame, Elided, Panes, Segmented, fallback, segmented};
 use kentos_ui::{label, style};
 
 use kentos_ui::widget::tree_view::{self, Node, TreeView};
@@ -374,7 +372,7 @@ impl App {
         if form.is_some() {
             frame = frame.push(self.forms_footer(w, form, &issues, locked.is_none()));
         }
-        overlay::modal(frame.key(TITLE).width(1040.0), msg(Event::Cancel))
+        frame.key(TITLE).width(1040.0).modal(msg(Event::Cancel))
     }
 
     fn forms_list(
@@ -433,13 +431,10 @@ impl App {
                     move |i| msg(Event::NewLayer(picks[i].0.clone())),
                 )
                 .placeholder("Katman");
-                let name = text_input("Formun adı (boşsa katmandan)", &n.name)
-                    .size(typography::body())
+                let name = kentos_ui::widget::text_field("Formun adı (boşsa katmandan)", &n.name)
                     .on_input(|t| msg(Event::NewName(t)))
-                    .on_submit(msg(Event::Create))
-                    .padding([5, 8])
-                    .style(style::field::input);
-                col = col.push(focus_ring(name)).push(pick).push(
+                    .on_submit(msg(Event::Create));
+                col = col.push(name).push(pick).push(
                     row![
                         words::primary(CREATE, editable.then(|| msg(Event::Create))),
                         words::secondary(CANCEL, Some(msg(Event::CancelNew))),
@@ -708,16 +703,13 @@ impl App {
             .forms_window
             .as_ref()
             .map_or("", |w| w.section_name.as_str());
-        let input = text_input("Bölümün adı (boşsa öğenin)", name)
-            .size(typography::body())
+        let input = kentos_ui::widget::text_field("Bölümün adı (boşsa öğenin)", name)
             .on_input(|t| msg(Event::SectionName(t)))
-            .on_submit(msg(Event::SaveSection))
-            .padding([5, 8])
-            .style(style::field::input);
+            .on_submit(msg(Event::SaveSection));
         column![
             label::strong("Bölüm kitaplığı"),
             row![
-                focus_ring(input),
+                input,
                 words::secondary(SAVE_SECTION, Some(msg(Event::SaveSection))),
             ]
             .spacing(6)
@@ -748,7 +740,7 @@ impl App {
                     button(label::caption(crate::forms::entry::language_name(Some(
                         tag
                     ))))
-                    .padding([2, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(if on {
                         style::button::primary
                     } else {
@@ -756,7 +748,7 @@ impl App {
                     })
                     .on_press(msg(Event::LanguagePick(tag.clone()))),
                     button(icon(Icon::Close).size(10.0))
-                        .padding([4, 4])
+                        .padding(kentos_ui::theme::metrics::icon_small(10.0))
                         .style(style::button::ghost)
                         .on_press_maybe(editable.then(|| msg(Event::LanguageRemove(tag.clone())))),
                 ]
@@ -767,13 +759,10 @@ impl App {
         let tag_ok = kentos_commands::language_tag_ok(w.new_language.trim())
             && !body.translations.contains_key(w.new_language.trim());
         let add = row![
-            text_input("Dil etiketi (en, de, ar)", &w.new_language)
-                .size(typography::body())
+            kentos_ui::widget::text_field("Dil etiketi (en, de, ar)", &w.new_language)
                 .on_input(|t| msg(Event::LanguageText(t)))
                 .on_submit_maybe((editable && tag_ok).then(|| msg(Event::LanguageAdd)))
-                .padding([4, 8])
-                .width(150)
-                .style(style::field::input),
+                .width(150),
             words::ghost(
                 "Dil ekle",
                 (editable && tag_ok).then(|| msg(Event::LanguageAdd))
@@ -798,10 +787,7 @@ impl App {
         };
         let words = &body.translations[tag];
         let line = |own: String, value: String, item: Option<String>, said: Said| {
-            let field = text_input(&own, &value)
-                .size(typography::body())
-                .padding([4, 8])
-                .style(style::field::input);
+            let field = kentos_ui::widget::text_field(&own, &value);
             let field = if editable {
                 field.on_input(move |t| msg(Event::Translate(item.clone(), said.clone(), t)))
             } else {
@@ -809,7 +795,7 @@ impl App {
             };
             row![
                 container(Elided::new(own).size(typography::caption())).width(130),
-                focus_ring(field),
+                field,
             ]
             .spacing(6)
             .align_y(Center)
@@ -905,7 +891,7 @@ impl App {
             let toggle = kentos_ui::widget::tip(
                 button(icon(if c.resolved { Icon::Undo } else { Icon::Check }).size(13.0))
                     .on_press(msg(Event::ResolveComment(c.id, !c.resolved)))
-                    .padding([3, 6])
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
                     .style(style::button::tool(false)),
                 if c.resolved {
                     "Yeniden aç"
@@ -930,7 +916,7 @@ impl App {
             .forms_window
             .as_ref()
             .map_or("", |w| w.comment_text.as_str());
-        let input = text_input(
+        let input = kentos_ui::widget::text_field(
             if item.is_some() {
                 "Bu öğeye yorum yazın"
             } else {
@@ -938,14 +924,11 @@ impl App {
             },
             typed,
         )
-        .size(typography::body())
         .on_input(|t| msg(Event::CommentText(t)))
-        .on_submit(msg(Event::AddComment))
-        .padding([5, 8])
-        .style(style::field::input);
+        .on_submit(msg(Event::AddComment));
         col.push(
             row![
-                focus_ring(input),
+                input,
                 words::secondary(
                     ADD_COMMENT,
                     (!typed.trim().is_empty()).then(|| msg(Event::AddComment))
@@ -1038,7 +1021,7 @@ impl App {
             kentos_ui::widget::tip(
                 button(icon(glyph).size(14.0))
                     .on_press_maybe(event.map(msg))
-                    .padding([4, 7])
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
                     .style(style::button::tool(false)),
                 words.into(),
                 iced::widget::tooltip::Position::Bottom,
@@ -1227,13 +1210,8 @@ impl App {
         };
         let input = |placeholder: &str, value: &str, which: Text| {
             let which = which.clone();
-            focus_ring(
-                text_input(placeholder, value)
-                    .size(typography::body())
-                    .on_input(move |t| msg(Event::Text(which.clone(), t)))
-                    .padding([5, 8])
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value)
+                .on_input(move |t| msg(Event::Text(which.clone(), t)))
         };
         let rule_in = |words: &'static str,
                        rule: Rule,
@@ -1241,19 +1219,16 @@ impl App {
                        placeholder: &'static str|
          -> Element<'_, Message> {
             let r = rule.clone();
-            let field = text_input(placeholder, value)
-                .size(typography::body())
+            let field = kentos_ui::widget::text_field(placeholder, value)
                 .on_input(move |t| msg(Event::RuleText(r.clone(), t)))
-                .padding([5, 8])
-                .font(typography::mono())
-                .style(style::field::input);
+                .font(typography::mono());
             let builder = button(label::body("ε"))
                 .on_press(msg(Event::Builder(rule.clone())))
                 .padding([4, 8])
                 .style(style::button::tool(false));
             words::field(
                 words,
-                row![focus_ring(field), builder].spacing(4).align_y(Center),
+                row![field, builder].spacing(4).align_y(Center),
                 error_of(&rule.path()),
             )
         };
@@ -1759,15 +1734,12 @@ impl App {
                     col = col.push(words::field(
                         "Aramaya başlama",
                         row![
-                            text_input(
+                            kentos_ui::widget::text_field(
                                 "1",
                                 &f.min_search.map(|n| n.to_string()).unwrap_or_default()
                             )
-                            .size(typography::body())
                             .on_input(|t| msg(Event::MinSearch(t)))
-                            .padding([5, 8])
-                            .width(70)
-                            .style(style::field::input),
+                            .width(70),
                             label::caption("harften sonra").style(muted),
                         ]
                         .spacing(6)
@@ -1922,7 +1894,7 @@ impl App {
                                 ),
                                 button(icon(Icon::Close).size(12.0))
                                     .on_press(msg(Event::RemoveCheck(i)))
-                                    .padding([5, 6])
+                                    .padding(kentos_ui::theme::metrics::icon(12.0))
                                     .style(style::button::tool(false)),
                             ]
                             .spacing(4)
@@ -2104,13 +2076,10 @@ impl App {
         if w.dirty {
             status.push_str(" · kaydedilmedi");
         }
-        let name = text_input("Formun adı", &w.name)
-            .size(typography::body())
+        let name = kentos_ui::widget::text_field("Formun adı", &w.name)
             .on_input(|t| msg(Event::Name(t)))
             .on_submit(msg(Event::Save))
-            .padding([5, 8])
-            .width(240)
-            .style(style::field::input);
+            .width(240);
         let enforce = words::check(
             form.enforce,
             ENFORCE,
@@ -2145,7 +2114,7 @@ impl App {
         );
         let top = row![
             label::body(NAME),
-            focus_ring(name),
+            name,
             label::caption(status).style(muted),
             space::horizontal().width(Fill),
             steps,
@@ -2182,14 +2151,11 @@ impl App {
             .as_ref()
             .and_then(|b| b.scope.clone())
             .unwrap_or_default();
-        let mut scope_input = text_input(
+        let mut scope_input = kentos_ui::widget::text_field(
             "Bütün kayıtlar (ör. Sorumlu = @kullanici_eposta)",
             &scope_text,
         )
-        .size(typography::body())
-        .padding([5, 8])
-        .width(Fill)
-        .style(style::field::input);
+        .width(Fill);
         if editable {
             scope_input = scope_input.on_input(|t| msg(Event::Scope(t)));
         }
@@ -2201,7 +2167,7 @@ impl App {
                 ),
                 iced::widget::tooltip::Position::Top,
             ),
-            focus_ring(scope_input),
+            scope_input,
         ]
         .spacing(10)
         .align_y(Center);
@@ -2337,7 +2303,7 @@ impl App {
                     ),
                     button(icon(Icon::Close).size(12.0))
                         .on_press(msg(Event::RemoveMatch(i)))
-                        .padding([5, 6])
+                        .padding(kentos_ui::theme::metrics::icon(12.0))
                         .style(style::button::tool(false)),
                 ]
                 .spacing(4)
@@ -2346,21 +2312,18 @@ impl App {
         }
         let rule = Rule::LookupFilter(id.to_owned());
         let r = rule.clone();
-        let filter = text_input(
+        let filter = kentos_ui::widget::text_field(
             "Süzgeç yok: bütün nesneler",
             l.filter.as_deref().unwrap_or(""),
         )
-        .size(typography::body())
         .on_input(move |t| msg(Event::RuleText(r.clone(), t)))
-        .padding([5, 8])
-        .font(typography::mono())
-        .style(style::field::input);
+        .font(typography::mono());
         col = col
             .push(words::secondary("Zincir ekle", Some(msg(Event::AddMatch))))
             .push(words::field(
                 "Listenin süzgeci",
                 row![
-                    focus_ring(filter),
+                    filter,
                     button(label::body("ε"))
                         .on_press(msg(Event::Builder(rule)))
                         .padding([4, 8])
@@ -2452,12 +2415,12 @@ impl App {
                 .width(200),
             );
         }
-        let limit = text_input("Hepsi", &l.limit.map(|n| n.to_string()).unwrap_or_default())
-            .size(typography::body())
-            .on_input(move |t| msg(Event::Lookup(LookupEdit::Limit(t))))
-            .padding([5, 8])
-            .width(90)
-            .style(style::field::input);
+        let limit = kentos_ui::widget::text_field(
+            "Hepsi",
+            &l.limit.map(|n| n.to_string()).unwrap_or_default(),
+        )
+        .on_input(move |t| msg(Event::Lookup(LookupEdit::Limit(t))))
+        .width(90);
         // Yinelenen anahtar.
         use kentos_commands::LookupDuplicates as D;
         let dups = [D::Warn, D::First, D::Refuse];
@@ -2486,12 +2449,12 @@ impl App {
             place_row = place_row
                 .push(label::caption("Tolerans").style(muted))
                 .push(
-                    text_input("0", &s.tolerance.map(|t| t.to_string()).unwrap_or_default())
-                        .size(typography::body())
-                        .on_input(move |t| msg(Event::Lookup(LookupEdit::Tolerance(t))))
-                        .padding([5, 8])
-                        .width(80)
-                        .style(style::field::input),
+                    kentos_ui::widget::text_field(
+                        "0",
+                        &s.tolerance.map(|t| t.to_string()).unwrap_or_default(),
+                    )
+                    .on_input(move |t| msg(Event::Lookup(LookupEdit::Tolerance(t))))
+                    .width(80),
                 );
         }
         // Kopyala: the chosen object's field into the record's, each row; the stamp.
@@ -2524,7 +2487,7 @@ impl App {
                     .width(Fill),
                     button(icon(Icon::Close).size(12.0))
                         .on_press(edit(LookupEdit::CopyRemove(i)))
-                        .padding([5, 6])
+                        .padding(kentos_ui::theme::metrics::icon(12.0))
                         .style(style::button::tool(false)),
                 ]
                 .spacing(4)
@@ -2622,7 +2585,7 @@ impl App {
                     container(label::body(t.name.clone())).width(Fill),
                     button(icon(Icon::Close).size(12.0))
                         .on_press(msg(Event::RemoveScenario(i)))
-                        .padding([3, 6])
+                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
                         .style(style::button::tool(false)),
                 ]
                 .spacing(6)
@@ -2639,15 +2602,12 @@ impl App {
                 body.tests.len()
             )));
         }
-        let name = text_input("Senaryonun adı", &w.scenario_name)
-            .size(typography::body())
+        let name = kentos_ui::widget::text_field("Senaryonun adı", &w.scenario_name)
             .on_input(|t| msg(Event::ScenarioName(t)))
-            .on_submit(msg(Event::SaveScenario))
-            .padding([4, 8])
-            .style(style::field::input);
+            .on_submit(msg(Event::SaveScenario));
         col.push(
             row![
-                container(focus_ring(name)).width(Fill),
+                container(name).width(Fill),
                 words::secondary("Senaryo olarak kaydet", Some(msg(Event::SaveScenario))),
             ]
             .spacing(6)
@@ -2767,11 +2727,8 @@ impl App {
                 None => Some(0),
                 Some(k) => reason_keys.iter().position(|x| x == k).map(|p| p + 1),
             };
-            let label_input = text_input("Adımın adı", &step.label)
-                .size(typography::body())
-                .on_input(move |t| msg(Event::StepLabel(i, t)))
-                .padding([4, 8])
-                .style(style::field::input);
+            let label_input = kentos_ui::widget::text_field("Adımın adı", &step.label)
+                .on_input(move |t| msg(Event::StepLabel(i, t)));
             let to_codes = codes.clone();
             let to = Select::new(
                 states.iter().map(|(_, l)| Choice::new(l.clone())),
@@ -2786,10 +2743,10 @@ impl App {
             });
             let boxed = column![
                 row![
-                    container(focus_ring(label_input)).width(Fill),
+                    container(label_input).width(Fill),
                     button(icon(Icon::Close).size(12.0))
                         .on_press(msg(Event::StepRemove(i)))
-                        .padding([3, 6])
+                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
                         .style(style::button::tool(false)),
                 ]
                 .spacing(6)

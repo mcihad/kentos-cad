@@ -9,7 +9,7 @@
 use std::collections::{BTreeSet, HashSet};
 use std::path::PathBuf;
 
-use iced::widget::{Column, container, row, text, text_input};
+use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, EntitiesCreate, Entity, LayerNode, LayerNodeType};
 use kentos_domain::{NewLayer, Slot};
@@ -22,7 +22,7 @@ use kentos_native_application::{ExecutionContext, create};
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog as Frame, Segmented, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -1054,13 +1054,9 @@ impl App {
             }))
         });
         let number = |value: &str, on: fn(String) -> Event| {
-            focus_ring(
-                text_input("", value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .width(110)
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field("", value)
+                .on_input(move |t| msg(on(t)))
+                .width(110)
         };
         let second = row![
             words::field(
@@ -1185,13 +1181,9 @@ impl App {
         let any = w.outcome.is_some();
         // Each side's date (docs/adr/0210 §8): empty, every object; a date, the temporal layers' objects shown then.
         let date = |value: &str, on: fn(String) -> Event| {
-            focus_ring(
-                text_input("GG.AA.YYYY", value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .width(150)
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field("GG.AA.YYYY", value)
+                .on_input(move |t| msg(on(t)))
+                .width(150)
         };
         let dates = row![
             words::field(OLD_DATE, date(&w.old_date, Event::OldDate), None),
@@ -1212,16 +1204,14 @@ impl App {
             .push(third)
             .push(summary)
             .push(list);
-        overlay::modal(
-            Frame::new(COMPARE_TITLE)
-                .push(content)
-                .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
-                .action(words::secondary(SAVE, any.then(|| msg(Event::Save))))
-                .action(words::secondary(WRITE, any.then(|| msg(Event::Write))))
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(920.0),
-            msg(Event::Close),
-        )
+        Frame::new(COMPARE_TITLE)
+            .push(content)
+            .action(words::secondary(COPY, any.then(|| msg(Event::Copy))))
+            .action(words::secondary(SAVE, any.then(|| msg(Event::Save))))
+            .action(words::secondary(WRITE, any.then(|| msg(Event::Write))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(920.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

@@ -5,8 +5,8 @@
 use iced::widget::{Column, container};
 use iced::{Element, Fill, Task};
 use kentos_commands::{FontMatch, FontsReport};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -124,17 +124,15 @@ impl App {
         if report.styles.is_empty() {
             lines.push(words::text_line(Kind::Info, "Çizimde yazı stili yok."));
         }
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(
-                    Column::new()
-                        .spacing(12)
-                        .push(words::summary(lines))
-                        .push(list),
-                )
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(720.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .push(
+                Column::new()
+                    .spacing(12)
+                    .push(words::summary(lines))
+                    .push(list),
+            )
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(720.0)
+            .modal(msg(Event::Close))
     }
 }

@@ -21,17 +21,18 @@ use std::collections::{HashMap, HashSet};
 use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_editor};
 use iced::{Bottom, Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    CommandResult, LabelClass, LabelObstacle, LabelsReport, LabelPlacement, LabelStyle, LabelsMode, LayerLabels,
-    LayerNodeType, LayersLabels, ObstacleKind, default_label, layer_labels_problem, style_problem,
+    CommandResult, LabelClass, LabelObstacle, LabelPlacement, LabelStyle, LabelsMode, LabelsReport,
+    LayerLabels, LayerNodeType, LayersLabels, ObstacleKind, default_label, layer_labels_problem,
+    style_problem,
 };
 use kentos_interaction::Level;
 use kentos_native_application::label_texts::compile_label_expression;
 use kentos_native_application::{ExecutionContext, labels_report, layers_labels};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tabs::{Tab as TabFace, Tabs};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 pub use form::Tab;
@@ -567,7 +568,8 @@ impl App {
         };
         // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread.
         let bands = self.bands.given(&doc.model);
-        match labels_report::execute_with(&mut ExecutionContext::new(&mut doc.model), input, &bands) {
+        match labels_report::execute_with(&mut ExecutionContext::new(&mut doc.model), input, &bands)
+        {
             CommandResult::Completed { output, .. } => {
                 let t = &output.totals;
                 let mut lines = vec![(
@@ -643,7 +645,12 @@ impl App {
             ground: None,
         }];
         if let Some(doc) = &self.document {
-            let n = doc.model.settings().plot_scale.round().clamp(1.0, 1_000_000.0) as u32;
+            let n = doc
+                .model
+                .settings()
+                .plot_scale
+                .round()
+                .clamp(1.0, 1_000_000.0) as u32;
             out.push(ReportScope {
                 words: format!("Görünüm, çizim ölçeğinde (1:{n})"),
                 paper: Some(n),
@@ -651,7 +658,12 @@ impl App {
             });
         }
         let book = self.sheets.book();
-        for p in self.sheets.display_list().iter().flat_map(|l| l.prims.iter()) {
+        for p in self
+            .sheets
+            .display_list()
+            .iter()
+            .flat_map(|l| l.prims.iter())
+        {
             let kentos_sheet::display::Prim::Map(m) = p else {
                 continue;
             };
@@ -659,7 +671,9 @@ impl App {
                 continue;
             };
             let n = m.view.scale.round().clamp(1.0, 1_000_000.0) as u32;
-            let name = book.item(&m.item).map_or(m.item.as_str(), |i| i.name.as_str());
+            let name = book
+                .item(&m.item)
+                .map_or(m.item.as_str(), |i| i.name.as_str());
             out.push(ReportScope {
                 words: format!("Paftanın haritası: {name} (1:{n})"),
                 paper: Some(n),
@@ -785,20 +799,18 @@ impl App {
             .iter()
             .map(|(kind, line)| words::text_line(*kind, line.clone()))
             .collect();
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(head)
-                .fill(body)
-                .push(labelling_obstacle(w))
-                .push(words::summary(lines))
-                .action(words::secondary(REPORT, Some(msg(Event::Report))))
-                .action(words::secondary(APPLY, w.ready.then(|| msg(Event::Apply))))
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, w.ready.then(|| msg(Event::Save))))
-                .width(860.0)
-                .max_height(640.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(head)
+            .fill(body)
+            .push(labelling_obstacle(w))
+            .push(words::summary(lines))
+            .action(words::secondary(REPORT, Some(msg(Event::Report))))
+            .action(words::secondary(APPLY, w.ready.then(|| msg(Event::Apply))))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, w.ready.then(|| msg(Event::Save))))
+            .width(860.0)
+            .max_height(640.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// Kurallı's classes: the list, its tools and the selected class's name and condition.
@@ -824,7 +836,7 @@ impl App {
             kentos_ui::widget::tip(
                 button(icon(from_web(Some(glyph))).size(16.0))
                     .style(style::button::ghost)
-                    .padding(4)
+                    .padding(kentos_ui::theme::metrics::icon_small(16.0))
                     .on_press_maybe(on.then(|| msg(event))),
                 kentos_ui::widget::Tip::new(caption),
                 iced::widget::tooltip::Position::Top,
@@ -851,18 +863,13 @@ impl App {
             .cloned()
             .unwrap_or_else(|| c.when.clone().unwrap_or_default());
         let field = |key: Key, text: String, placeholder: &str| {
-            kentos_ui::widget::focus_ring(
-                iced::widget::text_input(placeholder, &text)
-                    .on_input(move |t| msg(Event::Type(key, t)))
-                    .padding([5, 8])
-                    .size(typography::body())
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, &text)
+                .on_input(move |t| msg(Event::Type(key, t)))
         };
         let builder = kentos_ui::widget::tip(
             button(icon(from_web(Some("expression"))).size(16.0))
                 .style(style::button::ghost)
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .on_press(msg(Event::Builder(Field::When))),
             kentos_ui::widget::Tip::new("İfade oluşturucu…"),
             iced::widget::tooltip::Position::Top,
@@ -943,14 +950,10 @@ fn labelling_obstacle(w: &Window) -> Element<'_, Message> {
             .get(&Key::Weight)
             .cloned()
             .unwrap_or_else(|| o.weight.to_string());
-        let weight = kentos_ui::widget::focus_ring(
-            iced::widget::text_input("", &weight_text)
-                .on_input(|t| msg(Event::Type(Key::Weight, t)))
-                .padding([5, 8])
-                .width(typography::scaled(56.0))
-                .size(typography::body())
-                .style(style::field::validated(w.invalid.contains(&Key::Weight))),
-        );
+        let weight = kentos_ui::widget::text_field("", &weight_text)
+            .on_input(|t| msg(Event::Type(Key::Weight, t)))
+            .width(typography::scaled(56.0))
+            .style(style::field::validated(w.invalid.contains(&Key::Weight)));
         let kinds = [ObstacleKind::Interior, ObstacleKind::Boundary];
         let kind = form::choice(
             &["Alanın içi", "Yalnız sınırı"],

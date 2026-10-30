@@ -88,7 +88,7 @@ pub(crate) struct Dropdown<'a, Message, Local, S> {
     match_width: bool,
     /// Alanın kenarı duruma göre çizilir: üzerine gelince belirgin, açıkken
     /// vurgu çizgisi (metin girişleri gibi).
-    edge: Option<Edge>,
+    edge: bool,
     /// Kurulmuş panel ve kurulduğu durum sürümü. Panel yalnızca durum
     /// değişince yeniden kurulur: düğmeler durumlarını (üzerinde, basılı)
     /// öğenin kendisinde tutar ve her kurulumda yitirir.
@@ -97,6 +97,8 @@ pub(crate) struct Dropdown<'a, Message, Local, S> {
     on_step: Option<Box<dyn Fn(i32) -> Option<Message> + 'a>>,
     /// The open panel's keys.
     keys: Option<Keys<'a, S, Message>>,
+    /// In a cell: the cell draws the states.
+    bare: bool,
 }
 
 impl<'a, Message, Local, S> Dropdown<'a, Message, Local, S>
@@ -121,10 +123,11 @@ where
             reduce: Box::new(reduce),
             focus: None,
             match_width: false,
-            edge: None,
+            edge: false,
             built: None,
             on_step: None,
             keys: None,
+            bare: false,
         }
     }
 
@@ -166,26 +169,16 @@ where
     /// panel açıkken vurgu çizgisi (web'in `.dropdown:hover` ve
     /// `[aria-expanded]`'ı). Alanın kendi kenarı varken kullanılır.
     pub fn edge(mut self) -> Self {
-        self.edge = Some(Edge::Over);
+        self.edge = true;
         self
     }
 
-    /// Kenarsız alanın (özellik hücresi) kenarı ve zemini: üzerine gelince
-    /// ya da panel açıkken alanın arkasında belirir, yoksa alan düz yazı
-    /// gibi durur.
-    pub fn edge_cell(mut self) -> Self {
-        self.edge = Some(Edge::Under);
+    /// Hücrede: kenarı ve durumu hücre çizer ([`Cell`](super::cell::Cell)), panelin
+    /// açıklığını ondan öğrenir.
+    pub fn bare(mut self) -> Self {
+        self.bare = true;
         self
     }
-}
-
-/// Alanın duruma göre çizilen kenarı.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Edge {
-    /// Alanın kendi kenarının üstüne.
-    Over,
-    /// Kenarsız alanın arkasına, zeminiyle.
-    Under,
 }
 
 struct State<S> {
@@ -386,7 +379,7 @@ where
         }
 
         // Kenar, imleç alana girip çıkınca yeniden çizilir.
-        if self.edge.is_some()
+        if self.edge
             && let Event::Mouse(mouse::Event::CursorMoved { .. } | mouse::Event::CursorLeft) = event
         {
             let hovered = cursor.is_over(anchor_layout.bounds());
@@ -518,17 +511,14 @@ where
                 );
             };
 
-            if self.trigger.is_none() && tree.state.downcast_ref::<State<S>>().keys.0 {
+            if self.trigger.is_none() && !self.bare && tree.state.downcast_ref::<State<S>>().keys.0
+            {
                 super::key_focus::halo(
                     renderer,
                     theme,
                     anchor.bounds(),
                     crate::style::button::radius(),
                 );
-            }
-
-            if let (Some(Edge::Under), Some(color)) = (self.edge, color) {
-                frame(renderer, color, t.field);
             }
 
             self.anchor.as_widget().draw(
@@ -541,7 +531,7 @@ where
                 viewport,
             );
 
-            if let (Some(Edge::Over), Some(color)) = (self.edge, color) {
+            if let (true, Some(color)) = (self.edge, color) {
                 frame(renderer, color, iced::Color::TRANSPARENT);
             }
         }
@@ -570,6 +560,8 @@ where
             let keys = &mut tree.state.downcast_mut::<State<S>>().keys;
             operation.focusable(None, layout.bounds(), keys);
         }
+        let open = tree.state.downcast_ref::<State<S>>().open.is_some();
+        operation.custom(None, layout.bounds(), &mut super::cell::Opened(open));
         if let Some(anchor) = layout.children().next() {
             self.anchor
                 .as_widget_mut()

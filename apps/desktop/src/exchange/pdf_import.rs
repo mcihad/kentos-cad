@@ -7,7 +7,7 @@
 use std::fmt;
 use std::path::PathBuf;
 
-use iced::widget::{Column, Row, button, row, text_input};
+use iced::widget::{Column, Row, button, row};
 use iced::{Center, Element, Task};
 use kentos_commands::{CallOp, CommandResult, PdfCurveOutput, PdfImported};
 use kentos_domain::Slot;
@@ -15,11 +15,11 @@ use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;
 use kentos_native_application::ExecutionContext;
 use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog, overlay};
-use kentos_ui::label;
 use serde_json::{Value, json};
 
 use super::words::{self, Kind as Line};
@@ -88,15 +88,23 @@ impl fmt::Display for Curves {
 
 /// A number typed the Turkish way or the other.
 fn number(text: &str) -> Option<f64> {
-    text.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
+    text.trim()
+        .replace(',', ".")
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
 }
 
 /// A page's layers, “PDF” first when something is in no group.
 fn layers_of(page: &kentos_formats::pdf::PdfPage) -> Vec<(String, bool)> {
-    let plain = page.paths.iter().any(|p| p.layer.is_none()) || page.texts.iter().any(|t| t.layer.is_none());
+    let plain = page.paths.iter().any(|p| p.layer.is_none())
+        || page.texts.iter().any(|t| t.layer.is_none());
     let mut out = Vec::new();
     if plain || page.layers.is_empty() {
-        out.push((kentos_native_application::file_import_pdf::PLAIN.to_owned(), false));
+        out.push((
+            kentos_native_application::file_import_pdf::PLAIN.to_owned(),
+            false,
+        ));
     }
     for (i, l) in page.layers.iter().enumerate() {
         if !out.iter().any(|(n, _)| n == l) {
@@ -112,7 +120,10 @@ pub fn describe(path: &std::path::Path, scale: f64) -> Result<State, String> {
     let page = kentos_formats::pdf::read_page(&bytes, 1).map_err(|e| e.to_string())?;
     let layers = layers_of(&page);
     Ok(State {
-        file: path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned()),
+        file: path.file_name().map_or_else(
+            || path.display().to_string(),
+            |n| n.to_string_lossy().into_owned(),
+        ),
         path: path.to_path_buf(),
         pages: page.count,
         page: 1,
@@ -141,8 +152,10 @@ pub fn describe(path: &std::path::Path, scale: f64) -> Result<State, String> {
 impl State {
     /// The command's input, or the field that is not a number.
     pub fn input(&self) -> Result<Value, String> {
-        let scale = number(&self.scale).ok_or("Ölçek bir sayı olmalı: sayfanın basıldığı ölçeğin paydası (50 → 1:50).")?;
-        let tolerance = number(&self.tolerance).ok_or("Tolerans bir sayı olmalı: kâğıtta milimetre.")?;
+        let scale = number(&self.scale)
+            .ok_or("Ölçek bir sayı olmalı: sayfanın basıldığı ölçeğin paydası (50 → 1:50).")?;
+        let tolerance =
+            number(&self.tolerance).ok_or("Tolerans bir sayı olmalı: kâğıtta milimetre.")?;
         let mut input = json!({ "path": self.path.display().to_string(), "page": self.page, "scale": scale,
                                 "tolerance": tolerance, "strokes": self.strokes, "fills": self.fills, "texts": self.texts,
                                 "curves": if self.curves == PdfCurveOutput::Nurbs { "nurbs" } else { "polyline" } });
@@ -162,9 +175,12 @@ impl State {
         if self.region {
             let mut b = [0.0; 4];
             for (k, t) in self.bounds.iter().enumerate() {
-                b[k] = number(t).ok_or("Bölgenin kenarları sayı olmalı: sayfanın sol alt köşesinden milimetre.")?;
+                b[k] = number(t).ok_or(
+                    "Bölgenin kenarları sayı olmalı: sayfanın sol alt köşesinden milimetre.",
+                )?;
             }
-            input["region"] = json!({ "a": { "x": b[0], "y": b[1] }, "b": { "x": b[2], "y": b[3] } });
+            input["region"] =
+                json!({ "a": { "x": b[0], "y": b[1] }, "b": { "x": b[2], "y": b[3] } });
         }
         Ok(input)
     }
@@ -199,7 +215,10 @@ impl App {
         match e {
             Event::Picked(None) => return Task::none(),
             Event::Picked(Some(path)) => {
-                let scale = self.document.as_ref().map_or(1.0, |d| d.settings().plot_scale.max(1.0));
+                let scale = self
+                    .document
+                    .as_ref()
+                    .map_or(1.0, |d| d.settings().plot_scale.max(1.0));
                 match describe(&path, scale) {
                     Ok(state) => self.open_window(Window::PdfImport(Box::new(state))),
                     Err(why) => {
@@ -272,7 +291,10 @@ impl App {
                 self.dialog = None;
                 self.field = None;
                 self.snap = None;
-                self.session.run(Box::new(PickPoint::new("", "Sayfanın sol alt köşesinin çizimdeki yeri")));
+                self.session.run(Box::new(PickPoint::new(
+                    "",
+                    "Sayfanın sol alt köşesinin çizimdeki yeri",
+                )));
                 self.with_tool(|s, cx| s.activate(cx));
                 return Task::none();
             }
@@ -315,11 +337,16 @@ impl App {
                         CallOp::Plan,
                         input,
                     );
-                    match answer.ok().and_then(|v| serde_json::from_value::<CommandResult<PdfImported>>(v).ok()) {
+                    match answer
+                        .ok()
+                        .and_then(|v| serde_json::from_value::<CommandResult<PdfImported>>(v).ok())
+                    {
                         Some(CommandResult::Completed { output, warnings }) => {
                             Ok((output, warnings.into_iter().map(|w| w.message).collect()))
                         }
-                        Some(CommandResult::Failed { error } | CommandResult::Conflict { error }) => Err(error.message),
+                        Some(
+                            CommandResult::Failed { error } | CommandResult::Conflict { error },
+                        ) => Err(error.message),
                         _ => Err("Komutun planı okunamadı.".to_owned()),
                     }
                 }
@@ -354,7 +381,10 @@ impl App {
             CallOp::Execute,
             input,
         );
-        match answer.ok().and_then(|v| serde_json::from_value::<CommandResult<PdfImported>>(v).ok()) {
+        match answer
+            .ok()
+            .and_then(|v| serde_json::from_value::<CommandResult<PdfImported>>(v).ok())
+        {
             Some(CommandResult::Completed { output, warnings }) => {
                 let last = doc.model.next_slot();
                 let slots: Vec<Slot> = (first..last)
@@ -365,7 +395,11 @@ impl App {
                 self.close_exchange();
                 self.zoom_to(&slots);
                 self.announce(
-                    if warnings.is_empty() { Level::Success } else { Level::Warn },
+                    if warnings.is_empty() {
+                        Level::Success
+                    } else {
+                        Level::Warn
+                    },
                     format!(
                         "“{}” {}. sayfası alındı: {} nesne; Ctrl+Z geri alır.",
                         output.file, output.page, output.objects
@@ -392,16 +426,14 @@ impl App {
         if s.picking {
             return iced::widget::text("").into();
         }
-        let format = self.document.as_ref().map(|d| kentos_project::format::Format::of(d.model.settings()));
+        let format = self
+            .document
+            .as_ref()
+            .map(|d| kentos_project::format::Format::of(d.model.settings()));
         let input = |placeholder: &'a str, value: &'a str, width: f32, on: fn(String) -> Event| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| event(on(t)))
-                    .padding([5, 8])
-                    .width(width)
-                    .size(kentos_ui::theme::typography::body())
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value)
+                .on_input(move |t| event(on(t)))
+                .width(width)
         };
         let mut body = Column::new().spacing(12).push(words::file_line(
             &s.file,
@@ -416,9 +448,12 @@ impl App {
             .searchable(s.pages > 12);
             body = body.push(words::field("Sayfa", pages, None));
         }
-        let scale = row![label::body("1 :"), input("50", &s.scale, 96.0, Event::Scale)]
-            .spacing(6)
-            .align_y(Center);
+        let scale = row![
+            label::body("1 :"),
+            input("50", &s.scale, 96.0, Event::Scale)
+        ]
+        .spacing(6)
+        .align_y(Center);
         body = body.push(words::field(
             "Ölçek",
             scale,
@@ -426,14 +461,26 @@ impl App {
         ));
         let at = s.at.map_or_else(
             || "Çizimin başlangıcı (0, 0)".to_owned(),
-            |[x, y]| format.as_ref().map_or_else(|| format!("{x:.3}, {y:.3}"), |f| f.point(kentos_interaction::Vec2::new(x, y))),
+            |[x, y]| {
+                format.as_ref().map_or_else(
+                    || format!("{x:.3}, {y:.3}"),
+                    |f| f.point(kentos_interaction::Vec2::new(x, y)),
+                )
+            },
         );
         let pick = button(
-            row![icon(Icon::Target).size(14.0).tone(if s.at.is_some() { Tone::Accent } else { Tone::Inherit }), label::body("Çizimden seç")]
-                .spacing(6)
-                .align_y(Center),
+            row![
+                icon(Icon::Target).size(14.0).tone(if s.at.is_some() {
+                    Tone::Accent
+                } else {
+                    Tone::Inherit
+                }),
+                label::body("Çizimden seç")
+            ]
+            .spacing(6)
+            .align_y(Center),
         )
-        .padding([5, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press(event(Event::Pick));
         body = body.push(words::field(
@@ -443,18 +490,29 @@ impl App {
         ));
         let take = Row::new()
             .spacing(16)
-            .push(words::check(s.strokes, "Çizgiler", Some(event(Event::Strokes))))
+            .push(words::check(
+                s.strokes,
+                "Çizgiler",
+                Some(event(Event::Strokes)),
+            ))
             .push(words::check(s.fills, "Dolgular", Some(event(Event::Fills))))
             .push(words::check(s.texts, "Yazılar", Some(event(Event::Texts))));
         body = body.push(words::field("Alınacaklar", take, None));
         let curves = Segmented::new(
-            [Curves(PdfCurveOutput::Polyline), Curves(PdfCurveOutput::Nurbs)],
+            [
+                Curves(PdfCurveOutput::Polyline),
+                Curves(PdfCurveOutput::Nurbs),
+            ],
             Curves(s.curves),
             |c| event(Event::Curves(c.0)),
         );
-        let tolerance = row![label::body("Tolerans"), input("0.01", &s.tolerance, 80.0, Event::Tolerance), label::body("mm")]
-            .spacing(6)
-            .align_y(Center);
+        let tolerance = row![
+            label::body("Tolerans"),
+            input("0.01", &s.tolerance, 80.0, Event::Tolerance),
+            label::body("mm")
+        ]
+        .spacing(6)
+        .align_y(Center);
         body = body.push(words::field(
             "Eğriler",
             row![curves, tolerance].spacing(16).align_y(Center),
@@ -467,9 +525,11 @@ impl App {
                 }
             }),
         ));
-        let mut region = Column::new()
-            .spacing(6)
-            .push(words::check(s.region, "Yalnız bir bölge", Some(event(Event::Region))));
+        let mut region = Column::new().spacing(6).push(words::check(
+            s.region,
+            "Yalnız bir bölge",
+            Some(event(Event::Region)),
+        ));
         if s.region {
             let mut sides = Row::new().spacing(8).align_y(Center);
             let names = ["Sol", "Alt", "Sağ", "Üst"];
@@ -480,7 +540,10 @@ impl App {
                 |t| Event::Bound(3, t),
             ];
             for k in 0..4 {
-                sides = sides.push(label::body(names[k])).push(input("0", &s.bounds[k], 64.0, ons[k]));
+                sides =
+                    sides
+                        .push(label::body(names[k]))
+                        .push(input("0", &s.bounds[k], 64.0, ons[k]));
             }
             region = region.push(sides.push(label::body("mm")));
         }
@@ -492,7 +555,11 @@ impl App {
         ));
         let mut layers = Column::new().spacing(6);
         for (i, (name, hidden)) in s.layers.iter().enumerate() {
-            let text = if *hidden { format!("{name} (PDF'te gizli)") } else { name.clone() };
+            let text = if *hidden {
+                format!("{name} (PDF'te gizli)")
+            } else {
+                name.clone()
+            };
             layers = layers.push(words::check(s.take[i], text, Some(event(Event::Layer(i)))));
         }
         body = body.push(words::field("Katmanlar", layers, None));
@@ -503,7 +570,13 @@ impl App {
             Some(Ok((plan, warnings))) => {
                 let t = &plan.taken;
                 let mut kinds = Vec::new();
-                for (n, w) in [(t.lines, "çizgi"), (t.polylines, "çoklu çizgi"), (t.curves, "eğri"), (t.areas, "alan"), (t.texts, "yazı")] {
+                for (n, w) in [
+                    (t.lines, "çizgi"),
+                    (t.polylines, "çoklu çizgi"),
+                    (t.curves, "eğri"),
+                    (t.areas, "alan"),
+                    (t.texts, "yazı"),
+                ] {
                     if n > 0 {
                         kinds.push(format!("{n} {w}"));
                     }
@@ -535,10 +608,17 @@ impl App {
                             .as_ref()
                             .and_then(|d| d.model.layers().get(target).map(|n| n.name.clone()))
                             .unwrap_or_else(|| source.clone());
-                        if made { format!("{source} → yeni katman") } else { format!("{source} → {name}") }
+                        if made {
+                            format!("{source} → yeni katman")
+                        } else {
+                            format!("{source} → {name}")
+                        }
                     })
                     .collect();
-                lines.push(words::text_line(Line::Info, format!("Katmanlar: {}.", targets.join(", "))));
+                lines.push(words::text_line(
+                    Line::Info,
+                    format!("Katmanlar: {}.", targets.join(", ")),
+                ));
                 for w in warnings {
                     lines.push(words::text_line(Line::Warn, w.clone()));
                 }
@@ -558,9 +638,13 @@ impl App {
             Dialog::new("PDF içe aktar")
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("İçe aktar", ready.then(|| event(Event::Run))))
+                .action(words::primary(
+                    "İçe aktar",
+                    ready.then(|| event(Event::Run)),
+                ))
                 .width(680.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

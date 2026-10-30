@@ -13,7 +13,7 @@
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use iced::widget::{Column, button, container, row, scrollable, text_input};
+use iced::widget::{Column, button, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, Entity, FeatureFeed, FeedKind, LayerServiceOperation, LayersService,
@@ -21,8 +21,8 @@ use kentos_commands::{
 use kentos_services::feed::{DEFAULT_MOST, Ending, FeedChoice, FeedConnecting, Taking};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -766,7 +766,7 @@ impl App {
         } else {
             frame.action(words::primary("Al", ready.then(|| msg(Event::Take))))
         };
-        overlay::modal(frame, msg(Event::Cancel))
+        frame.modal(msg(Event::Cancel))
     }
 
     fn feed_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
@@ -781,11 +781,8 @@ impl App {
         };
         let input =
             |hint: &'a str, value: &'a str, on: fn(String) -> Event| -> Element<'a, Message> {
-                text_input(hint, value)
-                    .size(typography::body())
-                    .padding([4, 8])
+                kentos_ui::widget::text_field(hint, value)
                     .on_input(move |t| msg(on(t)))
-                    .style(style::field::input)
                     .into()
             };
         let connections: Vec<String> = self
@@ -824,15 +821,12 @@ impl App {
                 .push(labelled(
                     "Adres",
                     row![
-                        text_input(KINDS[w.kind].3, &w.url)
-                            .size(typography::body())
-                            .padding([4, 8])
+                        kentos_ui::widget::text_field(KINDS[w.kind].3, &w.url)
                             .on_input(|t| msg(Event::Url(t)))
-                            .on_submit(msg(Event::Connect))
-                            .style(style::field::input),
+                            .on_submit(msg(Event::Connect)),
                         button(label::body("Bağlan"))
                             .style(style::button::primary)
-                            .padding([4, 14])
+                            .padding(kentos_ui::theme::metrics::action())
                             .on_press_maybe(
                                 (!w.busy && !w.url.trim().is_empty()).then(|| msg(Event::Connect))
                             ),

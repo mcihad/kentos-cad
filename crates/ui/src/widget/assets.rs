@@ -30,7 +30,7 @@ use iced::advanced::renderer;
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell};
 use iced::widget::text::Wrapping;
-use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Event, Fill, Length, Rectangle, Renderer, Size, Theme, Vector, mouse};
 
 use crate::attribute::text;
@@ -183,13 +183,9 @@ impl<'a, Message: Clone + 'a> From<AssetBrowser<'a, Message>> for Element<'a, Me
 
         if let Some((query, on_search)) = browser.search {
             top = top.push(
-                text_input("Kitaplıkta ara", query)
+                crate::widget::text_field("Kitaplıkta ara", query)
                     .on_input(on_search)
-                    .font(typography::ui())
-                    .size(typography::body())
-                    .padding([3, 8])
-                    .width(Fill)
-                    .style(style::field::input),
+                    .width(Fill),
             );
         } else {
             top = top.push(space::horizontal());
@@ -203,7 +199,7 @@ impl<'a, Message: Clone + 'a> From<AssetBrowser<'a, Message>> for Element<'a, Me
                 top = top.push(crate::widget::tip(
                     button(icon(glyph).size(14.0))
                         .on_press(on_view(option))
-                        .padding(4)
+                        .padding(crate::theme::metrics::icon_small(14.0))
                         .style(style::button::toggle(*current == option)),
                     crate::widget::Tip::new(name),
                     iced::widget::tooltip::Position::Top,
@@ -278,7 +274,7 @@ impl<'a, Message: Clone + 'a> From<AssetBrowser<'a, Message>> for Element<'a, Me
                         .align_y(Center);
 
                         if let Some(detail) = asset.detail {
-                            line = line.push(label::mono_caption(detail));
+                            line = line.push(label::caption(detail));
                         }
 
                         line.into()

@@ -13,12 +13,13 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::spatial::SelectionMode;
 use kentos_ui::style;
+use kentos_ui::widget::cell::divider;
 use kentos_ui::widget::color::ColorPicker;
 use kentos_ui::widget::inspector::Subject;
 use kentos_ui::widget::number::{self, units};
 use kentos_ui::widget::table::{self, Table};
 use kentos_ui::widget::{
-    Choice, DatePicker, Inspector, NumberInput, QueryBuilder, Segmented, Select, TimePicker,
+    Cell, Choice, DatePicker, Inspector, NumberInput, QueryBuilder, Segmented, Select, TimePicker,
     Toolbar,
 };
 
@@ -95,7 +96,7 @@ impl Showcase {
                 self.demo_pickers(),
                 Some(
                     "DatePicker::date(value, Message::DatePicked)\n    \
-                     .anchor(text_input(\"GG.AA.YYYY\", &draft).on_input(Message::DateTyped))\n    \
+                     .anchor(kentos_ui::widget::text_field(\"GG.AA.YYYY\", &draft).on_input(Message::DateTyped))\n    \
                      .now(DateTime::now(180))\n\n\
                      DatePicker::date_time(moment, Message::MomentPicked)\n\
                      TimePicker::new(time, Message::TimePicked)",
@@ -276,38 +277,41 @@ impl Showcase {
             .row(
                 "Konum",
                 Some(Icon::Crosshair),
-                row![
+                Cell::new(row![
                     NumberInput::new(position[0], on_position(0))
                         .label("Y")
                         .tone(number::axis_color(0, &theme))
                         .units(units::LENGTH)
                         .step(0.01)
-                        .inline(),
+                        .cell(),
+                    divider(),
                     NumberInput::new(position[1], on_position(1))
                         .label("X")
                         .tone(number::axis_color(1, &theme))
                         .units(units::LENGTH)
                         .step(0.01)
-                        .inline(),
-                ]
-                .spacing(4),
+                        .cell(),
+                ]),
             )
             .row(
                 "Dönüklük",
                 Some(Icon::Svg(TURN)),
-                NumberInput::new(gallery.rotation, |degrees| {
-                    Message::Gallery(Demo::Rotation(degrees))
-                })
-                .units(units::ANGLE)
-                .step(0.5)
-                .inline(),
+                Cell::new(
+                    NumberInput::new(gallery.rotation, |degrees| {
+                        Message::Gallery(Demo::Rotation(degrees))
+                    })
+                    .units(units::ANGLE)
+                    .step(0.5)
+                    .cell(),
+                ),
             )
             .row(
                 "Cephe rengi",
                 Some(Icon::Drop),
-                ColorPicker::new(gallery.fill, |color| Message::Gallery(Demo::Fill(color)))
-                    .width(Fill)
-                    .inline(),
+                Cell::new(
+                    ColorPicker::new(gallery.fill, |color| Message::Gallery(Demo::Fill(color)))
+                        .cell(),
+                ),
             )
             .category("Ölçüler")
             .figure("Taban alanı", "1.248,60 m²")

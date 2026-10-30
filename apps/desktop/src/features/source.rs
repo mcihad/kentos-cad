@@ -196,7 +196,7 @@ impl App {
                         (!blocked)
                             .then(|| Message::Features(super::Event::Source(SourceEvent::Act))),
                     )
-                    .padding([2, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary),
             );
         }
@@ -206,7 +206,7 @@ impl App {
                 .on_press(Message::Features(super::Event::Source(
                     SourceEvent::Refresh,
                 )))
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(14.0))
                 .style(style::button::ghost),
             kentos_ui::widget::Tip::new(REFRESH).body(REFRESH_HINT),
             iced::widget::tooltip::Position::Top,

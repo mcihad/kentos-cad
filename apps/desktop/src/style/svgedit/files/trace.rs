@@ -424,7 +424,7 @@ pub fn view<'a>(
             column![
                 label::body("İzlenecek görüntü yok: bir PNG, JPEG ya da SVG seçin ya da önce altlık ekleyin."),
                 button(row![icon(Icon::Folder).size(14.0), label::body("Görüntü seç…")].spacing(6).align_y(Center))
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(ui_style::button::secondary)
                     .on_press(ev(EdEvent::File(Event::Pick(Purpose::Trace)))),
             ]
@@ -572,12 +572,12 @@ pub fn view<'a>(
                 .spacing(6)
                 .align_y(Center)
         )
-        .padding([5, 12])
+        .padding(kentos_ui::theme::metrics::action())
         .style(ui_style::button::secondary)
         .on_press(ev(EdEvent::File(Event::Pick(Purpose::Trace)))),
         space::horizontal(),
         button(label::body("Vazgeç"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(ui_style::button::secondary)
             .on_press(change(|ed| ed.files.dialog = None)),
         button(
@@ -588,13 +588,14 @@ pub fn view<'a>(
             .spacing(6)
             .align_y(Center)
         )
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(ui_style::button::primary)
         .on_press_maybe(can_add.then(|| change(add))),
     ]
     .spacing(8)
     .align_y(Center);
     Dialog::new("Bitmap izle")
+        .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(
             row![
                 left,

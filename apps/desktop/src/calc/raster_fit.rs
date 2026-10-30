@@ -12,8 +12,8 @@ use iced::widget::tooltip::Position;
 use iced::widget::{button, column, container, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
-    CommandError, CommandResult, Entity, GeorefMade, GeorefMethod, GeorefPoint, RasterFields, RasterGeoref,
-    RasterResampling, RastersGeoref,
+    CommandError, CommandResult, Entity, GeorefMade, GeorefMethod, GeorefPoint, RasterFields,
+    RasterGeoref, RasterResampling, RastersGeoref,
 };
 use kentos_domain::{Document as Model, Slot};
 use kentos_formats::raster::gcp;
@@ -98,9 +98,15 @@ fn method_hint(m: GeorefMethod) -> &'static str {
         GeorefMethod::Affine => {
             "İki yönde ayrı ölçek ve kayma da; en az 3 kontrol noktası. Rasterin dönüşümü değişir, yeniden örneklenmez."
         }
-        GeorefMethod::Projective => "Eğik çekilmiş fotoğraf için; en az 4 kontrol noktası. Raster yeniden örneklenir.",
-        GeorefMethod::Poly2 => "Hafif bükülmeler için; en az 6 kontrol noktası. Raster yeniden örneklenir.",
-        GeorefMethod::Poly3 => "Daha güçlü bükülmeler için; en az 10 kontrol noktası. Raster yeniden örneklenir.",
+        GeorefMethod::Projective => {
+            "Eğik çekilmiş fotoğraf için; en az 4 kontrol noktası. Raster yeniden örneklenir."
+        }
+        GeorefMethod::Poly2 => {
+            "Hafif bükülmeler için; en az 6 kontrol noktası. Raster yeniden örneklenir."
+        }
+        GeorefMethod::Poly3 => {
+            "Daha güçlü bükülmeler için; en az 10 kontrol noktası. Raster yeniden örneklenir."
+        }
         GeorefMethod::ThinPlate => {
             "Kontrol noktalarından tam geçer (artık yok; doğruluğu denetim noktaları söyler); en az 3. Raster yeniden örneklenir."
         }
@@ -239,7 +245,11 @@ impl Table for Form {
             .pair_rows
             .iter()
             .zip(&f.residuals)
-            .filter(|(r, _)| self.rows.get(**r).is_some_and(|row| row[USE] != "0" && row[CHECK] != "1"))
+            .filter(|(r, _)| {
+                self.rows
+                    .get(**r)
+                    .is_some_and(|row| row[USE] != "0" && row[CHECK] != "1")
+            })
             .filter_map(|(r, v)| Some((r, v.d?)))
             .max_by(|a, b| a.1.total_cmp(&b.1))?;
         (*worst.0 == row).then_some(Mark::Worst)
@@ -315,7 +325,10 @@ fn input_of_record(uid: String, g: &RasterGeoref) -> RastersGeoref {
         srid: g.srid,
         crs: g.crs.clone(),
         pixel: g.output.as_ref().map(|o| o.pixel),
-        resampling: g.output.as_ref().map_or(RasterResampling::Bilinear, |o| o.resampling),
+        resampling: g
+            .output
+            .as_ref()
+            .map_or(RasterResampling::Bilinear, |o| o.resampling),
         output: None,
         made: None,
         drawing: None,
@@ -342,7 +355,11 @@ impl Form {
             srid: self.srid.trim().parse::<u32>().ok().filter(|s| *s > 0),
             crs: self.crs.clone(),
             pixel: read_number(&self.pixel),
-            resampling: if self.nearest { RasterResampling::Nearest } else { RasterResampling::Bilinear },
+            resampling: if self.nearest {
+                RasterResampling::Nearest
+            } else {
+                RasterResampling::Bilinear
+            },
             output: None,
             made: None,
             drawing,
@@ -354,10 +371,16 @@ impl Form {
     /// first; its record's points when it has one.
     pub fn sync(&mut self, model: &Model, selected: &[Slot]) {
         let all = rasters(model);
-        let chosen = selected.iter().find(|s| all.iter().any(|(r, _)| r == *s)).copied();
+        let chosen = selected
+            .iter()
+            .find(|s| all.iter().any(|(r, _)| r == *s))
+            .copied();
         if chosen.is_some() {
             self.raster = chosen;
-        } else if self.raster.is_none_or(|r| !all.iter().any(|(s, _)| *s == r)) {
+        } else if self
+            .raster
+            .is_none_or(|r| !all.iter().any(|(s, _)| *s == r))
+        {
             self.raster = all.first().map(|(s, _)| *s);
         }
         self.status = None;
@@ -401,8 +424,15 @@ impl Form {
         self.rows = g.points.iter().map(row_of).collect();
         self.srid = g.srid.map(|s| s.to_string()).unwrap_or_default();
         self.crs = g.crs.clone();
-        self.pixel = g.output.as_ref().map(|o| number(o.pixel)).unwrap_or_default();
-        self.nearest = g.output.as_ref().is_some_and(|o| o.resampling == RasterResampling::Nearest);
+        self.pixel = g
+            .output
+            .as_ref()
+            .map(|o| number(o.pixel))
+            .unwrap_or_default();
+        self.nearest = g
+            .output
+            .as_ref()
+            .is_some_and(|o| o.resampling == RasterResampling::Nearest);
     }
 
     /// The rows solved again, the residuals and errors into their cells.
@@ -445,7 +475,10 @@ impl Form {
     /// target.
     pub fn picked(&mut self, model: &Model, row: usize, side: Side, p: Vec2) {
         let fields = self.fields(model);
-        let uid = self.raster.and_then(|s| model.uid(s)).map(|u| u.to_string());
+        let uid = self
+            .raster
+            .and_then(|s| model.uid(s))
+            .map(|u| u.to_string());
         let Some(r) = self.rows.get_mut(row) else {
             return;
         };
@@ -455,10 +488,15 @@ impl Form {
                     return;
                 };
                 let pixel = match (&f.georef, uid) {
-                    (Some(g), Some(uid)) if g.output.is_some() => rasters_georef::fit(model, &input_of_record(uid, g))
-                        .ok()
-                        .and_then(|fit| fit.georef.inverse(kentos_geometry_core::vec2::Vec2::new(p.x, p.y)))
-                        .map(|q| Vec2::new(q.x, q.y)),
+                    (Some(g), Some(uid)) if g.output.is_some() => {
+                        rasters_georef::fit(model, &input_of_record(uid, g))
+                            .ok()
+                            .and_then(|fit| {
+                                fit.georef
+                                    .inverse(kentos_geometry_core::vec2::Vec2::new(p.x, p.y))
+                            })
+                            .map(|q| Vec2::new(q.x, q.y))
+                    }
                     _ => kentos_geometry_core::geom::raster::pixel_of(f.affine, p),
                 };
                 if let Some(q) = pixel {
@@ -480,7 +518,10 @@ impl Form {
     fn summary_lines(&self, model: &Model) -> Vec<(Line, String)> {
         let mut out = Vec::new();
         let Some(fields) = self.fields(model) else {
-            out.push((Line::Warn, "Çizimde raster yok ya da seçili değil: önce bir raster seçin.".to_owned()));
+            out.push((
+                Line::Warn,
+                "Çizimde raster yok ya da seçili değil: önce bir raster seçin.".to_owned(),
+            ));
             return out;
         };
         match &self.solution {
@@ -560,11 +601,20 @@ impl Form {
                 .source
                 .file
                 .as_deref()
-                .map(|f| std::path::Path::new(f).file_name().map_or(f.to_owned(), |n| n.to_string_lossy().into_owned()))
+                .map(|f| {
+                    std::path::Path::new(f)
+                        .file_name()
+                        .map_or(f.to_owned(), |n| n.to_string_lossy().into_owned())
+                })
                 .or_else(|| g.source.asset.clone())
                 .or_else(|| g.source.url.clone())
                 .unwrap_or_default();
-            let digest = g.source.digest.as_deref().map(|d| format!(", özeti {}…", &d[..12.min(d.len())])).unwrap_or_default();
+            let digest = g
+                .source
+                .digest
+                .as_deref()
+                .map(|d| format!(", özeti {}…", &d[..12.min(d.len())]))
+                .unwrap_or_default();
             out.push((
                 Line::Info,
                 format!(
@@ -579,9 +629,13 @@ impl Form {
     pub fn view<'a>(&'a self, model: &'a Model) -> Element<'a, Message> {
         let all = rasters(model);
         let ids: Vec<u32> = all.iter().map(|(s, _)| s.0).collect();
-        let selected = self.raster.and_then(|r| all.iter().position(|(s, _)| *s == r));
+        let selected = self
+            .raster
+            .and_then(|r| all.iter().position(|(s, _)| *s == r));
         let list = Select::new(
-            all.iter().map(|(_, name)| Choice::new(name.clone())).collect::<Vec<_>>(),
+            all.iter()
+                .map(|(_, name)| Choice::new(name.clone()))
+                .collect::<Vec<_>>(),
             selected,
             move |i| raster_fit_event(Event::Raster(ids.get(i).copied().unwrap_or(0))),
         )
@@ -590,17 +644,24 @@ impl Form {
             "Raster",
             row![
                 container(list).width(Fill),
-                pick_button(Event::PickRaster, "Rasteri çizimden seç", "Rasterin üstüne tıklayın.")
+                pick_button(
+                    Event::PickRaster,
+                    "Rasteri çizimden seç",
+                    "Rasterin üstüne tıklayın."
+                )
             ]
             .spacing(6),
             None,
         );
-        let srid = super::number_field("Hedeflerin sistemi (EPSG)", &self.srid, "projeninki", |t| {
-            raster_fit_event(Event::Srid(t))
-        });
+        let srid =
+            super::number_field("Hedeflerin sistemi (EPSG)", &self.srid, "projeninki", |t| {
+                raster_fit_event(Event::Srid(t))
+            });
         let method = words::field(
             "Dönüşüm",
-            Segmented::new(METHODS, Named(self.method), |m| raster_fit_event(Event::Method(m.0))),
+            Segmented::new(METHODS, Named(self.method), |m| {
+                raster_fit_event(Event::Method(m.0))
+            }),
             Some(method_hint(self.method).to_owned()),
         );
         let table = grid::view_with(
@@ -661,9 +722,12 @@ impl Form {
             )
         } else {
             row![
-                super::number_field("Çıktının piksel boyu (m)", &self.pixel, "dönüşümden", |t| {
-                    raster_fit_event(Event::Pixel(t))
-                }),
+                super::number_field(
+                    "Çıktının piksel boyu (m)",
+                    &self.pixel,
+                    "dönüşümden",
+                    |t| { raster_fit_event(Event::Pixel(t)) }
+                ),
                 words::field(
                     "Örnekleme",
                     words::check(
@@ -678,11 +742,17 @@ impl Form {
             .into()
         };
         body = body.push(options);
-        let can = !self.warping && matches!(self.solution, Some(Ok(_))) && self.fields(model).is_some();
+        let can =
+            !self.warping && matches!(self.solution, Some(Ok(_))) && self.fields(model).is_some();
         let mut dialog = Dialog::new(TITLE)
+            .on_close(crate::calc::event(crate::calc::Event::Close))
             .scroll(body)
             .action(footer_button("Kapat", Some(event(Calc::Close)), false))
-            .action(footer_button("Uygula", can.then(|| raster_fit_event(Event::Apply)), true))
+            .action(footer_button(
+                "Uygula",
+                can.then(|| raster_fit_event(Event::Apply)),
+                true,
+            ))
             .max_height(MAX_HEIGHT)
             .width(1000.0);
         if let Some(status) = &self.status {
@@ -696,7 +766,7 @@ fn pick_button<'a>(on: Event, title: &str, body: &'static str) -> Element<'a, Me
     tip(
         button(icon(crate::icons::from_web(Some("target"))).size(14.0))
             .on_press(raster_fit_event(on))
-            .padding(6)
+            .padding(kentos_ui::theme::metrics::icon(14.0))
             .style(style::button::ghost),
         Tip::new(title.to_owned()).body(body),
         Position::Top,
@@ -707,7 +777,7 @@ fn pick_button_pin<'a>(on: Event, title: &str, body: &'static str) -> Element<'a
     tip(
         button(icon(crate::icons::from_web(Some("pin"))).size(14.0))
             .on_press(raster_fit_event(on))
-            .padding(6)
+            .padding(kentos_ui::theme::metrics::icon(14.0))
             .style(style::button::ghost),
         Tip::new(title.to_owned()).body(body),
         Position::Top,
@@ -773,15 +843,23 @@ impl App {
         if form.picking_raster {
             form.picking_raster = false;
             if let (Some(p), Some(doc)) = (p, &self.document) {
-                let under = rasters(&doc.model).into_iter().rev().find(|(s, _)| match doc.model.get(*s) {
-                    Some(Entity::Raster(r)) => {
-                        let x = &r.raster;
-                        kentos_geometry_core::geom::raster::pixel_of(x.affine, p).is_some_and(|q| {
-                            q.x >= 0.0 && q.y >= 0.0 && q.x < f64::from(x.width) && q.y < f64::from(x.height)
-                        })
-                    }
-                    _ => false,
-                });
+                let under =
+                    rasters(&doc.model)
+                        .into_iter()
+                        .rev()
+                        .find(|(s, _)| match doc.model.get(*s) {
+                            Some(Entity::Raster(r)) => {
+                                let x = &r.raster;
+                                kentos_geometry_core::geom::raster::pixel_of(x.affine, p)
+                                    .is_some_and(|q| {
+                                        q.x >= 0.0
+                                            && q.y >= 0.0
+                                            && q.x < f64::from(x.width)
+                                            && q.y < f64::from(x.height)
+                                    })
+                            }
+                            _ => false,
+                        });
                 if let Some((slot, _)) = under {
                     self.calc.raster_fit.raster = Some(slot);
                     self.calc.raster_fit.follow(&doc.model);
@@ -807,7 +885,10 @@ impl App {
             async {
                 rfd::AsyncFileDialog::new()
                     .set_title("Kontrol noktalarını al")
-                    .add_filter("Kontrol noktaları (.points, .csv, .txt)", &["points", "csv", "txt"])
+                    .add_filter(
+                        "Kontrol noktaları (.points, .csv, .txt)",
+                        &["points", "csv", "txt"],
+                    )
                     .pick_file()
                     .await
                     .map(|f| f.path().to_path_buf())
@@ -852,7 +933,8 @@ impl App {
                     Level::Info,
                     format!(
                         "{TITLE}: “{}” dosyasından {n} nokta alındı.{said}",
-                        path.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
+                        path.file_name()
+                            .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
                     ),
                 );
             }
@@ -891,17 +973,32 @@ impl App {
         };
         // The targets' system as QGIS reads it (docs/adr/0594 §2): the definition, the code's WKT, the project's.
         let crs = form.crs.clone().or_else(|| {
-            let srid = form.srid.trim().parse::<u32>().ok().filter(|s| *s > 0).or_else(|| {
-                self.document.as_ref().map(|d| d.model.settings().srid).filter(|s| *s > 0)
-            })?;
+            let srid = form
+                .srid
+                .trim()
+                .parse::<u32>()
+                .ok()
+                .filter(|s| *s > 0)
+                .or_else(|| {
+                    self.document
+                        .as_ref()
+                        .map(|d| d.model.settings().srid)
+                        .filter(|s| *s > 0)
+                })?;
             kentos_project::crs::system(srid).and_then(kentos_project::wkt2::wkt2)
         });
         match std::fs::write(&path, gcp::write(&points, &residuals, crs.as_deref())) {
             Ok(()) => self.say(
                 Level::Info,
-                format!("{TITLE}: {} nokta “{}” dosyasına yazıldı.", points.len(), path.display()),
+                format!(
+                    "{TITLE}: {} nokta “{}” dosyasına yazıldı.",
+                    points.len(),
+                    path.display()
+                ),
             ),
-            Err(e) => self.calc.raster_fit.status = Some(format!("“{}” yazılamadı: {e}.", path.display())),
+            Err(e) => {
+                self.calc.raster_fit.status = Some(format!("“{}” yazılamadı: {e}.", path.display()))
+            }
         }
     }
 
@@ -944,7 +1041,11 @@ impl App {
             georef: None,
             ..fields.clone()
         };
-        let folder = doc.path.as_deref().and_then(std::path::Path::parent).map(std::path::Path::to_path_buf);
+        let folder = doc
+            .path
+            .as_deref()
+            .and_then(std::path::Path::parent)
+            .map(std::path::Path::to_path_buf);
         let key = crate::rasters::key_of(&source);
         let Some(origin) = crate::rasters::origin_of(&key, &doc.model, folder.as_deref()) else {
             self.calc.raster_fit.status = Some("Rasterin kaynağı bulunamadı.".to_owned());
@@ -953,7 +1054,8 @@ impl App {
         let (output, name) = match &p.output {
             Some((_, at)) => (
                 Output::File(at.clone()),
-                at.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
+                at.file_name()
+                    .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
             ),
             None => (
                 Output::Memory,
@@ -965,14 +1067,19 @@ impl App {
         };
         let inverse = p.inverse();
         let (nearest, srid, geographic) = (p.nearest, p.srid, p.geographic);
-        self.calc.raster_fit.pending = Some(RastersGeoref { output: None, ..input });
+        self.calc.raster_fit.pending = Some(RastersGeoref {
+            output: None,
+            ..input
+        });
         self.calc.raster_fit.warping = true;
         self.calc.raster_fit.status = None;
         self.calc.open = None;
         self.dialog = None;
         self.say(
             Level::Info,
-            format!("{TITLE}: “{name}” yeniden örnekleniyor; sağ alttaki panel ilerlemeyi gösterir."),
+            format!(
+                "{TITLE}: “{name}” yeniden örnekleniyor; sağ alttaki panel ilerlemeyi gösterir."
+            ),
         );
         crate::rasters::off_thread(move || {
             let result = jobs::warp(name, origin, output, move |reader| {
@@ -1001,7 +1108,10 @@ impl App {
         let w = match result {
             Ok(w) => w,
             Err(why) if why == "durduruldu" => {
-                self.say(Level::Info, format!("{TITLE}: durduruldu; raster değişmedi."));
+                self.say(
+                    Level::Info,
+                    format!("{TITLE}: durduruldu; raster değişmedi."),
+                );
                 return;
             }
             Err(why) => {
@@ -1016,9 +1126,15 @@ impl App {
             return;
         };
         let made = match (&w.path, &w.bytes) {
-            (Some(path), _) => GeorefMade { file: Some(path.to_string_lossy().into_owned()), asset: None },
+            (Some(path), _) => GeorefMade {
+                file: Some(path.to_string_lossy().into_owned()),
+                asset: None,
+            },
             (None, Some(bytes)) => {
-                let layer = match doc.model.get(self.calc.raster_fit.raster.unwrap_or(Slot(0))) {
+                let layer = match doc
+                    .model
+                    .get(self.calc.raster_fit.raster.unwrap_or(Slot(0)))
+                {
                     Some(Entity::Raster(r)) => doc
                         .model
                         .layers()
@@ -1026,10 +1142,18 @@ impl App {
                         .map_or_else(|| "raster".to_owned(), |l| l.name.clone()),
                     _ => "raster".to_owned(),
                 };
-                match crate::rasters::library_item(&format!("{layer}-oturtulmus.tif"), bytes, w.width, w.height) {
+                match crate::rasters::library_item(
+                    &format!("{layer}-oturtulmus.tif"),
+                    bytes,
+                    w.width,
+                    w.height,
+                ) {
                     Ok((id, item)) => {
                         crate::rasters::keep_in_library(&mut doc.model, &id, item);
-                        GeorefMade { file: None, asset: Some(id) }
+                        GeorefMade {
+                            file: None,
+                            asset: Some(id),
+                        }
                     }
                     Err(why) => {
                         self.warn(format!("{TITLE}: {why}"));
@@ -1047,20 +1171,28 @@ impl App {
     fn raster_fit_write(&mut self, input: RastersGeoref, done: &str) -> Option<RasterFields> {
         let doc = self.document.as_mut()?;
         let slot = self.calc.raster_fit.raster?;
-        match rasters_georef::execute(&mut kentos_native_application::ExecutionContext::new(&mut doc.model), input) {
+        match rasters_georef::execute(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
             CommandResult::Completed { output, warnings } => {
                 crate::rasters::tiles::service().forget_tiles();
                 self.calc.open = None;
                 self.dialog = None;
                 self.calc.raster_fit.opened = Some(slot);
-                self.say(Level::Success, format!("{TITLE}: rasterin {done}; oturtma kaydına yazıldı. Ctrl+Z geri alır."));
+                self.say(
+                    Level::Success,
+                    format!("{TITLE}: rasterin {done}; oturtma kaydına yazıldı. Ctrl+Z geri alır."),
+                );
                 for w in warnings {
                     self.warn(w.message);
                 }
                 self.zoom_to(&[slot]);
                 Some(output.raster)
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.calc.raster_fit.status = Some(error.message.clone());
                 self.warn(format!("{TITLE}: {}", error.message));
                 None
@@ -1081,14 +1213,18 @@ impl App {
             .and_then(std::path::Path::parent)
             .map(std::path::Path::to_path_buf);
         let path = crate::pictures::resolve(file, folder.as_deref());
-        let ext = path.extension().map_or_else(|| "tif".to_owned(), |e| e.to_string_lossy().into_owned());
+        let ext = path
+            .extension()
+            .map_or_else(|| "tif".to_owned(), |e| e.to_string_lossy().into_owned());
         let target = path.with_extension(kentos_formats::raster::world::extension_for(&ext));
         match std::fs::write(&target, kentos_formats::raster::world::write(affine)) {
             Ok(()) => self.say(
                 Level::Info,
                 format!(
                     "{TITLE}: dünya dosyası “{}” yazıldı.",
-                    target.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned())
+                    target
+                        .file_name()
+                        .map_or_else(String::new, |n| n.to_string_lossy().into_owned())
                 ),
             ),
             Err(e) => self.warn(format!("{TITLE}: dünya dosyası yazılamadı: {e}.")),

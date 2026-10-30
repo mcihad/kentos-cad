@@ -12,7 +12,7 @@
 
 use std::collections::BTreeSet;
 
-use iced::widget::{Column, button, container, row, text, text_input};
+use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, SCENARIO_NAME_MAX, ScenarioOperation, ScenariosEdit};
 use kentos_interaction::Level;
@@ -352,23 +352,21 @@ impl App {
                         ),
                     )
                 };
-                let name_field = text_input("", name)
-                    .on_input(|t| msg(Event::Name(t)))
-                    .size(typography::body())
-                    .padding([5, 8])
-                    .style(style::field::input);
-                let note_field = text_input("Önerinin kısa açıklaması (isteğe bağlı)", note)
-                    .on_input(|t| msg(Event::Note(t)))
-                    .size(typography::body())
-                    .padding([5, 8])
-                    .style(style::field::input);
-                let head = row![
-                    container(text("")).width(typography::scaled(28.0)),
-                    container(label::caption("Ana katman")).width(Fill),
-                    container(label::caption("Nesne")).width(typography::scaled(56.0)),
-                ]
-                .spacing(8)
-                .padding([4, 8]);
+                let name_field =
+                    kentos_ui::widget::text_field("", name).on_input(|t| msg(Event::Name(t)));
+                let note_field =
+                    kentos_ui::widget::text_field("Önerinin kısa açıklaması (isteğe bağlı)", note)
+                        .on_input(|t| msg(Event::Note(t)));
+                let head = kentos_ui::widget::table::band(
+                    row![
+                        container(text("")).width(typography::scaled(28.0)),
+                        container(kentos_ui::widget::table::title("Ana katman")).width(Fill),
+                        container(kentos_ui::widget::table::title("Nesne"))
+                            .width(typography::scaled(56.0)),
+                    ]
+                    .spacing(8)
+                    .padding([0, 8]),
+                );
                 let rows: Vec<(String, String, bool, usize)> = bases
                     .iter()
                     .zip(&counts)
@@ -437,14 +435,12 @@ impl App {
                     ))
                     .push(words::summary(vec![words::text_line(said.0, said.1)]));
                 let ready = !words_now.is_empty() && words_now.chars().count() <= SCENARIO_NAME_MAX;
-                overlay::modal(
-                    Frame::new(TITLE)
-                        .push(body)
-                        .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                        .action(words::primary(CREATE, ready.then(|| msg(Event::Create))))
-                        .width(600.0),
-                    msg(Event::Cancel),
-                )
+                Frame::new(TITLE)
+                    .push(body)
+                    .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+                    .action(words::primary(CREATE, ready.then(|| msg(Event::Create))))
+                    .width(600.0)
+                    .modal(msg(Event::Cancel))
             }
         }
     }

@@ -193,7 +193,7 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
                         ed.touch();
                     })),
                     button(label::body(pick_words))
-                        .padding([3, 10])
+                        .padding(kentos_ui::theme::metrics::action_small())
                         .style(move |t: &iced::Theme, s| if picked {
                             ui_style::button::primary(t, s)
                         } else {
@@ -247,7 +247,7 @@ pub(super) fn tab<'a>(ed: &SvgEditor, count: usize) -> Element<'a, Message> {
         }
     }
     let apply = button(label::body("Uygula").style(ui_style::text::on_accent))
-        .padding([4, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(ui_style::button::primary)
         .on_press_maybe((count > 0).then(|| change(|ed| ed.apply_transform())));
     column![

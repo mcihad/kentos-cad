@@ -4,7 +4,7 @@
 //! writes them through `cad.settings.set`. Under them the way to the second system as `cad.crs.transform` records
 //! it: the operation, its steps, the PROJ pipeline, the area of use, and the four numbers a report keeps apart.
 
-use iced::widget::{Column, column, container, text_input};
+use iced::widget::{Column, column, container};
 use iced::{Element, Fill};
 use kentos_commands::{
     CrsTransformed, GeoidModel, HeightKind, HeightReference, StepKind, VERTICAL_SYSTEMS,
@@ -141,15 +141,11 @@ fn input<'a>(
     wrong: bool,
     on: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    kentos_ui::widget::focus_ring(
-        text_input(holder, value)
-            .on_input(on)
-            .padding([5, 8])
-            .size(typography::body())
-            .width(typography::scaled(width))
-            .style(style::field::validated(wrong)),
-    )
-    .into()
+    kentos_ui::widget::text_field(holder, value)
+        .on_input(on)
+        .width(typography::scaled(width))
+        .style(style::field::validated(wrong))
+        .into()
 }
 
 fn n(v: Option<f64>) -> String {

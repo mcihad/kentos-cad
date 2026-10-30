@@ -196,7 +196,7 @@ pub struct ColorPicker<'a, Message> {
     recent: Vec<Color>,
     width: Length,
     anchor: Option<Element<'a, Message>>,
-    inline: bool,
+    cell: bool,
 }
 
 impl<'a, Message: 'a> ColorPicker<'a, Message> {
@@ -209,14 +209,14 @@ impl<'a, Message: 'a> ColorPicker<'a, Message> {
             recent: Vec::new(),
             width: Length::Fixed(typography::scaled(132.0)),
             anchor: None,
-            inline: false,
+            cell: false,
         }
     }
 
-    /// Satır içi yükseklik: tablo ve özellik hücresine sığar
-    /// ([`metrics::inline`]).
-    pub fn inline(mut self) -> Self {
-        self.inline = true;
+    /// Izgara hücresini dolduran görünüm (docs/adr/0804): çerçevesi yok, satır
+    /// yüksekliğinde; durumlarını sarıldığı [`Cell`](crate::widget::cell::Cell) çizer.
+    pub fn cell(mut self) -> Self {
+        self.cell = true;
         self
     }
 
@@ -395,18 +395,29 @@ impl<'a, Message: 'a> From<ColorPicker<'a, Message>> for Element<'a, Message> {
                 .spacing(8)
                 .align_y(Center),
             )
-            .padding([0, 6])
-            .height(if picker.inline {
-                metrics::inline()
+            .padding(if picker.cell {
+                iced::Padding {
+                    left: metrics::cell_pad(),
+                    right: metrics::cell_end(),
+                    ..iced::Padding::ZERO
+                }
             } else {
-                metrics::control()
+                iced::Padding::from([0.0, metrics::FIELD_PAD])
             })
+            .height(metrics::control())
             .align_y(Center)
-            .width(picker.width)
-            .style(style::container::field_box)
+            .width(if picker.cell { Fill } else { picker.width })
+            .style(move |theme: &Theme| {
+                if picker.cell {
+                    container::Style::default()
+                } else {
+                    style::container::field_box(theme)
+                }
+            })
             .into(),
         };
         let framed = picker_has_own_frame;
+        let in_cell = picker.cell;
 
         let dropdown = Dropdown::new(
             anchor,
@@ -415,7 +426,14 @@ impl<'a, Message: 'a> From<ColorPicker<'a, Message>> for Element<'a, Message> {
             reduce,
         );
 
-        if framed { dropdown.edge() } else { dropdown }.into()
+        if in_cell {
+            dropdown.bare()
+        } else if framed {
+            dropdown.edge()
+        } else {
+            dropdown
+        }
+        .into()
     }
 }
 
@@ -469,7 +487,7 @@ fn panel<'a>(state: &Picker, props: &Props) -> Element<'a, Pick> {
         .on_submit(Pick::HexSubmit)
         .font(typography::mono())
         .size(typography::body())
-        .padding(metrics::padding(metrics::control(), 6.0))
+        .padding(metrics::field())
         .style(style::field::validated(state.invalid));
 
     body = body.push(row![compare, hex].spacing(8).align_y(Center));

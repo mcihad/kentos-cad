@@ -172,7 +172,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         self.quick.push(tip(
             button(icon(glyph).size(14.0))
                 .on_press_maybe(on_press)
-                .padding([4, 5])
+                .padding(crate::theme::metrics::icon_small(14.0))
                 .style(style::button::flat),
             Tip::new(description.into()),
             tooltip::Position::Bottom,
@@ -192,7 +192,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
         let face = tip(
             button(icon(glyph).size(14.0))
                 .on_press_maybe(on_press)
-                .padding([4, 5])
+                .padding(crate::theme::metrics::icon_small(14.0))
                 .style(style::button::flat),
             Tip::new(description.into()),
             tooltip::Position::Bottom,
@@ -479,7 +479,7 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
                 container(tip(
                     button(icon(glyph).size(11.0))
                         .on_press(on_toggle)
-                        .padding([4, 6])
+                        .padding(crate::theme::metrics::icon_small(11.0))
                         .style(style::button::flat),
                     Tip::new(description).detail("Ctrl+F1"),
                     tooltip::Position::Left,

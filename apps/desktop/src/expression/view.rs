@@ -6,9 +6,7 @@
 //! and the selected node's inspector stands over the help (docs/adr/0101).
 
 use iced::widget::tooltip::Position as Beside;
-use iced::widget::{
-    Column, Row, button, column, container, row, scrollable, space, text, text_input,
-};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text};
 use iced::{Alignment, Center, Element, Fill, Length};
 use kentos_expression::editor::{self as core, Kind, Section};
 use kentos_expression::{FieldSource, FieldType};
@@ -18,7 +16,7 @@ use kentos_ui::style;
 use kentos_ui::theme::{Mode, typography};
 use kentos_ui::widget::tabs::{Tab, Tabs};
 use kentos_ui::widget::tree_view::{Column as TreeColumn, Node, TreeView};
-use kentos_ui::widget::{Dialog, Tip, horizontal_divider, overlay, tip};
+use kentos_ui::widget::{Dialog, Tip, horizontal_divider, tip};
 
 use super::highlight::Syntax;
 use super::{Builder, Event, Preview, ViewMode, editor, ev, flow_view, values_section};
@@ -93,15 +91,15 @@ impl App {
         } else {
             format!("İfade oluşturucu · {}", b.context)
         };
-        Some(overlay::modal(
+        Some(
             Dialog::new(title)
                 .push(body)
                 .push(horizontal_divider())
                 .push(footer(b))
                 .width(if flow { FLOW_WIDTH } else { WIDTH })
-                .max_height(if flow { FLOW_HEIGHT } else { HEIGHT }),
-            ev(Event::Cancel),
-        ))
+                .max_height(if flow { FLOW_HEIGHT } else { HEIGHT })
+                .modal(ev(Event::Cancel)),
+        )
     }
 }
 
@@ -145,7 +143,7 @@ fn main(b: &Builder, mode: Mode) -> Element<'_, Message> {
                         .size(typography::body())
                         .color(color),
                 )
-                .padding([2, 7])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary)
                 // The parentheses are the text's: the flow draws its own.
                 .on_press_maybe(
@@ -164,7 +162,7 @@ fn main(b: &Builder, mode: Mode) -> Element<'_, Message> {
             container(tabs).width(Fill),
             tip(
                 button(label::caption("Biçimle"))
-                    .padding([3, 9])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary)
                     .on_press_maybe((!b.source.trim().is_empty()).then(|| ev(Event::Format))),
                 Tip::new("Uzun ifadeyi girintili satırlara böler; anlamı değişmez"),
@@ -291,7 +289,7 @@ fn preview(b: &Builder) -> Element<'_, Message> {
         let step = |glyph: Icon, by: i32, words: &'static str| {
             tip(
                 button(icon(glyph).size(14.0))
-                    .padding([2, 4])
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
                     .style(style::button::ghost)
                     .on_press_maybe((n > 1).then(|| ev(Event::Object(by)))),
                 Tip::new(words),
@@ -305,7 +303,7 @@ fn preview(b: &Builder) -> Element<'_, Message> {
             .push(step(Icon::ChevronRight, 1, "Sonraki nesne"))
             .push(tip(
                 button(icon(Icon::Target).size(14.0))
-                    .padding([2, 4])
+                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
                     .style(style::button::ghost)
                     .on_press(ev(Event::Pick)),
                 Tip::new("Sahneden seç").body("Önizlemenin nesnesini çizimde tıklayın."),
@@ -340,13 +338,9 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
     let search = container(
         row![
             icon(Icon::Search).size(13.0).tone(Tone::Muted),
-            text_input("Ara: alan, işlev, değişken…", &b.query)
+            kentos_ui::widget::bare_field("Ara: alan, işlev, değişken…", &b.query)
                 .on_input(|q| ev(Event::Query(q)))
-                .on_submit(ev(Event::QuerySubmit))
-                .font(typography::ui())
-                .size(typography::body())
-                .padding([3, 0])
-                .style(style::field::bare_input),
+                .on_submit(ev(Event::QuerySubmit)),
         ]
         .spacing(6)
         .align_y(Center),
@@ -612,7 +606,7 @@ fn values(b: &Builder) -> Element<'_, Message> {
     let any = !b.objects.is_empty();
     let small = |words: &'static str, all: bool| {
         button(label::caption(words))
-            .padding([3, 8])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(style::button::secondary)
             .on_press_maybe(any.then(|| ev(Event::Values(all))))
     };
@@ -693,11 +687,11 @@ fn footer(b: &Builder) -> Element<'_, Message> {
     row![
         label::caption(keys).style(style::text::muted).width(Fill),
         button(label::body("Vazgeç"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(Event::Cancel)),
         button(label::body("Tamam"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
             .on_press_maybe((!blocked).then(|| ev(Event::Ok))),
     ]

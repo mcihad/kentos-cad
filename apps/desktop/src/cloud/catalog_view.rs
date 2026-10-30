@@ -9,7 +9,6 @@
 use iced::widget::text::Wrapping;
 use iced::widget::{
     Column, Row, Space, button, column, container, mouse_area, row, scrollable, stack, text,
-    text_input,
 };
 use iced::{Background, Border, Center, Element, Fill, Length, Theme, mouse};
 use kentos_commands::{CatalogView, ProjectSummary};
@@ -113,7 +112,7 @@ pub(super) fn small_button<'a>(
         .align_y(Center),
     )
     .on_press_maybe(on)
-    .padding([4, 9])
+    .padding(kentos_ui::theme::metrics::action())
     .style(move |theme: &Theme, status| {
         let mut s = style::button::secondary(theme, status);
         if danger && status != button::Status::Disabled {
@@ -354,7 +353,7 @@ impl App {
                     muted("Sunucudaki listeler için giriş yapın.").width(Fill),
                     button(label::body("Buluta giriş…"))
                         .on_press(Message::Run("cloud.signIn"))
-                        .padding([5, 10])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::secondary),
                 ]
                 .spacing(6)
@@ -400,11 +399,8 @@ impl App {
         let search = container(
             row![
                 icon(Icon::Search).size(14.0).tone(Tone::Muted),
-                text_input("Ara: ad, açıklama, etiket", &c.search)
-                    .on_input_maybe((!held).then_some(|t| cloud(Event::CatalogSearch(t))))
-                    .size(typography::body())
-                    .padding([4, 0])
-                    .style(style::field::bare_input),
+                kentos_ui::widget::bare_field("Ara: ad, açıklama, etiket", &c.search)
+                    .on_input_maybe((!held).then_some(|t| cloud(Event::CatalogSearch(t)))),
             ]
             .spacing(6)
             .align_y(Center),
@@ -504,7 +500,7 @@ impl App {
                 container(
                     button(label::caption(caption))
                         .on_press_maybe((!c.loading() && !held).then(|| cloud(Event::CatalogMore)))
-                        .padding([4, 12])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::secondary),
                 )
                 .width(Fill)

@@ -13,7 +13,7 @@ use iced::widget::{Column, button, column, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
-use kentos_ui::widget::{Dialog, Switch, overlay};
+use kentos_ui::widget::{Dialog, Switch};
 use kentos_ui::{label, style};
 use serde_json::Value;
 
@@ -139,7 +139,7 @@ impl App {
                 column![label::heading(title), label::caption(sub)]
                     .spacing(2)
                     .width(Fill),
-                label::mono_caption(chord),
+                label::caption(chord),
             ]
             .spacing(12)
             .align_y(Center);
@@ -288,23 +288,21 @@ impl App {
         ]
         .spacing(16)
         .align_y(Center);
-        overlay::modal(
-            Dialog::new("Başlangıç")
-                .push(
-                    column![
-                        row![
-                            container(column![brand, actions].spacing(16))
-                                .width(Length::FillPortion(3)),
-                            container(side).width(Length::FillPortion(2)),
-                        ]
-                        .spacing(24),
-                        footer,
+        Dialog::new("Başlangıç")
+            .push(
+                column![
+                    row![
+                        container(column![brand, actions].spacing(16))
+                            .width(Length::FillPortion(3)),
+                        container(side).width(Length::FillPortion(2)),
                     ]
-                    .spacing(16),
-                )
-                .width(880.0),
-            event(Event::Keep),
-        )
+                    .spacing(24),
+                    footer,
+                ]
+                .spacing(16),
+            )
+            .width(880.0)
+            .modal(event(Event::Keep))
     }
 }
 
@@ -341,7 +339,7 @@ pub(crate) fn recent_row(
     let forget = kentos_ui::widget::tip(
         button(icon(Icon::Close).size(12.0).tone(Tone::Muted))
             .on_press(forget)
-            .padding(6)
+            .padding(kentos_ui::theme::metrics::icon(12.0))
             .style(style::button::ghost),
         kentos_ui::widget::Tip::new("Listeden kaldır"),
         iced::widget::tooltip::Position::Left,

@@ -117,7 +117,7 @@ impl<'a, Message: Clone + 'a> AiContent<'a, Message> {
                                 .spacing(5),
                             )
                             .on_press(copy(code.clone()))
-                            .padding([3, 7])
+                            .padding(crate::theme::metrics::action_small())
                             .style(style::button::flat),
                         );
                     }

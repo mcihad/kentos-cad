@@ -36,7 +36,7 @@ use iced::futures::{SinkExt as _, Stream};
 use iced::widget::{button, row, space};
 use iced::{Element, Task};
 use kentos_launch::Module;
-use kentos_ui::widget::{Dialog, overlay};
+use kentos_ui::widget::Dialog;
 use kentos_ui::{label, style};
 use serde::{Deserialize, Serialize};
 
@@ -589,8 +589,7 @@ impl App {
             answer("Geri yükle", Answer::Restore, style::button::primary),
         ]
         .spacing(6);
-        overlay::modal(
-            Dialog::new("Kaydedilmemiş çalışma bulundu")
+        Dialog::new("Kaydedilmemiş çalışma bulundu")
                 .push(label::body(format!(
                     "“{}” çiziminin kaydedilmemiş bir kopyası var: {when}, {} nesne{file}. KentOS beklenmedik biçimde kapanmış olabilir.",
                     copy.name, copy.objects
@@ -599,9 +598,8 @@ impl App {
                     "Geri yükle: kopya açılır ve kaydedilmemiş sayılır; Kaydet dosyanın yerini sorar, hiçbir dosyanın üzerine kendiliğinden yazılmaz. Sonra: kopya bu bilgisayarda kalır, KentOS bir sonraki açılışta yeniden sorar. Sil: kopya kalıcı olarak silinir.",
                 ))
                 .action(actions)
-                .width(520.0),
-            Message::Recovery(Event::Answer(Answer::Later)),
-        )
+                .width(520.0)
+.modal(Message::Recovery(Event::Answer(Answer::Later)))
     }
 }
 

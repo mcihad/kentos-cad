@@ -17,7 +17,7 @@ use kentos_interaction::Level;
 use kentos_native_application::geometry::core_pattern;
 use kentos_native_application::{ExecutionContext, hatch_patterns_edit};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame2, Elided, Segmented, overlay};
+use kentos_ui::widget::{Dialog as Frame2, Elided, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -400,13 +400,11 @@ impl App {
         if let Some((kind, said)) = &w.said {
             body = body.push(words::summary(vec![words::text_line(*kind, said.clone())]));
         }
-        overlay::modal(
-            Frame2::new(HATCH_PATTERNS_TITLE)
-                .push(body)
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(640.0),
-            msg(Event::Close),
-        )
+        Frame2::new(HATCH_PATTERNS_TITLE)
+            .push(body)
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(640.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

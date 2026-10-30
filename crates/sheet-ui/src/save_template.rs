@@ -438,17 +438,18 @@ impl Designer {
             );
         }
         Dialog::new("Şablon olarak kaydet")
+            .on_close(crate::Message::CloseDialog)
             .push(body)
             .action(
                 button(label::body("Vazgeç"))
                     .on_press(Message::CloseDialog)
-                    .padding([6, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body("Kaydet"))
                     .on_press(sm(SaveMessage::Save))
-                    .padding([6, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             )
             .width(520.0)

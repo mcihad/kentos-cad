@@ -258,7 +258,7 @@ impl<'a, Message: Clone + 'a> Viewports<'a, Message> {
                     .size(12.0),
                 )
                 .on_press(on_event(Event::Maximized(!maximized)))
-                .padding(4)
+                .padding(crate::theme::metrics::icon_small(12.0))
                 .style(style::button::flat);
 
                 let mut header = Row::new().spacing(4).align_y(Center);
@@ -891,7 +891,7 @@ pub fn arrangements<'a, Message: Clone + 'a>(
             row.push(crate::widget::tip(
                 button(icon(arrangement.icon()).size(16.0))
                     .on_press(on_select(arrangement))
-                    .padding(4)
+                    .padding(crate::theme::metrics::icon_small(16.0))
                     .style(style::button::tool(arrangement == current)),
                 crate::widget::Tip::new(arrangement.label()),
                 iced::widget::tooltip::Position::Bottom,

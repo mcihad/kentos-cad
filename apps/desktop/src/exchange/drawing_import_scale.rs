@@ -1,12 +1,12 @@
 //! Physical source calibration: editing a reference invalidates the preview until explicitly applied.
-use iced::{
-    Element, Task,
-    widget::{column, row, text_input, button},
-};
-use kentos_ui::{label, style};
-use super::{State, Event, event};
+use super::{Event, State, event};
 use crate::app::{App, Message};
 use crate::exchange::Window;
+use iced::{
+    Element, Task,
+    widget::{button, column, row},
+};
+use kentos_ui::{label, style};
 
 fn reference(s: &State) -> Option<kentos_commands::CadImportScale> {
     let value = |t: &str| t.trim().replace(',', ".").parse::<f64>().ok();
@@ -20,16 +20,12 @@ pub(super) fn view<'a>(s: &'a State) -> Element<'a, Message> {
     let field = |title: &'static str, text: &'a str, on: fn(String) -> Event| {
         column![
             label::caption(title),
-            text_input("Uzunluk", text)
-                .on_input(move |v| event(on(v)))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(style::field::input)
+            kentos_ui::widget::text_field("Uzunluk", text).on_input(move |v| event(on(v)))
         ]
         .spacing(4)
     };
     let mut apply = button(label::body("Ölçüyü uygula"))
-        .padding([6, 12])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary);
     if reference(s).is_some() {
         apply = apply.on_press(event(Event::ReferenceApply));
@@ -69,13 +65,13 @@ impl App {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        files_testing::{app_with_drawing, drive},
-        app::Picker,
-    };
     use crate::exchange::{
-        tests::{fixture, run, send, count},
         Event as X,
+        tests::{count, fixture, run, send},
+    };
+    use crate::{
+        app::Picker,
+        files_testing::{app_with_drawing, drive},
     };
     fn send_scale(app: &mut App, e: Event) {
         send(app, X::DrawingImport(e));
@@ -97,7 +93,10 @@ mod tests {
         );
         send_scale(&mut app, Event::ReferenceSource("4000".into()));
         // Switching an unrelated read option must not apply the unfinished reference.
-        send_scale(&mut app, Event::Closed(Some(kentos_commands::ClosedPolylines::Line)));
+        send_scale(
+            &mut app,
+            Event::Closed(Some(kentos_commands::ClosedPolylines::Line)),
+        );
         send_scale(&mut app, Event::Run);
         assert_eq!(
             count(&app),

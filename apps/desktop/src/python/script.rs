@@ -366,7 +366,7 @@ impl App {
             tip(
                 button(icon(glyph).size(15.0))
                     .on_press_maybe(message)
-                    .padding([5, 6])
+                    .padding(kentos_ui::theme::metrics::icon(15.0))
                     .style(style::button::flat),
                 about,
                 iced::widget::tooltip::Position::Top,
@@ -382,7 +382,7 @@ impl App {
                 .align_y(iced::Center),
             )
             .on_press(Message::Python(super::Event::Stop))
-            .padding([5, 12])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::danger)
         } else {
             button(
@@ -394,7 +394,7 @@ impl App {
                 .align_y(iced::Center),
             )
             .on_press(ev(Event::RunAll))
-            .padding([5, 12])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
         };
         let bar = row![
@@ -458,15 +458,15 @@ impl App {
                 .width(Fill),
                 button(text("Kaydet").size(typography::body()))
                     .on_press(ev(Event::KeepAndGo))
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
                 button(text("Kaydetme").size(typography::body()))
                     .on_press(ev(Event::DropAndGo))
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
                 button(text("Vazgeç").size(typography::body()))
                     .on_press(ev(Event::Cancel))
-                    .padding([4, 10])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::flat),
             ]
             .spacing(6)

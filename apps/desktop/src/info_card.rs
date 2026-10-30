@@ -59,7 +59,7 @@ pub(crate) fn card_body<'a>(
         head = head.push(
             button(icon(from_web(Some("close"))).size(14.0))
                 .on_press(msg(Event::Close))
-                .padding(2)
+                .padding(kentos_ui::theme::metrics::icon_small(14.0))
                 .style(style::button::ghost),
         );
     }
@@ -188,7 +188,7 @@ pub(crate) fn card_body<'a>(
             buttons = buttons.push(
                 button(face)
                     .on_press_maybe(on)
-                    .padding([3, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary),
             );
         }

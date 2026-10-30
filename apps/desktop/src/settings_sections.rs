@@ -9,7 +9,7 @@ use iced::widget::{Column, button, column, container, row, scrollable, space, te
 use iced::{Center, Element, Fill};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Accent, typography};
-use kentos_ui::widget::{Banner, Dialog, Form, NumberInput, Switch, Tip, overlay, tip};
+use kentos_ui::widget::{Banner, Dialog, Form, NumberInput, Switch, Tip, tip};
 use kentos_ui::{label, style};
 use serde_json::Value;
 
@@ -348,7 +348,7 @@ impl App {
         let own = !current.keys().is_empty();
         let reset = button(label::body("Bu bölümü varsayılana döndür"))
             .on_press_maybe(own.then_some(Message::Settings(Edit::ResetSection)))
-            .padding([5, 16])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::ghost);
         let reset: Element<'_, Message> = if own {
             reset.into()
@@ -361,23 +361,21 @@ impl App {
         };
         let save = button(label::body("Kaydet"))
             .on_press_maybe(draft.changed().then_some(Message::Settings(Edit::Save)))
-            .padding([5, 16])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary);
         let cancel = button(label::body("Vazgeç"))
             .on_press(Message::DialogClosed)
-            .padding([5, 16])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary);
-        overlay::modal(
-            Dialog::new("Uygulama ayarları")
-                .hint("Ctrl+,")
-                .push(row![nav, content].spacing(16))
-                .aside(reset)
-                .action(cancel)
-                .action(save)
-                .width(940.0)
-                .max_height(760.0),
-            Message::DialogClosed,
-        )
+        Dialog::new("Uygulama ayarları")
+            .hint("Ctrl+,")
+            .push(row![nav, content].spacing(16))
+            .aside(reset)
+            .action(cancel)
+            .action(save)
+            .width(940.0)
+            .max_height(760.0)
+            .modal(Message::DialogClosed)
     }
 
     fn appearance_section<'a>(&self, f: &Fields<'a>) -> Element<'a, Message> {

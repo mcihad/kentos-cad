@@ -471,7 +471,8 @@ impl App {
                     ready.then(|| event(Event::Save)),
                 ))
                 .width(640.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 
@@ -560,7 +561,8 @@ impl App {
                     ready.then(|| event(Event::Run)),
                 ))
                 .width(640.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

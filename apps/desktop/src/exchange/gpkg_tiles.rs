@@ -11,7 +11,7 @@
 
 use std::path::{Path, PathBuf};
 
-use iced::widget::{Column, container, row, text_input};
+use iced::widget::{Column, container, row};
 use iced::{Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, CommandWarning, Entity, GpkgTileFormat, GpkgTileSet, GpkgTilesMode,
@@ -725,13 +725,7 @@ impl App {
             );
         body = body.push(words::field("Okuma", how, None));
         let input = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| event(on(t)))
-                    .padding([5, 8])
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value).on_input(move |t| event(on(t)))
         };
         // A linked raster is always added: on a new layer.
         let add = words::check(
@@ -834,7 +828,8 @@ impl App {
                     ready.then(|| event(Event::Save)),
                 ))
                 .width(680.0)
-                .max_height(780.0),
+                .max_height(780.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 
@@ -847,13 +842,8 @@ impl App {
         for (i, r) in s.rasters.iter().enumerate() {
             rasters = rasters.option(i, r.label.clone(), "");
         }
-        let input = kentos_ui::widget::focus_ring(
-            text_input("tiles", &s.table)
-                .on_input(|t| event(Event::TableName(t)))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(kentos_ui::style::field::input),
-        );
+        let input = kentos_ui::widget::text_field("tiles", &s.table)
+            .on_input(|t| event(Event::TableName(t)));
         let mut body = Column::new()
             .spacing(12)
             .push(words::field("Raster", rasters, None))
@@ -968,7 +958,8 @@ impl App {
                     ready.then(|| event(Event::Pick)),
                 ))
                 .width(680.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

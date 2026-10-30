@@ -131,8 +131,15 @@ struct State {
 }
 
 impl<'a, Message: 'a> VirtualList<'a, Message> {
-    /// Kaydırma çubuğunun rayı ve tutamağı; kaydırılacak bir şey yoksa yok.
-    fn bar(&self, bounds: Rectangle, offset: f32, hot: bool) -> Option<(Rectangle, Rectangle)> {
+    /// Kaydırma çubuğunun rayı ve tutamağı; kaydırılacak bir şey yoksa yok. Liste yatay kayan bir tablodaysa çubuk
+    /// listenin değil, görünen kısmın sağ kenarındadır (`viewport`).
+    fn bar(
+        &self,
+        bounds: Rectangle,
+        viewport: &Rectangle,
+        offset: f32,
+        hot: bool,
+    ) -> Option<(Rectangle, Rectangle)> {
         let total = self.total();
 
         if total <= bounds.height {
@@ -140,8 +147,9 @@ impl<'a, Message: 'a> VirtualList<'a, Message> {
         }
 
         let width = if hot { BAR_HOT } else { BAR };
+        let right = (bounds.x + bounds.width).min(viewport.x + viewport.width);
         let rail = Rectangle::new(
-            Point::new(bounds.x + bounds.width - width - 1.0, bounds.y),
+            Point::new(right - width - 1.0, bounds.y),
             Size::new(width, bounds.height),
         );
         let length = (bounds.height * bounds.height / total).max(MIN_THUMB);
@@ -233,7 +241,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for VirtualList<'a, Messa
         if let Some((origin, start)) = state.dragging {
             match event {
                 Event::Mouse(mouse::Event::CursorMoved { position }) => {
-                    if let Some((_, thumb)) = self.bar(bounds, state.offset, true) {
+                    if let Some((_, thumb)) = self.bar(bounds, viewport, state.offset, true) {
                         let travel = (bounds.height - thumb.height).max(1.0);
                         state.offset = (start + (position.y - origin) * max_offset / travel)
                             .clamp(0.0, max_offset);
@@ -272,7 +280,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for VirtualList<'a, Messa
             }
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
                 let hot = over.is_some_and(|point| {
-                    self.bar(bounds, state.offset, true)
+                    self.bar(bounds, viewport, state.offset, true)
                         .is_some_and(|(rail, _)| rail.expand(2.0).contains(point))
                 });
 
@@ -283,7 +291,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for VirtualList<'a, Messa
             }
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 if let (Some(point), Some((rail, thumb))) =
-                    (over, self.bar(bounds, state.offset, true))
+                    (over, self.bar(bounds, viewport, state.offset, true))
                     && rail.expand(2.0).contains(point)
                 {
                     // Tutamağın dışına basmak bir sayfa kaydırır.
@@ -403,7 +411,7 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for VirtualList<'a, Messa
 
             let hot = state.bar_hovered || state.dragging.is_some();
 
-            if let Some((_, thumb)) = self.bar(bounds, state.offset, hot) {
+            if let Some((_, thumb)) = self.bar(bounds, viewport, state.offset, hot) {
                 let t = Tokens::of(theme);
 
                 renderer.fill_quad(
@@ -483,6 +491,22 @@ impl<'a, Message: 'a> From<VirtualList<'a, Message>> for Element<'a, Message> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_bar_stays_at_the_edge_of_what_is_seen_in_a_table_scrolled_sideways() {
+        let list: VirtualList<'_, ()> =
+            VirtualList::new(100, 24.0, |_| iced::widget::space().into());
+        let bounds = Rectangle::new(Point::new(0.0, 0.0), Size::new(900.0, 200.0));
+        let seen = Rectangle::new(Point::new(150.0, 0.0), Size::new(300.0, 200.0));
+        let (rail, _) = list.bar(bounds, &seen, 0.0, false).expect("it scrolls");
+        assert_eq!(rail.x + rail.width + 1.0, 450.0);
+        let (rail, _) = list.bar(bounds, &bounds, 0.0, false).expect("it scrolls");
+        assert_eq!(
+            rail.x + rail.width + 1.0,
+            900.0,
+            "all of it seen: its own edge"
+        );
+    }
 
     #[test]
     fn only_rows_in_view_are_built() {

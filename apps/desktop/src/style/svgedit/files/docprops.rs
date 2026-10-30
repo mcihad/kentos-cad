@@ -217,7 +217,7 @@ pub fn view<'a>(ed: &SvgEditor, d: &DocProps) -> Element<'a, Message> {
                     .spacing(6)
                     .align_y(Center)
             )
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(ui_style::button::secondary)
             .on_press(change(fit)),
             iced::widget::container(field("dpm", "Kenar payı", d.margin, None, 0.0, 1.0, |d, v| d.margin = v))
@@ -240,7 +240,7 @@ pub fn view<'a>(ed: &SvgEditor, d: &DocProps) -> Element<'a, Message> {
     let foot = row![
         space::horizontal(),
         button(label::body("Vazgeç"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(ui_style::button::secondary)
             .on_press(change(|ed| ed.files.dialog = None)),
         button(
@@ -251,13 +251,14 @@ pub fn view<'a>(ed: &SvgEditor, d: &DocProps) -> Element<'a, Message> {
             .spacing(6)
             .align_y(Center)
         )
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(ui_style::button::primary)
         .on_press(change(apply)),
     ]
     .spacing(8)
     .align_y(Center);
     Dialog::new("Belge özellikleri")
+        .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(body)
         .push(foot)
         .width(typography::unscaled(typography::from_default(500.0)))

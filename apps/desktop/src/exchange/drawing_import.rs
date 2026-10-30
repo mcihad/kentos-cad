@@ -25,7 +25,7 @@
 //! objects arrive, a panel counts them and Durdur takes everything back.
 //! Meanwhile the drawing takes no edit (`while_importing`); the view moves.
 
-#[path="drawing_import_scale.rs"]
+#[path = "drawing_import_scale.rs"]
 mod scale;
 
 use std::collections::BTreeSet;
@@ -184,7 +184,11 @@ pub enum Source {
 
 impl Source {
     fn cad(self) -> Option<CadFormat> {
-        match self { Self::Dxf => Some(CadFormat::Dxf), Self::Dwg => Some(CadFormat::Dwg), Self::Ncz => None }
+        match self {
+            Self::Dxf => Some(CadFormat::Dxf),
+            Self::Dwg => Some(CadFormat::Dwg),
+            Self::Ncz => None,
+        }
     }
     fn title(self) -> &'static str {
         match self {
@@ -238,10 +242,10 @@ pub struct State {
     allow_polyline_loss: bool,
     /// The unit chosen for a DXF's values (docs/adr/0257 §4); none: the rule's.
     file_unit: Option<FileUnit>,
-    scale_reference:Option<kentos_commands::CadImportScale>,
-    reference_source:String,
-    reference_real:String,
-    reference_pending:bool,
+    scale_reference: Option<kentos_commands::CadImportScale>,
+    reference_source: String,
+    reference_real: String,
+    reference_pending: bool,
     /// What a DXF's closed polylines become (docs/adr/0258 §1); none: the project type's.
     closed: Option<ClosedPolylines>,
     crs: CrsQuestion,
@@ -436,10 +440,10 @@ impl App {
             explode,
             allow_polyline_loss: false,
             file_unit: None,
-            scale_reference:None,
-            reference_source:String::new(),
-            reference_real:String::new(),
-            reference_pending:false,
+            scale_reference: None,
+            reference_source: String::new(),
+            reference_real: String::new(),
+            reference_pending: false,
             closed,
             crs,
             status: None,
@@ -462,10 +466,12 @@ impl App {
             return Task::none();
         };
         // Other read options cannot apply an unfinished physical reference implicitly.
-        if s.reference_pending { return Task::none(); }
+        if s.reference_pending {
+            return Task::none();
+        }
         // Preview exposes losses; committing still requires explicit acceptance.
         options.allow_polyline_loss = true;
-        options.scale_reference=s.scale_reference;
+        options.scale_reference = s.scale_reference;
         // A new unit/closed/explode choice can produce a different loss report.
         s.allow_polyline_loss = false;
         s.stop_reading();
@@ -498,7 +504,8 @@ impl App {
                 });
                 let result = match source {
                     Source::Dxf => kentos_formats::dxf::read_watched(&bytes, &options, &mut watch),
-                    Source::Dwg => kentos_dwg::read_watched(&bytes, &options, &mut watch).map_err(|e| e.to_string()),
+                    Source::Dwg => kentos_dwg::read_watched(&bytes, &options, &mut watch)
+                        .map_err(|e| e.to_string()),
                     Source::Ncz => kentos_ncz::read(
                         &bytes,
                         &NczReadOptions {
@@ -517,7 +524,11 @@ impl App {
                     read,
                     result: result.map(|mut result| {
                         if source.cad().is_some() {
-                            result.report.notes.extend(kentos_native_application::cad_layouts::diagnostics(&result.layouts));
+                            result.report.notes.extend(
+                                kentos_native_application::cad_layouts::diagnostics(
+                                    &result.layouts,
+                                ),
+                            );
                         }
                         Arc::new(result)
                     }),
@@ -558,8 +569,8 @@ impl App {
             Event::FileUnit(unit) => {
                 if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                     s.file_unit = unit;
-                    s.scale_reference=None;
-                    s.reference_pending=false;
+                    s.scale_reference = None;
+                    s.reference_pending = false;
                 }
                 return self.read_drawing();
             }
@@ -656,8 +667,17 @@ impl App {
             && self.importing.is_none()
             && s.result.is_some()
             && s.unusable.is_none()
-            && (s.allow_polyline_loss || s.result.as_ref().is_none_or(|r| kentos_formats::dxf::polyline_policy::refusal(r.report.notes.iter().chain(&r.report.skipped)).is_none()))
-            && (!self.drawing_included(s).is_empty() || s.result.as_ref().is_some_and(|r| r.entities.is_empty() && !r.layouts.is_empty()))
+            && (s.allow_polyline_loss
+                || s.result.as_ref().is_none_or(|r| {
+                    kentos_formats::dxf::polyline_policy::refusal(
+                        r.report.notes.iter().chain(&r.report.skipped),
+                    )
+                    .is_none()
+                }))
+            && (!self.drawing_included(s).is_empty()
+                || s.result
+                    .as_ref()
+                    .is_some_and(|r| r.entities.is_empty() && !r.layouts.is_empty()))
             && s.crs.matches(&self.project_system())
     }
 
@@ -710,7 +730,7 @@ impl App {
             layers,
             group: Some(name.clone()),
         };
-        self.write_import(&name, result, plan, None,None)
+        self.write_import(&name, result, plan, None, None)
     }
 
     /// A DXF in by `file.import.dxf` (docs/adr/0257 §3, §4): the input says
@@ -721,7 +741,9 @@ impl App {
         let Some(Window::DrawingImport(s)) = &self.exchange else {
             return Task::none();
         };
-        let Some(format) = s.source.cad() else { return Task::none(); };
+        let Some(format) = s.source.cad() else {
+            return Task::none();
+        };
         let included: BTreeSet<&str> = self
             .drawing_included(s)
             .into_iter()
@@ -735,7 +757,7 @@ impl App {
                 .as_ref()
                 .map_or_else(|| s.file.name.clone(), |p| p.display().to_string()),
             file_unit: s.file_unit,
-            scale_reference:s.scale_reference,
+            scale_reference: s.scale_reference,
             explode_blocks: s.explode,
             closed_polylines: s.closed,
             skip_layers: result
@@ -754,7 +776,13 @@ impl App {
             return Task::none();
         };
         if result.entities.len() > AT_ONCE {
-            let plan = match file_import::import_plan_format(&doc.model, &input, &result.layers, &name, format) {
+            let plan = match file_import::import_plan_format(
+                &doc.model,
+                &input,
+                &result.layers,
+                &name,
+                format,
+            ) {
                 Ok(plan) => plan,
                 Err(error) => {
                     if let Some(Window::DrawingImport(s)) = &mut self.exchange {
@@ -765,12 +793,25 @@ impl App {
             };
             let said = file_import::warnings_of_read(&result);
             let base = doc.model.revision();
-            return self.write_import(&name, result, plan, Some((input, said, base, format)),Some(kentos_native_application::cad_layouts::Source{file:name.clone(),sha256:Some(kentos_commands::encoding::sha256_hex(&bytes))}));
+            return self.write_import(
+                &name,
+                result,
+                plan,
+                Some((input, said, base, format)),
+                Some(kentos_native_application::cad_layouts::Source {
+                    file: name.clone(),
+                    sha256: Some(kentos_commands::encoding::sha256_hex(&bytes)),
+                }),
+            );
         }
         let first = doc.model.next_slot();
         let read = ReadDxf::of(&name, &bytes, (*result).clone());
-        let answer =
-            file_import::execute_read_format(&mut ExecutionContext::new(&mut doc.model), input, read, format);
+        let answer = file_import::execute_read_format(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+            read,
+            format,
+        );
         let output = match answer {
             CommandResult::Completed { output, .. } => output,
             CommandResult::Failed { error } | CommandResult::Conflict { error } => {
@@ -821,7 +862,7 @@ impl App {
         result: Arc<ImportResult>,
         plan: ImportPlan,
         command: Option<(ImportDxf, Vec<CommandWarning>, u64, CadFormat)>,
-        cad_source:Option<kentos_native_application::cad_layouts::Source>,
+        cad_source: Option<kentos_native_application::cad_layouts::Source>,
     ) -> Task<Message> {
         let name = name.to_owned();
         let chosen = plan.layers.len();
@@ -1114,8 +1155,15 @@ impl App {
         let project = self.project_system();
         let r = s.result.as_deref();
         let meta = match (r, &s.failed) {
-            (None,_) if s.reference_pending => "ölçü doğrulaması bekleniyor".to_owned(),
-            (Some(r), _) => words::facts(&r.report.source.iter().filter(|f| !matches!(f.label.as_str(), "Kodek" | "Aktarma biçimi")).cloned().collect::<Vec<_>>()),
+            (None, _) if s.reference_pending => "ölçü doğrulaması bekleniyor".to_owned(),
+            (Some(r), _) => words::facts(
+                &r.report
+                    .source
+                    .iter()
+                    .filter(|f| !matches!(f.label.as_str(), "Kodek" | "Aktarma biçimi"))
+                    .cloned()
+                    .collect::<Vec<_>>(),
+            ),
             (None, Some(_)) => "okunamadı".to_owned(),
             (None, None) => "okunuyor…".to_owned(),
         };
@@ -1169,7 +1217,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(event(Event::Cancel))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
                 .width(900.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(event(Event::Cancel))),
         )
     }
 
@@ -1203,7 +1252,7 @@ impl App {
             allow_polyline_loss: s.allow_polyline_loss,
             path: String::new(),
             file_unit: s.file_unit,
-            scale_reference:s.scale_reference,
+            scale_reference: s.scale_reference,
             explode_blocks: s.explode,
             closed_polylines: s.closed,
             skip_layers: skipped,
@@ -1251,16 +1300,31 @@ impl App {
     /// go into the drawing.
     fn unit_field<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let decided = s.result.as_ref().and_then(|r| r.unit.as_ref());
-        let automatic=decided.and_then(|d|d.declared).and_then(kentos_commands::units::insunits).map_or_else(||"Dosyaya göre".to_owned(),|(_,name)|format!("Dosyaya göre ({name})"));
+        let automatic = decided
+            .and_then(|d| d.declared)
+            .and_then(kentos_commands::units::insunits)
+            .map_or_else(
+                || "Dosyaya göre".to_owned(),
+                |(_, name)| format!("Dosyaya göre ({name})"),
+            );
         let choices = std::iter::once(Choice::new(automatic))
             .chain(FileUnit::ALL.iter().map(|u| Choice::new(unit_label(*u))))
-            .chain(s.scale_reference.is_some().then(||Choice::new("Bilinen ölçüye göre")));
-        let current = if s.scale_reference.is_some(){FileUnit::ALL.len()+1}else{s
-            .file_unit
-            .and_then(|u| FileUnit::ALL.iter().position(|x| *x == u))
-            .map_or(0, |i| i + 1)};
+            .chain(
+                s.scale_reference
+                    .is_some()
+                    .then(|| Choice::new("Bilinen ölçüye göre")),
+            );
+        let current = if s.scale_reference.is_some() {
+            FileUnit::ALL.len() + 1
+        } else {
+            s.file_unit
+                .and_then(|u| FileUnit::ALL.iter().position(|x| *x == u))
+                .map_or(0, |i| i + 1)
+        };
         let select = Select::new(choices, Some(current), |i| {
-            if i==FileUnit::ALL.len()+1{return event(Event::ReferenceApply)}
+            if i == FileUnit::ALL.len() + 1 {
+                return event(Event::ReferenceApply);
+            }
             event(Event::FileUnit(
                 i.checked_sub(1).and_then(|k| FileUnit::ALL.get(k).copied()),
             ))
@@ -1276,7 +1340,9 @@ impl App {
     }
 
     fn drawing_layers<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        if s.reference_pending{return words::empty("Ölçüyü uygulayınca katmanlar yeniden gösterilir.")}
+        if s.reference_pending {
+            return words::empty("Ölçüyü uygulayınca katmanlar yeniden gösterilir.");
+        }
         let Some(r) = &s.result else {
             if s.failed.is_some() {
                 return words::empty("Katman yok.");
@@ -1358,7 +1424,12 @@ impl App {
     }
 
     fn drawing_summary<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        if s.reference_pending{return words::summary(vec![words::text_line(Line::Info,"Yeni ölçüler henüz uygulanmadı. Ölçüyü uygula seçin veya dosya birimi seçerek normal okumaya dönün.")])}
+        if s.reference_pending {
+            return words::summary(vec![words::text_line(
+                Line::Info,
+                "Yeni ölçüler henüz uygulanmadı. Ölçüyü uygula seçin veya dosya birimi seçerek normal okumaya dönün.",
+            )]);
+        }
         let Some(r) = &s.result else {
             return words::summary(vec![match &s.failed {
                 Some(e) => words::text_line(Line::Error, e.clone()),
@@ -1502,20 +1573,34 @@ impl App {
 }
 
 impl State {
-    pub(crate) fn trace_title(&self) -> String { self.source.title().into() }
-    pub(crate) fn trace_control(&self, control: crate::traces::Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn trace_title(&self) -> String {
+        self.source.title().into()
+    }
+    pub(crate) fn trace_control(
+        &self,
+        control: crate::traces::Control<'_>,
+    ) -> Result<Option<Message>, String> {
         use crate::traces::Control;
         match control {
             Control::Press("Vazgeç") => Ok(Some(event(Event::Cancel))),
             Control::Press("İçe aktar") => Ok(Some(event(Event::Run))),
-            Control::Check(EXPLODE, checked) => Ok((self.explode != checked).then(|| event(Event::Explode))),
-            Control::Check("Raporlanan çoklu çizgi kaybını kabul et", checked) => Ok((self.allow_polyline_loss != checked).then(|| event(Event::AllowPolylineLoss))),
+            Control::Check(EXPLODE, checked) => {
+                Ok((self.explode != checked).then(|| event(Event::Explode)))
+            }
+            Control::Check("Raporlanan çoklu çizgi kaybını kabul et", checked) => {
+                Ok((self.allow_polyline_loss != checked).then(|| event(Event::AllowPolylineLoss)))
+            }
             Control::Pick(FILE_UNIT, value) => {
                 let unit = if value.starts_with("Dosyaya göre") {
                     None
                 } else {
-                    Some(FileUnit::ALL.iter().copied().find(|u| unit_label(*u) == value)
-                        .ok_or_else(|| format!("Dosyanın birimi: “{value}” seçeneği yok"))?)
+                    Some(
+                        FileUnit::ALL
+                            .iter()
+                            .copied()
+                            .find(|u| unit_label(*u) == value)
+                            .ok_or_else(|| format!("Dosyanın birimi: “{value}” seçeneği yok"))?,
+                    )
                 };
                 Ok((self.file_unit != unit).then(|| event(Event::FileUnit(unit))))
             }

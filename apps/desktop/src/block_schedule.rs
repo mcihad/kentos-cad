@@ -4,8 +4,8 @@
 //! layer, X, Y, turn and the attributes' values. Seç selects them, Panoya kopyala copies the table as tab-separated
 //! text, Dışa aktar ▾ writes it as a workbook (table_write.rs).
 
-use iced::widget::{Column, Row, column, container, row, scrollable, text, text_input};
-use iced::{Center, Element, Fill, Task};
+use iced::widget::{Column, container, row, text};
+use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     AttributeFilter, AttributeOp, BlockId, BlockReport, BlocksQueried, BlocksQuery, CellKind,
     CommandResult, ScheduleCell, WorkbookColumn, WorkbookFormat, WorkbookSheet,
@@ -14,9 +14,9 @@ use kentos_domain::Slot;
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, blocks_query};
 use kentos_ui::style;
-use kentos_ui::theme::typography;
 use kentos_ui::widget::segmented::Segmented;
-use kentos_ui::widget::{Dialog as Frame, Menu, focus_ring, overlay};
+use kentos_ui::widget::table::{self, Table};
+use kentos_ui::widget::{Dialog as Frame, Menu};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -282,14 +282,10 @@ impl App {
         let condition = row![
             words::field(
                 "Etiket",
-                focus_ring(
-                    text_input("NUMARA", &w.tag)
-                        .on_input(|t| msg(Event::Tag(t)))
-                        .on_submit(msg(Event::Find))
-                        .padding([5, 8])
-                        .width(130)
-                        .style(style::field::input),
-                ),
+                kentos_ui::widget::text_field("NUMARA", &w.tag)
+                    .on_input(|t| msg(Event::Tag(t)))
+                    .on_submit(msg(Event::Find))
+                    .width(130),
                 None
             ),
             words::field(
@@ -299,14 +295,10 @@ impl App {
             ),
             words::field(
                 "Değer",
-                focus_ring(
-                    text_input("K-", &w.value)
-                        .on_input(|t| msg(Event::Value(t)))
-                        .on_submit(msg(Event::Find))
-                        .padding([5, 8])
-                        .width(120)
-                        .style(style::field::input),
-                ),
+                kentos_ui::widget::text_field("K-", &w.value)
+                    .on_input(|t| msg(Event::Value(t)))
+                    .on_submit(msg(Event::Find))
+                    .width(120),
                 None
             ),
             container(words::secondary("Bul", Some(msg(Event::Find)))).padding(iced::Padding {
@@ -321,38 +313,38 @@ impl App {
         let table: Element<'_, Message> = match &w.found {
             Ok(q) if !q.rows.is_empty() => {
                 let width = |i: usize| if i < 2 { 120.0 } else { 90.0 };
-                let head = q
-                    .columns
-                    .iter()
-                    .enumerate()
-                    .fold(Row::new().spacing(6), |r, (i, c)| {
-                        r.push(
-                            text(c.clone())
-                                .font(typography::ui_strong())
-                                .size(typography::caption())
-                                .width(width(i)),
-                        )
-                    });
-                let mut body = Column::new().spacing(2);
-                for r in q.rows.iter().take(SHOWN) {
-                    body = body.push(r.iter().enumerate().fold(
-                        Row::new().spacing(6),
-                        |row, (i, c)| {
-                            let t = text(cell_text(c))
-                                .size(typography::caption())
-                                .wrapping(text::Wrapping::None)
-                                .width(width(i));
-                            row.push(if matches!(c, ScheduleCell::Number(_)) {
-                                t.align_x(iced::alignment::Horizontal::Right)
-                            } else {
-                                t
-                            })
-                        },
-                    ));
-                }
-                column![head, scrollable(scrollable(body).horizontal()).height(260)]
-                    .spacing(6)
-                    .into()
+                let numbers: Vec<bool> = (0..q.columns.len())
+                    .map(|i| {
+                        q.rows
+                            .first()
+                            .and_then(|r| r.get(i))
+                            .is_some_and(|c| matches!(c, ScheduleCell::Number(_)))
+                    })
+                    .collect();
+                let columns = q.columns.iter().enumerate().map(|(i, c)| {
+                    let column = table::Column::new(c.clone()).width(Length::Fixed(width(i)));
+                    if numbers[i] {
+                        column.align_right()
+                    } else {
+                        column
+                    }
+                });
+                let rows = q.rows.iter().take(SHOWN).map(|r| {
+                    table::Row::new(r.iter().map(|c| match c {
+                        ScheduleCell::Number(_) => table::number(cell_text(c)).into(),
+                        _ => table::text(cell_text(c)).into(),
+                    }))
+                });
+                container(
+                    Table::new(columns)
+                        .horizontal()
+                        .height(260.0)
+                        .min_width(width(0) * 4.0)
+                        .extend(rows),
+                )
+                .width(Fill)
+                .style(style::container::bordered)
+                .into()
             }
             Ok(_) => words::text_line(Kind::Info, "Koşula uyan yerleştirme yok.".to_owned()),
             Err(why) if !why.is_empty() => words::text_line(Kind::Error, why.clone()),
@@ -403,20 +395,18 @@ impl App {
             face.into()
         };
         let body = body.push(row![export].width(Fill));
-        overlay::modal(
-            Frame::new(SCHEDULE_TITLE)
-                .push(body)
-                .action(words::secondary("Kapat", Some(msg(Event::Close))))
-                .action(words::secondary(
-                    "Panoya kopyala",
-                    (found > 0).then(|| msg(Event::Copy)),
-                ))
-                .action(words::primary(
-                    "Seç",
-                    (found > 0).then(|| msg(Event::Select)),
-                ))
-                .width(860.0),
-            msg(Event::Close),
-        )
+        Frame::new(SCHEDULE_TITLE)
+            .push(body)
+            .action(words::secondary("Kapat", Some(msg(Event::Close))))
+            .action(words::secondary(
+                "Panoya kopyala",
+                (found > 0).then(|| msg(Event::Copy)),
+            ))
+            .action(words::primary(
+                "Seç",
+                (found > 0).then(|| msg(Event::Select)),
+            ))
+            .width(860.0)
+            .modal(msg(Event::Close))
     }
 }

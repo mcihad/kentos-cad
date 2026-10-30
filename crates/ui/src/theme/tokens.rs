@@ -265,6 +265,64 @@ impl Tokens {
         }
     }
 
+    /// Okunması gereken ikincil yazı: açıklama, birim, küçük not, sütun başlığı.
+    /// İkincil ile üçüncül tonun arasında, panelde en az 4,5:1 (DESIGN.md §11);
+    /// üçüncül ton ([`faint`](Self::faint)) çizgi ve işaretler içindir.
+    pub fn soft(&self) -> Color {
+        mix(self.muted, self.faint, 0.33)
+    }
+
+    /// Pencerenin çekilebilen köşesinin kavisi: çerçeveden biraz belirgin, vurgu değil.
+    pub fn border_grip(&self) -> Color {
+        mix(self.border_strong(), self.muted, 0.45)
+    }
+
+    /// Seçili satırın imleç üstündeki zemini.
+    pub fn selection_hover(&self) -> Color {
+        self.accent.scale_alpha(match self.mode {
+            Mode::HighContrast => 0.5,
+            Mode::Light => 0.18,
+            Mode::Dark => 0.26,
+            Mode::Night => 0.3,
+        })
+    }
+
+    /// Tablo başlığının bandı (docs/adr/0805): satırlardan açıkça ayrı, panelin başlığından bir ton belirgin.
+    pub fn table_head(&self) -> Color {
+        match self.mode {
+            Mode::HighContrast => self.header,
+            Mode::Light => mix(self.header, self.text, 0.035),
+            Mode::Dark | Mode::Night => mix(self.header, self.text, 0.05),
+        }
+    }
+
+    /// Izgaranın, tablonun ve listenin ince çizgisi: panelin üstünde, sessiz.
+    pub fn rule(&self) -> Color {
+        self.border.scale_alpha(match self.mode {
+            Mode::HighContrast => 1.0,
+            _ => 0.75,
+        })
+    }
+
+    /// Yazılabilir hücrenin zemini (docs/adr/0804): panelden gömük, koyu temada
+    /// panelle alan arasında, açık temada kâğıt beyazı.
+    pub fn cell(&self) -> Color {
+        match self.mode {
+            Mode::Light | Mode::HighContrast => self.field,
+            Mode::Dark | Mode::Night => mix(self.surface, self.field, 0.55),
+        }
+    }
+
+    /// İmleç üstündeki yazılabilir hücrenin zemini.
+    pub fn cell_hover(&self) -> Color {
+        let over = if self.is_dark {
+            Color::WHITE
+        } else {
+            Color::BLACK
+        };
+        mix(self.cell(), over, if self.is_dark { 0.05 } else { 0.03 })
+    }
+
     /// Odaklanan alanın ve "değişecek" durumun kenarı: vurgu, biraz
     /// saydam (web'in `--c-accent-line`'ı); yüksek karşıtlıkta tam.
     pub fn accent_line(&self) -> Color {

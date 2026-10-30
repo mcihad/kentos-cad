@@ -39,11 +39,9 @@ use crate::widget::Responsive;
 use crate::widget::elided::Elided;
 use crate::widget::tip::{Tip, tip};
 
-/// Parçaların yuvanın kenarından uzaklığı. Yuvayla birlikte seçim bir
-/// kontrol yüksekliğindedir ([`metrics::control`]); sıkışık seçim satır içi
-/// kontrol yüksekliğindedir ([`metrics::inline`]), yuvası daha incedir.
+/// Parçaların yuvanın kenarından uzaklığı. Yuvayla birlikte seçim bir kontrol
+/// yüksekliğindedir ([`metrics::control`]), sıkışığı da: yalnız yanları dardır.
 const INSET: f32 = 2.0;
-const COMPACT_INSET: f32 = 1.0;
 /// Parçalar arasındaki aralık; seçili olmayan iki komşunun arasında ince bir
 /// çizgi taşır.
 const GAP: f32 = 2.0;
@@ -66,6 +64,8 @@ pub struct Segmented<'a, Message> {
     accent: bool,
     width: Length,
     _lifetime: std::marker::PhantomData<&'a ()>,
+    /// Hücreyi dolduran görünüm ([`Segmented::cell`]).
+    cell: bool,
 }
 
 impl<'a, Message: Clone + 'a> Segmented<'a, Message> {
@@ -125,6 +125,7 @@ impl<'a, Message: Clone + 'a> Segmented<'a, Message> {
             icon_only: false,
             compact: false,
             accent: false,
+            cell: false,
             width: Length::Shrink,
             _lifetime: std::marker::PhantomData,
         }
@@ -163,6 +164,15 @@ impl<'a, Message: Clone + 'a> Segmented<'a, Message> {
         self
     }
 
+    /// Izgara hücresini dolduran görünüm (docs/adr/0804): yuvası yok, parçalar
+    /// hücrenin bütün yüksekliğini ve genişliğini ince çizgilerle paylaşır.
+    pub fn cell(mut self) -> Self {
+        self.cell = true;
+        self.compact = true;
+        self.width = Length::Fill;
+        self
+    }
+
     /// Seçili parça yumuşak vurgu zemininde, vurgu yazısıyla: çalışma kipini
     /// ya da görünümü değiştiren, ekranda öne çıkan seçimler için (ör. 2B /
     /// 3B). Formlardaki sıradan seçimlerde kullanılmaz.
@@ -193,7 +203,18 @@ fn face<'a, Message: 'a>(text: String, selected: bool) -> Element<'a, Message> {
 
 /// Seçili olmayan iki komşunun arasındaki ince çizgi; seçili parçanın
 /// yanında görünmez (kalkık parçanın kendi kenarı vardır).
-fn separator<'a, Message: 'a>(visible: bool, height: f32) -> Element<'a, Message> {
+fn separator<'a, Message: 'a>(visible: bool, height: f32, cell: bool) -> Element<'a, Message> {
+    // In a cell the parts share its whole height, a hairline from edge to edge between them.
+    if cell {
+        return container(space::horizontal())
+            .width(1)
+            .height(height)
+            .style(|theme: &Theme| container::Style {
+                background: Some(Tokens::of(theme).rule().into()),
+                ..container::Style::default()
+            })
+            .into();
+    }
     container(
         container(space::horizontal())
             .width(1)
@@ -279,11 +300,8 @@ fn shared(needs: &[f32], room: f32, least: f32) -> Vec<f32> {
 /// aralıklar dahil, ikonsuz): seçimi taşıyan bölme en az bu kadar olur ki
 /// yazılar kısalmasın (docs/adr/0749).
 pub fn natural_width(labels: &[&str], compact: bool) -> f32 {
-    let (padding, inset) = if compact {
-        (8.0, COMPACT_INSET)
-    } else {
-        (12.0, INSET)
-    };
+    let padding = if compact { 8.0 } else { 12.0 };
+    let inset = INSET;
     let parts: f32 = labels
         .iter()
         .map(|l| 2.0 * padding + typography::measured_width(l, typography::body(), true).ceil())
@@ -294,8 +312,8 @@ pub fn natural_width(labels: &[&str], compact: bool) -> f32 {
 impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Message> {
     fn from(segmented: Segmented<'a, Message>) -> Self {
         let fill = segmented.width != Length::Shrink;
-        let (outer, inset) = if segmented.compact {
-            (metrics::inline(), COMPACT_INSET)
+        let (outer, inset) = if segmented.cell {
+            (metrics::row(), 0.0)
         } else {
             (metrics::control(), INSET)
         };
@@ -315,6 +333,7 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
             icon_only: segmented.icon_only,
             compact: segmented.compact,
             accent: segmented.accent,
+            cell: segmented.cell,
             height,
         };
         // The row is laid out when its room is known: filling it, the parts' shares and their labels'
@@ -327,8 +346,12 @@ impl<'a, Message: Clone + 'a> From<Segmented<'a, Message>> for Element<'a, Messa
         let boxed = container(content)
             .padding(inset)
             .height(outer)
-            .width(typography::length(width))
-            .style(style::container::segmented);
+            .width(typography::length(width));
+        let boxed = if segmented.cell {
+            boxed
+        } else {
+            boxed.style(style::container::segmented)
+        };
         super::key_focus(boxed)
             .on_step(move |by| step_to(&presses, at, by))
             .into()
@@ -364,10 +387,16 @@ struct Parts<Message> {
     icon_only: bool,
     compact: bool,
     accent: bool,
+    cell: bool,
     height: f32,
 }
 
 impl<'a, Message: Clone + 'a> Parts<Message> {
+    /// The room between two parts.
+    fn gap(&self) -> f32 {
+        if self.cell { 1.0 } else { GAP }
+    }
+
     fn padding(&self, shows_name: bool) -> f32 {
         if !shows_name {
             7.0
@@ -383,7 +412,7 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
     /// label in the tip (docs/adr/0749).
     fn fitted(&self, room: f32, fill: bool) -> Element<'a, Message> {
         let n = self.segments.len();
-        let room = room - GAP * n.saturating_sub(1) as f32;
+        let room = room - self.gap() * n.saturating_sub(1) as f32;
         let fits = |needs: &[f32]| !room.is_finite() || needs.iter().sum::<f32>() <= room + 0.5;
         let laid = |needs: &[f32], icon_only: bool| {
             if fill && room.is_finite() {
@@ -444,7 +473,7 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
         for (index, segment) in self.segments.iter().enumerate() {
             if index > 0 {
                 let visible = !selected[index - 1] && !selected[index];
-                segments = segments.push(separator(visible, height));
+                segments = segments.push(separator(visible, height, self.cell));
             }
             let glyph = self.icons.get(index).copied();
             let name = segment.text.clone();
@@ -475,6 +504,7 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
             }
             let on = segment.selected;
             let accent = self.accent;
+            let in_cell = self.cell;
             let content = container(content).height(height).center_y(height);
             let content = if widths.is_some() {
                 content.center_x(Length::Fill)
@@ -485,7 +515,9 @@ impl<'a, Message: Clone + 'a> Parts<Message> {
                 .on_press_maybe(segment.on_press.clone())
                 .padding([0.0, self.padding(shows_name)])
                 .style(move |theme: &Theme, status| {
-                    if accent {
+                    if in_cell {
+                        style::button::segment_cell(on)(theme, status)
+                    } else if accent {
                         style::button::segment_accent(on)(theme, status)
                     } else {
                         style::button::segment(on)(theme, status)

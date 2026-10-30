@@ -553,7 +553,7 @@ impl<'a, K: Copy, Message: 'a> Entry<'a, K, Message> {
         heading = heading.push(container(title).width(Fill).clip(true));
 
         if let Some(meta) = content.meta {
-            heading = heading.push(label::mono_caption(meta).wrapping(Wrapping::None));
+            heading = heading.push(label::caption(meta).wrapping(Wrapping::None));
         }
 
         let body: Element<'a, Message> = if content.scrollable {
@@ -1468,7 +1468,26 @@ where
                 }
 
                 if entry.resizable {
-                    draw_grip(renderer, &t, geometry.bounds);
+                    // Çekilebildiğini çerçevesi söyler, iletişim kutusunda olduğu gibi (docs/adr/0804).
+                    let e = state
+                        .gesture
+                        .filter(|gesture| gesture.key == entry.key)
+                        .and_then(|gesture| match gesture.kind {
+                            Kind::Resize(edges) => Some(edges),
+                            _ => None,
+                        })
+                        .or(match state.hovered {
+                            Some((key, Part::Edge(edges))) if key == entry.key => Some(edges),
+                            _ => None,
+                        })
+                        .unwrap_or_default();
+                    crate::widget::sizable::frame_mark(
+                        renderer,
+                        &t,
+                        geometry.bounds,
+                        radius(),
+                        (e.left, e.right, e.top, e.bottom),
+                    );
                 }
             });
         }
@@ -2018,26 +2037,6 @@ fn draw_frame<K, Message>(
                 ..Quad::default()
             },
             Background::Color(t.accent),
-        );
-    }
-}
-
-/// Boyutlandırılabilen pencerenin sağ alt köşesindeki nokta üçgeni.
-fn draw_grip(renderer: &mut Renderer, t: &Tokens, bounds: Rectangle) {
-    let right = bounds.x + bounds.width;
-    let bottom = bounds.y + bounds.height;
-    let color = t.muted.scale_alpha(0.7);
-
-    for (column, row) in [(0, 0), (1, 0), (2, 0), (0, 1), (1, 1), (0, 2)] {
-        fill(
-            renderer,
-            Rectangle {
-                x: right - 5.0 - 4.0 * column as f32,
-                y: bottom - 5.0 - 4.0 * row as f32,
-                width: 2.0,
-                height: 2.0,
-            },
-            color,
         );
     }
 }

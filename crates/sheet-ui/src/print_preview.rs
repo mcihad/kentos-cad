@@ -1,9 +1,9 @@
 //! A captured print page on the same canvas image path as placed paper images.
+use crate::Message;
 use iced::{
     Element, Length, Point, Rectangle, Size, Theme, mouse,
     widget::canvas::{self, Frame},
 };
-use crate::Message;
 #[derive(Debug)]
 struct Tile {
     handle: iced::advanced::image::Handle,
@@ -111,7 +111,7 @@ mod tests {
             )
             .width(700.);
         let shot = snapshot.render(
-            kentos_ui::widget::overlay::modal(dialog, crate::Message::CloseDialog),
+            dialog.modal(crate::Message::CloseDialog),
             &iced::Theme::Dark,
         );
         let white = shot

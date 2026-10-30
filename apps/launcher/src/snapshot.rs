@@ -41,7 +41,10 @@ Seçenekler:
   --olcek <katsayı>  piksel yoğunluğu (varsayılan: 1)
   --secili <kimlik>  başlatılacak kart (ör. kentos-harita)
   --bildirimler      bildirimler açık, iki örnek bildirimle
-  --imlec <x>,<y>    imleci taşır (üzerine gelinen kart)";
+  --ara <metin>      uygulamalarda arama
+  --ilk              ilk açılış: KentOS bulunmadı, son dosya yok
+  --imlec <x>,<y>    imleci taşır (üzerine gelinen levha)
+  --tik <x>,<y>      o noktaya tıklar (ör. ⋯ menüsü)";
 
 /// The fixed now the recent drawings are said from: 30 October 2026, 09:00 UTC.
 const NOW: u64 = 1_793_350_800_000;
@@ -50,6 +53,15 @@ const HOME: &str = "/home/kullanici";
 
 /// KentOS installed as the snapshot says: `kentos-cad` and each module's own program at `/opt/kentos/bin`.
 struct Installed;
+
+/// Nothing installed: the first run on a machine without KentOS.
+struct Nothing;
+
+impl Finder for Nothing {
+    fn find(&self, _name: &str) -> Option<PathBuf> {
+        None
+    }
+}
 
 impl Finder for Installed {
     fn find(&self, name: &str) -> Option<PathBuf> {
@@ -61,20 +73,26 @@ impl Finder for Installed {
     }
 }
 
-/// The launcher with the snapshot's data.
-pub fn sample() -> Launcher {
+/// The launcher over the snapshot's folders, with its bundled apps and a fixed now.
+fn over(finder: Box<dyn Finder>) -> Launcher {
     let mut launcher = Launcher::new(
         Folders {
             beside: Some(PathBuf::from("/opt/kentos/bin/uygulamalar")),
             user: Some(Path::new(HOME).join(".local/share/kentos/uygulamalar")),
         },
         Locations::memory(),
-        Box::new(Installed),
+        finder,
         Processes::quiet(),
         None,
     );
     launcher.set_registry(Registry::builtin());
     launcher.now = NOW;
+    launcher
+}
+
+/// The launcher with the snapshot's data.
+pub fn sample() -> Launcher {
+    let mut launcher = over(Box::new(Installed));
     let minutes = |m: u64| NOW - m * 60_000;
     let list = [
         (
@@ -143,6 +161,8 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
     let mut scale = 1.0;
     let mut selected = None;
     let mut notices = false;
+    let mut query = String::new();
+    let mut first_run = false;
     let mut inputs = Vec::new();
     while let Some(arg) = args.next() {
         let mut value = || {
@@ -185,6 +205,8 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
             }
             "--secili" => selected = Some(value()?),
             "--bildirimler" => notices = true,
+            "--ara" => query = value()?,
+            "--ilk" => first_run = true,
             "--imlec" => {
                 let v = value()?;
                 let point = v
@@ -194,6 +216,16 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
                     })
                     .ok_or(format!("{v}: nokta x,y piksel biçiminde olur."))?;
                 inputs.push(Input::Move(point));
+            }
+            "--tik" => {
+                let v = value()?;
+                let point = v
+                    .split_once(',')
+                    .and_then(|(x, y)| {
+                        Some(Point::new(x.trim().parse().ok()?, y.trim().parse().ok()?))
+                    })
+                    .ok_or(format!("{v}: nokta x,y piksel biçiminde olur."))?;
+                inputs.push(Input::Click(point));
             }
             "--yardim" | "--help" | "-h" => {
                 println!("{USAGE}");
@@ -217,7 +249,12 @@ pub fn run(mut args: impl Iterator<Item = String>) -> Result<(), String> {
             .map_err(|e| format!("{out}: yazılamadı ({e})"));
     }
 
-    let mut launcher = sample();
+    let mut launcher = if first_run {
+        over(Box::new(Nothing))
+    } else {
+        sample()
+    };
+    launcher.query = query;
     launcher.settings.theme = match mode {
         Mode::Light => crate::settings::ThemeChoice::Light,
         _ => crate::settings::ThemeChoice::Dark,

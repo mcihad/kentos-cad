@@ -7,13 +7,12 @@
 
 use std::fmt;
 
-use iced::widget::{Column, column, row, text_input};
+use iced::widget::{Column, column, row};
 use iced::{Element, Fill};
 use kentos_commands::{Convention, DatumTransform};
 use kentos_project::choice_form::{
     self, Form, GridRef, Method, PAIRS, PARAMETERS, Problems, datum_name, epsg_text,
 };
-use kentos_ui::theme::typography;
 use kentos_ui::widget::Banner;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::select::{Choice, Select};
@@ -160,17 +159,10 @@ pub(super) fn field<'a>(
     problem: Option<&'static str>,
     on: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    let input = text_input("", value)
+    let input = kentos_ui::widget::text_field("", value)
         .on_input(on)
-        .padding([5, 8])
-        .size(typography::body())
-        .width(width)
-        .style(style::field::input);
-    let mut c = column![
-        label::caption(caption),
-        kentos_ui::widget::focus_ring(input)
-    ]
-    .spacing(4);
+        .width(width);
+    let mut c = column![label::caption(caption), input].spacing(4);
     if let Some(p) = problem {
         c = c.push(
             label::caption(p)

@@ -3,13 +3,13 @@
 //! 1:N, chosen from the project's type's scales or typed. The view zooms
 //! about its middle to it, a navigation step Önceki görünüm goes back from.
 
-use iced::widget::{Id, operation, row, text_input};
+use iced::widget::{Id, operation, row};
 use iced::{Center, Element, Task};
 use kentos_commands::Workspace;
 use kentos_interaction::Level;
 use kentos_project::wizard::{CAD_SCALES, GIS_SCALES, scale_text};
 use kentos_ui::widget::Menu;
-use kentos_ui::{label, style, theme::typography};
+use kentos_ui::{label, theme::typography};
 
 use crate::app::{App, Message};
 
@@ -91,16 +91,15 @@ impl App {
     /// “1:” and the number, as the cell reads (docs/adr/0626 §3).
     pub(crate) fn scale_field_view(&self) -> Option<Element<'_, Message>> {
         let text = self.scale_field.as_ref()?;
-        let field = kentos_ui::widget::focus_ring(
-            text_input("N", text)
-                .id(Id::new(FIELD))
-                .on_input(|t| event(Event::Edit(t)))
-                .on_submit(event(Event::Submit))
-                .padding([1, 6])
-                .size(typography::body())
-                .width(typography::from_default(84.0))
-                .style(style::field::input),
-        );
+        let field = kentos_ui::widget::text_field("N", text)
+            .padding(kentos_ui::theme::metrics::padding(
+                kentos_ui::theme::metrics::inline(),
+                6.0,
+            ))
+            .id(Id::new(FIELD))
+            .on_input(|t| event(Event::Edit(t)))
+            .on_submit(event(Event::Submit))
+            .width(typography::from_default(84.0));
         Some(
             row![label::muted("1:"), field]
                 .spacing(4)

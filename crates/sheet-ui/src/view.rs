@@ -61,12 +61,22 @@ impl Designer {
         }
         let inner: Element<'_, Message> = match self.dialog.as_ref()? {
             Dialog::PrintPreview { image, caption } => Window::new("Baskı önizlemesi")
-                .push(iced::widget::column![
-                    label::caption(caption).style(style::text::muted),
-                    crate::print_preview::view(image)
-                ].spacing(8))
-                .action(button(label::body("Çıktı seçeneklerine dön")).on_press(Message::Print).padding([6,14]).style(style::button::primary))
-                .width(700.0).into(),
+                .on_close(Message::CloseDialog)
+                .push(
+                    iced::widget::column![
+                        label::caption(caption).style(style::text::muted),
+                        crate::print_preview::view(image)
+                    ]
+                    .spacing(8),
+                )
+                .action(
+                    button(label::body("Çıktı seçeneklerine dön"))
+                        .on_press(Message::Print)
+                        .padding(kentos_ui::theme::metrics::action())
+                        .style(style::button::primary),
+                )
+                .width(700.0)
+                .into(),
             Dialog::SaveTemplate(d) => self.save_template_view(d),
             Dialog::Questions(d) => self.questions_view(d),
             Dialog::Variables(d) => self.variables_view(d),
@@ -99,6 +109,7 @@ impl Designer {
 
     fn import_view(&self, file: &str, sheets: usize, have: usize) -> Element<'_, Message> {
         Window::new(".kpafta dosyasından")
+.on_close(Message::CloseDialog)
             .push(
                 column![
                     label::body(format!("“{file}” dosyasında {sheets} pafta var. Bu projenin {have} paftasının yanına mı eklensin, yerine mi?")),
@@ -106,9 +117,9 @@ impl Designer {
                 ]
                 .spacing(8),
             )
-            .aside(button(label::body("Vazgeç")).on_press(Message::CloseDialog).padding([6, 14]).style(style::button::secondary))
-            .action(button(label::body("Yerine koy")).on_press(Message::ImportChoose(true)).padding([6, 14]).style(style::button::secondary))
-            .action(button(label::body("Yanına ekle")).on_press(Message::ImportChoose(false)).padding([6, 16]).style(style::button::primary))
+            .aside(button(label::body("Vazgeç")).on_press(Message::CloseDialog).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary))
+            .action(button(label::body("Yerine koy")).on_press(Message::ImportChoose(true)).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary))
+            .action(button(label::body("Yanına ekle")).on_press(Message::ImportChoose(false)).padding(kentos_ui::theme::metrics::action()).style(style::button::primary))
             .width(460.0)
             .into()
     }
@@ -152,17 +163,18 @@ impl Designer {
             "Aktar…"
         };
         Window::new(title)
+            .on_close(Message::CloseDialog)
             .push(body)
             .action(
                 button(label::body("Vazgeç"))
                     .on_press(Message::CloseDialog)
-                    .padding([6, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body(go))
                     .on_press(Message::ExportAnyway)
-                    .padding([6, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(if errors > 0 {
                         style::button::danger
                     } else {

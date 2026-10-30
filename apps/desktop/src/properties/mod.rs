@@ -105,7 +105,7 @@ pub enum Event {
     Space(Slot, kentos_commands::SpacesOperation),
     /// A slab's own field chosen (Tür, Kenar, Kat, Evre, Metraj; docs/adr/0722 §6): written through `cad.slabs.edit`.
     Slab(Slot, kentos_commands::SlabsOperation),
-    SpaceSeparator(Slot,bool),
+    SpaceSeparator(Slot, bool),
     /// Kat ▾ of several architectural objects (docs/adr/0717 §2): through `cad.levels.assign`.
     Levels(Vec<Slot>, String),
     /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
@@ -543,8 +543,11 @@ impl App {
                     continue;
                 }
                 if doc.settings().workspace == Some(kentos_commands::Workspace::Cad)
-                    && row.numeric && row.editor.is_none() && row.thumb.is_none()
-                    && let Some(unit) = &row.unit && !unit.is_empty()
+                    && row.numeric
+                    && row.editor.is_none()
+                    && row.thumb.is_none()
+                    && let Some(unit) = &row.unit
+                    && !unit.is_empty()
                 {
                     sheet = sheet.measurement(row.label.into_owned(), row.value, unit.to_string());
                     continue;
@@ -554,10 +557,18 @@ impl App {
                 let thumb = row.thumb.take();
                 let cell = self.cell(row);
                 let cell = match thumb {
-                    Some(t) => iced::widget::row![self.thumb(t), container(cell).width(Fill)]
-                        .spacing(6)
-                        .align_y(iced::Center)
-                        .into(),
+                    Some(t) => kentos_ui::widget::Cell::flat(
+                        iced::widget::row![
+                            container(self.thumb(t)).padding(iced::Padding {
+                                left: kentos_ui::theme::metrics::cell_end(),
+                                right: 2.0,
+                                ..iced::Padding::ZERO
+                            }),
+                            cell,
+                        ]
+                        .align_y(iced::Center),
+                    )
+                    .into(),
                     None => cell,
                 };
                 sheet = sheet.row(label, cell);
@@ -604,9 +615,7 @@ impl App {
             } else {
                 style::text::muted
             };
-            return container(label::caption(row.value).style(tone))
-                .padding([0, 6])
-                .into();
+            return label::caption(row.value).style(tone).into();
         }
         match row.editor {
             None => property_grid::value(row.value, row.numeric, unit.map(|u| u.into_owned())),
@@ -849,11 +858,16 @@ impl App {
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
             Event::Slab(slot, op) => properties::edit_slab(model, slot, op),
-            Event::SpaceSeparator(slot,on)=> {
-                let arch=on.then(||model.get(slot).and_then(kentos_domain::space_follow::separator_path)
-                    .and_then(|p|p.space_separator.clone()).unwrap_or_default());
-                properties::set_space_separator(model,slot,arch)
-            },
+            Event::SpaceSeparator(slot, on) => {
+                let arch = on.then(|| {
+                    model
+                        .get(slot)
+                        .and_then(kentos_domain::space_follow::separator_path)
+                        .and_then(|p| p.space_separator.clone())
+                        .unwrap_or_default()
+                });
+                properties::set_space_separator(model, slot, arch)
+            }
             Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
             Event::Levels(slots, level) => properties::assign_level(model, &slots, &level),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
@@ -1001,7 +1015,11 @@ impl App {
 }
 
 /// A kitchen run changed through `cad.casework.edit` (docs/adr/0727 §6): its refusal or warnings, said.
-fn casework_edit(model: &mut kentos_domain::Document, slot: Slot, edit: serde_json::Value) -> Vec<String> {
+fn casework_edit(
+    model: &mut kentos_domain::Document,
+    slot: Slot,
+    edit: serde_json::Value,
+) -> Vec<String> {
     use kentos_commands::CallOp;
     use kentos_native_application::{ExecutionContext, registry};
     let Some(uid) = model.uid(slot) else {
@@ -1012,11 +1030,18 @@ fn casework_edit(model: &mut kentos_domain::Document, slot: Slot, edit: serde_js
         "edit": edit,
         "expectedRevision": model.revision().to_string(),
     });
-    said(registry::run(&mut ExecutionContext::new(model), "cad.casework.edit", CallOp::Execute, input))
+    said(registry::run(
+        &mut ExecutionContext::new(model),
+        "cad.casework.edit",
+        CallOp::Execute,
+        input,
+    ))
 }
 
 /// A command's answer as what the panel says: its warnings, or why it wrote nothing.
-fn said(answer: Result<serde_json::Value, kentos_native_application::registry::Unrun>) -> Vec<String> {
+fn said(
+    answer: Result<serde_json::Value, kentos_native_application::registry::Unrun>,
+) -> Vec<String> {
     match answer {
         Ok(value) if value["status"] == "completed" => value["warnings"]
             .as_array()
@@ -1045,22 +1070,36 @@ fn casework_action(model: &mut kentos_domain::Document, slot: Slot, action: &str
                 return Vec::new();
             };
             let uids: Vec<String> = run.members.iter().map(|m| m.uid.to_text()).collect();
-            let input = serde_json::json!({"uids": uids, "expectedRevision": model.revision().to_string()});
-            said(registry::run(&mut ExecutionContext::new(model), "cad.entities.delete", CallOp::Execute, input))
+            let input =
+                serde_json::json!({"uids": uids, "expectedRevision": model.revision().to_string()});
+            said(registry::run(
+                &mut ExecutionContext::new(model),
+                "cad.entities.delete",
+                CallOp::Execute,
+                input,
+            ))
         }
         _ => Vec::new(),
     }
 }
 
 /// A run's value picked: the object's module's width, door or kind (its other own value kept), or the recipe's.
-fn casework_value(model: &mut kentos_domain::Document, slot: Slot, field: &str, value: &str) -> Vec<String> {
+fn casework_value(
+    model: &mut kentos_domain::Document,
+    slot: Slot,
+    field: &str,
+    value: &str,
+) -> Vec<String> {
     use serde_json::json;
     let Some((run, member)) = model.uid(slot).and_then(|uid| model.casework_member(uid)) else {
         return Vec::new();
     };
     let (recipe, module) = (run.recipe.clone(), member.index);
     let (own_width, own_hand) = match module {
-        Some(k) => (rows::casework::own_width(&recipe, k), rows::casework::own_hand(&recipe, k)),
+        Some(k) => (
+            rows::casework::own_width(&recipe, k),
+            rows::casework::own_hand(&recipe, k),
+        ),
         None => (None, None),
     };
     let edit = match (field, module) {
@@ -1072,10 +1111,13 @@ fn casework_value(model: &mut kentos_domain::Document, slot: Slot, field: &str, 
             let hand = own_hand.filter(|_| width <= kentos_commands::CASEWORK_APPLIANCE + 1e-9);
             json!({"kind": "module", "module": k, "width": width, "hand": hand})
         }
-        ("hand", Some(k)) => json!({"kind": "module", "module": k, "hand": value, "width": own_width}),
+        ("hand", Some(k)) => {
+            json!({"kind": "module", "module": k, "hand": value, "width": own_width})
+        }
         ("holds", Some(k)) => {
             // An appliance (a dishwasher, an oven's cooktop) has no width or door of its own.
-            let appliance = value == "dishwasher" || (value == "cooktop" && recipe.oven == Some(true));
+            let appliance =
+                value == "dishwasher" || (value == "cooktop" && recipe.oven == Some(true));
             if appliance {
                 json!({"kind": "module", "module": k, "holds": value})
             } else {
@@ -1084,7 +1126,11 @@ fn casework_value(model: &mut kentos_domain::Document, slot: Slot, field: &str, 
         }
         ("corner" | "fridge", _) => {
             let mut r = serde_json::to_value(&recipe).unwrap_or_default();
-            r[field] = if value == "none" { serde_json::Value::Null } else { json!(value) };
+            r[field] = if value == "none" {
+                serde_json::Value::Null
+            } else {
+                json!(value)
+            };
             json!({"kind": "recipe", "recipe": r})
         }
         ("upper" | "oven", _) => {
@@ -1255,7 +1301,11 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             Some(depth) if depth.is_finite() => {
                 let mut r = serde_json::to_value(&recipe).unwrap_or_default();
                 r["depth"] = serde_json::json!(depth);
-                casework_edit(model, *slot, serde_json::json!({"kind": "recipe", "recipe": r}))
+                casework_edit(
+                    model,
+                    *slot,
+                    serde_json::json!({"kind": "recipe", "recipe": r}),
+                )
             }
             _ => vec!["Tezgâhın derinliğini girin; örneğin 65 cm.".into()],
         };
@@ -1352,7 +1402,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             return match field {
                 Field::TextIndent(_) => layout::set_indent(model, slots, n),
                 Field::TextLeftIndent(_) => layout::set_left_indent(model, slots, n),
-                Field::TextColumns(_) => layout::set_columns(model, slots, n.max(0.0).min(f64::from(u32::MAX)) as u32),
+                Field::TextColumns(_) => {
+                    layout::set_columns(model, slots, n.max(0.0).min(f64::from(u32::MAX)) as u32)
+                }
                 Field::TextColumnHeight(_) => layout::set_column_height(model, slots, n),
                 _ => layout::set_column_gap(model, slots, n),
             };
@@ -1430,19 +1482,33 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             // A length with its unit kept (−2 cm), else in the drawing's unit (docs/adr/0646).
             let typed = kentos_interaction::js_trim(text);
-            let n = if typed.is_empty() { Some(0.0) } else { length(typed) };
-            let Some(n) = n.filter(|n| n.is_finite() && n.abs() <= kentos_commands::MAX_LEVEL_OFFSET) else {
-                return vec!["Farkı metre olarak bir sayıyla yazın (−0.02 gibi); en çok 1000 m.".into()];
+            let n = if typed.is_empty() {
+                Some(0.0)
+            } else {
+                length(typed)
             };
-            let level = kentos_commands::DimensionLevel { id, offset: (n != 0.0).then_some(n) };
-            return properties::edit_dimensions(model, slots, |uids| kentos_commands::DimensionEdit::Level {
-                uids,
-                level: Some(level),
+            let Some(n) =
+                n.filter(|n| n.is_finite() && n.abs() <= kentos_commands::MAX_LEVEL_OFFSET)
+            else {
+                return vec![
+                    "Farkı metre olarak bir sayıyla yazın (−0.02 gibi); en çok 1000 m.".into(),
+                ];
+            };
+            let level = kentos_commands::DimensionLevel {
+                id,
+                offset: (n != 0.0).then_some(n),
+            };
+            return properties::edit_dimensions(model, slots, |uids| {
+                kentos_commands::DimensionEdit::Level {
+                    uids,
+                    level: Some(level),
+                }
             });
         }
         // A slope's and a Kot's elevations: a length with its unit kept in CAD (docs/adr/0646, 0721 §2).
         Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
-            let Some(n) = length(kentos_interaction::js_trim(text)).filter(|n| n.is_finite()) else {
+            let Some(n) = length(kentos_interaction::js_trim(text)).filter(|n| n.is_finite())
+            else {
                 return Vec::new();
             };
             let second = matches!(field, Field::DimensionZb(_));
@@ -1495,11 +1561,26 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     if blank =>
                 {
                     OpeningsOperation::Set(match field {
-                        Field::OpeningFrame(_) => OpeningChange { frame: Some(None), ..Default::default() },
-                        Field::OpeningSill(_) => OpeningChange { sill: Some(None), ..Default::default() },
-                        Field::OpeningHead(_) => OpeningChange { head: Some(None), ..Default::default() },
-                        Field::OpeningInset(_) => OpeningChange { inset: Some(None), ..Default::default() },
-                        _ => OpeningChange { swing: Some(None), ..Default::default() },
+                        Field::OpeningFrame(_) => OpeningChange {
+                            frame: Some(None),
+                            ..Default::default()
+                        },
+                        Field::OpeningSill(_) => OpeningChange {
+                            sill: Some(None),
+                            ..Default::default()
+                        },
+                        Field::OpeningHead(_) => OpeningChange {
+                            head: Some(None),
+                            ..Default::default()
+                        },
+                        Field::OpeningInset(_) => OpeningChange {
+                            inset: Some(None),
+                            ..Default::default()
+                        },
+                        _ => OpeningChange {
+                            swing: Some(None),
+                            ..Default::default()
+                        },
                     })
                 }
                 _ => {
@@ -1507,7 +1588,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                         web_number(text)
                     } else {
                         let Some(n) = length(text) else {
-                            return vec!["Açıklık ölçüsü için bir uzunluk girin; örneğin 900 mm veya 90 cm.".into()];
+                            return vec![
+                                "Açıklık ölçüsü için bir uzunluk girin; örneğin 900 mm veya 90 cm."
+                                    .into(),
+                            ];
                         };
                         n
                     };
@@ -1515,14 +1599,38 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                         return Vec::new();
                     }
                     match field {
-                        Field::OpeningWidth(_) => OpeningsOperation::Set(OpeningChange { width: Some(n), ..Default::default() }),
-                        Field::OpeningAt(_) => OpeningsOperation::Move { by: None, at: Some(n) },
-                        Field::OpeningSwing(_) => OpeningsOperation::Set(OpeningChange { swing: Some(Some(n)), ..Default::default() }),
-                        Field::OpeningFrame(_) => OpeningsOperation::Set(OpeningChange { frame: Some(Some(n)), ..Default::default() }),
-                        Field::OpeningSill(_) => OpeningsOperation::Set(OpeningChange { sill: Some(Some(n)), ..Default::default() }),
-                        Field::OpeningDepth(_) => OpeningsOperation::Set(OpeningChange { depth: Some(Some(n)), ..Default::default() }),
-                        Field::OpeningInset(_) => OpeningsOperation::Set(OpeningChange { inset: Some(Some(n)), ..Default::default() }),
-                        _ => OpeningsOperation::Set(OpeningChange { head: Some(Some(n)), ..Default::default() }),
+                        Field::OpeningWidth(_) => OpeningsOperation::Set(OpeningChange {
+                            width: Some(n),
+                            ..Default::default()
+                        }),
+                        Field::OpeningAt(_) => OpeningsOperation::Move {
+                            by: None,
+                            at: Some(n),
+                        },
+                        Field::OpeningSwing(_) => OpeningsOperation::Set(OpeningChange {
+                            swing: Some(Some(n)),
+                            ..Default::default()
+                        }),
+                        Field::OpeningFrame(_) => OpeningsOperation::Set(OpeningChange {
+                            frame: Some(Some(n)),
+                            ..Default::default()
+                        }),
+                        Field::OpeningSill(_) => OpeningsOperation::Set(OpeningChange {
+                            sill: Some(Some(n)),
+                            ..Default::default()
+                        }),
+                        Field::OpeningDepth(_) => OpeningsOperation::Set(OpeningChange {
+                            depth: Some(Some(n)),
+                            ..Default::default()
+                        }),
+                        Field::OpeningInset(_) => OpeningsOperation::Set(OpeningChange {
+                            inset: Some(Some(n)),
+                            ..Default::default()
+                        }),
+                        _ => OpeningsOperation::Set(OpeningChange {
+                            head: Some(Some(n)),
+                            ..Default::default()
+                        }),
                     }
                 }
             };
@@ -1572,58 +1680,132 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             use kentos_commands::{ArchChange, ArchOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
-            let physical = matches!(which, ArchField::Width | ArchField::Depth |
-                ArchField::RiserHeight | ArchField::Tread | ArchField::Landing |
-                ArchField::Rise | ArchField::Base | ArchField::BaseOffset | ArchField::Post |
-                ArchField::LegA | ArchField::LegB);
+            let physical = matches!(
+                which,
+                ArchField::Width
+                    | ArchField::Depth
+                    | ArchField::RiserHeight
+                    | ArchField::Tread
+                    | ArchField::Landing
+                    | ArchField::Rise
+                    | ArchField::Base
+                    | ArchField::BaseOffset
+                    | ArchField::Post
+                    | ArchField::LegA
+                    | ArchField::LegB
+            );
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
-                    return vec!["Mimari ölçü için bir uzunluk girin; örneğin 400 mm veya 40 cm.".into()];
+                    return vec![
+                        "Mimari ölçü için bir uzunluk girin; örneğin 400 mm veya 40 cm.".into(),
+                    ];
                 };
                 n
             } else {
                 web_number(text)
             };
-            if !t.is_empty() && !n.is_finite() && !matches!(which, ArchField::Label | ArchField::Tag | ArchField::Type) {
+            if !t.is_empty()
+                && !n.is_finite()
+                && !matches!(which, ArchField::Label | ArchField::Tag | ArchField::Type)
+            {
                 return Vec::new();
             }
             let c = match which {
                 ArchField::Label => match words {
-                    Some(w) => ArchChange { label: Some(w), ..Default::default() },
+                    Some(w) => ArchChange {
+                        label: Some(w),
+                        ..Default::default()
+                    },
                     None => return Vec::new(),
                 },
-                ArchField::Tag => ArchChange { tag: Some(words), ..Default::default() },
-                ArchField::Type => ArchChange { kind: Some(words), ..Default::default() },
-                ArchField::BubbleSize => ArchChange { bubble_size: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Depth => ArchChange { depth: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Landing => ArchChange { landing: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Slope => ArchChange { slope: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Base => ArchChange { base: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::BaseOffset => ArchChange { base_offset: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Post => ArchChange { post: Some(words.map(|_| n)), ..Default::default() },
-                ArchField::Ends => ArchChange { ends: Some(words.map(|_| n).filter(|v| *v != 0.0)), ..Default::default() },
+                ArchField::Tag => ArchChange {
+                    tag: Some(words),
+                    ..Default::default()
+                },
+                ArchField::Type => ArchChange {
+                    kind: Some(words),
+                    ..Default::default()
+                },
+                ArchField::BubbleSize => ArchChange {
+                    bubble_size: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Depth => ArchChange {
+                    depth: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Landing => ArchChange {
+                    landing: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Slope => ArchChange {
+                    slope: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Base => ArchChange {
+                    base: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::BaseOffset => ArchChange {
+                    base_offset: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Post => ArchChange {
+                    post: Some(words.map(|_| n)),
+                    ..Default::default()
+                },
+                ArchField::Ends => ArchChange {
+                    ends: Some(words.map(|_| n).filter(|v| *v != 0.0)),
+                    ..Default::default()
+                },
                 _ if words.is_none() => return Vec::new(),
                 // One leg typed, the other kept (docs/adr/0725 §3).
                 ArchField::LegA | ArchField::LegB => {
                     let Some(kentos_commands::Entity::Column(c)) = model.get(*slot) else {
                         return Vec::new();
                     };
-                    let [a, b] = c.column.legs.unwrap_or([c.column.depth() / 2.0, c.column.width / 2.0]);
+                    let [a, b] = c
+                        .column
+                        .legs
+                        .unwrap_or([c.column.depth() / 2.0, c.column.width / 2.0]);
                     ArchChange {
-                        legs: Some(if *which == ArchField::LegA { [n, b] } else { [a, n] }),
+                        legs: Some(if *which == ArchField::LegA {
+                            [n, b]
+                        } else {
+                            [a, n]
+                        }),
                         ..Default::default()
                     }
                 }
-                ArchField::Width => ArchChange { width: Some(n), ..Default::default() },
-                ArchField::Turn => ArchChange { rotation: Some(n.to_radians()), ..Default::default() },
-                ArchField::Risers if n >= 0.0 && n.fract() == 0.0 => {
-                    ArchChange { risers: Some(n as u32), ..Default::default() }
-                }
+                ArchField::Width => ArchChange {
+                    width: Some(n),
+                    ..Default::default()
+                },
+                ArchField::Turn => ArchChange {
+                    rotation: Some(n.to_radians()),
+                    ..Default::default()
+                },
+                ArchField::Risers if n >= 0.0 && n.fract() == 0.0 => ArchChange {
+                    risers: Some(n as u32),
+                    ..Default::default()
+                },
                 ArchField::Risers => return Vec::new(),
-                ArchField::RiserHeight => ArchChange { riser_height: Some(n), ..Default::default() },
-                ArchField::Tread => ArchChange { tread: Some(n), ..Default::default() },
-                ArchField::Rise => ArchChange { rise: Some(n), ..Default::default() },
-                ArchField::TagContent | ArchField::TagSize | ArchField::MarkNumber | ArchField::MarkSize => {
+                ArchField::RiserHeight => ArchChange {
+                    riser_height: Some(n),
+                    ..Default::default()
+                },
+                ArchField::Tread => ArchChange {
+                    tread: Some(n),
+                    ..Default::default()
+                },
+                ArchField::Rise => ArchChange {
+                    rise: Some(n),
+                    ..Default::default()
+                },
+                ArchField::TagContent
+                | ArchField::TagSize
+                | ArchField::MarkNumber
+                | ArchField::MarkSize => {
                     return Vec::new();
                 }
             };
@@ -1670,7 +1852,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 },
                 _ => {
                     let Some(n) = length(text) else {
-                        return vec!["Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m.".into()];
+                        return vec![
+                            "Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m."
+                                .into(),
+                        ];
                     };
                     if !n.is_finite() {
                         return Vec::new();
@@ -1683,11 +1868,17 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             return properties::edit_space(model, *slot, SpacesOperation::Set(change));
         }
-        Field::SlabThickness(slot) | Field::SlabOffset(slot) | Field::SlabEdgeWidth(slot) | Field::SlabMaterial(slot) => {
+        Field::SlabThickness(slot)
+        | Field::SlabOffset(slot)
+        | Field::SlabEdgeWidth(slot)
+        | Field::SlabMaterial(slot) => {
             use kentos_commands::{SlabChange, SlabsOperation};
             let change = if let Field::SlabMaterial(_) = field {
                 let t = kentos_interaction::js_trim(text);
-                SlabChange { material: Some((!t.is_empty()).then(|| t.to_owned())), ..Default::default() }
+                SlabChange {
+                    material: Some((!t.is_empty()).then(|| t.to_owned())),
+                    ..Default::default()
+                }
             } else {
                 let Some(n) = length(text) else {
                     return vec!["Bir uzunluk girin; örneğin 15 cm ya da 0.15 m.".into()];
@@ -1696,13 +1887,26 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     return Vec::new();
                 }
                 match field {
-                    Field::SlabThickness(_) => SlabChange { thickness: Some(n), ..Default::default() },
-                    Field::SlabOffset(_) => SlabChange { offset: Some(n), ..Default::default() },
+                    Field::SlabThickness(_) => SlabChange {
+                        thickness: Some(n),
+                        ..Default::default()
+                    },
+                    Field::SlabOffset(_) => SlabChange {
+                        offset: Some(n),
+                        ..Default::default()
+                    },
                     _ => {
-                        let Some(Entity::Slab(s)) = model.get(*slot) else { return Vec::new() };
-                        let Some(e) = &s.slab.edge else { return Vec::new() };
+                        let Some(Entity::Slab(s)) = model.get(*slot) else {
+                            return Vec::new();
+                        };
+                        let Some(e) = &s.slab.edge else {
+                            return Vec::new();
+                        };
                         SlabChange {
-                            edge: Some(Some(kentos_commands::NewSlabEdge { kind: e.kind, width: Some(n) })),
+                            edge: Some(Some(kentos_commands::NewSlabEdge {
+                                kind: e.kind,
+                                width: Some(n),
+                            })),
                             ..Default::default()
                         }
                     }
@@ -1723,7 +1927,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 );
             }
             let Some(n) = length(text) else {
-                return vec!["Duvar ölçüsü için bir uzunluk girin; örneğin 250 mm veya 25 cm.".into()];
+                return vec![
+                    "Duvar ölçüsü için bir uzunluk girin; örneğin 250 mm veya 25 cm.".into(),
+                ];
             };
             if !n.is_finite() {
                 return Vec::new();

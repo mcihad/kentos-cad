@@ -17,13 +17,13 @@
 
 use std::time::{Duration, Instant};
 
-use iced::widget::{column, container, pin, text_input};
+use iced::widget::{column, container, pin};
 use iced::{Element, Fill, Task};
 use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::{TextField, Vec2, dimension_layout};
-use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::{label, style};
+use kentos_ui::label;
+use kentos_ui::theme::Tokens;
 
 use crate::app::{App, Message};
 
@@ -277,15 +277,12 @@ impl App {
             .max(open.placeholder.chars().count())
             .max(8);
         let width = (chars as f32 * size * 0.62 + 24.0).max(160.0);
-        let input = text_input(&open.placeholder, &open.text)
+        let input = kentos_ui::widget::text_field(&open.placeholder, &open.text)
             .id(ID)
             .on_input(|text| Message::TextField(Event::Input(text)))
             .on_submit(Message::TextField(Event::Keep))
-            .font(typography::ui())
             .size(size)
-            .padding([2, 6])
-            .width(width)
-            .style(style::field::input);
+            .width(width);
         let hint =
             container(label::caption(open.hint))
                 .padding([2, 6])

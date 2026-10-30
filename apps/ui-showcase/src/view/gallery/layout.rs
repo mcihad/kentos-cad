@@ -111,8 +111,9 @@ impl Showcase {
                 "Açık çizimler ya da model ve düzen görünümleri gibi aynı alanı paylaşan içerikler. \
              Etkin sekme içeriğe bağlanır. Kaydedilmemiş çizimde kapatma düğmesinin yerinde nokta \
              durur; üzerine gelince × olur, orta tık da kapatır. Sekmeleri sürükleyerek sıralayın. \
-             Sığmayan sekmeler sağdaki listeden seçilir, uzun adların sonu solar; alttaki dar \
-             şeritte deneyin. Şerit içeriğin altına da asılır: Giriş sekmesinde haritanın altındaki \
+             Sekmeler daralmaz: sığmayan şerit kayar, sağda ‹ › okları ve bütün sekmelerin listesi \
+             çıkar, tekerlek de kaydırır; kesilen kenar solar, seçilen sekme görünür yapılır. Alttaki \
+             dar şeritte deneyin. Şerit içeriğin altına da asılır: Giriş sekmesinde haritanın altındaki \
              Model ve Düzen sekmeleri.",
                 self.documents_sample(),
                 Some(
@@ -362,7 +363,7 @@ impl Showcase {
                     DemoPanel::Layers => pane.actions(
                         button(icon(Icon::Plus).size(12.0))
                             .on_press(pressed("Katman ekle"))
-                            .padding(4)
+                            .padding(kentos_ui::theme::metrics::icon_small(12.0))
                             .style(style::button::flat),
                     ),
                     DemoPanel::Properties | DemoPanel::Output => pane.scrollable(),
@@ -379,7 +380,7 @@ impl Showcase {
             row![
                 button(label::body("Yerleşimi sıfırla"))
                     .on_press(Message::Gallery(Demo::DockReset))
-                    .padding([4, 12])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
                 label::caption(self.gallery.docks.save(|panel| demo_key(panel).to_owned())),
             ]
@@ -437,7 +438,7 @@ impl Showcase {
                                 .dirty
                                 .then_some(Message::Gallery(Demo::DocumentSaved)),
                         )
-                        .padding([4, 12])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::secondary),
                 ]
                 .spacing(10)

@@ -5,22 +5,22 @@
 
 use std::path::{Path, PathBuf};
 
-use iced::widget::{Column, Row, button, container, row, text_input};
+use iced::widget::{Column, Row, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    AssetKind, AssetState, AssetStatus, AssetVia, AssetsCheck, CommandResult, CommandWarning, Vec2, XrefBindMode, XrefInfo, XrefKind, XrefState, XrefsEdit, XrefsEdited,
-    XrefsList, XrefsOperation,
+    AssetKind, AssetState, AssetStatus, AssetVia, AssetsCheck, CommandResult, CommandWarning, Vec2,
+    XrefBindMode, XrefInfo, XrefKind, XrefState, XrefsEdit, XrefsEdited, XrefsList, XrefsOperation,
 };
 use kentos_interaction::pick::PickPoint;
 use kentos_native_application::{ExecutionContext, xrefs_edit, xrefs_list};
 use kentos_ui::icon::{Icon, Tone, icon};
-use kentos_ui::widget::{Dialog as Frame, NumberInput, Segmented, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, NumberInput, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message, Picker};
 use crate::exchange::words::{self, Kind};
-use kentos_interaction::Level;
 use crate::traces::Control;
+use kentos_interaction::Level;
 
 /// The windows' titles, which a trace names them by.
 pub const TITLE: &str = "Dış başvurular";
@@ -157,7 +157,10 @@ fn msg(e: Event) -> Message {
 }
 
 fn file_name(path: &Path) -> String {
-    path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
+    path.file_name().map_or_else(
+        || path.display().to_string(),
+        |n| n.to_string_lossy().into_owned(),
+    )
 }
 
 fn state_words(s: XrefState) -> (&'static str, Kind) {
@@ -172,12 +175,19 @@ fn state_words(s: XrefState) -> (&'static str, Kind) {
 impl App {
     /// The open drawing's file, for the references' relative paths and the cycle check.
     pub(crate) fn drawing_path(&self) -> Option<String> {
-        self.document.as_ref()?.path.as_ref().map(|p| p.display().to_string())
+        self.document
+            .as_ref()?
+            .path
+            .as_ref()
+            .map(|p| p.display().to_string())
     }
 
     fn xrefs_listed(&self) -> Option<Vec<XrefInfo>> {
         let doc = self.document.as_ref()?;
-        let input = XrefsList { drawing: self.drawing_path(), affected: false };
+        let input = XrefsList {
+            drawing: self.drawing_path(),
+            affected: false,
+        };
         match xrefs_list::plan(&ExecutionContext::new(&mut doc.model.clone()), &input) {
             CommandResult::Completed { output, .. } => Some(nested_under(output.xrefs)),
             _ => None,
@@ -186,18 +196,32 @@ impl App {
 
     /// The other linked files (Diğer bağlı dosyalar) and the search paths, as the drawing has them now.
     fn xrefs_others(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let drawing = self.drawing_path();
         // Pictures, tables and attachments with their SHA-256 where one is kept; a bound layer's source (a large file) only
         // looked for.
         let near = AssetsCheck {
             drawing: drawing.clone(),
-            kinds: Some(vec![AssetKind::Image, AssetKind::Raster, AssetKind::PointCloud, AssetKind::Table, AssetKind::Attachment]),
+            kinds: Some(vec![
+                AssetKind::Image,
+                AssetKind::Raster,
+                AssetKind::PointCloud,
+                AssetKind::Table,
+                AssetKind::Attachment,
+            ]),
             digests: Some(true),
         };
-        let sources = AssetsCheck { drawing, kinds: Some(vec![AssetKind::Source]), digests: Some(false) };
-        let mut others = kentos_native_application::assets_check::check_in(&doc.model, &near).assets;
-        others.extend(kentos_native_application::assets_check::check_in(&doc.model, &sources).assets);
+        let sources = AssetsCheck {
+            drawing,
+            kinds: Some(vec![AssetKind::Source]),
+            digests: Some(false),
+        };
+        let mut others =
+            kentos_native_application::assets_check::check_in(&doc.model, &near).assets;
+        others
+            .extend(kentos_native_application::assets_check::check_in(&doc.model, &sources).assets);
         self.xrefs.others = others;
         self.xrefs.paths = doc.model.settings().xref_paths.clone();
     }
@@ -209,7 +233,12 @@ impl App {
             return;
         }
         self.xrefs.listed = self.xrefs_listed();
-        self.xrefs.chosen = self.xrefs.listed.as_ref().filter(|l| !l.is_empty()).map(|_| 0);
+        self.xrefs.chosen = self
+            .xrefs
+            .listed
+            .as_ref()
+            .filter(|l| !l.is_empty())
+            .map(|_| 0);
         self.xrefs.bind_menu = false;
         self.xrefs_others();
         self.dialog = Some(Dialog::Xrefs);
@@ -255,28 +284,40 @@ impl App {
         let locked = self.tree_locked();
         let drawing = self.drawing_path();
         let doc = self.document.as_mut()?;
-        let input = XrefsEdit { operation, drawing, expected_revision: None };
+        let input = XrefsEdit {
+            operation,
+            drawing,
+            expected_revision: None,
+        };
         // A project whose layer tree is not ours to change takes no new layer.
         if let Some(locked) = locked
-            && let CommandResult::Completed { output, .. } = xrefs_edit::plan(&ExecutionContext::new(&mut doc.model), &input)
+            && let CommandResult::Completed { output, .. } =
+                xrefs_edit::plan(&ExecutionContext::new(&mut doc.model), &input)
             && !output.layers.is_empty()
         {
             self.warn(format!("{TITLE}: {locked}"));
             return None;
         }
-        let (output, warnings) = match xrefs_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-            CommandResult::Completed { output, warnings } => (output, warnings),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                self.warn(format!("{TITLE}: {}", error.message));
-                return None;
-            }
-            _ => return None,
-        };
+        let (output, warnings) =
+            match xrefs_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                CommandResult::Completed { output, warnings } => (output, warnings),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
+                    self.warn(format!("{TITLE}: {}", error.message));
+                    return None;
+                }
+                _ => return None,
+            };
         self.say_warnings(&warnings);
         if self.dialog == Some(Dialog::Xrefs) {
             self.xrefs.listed = self.xrefs_listed();
             let n = self.xrefs.listed.as_ref().map_or(0, Vec::len);
-            self.xrefs.chosen = self.xrefs.chosen.filter(|k| *k < n).or((n > 0).then_some(0));
+            self.xrefs.chosen = self
+                .xrefs
+                .chosen
+                .filter(|k| *k < n)
+                .or((n > 0).then_some(0));
             self.xrefs_others();
         }
         // A command answered: the files as they are now are the ones seen.
@@ -287,15 +328,22 @@ impl App {
     /// Yeniden bağla: the picture at `slot` shows `path` (`cad.images.edit`), one step.
     fn image_relinked(&mut self, slot: kentos_domain::Slot, path: &Path) {
         let drawing = self.document.as_ref().and_then(|d| d.path.clone());
-        let Some(doc) = self.document.as_mut() else { return };
-        let Some(uid) = doc.model.uid(slot) else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let Some(uid) = doc.model.uid(slot) else {
+            return;
+        };
         let operation = kentos_commands::ImagesOperation::Relink {
             uids: vec![uid.to_string()],
             file: path.display().to_string(),
         };
         let said = crate::pictures::edit(&mut doc.model, operation, drawing.as_deref());
         if said.is_empty() {
-            self.say(Level::Success, format!("Resim artık {} dosyasını gösteriyor.", file_name(path)));
+            self.say(
+                Level::Success,
+                format!("Resim artık {} dosyasını gösteriyor.", file_name(path)),
+            );
         }
         for s in said {
             self.warn(format!("Resmin kaynağı: {s}"));
@@ -309,8 +357,14 @@ impl App {
     }
 
     fn attach_now(&mut self, at: Option<Vec2>) {
-        let Some(a) = self.xrefs.attach.take() else { return };
-        let layer = self.document.as_ref().map(|d| d.model.layers().active().to_owned()).unwrap_or_default();
+        let Some(a) = self.xrefs.attach.take() else {
+            return;
+        };
+        let layer = self
+            .document
+            .as_ref()
+            .map(|d| d.model.layers().active().to_owned())
+            .unwrap_or_default();
         let operation = XrefsOperation::Attach {
             path: a.path.display().to_string(),
             mode: match a.mode {
@@ -330,7 +384,10 @@ impl App {
                 parts.push(format!("{} yeni katman", done.layers.len()));
             }
             if !done.nested.is_empty() {
-                parts.push(format!("{} iç blok ya da iç içe dış başvuru", done.nested.len()));
+                parts.push(format!(
+                    "{} iç blok ya da iç içe dış başvuru",
+                    done.nested.len()
+                ));
             }
             self.say(
                 Level::Success,
@@ -377,8 +434,18 @@ impl App {
 
     /// The chosen PDF underlay's look written, one step.
     fn underlay_look(&mut self, fade: Option<u8>, monochrome: Option<bool>, plot: Option<bool>) {
-        let Some(name) = self.chosen_name() else { return };
-        if self.xref_run(XrefsOperation::Underlay { name, fade, monochrome, plot }).is_some() {
+        let Some(name) = self.chosen_name() else {
+            return;
+        };
+        if self
+            .xref_run(XrefsOperation::Underlay {
+                name,
+                fade,
+                monochrome,
+                plot,
+            })
+            .is_some()
+        {
             self.xrefs_others();
         }
     }
@@ -391,14 +458,28 @@ impl App {
             return Task::none();
         };
         if x.page.is_some() {
-            self.warn("Bir PDF altlığının kaynağı çizim değil, PDF dosyasıdır; KentOS'ta düzenlenmez.");
+            self.warn(
+                "Bir PDF altlığının kaynağı çizim değil, PDF dosyasıdır; KentOS'ta düzenlenmez.",
+            );
             return Task::none();
         }
-        let search = self.document.as_ref().map(|d| d.model.settings().xref_paths.clone()).unwrap_or_default();
+        let search = self
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().xref_paths.clone())
+            .unwrap_or_default();
         let drawing = self.drawing_path();
-        let found = kentos_native_application::links::find(&x.path, x.relative.as_deref(), drawing.as_deref(), &search);
+        let found = kentos_native_application::links::find(
+            &x.path,
+            x.relative.as_deref(),
+            drawing.as_deref(),
+            &search,
+        );
         let Some(at) = found.at else {
-            self.warn(format!("“{}” kaynağı bulunamadı; önce Yolu değiştir… ile bağlayın.", x.name));
+            self.warn(format!(
+                "“{}” kaynağı bulunamadı; önce Yolu değiştir… ile bağlayın.",
+                x.name
+            ));
             return Task::none();
         };
         if drawing.as_deref().is_some_and(|d| Path::new(d) == at) {
@@ -431,11 +512,19 @@ impl App {
         match event {
             Event::Picked(_, None) => {}
             Event::Picked(Purpose::Attach, Some(path)) => {
-                let name = path.file_stem().map_or_else(String::new, |s| s.to_string_lossy().into_owned());
+                let name = path
+                    .file_stem()
+                    .map_or_else(String::new, |s| s.to_string_lossy().into_owned());
                 // A PDF is an underlay of one of its pages (docs/adr/0351 §2).
                 let pdf = std::fs::read(&path).is_ok_and(|b| kentos_formats::pdf::is_pdf(&b));
-                self.xrefs.attach =
-                    Some(Attach { path, name, mode: Mode::Attach, scale: 1.0, rotation: 0.0, page: pdf.then_some(1) });
+                self.xrefs.attach = Some(Attach {
+                    path,
+                    name,
+                    mode: Mode::Attach,
+                    scale: 1.0,
+                    rotation: 0.0,
+                    page: pdf.then_some(1),
+                });
                 self.dialog = Some(Dialog::XrefAttach);
             }
             Event::Picked(Purpose::Image(slot), Some(path)) => self.image_relinked(slot, &path),
@@ -443,8 +532,19 @@ impl App {
             Event::Picked(Purpose::Repath, Some(path)) => {
                 if let Some(name) = self.chosen_name() {
                     let path = path.display().to_string();
-                    if let Some(done) = self.xref_run(XrefsOperation::Repath { name, path: path.clone() }) {
-                        self.say(Level::Success, format!("“{}” artık {} dosyasından: {} nesne.", done.name, file_name(Path::new(&path)), done.objects));
+                    if let Some(done) = self.xref_run(XrefsOperation::Repath {
+                        name,
+                        path: path.clone(),
+                    }) {
+                        self.say(
+                            Level::Success,
+                            format!(
+                                "“{}” artık {} dosyasından: {} nesne.",
+                                done.name,
+                                file_name(Path::new(&path)),
+                                done.objects
+                            ),
+                        );
                     }
                 }
             }
@@ -473,7 +573,9 @@ impl App {
                     a.page = Some(v.round().clamp(1.0, f64::from(u32::MAX)) as u32);
                 }
             }
-            Event::Fade(v) => self.underlay_look(Some(v.round().clamp(0.0, 80.0) as u8), None, None),
+            Event::Fade(v) => {
+                self.underlay_look(Some(v.round().clamp(0.0, 80.0) as u8), None, None)
+            }
             Event::Monochrome(on) => self.underlay_look(None, Some(on), None),
             Event::Plot(on) => self.underlay_look(None, None, Some(on)),
             Event::OpenSource => return self.open_xref_source(),
@@ -487,7 +589,10 @@ impl App {
                 self.say(Level::Command, ATTACH_TITLE.to_owned());
                 self.field = None;
                 self.snap = None;
-                self.session.run(Box::new(PickPoint::new("", "Dış başvurunun yeri (kaynağın 0,0 noktası)")));
+                self.session.run(Box::new(PickPoint::new(
+                    "",
+                    "Dış başvurunun yeri (kaynağın 0,0 noktası)",
+                )));
                 self.with_tool(|s, cx| s.activate(cx));
             }
             Event::CancelAttach => {
@@ -502,7 +607,10 @@ impl App {
                 if let Some(name) = self.chosen_name()
                     && let Some(done) = self.xref_run(XrefsOperation::Reload { name })
                 {
-                    self.say(Level::Success, format!("“{}” yeniden yüklendi: {} nesne.", done.name, done.objects));
+                    self.say(
+                        Level::Success,
+                        format!("“{}” yeniden yüklendi: {} nesne.", done.name, done.objects),
+                    );
                 }
             }
             Event::Unload => {
@@ -517,7 +625,13 @@ impl App {
                 if let Some(name) = self.chosen_name()
                     && let Some(done) = self.xref_run(XrefsOperation::Detach { name })
                 {
-                    self.say(Level::Success, format!("“{}” kaldırıldı: {} yerleştirmesiyle (tek adımda geri alınır).", done.name, done.removed));
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "“{}” kaldırıldı: {} yerleştirmesiyle (tek adımda geri alınır).",
+                            done.name, done.removed
+                        ),
+                    );
                 }
             }
             Event::BindMenu => self.xrefs.bind_menu = !self.xrefs.bind_menu,
@@ -531,7 +645,10 @@ impl App {
                     } else {
                         format!("; birleşen katmanlar: {}", done.merged.join(", "))
                     };
-                    self.say(Level::Success, format!("“{}” sıradan blok oldu{merged}.", done.name));
+                    self.say(
+                        Level::Success,
+                        format!("“{}” sıradan blok oldu{merged}.", done.name),
+                    );
                 }
             }
             Event::Add => {
@@ -545,7 +662,10 @@ impl App {
                 }
                 return Task::perform(
                     async {
-                        let folder = rfd::AsyncFileDialog::new().set_title("Arama yolu").pick_folder().await?;
+                        let folder = rfd::AsyncFileDialog::new()
+                            .set_title("Arama yolu")
+                            .pick_folder()
+                            .await?;
                         Some(folder.path().to_path_buf())
                     },
                     |folder| msg(Event::PathPicked(folder)),
@@ -578,7 +698,10 @@ impl App {
         let chosen = self.xrefs.chosen.and_then(|k| listed.get(k));
         let counts = |s: XrefState| listed.iter().filter(|x| x.state == s).count();
         let line = if listed.is_empty() {
-            words::text_line(Kind::Info, "Bu çizimde dış başvuru yok. Ekle… ile başka bir çizimi kaynağına bağlı ekleyin.")
+            words::text_line(
+                Kind::Info,
+                "Bu çizimde dış başvuru yok. Ekle… ile başka bir çizimi kaynağına bağlı ekleyin.",
+            )
         } else if counts(XrefState::Changed) + counts(XrefState::Missing) > 0 {
             words::text_line(
                 Kind::Warn,
@@ -590,7 +713,10 @@ impl App {
                 ),
             )
         } else {
-            words::text_line(Kind::Ok, format!("{} dış başvuru, hepsi kaynağıyla aynı.", listed.len()))
+            words::text_line(
+                Kind::Ok,
+                format!("{} dış başvuru, hepsi kaynağıyla aynı.", listed.len()),
+            )
         };
         let mut list = Column::new().spacing(4);
         for (k, x) in listed.iter().enumerate() {
@@ -623,7 +749,12 @@ impl App {
                 XrefState::Missing | XrefState::Changed => "warning",
             };
             let face = row![
-                container(icon(crate::icons::from_web(Some(glyph))).size(18.0)).padding(iced::Padding { left: if x.parent.is_some() { 18.0 } else { 0.0 }, ..Default::default() }),
+                container(icon(crate::icons::from_web(Some(glyph))).size(18.0)).padding(
+                    iced::Padding {
+                        left: if x.parent.is_some() { 18.0 } else { 0.0 },
+                        ..Default::default()
+                    }
+                ),
                 container(text).width(Fill).clip(true),
                 state_chip(kind, state),
             ]
@@ -646,7 +777,14 @@ impl App {
             .push(words::secondary(REPATH, on(Event::Repath)))
             .push(words::secondary(DETACH, on(Event::Detach)))
             .push(words::secondary(OPEN_SOURCE, on(Event::OpenSource)))
-            .push(words::secondary(if self.xrefs.bind_menu { "Bağla ▴" } else { "Bağla ▾" }, on(Event::BindMenu)));
+            .push(words::secondary(
+                if self.xrefs.bind_menu {
+                    "Bağla ▴"
+                } else {
+                    "Bağla ▾"
+                },
+                on(Event::BindMenu),
+            ));
         if chosen.is_some_and(|x| x.parent.is_some()) {
             actions = actions.push(label::caption("İç içe olanı onu getiren değiştirir."));
         }
@@ -672,8 +810,12 @@ impl App {
                                     .width(90),
                                 None,
                             ),
-                            kentos_ui::widget::Switch::new(look.monochrome, |on| msg(Event::Monochrome(on))).label("Tek renk"),
-                            kentos_ui::widget::Switch::new(look.plot, |on| msg(Event::Plot(on))).label("Yazdır"),
+                            kentos_ui::widget::Switch::new(look.monochrome, |on| msg(
+                                Event::Monochrome(on)
+                            ))
+                            .label("Tek renk"),
+                            kentos_ui::widget::Switch::new(look.plot, |on| msg(Event::Plot(on)))
+                                .label("Yazdır"),
                         ]
                         .spacing(16)
                         .align_y(Center),
@@ -688,21 +830,27 @@ impl App {
                 container(
                     Column::new()
                         .spacing(2)
-                        .push(menu_item(BIND, "Sıradan blok olur; katmanları “Dış başvuru” grubunda kalır.", Event::Bind(XrefBindMode::Bind)))
-                        .push(menu_item(BIND_INSERT, "Katmanları bu çizimin aynı yoldaki katmanlarıyla birleşir.", Event::Bind(XrefBindMode::Insert))),
+                        .push(menu_item(
+                            BIND,
+                            "Sıradan blok olur; katmanları “Dış başvuru” grubunda kalır.",
+                            Event::Bind(XrefBindMode::Bind),
+                        ))
+                        .push(menu_item(
+                            BIND_INSERT,
+                            "Katmanları bu çizimin aynı yoldaki katmanlarıyla birleşir.",
+                            Event::Bind(XrefBindMode::Insert),
+                        )),
                 )
                 .padding(4)
                 .style(style::container::field_box),
             );
         }
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .aside(words::ghost(ADD, Some(msg(Event::Add))))
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(720.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .aside(words::ghost(ADD, Some(msg(Event::Add))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(720.0)
+            .modal(msg(Event::Close))
     }
 
     /// Arama yolları: the project's folders in order, each removable, and Klasör ekle….
@@ -720,10 +868,14 @@ impl App {
                 container(
                     row![
                         icon(Icon::Folder).size(16.0).tone(Tone::Muted),
-                        container(label::body(p.clone()).wrapping(iced::widget::text::Wrapping::None)).width(Fill).clip(true),
+                        container(
+                            label::body(p.clone()).wrapping(iced::widget::text::Wrapping::None)
+                        )
+                        .width(Fill)
+                        .clip(true),
                         button(icon(Icon::Close).size(12.0).tone(Tone::Muted))
                             .on_press(msg(Event::RemovePath(k)))
-                            .padding(4)
+                            .padding(kentos_ui::theme::metrics::icon_small(12.0))
                             .style(style::button::ghost),
                     ]
                     .spacing(10)
@@ -745,13 +897,28 @@ impl App {
     /// Diğer bağlı dosyalar: the drawing's pictures, rasters, point clouds, tables, attachments and sources, read-only.
     fn xref_others_view(&self) -> Element<'_, Message> {
         let others = &self.xrefs.others;
-        let bad = others.iter().filter(|a| matches!(a.state, AssetState::Missing | AssetState::Changed)).count();
+        let bad = others
+            .iter()
+            .filter(|a| matches!(a.state, AssetState::Missing | AssetState::Changed))
+            .count();
         let line = if others.is_empty() {
-            words::text_line(Kind::Info, "Çizimin başka bağlı dosyası yok: resimler ve rasterler gömülü ya da hiç yok.")
+            words::text_line(
+                Kind::Info,
+                "Çizimin başka bağlı dosyası yok: resimler ve rasterler gömülü ya da hiç yok.",
+            )
         } else if bad > 0 {
-            words::text_line(Kind::Warn, format!("{} bağlı dosyanın {bad} tanesi bulunamadı ya da değişti.", others.len()))
+            words::text_line(
+                Kind::Warn,
+                format!(
+                    "{} bağlı dosyanın {bad} tanesi bulunamadı ya da değişti.",
+                    others.len()
+                ),
+            )
         } else {
-            words::text_line(Kind::Ok, format!("{} bağlı dosya, hepsi yerinde.", others.len()))
+            words::text_line(
+                Kind::Ok,
+                format!("{} bağlı dosya, hepsi yerinde.", others.len()),
+            )
         };
         let mut list = Column::new().spacing(4);
         for a in others {
@@ -780,15 +947,29 @@ impl App {
             };
             let text = Column::new()
                 .spacing(2)
-                .push(label::body(format!("{what} · {}", a.name)).wrapping(iced::widget::text::Wrapping::None))
+                .push(
+                    label::body(format!("{what} · {}", a.name))
+                        .wrapping(iced::widget::text::Wrapping::None),
+                )
                 .push(label::caption(place).wrapping(iced::widget::text::Wrapping::None));
             list = list.push(
-                container(row![container(text).width(Fill).clip(true), state_chip(kind, state)].spacing(10).align_y(Center))
-                    .padding([6, 10])
-                    .width(Fill),
+                container(
+                    row![
+                        container(text).width(Fill).clip(true),
+                        state_chip(kind, state)
+                    ]
+                    .spacing(10)
+                    .align_y(Center),
+                )
+                .padding([6, 10])
+                .width(Fill),
             );
         }
-        Column::new().spacing(12).push(words::summary(vec![line])).push(iced::widget::scrollable(list).height(300.0)).into()
+        Column::new()
+            .spacing(12)
+            .push(words::summary(vec![line]))
+            .push(iced::widget::scrollable(list).height(300.0))
+            .into()
     }
 
     pub(crate) fn xref_attach_view(&self) -> Element<'_, Message> {
@@ -802,21 +983,38 @@ impl App {
                 file_name(&a.path)
             ),
         );
-        let name = focus_ring(
-            text_input("Dosyanın adı", &a.name)
-                .on_input(|t| msg(Event::Name(t)))
-                .padding([5, 8])
-                .style(style::field::input),
-        );
+        let name = kentos_ui::widget::text_field("Dosyanın adı", &a.name)
+            .on_input(|t| msg(Event::Name(t)));
         let numbers = row![
-            words::field("Ölçek", NumberInput::new(a.scale, |v| msg(Event::Scale(v))).range(0.000_001..=1_000_000.0).step(0.5).decimals(3).point().width(120), None),
-            words::field("Dönüş (°)", NumberInput::new(a.rotation, |v| msg(Event::Rotation(v))).step(15.0).decimals(2).point().width(120), None),
+            words::field(
+                "Ölçek",
+                NumberInput::new(a.scale, |v| msg(Event::Scale(v)))
+                    .range(0.000_001..=1_000_000.0)
+                    .step(0.5)
+                    .decimals(3)
+                    .point()
+                    .width(120),
+                None
+            ),
+            words::field(
+                "Dönüş (°)",
+                NumberInput::new(a.rotation, |v| msg(Event::Rotation(v)))
+                    .step(15.0)
+                    .decimals(2)
+                    .point()
+                    .width(120),
+                None
+            ),
         ]
         .spacing(16);
         let numbers = match a.page {
             Some(page) => numbers.push(words::field(
                 "Sayfa",
-                NumberInput::new(f64::from(page), |v| msg(Event::Page(v))).range(1.0..=100_000.0).step(1.0).decimals(0).width(90),
+                NumberInput::new(f64::from(page), |v| msg(Event::Page(v)))
+                    .range(1.0..=100_000.0)
+                    .step(1.0)
+                    .decimals(0)
+                    .width(90),
                 None,
             )),
             None => numbers,
@@ -831,26 +1029,33 @@ impl App {
         let body = Column::new()
             .spacing(12)
             .push(words::summary(vec![line]))
-            .push(words::file_line(&file_name(&a.path), a.path.parent().map_or_else(String::new, |p| p.display().to_string())))
+            .push(words::file_line(
+                &file_name(&a.path),
+                a.path
+                    .parent()
+                    .map_or_else(String::new, |p| p.display().to_string()),
+            ))
             .push(words::field("Ad", name, None))
             .push(words::field(
                 "Tür",
                 Segmented::new(MODES, a.mode, |m| msg(Event::Mode(m))),
                 Some(match a.mode {
-                    Mode::Attach => "Bu çizimi dış başvuru olarak alan çizimde de görünür.".to_owned(),
-                    Mode::Overlay => "Yalnız bu çizimde görünür; bu çizimi alan çizime gelmez.".to_owned(),
+                    Mode::Attach => {
+                        "Bu çizimi dış başvuru olarak alan çizimde de görünür.".to_owned()
+                    }
+                    Mode::Overlay => {
+                        "Yalnız bu çizimde görünür; bu çizimi alan çizime gelmez.".to_owned()
+                    }
                 }),
             ))
             .push(numbers);
-        overlay::modal(
-            Frame::new(ATTACH_TITLE)
-                .push(body)
-                .aside(words::ghost(CANCEL, Some(msg(Event::CancelAttach))))
-                .action(words::secondary(ON_SCREEN, Some(msg(Event::OnScreen))))
-                .action(words::primary(IN_PLACE, Some(msg(Event::InPlace))))
-                .width(560.0),
-            msg(Event::CancelAttach),
-        )
+        Frame::new(ATTACH_TITLE)
+            .push(body)
+            .aside(words::ghost(CANCEL, Some(msg(Event::CancelAttach))))
+            .action(words::secondary(ON_SCREEN, Some(msg(Event::OnScreen))))
+            .action(words::primary(IN_PLACE, Some(msg(Event::InPlace))))
+            .width(560.0)
+            .modal(msg(Event::CancelAttach))
     }
 
     /// The windows' buttons by their words (a trace's `dialog` step).
@@ -876,7 +1081,11 @@ impl App {
 fn nested_under(all: Vec<XrefInfo>) -> Vec<XrefInfo> {
     fn take(name: Option<&str>, all: &mut Vec<Option<XrefInfo>>, out: &mut Vec<XrefInfo>) {
         let here: Vec<usize> = (0..all.len())
-            .filter(|k| all[*k].as_ref().is_some_and(|x| x.parent.as_deref() == name))
+            .filter(|k| {
+                all[*k]
+                    .as_ref()
+                    .is_some_and(|x| x.parent.as_deref() == name)
+            })
             .collect();
         for k in here {
             if let Some(x) = all[k].take() {
@@ -902,14 +1111,22 @@ fn state_chip<'a>(kind: Kind, words: &'a str) -> Element<'a, Message> {
         Kind::Info => (Icon::Info, Tone::Muted),
         Kind::Error => (Icon::Error, Tone::Danger),
     };
-    row![icon(glyph).size(14.0).tone(tone), label::caption(words)].spacing(4).align_y(Center).into()
+    row![icon(glyph).size(14.0).tone(tone), label::caption(words)]
+        .spacing(4)
+        .align_y(Center)
+        .into()
 }
 
 fn menu_item<'a>(title: &'a str, about: &'a str, e: Event) -> Element<'a, Message> {
-    button(Column::new().spacing(2).push(label::body(title)).push(label::caption(about)))
-        .on_press(msg(e))
-        .padding([6, 10])
-        .width(Fill)
-        .style(style::button::subtle)
-        .into()
+    button(
+        Column::new()
+            .spacing(2)
+            .push(label::body(title))
+            .push(label::caption(about)),
+    )
+    .on_press(msg(e))
+    .padding([6, 10])
+    .width(Fill)
+    .style(style::button::subtle)
+    .into()
 }

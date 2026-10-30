@@ -358,8 +358,7 @@ impl App {
         })
         .id(SEARCH)
         .on_down(msg(Event::Down))
-        .fill()
-        .height(28.0);
+        .fill();
         // Yeni şablon, Seçili nesneden şablon and Stil yöneticisi beside the search (the web's toolbar).
         let search = container(
             row![
@@ -433,7 +432,7 @@ impl App {
         tip(
             button(icon(glyph).size(16.0))
                 .on_press_maybe(self.available(id).then_some(Message::Run(id)))
-                .padding([4, 5])
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .style(style::button::ghost),
             Tip::new(title.to_owned()),
             tooltip::Position::Bottom,

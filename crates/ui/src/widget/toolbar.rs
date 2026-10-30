@@ -47,8 +47,8 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
         let content = button(container(icon(glyph)).center(Fill))
             .on_press_maybe(on_press)
             .padding(0)
-            .width(metrics::inline() + 4.0)
-            .height(metrics::inline())
+            .width(metrics::control())
+            .height(metrics::control())
             .style(style::button::flat);
 
         self.push(tip(
@@ -74,7 +74,7 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
             )
             .on_press_maybe(on_press)
             .padding([0, 8])
-            .height(metrics::inline())
+            .height(metrics::control())
             .style(style::button::flat),
         )
     }
@@ -103,7 +103,7 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
             )
             .on_press(on_press)
             .padding([0, 8])
-            .height(metrics::inline())
+            .height(metrics::control())
             .style(style::button::tool(active)),
         )
     }
@@ -120,8 +120,7 @@ impl<'a, Message: Clone + 'a> Toolbar<'a, Message> {
             InputField::new(placeholder, value)
                 .on_input(on_input)
                 .icon(Icon::Search)
-                .clear(clear)
-                .inline(),
+                .clear(clear),
         )
         .width(typography::scaled(220.0));
 

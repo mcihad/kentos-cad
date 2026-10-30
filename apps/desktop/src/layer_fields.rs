@@ -12,7 +12,7 @@
 //! The fields change the layer tree: a cloud project without `project.edit`
 //! refuses them ([`crate::layering::TREE_LOCKED`]).
 
-use iced::widget::{Column, button, container, row, text, text_input};
+use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, FieldChoice, FieldRename, LayerEditOperation, LayerField, LayerFieldKind,
@@ -22,9 +22,9 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_edit};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -938,17 +938,18 @@ impl App {
             .map(|d| d.model.settings().domains.clone())
             .unwrap_or_default();
         let cell_width = |j: usize| Length::Fixed(typography::scaled(HEADS[j].1));
-        let head = HEADS
-            .iter()
-            .enumerate()
-            .fold(row![].spacing(6), |r, (j, (h, _))| {
-                r.push(container(label::caption(*h)).width(cell_width(j)))
-            });
+        let head = kentos_ui::widget::table::band(HEADS.iter().enumerate().fold(
+            row![].spacing(6),
+            |r, (j, (h, _))| {
+                r.push(
+                    container(kentos_ui::widget::table::title(*h))
+                        .padding([0, 8])
+                        .width(cell_width(j)),
+                )
+            },
+        ));
         let input = |i: usize, cell: Cell, value: &str, label_words: &'static str, on: bool| {
-            let field = text_input(label_words, value)
-                .size(typography::body())
-                .padding([3, 6])
-                .style(style::field::input);
+            let field = kentos_ui::widget::text_field(label_words, value);
             let field = if on {
                 field.on_input(move |t| msg(Event::Type(i, cell, t)))
             } else {
@@ -997,7 +998,7 @@ impl App {
                     .width(Length::Fixed(typography::scaled(HEADS[8].1) - 18.0)),
             )
             .style(style::button::secondary)
-            .padding([3, 8])
+            .padding(kentos_ui::theme::metrics::action_small())
             .on_press_maybe(listed.then(|| msg(Event::OpenList(i))));
             let line = row![
                 container(input(i, Cell::Name, &r.name, "Ad", true)).width(cell_width(0)),
@@ -1049,7 +1050,7 @@ impl App {
                     .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe(on)
         };
         let chosen = w.chosen;
@@ -1113,10 +1114,7 @@ impl App {
                 if r.kind.is_number() {
                     line = line.push(label::body("Birim")).push(
                         container(
-                            text_input("m², kg …", &r.unit)
-                                .size(typography::body())
-                                .padding([3, 6])
-                                .style(style::field::input)
+                            kentos_ui::widget::text_field("m², kg …", &r.unit)
                                 .on_input(|t| msg(Event::Unit(t))),
                         )
                         .width(Length::Fixed(typography::scaled(90.0))),
@@ -1146,7 +1144,10 @@ impl App {
                         .into()
                 }
             }
-            None => label::caption("Tekil, hariç uçlar, birim ve dışarı verilmez için bir alan seçin.").into(),
+            None => {
+                label::caption("Tekil, hariç uçlar, birim ve dışarı verilmez için bir alan seçin.")
+                    .into()
+            }
         };
         // The bound table's constraints (docs/adr/0755 §6).
         let held: Element<'_, Message> = match doc
@@ -1210,22 +1211,20 @@ impl App {
         let path = doc.model.layers().path(&w.layer);
         let ready = problem.is_none() && w.changed();
         // The body scrolls in a low window, the buttons stay in sight (docs/adr/0749, 0753).
-        let main = overlay::modal(
-            Frame::new(FIELDS_TITLE)
-                .scroll(
-                    Column::new()
-                        .spacing(10)
-                        .push(label::muted(format!("Katman: {path}")))
-                        .push(table)
-                        .push(actions)
-                        .push(usage)
-                        .push(words::summary(vec![line])),
-                )
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
-                .width(1040.0),
-            msg(Event::Cancel),
-        );
+        let main = Frame::new(FIELDS_TITLE)
+            .scroll(
+                Column::new()
+                    .spacing(10)
+                    .push(label::muted(format!("Katman: {path}")))
+                    .push(table)
+                    .push(actions)
+                    .push(usage)
+                    .push(words::summary(vec![line])),
+            )
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
+            .width(1040.0)
+            .modal(msg(Event::Cancel));
         let Some(c) = &w.choices else {
             return main;
         };
@@ -1259,17 +1258,11 @@ impl App {
         for (i, choice) in c.list.iter().enumerate() {
             let (code, label_text) = (&choice.code, &choice.label);
             let retired = choice.retired;
-            let code_input = text_input("", code)
-                .padding([3, 6])
-                .style(style::field::input);
-            let label_input = text_input("", label_text)
-                .padding([3, 6])
-                .style(style::field::input);
+            let code_input = kentos_ui::widget::text_field("", code);
+            let label_input = kentos_ui::widget::text_field("", label_text);
             // What the value means and the days it holds (docs/adr/0438 §5).
             let typed = |placeholder: &'static str, value: &str, on: fn(usize, String) -> Event| {
-                let field = text_input(placeholder, value)
-                    .padding([3, 6])
-                    .style(style::field::input);
+                let field = kentos_ui::widget::text_field(placeholder, value);
                 if own {
                     field.on_input(move |t| msg(on(i, t)))
                 } else {
@@ -1278,10 +1271,7 @@ impl App {
             };
             let shown_day = |d: &Option<String>| {
                 d.as_deref().map_or_else(String::new, |d| {
-                    kentos_commands::display_value(
-                        &LayerField::new("gün", LayerFieldKind::Date),
-                        d,
-                    )
+                    kentos_commands::display_value(&LayerField::new("gün", LayerFieldKind::Date), d)
                 })
             };
             list = list.push(
@@ -1317,7 +1307,7 @@ impl App {
                     ),
                     button(icon(kentos_ui::icon::Icon::Close).size(12.0))
                         .style(style::button::subtle)
-                        .padding(4)
+                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
                         .on_press_maybe(own.then(|| msg(Event::ListRemove(i)))),
                 ]
                 .spacing(6)
@@ -1387,14 +1377,12 @@ impl App {
                 Some(msg(Event::ListMultiple(!c.multiple))),
             ));
         }
-        let sub = overlay::modal(
-            Frame::new(format!("Değer listesi · {name}"))
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::ListCancel))))
-                .action(words::primary("Tamam", Some(msg(Event::ListOk))))
-                .width(820.0),
-            msg(Event::ListCancel),
-        );
+        let sub = Frame::new(format!("Değer listesi · {name}"))
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::ListCancel))))
+            .action(words::primary("Tamam", Some(msg(Event::ListOk))))
+            .width(820.0)
+            .modal(msg(Event::ListCancel));
         iced::widget::stack![main, sub].into()
     }
 

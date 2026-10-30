@@ -281,7 +281,7 @@ pub fn act_sized<'a>(
 /// A small text button of the panels.
 pub fn small<'a>(words: &str, press: Option<Message>) -> Element<'a, Message> {
     button(label::body(words.to_owned()))
-        .padding([3, 10])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(ui_style::button::secondary)
         .on_press_maybe(press)
         .into()

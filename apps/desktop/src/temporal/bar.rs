@@ -5,7 +5,7 @@
 //! first, then the words beside the fields, then Hız and Döngü, as far as the
 //! slider needs to keep its room: what the bar holds is measured.
 
-use iced::widget::{button, container, row, slider, text_input};
+use iced::widget::{button, container, row, slider};
 use iced::{Background, Border, Center, Element, Fill, Length, Theme};
 use kentos_geometry_core::time::Unit;
 use kentos_ui::icon::icon;
@@ -115,7 +115,7 @@ impl App {
                 tip(
                     button(icon(crate::icons::from_web(Some(glyph))).size(16.0))
                         .on_press(msg(event))
-                        .padding([5, 6])
+                        .padding(kentos_ui::theme::metrics::icon(16.0))
                         .style(style::button::flat),
                     Tip::new(words).detail(keys),
                     iced::widget::tooltip::Position::Top,
@@ -132,7 +132,7 @@ impl App {
                 .size(16.0),
             )
             .on_press(msg(Event::PlayStop))
-            .padding([5, 6])
+            .padding(kentos_ui::theme::metrics::icon(16.0))
             .style(style::button::flat),
             Tip::new(if playing { "Durdur" } else { "Oynat" }).detail("Boşluk"),
             iced::widget::tooltip::Position::Top,
@@ -164,13 +164,10 @@ impl App {
         if show.ends {
             middle = middle.push(label::caption(last).style(kentos_ui::style::text::muted));
         }
-        let count = text_input("", &s.count)
+        let count = kentos_ui::widget::text_field("", &s.count)
             .on_input(|t| msg(Event::Count(t)))
             .on_submit(msg(Event::CountDone))
-            .size(typography::body())
-            .padding([3, 6])
-            .width(typography::scaled(52.0))
-            .style(style::field::input);
+            .width(typography::scaled(52.0));
         let units: Vec<Choice> = Unit::ALL.iter().map(|u| Choice::new(u.word())).collect();
         let unit = container(Select::new(
             units,
@@ -193,7 +190,7 @@ impl App {
         let loop_button = tip(
             button(icon(crate::icons::from_web(Some("loop"))).size(16.0))
                 .on_press(msg(Event::Loop))
-                .padding([5, 6])
+                .padding(kentos_ui::theme::metrics::icon(16.0))
                 .style(style::button::tool(looping)),
             Tip::new("Döngü").body("Sonda başa döner."),
             iced::widget::tooltip::Position::Top,
@@ -205,13 +202,10 @@ impl App {
         line = line.push(count).push(unit).push(kind);
         // Bilinen gün (docs/adr/0537): the drawing as known on a day, its versions recorded by then.
         if self.time_recorded() {
-            let known = text_input("Bugün", &s.known)
+            let known = kentos_ui::widget::text_field("Bugün", &s.known)
                 .on_input(|t| msg(Event::Known(t)))
                 .on_submit(msg(Event::KnownDone))
-                .size(typography::body())
-                .padding([3, 6])
-                .width(typography::scaled(96.0))
-                .style(style::field::input);
+                .width(typography::scaled(96.0));
             line = line.push(tip(
                 row![label::caption("Bilinen"), known]
                     .spacing(6)

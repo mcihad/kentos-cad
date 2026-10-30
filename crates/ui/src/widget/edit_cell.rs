@@ -1,10 +1,10 @@
-//! Özellik hücresi: düzenlenene dek düz yazı gibi görünen değer (ızgaradaki
-//! metin ve sayı hücresi).
+//! Özellik hücresi: ızgaradaki metin ve sayı hücresi. Hücreyi çizgiden çizgiye
+//! doldurur; durumlarını [`Cell`](crate::widget::cell::Cell) çizer, yazı
+//! düzenlenirken de aynı yerde kalır (docs/adr/0804).
 //!
 //! ```text
-//!   Yükseklik     2.500            m     ← düz yazı
-//!   Yükseklik    ┌2.500──────────┐ m     ← üzerine gelince ince kenar
-//!   Yükseklik    ┃3,5│           ┃ m     ← düzenlenirken zemin ve vurgu kenarı
+//!   Yükseklik │▒2.500▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ m    ← gömük zeminde yazılabilir değer
+//!   Yükseklik ║ 3,5|                m ║   ← düzenlenirken alan zemini ve vurgu kenarı
 //! ```
 //!
 //! - Tıklanınca imlecin olduğu yerde düzenlenir; Tab ile gelen odak da
@@ -26,26 +26,21 @@
 //! ```
 
 use iced::advanced::layout::{self, Layout, Node};
-use iced::advanced::renderer::{self, Quad, Renderer as _};
+use iced::advanced::renderer;
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
 use iced::advanced::{Clipboard, Shell};
 use iced::keyboard::{self, key};
 use iced::widget::text::Wrapping;
 use iced::widget::{Text, TextInput, text, text_input};
-use iced::{
-    Background, Border, Color, Element, Event, Length, Point, Rectangle, Renderer, Size, Theme,
-    mouse,
-};
+use iced::{Element, Event, Length, Point, Rectangle, Renderer, Size, Theme, mouse};
 
 use crate::style;
-use crate::style::button::radius;
-use crate::theme::{Tokens, typography};
+use crate::theme::{Tokens, metrics, typography};
+use crate::widget::cell::Cell;
 use crate::widget::dropdown::propagate;
 use crate::widget::elided::{self, Cut};
-use crate::widget::property_grid::{VALUE_TEXT, varies};
+use crate::widget::property_grid::varies;
 
-/// Hücrenin yüksekliği, 12 piksellik gövde metnine göre.
-const HEIGHT: f32 = 24.0;
 /// Birimle alan arasındaki boşluk.
 const GAP: f32 = 4.0;
 /// The field's text's distance to its right edge.
@@ -129,7 +124,7 @@ impl<'a, Message: Clone + 'a> EditCell<'a, Message> {
         } else {
             typography::ui()
         };
-        let room = (field_width - VALUE_TEXT - FIELD_END).max(0.0);
+        let room = (field_width - metrics::cell_pad() - FIELD_END).max(0.0);
         let key = (self.value.clone(), room.to_bits(), size.to_bits(), font);
         if state.measured.as_ref() != Some(&key) {
             let (_, cut) = elided::fit(
@@ -167,11 +162,11 @@ fn field<'a>(content: &str, placeholder: &str, numeric: bool) -> Field<'a> {
             typography::ui()
         })
         .size(typography::body())
-        // Its text where a read-only value's is, in a frame filling the cell (docs/adr/0747).
+        // Its text where a read-only value's is, the field filling the cell (docs/adr/0804).
         .padding(iced::Padding {
             top: 0.0,
             bottom: 0.0,
-            left: crate::widget::property_grid::VALUE_TEXT,
+            left: metrics::cell_pad(),
             right: FIELD_END,
         })
         // The input is made again at each layout, so it has seen no event yet: iced draws such an input as disabled
@@ -199,7 +194,6 @@ fn unit_text<'a>(symbol: String) -> Text<'a> {
 struct State {
     editing: bool,
     buffer: String,
-    hovered: bool,
     /// At rest, the value cut with “…” to fit, when it does not (docs/adr/0748).
     rest: Option<String>,
     /// What `rest` was measured for: the value, the room, the size and the type.
@@ -224,11 +218,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
     }
 
     fn size(&self) -> Size<Length> {
-        Size::new(Length::Fill, Length::Fixed(typography::scaled(HEIGHT)))
+        Size::new(Length::Fill, Length::Fixed(metrics::row()))
     }
 
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) -> Node {
-        let height = typography::scaled(HEIGHT);
+        let height = metrics::row();
         let size = limits.resolve(Length::Fill, height, Size::new(0.0, height));
         let Tree {
             state, children, ..
@@ -242,7 +236,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
             .as_widget_mut()
             .layout(&mut children[1], renderer, &unbounded);
         // The unit keeps its distance to the cell's right edge, as a read-only value's.
-        let unit_pad = crate::widget::property_grid::UNIT_PAD;
+        let unit_pad = metrics::cell_end();
         let suffix = if unit.size().width > 0.0 {
             unit.size().width + GAP + unit_pad
         } else {
@@ -291,14 +285,6 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
             state, children, ..
         } = tree;
         let state = state.downcast_mut::<State>();
-
-        if let Event::Mouse(mouse::Event::CursorMoved { .. } | mouse::Event::CursorLeft) = event {
-            let hovered = cursor.is_over(bounds);
-            if hovered != state.hovered {
-                state.hovered = hovered;
-                shell.request_redraw();
-            }
-        }
 
         if !state.editing {
             // A press on the cell, or the focus coming with Tab, starts editing.
@@ -434,35 +420,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        let state = tree.state.downcast_ref::<State>();
         let t = Tokens::of(theme);
         let mut parts = layout.children();
         let Some(field) = parts.next() else {
             return;
         };
-        // The box around the field only: the unit stays outside it.
-        let frame = field.bounds();
-        let (background, edge) = if state.editing {
-            (t.field, t.accent)
-        } else if state.hovered {
-            (Color::TRANSPARENT, t.border)
-        } else {
-            (Color::TRANSPARENT, Color::TRANSPARENT)
-        };
-        if edge != Color::TRANSPARENT {
-            renderer.fill_quad(
-                Quad {
-                    bounds: frame,
-                    border: Border {
-                        color: edge,
-                        width: 1.0,
-                        radius: radius().into(),
-                    },
-                    ..Quad::default()
-                },
-                Background::Color(background),
-            );
-        }
         self.parts[0].as_widget().draw(
             &tree.children[0],
             renderer,
@@ -516,11 +478,12 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditCell<'a, 
 impl<'a, Message: Clone + 'a> From<EditCell<'a, Message>> for Element<'a, Message> {
     fn from(cell: EditCell<'a, Message>) -> Self {
         let value = cell.value.clone();
-        crate::widget::tip(
+        Cell::new(crate::widget::tip(
             Element::new(cell),
             crate::widget::Tip::new(value).when_cut(),
             iced::widget::tooltip::Position::Bottom,
-        )
+        ))
+        .into()
     }
 }
 
@@ -621,7 +584,7 @@ mod interaction {
 
     #[test]
     fn idle_caret_and_pointer_events_do_not_relayout_the_window() {
-        use iced::advanced::{Widget, widget::Tree, layout, Layout, Shell, Clipboard};
+        use iced::advanced::{Clipboard, Layout, Shell, Widget, layout, widget::Tree};
         use iced::{Event, Rectangle, mouse, window};
         let snapshot = Snapshot::new(Size::new(240.0, 60.0)).expect("renderer");
         let renderer = snapshot.renderer();
@@ -634,18 +597,41 @@ mod interaction {
         let mut messages = Vec::new();
         let mut clipboard = iced::advanced::clipboard::Null;
         let mut shell = Shell::new(&mut messages);
-        cell.update(&mut tree, &Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
-            Layout::new(&node), cursor, renderer, &mut clipboard as &mut dyn Clipboard, &mut shell, &viewport);
+        cell.update(
+            &mut tree,
+            &Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
+            Layout::new(&node),
+            cursor,
+            renderer,
+            &mut clipboard as &mut dyn Clipboard,
+            &mut shell,
+            &viewport,
+        );
         assert!(tree.state.downcast_ref::<super::State>().editing);
         node = cell.layout(&mut tree, renderer, &limits);
         for i in 0..120 {
             let event = if i % 2 == 0 {
                 Event::Window(window::Event::RedrawRequested(std::time::Instant::now()))
-            } else { Event::Mouse(mouse::Event::CursorMoved { position: Point::new(151.0, 12.0) }) };
+            } else {
+                Event::Mouse(mouse::Event::CursorMoved {
+                    position: Point::new(151.0, 12.0),
+                })
+            };
             let mut shell = Shell::new(&mut messages);
-            cell.update(&mut tree, &event, Layout::new(&node), cursor, renderer,
-                &mut clipboard, &mut shell, &viewport);
-            assert!(!shell.is_layout_invalid(), "idle event {i} caused a full relayout");
+            cell.update(
+                &mut tree,
+                &event,
+                Layout::new(&node),
+                cursor,
+                renderer,
+                &mut clipboard,
+                &mut shell,
+                &viewport,
+            );
+            assert!(
+                !shell.is_layout_invalid(),
+                "idle event {i} caused a full relayout"
+            );
         }
         assert!(messages.is_empty(), "no document edit before commit");
     }
@@ -730,8 +716,14 @@ mod interaction {
 
     #[test]
     fn rapid_typing_keeps_every_character_until_one_commit() {
-        let commits = play("", vec![Input::Click(END),
-            Input::Type("12345,6789".into()), Input::Key(Named::Enter)]);
+        let commits = play(
+            "",
+            vec![
+                Input::Click(END),
+                Input::Type("12345,6789".into()),
+                Input::Key(Named::Enter),
+            ],
+        );
         assert_eq!(commits, ["12345,6789"]);
     }
 }

@@ -18,7 +18,7 @@
 
 use std::collections::BTreeMap;
 
-use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     DomainsEdit, DomainsOp, FieldChoice, FieldDomain, LayerFieldKind, domain_id_of, domain_uses,
@@ -29,7 +29,7 @@ use kentos_native_application::{ExecutionContext, domains_edit};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Segmented, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -429,9 +429,7 @@ impl App {
                 },
             );
             match result {
-                kentos_commands::CommandResult::Completed { warnings: w, .. } => {
-                    warnings.extend(w)
-                }
+                kentos_commands::CommandResult::Completed { warnings: w, .. } => warnings.extend(w),
                 kentos_commands::CommandResult::Failed { error }
                 | kentos_commands::CommandResult::Conflict { error }
                 | kentos_commands::CommandResult::NeedsInput { error } => {
@@ -767,7 +765,7 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(frame.width(900.0), msg(Event::Cancel))
+        frame.width(900.0).modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
@@ -821,11 +819,8 @@ fn editor<'a>(
     uses: Vec<String>,
     recode: BTreeMap<String, String>,
 ) -> Element<'a, Message> {
-    let name = text_input("Listenin adı", &d.name)
-        .size(typography::body())
-        .on_input(|s| msg(Event::Name(s)))
-        .padding([5, 8])
-        .style(style::field::input);
+    let name =
+        kentos_ui::widget::text_field("Listenin adı", &d.name).on_input(|s| msg(Event::Name(s)));
     // A list's kind is fixed once kept: a field linking it is of that kind (docs/adr/0430 §2).
     let kind: Element<'a, Message> = if kept.is_some() {
         container(label::body(d.kind.label()))
@@ -841,21 +836,18 @@ fn editor<'a>(
         )
         .into()
     };
-    let description = text_input(
+    let description = kentos_ui::widget::text_field(
         "Ne için; hangi katmanlarda",
         d.description.as_deref().unwrap_or(""),
     )
-    .size(typography::body())
-    .on_input(|s| msg(Event::Description(s)))
-    .padding([5, 8])
-    .style(style::field::input);
+    .on_input(|s| msg(Event::Description(s)));
     let mut col = column![
         row![
-            words::field("Ad", container(focus_ring(name)).width(300), None),
+            words::field("Ad", container(name).width(300), None),
             words::field("Tür", container(kind).width(170), None),
         ]
         .spacing(16),
-        words::field("Açıklama", focus_ring(description), None),
+        words::field("Açıklama", description, None),
     ]
     .spacing(10);
     if d.kind.is_number() {
@@ -883,19 +875,13 @@ fn editor<'a>(
                 rows = rows.push(
                     row![
                         container(
-                            text_input("", &c.code)
-                                .size(typography::body())
+                            kentos_ui::widget::text_field("", &c.code)
                                 .on_input(move |t| msg(Event::Code(i, t)))
-                                .padding([3, 6])
-                                .style(style::field::input)
                         )
                         .width(Length::Fixed(140.0)),
                         container(
-                            text_input("", &c.label)
-                                .size(typography::body())
+                            kentos_ui::widget::text_field("", &c.label)
                                 .on_input(move |t| msg(Event::Label(i, t)))
-                                .padding([3, 6])
-                                .style(style::field::input)
                         )
                         .width(Length::Fixed(240.0)),
                         container(words::check(
@@ -908,7 +894,7 @@ fn editor<'a>(
                         kentos_ui::widget::tip(
                             button(icon(kentos_ui::icon::Icon::Close).size(12.0))
                                 .style(style::button::subtle)
-                                .padding(4)
+                                .padding(kentos_ui::theme::metrics::icon_small(12.0))
                                 .on_press(msg(Event::RemoveCode(i))),
                             kentos_ui::widget::Tip::new("Kodu sil"),
                             iced::widget::tooltip::Position::Top,
@@ -972,18 +958,14 @@ fn editor<'a>(
             }
         }
         None => {
-            let lo = text_input("", d.min.as_deref().unwrap_or(""))
-                .on_input(|t| msg(Event::Min(t)))
-                .padding([5, 8])
-                .style(style::field::input);
-            let hi = text_input("", d.max.as_deref().unwrap_or(""))
-                .on_input(|t| msg(Event::Max(t)))
-                .padding([5, 8])
-                .style(style::field::input);
+            let lo = kentos_ui::widget::text_field("", d.min.as_deref().unwrap_or(""))
+                .on_input(|t| msg(Event::Min(t)));
+            let hi = kentos_ui::widget::text_field("", d.max.as_deref().unwrap_or(""))
+                .on_input(|t| msg(Event::Max(t)));
             col = col.push(
                 row![
-                    words::field("En az", container(focus_ring(lo)).width(150), None),
-                    words::field("En çok", container(focus_ring(hi)).width(150), None),
+                    words::field("En az", container(lo).width(150), None),
+                    words::field("En çok", container(hi).width(150), None),
                 ]
                 .spacing(16),
             );
@@ -1011,15 +993,9 @@ fn editor<'a>(
     }
     // A number list's unit, shown after its values (docs/adr/0438 §4).
     if d.kind.is_number() {
-        let unit = text_input("m², kg …", d.unit.as_deref().unwrap_or(""))
-            .on_input(|t| msg(Event::Unit(t)))
-            .padding([5, 8])
-            .style(style::field::input);
-        col = col.push(words::field(
-            "Birim",
-            container(focus_ring(unit)).width(150),
-            None,
-        ));
+        let unit = kentos_ui::widget::text_field("m², kg …", d.unit.as_deref().unwrap_or(""))
+            .on_input(|t| msg(Event::Unit(t)));
+        col = col.push(words::field("Birim", container(unit).width(150), None));
     }
     let uses_words = if uses.is_empty() {
         "Bağlı alan yok. Alanlar penceresinde bir alanın Değer listesi'nden bu listeyi seçin."

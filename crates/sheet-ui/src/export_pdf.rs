@@ -236,7 +236,12 @@ impl Designer {
                 .width(Fill),
             );
         }
-        body=body.push(button(label::body("Toplu yayınla…")).on_press(pm(PdfMessage::Publish)).padding([6,12]).style(style::button::secondary));
+        body = body.push(
+            button(label::body("Toplu yayınla…"))
+                .on_press(pm(PdfMessage::Publish))
+                .padding(kentos_ui::theme::metrics::action())
+                .style(style::button::secondary),
+        );
         let going = self.pdf_sheets();
         if going.is_empty() {
             body = body.push(label::caption(texts::NONE_CHOSEN).style(style::text::muted));
@@ -270,7 +275,7 @@ impl Designer {
             "Kaydet"
         }))
         .on_press_maybe(ready.then_some(pm(PdfMessage::Save)))
-        .padding([6, 16])
+        .padding(kentos_ui::theme::metrics::action())
         .style(match (print, anyway) {
             (false, true) => style::button::danger,
             (false, false) => style::button::primary,
@@ -285,7 +290,7 @@ impl Designer {
             .align_y(Center),
         )
         .on_press_maybe(ready.then_some(pm(PdfMessage::Print)))
-        .padding([6, 16])
+        .padding(kentos_ui::theme::metrics::action())
         .style(match (print, anyway) {
             (true, true) => style::button::danger,
             (true, false) => style::button::primary,
@@ -296,11 +301,12 @@ impl Designer {
         } else {
             "PDF olarak dışa aktar"
         })
+        .on_close(crate::Message::CloseDialog)
         .push(body)
         .aside(
             button(label::body("Vazgeç"))
                 .on_press(Message::CloseDialog)
-                .padding([6, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         );
         // One primary: Yazdır when the window was opened to print, else Kaydet.
@@ -309,8 +315,14 @@ impl Designer {
         } else {
             window.action(printing).action(save)
         };
-        window.action(button(label::body("Baskı önizlemesi"))
-            .on_press_maybe(ready.then_some(pm(PdfMessage::Preview)))
-            .padding([6, 14]).style(style::button::secondary)).width(620.0).into()
+        window
+            .action(
+                button(label::body("Baskı önizlemesi"))
+                    .on_press_maybe(ready.then_some(pm(PdfMessage::Preview)))
+                    .padding(kentos_ui::theme::metrics::action())
+                    .style(style::button::secondary),
+            )
+            .width(620.0)
+            .into()
     }
 }

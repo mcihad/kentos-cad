@@ -4,7 +4,7 @@ use iced::Element;
 use iced::widget::{Column, button};
 use kentos_commands::{TemplateSettingsMode, TemplatesApplied, TemplatesApply};
 use kentos_native_application::{ExecutionContext, templates_apply};
-use kentos_ui::widget::{Choice, Dialog as Frame, Select, overlay};
+use kentos_ui::widget::{Choice, Dialog as Frame, Select};
 use kentos_ui::{label, style};
 
 #[derive(Clone, Debug)]
@@ -221,15 +221,18 @@ impl App {
         if let Some(why) = locked {
             body = body.push(label::body(why));
         }
-        overlay::modal(Frame::new("Mimari şablonunu gözden geçir")
+        Frame::new("Mimari şablonunu gözden geçir")
             .push(label::muted("Ofis paketi cm / 1:50, iki kat ve üç A3 pafta içerir. Model geometrisi yeniden ölçeklenmez. Mevcut tanım, yazı tipi ve katman durumları korunur."))
             .push(pick).scroll(body)
             .push(label::caption("Tüm paket tek geri alma adımıdır. Paftalar kendi 1:50 / 1:20 oranlarıyla eklenir."))
-            .action(button(label::body("Vazgeç")).style(style::button::secondary).on_press(Message::DialogClosed))
-            .action(button(label::body("Uygula")).style(style::button::primary).on_press_maybe(locked.is_none().then(|| {
+            .action(button(label::body("Vazgeç"))
+.padding(kentos_ui::theme::metrics::action()).style(style::button::secondary).on_press(Message::DialogClosed))
+            .action(button(label::body("Uygula"))
+.padding(kentos_ui::theme::metrics::action()).style(style::button::primary).on_press_maybe(locked.is_none().then(|| {
                 Message::ArchTemplate(Event::Apply { session, input: w.input.clone() })
             })))
-            .width(650.).max_height(650.), Message::DialogClosed)
+            .width(650.).max_height(650.)
+.modal(Message::DialogClosed)
     }
 }
 

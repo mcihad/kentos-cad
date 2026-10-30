@@ -15,7 +15,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, Row, column, container, row, text_input};
+use iced::widget::{Column, Row, column, container, row};
 use iced::{Element, Fill, Length, Task};
 use kentos_commands::{Bounds, GnssRead, LineError};
 use kentos_geometry_core::crs::format_dd;
@@ -23,7 +23,6 @@ use kentos_interaction::gnss::{self, Options, Placed, Plan};
 use kentos_interaction::{Level, fixed};
 use kentos_project::systems::{self, Named};
 use kentos_ui::label;
-use kentos_ui::style;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::widget::{Dialog, overlay};
@@ -443,7 +442,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
                 .width(960.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 
@@ -475,22 +475,12 @@ impl App {
                 ));
             }
         }
-        let prefix = kentos_ui::widget::focus_ring(
-            text_input("Ön ek", &s.prefix)
-                .on_input(|t| event(Event::Prefix(t)))
-                .padding([5, 8])
-                .width(96)
-                .size(kentos_ui::theme::typography::body())
-                .style(style::field::input),
-        );
-        let start = kentos_ui::widget::focus_ring(
-            text_input("İlk numara", &s.start_text)
-                .on_input(|t| event(Event::Start(t)))
-                .padding([5, 8])
-                .width(80)
-                .size(kentos_ui::theme::typography::body())
-                .style(style::field::input),
-        );
+        let prefix = kentos_ui::widget::text_field("Ön ek", &s.prefix)
+            .on_input(|t| event(Event::Prefix(t)))
+            .width(96);
+        let start = kentos_ui::widget::text_field("İlk numara", &s.start_text)
+            .on_input(|t| event(Event::Start(t)))
+            .width(80);
         parts = parts.push(
             container(words::field(
                 "Adsız noktalar",
@@ -708,13 +698,10 @@ impl App {
         ]
         .spacing(16);
         if s.target.is_none() {
-            let name = text_input("Yeni katmanın adı", &s.name)
+            let name = kentos_ui::widget::text_field("Yeni katmanın adı", &s.name)
                 .on_input(|t| event(Event::Name(t)))
-                .on_submit(event(Event::Run))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(style::field::input);
-            let name = kentos_ui::widget::focus_ring(name);
+                .on_submit(event(Event::Run));
+            let name = name;
             parts = parts.push(
                 container(words::field(
                     "Yeni katmanın adı",

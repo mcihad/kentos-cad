@@ -149,6 +149,14 @@ pub enum Demo {
     /// Etkisi olmayan bir örnek düğmeye basıldı; komut satırına yazılır.
     Pressed(&'static str),
     RowSelected(usize),
+    /// Veri tablosu örneği: başlığa basıldı (sütun).
+    ParcelSort(usize),
+    /// Sütunun kenarı sürüklendi: sütun ve yeni genişlik.
+    ParcelWidth(usize, f32),
+    /// Sütunun kenarına çift tıklandı.
+    ParcelFit(usize),
+    /// Satıra basıldı (örnek verideki yeri).
+    ParcelRow(usize),
     Toggled(usize),
     Checked(bool),
     OpacityChanged(f32),
@@ -399,6 +407,23 @@ pub enum DemoPane {
     Layer,
 }
 
+/// Veri tablosu örneğinin sütunları: başlık ve ilk genişlik.
+pub const PARCEL_COLUMNS: [&str; 4] = ["Ada", "Parsel", "Kullanım", "Alan (m²)"];
+pub const PARCEL_WIDTHS: [f32; 4] = [70.0, 70.0, 150.0, 100.0];
+
+/// Veri tablosu örneğinin satırları.
+pub fn parcel_cells() -> [[String; 4]; 6] {
+    [
+        ["101", "7", "Konut", "400.50"],
+        ["101", "12", "Ticaret", "98.25"],
+        ["102", "3", "İşyeri", "1 200.00"],
+        ["102", "7", "Konut", "55.50"],
+        ["103", "1", "Park ve yeşil alan", "2 310.75"],
+        ["103", "4", "Eğitim tesisi alanı (ilköğretim)", "5 120.00"],
+    ]
+    .map(|row| row.map(str::to_owned))
+}
+
 /// Nesne yakalama penceresindeki yakalama türleri.
 pub const SNAP_KINDS: [&str; 4] = ["Uç nokta", "Orta nokta", "Merkez", "Kesişim"];
 
@@ -460,6 +485,10 @@ const HISTORY_LIMIT: usize = 12;
 pub struct Gallery {
     pub page: Page,
     pub row: usize,
+    /// Veri tablosu örneği: sıralanan sütun ve yönü, sütun genişlikleri, seçili satır.
+    pub parcel_sort: Option<(usize, bool)>,
+    pub parcel_widths: [f32; 4],
+    pub parcel_row: Option<usize>,
     pub toggles: [bool; 3],
     pub checked: bool,
     pub opacity: f32,
@@ -879,6 +908,9 @@ impl Default for Gallery {
         Self {
             page: Page::Colors,
             row: 1,
+            parcel_sort: Some((3, true)),
+            parcel_widths: PARCEL_WIDTHS,
+            parcel_row: Some(2),
             toggles: [true, true, false],
             checked: true,
             opacity: 0.8,
@@ -1058,6 +1090,26 @@ impl Gallery {
         match demo {
             Demo::Pressed(name) => return Some(format!("Galeri: \"{name}\" düğmesine basıldı.")),
             Demo::RowSelected(row) => self.row = row,
+            Demo::ParcelSort(column) => {
+                self.parcel_sort = match self.parcel_sort {
+                    Some((c, false)) if c == column => Some((column, true)),
+                    Some((c, true)) if c == column => None,
+                    _ => Some((column, false)),
+                };
+            }
+            Demo::ParcelWidth(column, width) => self.parcel_widths[column] = width,
+            Demo::ParcelFit(column) => {
+                let body = kentos_ui::theme::typography::body();
+                let widest = parcel_cells()
+                    .iter()
+                    .map(|row| {
+                        kentos_ui::theme::typography::measured_width(&row[column], body, false)
+                    })
+                    .fold(0.0, f32::max);
+                self.parcel_widths[column] =
+                    kentos_ui::theme::typography::unscaled(widest.ceil() + 2.0);
+            }
+            Demo::ParcelRow(row) => self.parcel_row = Some(row),
             Demo::Toggled(index) => {
                 if let Some(toggle) = self.toggles.get_mut(index) {
                     *toggle = !*toggle;

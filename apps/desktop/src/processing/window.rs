@@ -18,7 +18,7 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog, Menu, MenuButton, Tip, horizontal_divider, overlay, tip};
+use kentos_ui::widget::{Dialog, Menu, MenuButton, Tip, horizontal_divider, tip};
 
 use super::dialog::ToolDialog;
 use super::fields::{Env, control};
@@ -90,15 +90,13 @@ impl App {
         ]
         .spacing(16)
         .height(Fill);
-        overlay::modal(
-            Dialog::new(window.tool.label.clone())
-                .push(body)
-                .push(horizontal_divider())
-                .push(footer(window, at_server))
-                .width(WIDTH)
-                .max_height(HEIGHT),
-            ev(Event::Close),
-        )
+        Dialog::new(window.tool.label.clone())
+            .push(body)
+            .push(horizontal_divider())
+            .push(footer(window, at_server))
+            .width(WIDTH)
+            .max_height(HEIGHT)
+            .modal(ev(Event::Close))
     }
 }
 
@@ -216,7 +214,7 @@ fn result(t: &super::dialog::ResultTable, chart: bool) -> Element<'_, Message> {
             .spacing(5)
             .align_y(Center),
         )
-        .padding([3, 8])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(style::button::ghost)
         .on_press(ev(e))
     };
@@ -511,7 +509,7 @@ fn side<'a>(
             .spacing(6)
             .align_y(Center),
         )
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press(ev(Event::Panel(super::panel::Event::EditModel(
             model.id.clone(),
@@ -598,12 +596,12 @@ fn footer<'a>(window: &'a ToolDialog, at_server: bool) -> Element<'a, Message> {
     let buttons = plan::footer_at(&window.status, at_server);
     let line = window.line();
     let reset = button(label::body("Varsayılanlar"))
-        .padding([5, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::ghost)
         .on_press_maybe((!buttons.reset_disabled).then(|| ev(Event::Reset)));
     let small = |text: &'a str, e: Event| {
         button(label::body(text))
-            .padding([4, 8])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::ghost)
             .on_press(ev(e))
     };
@@ -616,7 +614,7 @@ fn footer<'a>(window: &'a ToolDialog, at_server: bool) -> Element<'a, Message> {
         .spacing(6)
         .align_y(Center),
     )
-    .padding([5, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::ghost)
     .on_press_maybe((!window.running()).then(|| ev(Event::Batch(super::batch::Event::Open))));
     let mut status = Row::new().spacing(8).align_y(Center).width(Fill);
@@ -646,7 +644,7 @@ fn footer<'a>(window: &'a ToolDialog, at_server: bool) -> Element<'a, Message> {
         });
     }
     let close = button(label::body(buttons.close))
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press(ev(if window.running() {
             Event::Stop
@@ -658,7 +656,7 @@ fn footer<'a>(window: &'a ToolDialog, at_server: bool) -> Element<'a, Message> {
             .spacing(6)
             .align_y(Center),
     )
-    .padding([5, 14])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::primary)
     .on_press_maybe((!buttons.run_disabled).then(|| ev(Event::Run)));
     row![reset, batch, status, close, run]

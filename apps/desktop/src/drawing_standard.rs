@@ -15,7 +15,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, standards};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -248,14 +248,16 @@ impl App {
             ),
         };
         let chosen = w.chosen;
-        let head = row![
-            container(label::caption("Tür")).width(typography::scaled(120.0)),
-            container(label::caption("Konu")).width(Fill),
-            container(label::caption("Çizimde → standartta")).width(Fill),
-            container(label::caption("")).width(typography::scaled(24.0)),
-        ]
-        .spacing(8)
-        .padding([4, 8]);
+        let head = kentos_ui::widget::table::band(
+            row![
+                container(kentos_ui::widget::table::title("Tür")).width(typography::scaled(120.0)),
+                container(kentos_ui::widget::table::title("Konu")).width(Fill),
+                container(kentos_ui::widget::table::title("Çizimde → standartta")).width(Fill),
+                container(kentos_ui::widget::table::title("")).width(typography::scaled(24.0)),
+            ]
+            .spacing(8)
+            .padding([0, 8]),
+        );
         let detail = chosen
             .and_then(|i| issues.get(i))
             .map(|issue| issue.message.clone());
@@ -357,14 +359,12 @@ impl App {
             .push(words::field("Bulgular", table, Some(hint)))
             .push(words::field("Düzeltme", parts, None))
             .push(words::summary(preview));
-        overlay::modal(
-            Frame::new(STANDARD_TITLE)
-                .push(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
-                .width(680.0),
-            msg(Event::Close),
-        )
+        Frame::new(STANDARD_TITLE)
+            .push(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
+            .width(680.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

@@ -38,7 +38,7 @@ fn bar_button<'a>(
                 .align_y(Center),
         )
         .style(style::button::secondary)
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,
@@ -134,8 +134,7 @@ impl App {
         let words = SearchBox::new(a.text.clone(), texts::PLACEHOLDER, |t| msg(Event::Text(t)))
             .id(iced::widget::Id::new(ADDRESS_FIELD))
             .on_enter(msg(Event::Find))
-            .fill()
-            .height(28.0);
+            .fill();
         let asked_address = matches!(a.question, Some(Question::Address(_)))
             && a.answerer.as_ref().is_none_or(|w| w.keeps_none.is_none());
         let some_row = a.current.is_some();
@@ -153,7 +152,7 @@ impl App {
             .width(Fill),
             button(label::body(texts::FIND))
                 .style(style::button::primary)
-                .padding([4, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .on_press_maybe(chosen.as_ref().map(|_| msg(Event::Find))),
             bar_button(
                 "addressReverse",

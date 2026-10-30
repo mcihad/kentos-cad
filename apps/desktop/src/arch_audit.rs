@@ -15,8 +15,9 @@ use std::collections::BTreeSet;
 use iced::widget::{button, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_LENGTH, ARCH_AUDIT_MIN_WIDTH, ArchAudit, ArchAuditCheck,
-    ArchAuditExceptionView, ArchAuditFinding, ArchAuditWithin, CommandResult,
+    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_LENGTH, ARCH_AUDIT_MIN_WIDTH,
+    ArchAudit, ArchAuditCheck, ArchAuditExceptionView, ArchAuditFinding, ArchAuditWithin,
+    CommandResult,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::arch_audit;
@@ -63,12 +64,18 @@ const AREAS: [f64; 5] = [0.05, ARCH_AUDIT_MIN_AREA, 0.25, 0.50, 1.00];
 const WIDTHS: [f64; 4] = [0.10, ARCH_AUDIT_MIN_WIDTH, 0.20, 0.30];
 const LENGTHS: [f64; 4] = [0.02, ARCH_AUDIT_MIN_LENGTH, 0.10, 0.20];
 /// The ramp profiles a bar offers (docs/adr/0723 §4): none, or one of the catalog's, by its words.
-const RAMP_PROFILES: [(Option<&str>, &str); 2] = [(None, "Yok"), (Some("erisilebilirlik-rampa/1"), "TS 9111 özeti")];
+const RAMP_PROFILES: [(Option<&str>, &str); 2] = [
+    (None, "Yok"),
+    (Some("erisilebilirlik-rampa/1"), "TS 9111 özeti"),
+];
 /// The stair profiles a bar offers (docs/adr/0724 §2): none, or one of the catalog's, by its words.
 const STAIR_PROFILES: [(Option<&str>, &str); 5] = [
     (None, "Yok"),
     (Some("imar-merdiven-konut/1"), "Konut, asansörlü"),
-    (Some("imar-merdiven-konut-asansorsuz/1"), "Konut, asansörsüz"),
+    (
+        Some("imar-merdiven-konut-asansorsuz/1"),
+        "Konut, asansörsüz",
+    ),
     (Some("imar-merdiven-diger/1"), "Diğer yapılar"),
     (Some("imar-merdiven-daire-ici/1"), "Daire içi"),
 ];
@@ -222,7 +229,12 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
 }
 
 /// A bar button: its icon and words, its hint above it.
-fn bar_button<'a>(glyph: &str, words: &'a str, hint: &'a str, on: Option<Message>) -> Element<'a, Message> {
+fn bar_button<'a>(
+    glyph: &str,
+    words: &'a str,
+    hint: &'a str,
+    on: Option<Message>,
+) -> Element<'a, Message> {
     tip(
         button(
             row![icon(from_web(Some(glyph))).size(14.0), label::body(words)]
@@ -230,7 +242,7 @@ fn bar_button<'a>(glyph: &str, words: &'a str, hint: &'a str, on: Option<Message
                 .align_y(Center),
         )
         .style(style::button::secondary)
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,
@@ -371,7 +383,12 @@ impl App {
                 .map(|f| f.key.clone())
         };
         let kept = self.arch_audit.selected.and_then(key_of);
-        let chosen: Vec<String> = self.arch_audit.chosen.iter().filter_map(|i| key_of(*i)).collect();
+        let chosen: Vec<String> = self
+            .arch_audit
+            .chosen
+            .iter()
+            .filter_map(|i| key_of(*i))
+            .collect();
         match arch_audit::plan_in(&doc.model, &input) {
             CommandResult::Completed { output, warnings } => {
                 let place = |key: &str| output.findings.iter().position(|f| f.key == key);
@@ -405,7 +422,10 @@ impl App {
         if let Some(i) = self.arch_audit.selected {
             places.insert(i);
         }
-        places.into_iter().filter_map(|i| a.findings.get(i)).collect()
+        places
+            .into_iter()
+            .filter_map(|i| a.findings.get(i))
+            .collect()
     }
 
     /// A row menu's row, by its place shown: it becomes the choice unless it is among the rows chosen already.
@@ -422,7 +442,9 @@ impl App {
     /// Whether the drawing changed since the check.
     pub(crate) fn arch_audit_stale(&self) -> bool {
         match (&self.arch_audit.audited, &self.document) {
-            (Some(a), Some(d)) => a.generation != d.model.generation() || a.revision != d.model.revision(),
+            (Some(a), Some(d)) => {
+                a.generation != d.model.generation() || a.revision != d.model.revision()
+            }
             _ => false,
         }
     }
@@ -452,7 +474,11 @@ impl App {
                     let m = self.modifiers;
                     if m.command() {
                         // Ctrl/⌘: one more row, or one less (docs/adr/0732 §5).
-                        if let Some(was) = self.arch_audit.selected.filter(|_| self.arch_audit.chosen.is_empty()) {
+                        if let Some(was) = self
+                            .arch_audit
+                            .selected
+                            .filter(|_| self.arch_audit.chosen.is_empty())
+                        {
                             self.arch_audit.chosen.insert(was);
                         }
                         if !self.arch_audit.chosen.insert(i) {
@@ -500,7 +526,9 @@ impl App {
                             })
                             .unwrap_or_default();
                         if uids.is_empty() {
-                            self.warn("Seçili nesne yok; önce denetlenecek nesneleri seçin.".to_owned());
+                            self.warn(
+                                "Seçili nesne yok; önce denetlenecek nesneleri seçin.".to_owned(),
+                            );
                             return Task::none();
                         }
                         AuditScope::Selection(uids)
@@ -569,7 +597,12 @@ impl App {
         };
         let mut slots: Vec<Slot> = Vec::new();
         for f in self.arch_audit_chosen() {
-            for s in f.uids.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)) {
+            for s in f
+                .uids
+                .iter()
+                .filter_map(|u| Uuid::parse_str(u).ok())
+                .filter_map(|u| doc.model.slot_of(u))
+            {
                 if !slots.contains(&s) {
                     slots.push(s);
                 }

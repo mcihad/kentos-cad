@@ -77,7 +77,7 @@ pub(crate) fn way_out<'a>(
     Some(
         button(label::caption(words))
             .on_press(message)
-            .padding([2, 8])
+            .padding(kentos_ui::theme::metrics::action_small())
             .style(style::button::secondary)
             .into(),
     )

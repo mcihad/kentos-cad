@@ -16,7 +16,7 @@
 //! step and closes the window. The rules' order is theirs: the first that holds gives each of the
 //! background, the colour and bold.
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Task, Theme};
 use kentos_commands::{LayerNodeType, LayersTable, TableStyle, table_styles_problem};
 use kentos_interaction::Level;
@@ -25,7 +25,7 @@ use kentos_ui::icon::icon;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::color::{ColorPicker, parse_hex, to_hex};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -337,7 +337,7 @@ impl App {
             kentos_ui::widget::tip(
                 button(icon(from_web(Some(glyph))).size(16.0))
                     .style(style::button::ghost)
-                    .padding(4)
+                    .padding(kentos_ui::theme::metrics::icon_small(16.0))
                     .on_press_maybe(on),
                 kentos_ui::widget::Tip::new(tip),
                 iced::widget::tooltip::Position::Top,
@@ -394,10 +394,10 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(
-            Frame::new(TITLE).push(body).width(780.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .width(780.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn table_style_editor<'a>(
@@ -416,15 +416,13 @@ impl App {
         let place = Select::new(choices, chosen, move |i| {
             msg(Event::Field(i.checked_sub(1).map(|i| names[i].clone())))
         });
-        let condition = text_input("Durum = 'kotu'", &r.condition)
-            .size(typography::body())
+        let condition = kentos_ui::widget::text_field("Durum = 'kotu'", &r.condition)
             .on_input(|t| msg(Event::Condition(t)))
-            .padding([5, 8])
             .style(style::field::validated(r.condition.trim().is_empty()));
         let builder = kentos_ui::widget::tip(
             button(icon(from_web(Some("expression"))).size(16.0))
                 .style(style::button::ghost)
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .on_press(msg(Event::Builder)),
             kentos_ui::widget::Tip::new("İfade oluşturucu…"),
             iced::widget::tooltip::Position::Top,
@@ -442,7 +440,7 @@ impl App {
             ))
             .push(words::field(
                 "Koşul",
-                row![container(focus_ring(condition)).width(Fill), builder]
+                row![container(condition).width(Fill), builder]
                     .spacing(4)
                     .align_y(Center),
                 None,

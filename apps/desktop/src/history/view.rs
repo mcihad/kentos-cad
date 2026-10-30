@@ -193,7 +193,7 @@ impl App {
             tip(
                 button(icon(glyph).size(13.0))
                     .on_press(Message::History(event))
-                    .padding([2, 4])
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
                     .style(kentos_ui::style::button::flat),
                 about,
                 iced::widget::tooltip::Position::Top,

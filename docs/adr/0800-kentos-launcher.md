@@ -1,6 +1,6 @@
 # ADR 0800: KentOS Launcher
 
-- **Durum:** kabul edildi (2026-10-30).
+- **Durum:** kabul edildi (2026-10-30). Pencerenin görünüşü (§3, §6'nın yerleri) [ADR 0803](0803-launcher-sheet-and-plates.md) ile değişti.
 - **İstek:** sahibin sözleri “launcher tasarımı tıpkı görseldeki gibi olsun” ve “launcher içine ileride rust ile yazılmamış
   yazılımlar da entegre edebiliriz, daha esnek estetik bir launcher tasarla”. Görsel sahibin taslağıdır (`lancher.png`, 1586 × 992,
   koyu): solda KentOS yazısı ve gezinme (Uygulamalar, Güncellemeler, İndirmeler; altta Ayarlar), üstte “Uygulamalarım”, arama ve

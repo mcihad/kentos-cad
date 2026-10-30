@@ -333,7 +333,9 @@ impl Form {
         }
         let done = read.points.is_some();
         footer(
-            Dialog::new(TITLE).scroll(body),
+            Dialog::new(TITLE)
+                .on_close(crate::calc::event(crate::calc::Event::Close))
+                .scroll(body),
             model,
             self.layer.as_deref(),
             done,

@@ -32,7 +32,7 @@ use std::rc::Rc;
 
 use iced::advanced::widget;
 use iced::keyboard::key::Named;
-use iced::widget::{Column, button, column, container, row, rule, scrollable, space, text_input};
+use iced::widget::{Column, button, column, container, row, rule, scrollable, space};
 use iced::{Center, Color, Element, Fill};
 
 use crate::attribute::text;
@@ -47,7 +47,6 @@ use crate::widget::swatch;
 // Ölçüler 12 piksellik gövde metninde tasarlandı ve yazı boyutuyla büyür.
 
 /// Satır yüksekliği.
-const ROW_HEIGHT: f32 = 26.0;
 /// Listenin en fazla yüksekliği; daha uzun listeler kayar.
 const MAX_HEIGHT: f32 = 286.0;
 /// Bu kadar seçenekten sonra arama kutusu gösterilir.
@@ -164,8 +163,7 @@ pub struct Select<'a, Message> {
     actions: Vec<(Icon, String, Message)>,
     placeholder: String,
     searchable: Option<bool>,
-    borderless: bool,
-    inline: bool,
+    cell: bool,
     prefix: Option<String>,
 }
 
@@ -184,8 +182,7 @@ impl<'a, Message: Clone + 'a> Select<'a, Message> {
             actions: Vec::new(),
             placeholder: "Seçin".to_owned(),
             searchable: None,
-            borderless: false,
-            inline: false,
+            cell: false,
             prefix: None,
         }
     }
@@ -222,18 +219,10 @@ impl<'a, Message: Clone + 'a> Select<'a, Message> {
         self
     }
 
-    /// Kenarsız görünüm: özellik ızgarası hücreleri için; satır içi
-    /// yükseklikte, kenarı üzerine gelince çıkar.
-    pub fn borderless(mut self) -> Self {
-        self.borderless = true;
-        self.inline = true;
-        self
-    }
-
-    /// Satır içi yükseklik ([`metrics::inline`]): araç çubuğunda ve
-    /// tablonun üstünde, yanındaki arama kutusuyla aynı boyda.
-    pub fn inline(mut self) -> Self {
-        self.inline = true;
+    /// Izgara hücresini dolduran görünüm (docs/adr/0804): çerçevesi yok, satır
+    /// yüksekliğinde; hücre durumları çizer.
+    pub fn cell(mut self) -> Self {
+        self.cell = true;
         self
     }
 }
@@ -247,9 +236,8 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             on_clear,
             actions,
             placeholder,
+            cell,
             searchable,
-            borderless,
-            inline,
             prefix,
         } = select;
 
@@ -298,7 +286,10 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             None => Elided::new(placeholder)
                 .size(typography::body())
                 .font(typography::ui())
-                .style(style::text::muted)
+                // As a text field's hint.
+                .style(|theme: &iced::Theme| iced::widget::text::Style {
+                    color: Some(crate::theme::Tokens::of(theme).muted.scale_alpha(0.75)),
+                })
                 .width(Fill)
                 .into(),
         };
@@ -314,25 +305,28 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             None => shown,
         };
 
-        let anchor_style: fn(&iced::Theme) -> container::Style = if borderless {
+        let anchor_style: fn(&iced::Theme) -> container::Style = if cell {
             |_theme| container::Style::default()
         } else {
             style::container::field_box
         };
 
-        // Yanındaki metin girişleriyle aynı boyda: kontrol yüksekliği;
-        // hücredeki kenarsız kutu satır içi kontrol yüksekliğinde.
+        // Yanındaki metin girişleriyle aynı boyda: kontrol yüksekliği.
         let anchor = container(
             row![shown, icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted)]
                 .spacing(6)
                 .align_y(Center),
         )
-        .padding([0, if borderless { 6 } else { 8 }])
-        .height(if inline {
-            metrics::inline()
+        .padding(if cell {
+            iced::Padding {
+                left: metrics::cell_pad(),
+                right: metrics::cell_end(),
+                ..iced::Padding::ZERO
+            }
         } else {
-            metrics::control()
+            iced::Padding::from([0.0, metrics::FIELD_PAD])
         })
+        .height(metrics::control())
         .align_y(Center)
         .width(Fill)
         .style(anchor_style);
@@ -411,8 +405,8 @@ impl<'a, Message: Clone + 'a> From<Select<'a, Message>> for Element<'a, Message>
             .match_width()
             .keys(keys)
             .on_step(move |by| super::segmented::step_to(&presses, selected, by));
-        let dropdown = if borderless {
-            dropdown.edge_cell()
+        let dropdown = if cell {
+            dropdown.bare()
         } else {
             dropdown.edge()
         };
@@ -483,13 +477,9 @@ fn panel<'a>(
             container(
                 row![
                     icon(Icon::Search).size(13.0).tone(Tone::Muted),
-                    text_input("Ara", search_text)
+                    crate::widget::bare_field("Ara", search_text)
                         .id(id)
-                        .on_input(Event::Search)
-                        .font(typography::ui())
-                        .size(typography::body())
-                        .padding([3, 0])
-                        .style(style::field::bare_input),
+                        .on_input(Event::Search),
                 ]
                 .spacing(6)
                 .align_y(Center),
@@ -508,7 +498,7 @@ fn panel<'a>(
                     .style(style::text::muted),
             )
             .width(Fill)
-            .height(typography::scaled(ROW_HEIGHT))
+            .height(metrics::row())
             .padding([0, 6])
             .align_y(Center)
             .into();
@@ -555,7 +545,7 @@ fn panel<'a>(
         button(container(line).height(Fill).align_y(Center))
             .on_press_maybe((!choice.disabled).then_some(Event::Pick(index)))
             .width(Fill)
-            .height(typography::scaled(ROW_HEIGHT))
+            .height(metrics::row())
             .padding([0, 6])
             .style(move |theme, status| {
                 style::button::menu_row(
@@ -578,8 +568,8 @@ fn panel<'a>(
                 .width(Fill),
         )
     } else {
-        let height = (matches.len() as f32 * (typography::scaled(ROW_HEIGHT) + 1.0))
-            .min(typography::scaled(MAX_HEIGHT));
+        let height =
+            (matches.len() as f32 * (metrics::row() + 1.0)).min(typography::scaled(MAX_HEIGHT));
 
         content.push(
             scrollable(rows)
@@ -620,7 +610,7 @@ fn command<'a>(glyph: Icon, text: String, event: Event) -> Element<'a, Event> {
     )
     .on_press(event)
     .width(Fill)
-    .height(typography::scaled(ROW_HEIGHT))
+    .height(metrics::row())
     .padding([0, 6])
     .style(style::button::menu_row)
     .into()
