@@ -44275,7 +44275,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is\nnot a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the\nlayer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,\n`label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),\n`reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key\ndoes not fit the field, or keys that could not be read; docs/adr/0753).",
+        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is\nnot a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the\nlayer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,\n`label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),\n`reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key\ndoes not fit the field, or keys that could not be read; docs/adr/0753), `constraints_unread` (the table's CHECK and\nunique constraints could not be read; docs/adr/0755 §1). The link keeps the table's CHECK and unique constraints,\nand a one-column CHECK tying its column to a list of values gives the field that list (docs/adr/0755 §1, §4).",
         "properties": {
           "edit": {
             "$ref": "#/$defs/SourcesEditOp"
@@ -44421,7 +44421,8 @@
           "label_pins_restored",
           "key_not_unique",
           "network_share",
-          "reference_values_missing"
+          "reference_values_missing",
+          "constraints_unread"
         ]
       },
       "examples": [
@@ -45473,7 +45474,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a\ndatabase's rows the account may not change: privilege or row security, docs/adr/0585 §2), `source_not_null` (a column\nthe table keeps NOT NULL a write would leave empty: a new row's without a default, any changed row's; a new row's\nempty value of a column with a default is the table's, and what the table gave comes back to the object in the\nsame step, docs/adr/0750); conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed), `reference_values_missing` (a read whose foreign key's table has more rows\nthan a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
+        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`, `rows_denied` (a\ndatabase's rows the account may not change: privilege or row security, docs/adr/0585 §2), `source_not_null` (a column\nthe table keeps NOT NULL a write would leave empty: a new row's without a default, any changed row's; a new row's\nempty value of a column with a default is the table's, and what the table gave comes back to the object in the\nsame step, docs/adr/0750), `source_check`, `source_unique`, `source_reference` (one of the table's CHECK, unique or\nforeign key constraints refused the write, told by its name and a CHECK's sentence; nothing was written, docs/adr/0755\n§5); conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key, or without a key their geometry or nearest feature\nof the same kind within 0,05 m, to another row; docs/adr/0578 §2), `label_pins_parked` (pins of objects whose row\nis outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given\nback to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the\npins of those rows are not followed), `reference_values_missing` (a read whose foreign key's table has more rows\nthan a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753),\n`constraints_unread` (a read that could not read the table's constraints: the link keeps those it had; docs/adr/0755).\n\n`with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in\ntogether or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,\n`source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file\n(`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and\n`with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with\nits layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table\ndoes not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).",
         "properties": {
           "direction": {
             "$ref": "#/$defs/SyncDirection"
@@ -45718,7 +45719,10 @@
           "source_not_null",
           "invalid_input",
           "transaction_split",
-          "relation_dangling"
+          "relation_dangling",
+          "source_check",
+          "source_unique",
+          "source_reference"
         ],
         "warnings": [
           "export_losses",
@@ -45732,7 +45736,8 @@
           "source_others",
           "source_columns_renamed",
           "library_symbol_field",
-          "reference_values_missing"
+          "reference_values_missing",
+          "constraints_unread"
         ]
       },
       "examples": [
@@ -66986,6 +66991,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Tablo bazı sütunların boş kalmasına izin vermiyor (NOT NULL); o nesnelere değer verin, hiçbir şey yazılmadı."
+    },
+    {
+      "code": "source_check",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablonun bir CHECK ya da dışlama kısıtı yazmayı reddetti; hiçbir şey yazılmadı. Değerleri kısıta göre düzeltip yeniden yazın."
+    },
+    {
+      "code": "source_unique",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablonun tekil kısıtı yazmayı reddetti: aynı değerler başka bir satırda var; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "source_reference",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablonun yabancı anahtarı yazmayı reddetti: başvurulan satır yok ya da silinen satıra başka satırlar başvuruyor; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "constraints_unread",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tablonun CHECK ve tekil kısıtları okunamadı; KentOS onları denetlemez, tablo yine denetler."
     },
     {
       "code": "not_a_pointcloud",
@@ -88242,6 +88271,13 @@
       "additionalProperties": false,
       "description": "A bound table's column as its field keeps it (docs/adr/0753).",
       "properties": {
+        "check": {
+          "description": "The table's CHECK constraint that ties the column to a list of values (docs/adr/0755 §4), by its name or, for one\nwithout a name, its text: the field's values are that list, read again with every reading of the table.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "made": {
           "description": "The value the table makes itself, as its SQL text: a default it works out for a new row (`now()`, `uuidv7()`,\n`nextval('…')`; docs/adr/0753 §2), an identity's clause (`GENERATED BY DEFAULT AS IDENTITY`, `GENERATED ALWAYS\nAS IDENTITY`) or a generated column's with its expression (`GENERATED ALWAYS AS (…) STORED`; docs/adr/0754 §1).\nA new object leaves the field empty for it and the form says the database gives it; a value the table always\nmakes (an always-numbered identity, a generated column) is never written and a kept record's is not changed.",
           "type": [
@@ -121968,6 +122004,13 @@
       "additionalProperties": false,
       "description": "A layer bound to a table of a file.",
       "properties": {
+        "checks": {
+          "description": "The table's CHECK constraints as the link last read them (docs/adr/0755 §1): every write of a record is asked them\nwith SQL's own meaning, and one that ties a column to a list of values makes the field's value list. Binding and\nevery reading of the table write them anew.",
+          "items": {
+            "$ref": "#/$defs/TableCheck"
+          },
+          "type": "array"
+        },
         "digest": {
           "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
           "type": "string"
@@ -122039,6 +122082,13 @@
         "table": {
           "description": "The table in it.",
           "type": "string"
+        },
+        "uniques": {
+          "description": "The table's unique constraints and plain unique indexes as the link last read them (docs/adr/0755 §1): no two\nrecords of the layer hold the same values in their columns.",
+          "items": {
+            "$ref": "#/$defs/TableUnique"
+          },
+          "type": "array"
         },
         "writable": {
           "description": "Whether the table can be written: a feature or attribute table of a file KentOS may write.",
@@ -126400,6 +126450,39 @@
       ],
       "type": "string"
     },
+    "TableCheck": {
+      "additionalProperties": false,
+      "description": "A CHECK constraint of a bound table (docs/adr/0755 §1).",
+      "properties": {
+        "columns": {
+          "description": "The table's columns it reads, in the table's order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Its name; none for SQLite's constraint without one, which the database names by its text.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sql": {
+          "description": "Its condition as the table gives it: the inside of PostgreSQL's `CHECK (…)` (`pg_get_constraintdef`), SQLite's\nas its `CREATE TABLE` text writes it.",
+          "type": "string"
+        },
+        "tableOnly": {
+          "description": "Only the table judges it (docs/adr/0755 §3): it reads a column whose comparisons KentOS cannot follow (a\ncollation other than byte order, SQLite's affinity other than the field kind's, PostgreSQL's blank-padded\n`character(n)`); written only as `true`.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sql",
+        "columns"
+      ],
+      "type": "object"
+    },
     "TableEdit": {
       "description": "One edit of a table's cells, rows and columns, applied in order (Tabloyu düzenle).",
       "oneOf": [
@@ -127644,6 +127727,34 @@
       },
       "required": [
         "condition"
+      ],
+      "type": "object"
+    },
+    "TableUnique": {
+      "additionalProperties": false,
+      "description": "A unique constraint or a plain unique index of a bound table (docs/adr/0755 §1).",
+      "properties": {
+        "columns": {
+          "description": "Its columns, in its order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Its name; none for SQLite's constraint without one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nullsEqual": {
+          "description": "Two empty (NULL) values count as the same (PostgreSQL's `NULLS NOT DISTINCT`); written only as `true`.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "columns"
       ],
       "type": "object"
     },

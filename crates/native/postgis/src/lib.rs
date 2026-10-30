@@ -17,13 +17,14 @@ use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
     Created, DbRelation, Edited, MapWrite, NewTable, Param, ProviderError, ProviderRead,
-    ProviderScan, ProviderShape, ProviderTable, Reference, RowCheck, TableClash, TableEdit,
-    TableProvider, register_postgis,
+    ProviderScan, ProviderShape, ProviderTable, Reference, RowCheck, TableClash, TableConstraints,
+    TableEdit, TableProvider, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
 
 pub mod connections;
+mod constraints;
 mod create;
 mod junctions;
 pub mod probe;
@@ -58,7 +59,14 @@ fn unreachable(e: impl std::fmt::Display) -> ProviderError {
     ProviderError::Unreachable(e.to_string())
 }
 
-fn refused(e: impl std::fmt::Display) -> ProviderError {
+fn refused<E: std::fmt::Display + 'static>(e: E) -> ProviderError {
+    // One of the table's constraints said by its kind and name (docs/adr/0755 §5).
+    if let Some(v) = (&e as &dyn std::any::Any)
+        .downcast_ref::<sqlx::Error>()
+        .and_then(constraints::violation)
+    {
+        return v;
+    }
     ProviderError::Refused(e.to_string())
 }
 
@@ -1486,6 +1494,15 @@ impl TableProvider for PostGis {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
             let found = references::read(&mut conn, table, most).await;
+            let _ = conn.close().await;
+            found
+        })
+    }
+
+    fn constraints(&self, address: &str, table: &str) -> Result<TableConstraints, ProviderError> {
+        self.runtime.block_on(async {
+            let mut conn = connect(address).await?;
+            let found = constraints::read(&mut conn, table).await;
             let _ = conn.close().await;
             found
         })

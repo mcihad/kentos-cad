@@ -8,6 +8,7 @@
 //! A file written here is GeoPackage 1.3 (`application_id` GPKG, `user_version` 10300). Unknown extensions and tables
 //! are not touched. SQLite is compiled in (rusqlite's `bundled`).
 
+pub mod constraints;
 pub mod fgb;
 pub mod foreign;
 pub mod geom;

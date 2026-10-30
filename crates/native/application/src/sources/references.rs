@@ -9,8 +9,9 @@ use std::path::Path;
 
 use kentos_commands::{
     ColumnRefers, CommandWarning, FieldChoice, FieldColumn, LayerField, LayerFieldKind, MAX_MADE,
-    MAX_REFERS_NAME, check_value, field_problem, fold, js_trim,
+    MAX_REFERS_NAME, TableCheck, check_value, field_problem, fold, js_trim,
 };
+use kentos_forms::table_checks::{self, Dialect};
 use kentos_geometry_core::text::natural::natural_cmp;
 use kentos_geopackage::{self as gpkg, GeoPackage};
 
@@ -196,14 +197,46 @@ fn warning(message: String, at: &str) -> CommandWarning {
     }
 }
 
+/// The values a one-column CHECK of the table ties `f` to (docs/adr/0755 §4) as its list, with the constraint's name:
+/// each value one the field takes as it is (a text trimmed and not empty, a number of the field's kind), else none.
+fn check_list(
+    f: &LayerField,
+    checks: &[TableCheck],
+    d: Dialect,
+) -> Option<(Vec<FieldChoice>, String)> {
+    if !takes_list(f) {
+        return None;
+    }
+    let mut probe = LayerField::new(f.name.clone(), f.kind);
+    probe.length = f.length;
+    probe.scale = f.scale;
+    checks.iter().find_map(|c| {
+        let (column, codes) = table_checks::value_list(c, d, f.kind)?;
+        (column == f.name).then_some(())?;
+        let fits = codes.iter().all(|code| match check_value(&probe, code) {
+            Ok(v) if f.kind == LayerFieldKind::Text => v == *code && !v.is_empty(),
+            Ok(v) => !v.is_empty(),
+            Err(_) => false,
+        });
+        if !fits || c.said().chars().count() > kentos_commands::MAX_CHECK_SQL {
+            return None;
+        }
+        let rows: Vec<(String, Option<String>)> = codes.into_iter().map(|c| (c, None)).collect();
+        let (list, _) = listed(f, &rows);
+        (!list.is_empty()).then(|| (list, c.said().to_owned()))
+    })
+}
+
 /// The table's own fields (as they are read from its columns) with what its columns say besides (docs/adr/0753 §1):
 /// each column's made default, and each single-column foreign key's table with its rows as the field's value list, when
-/// the field's kind holds one. `refs` an error: the references could not be read (said; no field gets one). The
-/// warnings, at `at`: lists not made or short.
+/// the field's kind holds one; without a key, a one-column CHECK's list of values (docs/adr/0755 §4). `refs` an error:
+/// the references could not be read (said; no field gets one). The warnings, at `at`: lists not made or short.
 pub(crate) fn table_fields(
     fields: &mut [LayerField],
     columns: &[gpkg::Column],
     refs: &Result<Vec<Reference>, String>,
+    checks: &[TableCheck],
+    d: Dialect,
     table: &str,
     at: &str,
 ) -> Vec<CommandWarning> {
@@ -256,8 +289,19 @@ pub(crate) fn table_fields(
                 }
             }
         }
-        let mirrored = refers.is_some();
-        f.column = (made.is_some() || mirrored).then_some(FieldColumn { made, refers });
+        let mut check = None;
+        if refers.is_none()
+            && let Some((list, said)) = check_list(f, checks, d)
+        {
+            values = Some(list);
+            check = Some(said);
+        }
+        let mirrored = refers.is_some() || check.is_some();
+        f.column = (made.is_some() || mirrored).then_some(FieldColumn {
+            made,
+            refers,
+            check,
+        });
         if mirrored {
             f.values = values;
         }
@@ -266,28 +310,33 @@ pub(crate) fn table_fields(
 }
 
 /// A layer's field after a reading of its table (docs/adr/0753 §1), `t` the table's (from [`table_fields`]): the table's
-/// made default; its foreign key's table and list when the field holds that list already or has none of its own (nor a
-/// project's), the list dropped with the key. `known`: the references were read (else the field's stay). A field the
-/// mirror would make wrong stays as it was.
+/// made default; its foreign key's table and list, or its CHECK's list (docs/adr/0755 §4), when the field holds that list
+/// already or has none of its own (nor a project's), the list dropped with the key or the constraint. `known`: the
+/// references and the constraints were read (else the field's stay). A field the mirror would make wrong stays as it was.
 pub(crate) fn follow(f: &mut LayerField, t: &LayerField, known: bool) {
     let before = f.clone();
-    let mirrored = f.column.as_ref().is_some_and(|c| c.refers.is_some());
+    let mirrored = f
+        .column
+        .as_ref()
+        .is_some_and(|c| c.refers.is_some() || c.check.is_some());
     let own = !mirrored && (f.values.is_some() || f.domain.is_some());
     let made = t.column.as_ref().and_then(|c| c.made.clone());
-    let refers = if !known || own {
-        f.column.as_ref().and_then(|c| c.refers.clone())
-    } else {
-        t.column.as_ref().and_then(|c| c.refers.clone())
-    };
-    if known && !own && (mirrored || refers.is_some()) {
+    let from = if !known || own { &f.column } else { &t.column };
+    let refers = from.as_ref().and_then(|c| c.refers.clone());
+    let check = from.as_ref().and_then(|c| c.check.clone());
+    if known && !own && (mirrored || refers.is_some() || check.is_some()) {
         let same = f.kind == t.kind && f.length == t.length && f.scale == t.scale;
-        f.values = if refers.is_some() && same && takes_list(f) {
+        f.values = if (refers.is_some() || check.is_some()) && same && takes_list(f) {
             t.values.clone()
         } else {
             None
         };
     }
-    f.column = (made.is_some() || refers.is_some()).then_some(FieldColumn { made, refers });
+    f.column = (made.is_some() || refers.is_some() || check.is_some()).then_some(FieldColumn {
+        made,
+        refers,
+        check,
+    });
     if field_problem(f).is_some() {
         *f = before;
     }
@@ -444,6 +493,7 @@ mod tests {
         t.column = Some(FieldColumn {
             made: None,
             refers: Some(refers.clone()),
+            check: None,
         });
         t.values = Some(vec![FieldChoice::new("6", "Ankara")]);
         // A field without a list takes it.

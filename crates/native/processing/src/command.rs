@@ -1969,10 +1969,19 @@ fn write_database(
 fn provider_words(e: &kentos_native_application::provider::ProviderError) -> String {
     use kentos_native_application::provider::ProviderError as E;
     match e {
-        E::Unreachable(w) | E::Refused(w) | E::Unreadable(w) | E::NoKey(w) | E::NoTable(w) | E::Exists(w) => w.clone(),
+        E::Unreachable(w)
+        | E::Refused(w)
+        | E::Unreadable(w)
+        | E::NoKey(w)
+        | E::NoTable(w)
+        | E::Exists(w) => w.clone(),
         E::Changed => "kaynak değişti".into(),
         E::RowsChanged(k) | E::RowsDenied(k) => format!("{} satır", k.len()),
         E::KeyRepeats(c, v) => format!("{c} anahtarında {v} yineleniyor"),
+        E::Constraint { name, detail, .. } => match name {
+            Some(n) => format!("“{n}” kısıtı reddetti: {detail}"),
+            None => format!("bir kısıt reddetti: {detail}"),
+        },
     }
 }
 

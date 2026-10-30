@@ -417,6 +417,11 @@ pub struct FieldColumn {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub refers: Option<ColumnRefers>,
+    /// The table's CHECK constraint that ties the column to a list of values (docs/adr/0755 §4), by its name or, for one
+    /// without a name, its text: the field's values are that list, read again with every reading of the table.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub check: Option<String>,
 }
 
 /// How the table makes a field's value, as its column's `made` says it (docs/adr/0754 §1).
@@ -509,9 +514,17 @@ fn column_problem(name: &str, c: &FieldColumn) -> Option<String> {
             || t.chars().count() > most
             || t.chars().any(char::is_control)
     };
-    if c.made.is_none() && c.refers.is_none() {
+    if c.made.is_none() && c.refers.is_none() && c.check.is_none() {
         return Some(format!(
-            "“{name}” alanının sütun bilgisi boş; veritabanının verdiği değeri ya da başvurulan tabloyu yazın ya da bilgiyi kaldırın."
+            "“{name}” alanının sütun bilgisi boş; veritabanının verdiği değeri, başvurulan tabloyu ya da değer listesini veren kısıtı yazın ya da bilgiyi kaldırın."
+        ));
+    }
+    if let Some(k) = &c.check
+        && bad(k, crate::sources::MAX_CHECK_SQL)
+    {
+        return Some(format!(
+            "“{name}” alanının değer listesini veren kısıtın adı boş olamaz, en çok {} karakterdir, boşlukla başlayıp bitmez ve denetim karakteri içermez.",
+            crate::sources::MAX_CHECK_SQL
         ));
     }
     if let Some(m) = &c.made

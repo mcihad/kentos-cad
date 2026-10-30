@@ -217,6 +217,8 @@ fn a_bound_file_that_changes_while_the_pages_are_made_refuses_the_run() {
         extent: None,
         key: None,
         parked: Vec::new(),
+        checks: Vec::new(),
+        uniques: Vec::new(),
         writable: true,
     };
     snapshot.settings.sources.push(link);

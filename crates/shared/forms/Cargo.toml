@@ -12,4 +12,5 @@ publish.workspace = true
 kentos-contracts = { path = "../contracts" }
 kentos-expression = { path = "../expression" }
 kentos-geometry-core = { path = "../geometry-core" }
+regex-lite = { workspace = true }
 serde_json = { workspace = true }

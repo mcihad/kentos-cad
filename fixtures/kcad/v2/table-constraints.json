@@ -1,0 +1,199 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Tablonun kısıtları",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "gis",
+  "sources": [
+   {
+    "id": "kaynak-1",
+    "kind": "postgis",
+    "path": "postgresql://muhasebe@veri.belediye.local:5432/kent?sslmode=require",
+    "table": "muhasebe.fis",
+    "layer": "fis",
+    "revision": "3333333333333333333333333333333333333333333333333333333333333333",
+    "digest": "4444444444444444444444444444444444444444444444444444444444444444",
+    "checks": [
+     {
+      "name": "fis_oncelik_check",
+      "sql": "((oncelik >= 1) AND (oncelik <= 3))",
+      "columns": [
+       "oncelik"
+      ]
+     },
+     {
+      "name": "fis_tur_check",
+      "sql": "((tur)::text = ANY ((ARRAY['is'::character varying, 'personel'::character varying, 'butce_disi'::character varying])::text[]))",
+      "columns": [
+       "tur"
+      ]
+     },
+     {
+      "name": "fis_durum_check",
+      "sql": "(durum = ANY (ARRAY['A'::bpchar, 'P'::bpchar]))",
+      "columns": [
+       "durum"
+      ],
+      "tableOnly": true
+     }
+    ],
+    "uniques": [
+     {
+      "name": "fis_yil_no_key",
+      "columns": [
+       "mali_yil",
+       "yevmiye_no"
+      ],
+      "nullsEqual": true
+     },
+     {
+      "name": "fis_kod_idx",
+      "columns": [
+       "kod"
+      ]
+     }
+    ],
+    "writable": true
+   },
+   {
+    "id": "kaynak-2",
+    "kind": "geopackage",
+    "path": "/veri/defter.gpkg",
+    "table": "kalem",
+    "layer": "kalem",
+    "revision": "5555555555555555555555555555555555555555555555555555555555555555",
+    "digest": "6666666666666666666666666666666666666666666666666666666666666666",
+    "checks": [
+     {
+      "sql": "tutar > 0",
+      "columns": [
+       "tutar"
+      ]
+     }
+    ],
+    "writable": true
+   }
+  ]
+ },
+ "origin": {
+  "x": 500000.0,
+  "y": 4400000.0
+ },
+ "layers": [
+  {
+   "id": "fis",
+   "name": "fis",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "mali_yil",
+     "kind": "integer",
+     "required": true
+    },
+    {
+     "name": "yevmiye_no",
+     "kind": "integer",
+     "required": true
+    },
+    {
+     "name": "kod",
+     "kind": "text",
+     "length": 20
+    },
+    {
+     "name": "tur",
+     "kind": "text",
+     "length": 20,
+     "values": [
+      {
+       "code": "butce_disi",
+       "label": "butce_disi"
+      },
+      {
+       "code": "is",
+       "label": "is"
+      },
+      {
+       "code": "personel",
+       "label": "personel"
+      }
+     ],
+     "column": {
+      "check": "fis_tur_check"
+     }
+    },
+    {
+     "name": "oncelik",
+     "kind": "integer"
+    },
+    {
+     "name": "durum",
+     "kind": "text",
+     "length": 1
+    }
+   ]
+  },
+  {
+   "id": "kalem",
+   "name": "kalem",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "tutar",
+     "kind": "decimal"
+    }
+   ]
+  }
+ ],
+ "activeLayer": "fis",
+ "entities": [
+  {
+   "kind": "point",
+   "id": 1,
+   "layerId": "fis",
+   "attrs": {
+    "mali_yil": "2026",
+    "yevmiye_no": "17",
+    "kod": "F-17",
+    "tur": "is",
+    "oncelik": "2",
+    "durum": "A"
+   },
+   "p": {
+    "x": 500100.0,
+    "y": 4400200.0
+   }
+  }
+ ],
+ "uids": [
+  "0193f1c2-7a00-7000-8000-000000000134"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

@@ -210,15 +210,22 @@ impl<'d> Encoder<'d> {
     }
 
     /// A key of a map whose keys are fixed; the caller writes them in order.
-    /// A field's bound column (schema 133, docs/adr/0753): `made`, then `refers` (`label`, `table`, `column`).
+    /// A field's bound column (schema 133, docs/adr/0753): `made`, then (schema 134, docs/adr/0755) `check`, then
+    /// `refers` (`label`, `table`, `column`).
     fn field_column(&mut self, c: &kentos_contracts::FieldColumn) -> Result<(), KcadError> {
         self.open(
-            usize::from(c.made.is_some()) + usize::from(c.refers.is_some()),
+            usize::from(c.made.is_some())
+                + usize::from(c.check.is_some())
+                + usize::from(c.refers.is_some()),
             true,
         )?;
         if let Some(made) = &c.made {
             self.key("made");
             self.at(Seg::Name("made"), |e| e.text(made))?;
+        }
+        if let Some(check) = &c.check {
+            self.key("check");
+            self.at(Seg::Name("check"), |e| e.text(check))?;
         }
         if let Some(r) = &c.refers {
             self.key("refers");
@@ -2036,6 +2043,24 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 134 (docs/adr/0755): a bound table's constraints in its link, a field's list from one of them.
+    fn checked(nodes: &[LayerNode]) -> bool {
+        nodes.iter().any(|n| {
+            n.fields
+                .iter()
+                .any(|f| f.column.as_ref().is_some_and(|c| c.check.is_some()))
+                || checked(&n.children)
+        })
+    }
+    if checked(&doc.layers)
+        || doc
+            .settings
+            .sources
+            .iter()
+            .any(|s| !s.checks.is_empty() || !s.uniques.is_empty())
+    {
+        return crate::SCHEMA_WITH_TABLE_CONSTRAINTS;
+    }
     // Schema 133 (docs/adr/0753): a layer field's bound column, what the table makes and refers to.
     fn columns(nodes: &[LayerNode]) -> bool {
         nodes

@@ -318,6 +318,7 @@ pub(super) struct Features {
     pub(super) withheld_fields: bool,
     /// Schema 133: a layer field's bound column, what the table makes and refers to (docs/adr/0753).
     pub(super) field_columns: bool,
+    pub(super) table_constraints: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -516,6 +517,7 @@ impl Features {
             field_kinds: schema >= crate::SCHEMA_WITH_FIELD_KINDS,
             withheld_fields: schema >= crate::SCHEMA_WITH_WITHHELD_FIELDS,
             field_columns: schema >= crate::SCHEMA_WITH_FIELD_COLUMNS,
+            table_constraints: schema >= crate::SCHEMA_WITH_TABLE_CONSTRAINTS,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,

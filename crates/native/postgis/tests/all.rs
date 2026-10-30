@@ -2868,3 +2868,223 @@ fn a_tables_generated_columns_come_from_it() {
     );
     assert_eq!(d.revision(), before, "the read changed the drawing");
 }
+
+/// A voucher table like the owner's (`muhasebe.fis`: a list, a range, a date pair, a numeric minimum, a JSON shape, a
+/// blank-padded code, a unique pair taking NULLs as the same, a unique index, a partial one, a foreign key;
+/// docs/adr/0755): bound, the link holds the CHECKs (the blank-padded one the table's only) and the unique ones (not the
+/// partial index), the use's list becomes the field's; KentOS refuses what breaks a CHECK it judges and a repeated pair
+/// before anything is written; what only the table judges is refused at the write by its name and nothing is written.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_tables_constraints_come_from_it() {
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        return;
+    };
+    kentos_postgis::register();
+    let mut d = doc();
+    let (layer, _) = bind(&mut d, &url, "muhasebe.fis");
+    let link = d
+        .settings()
+        .sources
+        .iter()
+        .find(|s| s.layer == layer)
+        .expect("the link")
+        .clone();
+    let names: Vec<&str> = link
+        .checks
+        .iter()
+        .filter_map(|c| c.name.as_deref())
+        .collect();
+    for n in [
+        "fis_durum_check",
+        "fis_oncelik",
+        "fis_tarih",
+        "fis_tur_check",
+        "fis_tutar",
+        "fis_veri_check",
+    ] {
+        assert!(names.contains(&n), "{n}: {names:?}");
+    }
+    let durum = link
+        .checks
+        .iter()
+        .find(|c| c.name.as_deref() == Some("fis_durum_check"))
+        .expect("durum");
+    assert!(
+        durum.table_only,
+        "a blank-padded column is the table's only: {durum:?}"
+    );
+    let tarih = link
+        .checks
+        .iter()
+        .find(|c| c.name.as_deref() == Some("fis_tarih"))
+        .expect("tarih");
+    assert_eq!(tarih.columns, ["baslangic", "bitis"]);
+    let pair = link
+        .uniques
+        .iter()
+        .find(|u| u.name.as_deref() == Some("fis_yil_no"))
+        .expect("the pair");
+    assert_eq!(pair.columns, ["mali_yil", "yevmiye_no"]);
+    assert!(pair.nulls_equal, "NULLS NOT DISTINCT: {pair:?}");
+    assert!(
+        link.uniques
+            .iter()
+            .any(|u| u.name.as_deref() == Some("fis_kod") && u.columns == ["kod"])
+    );
+    assert!(
+        link.uniques
+            .iter()
+            .all(|u| u.name.as_deref() != Some("fis_kismi")),
+        "a partial index is not kept"
+    );
+    let fields =
+        serde_json::to_value(&d.layers().get(&layer).expect("the layer").fields).expect("fields");
+    let field = |name: &str| {
+        fields
+            .as_array()
+            .and_then(|a| a.iter().find(|f| f["name"] == name))
+            .cloned()
+            .unwrap_or(Value::Null)
+    };
+    assert_eq!(
+        field("tur")["values"],
+        json!([{ "code": "butce_disi", "label": "butce_disi" }, { "code": "is", "label": "is" },
+               { "code": "personel", "label": "personel" }]),
+        "{fields}"
+    );
+    assert_eq!(field("tur")["column"]["check"], "fis_tur_check", "{fields}");
+    assert!(
+        field("durum")["values"].is_null(),
+        "the table's only gives no list: {fields}"
+    );
+    assert_eq!(
+        field("tutar")["scale"],
+        2,
+        "numeric(14,2) keeps two decimals: {fields}"
+    );
+    let uid_of = |d: &Document, no: &str| {
+        d.by_layer_with_uids(&layer)
+            .find(|(_, e)| e.base().attrs.get("yevmiye_no").map(String::as_str) == Some(no))
+            .map(|(u, _)| u.to_string())
+            .expect("a voucher")
+    };
+    let first = uid_of(&d, "1");
+    let set = |d: &mut Document, uid: &str, attrs: Value| {
+        run(
+            d,
+            "cad.entities.set",
+            CallOp::Execute,
+            json!({ "uids": [uid], "attrs": attrs, "operation": "attributes" }),
+        )
+    };
+    // What KentOS judges is refused before anything is written.
+    for (attrs, code, path, says) in [
+        (
+            json!({ "oncelik": "4" }),
+            "rule_broken",
+            "attrs.oncelik",
+            "Tablonun “fis_oncelik” kısıtı: oncelik 1 ile 3 arasında olmalı.",
+        ),
+        (
+            json!({ "tutar": "0" }),
+            "rule_broken",
+            "attrs.tutar",
+            "Tablonun “fis_tutar” kısıtı: tutar en az 0.01 olmalı.",
+        ),
+        (
+            json!({ "bitis": "2025-12-31" }),
+            "rule_broken",
+            "attrs.baslangic",
+            "Tablonun “fis_tarih” kısıtı: bitis, baslangic alanından büyük olmalı.",
+        ),
+        (
+            json!({ "yevmiye_no": "2" }),
+            "not_unique",
+            "attrs.mali_yil",
+            "“mali_yil”, “yevmiye_no” alanları tabloda birlikte tekil; (“2026”, “2”) başka bir kayıtta var. Başka değerler verin.",
+        ),
+    ] {
+        let before = d.revision();
+        let refused = set(&mut d, &first, attrs);
+        assert_eq!(refused["error"]["code"], code, "{refused}");
+        assert_eq!(refused["error"]["path"], path, "{refused}");
+        assert_eq!(refused["error"]["message"], says, "{refused}");
+        assert_eq!(d.revision(), before, "the refusal changed the drawing");
+    }
+    // What only the table judges is refused at the write, by its name; nothing is written.
+    let write = |d: &mut Document| {
+        run(
+            d,
+            "cad.sources.sync",
+            CallOp::Execute,
+            json!({ "layer": layer, "direction": "write" }),
+        )
+    };
+    let discard = |d: &mut Document| {
+        ok(&run(
+            d,
+            "cad.sources.sync",
+            CallOp::Execute,
+            json!({ "layer": layer, "direction": "read", "discard": true }),
+        ));
+    };
+    for (attrs, code, says) in [
+        (
+            json!({ "veri": "{}" }),
+            "source_check",
+            "“muhasebe.fis” tablosunun “fis_veri_check” kısıtı yazmayı reddetti: (jsonb_typeof(veri) = 'array'::text).",
+        ),
+        (
+            json!({ "durum": "X" }),
+            "source_check",
+            "“muhasebe.fis” tablosunun “fis_durum_check” kısıtı yazmayı reddetti: (durum = ANY (ARRAY['A'::bpchar, 'P'::bpchar])).",
+        ),
+        (
+            json!({ "oncelik": "3" }),
+            "source_unique",
+            "“muhasebe.fis” tablosunun tekil kısıtı “fis_kismi” yazmayı reddetti",
+        ),
+    ] {
+        ok(&set(&mut d, &first, attrs));
+        let refused = write(&mut d);
+        assert_eq!(refused["status"], "failed", "{refused}");
+        assert_eq!(refused["error"]["code"], code, "{refused}");
+        assert!(
+            refused["error"]["message"]
+                .as_str()
+                .is_some_and(|m| m.starts_with(says)),
+            "{refused}"
+        );
+        discard(&mut d);
+    }
+    // A province a voucher refers to, deleted: the foreign key refuses the write.
+    let (iller, _) = bind(&mut d, &url, "kbs.iller");
+    let ankara = d
+        .by_layer_with_uids(&iller)
+        .find(|(_, e)| e.base().attrs.get("ad").map(String::as_str) == Some("Ankara"))
+        .map(|(u, _)| u.to_string())
+        .expect("Ankara");
+    ok(&run(
+        &mut d,
+        "cad.entities.delete",
+        CallOp::Execute,
+        json!({ "uids": [ankara] }),
+    ));
+    let refused = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": iller, "direction": "write" }),
+    );
+    assert_eq!(refused["error"]["code"], "source_reference", "{refused}");
+    // A voucher the table takes is written.
+    ok(&set(
+        &mut d,
+        &first,
+        json!({ "oncelik": "1", "tutar": "12.50" }),
+    ));
+    let written = ok(&write(&mut d)).clone();
+    assert_eq!(written["modified"], 1, "{written}");
+    record(json!({ "constraints": { "uid": first } }));
+}

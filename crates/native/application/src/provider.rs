@@ -70,6 +70,35 @@ pub enum ProviderError {
     Unreadable(String),
     /// A table of that name is already in the database (docs/adr/0590 §2).
     Exists(String),
+    /// One of the table's constraints refused the write (docs/adr/0755 §5): its kind, its name, the column the database
+    /// named and its words; nothing was written.
+    Constraint {
+        kind: ConstraintKind,
+        name: Option<String>,
+        column: Option<String>,
+        detail: String,
+    },
+}
+
+/// The kind of a table's constraint that refused a write (docs/adr/0755 §5), by PostgreSQL's SQLSTATE of class 23 or
+/// SQLite's extended code.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ConstraintKind {
+    /// A CHECK (`23514`) or an exclusion (`23P01`).
+    Check,
+    /// A unique constraint (`23505`).
+    Unique,
+    /// A foreign key (`23503`).
+    Foreign,
+    /// NOT NULL (`23502`).
+    NotNull,
+}
+
+/// A bound table's CHECK and unique constraints as the database holds them (docs/adr/0755 §1).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct TableConstraints {
+    pub checks: Vec<kentos_commands::TableCheck>,
+    pub uniques: Vec<kentos_commands::TableUnique>,
 }
 
 /// A single-column foreign key of a bound table with the referenced table's rows (docs/adr/0753 §2): the table's column,
@@ -293,6 +322,10 @@ pub trait TableProvider: Send + Sync {
         _most: usize,
     ) -> Result<Vec<Reference>, ProviderError> {
         Ok(Vec::new())
+    }
+    /// `table`'s CHECK and unique constraints (docs/adr/0755 §2); a provider that reads none says there are none.
+    fn constraints(&self, _address: &str, _table: &str) -> Result<TableConstraints, ProviderError> {
+        Ok(TableConstraints::default())
     }
     /// How the database holds a many-to-many reference from `child`'s rows to `parent`'s (docs/adr/0590 §1).
     fn relation(

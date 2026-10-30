@@ -115,6 +115,7 @@ fn a_columns_clause_says_how_the_table_makes_the_value() {
     let column = |made: &str| FieldColumn {
         made: Some(made.to_owned()),
         refers: None,
+        check: None,
     };
     let cases = [
         ("now()", ColumnMade::Default("now()"), false),
@@ -158,7 +159,8 @@ fn a_columns_clause_says_how_the_table_makes_the_value() {
     assert_eq!(
         FieldColumn {
             made: None,
-            refers: None
+            refers: None,
+            check: None,
         }
         .making(),
         None

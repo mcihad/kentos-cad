@@ -377,6 +377,24 @@ pub(super) fn write(
                         &uids,
                     )
                 }
+                provider::ProviderError::Constraint {
+                    kind,
+                    name,
+                    column,
+                    detail,
+                } => super::constraints::refusal(
+                    kind,
+                    name.as_deref(),
+                    column.as_deref(),
+                    &detail,
+                    Some(&it.link.table),
+                    Some((
+                        &it.link.checks,
+                        &it.stored.fields,
+                        kentos_forms::Dialect::Postgres,
+                    )),
+                    place,
+                ),
                 e => provider_stop(e, &address, at_one(place)),
             }
         })?;

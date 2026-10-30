@@ -17,4 +17,9 @@ made?: string,
  * The table the column's foreign key refers to (docs/adr/0753 §1): the field's values are that table's rows, read
  * again with every reading of the table.
  */
-refers?: ColumnRefers, };
+refers?: ColumnRefers, 
+/**
+ * The table's CHECK constraint that ties the column to a list of values (docs/adr/0755 §4), by its name or, for one
+ * without a name, its text: the field's values are that list, read again with every reading of the table.
+ */
+check?: string, };

@@ -116,11 +116,113 @@ pub(crate) fn object_attrs(
     Ok((!out.is_empty()).then_some(out))
 }
 
+/// A bound layer's writes against its table's unique constraints (docs/adr/0755 §5), SQL's way: the values of a
+/// constraint's columns written anew (a column of it changed, or a new record) that another record of the layer holds
+/// after the writes is `not_unique` at `{at}.{name}` of its first column. A set with an empty value (NULL) is not asked
+/// unless the constraint takes NULLs as the same; an empty text is a value. Rows the layer has not taken (a part's,
+/// docs/adr/0510) are the table's to judge.
+fn table_unique_fit(
+    doc: &Document,
+    layer: &str,
+    fields: &[kentos_commands::LayerField],
+    mine: &[&UniqueWrite<'_>],
+    written: &HashSet<Slot>,
+) -> Result<(), Stop> {
+    let Some(link) = doc
+        .settings()
+        .sources
+        .iter()
+        .find(|s| s.layer == layer && !s.uniques.is_empty())
+    else {
+        return Ok(());
+    };
+    for u in &link.uniques {
+        let cols: Vec<&kentos_commands::LayerField> = u
+            .columns
+            .iter()
+            .filter_map(|c| fields.iter().find(|f| f.name == *c))
+            .collect();
+        if cols.len() != u.columns.len() || cols.is_empty() {
+            continue;
+        }
+        let set = |attrs: &BTreeMap<String, String>| -> Option<Vec<Option<String>>> {
+            let values: Vec<Option<String>> =
+                cols.iter().map(|f| attrs.get(&f.name).cloned()).collect();
+            (u.nulls_equal || values.iter().all(Option::is_some)).then_some(values)
+        };
+        let fresh: Vec<(&UniqueWrite<'_>, Vec<Option<String>>)> = mine
+            .iter()
+            .filter(|w| {
+                w.before
+                    .is_none_or(|b| cols.iter().any(|f| b.get(&f.name) != w.after.get(&f.name)))
+            })
+            .filter_map(|w| set(w.after).map(|v| (*w, v)))
+            .collect();
+        if fresh.is_empty() {
+            continue;
+        }
+        let mut counts: std::collections::HashMap<Vec<Option<String>>, usize> =
+            std::collections::HashMap::new();
+        for e in doc.by_layer(layer) {
+            if written.contains(&Slot(e.base().id)) {
+                continue;
+            }
+            if let Some(v) = set(&e.base().attrs) {
+                *counts.entry(v).or_default() += 1;
+            }
+        }
+        for w in mine {
+            if let Some(v) = set(w.after) {
+                *counts.entry(v).or_default() += 1;
+            }
+        }
+        if let Some((w, values)) = fresh
+            .iter()
+            .find(|(_, v)| counts.get(v).copied().unwrap_or(0) > 1)
+        {
+            let said = |f: &kentos_commands::LayerField, v: &Option<String>| {
+                v.as_ref().map_or_else(
+                    || "boş".to_owned(),
+                    |v| format!("“{}”", kentos_commands::display_value(f, v)),
+                )
+            };
+            let message = if cols.len() == 1 {
+                format!(
+                    "“{}” alanı tabloda tekil; {} başka bir kayıtta var. Başka bir değer verin.",
+                    cols[0].label(),
+                    said(cols[0], &values[0])
+                )
+            } else {
+                format!(
+                    "{} alanları tabloda birlikte tekil; ({}) başka bir kayıtta var. Başka değerler verin.",
+                    cols.iter()
+                        .map(|f| format!("“{}”", f.label()))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    cols.iter()
+                        .zip(values)
+                        .map(|(f, v)| said(f, v))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                )
+            };
+            return Err(Stop::failed(error(
+                codes::NOT_UNIQUE,
+                message,
+                Some(format!("{}.{}", w.at, cols[0].name)),
+            )));
+        }
+    }
+    Ok(())
+}
+
 /// The layers' record rules (Kayıt kuralları, docs/adr/0438 §1) asked of writes, each layer's
 /// compiled once.
 pub(crate) struct LayerRules<'d> {
     doc: &'d Document,
     compiled: std::collections::HashMap<String, kentos_forms::LayerRules>,
+    /// The bound tables' CHECK constraints by layer (docs/adr/0755 §3).
+    tables: std::collections::HashMap<String, kentos_forms::TableChecks>,
 }
 
 impl<'d> LayerRules<'d> {
@@ -128,7 +230,53 @@ impl<'d> LayerRules<'d> {
         LayerRules {
             doc,
             compiled: std::collections::HashMap::new(),
+            tables: std::collections::HashMap::new(),
         }
+    }
+
+    /// A write of a record on a bound `layer` against its table's CHECK constraints (docs/adr/0755 §3): one it breaks
+    /// for certain is `rule_broken` at `{at}.{name}` of its first column that is a field (`at` without one).
+    fn table_fit(
+        &mut self,
+        layer: &str,
+        before: Option<&BTreeMap<String, String>>,
+        after: &BTreeMap<String, String>,
+        at: &str,
+    ) -> Result<(), Stop> {
+        let doc = self.doc;
+        let Some(link) = doc
+            .settings()
+            .sources
+            .iter()
+            .find(|s| s.layer == layer && !s.checks.is_empty())
+        else {
+            return Ok(());
+        };
+        let Some(node) = doc.layers().get(layer) else {
+            return Ok(());
+        };
+        let checks = self.tables.entry(layer.to_owned()).or_insert_with(|| {
+            kentos_forms::TableChecks::new(
+                &link.checks,
+                &node.fields,
+                kentos_forms::Dialect::of(link.kind),
+            )
+        });
+        if let Some(b) = checks
+            .broken(&node.fields, before, after)
+            .into_iter()
+            .next()
+        {
+            let path = b
+                .field
+                .map_or_else(|| at.to_owned(), |f| format!("{at}.{}", f.name));
+            return Err(Stop::failed(error(
+                codes::RULE_BROKEN,
+                b.message,
+                Some(path),
+            )));
+        }
+        Ok(())
     }
 
     /// A write of a record on `layer` from `before` (none: a new record) to `after` against the
@@ -143,6 +291,7 @@ impl<'d> LayerRules<'d> {
         object: Option<&kentos_forms::Object>,
         at: &str,
     ) -> Result<Vec<CommandWarning>, Stop> {
+        self.table_fit(layer, before, after, at)?;
         let Some(node) = self.doc.layers().get(layer).filter(|n| !n.rules.is_empty()) else {
             return Ok(Vec::new());
         };
@@ -195,7 +344,8 @@ pub(crate) struct UniqueWrite<'a> {
 
 /// Writes against their layers' unique fields (docs/adr/0438 §3): a value written anew that another
 /// record of the layer holds after the writes, the written ones among them, is `not_unique` at
-/// `{at}.{name}`. A value a record kept is not asked; empty ones are not unique's.
+/// `{at}.{name}`. A value a record kept is not asked; empty ones are not unique's. Then the bound
+/// tables' unique constraints ([`table_unique_fit`]).
 pub(crate) fn unique_fit(doc: &Document, writes: &[UniqueWrite<'_>]) -> Result<(), Stop> {
     let mut layers: Vec<&str> = writes.iter().map(|w| w.layer).collect();
     layers.dedup();
@@ -205,6 +355,7 @@ pub(crate) fn unique_fit(doc: &Document, writes: &[UniqueWrite<'_>]) -> Result<(
         };
         let mine: Vec<&UniqueWrite<'_>> = writes.iter().filter(|w| w.layer == layer).collect();
         let written: HashSet<Slot> = mine.iter().filter_map(|w| w.slot).collect();
+        table_unique_fit(doc, layer, &node.fields, &mine, &written)?;
         for f in node.fields.iter().filter(|f| f.unique) {
             let fresh = |w: &UniqueWrite<'_>| -> Option<String> {
                 let v = w.after.get(&f.name).filter(|v| !v.trim().is_empty())?;

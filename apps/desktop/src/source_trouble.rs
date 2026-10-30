@@ -125,6 +125,8 @@ mod tests {
             extent: None,
             key: None,
             parked: Vec::new(),
+            checks: Vec::new(),
+            uniques: Vec::new(),
             writable: true,
         }
     }

@@ -1,0 +1,2695 @@
+{
+ "about": "docs/adr/0755 §3: a bound table's CHECK constraints judged by SQLite and PostgreSQL themselves (scripts/fixtures/table_checks_cases.py); ok: the table took the record; kentos: KentOS's verdict.",
+ "cases": [
+  {
+   "name": "SQLite: değer listesi",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"tur\" TEXT, CONSTRAINT k CHECK (tur IN ('is', 'personel', 'butce_disi')))",
+   "fields": [
+    {
+     "name": "tur",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "tur IN ('is', 'personel', 'butce_disi')",
+    "columns": [
+     "tur"
+    ]
+   },
+   "judged": "whole",
+   "said": "tur şunlardan biri olmalı: is, personel, butce_disi",
+   "list": [
+    "is",
+    "personel",
+    "butce_disi"
+   ],
+   "rows": [
+    {
+     "values": {
+      "tur": "is"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "personel"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "Is"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "tur": ""
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "butce_disi"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: boş ya da listeden",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"durum\" TEXT, CONSTRAINT k CHECK (durum IS NULL OR durum IN ('A', 'P')))",
+   "fields": [
+    {
+     "name": "durum",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "durum IS NULL OR durum IN ('A', 'P')",
+    "columns": [
+     "durum"
+    ]
+   },
+   "judged": "whole",
+   "said": "durum şunlardan biri olmalı: A, P",
+   "list": [
+    "A",
+    "P"
+   ],
+   "rows": [
+    {
+     "values": {
+      "durum": "A"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "durum": "B"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "durum": "a"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: listede olmamalı",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"kod\" TEXT, CONSTRAINT k CHECK (kod NOT IN ('x', 'y')))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "kod NOT IN ('x', 'y')",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "said": "kod şunlardan biri olmamalı: x, y",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "x"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "z"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: arasında",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"oncelik\" INTEGER, CONSTRAINT k CHECK (oncelik BETWEEN 1 AND 3))",
+   "fields": [
+    {
+     "name": "oncelik",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "oncelik BETWEEN 1 AND 3",
+    "columns": [
+     "oncelik"
+    ]
+   },
+   "judged": "whole",
+   "said": "oncelik 1 ile 3 arasında olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "oncelik": "1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "oncelik": "3"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "oncelik": "0"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "oncelik": "4"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: iki uçlu aralık",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"oncelik\" INTEGER, CONSTRAINT k CHECK (oncelik >= 1 AND oncelik <= 3))",
+   "fields": [
+    {
+     "name": "oncelik",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "oncelik >= 1 AND oncelik <= 3",
+    "columns": [
+     "oncelik"
+    ]
+   },
+   "judged": "whole",
+   "said": "oncelik 1 ile 3 arasında olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "oncelik": "2"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "oncelik": "-1"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "oncelik": "7"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: metin sütunu sayıyla metin olarak karşılaştırılır",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"x\" TEXT, CONSTRAINT k CHECK (x > 10))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "x > 10",
+    "columns": [
+     "x"
+    ]
+   },
+   "judged": "whole",
+   "said": "x 10 değerinden büyük olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "x": "9"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "2"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "10"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "x": "1"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "x": "100"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "abc"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: tam sayı sütunu metinle sayı olarak karşılaştırılır",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"n\" INTEGER, CONSTRAINT k CHECK (n <> '5'))",
+   "fields": [
+    {
+     "name": "n",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "n <> '5'",
+    "columns": [
+     "n"
+    ]
+   },
+   "judged": "whole",
+   "said": "n 5 olmamalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "n": "5"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "n": "6"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: iki tarih",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"baslangic\" DATE, \"bitis\" DATE, CONSTRAINT k CHECK (bitis > baslangic))",
+   "fields": [
+    {
+     "name": "baslangic",
+     "kind": "date"
+    },
+    {
+     "name": "bitis",
+     "kind": "date"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "bitis > baslangic",
+    "columns": [
+     "baslangic",
+     "bitis"
+    ]
+   },
+   "judged": "whole",
+   "said": "bitis, baslangic alanından büyük olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "baslangic": "2024-01-01",
+      "bitis": "2024-02-01"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "baslangic": "2024-02-01",
+      "bitis": "2024-01-01"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "baslangic": "2024-01-01"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "baslangic": "2024-03-01",
+      "bitis": "2024-03-01"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: GLOB",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"kod\" TEXT, CONSTRAINT k CHECK (kod GLOB '[0-9][0-9]'))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "kod GLOB '[0-9][0-9]'",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "said": "kod şu kalıba uymalı: [0-9][0-9]",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "06"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "6"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "ab"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "061"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: LIKE büyük küçük harfe bakmaz (ASCII)",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"ad\" TEXT, CONSTRAINT k CHECK (ad LIKE 'A%'))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "ad LIKE 'A%'",
+    "columns": [
+     "ad"
+    ]
+   },
+   "judged": "whole",
+   "said": "ad şu kalıba uymalı: A%",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": "Ankara"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "ankara"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "İzmir"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "ad": "Bursa"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: boşluksuz uzunluk",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"gerekce\" TEXT, CONSTRAINT k CHECK (length(trim(gerekce)) >= 3))",
+   "fields": [
+    {
+     "name": "gerekce",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "length(trim(gerekce)) >= 3",
+    "columns": [
+     "gerekce"
+    ]
+   },
+   "judged": "whole",
+   "said": "gerekce baştaki ve sondaki boşluklar sayılmadan en az 3 karakter olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "gerekce": "abc"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "gerekce": " a "
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "gerekce": "  abcd"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "gerekce": ""
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: boş metin olmamalı",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"ad\" TEXT, CONSTRAINT k CHECK (ad <> ''))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "ad <> ''",
+    "columns": [
+     "ad"
+    ]
+   },
+   "judged": "whole",
+   "said": "ad boş metin olmamalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": ""
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "ad": "a"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: typeof",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"deger\" TEXT, CONSTRAINT k CHECK (typeof(deger) <> 'text' OR length(deger) <= 3))",
+   "fields": [
+    {
+     "name": "deger",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "typeof(deger) <> 'text' OR length(deger) <= 3",
+    "columns": [
+     "deger"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "deger": "abc"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "deger": "abcd"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: açık COLLATE NOCASE",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"ad\" TEXT, CONSTRAINT k CHECK (ad COLLATE NOCASE IN ('ankara', 'izmir')))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "ad COLLATE NOCASE IN ('ankara', 'izmir')",
+    "columns": [
+     "ad"
+    ]
+   },
+   "judged": "whole",
+   "said": "ad şunlardan biri olmalı: ankara, izmir",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": "Ankara"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "ANKARA"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "Bursa"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: sütunun harmanlaması yalnız tablonun",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"ad\" TEXT COLLATE NOCASE, CONSTRAINT k CHECK (ad IN ('ankara')))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "ad IN ('ankara')",
+    "columns": [
+     "ad"
+    ],
+    "tableOnly": true
+   },
+   "judged": "tableOnly",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": "Ankara"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "x"
+     },
+     "ok": false,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: toplam",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"a\" INTEGER, \"b\" INTEGER, \"c\" INTEGER, CONSTRAINT k CHECK (a + b <= c))",
+   "fields": [
+    {
+     "name": "a",
+     "kind": "integer"
+    },
+    {
+     "name": "b",
+     "kind": "integer"
+    },
+    {
+     "name": "c",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "a + b <= c",
+    "columns": [
+     "a",
+     "b",
+     "c"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "a": "1",
+      "b": "2",
+      "c": "3"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "a": "2",
+      "b": "2",
+      "c": "3"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "a": "1",
+      "c": "0"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: tam sayı bölmesi",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"a\" INTEGER, CONSTRAINT k CHECK (a / 2 = 1))",
+   "fields": [
+    {
+     "name": "a",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "a / 2 = 1",
+    "columns": [
+     "a"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "a": "2"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "a": "3"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "a": "4"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "a": "1"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "a": "-3"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: gerçel sayı",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"x\" DOUBLE, CONSTRAINT k CHECK (x >= 0.1))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "decimal"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "x >= 0.1",
+    "columns": [
+     "x"
+    ]
+   },
+   "judged": "whole",
+   "said": "x en az 0.1 olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "x": "0.1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "0.05"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "x": "0.30000000000000004"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "1e-1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: gerçel toplamın son biti",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"x\" DOUBLE, \"y\" DOUBLE, CONSTRAINT k CHECK (x + y <= 0.3))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "decimal"
+    },
+    {
+     "name": "y",
+     "kind": "decimal"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "x + y <= 0.3",
+    "columns": [
+     "x",
+     "y"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "x": "0.1",
+      "y": "0.1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "0.1",
+      "y": "0.2"
+     },
+     "ok": false,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "0.2",
+      "y": "0.2"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: CASE",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"tur\" TEXT, \"alan\" DOUBLE, CONSTRAINT k CHECK (CASE WHEN tur = 'park' THEN alan > 100 ELSE 1 END))",
+   "fields": [
+    {
+     "name": "tur",
+     "kind": "text"
+    },
+    {
+     "name": "alan",
+     "kind": "decimal"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "CASE WHEN tur = 'park' THEN alan > 100 ELSE 1 END",
+    "columns": [
+     "tur",
+     "alan"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "tur": "park",
+      "alan": "150"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "park",
+      "alan": "50"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "tur": "yol",
+      "alan": "5"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "park"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: coalesce",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"n\" INTEGER, CONSTRAINT k CHECK (coalesce(n, 0) >= 0))",
+   "fields": [
+    {
+     "name": "n",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "coalesce(n, 0) >= 0",
+    "columns": [
+     "n"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "n": "-1"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "n": "5"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: date",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"d\" DATE, CONSTRAINT k CHECK (d = date(d)))",
+   "fields": [
+    {
+     "name": "d",
+     "kind": "date"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "d = date(d)",
+    "columns": [
+     "d"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "d": "2024-01-15"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "d": "2024-02-30"
+     },
+     "ok": false,
+     "kentos": "takes"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: upper ASCII'dir",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"kod\" TEXT, CONSTRAINT k CHECK (kod = upper(kod)))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "kod = upper(kod)",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "AB"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "ab"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "çI"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "çi"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: substr",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"kod\" TEXT, CONSTRAINT k CHECK (substr(kod, 1, 2) = '06'))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "substr(kod, 1, 2) = '06'",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "0601"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "0701"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "0"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: replace",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"kod\" TEXT, CONSTRAINT k CHECK (length(replace(kod, '.', '')) = 4))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "length(replace(kod, '.', '')) = 4",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "12.34"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "1.2"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: evet/hayır",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"aktif\" BOOLEAN, \"neden\" TEXT, CONSTRAINT k CHECK (aktif OR neden IS NOT NULL))",
+   "fields": [
+    {
+     "name": "aktif",
+     "kind": "boolean"
+    },
+    {
+     "name": "neden",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "aktif OR neden IS NOT NULL",
+    "columns": [
+     "aktif",
+     "neden"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "aktif": "true"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "aktif": "false"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "aktif": "false",
+      "neden": "x"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: adsız kısıt",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"x\" INTEGER, CHECK (x > 0))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "sql": "x > 0",
+    "columns": [
+     "x"
+    ]
+   },
+   "judged": "whole",
+   "said": "x 0 değerinden büyük olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "x": "0"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "x": "1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: çift tırnaklı değer",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"tur\" TEXT, CONSTRAINT k CHECK (tur IN (\"a\", \"b\")))",
+   "fields": [
+    {
+     "name": "tur",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "tur IN (\"a\", \"b\")",
+    "columns": [
+     "tur"
+    ]
+   },
+   "judged": "whole",
+   "said": "tur şunlardan biri olmalı: a, b",
+   "list": [
+    "a",
+    "b"
+   ],
+   "rows": [
+    {
+     "values": {
+      "tur": "a"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "c"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: abs",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"x\" INTEGER, CONSTRAINT k CHECK (abs(x) <= 10))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "abs(x) <= 10",
+    "columns": [
+     "x"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "x": "-11"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "x": "-10"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: IS NOT",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"x\" TEXT, CONSTRAINT k CHECK (x IS NOT ''))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "x IS NOT ''",
+    "columns": [
+     "x"
+    ]
+   },
+   "judged": "whole",
+   "said": "x boş metin olmamalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "x": ""
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "a"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: bilinmeyen işlev",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"x\" TEXT, CONSTRAINT k CHECK (x <> '' AND hex(x) <> '41'))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "x <> '' AND hex(x) <> '41'",
+    "columns": [
+     "x"
+    ]
+   },
+   "judged": "partly",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "x": ""
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "x": "A"
+     },
+     "ok": false,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "B"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "SQLite: büyük harfli sütun adı",
+   "dialect": "sqlite",
+   "ddl": "CREATE TABLE t (fid INTEGER PRIMARY KEY, \"Tur\" TEXT, CONSTRAINT k CHECK (TUR IN ('a')))",
+   "fields": [
+    {
+     "name": "Tur",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "TUR IN ('a')",
+    "columns": [
+     "Tur"
+    ]
+   },
+   "judged": "whole",
+   "said": "Tur şunlardan biri olmalı: a",
+   "list": [
+    "a"
+   ],
+   "rows": [
+    {
+     "values": {
+      "Tur": "a"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "Tur": "b"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: değer listesi",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t32 (fid serial PRIMARY KEY, \"tur\" varchar(20), CONSTRAINT k CHECK (tur IN ('is', 'personel', 'butce_disi')))",
+   "fields": [
+    {
+     "name": "tur",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "((tur)::text = ANY ((ARRAY['is'::character varying, 'personel'::character varying, 'butce_disi'::character varying])::text[]))",
+    "columns": [
+     "tur"
+    ]
+   },
+   "judged": "whole",
+   "said": "tur şunlardan biri olmalı: is, personel, butce_disi",
+   "list": [
+    "is",
+    "personel",
+    "butce_disi"
+   ],
+   "rows": [
+    {
+     "values": {
+      "tur": "is"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "Is"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "butce_disi"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "is "
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: listede olmamalı",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t33 (fid serial PRIMARY KEY, \"kod\" text, CONSTRAINT k CHECK (kod NOT IN ('x', 'y')))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(kod <> ALL (ARRAY['x'::text, 'y'::text]))",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "said": "kod şunlardan biri olmamalı: x, y",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "x"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "z"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: arasında",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t34 (fid serial PRIMARY KEY, \"oncelik\" integer, CONSTRAINT k CHECK (oncelik BETWEEN 1 AND 3))",
+   "fields": [
+    {
+     "name": "oncelik",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "((oncelik >= 1) AND (oncelik <= 3))",
+    "columns": [
+     "oncelik"
+    ]
+   },
+   "judged": "whole",
+   "said": "oncelik 1 ile 3 arasında olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "oncelik": "1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "oncelik": "4"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: iki tarih",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t35 (fid serial PRIMARY KEY, \"baslangic\" date, \"bitis\" date, CONSTRAINT k CHECK (bitis IS NULL OR bitis > baslangic))",
+   "fields": [
+    {
+     "name": "baslangic",
+     "kind": "date"
+    },
+    {
+     "name": "bitis",
+     "kind": "date"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "((bitis IS NULL) OR (bitis > baslangic))",
+    "columns": [
+     "baslangic",
+     "bitis"
+    ]
+   },
+   "judged": "whole",
+   "said": "bitis, baslangic alanından büyük olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "baslangic": "2024-01-01",
+      "bitis": "2024-02-01"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "baslangic": "2024-02-01",
+      "bitis": "2024-01-01"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "baslangic": "2024-01-01"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: düzenli ifade",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t36 (fid serial PRIMARY KEY, \"kod\" varchar(10), CONSTRAINT k CHECK (kod ~ '^[0-9]{2}$'))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "((kod)::text ~ '^[0-9]{2}$'::text)",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "said": "kod şu kalıba uymalı: ^[0-9]{2}$",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "06"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "6"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "ç6"
+     },
+     "ok": false,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: boşluksuz uzunluk",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t37 (fid serial PRIMARY KEY, \"gerekce\" text, CONSTRAINT k CHECK (length(btrim(gerekce)) >= 3))",
+   "fields": [
+    {
+     "name": "gerekce",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(length(btrim(gerekce)) >= 3)",
+    "columns": [
+     "gerekce"
+    ]
+   },
+   "judged": "whole",
+   "said": "gerekce baştaki ve sondaki boşluklar sayılmadan en az 3 karakter olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "gerekce": "abc"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "gerekce": " a "
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: metinlerin sırası",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t38 (fid serial PRIMARY KEY, \"ad\" text, CONSTRAINT k CHECK (ad > 'm'))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(ad > 'm'::text)",
+    "columns": [
+     "ad"
+    ]
+   },
+   "judged": "partly",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": "a"
+     },
+     "ok": false,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "z"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: JSON işlevi",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t39 (fid serial PRIMARY KEY, \"veri\" jsonb, CONSTRAINT k CHECK (jsonb_array_length(veri) > 0))",
+   "fields": [
+    {
+     "name": "veri",
+     "kind": "json"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(jsonb_array_length(veri) > 0)",
+    "columns": [
+     "veri"
+    ]
+   },
+   "judged": "partly",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "veri": "[1]"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "veri": "[]"
+     },
+     "ok": false,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: bilinen yanı yanlış",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t40 (fid serial PRIMARY KEY, \"ad\" text, \"veri\" jsonb, CONSTRAINT k CHECK (ad <> '' AND jsonb_typeof(veri) = 'array'))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    },
+    {
+     "name": "veri",
+     "kind": "json"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "((ad <> ''::text) AND (jsonb_typeof(veri) = 'array'::text))",
+    "columns": [
+     "ad",
+     "veri"
+    ]
+   },
+   "judged": "partly",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": "",
+      "veri": "[]"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "ad": "a",
+      "veri": "{}"
+     },
+     "ok": false,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "a",
+      "veri": "[]"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: numeric",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t41 (fid serial PRIMARY KEY, \"tutar\" numeric(12,2), CONSTRAINT k CHECK (tutar >= 0.01))",
+   "fields": [
+    {
+     "name": "tutar",
+     "kind": "decimal"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(tutar >= 0.01)",
+    "columns": [
+     "tutar"
+    ]
+   },
+   "judged": "whole",
+   "said": "tutar en az 0.01 olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "tutar": "0.01"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tutar": "0"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "tutar": "12.5"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: evet/hayır",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t42 (fid serial PRIMARY KEY, \"aktif\" boolean, \"neden\" text, CONSTRAINT k CHECK (aktif OR neden IS NOT NULL))",
+   "fields": [
+    {
+     "name": "aktif",
+     "kind": "boolean"
+    },
+    {
+     "name": "neden",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(aktif OR (neden IS NOT NULL))",
+    "columns": [
+     "aktif",
+     "neden"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "aktif": "true"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "aktif": "false"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "aktif": "false",
+      "neden": "x"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: ILIKE",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t43 (fid serial PRIMARY KEY, \"ad\" text, CONSTRAINT k CHECK (ad ILIKE 'a%'))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(ad ~~* 'a%'::text)",
+    "columns": [
+     "ad"
+    ]
+   },
+   "judged": "whole",
+   "said": "ad şu kalıba uymalı: a%",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": "Ankara"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "ad": "bursa"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "ad": "Ağrı"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: LIKE",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t44 (fid serial PRIMARY KEY, \"kod\" text, CONSTRAINT k CHECK (kod LIKE 'TR%'))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(kod ~~ 'TR%'::text)",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "said": "kod şu kalıba uymalı: TR%",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "TR01"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "tr01"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: coalesce",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t45 (fid serial PRIMARY KEY, \"n\" integer, CONSTRAINT k CHECK (COALESCE(n, 0) >= 0))",
+   "fields": [
+    {
+     "name": "n",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(COALESCE(n, 0) >= 0)",
+    "columns": [
+     "n"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "n": "-1"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {},
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "n": "2"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: CASE",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t46 (fid serial PRIMARY KEY, \"tur\" text, \"alan\" numeric, CONSTRAINT k CHECK (CASE WHEN tur = 'park' THEN alan > 100 ELSE true END))",
+   "fields": [
+    {
+     "name": "tur",
+     "kind": "text"
+    },
+    {
+     "name": "alan",
+     "kind": "decimal"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "CASE\n    WHEN (tur = 'park'::text) THEN (alan > (100)::numeric)\n    ELSE true\nEND",
+    "columns": [
+     "tur",
+     "alan"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "tur": "park",
+      "alan": "150"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "tur": "park",
+      "alan": "50"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "tur": "yol",
+      "alan": "5"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: bugünün tarihi",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t47 (fid serial PRIMARY KEY, \"d\" date, CONSTRAINT k CHECK (d <= CURRENT_DATE))",
+   "fields": [
+    {
+     "name": "d",
+     "kind": "date"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(d <= CURRENT_DATE)",
+    "columns": [
+     "d"
+    ]
+   },
+   "judged": "partly",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "d": "2000-01-01"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "d": "2999-01-01"
+     },
+     "ok": false,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: uuid",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t48 (fid serial PRIMARY KEY, \"u\" uuid, CONSTRAINT k CHECK (u <> '00000000-0000-0000-0000-000000000000'))",
+   "fields": [
+    {
+     "name": "u",
+     "kind": "uuid"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(u <> '00000000-0000-0000-0000-000000000000'::uuid)",
+    "columns": [
+     "u"
+    ]
+   },
+   "judged": "whole",
+   "said": "u 00000000-0000-0000-0000-000000000000 olmamalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "u": "00000000-0000-0000-0000-000000000000"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "u": "0190f0a4-7c2e-7a3b-9d4e-1f2a3b4c5d6e"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: iki alan",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t49 (fid serial PRIMARY KEY, \"a\" integer, \"b\" integer, CONSTRAINT k CHECK (a < b))",
+   "fields": [
+    {
+     "name": "a",
+     "kind": "integer"
+    },
+    {
+     "name": "b",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(a < b)",
+    "columns": [
+     "a",
+     "b"
+    ]
+   },
+   "judged": "whole",
+   "said": "a, b alanından küçük olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "a": "1",
+      "b": "2"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "a": "2",
+      "b": "2"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "a": "1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: tarih ve saat",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t50 (fid serial PRIMARY KEY, \"t\" timestamp, CONSTRAINT k CHECK (t >= '2020-01-01 00:00:00'))",
+   "fields": [
+    {
+     "name": "t",
+     "kind": "datetime"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(t >= '2020-01-01 00:00:00'::timestamp without time zone)",
+    "columns": [
+     "t"
+    ]
+   },
+   "judged": "whole",
+   "said": "t en az 2020-01-01 00:00:00 olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "t": "2019-12-31T23:59:59"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "t": "2020-01-01T00:00:00"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: karakter sayısı",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t51 (fid serial PRIMARY KEY, \"kod\" varchar(10), CONSTRAINT k CHECK (char_length(kod) = 2))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(char_length((kod)::text) = 2)",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "said": "kod 2 karakter olmalı",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "06"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "6"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "çö"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: character(n) yalnız tablonun",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t52 (fid serial PRIMARY KEY, \"durum\" character(1), CONSTRAINT k CHECK (durum IN ('A', 'P')))",
+   "fields": [
+    {
+     "name": "durum",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(durum = ANY (ARRAY['A'::bpchar, 'P'::bpchar]))",
+    "columns": [
+     "durum"
+    ],
+    "tableOnly": true
+   },
+   "judged": "tableOnly",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "durum": "A"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "durum": "X"
+     },
+     "ok": false,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: upper ASCII dışında bilinmez",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t53 (fid serial PRIMARY KEY, \"kod\" text, CONSTRAINT k CHECK (kod = upper(kod)))",
+   "fields": [
+    {
+     "name": "kod",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(kod = upper(kod))",
+    "columns": [
+     "kod"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "kod": "AB"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "kod": "ab"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "kod": "Çi"
+     },
+     "ok": false,
+     "kentos": "takes"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: NULLIF",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t54 (fid serial PRIMARY KEY, \"ad\" text, CONSTRAINT k CHECK (NULLIF(ad, '') IS NOT NULL))",
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(NULLIF(ad, ''::text) IS NOT NULL)",
+    "columns": [
+     "ad"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "ad": ""
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "ad": "a"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {},
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: dizi metni",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t55 (fid serial PRIMARY KEY, \"x\" text, CONSTRAINT k CHECK (x = ANY ('{a,b}'::text[])))",
+   "fields": [
+    {
+     "name": "x",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(x = ANY ('{a,b}'::text[]))",
+    "columns": [
+     "x"
+    ]
+   },
+   "judged": "whole",
+   "said": "x şunlardan biri olmalı: a, b",
+   "list": [
+    "a",
+    "b"
+   ],
+   "rows": [
+    {
+     "values": {
+      "x": "a"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "x": "c"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: tam sayı listesi",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t56 (fid serial PRIMARY KEY, \"seviye\" integer, CONSTRAINT k CHECK (seviye IN (1, 2, 3)))",
+   "fields": [
+    {
+     "name": "seviye",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(seviye = ANY (ARRAY[1, 2, 3]))",
+    "columns": [
+     "seviye"
+    ]
+   },
+   "judged": "whole",
+   "said": "seviye şunlardan biri olmalı: 1, 2, 3",
+   "list": [
+    "1",
+    "2",
+    "3"
+   ],
+   "rows": [
+    {
+     "values": {
+      "seviye": "1"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "seviye": "4"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: tam sayı bölmesi",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t57 (fid serial PRIMARY KEY, \"a\" integer, CONSTRAINT k CHECK (a / 2 = 1))",
+   "fields": [
+    {
+     "name": "a",
+     "kind": "integer"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "((a / 2) = 1)",
+    "columns": [
+     "a"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "a": "2"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "a": "3"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "a": "4"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    }
+   ]
+  },
+  {
+   "name": "PostgreSQL: birleştirme",
+   "dialect": "postgres",
+   "ddl": "CREATE TABLE t58 (fid serial PRIMARY KEY, \"il\" text, \"ilce\" text, CONSTRAINT k CHECK ((il || '-' || ilce) <> 'x-y'))",
+   "fields": [
+    {
+     "name": "il",
+     "kind": "text"
+    },
+    {
+     "name": "ilce",
+     "kind": "text"
+    }
+   ],
+   "check": {
+    "name": "k",
+    "sql": "(((il || '-'::text) || ilce) <> 'x-y'::text)",
+    "columns": [
+     "il",
+     "ilce"
+    ]
+   },
+   "judged": "whole",
+   "list": null,
+   "rows": [
+    {
+     "values": {
+      "il": "x",
+      "ilce": "y"
+     },
+     "ok": false,
+     "kentos": "refuses"
+    },
+    {
+     "values": {
+      "il": "x",
+      "ilce": "z"
+     },
+     "ok": true,
+     "kentos": "takes"
+    },
+    {
+     "values": {
+      "il": "x"
+     },
+     "ok": true,
+     "kentos": "takes"
+    }
+   ]
+  }
+ ]
+}

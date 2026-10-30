@@ -144,6 +144,29 @@ pub(crate) fn body<'a>(
 }
 
 /// The layer's record rules (docs/adr/0438 §1), which a form over it shows.
+/// The bound table's CHECK and unique constraints of a layer (docs/adr/0755), which a form over it asks, and their
+/// dialect; none for a layer bound to no table.
+pub(crate) fn table<'d>(
+    doc: &'d Document,
+    layer: &str,
+) -> (
+    &'d [kentos_commands::TableCheck],
+    &'d [kentos_commands::TableUnique],
+    kentos_forms::Dialect,
+) {
+    doc.settings()
+        .sources
+        .iter()
+        .find(|s| s.layer == layer)
+        .map_or((&[][..], &[][..], kentos_forms::Dialect::Sqlite), |s| {
+            (
+                s.checks.as_slice(),
+                s.uniques.as_slice(),
+                kentos_forms::Dialect::of(s.kind),
+            )
+        })
+}
+
 pub(crate) fn rules<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_commands::LayerRule] {
     doc.layers()
         .get(layer)
@@ -185,9 +208,11 @@ pub(crate) fn prepared(
         &doc.form_world(body),
     )
     .map(|p| {
+        let (checks, uniques, dialect) = table(doc, &form.layer);
         p.with_subtypes(subtypes(doc, &form.layer))
             .with_contingents(contingents(doc, &form.layer))
             .with_rules(rules(doc, &form.layer))
+            .with_table(checks, uniques, dialect)
     })
     .map_err(|issues| {
         let first = first_error(&issues);
@@ -497,9 +522,11 @@ pub(crate) fn enforced(
             &doc.form_world(&release.body),
         )
         .map(|p| {
+            let (checks, uniques, dialect) = table(doc, layer);
             p.with_subtypes(subtypes(doc, layer))
                 .with_contingents(contingents(doc, layer))
                 .with_rules(rules(doc, layer))
+                .with_table(checks, uniques, dialect)
         })
         .map_err(|issues| refuse(first_error(&issues)))?;
         let mut probe = e.clone();

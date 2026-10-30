@@ -8,7 +8,9 @@ import type { SyncTopology } from "./SyncTopology";
  * database's rows the account may not change: privilege or row security, docs/adr/0585 §2), `source_not_null` (a column
  * the table keeps NOT NULL a write would leave empty: a new row's without a default, any changed row's; a new row's
  * empty value of a column with a default is the table's, and what the table gave comes back to the object in the
- * same step, docs/adr/0750); conflicts:
+ * same step, docs/adr/0750), `source_check`, `source_unique`, `source_reference` (one of the table's CHECK, unique or
+ * foreign key constraints refused the write, told by its name and a CHECK's sentence; nothing was written, docs/adr/0755
+ * §5); conflicts:
  * `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
  * the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
  * for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
@@ -17,7 +19,8 @@ import type { SyncTopology } from "./SyncTopology";
  * is outside the part's area now, kept in the link; docs/adr/0578 §3), `label_pins_restored` (parked pins given
  * back to their row that came into the part), `key_not_unique` (a read whose table repeats the layer's key: the
  * pins of those rows are not followed), `reference_values_missing` (a read whose foreign key's table has more rows
- * than a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753).
+ * than a list holds, rows whose key does not fit the field, or keys that could not be read; docs/adr/0753),
+ * `constraints_unread` (a read that could not read the table's constraints: the link keeps those it had; docs/adr/0755).
  *
  * `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
  * together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,

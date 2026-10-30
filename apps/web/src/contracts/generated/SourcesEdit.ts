@@ -11,6 +11,8 @@ import type { SourcesEditOp } from "./SourcesEditOp";
  * layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved`, `label_pins_parked`,
  * `label_pins_restored` (an area change that took objects with label pins out of the layer, or brought them in),
  * `reference_values_missing` (a new layer's foreign key whose table has more rows than a list holds, rows whose key
- * does not fit the field, or keys that could not be read; docs/adr/0753).
+ * does not fit the field, or keys that could not be read; docs/adr/0753), `constraints_unread` (the table's CHECK and
+ * unique constraints could not be read; docs/adr/0755 §1). The link keeps the table's CHECK and unique constraints,
+ * and a one-column CHECK tying its column to a list of values gives the field that list (docs/adr/0755 §1, §4).
  */
 export type SourcesEdit = { edit: SourcesEditOp, };

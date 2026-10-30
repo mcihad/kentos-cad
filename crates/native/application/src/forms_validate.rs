@@ -44,9 +44,11 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
             &doc.form_world(body),
         )
         .map(|p| {
+            let (checks, uniques, dialect) = forms::table(doc, &form.layer);
             p.with_subtypes(forms::subtypes(doc, &form.layer))
                 .with_contingents(forms::contingents(doc, &form.layer))
                 .with_rules(forms::rules(doc, &form.layer))
+                .with_table(checks, uniques, dialect)
         })
     {
         let object = forms::object(doc, slot, e);

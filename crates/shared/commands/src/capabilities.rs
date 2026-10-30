@@ -4360,6 +4360,8 @@ const ENTRIES: &[Entry] = &[
             "network_share",
             // docs/adr/0753 §2: a foreign key's rows a field's list lacks.
             "reference_values_missing",
+            // docs/adr/0755 §1: the table's constraints not read.
+            "constraints_unread",
         ],
         targets: none,
     },
@@ -4483,6 +4485,8 @@ const ENTRIES: &[Entry] = &[
             ],
             // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
             &["invalid_input", "transaction_split", "relation_dangling"],
+            // docs/adr/0755 §5: the table's CHECK, unique and foreign key constraints refusing the write.
+            &["source_check", "source_unique", "source_reference"],
         ],
         warnings: &[
             "export_losses",
@@ -4498,6 +4502,8 @@ const ENTRIES: &[Entry] = &[
             "library_symbol_field",
             // docs/adr/0753 §2: a foreign key's rows a field's list lacks.
             "reference_values_missing",
+            // docs/adr/0755 §1: the table's constraints not read.
+            "constraints_unread",
         ],
         targets: none,
     },

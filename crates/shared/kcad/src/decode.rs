@@ -750,6 +750,18 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "boş liste yazılmaz; bağlı katman yoksa alan hiç yazılmaz",
                     ));
                 }
+                // Schema 134 (docs/adr/0755 §1): a link's CHECK and unique constraints.
+                if !has.table_constraints
+                    && list
+                        .iter()
+                        .any(|s| !s.checks.is_empty() || !s.uniques.is_empty())
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "kaynakların checks ve uniques'i şema 134'ten (docs/adr/0755)",
+                    ));
+                }
                 if let Some(problem) = kentos_contracts::sources_problem(&list, &[]) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
@@ -1958,6 +1970,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                     has.field_kinds,
                     has.withheld_fields,
                     has.field_columns,
+                    has.table_constraints,
                 )?)
             }
             "service" if has.services => service = Some(services::service_layer(r)?),
@@ -2186,9 +2199,12 @@ fn layer_fields(
     wide: bool,
     withheld: bool,
     columns: bool,
+    constraints: bool,
 ) -> Result<Vec<LayerField>, KcadError> {
     let at = r.position();
-    let all = list(r, |r, _| layer_field(r, ids, wide, withheld, columns))?;
+    let all = list(r, |r, _| {
+        layer_field(r, ids, wide, withheld, columns, constraints)
+    })?;
     match layer_fields_problem(&all) {
         Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),
         None => Ok(all),
@@ -2202,6 +2218,7 @@ fn layer_field(
     wide: bool,
     withholds: bool,
     columns: bool,
+    constraints: bool,
 ) -> Result<LayerField, KcadError> {
     let mut id = None;
     let mut withheld = None;
@@ -2249,7 +2266,7 @@ fn layer_field(
             // Schema 107 (docs/adr/0638 §5): its values do not leave the drawing.
             "withheld" if withholds => withheld = Some(r.bool()?),
             // Schema 133 (docs/adr/0753): the bound table's column, what the table makes and what it refers to.
-            "column" if columns => column = Some(field_column(r)?),
+            "column" if columns => column = Some(field_column(r, constraints)?),
             // Schema 72 (docs/adr/0419): the split and merge policies.
             "split" if ids => {
                 let all: Vec<(&str, kentos_contracts::SplitPolicy)> =
@@ -2314,13 +2331,14 @@ fn layer_field(
     })
 }
 
-/// A field's bound column (schema 133, docs/adr/0753): `made` and `refers`, at least one; their texts are checked with
-/// the field's (`field_problem`).
-fn field_column(r: &mut Reader<'_>) -> Result<FieldColumn, KcadError> {
-    let (mut made, mut refers) = (None, None);
+/// A field's bound column (schema 133, docs/adr/0753): `made` and `refers`, from schema 134 `check` (docs/adr/0755 §4),
+/// at least one; their texts are checked with the field's (`field_problem`).
+fn field_column(r: &mut Reader<'_>, constraints: bool) -> Result<FieldColumn, KcadError> {
+    let (mut made, mut refers, mut check) = (None, None, None);
     map(r, |r, key| {
         match key {
             "made" => made = Some(text(r)?),
+            "check" if constraints => check = Some(text(r)?),
             "refers" => {
                 let (mut table, mut column, mut label) = (None, None, None);
                 map(r, |r, key| {
@@ -2342,13 +2360,17 @@ fn field_column(r: &mut Reader<'_>) -> Result<FieldColumn, KcadError> {
         }
         Ok(())
     })?;
-    if made.is_none() && refers.is_none() {
+    if made.is_none() && refers.is_none() && check.is_none() {
         return Err(r.fail(
             Code::BadValue,
-            "column boş olamaz: made ya da refers yazılır; ikisi de yoksa column yazılmaz",
+            "column boş olamaz: made, refers ya da check yazılır; hiçbiri yoksa column yazılmaz",
         ));
     }
-    Ok(FieldColumn { made, refers })
+    Ok(FieldColumn {
+        made,
+        refers,
+        check,
+    })
 }
 
 /// A value of a field's list; `later`: schema 72's `retired` is read (docs/adr/0418).

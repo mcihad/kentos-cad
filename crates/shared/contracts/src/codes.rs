@@ -1360,6 +1360,18 @@ codes! {
     /// A write that would leave empty a column the table keeps NOT NULL: a new row's without a default, any row's
     /// (docs/adr/0750).
     SOURCE_NOT_NULL = "source_not_null", Failed, false, "Tablo bazı sütunların boş kalmasına izin vermiyor (NOT NULL); o nesnelere değer verin, hiçbir şey yazılmadı.";
+    /// The table refused a write by a CHECK or an exclusion constraint (PostgreSQL 23514, 23P01; SQLite's
+    /// SQLITE_CONSTRAINT_CHECK; docs/adr/0755 §5).
+    SOURCE_CHECK = "source_check", Failed, false, "Tablonun bir CHECK ya da dışlama kısıtı yazmayı reddetti; hiçbir şey yazılmadı. Değerleri kısıta göre düzeltip yeniden yazın.";
+    /// The table refused a write by a unique constraint (PostgreSQL 23505; SQLite's SQLITE_CONSTRAINT_UNIQUE; docs/adr/0755
+    /// §5).
+    SOURCE_UNIQUE = "source_unique", Failed, false, "Tablonun tekil kısıtı yazmayı reddetti: aynı değerler başka bir satırda var; hiçbir şey yazılmadı.";
+    /// The table refused a write by a foreign key: the row referred to is not there, or rows still refer to a deleted one
+    /// (PostgreSQL 23503; SQLite's SQLITE_CONSTRAINT_FOREIGNKEY; docs/adr/0755 §5).
+    SOURCE_REFERENCE = "source_reference", Failed, false, "Tablonun yabancı anahtarı yazmayı reddetti: başvurulan satır yok ya da silinen satıra başka satırlar başvuruyor; hiçbir şey yazılmadı.";
+    /// A bound table's CHECK and unique constraints could not be read (docs/adr/0755 §1): the link keeps those it had,
+    /// the table still asks them.
+    CONSTRAINTS_UNREAD = "constraints_unread", Warning, false, "Tablonun CHECK ve tekil kısıtları okunamadı; KentOS onları denetlemez, tablo yine denetler.";
     /// A uid given to a point cloud command that is not a point cloud (docs/adr/0536).
     NOT_A_POINTCLOUD = "not_a_pointcloud", Failed, false, "Verilen nesne bir nokta bulutu değil.";
     /// Counting the classes would read more points than one call does (docs/adr/0536).

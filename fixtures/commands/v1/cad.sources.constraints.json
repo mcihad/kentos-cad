@@ -1,0 +1,8759 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.edit",
+ "commandVersion": 1,
+ "title": "Bağlı tablonun CHECK ve tekil kısıtları",
+ "note": "ADR 0755. Tablonun kısıtları sqlite3 ile okunur, KentOS kodu olmadan: CHECK'ler CREATE metninden (sütunun ve tablonun, CONSTRAINT adlarıyla), tekil kısıtlar PRAGMA index_list ve index_info'dan (kısmi ve ifadeli dizin dışarıda, yapıldıkları sırayla); yazmanın kabul edilip edilmediği SQLite'ın kendi cevabı (aynı değerler dosyanın kopyasına yazılır). Bağ CHECK'leri adıyla, metniyle ve okuduğu sütunlarla tutar, harmanlamalı sütunu okuyan yalnız tablonundur; tek sütunlu IN listesi alanın listesi olur. KentOS yargıladığı CHECK'i (rule_broken) ve tekil kısıtı (not_unique) tablodan önce sorar; bilmediği işlevli ve yalnız tablonun kısıtını, kısmi tekil dizini tablo sorar (source_check, source_unique), hiçbir şey yazılmaz.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlı katmanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "bağlanınca tablonun CHECK ve tekil kısıtları bağa gelir; listeli CHECK alanın listesi olur",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-1.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-1.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-1.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-1.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "plan bağlamayı yazmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-2.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-2.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-2.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false,
+      "dirty": false
+     },
+     "command": "cad.sources.edit"
+    }
+   ]
+  },
+  {
+   "name": "hemen okumak bir şey değiştirmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-3.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-3.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-3.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-3.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "listede olmayan tür alanın listesince reddedilir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-4.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-4.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-4.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-4.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "tur": "fabrika"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“tur” alanı listedeki değerlerden birini ister; “fabrika” listede yok.",
+       "path": "attrs.tur"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "sıfır alan alan_pozitif kısıtını bozar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-5.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-5.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-5.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-5.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "alan": "0"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "Tablonun “alan_pozitif” kısıtı: alan 0 değerinden büyük olmalı.",
+       "path": "attrs.alan"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "eksi alan da bozar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-6.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-6.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-6.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-6.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "alan": "-5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "Tablonun “alan_pozitif” kısıtı: alan 0 değerinden büyük olmalı.",
+       "path": "attrs.alan"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "aralığın dışındaki kat kat_aralik kısıtını bozar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-7.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-7.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-7.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-7.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kat": "41"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "Tablonun “kat_aralik” kısıtı: kat 0 ile 40 arasında olmalı.",
+       "path": "attrs.kat"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "pozitif alan geçer",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-8.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-8.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-8.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-8.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "alan": "12.5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "alanı boşaltmak geçer: boş değer kısıtı tutar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-9.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-9.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-9.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-9.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "alan": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "aralığın ucundaki kat geçer",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-10.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-10.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-10.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-10.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kat": "40"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "listedeki tür geçer",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-11.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-11.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-11.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-11.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "tur": "tarla"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "ada ve parsel birlikte tekil: aynı çift başka kayıtta",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-12.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-12.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-12.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-12.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "parsel": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“ada”, “parsel” alanları tabloda birlikte tekil; (“101”, “5”) başka bir kayıtta var. Başka değerler verin.",
+       "path": "attrs.ada"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "aynı ada başka parsel geçer",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-13.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-13.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-13.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-13.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "parsel": "9"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "kod tekil dizinle tekil",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-14.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-14.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-14.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-14.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "attrs": {
+       "kod": "K1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_unique",
+       "message": "“kod” alanı tabloda tekil; “K1” başka bir kayıtta var. Başka bir değer verin.",
+       "path": "attrs.kod"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "boş kod tekilliğe girmez: boş değerler birbirinden farklı",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-15.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-15.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-15.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-15.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kod": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  },
+  {
+   "name": "yeni kayıt her kısıtı sorar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-16.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-16.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-16.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-16.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487200.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487200.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "alan": "-1"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "Tablonun “alan_pozitif” kısıtı: alan 0 değerinden büyük olmalı.",
+       "path": "attrs.alan"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.polygon.create"
+    }
+   ]
+  },
+  {
+   "name": "yeni kaydın türü de listeden olmalı",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-17.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-17.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-17.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-17.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487200.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487200.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "tur": "fabrika"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_attribute",
+       "message": "“tur” alanı listedeki değerlerden birini ister; “fabrika” listede yok.",
+       "path": "attrs.tur"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.polygon.create"
+    }
+   ]
+  },
+  {
+   "name": "kısıtlara uyan yeni kayıt geçer",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-18.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-18.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-18.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-18.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487200.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4420060.0
+       },
+       {
+        "x": 487200.0,
+        "y": 4420060.0
+       }
+      ],
+      "attrs": {
+       "alan": "50",
+       "tur": "konut",
+       "kat": "1"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    }
+   ]
+  },
+  {
+   "name": "KentOS'un bilmediği işlevli kısıtı tablo sorar: source_check",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-19.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-19.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-19.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-19.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "notu": "A"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_check",
+       "message": "“parsel” tablosunun kısıtı yazmayı reddetti: notu IS NULL OR hex(notu) <> '41'. Hiçbir şey yazılmadı; değeri kısıta göre düzeltip yeniden yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "harmanlamalı sütunun kısıtını yalnız tablo sorar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-20.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-20.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-20.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-20.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "ad": "c"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_check",
+       "message": "“parsel” tablosunun kısıtı yazmayı reddetti: ad IN ('a', 'b'). Hiçbir şey yazılmadı; değeri kısıta göre düzeltip yeniden yazın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "kısmi tekil dizini tablo sorar: source_unique",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-21.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-21.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-21.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-21.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "no": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_unique",
+       "message": "“parsel” tablosunun tekil kısıtı (no) yazmayı reddetti: aynı değerler başka bir satırda var; hiçbir şey yazılmadı.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "kısmi tekil dizine uyan değer yazılacak",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-22.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-22.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-22.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-22.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ],
+      "attrs": {
+       "no": "3"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "dosyada kısıt kalkınca bağdan da kalkar, verdiği liste de; değişen kısıt yenilenir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-23.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-23.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-23.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-23.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli-2.gpkg",
+     "to": "$tmp:kisitli-23.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "84521e142093260cb8ea100ad5b7bca42822e4de6b15c58e64ce2abfe6f9db92",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-23.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "84521e142093260cb8ea100ad5b7bca42822e4de6b15c58e64ce2abfe6f9db92",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 60",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "okumanın planı ne bağı ne alanları yazar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-24.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-24.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-24.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-24.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli-2.gpkg",
+     "to": "$tmp:kisitli-24.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "84521e142093260cb8ea100ad5b7bca42822e4de6b15c58e64ce2abfe6f9db92",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "okunan yeni aralık kat'ı yeniden yargılar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli.gpkg",
+     "to": "$tmp:kisitli-25.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:kisitli-25.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$tmp:kisitli-25.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true,
+        "checks": [
+         {
+          "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+          "columns": [
+           "tur"
+          ]
+         },
+         {
+          "name": "kat_aralik",
+          "sql": "kat BETWEEN 0 AND 40",
+          "columns": [
+           "kat"
+          ]
+         },
+         {
+          "sql": "notu IS NULL OR hex(notu) <> '41'",
+          "columns": [
+           "notu"
+          ]
+         },
+         {
+          "sql": "ad IN ('a', 'b')",
+          "columns": [
+           "ad"
+          ],
+          "tableOnly": true
+         },
+         {
+          "name": "alan_pozitif",
+          "sql": "alan > 0",
+          "columns": [
+           "alan"
+          ]
+         }
+        ],
+        "uniques": [
+         {
+          "columns": [
+           "ada",
+           "parsel"
+          ]
+         },
+         {
+          "name": "parsel_kod",
+          "columns": [
+           "kod"
+          ]
+         }
+        ]
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "5",
+         "kod": "K1",
+         "tur": "konut",
+         "alan": "120.5",
+         "kat": "2",
+         "ad": "a"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "101",
+         "parsel": "6",
+         "kod": "K2",
+         "tur": "ticaret",
+         "alan": "80",
+         "kat": "4",
+         "no": "7",
+         "notu": "köşe",
+         "ad": "b"
+        },
+        "pts": [
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420030.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "102",
+         "parsel": "1"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420030.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420030.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$tmp:kisitli-25.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "908e671df3f48bfd24b1db76400fb89d4d6750424f451ff1fe396333c2206141",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true,
+         "checks": [
+          {
+           "sql": "tur IN ('konut', 'ticaret', 'tarla')",
+           "columns": [
+            "tur"
+           ]
+          },
+          {
+           "name": "kat_aralik",
+           "sql": "kat BETWEEN 0 AND 40",
+           "columns": [
+            "kat"
+           ]
+          },
+          {
+           "sql": "notu IS NULL OR hex(notu) <> '41'",
+           "columns": [
+            "notu"
+           ]
+          },
+          {
+           "sql": "ad IN ('a', 'b')",
+           "columns": [
+            "ad"
+           ],
+           "tableOnly": true
+          },
+          {
+           "name": "alan_pozitif",
+           "sql": "alan > 0",
+           "columns": [
+            "alan"
+           ]
+          }
+         ],
+         "uniques": [
+          {
+           "columns": [
+            "ada",
+            "parsel"
+           ]
+          },
+          {
+           "name": "parsel_kod",
+           "columns": [
+            "kod"
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      "nodes": {
+       "import-parsel": {
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text"
+         },
+         {
+          "name": "parsel",
+          "kind": "text"
+         },
+         {
+          "name": "kod",
+          "kind": "text"
+         },
+         {
+          "name": "tur",
+          "kind": "text",
+          "values": [
+           {
+            "code": "konut",
+            "label": "konut"
+           },
+           {
+            "code": "tarla",
+            "label": "tarla"
+           },
+           {
+            "code": "ticaret",
+            "label": "ticaret"
+           }
+          ],
+          "column": {
+           "check": "tur IN ('konut', 'ticaret', 'tarla')"
+          }
+         },
+         {
+          "name": "alan",
+          "kind": "decimal"
+         },
+         {
+          "name": "kat",
+          "kind": "integer"
+         },
+         {
+          "name": "no",
+          "kind": "integer"
+         },
+         {
+          "name": "notu",
+          "kind": "text"
+         },
+         {
+          "name": "ad",
+          "kind": "text"
+         }
+        ]
+       }
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/kisitli-2.gpkg",
+     "to": "$tmp:kisitli-25.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "84521e142093260cb8ea100ad5b7bca42822e4de6b15c58e64ce2abfe6f9db92",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     },
+     "command": "cad.sources.sync"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kat": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "kat": "61"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "rule_broken",
+       "message": "Tablonun “kat_aralik” kısıtı: kat 0 ile 60 arasında olmalı.",
+       "path": "attrs.kat"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.entities.set"
+    }
+   ]
+  }
+ ]
+}

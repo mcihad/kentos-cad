@@ -332,6 +332,8 @@ fn a_project_keeps_at_most_a_thousand_bound_layers() {
             key: None,
             extent: None,
             parked: Vec::new(),
+            checks: Vec::new(),
+            uniques: Vec::new(),
             writable: true,
         })
         .collect();

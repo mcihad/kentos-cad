@@ -848,6 +848,8 @@ def field_column(c):
     refers = {"table": (text, True), "column": (text, True), "label": (text, False)}
     table = {
         "made": (text, False),
+        # Schema 134 (docs/adr/0755 §4): the CHECK its list comes from.
+        "check": (text, False),
         "refers": (lambda r: cmap(fields(r, refers, "column.refers")), False),
     }
     return cmap(fields(c, table, "column"))
@@ -2265,6 +2267,15 @@ def document(d):
     if bound_columns(d.get("layers", [])):
         # A layer field's bound column (docs/adr/0753).
         schema = max(schema, 133)
+
+    def checked_columns(nodes):
+        return any(any("check" in f.get("column", {}) for f in n.get("fields", [])) or checked_columns(n.get("children", []))
+                   for n in nodes)
+
+    if checked_columns(d.get("layers", [])) or any(
+            "checks" in s or "uniques" in s for s in d["settings"].get("sources", [])):
+        # A bound table's constraints, a field's list from one of them (docs/adr/0755).
+        schema = max(schema, 134)
     return root(cmap(body), version=uint(schema))
 
 
@@ -2978,7 +2989,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-134.kcad"] = container(root(cmap(parts), version=uint(134)))
+    files["schema-version-135.kcad"] = container(root(cmap(parts), version=uint(135)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5184,6 +5195,21 @@ def build():
     assert fc.count(whole) == 1
     out["broken/field-columns-refers-no-table.kcad"] = container(fc.replace(whole, cmap({"column": text("id")})))
     column_bad("refers-blank-label", 2, lambda f: f["column"]["refers"].update(label=""))
+    # Schema 134 (docs/adr/0755): a database table's CHECKs (one left to the table) and unique constraints (one taking
+    # NULLs as the same), a field whose list one of them gives, a GeoPackage's unnamed CHECK; schema 133 refuses them.
+    held = load("table-constraints.json")
+    tc = document(held)
+    assert tc.count(b"\x67version\x18\x86") == 1, "the constraints are schema 134"
+    out["table-constraints.kcad"] = container(tc)
+    out["broken/table-constraints-in-schema-133.kcad"] = container(tc.replace(b"\x67version\x18\x86", b"\x67version\x18\x85"))
+    def held_bad(name, change):
+        d = copy.deepcopy(held)
+        change(d)
+        out["broken/table-constraints-" + name + ".kcad"] = container(document(d))
+    held_bad("check-blank", lambda d: d["settings"]["sources"][0]["checks"][0].update(sql=" "))
+    held_bad("unique-no-columns", lambda d: d["settings"]["sources"][0]["uniques"][1].update(columns=[]))
+    held_bad("unique-column-twice", lambda d: d["settings"]["sources"][0]["uniques"][0].update(columns=["kod", "kod"]))
+    held_bad("column-check-blank", lambda d: d["layers"][0]["fields"][3]["column"].update(check=""))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

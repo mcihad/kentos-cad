@@ -38,6 +38,7 @@ import bound_sources_cases as bs  # noqa: E402
 import layer_field_cases as lf  # noqa: E402
 import source_defaults_cases as sd  # noqa: E402
 import source_references_cases as sr  # noqa: E402
+import source_constraints_cases as sc  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 DIR = ROOT / "fixtures/geopackage/v1"
@@ -309,6 +310,10 @@ def bound(n):
     answer, warnings, objs, ids, b = bs.linked(TABLE, name=U)
     path = path_of(n)
     b = {**b, "path": path}
+    # The table's CHECK and unique constraints come with it (docs/adr/0755), read by that item's reference.
+    for key, found in (("checks", sc.checks_of(U)), ("uniques", sc.uniques_of(U))):
+        if found:
+            b[key] = found
     answer = {**answer, "link": b}
     layer_fields = fields(U)
     copy = {"op": "copyFile", "from": f"$fixture:geopackage/v1/{U}", "to": path}

@@ -500,11 +500,25 @@ pub(super) fn write(
             )
         })?;
         let inserted = file.edit_many(&jobs, &maps).map_err(|e| {
-            refuse(
-                codes::FILE_UNWRITABLE,
-                format!("{path} yazılamadı, dosya değişmedi: {}", e.0),
-                "layer",
+            // One of the tables' constraints, said by its name (docs/adr/0755 §5).
+            let k = items
+                .iter()
+                .position(|it| super::constraints::names_check(&e, &it.link.checks))
+                .unwrap_or(0);
+            let it = &items[k];
+            super::constraints::file_refusal(
+                &e,
+                &it.link.table,
+                Some((&it.link.checks, &it.stored.fields)),
+                at(k),
             )
+            .unwrap_or_else(|| {
+                refuse(
+                    codes::FILE_UNWRITABLE,
+                    format!("{path} yazılamadı, dosya değişmedi: {}", e.0),
+                    "layer",
+                )
+            })
         })?;
         file.close().map_err(|e| {
             refuse(

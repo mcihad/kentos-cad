@@ -51,6 +51,11 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
+- ADR 0755: bağlı tablonun CHECK ve tekil kısıtları bağın `checks` ve `uniques`'inde (`.kcad` şema 134), alanın
+  `column.check`'i; CHECK SQL'in kendi anlamıyla formda ve komutta sorulur, tek sütunlu IN listesi açılır liste,
+  birden çok sütunlu tekil kısıt `not_unique`, tablonun reddi `source_check` ve benzerleriyle; Alanlar'da “Tablonun
+  kısıtları” (web'in formu, Alanlar penceresi ve Kaynağa yaz'ı gelince aynısı; çekirdek `kentos_forms::table_checks`
+  WASM'a bağlanmadı).
 - ADR 0754: bağlı tablonun hesaplanan (`GENERATED ALWAYS AS (…) STORED|VIRTUAL`) ve kimlik (`GENERATED … AS
   IDENTITY`) sütunları alanın `column.made`'inde yan tümceleriyle; tablonun her zaman yaptığı değer hiç yazılmaz,
   güncellemeden ve eklemeden sonra tablodan geri okunur; çizimde var olan kaydın değeri değiştirilemez

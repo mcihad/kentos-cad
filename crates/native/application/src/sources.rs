@@ -33,6 +33,7 @@ use crate::geopackage as gp;
 use crate::provider;
 
 mod base;
+mod constraints;
 mod database;
 mod merge;
 pub mod reconcile;
@@ -566,6 +567,20 @@ pub(crate) fn provider_stop(e: provider::ProviderError, address: &str, at: At<'_
             codes::INVALID_MAPPING,
             format!("Veritabanında “{name}” adlı bir tablo zaten var; başka bir ad verin."),
             "mapping",
+        ),
+        provider::ProviderError::Constraint {
+            kind,
+            name,
+            column,
+            detail,
+        } => constraints::refusal(
+            kind,
+            name.as_deref(),
+            column.as_deref(),
+            &detail,
+            None,
+            None,
+            at.table,
         ),
         provider::ProviderError::KeyRepeats(name, key) => refuse(
             codes::ROW_KEY_NOT_UNIQUE,
@@ -2573,6 +2588,19 @@ fn link_table(
             path: Some("edit.path".into()),
         });
     }
+    // The table's CHECK and unique constraints come with the link (docs/adr/0755 §1).
+    let held = match at {
+        Origin::Database(_) => constraints::of_database(path, table),
+        Origin::File(p) => constraints::of_file(p, &stored.layer, &stored.fields),
+    };
+    if let Err(why) = &held {
+        warnings.push(constraints::unread(table, why, "edit.table"));
+    }
+    let provider::TableConstraints {
+        checks: table_checks,
+        uniques: table_uniques,
+    } = held.unwrap_or_default();
+    let dialect = kentos_forms::Dialect::of(at.kind());
     let (layer, objects, layers) = match layer {
         Some(id) => {
             existing_layer(doc, id, "edit.layer")?;
@@ -2611,6 +2639,8 @@ fn link_table(
                 &mut stored.fields,
                 &stored.layer.columns,
                 &refs,
+                &table_checks,
+                dialect,
                 table,
                 "edit.table",
             ));
@@ -2653,6 +2683,8 @@ fn link_table(
                     &mut fields,
                     &stored.layer.columns,
                     &refs,
+                    &table_checks,
+                    dialect,
                     table,
                     "edit.table",
                 ));
@@ -2703,6 +2735,8 @@ fn link_table(
         extent,
         key: key.map(str::to_owned),
         parked: Vec::new(),
+        checks: table_checks,
+        uniques: table_uniques,
         writable,
     };
     set_link(doc, Some(link.clone()), None);
@@ -3392,14 +3426,30 @@ fn sync_run(
                 Origin::File(p) => references::of_file(p, &link.table),
                 Origin::Database(a) => references::of_database(a, &link.table),
             };
-            let known = refs.is_ok();
-            let referred = references::table_fields(
+            // Its CHECK and unique constraints too (docs/adr/0755 §1): a constraint gone from the table goes from the
+            // link, a list it gave a field with it.
+            let held = match source {
+                Origin::File(p) => constraints::of_file(p, &stored.layer, &stored.fields),
+                Origin::Database(a) => constraints::of_database(a, &link.table),
+            };
+            let known = refs.is_ok() && held.is_ok();
+            let mut referred = Vec::new();
+            if let Err(why) = &held {
+                referred.push(constraints::unread(&link.table, why, "layer"));
+            }
+            let held = held.unwrap_or_else(|_| provider::TableConstraints {
+                checks: link.checks.clone(),
+                uniques: link.uniques.clone(),
+            });
+            referred.extend(references::table_fields(
                 &mut stored.fields,
                 &stored.layer.columns,
                 &refs,
+                &held.checks,
+                kentos_forms::Dialect::of(link.kind),
                 &link.table,
                 "layer",
-            );
+            ));
             // Columns renamed in the source: the layer's fields follow, and every place that names them
             // (docs/adr/0635 §1).
             let fields_now = doc
@@ -3507,6 +3557,10 @@ fn sync_run(
                         if f.default.is_none() {
                             f.default.clone_from(&t.default);
                         }
+                        // The decimals a numeric(p, s) column keeps (docs/adr/0755 §3).
+                        if f.kind == t.kind && f.scale.is_none() {
+                            f.scale = t.scale;
+                        }
                         references::follow(&mut f, t, known);
                     }
                     f
@@ -3541,6 +3595,8 @@ fn sync_run(
             }
             // The pins of rows outside the part wait in the binding (docs/adr/0578 §3).
             link.parked = pins.parked.clone();
+            link.checks = held.checks;
+            link.uniques = held.uniques;
             set_link(doc, Some(link.clone()), None);
             base::take(doc, &link, None);
             Ok((

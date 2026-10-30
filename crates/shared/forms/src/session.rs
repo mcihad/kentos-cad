@@ -55,6 +55,10 @@ pub struct Prepared {
     workflow: Option<(kentos_contracts::FormWorkflow, usize)>,
     /// The layer's record rules (docs/adr/0438 §1), shown on their fields.
     rules: crate::LayerRules,
+    /// The bound table's CHECK constraints (docs/adr/0755 §3), shown on their fields as the rules are.
+    table: crate::TableChecks,
+    /// The bound table's unique constraints (docs/adr/0755 §5).
+    table_uniques: Vec<kentos_contracts::TableUnique>,
     /// The rules' schema: what the layer's rules compile against.
     schema: Schema,
     /// The day the rules read (`@tarih`): what a listed value's validity is judged on (docs/adr/0438 §5).
@@ -197,6 +201,8 @@ impl Prepared {
             .filter(|t| !t.is_empty());
         Ok(Prepared {
             rules: crate::LayerRules::default(),
+            table: crate::TableChecks::default(),
+            table_uniques: Vec::new(),
             today,
             fields: fields.to_vec(),
             items,
@@ -222,6 +228,28 @@ impl Prepared {
             self.schema.unit,
         )
         .unwrap_or_default();
+        self
+    }
+
+    /// The form over a bound layer (docs/adr/0755 §3, §5): a record breaking one of the table's CHECK constraints is
+    /// told on its field, as a layer rule is; a record whose values another record holds under one of the table's
+    /// unique constraints is not unique.
+    pub fn with_table(
+        mut self,
+        checks: &[kentos_contracts::TableCheck],
+        uniques: &[kentos_contracts::TableUnique],
+        dialect: crate::Dialect,
+    ) -> Prepared {
+        self.table = crate::TableChecks::new(checks, &self.fields, dialect);
+        self.table_uniques = uniques
+            .iter()
+            .filter(|u| {
+                u.columns
+                    .iter()
+                    .all(|c| self.fields.iter().any(|f| f.name == *c))
+            })
+            .cloned()
+            .collect();
         self
     }
 
@@ -321,11 +349,24 @@ impl Prepared {
 
     /// The keys of the fields whose values are unique in the layer.
     pub fn unique_keys(&self) -> Vec<&str> {
-        // A field the layer keeps unique is the form's too (docs/adr/0438 §3).
-        self.bound()
+        // A field the layer keeps unique is the form's too (docs/adr/0438 §3), and one a unique constraint of the bound
+        // table keeps (docs/adr/0755 §5).
+        let mut keys: Vec<&str> = self
+            .bound()
             .filter(|(_, b)| b.item.unique || self.fields[b.index].unique)
             .map(|(_, b)| self.fields[b.index].key())
-            .collect()
+            .collect();
+        for f in self
+            .table_uniques
+            .iter()
+            .flat_map(|u| &u.columns)
+            .filter_map(|c| self.fields.iter().find(|f| f.name == *c))
+        {
+            if !keys.contains(&f.key()) {
+                keys.push(f.key());
+            }
+        }
+        keys
     }
 
     /// The suggesting field items (docs/adr/0407 §3): each item's id and its layer field's name.
@@ -984,6 +1025,20 @@ impl Prepared {
                 broken.rule.message.clone(),
             ));
         }
+        for broken in self.table.broken(&self.fields, None, attrs) {
+            let item = broken
+                .field
+                .and_then(|f| self.fields.iter().position(|x| x.key() == f.key()))
+                .and_then(|i| self.item_of(i));
+            issues.push(issue(
+                codes::LAYER_RULE,
+                FormSeverity::Error,
+                item,
+                broken.field.map(|f| f.key()),
+                Some(&format!("table/{}", broken.at)),
+                broken.message,
+            ));
+        }
         issues
     }
 
@@ -994,12 +1049,90 @@ impl Prepared {
     }
 
     /// Whether the record's unique fields keep their uniqueness among `others` (the layer's other
-    /// objects' attributes): a `form_unique` error for each that does not.
+    /// objects' attributes): a `form_unique` error for each that does not, then for each unique constraint of the bound
+    /// table whose values another record holds (docs/adr/0755 §5).
     pub fn unique_issues<'a>(
         &self,
         attrs: &Attrs,
         object: &Object,
         others: impl Iterator<Item = &'a Attrs>,
+    ) -> Vec<FormIssue> {
+        let others: Vec<&Attrs> = others.collect();
+        let mut issues = self.field_unique_issues(attrs, object, &others);
+        issues.extend(self.table_unique_issues(attrs, &others));
+        issues
+    }
+
+    /// The bound table's unique constraints among `others`, SQL's way: a set of values with an empty one (NULL) is not
+    /// compared unless the constraint takes NULLs as the same; an empty text is a value. A one-column constraint over a
+    /// field the layer keeps unique itself is said by it, but for an empty text.
+    fn table_unique_issues(&self, attrs: &Attrs, others: &[&Attrs]) -> Vec<FormIssue> {
+        let mut issues = Vec::new();
+        for u in &self.table_uniques {
+            let fields: Vec<(usize, &LayerField)> = u
+                .columns
+                .iter()
+                .filter_map(|c| self.fields.iter().enumerate().find(|(_, f)| f.name == *c))
+                .collect();
+            if fields.len() != u.columns.len() || fields.is_empty() {
+                continue;
+            }
+            let values: Vec<Option<&String>> =
+                fields.iter().map(|(_, f)| attrs.get(&f.name)).collect();
+            if !u.nulls_equal && values.iter().any(Option::is_none) {
+                continue;
+            }
+            if let ([(i, f)], [Some(v)]) = (fields.as_slice(), values.as_slice())
+                && !js_trim(v).is_empty()
+                && (f.unique || self.bound().any(|(_, b)| b.index == *i && b.item.unique))
+            {
+                continue;
+            }
+            let taken = others.iter().any(|o| {
+                fields
+                    .iter()
+                    .zip(&values)
+                    .all(|((_, f), v)| o.get(&f.name) == *v)
+            });
+            if !taken {
+                continue;
+            }
+            let said = |v: &Option<&String>| v.map_or("boş".to_owned(), |s| format!("“{s}”"));
+            let (first, field) = fields[0];
+            let message = if fields.len() == 1 {
+                format!(
+                    "“{}” tabloda tekil olmalı; {} başka bir kayıtta var.",
+                    field.label(),
+                    said(&values[0])
+                )
+            } else {
+                format!(
+                    "{} tabloda birlikte tekil olmalı; ({}) başka bir kayıtta var.",
+                    fields
+                        .iter()
+                        .map(|(_, f)| format!("“{}”", f.label()))
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    values.iter().map(said).collect::<Vec<_>>().join(", ")
+                )
+            };
+            issues.push(issue(
+                codes::UNIQUE,
+                FormSeverity::Error,
+                self.item_of(first),
+                Some(field.key()),
+                Some("table/unique"),
+                message,
+            ));
+        }
+        issues
+    }
+
+    fn field_unique_issues(
+        &self,
+        attrs: &Attrs,
+        object: &Object,
+        others: &[&Attrs],
     ) -> Vec<FormIssue> {
         let states = self.flags(attrs, object);
         let wanted: Vec<(usize, &Bound, String)> = self

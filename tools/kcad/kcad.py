@@ -427,6 +427,50 @@ SCHEMA_WITH_PROFILE_FILES = 132
 # Schema 133 (docs/adr/0753): a layer field's bound column (`column`): the default the table makes for a new row itself
 # (`made`) and the table its foreign key refers to (`refers`: table, column, label), written only when a field has one.
 SCHEMA_WITH_FIELD_COLUMNS = 133
+# Schema 134 (docs/adr/0755): a bound table's CHECK and unique constraints in its link (`checks`, `uniques`) and the
+# CHECK a field's bound column takes its list from (`column.check`), written only when a link or a field has one.
+SCHEMA_WITH_TABLE_CONSTRAINTS = 134
+MAX_TABLE_CONSTRAINTS = 256
+MAX_CHECK_SQL = 8000
+MAX_CONSTRAINT_NAME = 256
+
+
+def table_constraints_problem(checks, uniques):
+    """What is wrong with a link's constraints (docs/adr/0755 §1): at most 256 of each, a CHECK's text not blank, not
+    padded and at most 8000 characters, names and columns' names not blank, not padded, not long, without a control
+    character, a unique constraint with a column and each column once."""
+    def bad(n):
+        return not n.strip() or n.strip() != n or len(n) > MAX_CONSTRAINT_NAME or any(
+            unicodedata.category(ch) == "Cc" for ch in n)
+
+    def columns(cs, need):
+        if need and not cs:
+            return "sütunu yok"
+        if len(cs) > MAX_TABLE_CONSTRAINTS:
+            return "çok sütunu var"
+        if any(bad(c) for c in cs):
+            return "sütunlarından birinin adı boş, çok uzun ya da denetim karakteri taşıyor"
+        if len(set(cs)) != len(cs):
+            return "bir sütunu iki kez geçiyor"
+        return None
+
+    if len(checks) > MAX_TABLE_CONSTRAINTS or len(uniques) > MAX_TABLE_CONSTRAINTS:
+        return f"en çok {MAX_TABLE_CONSTRAINTS} CHECK ve {MAX_TABLE_CONSTRAINTS} tekil kısıt tutulur"
+    for i, c in enumerate(checks, 1):
+        if "name" in c and bad(c["name"]):
+            return f"{i}. CHECK kısıtı: adı boş, çok uzun ya da denetim karakteri taşıyor"
+        if not c["sql"].strip() or c["sql"].strip() != c["sql"] or len(c["sql"]) > MAX_CHECK_SQL:
+            return f"{i}. CHECK kısıtı: metni boş, başında ya da sonunda boşluk var ya da {MAX_CHECK_SQL} karakteri aşıyor"
+        why = columns(c["columns"], False)
+        if why:
+            return f"{i}. CHECK kısıtı: {why}"
+    for i, u in enumerate(uniques, 1):
+        if "name" in u and bad(u["name"]):
+            return f"{i}. tekil kısıt: adı boş, çok uzun ya da denetim karakteri taşıyor"
+        why = columns(u["columns"], True)
+        if why:
+            return f"{i}. tekil kısıt: {why}"
+    return None
 MAX_MADE = 1000
 MAX_REFERS_NAME = 256
 MAX_PROJECT_PROFILE_FILES = 256
@@ -689,7 +733,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2166,6 +2210,8 @@ def fields_problem(fields):
             r = c.get("refers")
             if r and any(bad(r[k], MAX_REFERS_NAME) for k in ("table", "column", "label") if k in r):
                 return f"“{name}” alanının başvurduğu tablonun adı geçersiz"
+            if "check" in c and bad(c["check"], MAX_CHECK_SQL):
+                return f"“{name}” alanının değerlerini veren kısıtın adı geçersiz"
         retired = [c["code"] for c in f.get("values", []) if c.get("retired")]
         parts = f["default"].split("; ") if f.get("multiple") and "default" in f else [f.get("default")]
         if "default" in f and any(p in retired for p in parts):
@@ -3258,6 +3304,7 @@ class _Schema:
         self.datasets = version >= SCHEMA_WITH_DATASETS
         self.withheld_fields = version >= SCHEMA_WITH_WITHHELD_FIELDS
         self.field_columns = version >= SCHEMA_WITH_FIELD_COLUMNS
+        self.table_constraints = version >= SCHEMA_WITH_TABLE_CONSTRAINTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -5264,7 +5311,9 @@ class _Schema:
         """A field's bound column (schema 133, docs/adr/0753): `made` and `refers` (its table and column, a label),
         at least one."""
         refers = self.fields({"table": (self.text, True), "column": (self.text, True), "label": (self.text, False)})
-        c = self.fields({"made": (self.text, False), "refers": (refers, False)})(v)
+        c = self.fields({"made": (self.text, False), "refers": (refers, False),
+                         # Schema 134 (docs/adr/0755 §4): the CHECK its list comes from.
+                         **({"check": (self.text, False)} if self.table_constraints else {})})(v)
         if not c:
             self.fail("bad_value", "column boş yazılmaz")
         return c
@@ -5834,6 +5883,14 @@ class _Schema:
             "extent": (box, False),
             "key": (self.text, False),
             "parked": (parked, False),
+            # Schema 134 (docs/adr/0755 §1): the table's CHECK and unique constraints.
+            **({"checks": (self.array(self.fields({"name": (self.text, False), "sql": (self.text, True),
+                                                   "columns": (self.array(self.text), True),
+                                                   "tableOnly": (self.true_only, False)})), False),
+                "uniques": (self.array(self.fields({"name": (self.text, False),
+                                                    "columns": (self.array(self.text), True),
+                                                    "nullsEqual": (self.true_only, False)})), False)}
+               if self.table_constraints else {}),
             "writable": (self.bool, True),
         })
         lst = self.array(source)(v)
@@ -5863,6 +5920,9 @@ class _Schema:
                     bad = pins_problem(p["pins"])
                     if bad:
                         self.fail("bad_value", bad)
+            problem = table_constraints_problem(s.get("checks", []), s.get("uniques", []))
+            if problem:
+                self.fail("bad_value", problem)
             if s["kind"] == "geopackage" and "extent" in s:
                 # docs/adr/0510: the area of a part's working copy, finite, its minimum below its maximum.
                 e = s["extent"]

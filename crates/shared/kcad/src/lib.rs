@@ -664,11 +664,15 @@ pub const SCHEMA_WITH_PROFILE_FILES: u32 = 132;
 /// itself (`made`) and the table its foreign key refers to (`refers`), whose rows are the field's values; written only
 /// when a field has one.
 pub const SCHEMA_WITH_FIELD_COLUMNS: u32 = 133;
+/// Schema 134 (docs/adr/0755): a bound table's CHECK and unique constraints in its link (the settings' `sources`'
+/// `checks` and `uniques`) and the CHECK a field's bound column takes its list from (`column.check`), written only when
+/// a link or a field has one.
+pub const SCHEMA_WITH_TABLE_CONSTRAINTS: u32 = 134;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 132] = [
+pub const SCHEMAS: [u32; 133] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -801,6 +805,7 @@ pub const SCHEMAS: [u32; 132] = [
     SCHEMA_WITH_FIXTURES,
     SCHEMA_WITH_PROFILE_FILES,
     SCHEMA_WITH_FIELD_COLUMNS,
+    SCHEMA_WITH_TABLE_CONSTRAINTS,
 ];
 
 /// The file a drawing is saved as.

@@ -9854,7 +9854,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1052,
+   "cases": 1070,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
@@ -9880,6 +9880,7 @@
     "fixtures/commands/v1/cad.records.duplicate.json",
     "fixtures/commands/v1/cad.records.page.json",
     "fixtures/commands/v1/cad.relations.edit.json",
+    "fixtures/commands/v1/cad.sources.constraints.json",
     "fixtures/commands/v1/cad.sources.defaults.json",
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.edit.json",
@@ -15892,7 +15893,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 254,
+   "cases": 257,
    "files": [
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.polygon.create.area-rules.json",
@@ -15903,6 +15904,7 @@
     "fixtures/commands/v1/cad.polygon.create.json",
     "fixtures/commands/v1/cad.polygon.create.rules.json",
     "fixtures/commands/v1/cad.polygon.create.subtypes.json",
+    "fixtures/commands/v1/cad.sources.constraints.json",
     "fixtures/commands/v1/cad.sources.defaults.json",
     "fixtures/commands/v1/cad.sources.generated.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
@@ -23021,7 +23023,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 631,
+   "cases": 656,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
@@ -23029,6 +23031,7 @@
     "fixtures/commands/v1/cad.processing.batch.sink.json",
     "fixtures/commands/v1/cad.processing.run.source.json",
     "fixtures/commands/v1/cad.records.page.json",
+    "fixtures/commands/v1/cad.sources.constraints.json",
     "fixtures/commands/v1/cad.sources.defaults.json",
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.edit.json",
@@ -23218,10 +23221,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 182,
+   "cases": 194,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.sources.constraints.json",
     "fixtures/commands/v1/cad.sources.defaults.json",
     "fixtures/commands/v1/cad.sources.generated.json",
     "fixtures/commands/v1/cad.sources.references.json",
@@ -30477,6 +30481,11 @@
      "covered": false
     },
     {
+     "key": "nullsEqual",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "off",
      "value": true,
      "covered": false
@@ -30944,6 +30953,11 @@
     {
      "key": "symbol",
      "value": "triangle",
+     "covered": false
+    },
+    {
+     "key": "tableOnly",
+     "value": true,
      "covered": false
     },
     {
@@ -33014,6 +33028,11 @@
      "covered": false
     },
     {
+     "key": "nullsEqual",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "off",
      "value": true,
      "covered": false
@@ -33481,6 +33500,11 @@
     {
      "key": "symbol",
      "value": "triangle",
+     "covered": false
+    },
+    {
+     "key": "tableOnly",
+     "value": true,
      "covered": false
     },
     {
@@ -35361,6 +35385,11 @@
      "covered": false
     },
     {
+     "key": "nullsEqual",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "off",
      "value": true,
      "covered": false
@@ -35848,6 +35877,11 @@
     {
      "key": "symbol",
      "value": "triangle",
+     "covered": false
+    },
+    {
+     "key": "tableOnly",
+     "value": true,
      "covered": false
     },
     {

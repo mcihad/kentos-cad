@@ -61,7 +61,7 @@ pub fn generated_clause(expression: Option<&str>, stored: bool) -> String {
 
 /// A token of SQL text: its kind and its place in the text.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Kind {
+pub(crate) enum Kind {
     Word,
     Quoted,
     Open,
@@ -71,7 +71,7 @@ enum Kind {
 }
 
 /// The tokens of SQL text with their byte ranges; comments and blanks left out, a string or a quoted name one token.
-fn tokens(sql: &str) -> Vec<(Kind, usize, usize)> {
+pub(crate) fn tokens(sql: &str) -> Vec<(Kind, usize, usize)> {
     let b = sql.as_bytes();
     let mut out = Vec::new();
     let mut i = 0;
@@ -155,7 +155,7 @@ fn tokens(sql: &str) -> Vec<(Kind, usize, usize)> {
 }
 
 /// A name token's name: a quoted one unquoted, its doubled quotes single.
-fn name_of(sql: &str, (kind, a, b): (Kind, usize, usize)) -> String {
+pub(crate) fn name_of(sql: &str, (kind, a, b): (Kind, usize, usize)) -> String {
     let t = &sql[a..b];
     if kind != Kind::Quoted || t.len() < 2 {
         return t.to_owned();
@@ -168,14 +168,13 @@ fn name_of(sql: &str, (kind, a, b): (Kind, usize, usize)) -> String {
     }
 }
 
-/// The generation expression of `column` in a table's `CREATE TABLE` text (docs/adr/0754 §1): the text inside the
-/// parentheses after the `AS` of the column's definition, as written; none when the definition or its `AS (` is not
-/// found. Names are compared as SQLite compares them (ASCII letters' case aside).
-pub fn generation_of(create: &str, column: &str) -> Option<String> {
-    let t = tokens(create);
+/// A token: its kind and its byte range.
+pub(crate) type Token = (Kind, usize, usize);
+
+/// A `CREATE TABLE` text's definitions: the tokens between the commas of its outer parentheses.
+pub(crate) fn definitions(t: &[Token]) -> Option<Vec<&[Token]>> {
     let open = t.iter().position(|x| x.0 == Kind::Open)?;
-    // The definitions: the tokens between the commas of the outer parentheses.
-    let mut defs: Vec<&[(Kind, usize, usize)]> = Vec::new();
+    let mut defs: Vec<&[Token]> = Vec::new();
     let mut depth = 0usize;
     let mut start = open + 1;
     for (k, x) in t.iter().enumerate().skip(open + 1) {
@@ -183,7 +182,7 @@ pub fn generation_of(create: &str, column: &str) -> Option<String> {
             Kind::Open => depth += 1,
             Kind::Close if depth == 0 => {
                 defs.push(&t[start..k]);
-                break;
+                return Some(defs);
             }
             Kind::Close => depth -= 1,
             Kind::Comma if depth == 0 => {
@@ -193,6 +192,15 @@ pub fn generation_of(create: &str, column: &str) -> Option<String> {
             _ => {}
         }
     }
+    Some(defs)
+}
+
+/// The generation expression of `column` in a table's `CREATE TABLE` text (docs/adr/0754 §1): the text inside the
+/// parentheses after the `AS` of the column's definition, as written; none when the definition or its `AS (` is not
+/// found. Names are compared as SQLite compares them (ASCII letters' case aside).
+pub fn generation_of(create: &str, column: &str) -> Option<String> {
+    let t = tokens(create);
+    let defs = definitions(&t)?;
     let def = defs.into_iter().find(|d| {
         d.first().is_some_and(|&n| {
             matches!(n.0, Kind::Word | Kind::Quoted)

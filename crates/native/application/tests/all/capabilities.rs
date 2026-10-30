@@ -857,6 +857,21 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ),
     (
         "cad.sources.sync",
+        "source_reference",
+        "yabancı anahtarı yalnız veritabanı zorlar: KentOS GeoPackage'a SQLite'ın foreign_keys anahtarı kapalı yazar; ret kentos-postgis'in postgis_cases.py ile koşan testinde (ADR 0755 §5)",
+    ),
+    (
+        "cad.sources.sync",
+        "constraints_unread",
+        "kısıtlar tablonun okunduğu dosyadan ve bağlantıdan okunur: tablo okunup kısıtları okunamayan bir ortak durum kurulamaz; uyarının metni sources/constraints.rs'in unread'inde (ADR 0755 §1)",
+    ),
+    (
+        "cad.sources.edit",
+        "constraints_unread",
+        "kısıtlar tablonun okunduğu dosyadan ve bağlantıdan okunur: tablo okunup kısıtları okunamayan bir ortak durum kurulamaz; uyarının metni sources/constraints.rs'in unread'inde (ADR 0755 §1)",
+    ),
+    (
+        "cad.sources.sync",
         "rows_denied",
         "yetki ve satır güvenliği yalnız veritabanında: GeoPackage'ın satır hakkı yoktur; kentos-postgis'in postgis_cases.py ile koşan testi satır güvenliği politikalı bir hesapla sınar (ADR 0585)",
     ),

@@ -153,7 +153,65 @@ pub fn column_said(column: Option<&kentos_commands::FieldColumn>) -> Option<Stri
             t.table
         ));
     }
+    // docs/adr/0755 §4: a list one of the table's CHECKs gives.
+    if let Some(check) = &c.check {
+        said.push(format!(
+            "Değerler tablonun kısıtından ({check}); tablo her okunduğunda yenilenir."
+        ));
+    }
     (!said.is_empty()).then(|| said.join(" "))
+}
+
+/// The bound table's constraints as the Alanlar window lists them (docs/adr/0755 §6): each CHECK's sentence with how
+/// much of it KentOS judges, then each unique constraint of several columns (one column's is said on its field).
+pub fn constraints_said(
+    link: &kentos_commands::SourceLink,
+    fields: &[LayerField],
+) -> Vec<(String, &'static str)> {
+    use kentos_forms::table_checks::{Dialect, Judged, TableChecks};
+    let checks = TableChecks::new(&link.checks, fields, Dialect::of(link.kind));
+    let mut out: Vec<(String, &'static str)> = link
+        .checks
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let named = c
+                .name
+                .as_deref()
+                .map(|n| format!("{n}: "))
+                .unwrap_or_default();
+            let judged = match checks.judged(i) {
+                Judged::Whole => "KentOS da denetler",
+                Judged::Partly => "KentOS kısmen denetler",
+                Judged::TableOnly => "Yalnız tablo denetler",
+            };
+            (format!("{named}{}", checks.said(i)), judged)
+        })
+        .collect();
+    for u in link.uniques.iter().filter(|u| u.columns.len() > 1) {
+        let named = u
+            .name
+            .as_deref()
+            .map(|n| format!("{n}: "))
+            .unwrap_or_default();
+        let nulls = if u.nulls_equal {
+            ", boşlar da aynı sayılır"
+        } else {
+            ""
+        };
+        out.push((
+            format!("{named}{} birlikte tekil{nulls}", u.columns.join(", ")),
+            "KentOS da denetler",
+        ));
+    }
+    out
+}
+
+/// Whether the bound table keeps a field's values unique by a constraint of its one column (docs/adr/0755 §5).
+pub fn unique_in_table(link: &kentos_commands::SourceLink, name: &str) -> bool {
+    link.uniques
+        .iter()
+        .any(|u| u.columns.len() == 1 && u.columns[0] == name)
 }
 
 /// What a form says in an empty field whose value the bound table makes (docs/adr/0753 §2, 0754 §3): the default it
@@ -1064,18 +1122,71 @@ impl App {
                         .width(Length::Fixed(typography::scaled(90.0))),
                     );
                 }
-                // What the bound table's column says (docs/adr/0753): written by binding and reading, shown here.
-                match column_said(r.column.as_ref()) {
-                    Some(said) => iced::widget::column![line, label::muted(said)]
+                // What the bound table's column says (docs/adr/0753): written by binding and reading, shown here; and
+                // its one-column unique constraint (docs/adr/0755 §5).
+                let unique = doc
+                    .model
+                    .settings()
+                    .sources
+                    .iter()
+                    .find(|s| s.layer == w.layer)
+                    .is_some_and(|link| unique_in_table(link, &r.name));
+                let said = [
+                    column_said(r.column.as_ref()),
+                    unique.then(|| "Tabloda tekil: tablonun tekil kısıtı değerin başka bir kayıtta olmasına izin vermez.".to_owned()),
+                ]
+                .into_iter()
+                .flatten()
+                .collect::<Vec<_>>();
+                if said.is_empty() {
+                    line.into()
+                } else {
+                    iced::widget::column![line, label::muted(said.join(" "))]
                         .spacing(6)
-                        .into(),
-                    None => line.into(),
+                        .into()
                 }
             }
             None => label::caption("Tekil, hariç uçlar, birim ve dışarı verilmez için bir alan seçin.").into(),
         };
+        // The bound table's constraints (docs/adr/0755 §6).
+        let held: Element<'_, Message> = match doc
+            .model
+            .settings()
+            .sources
+            .iter()
+            .find(|s| s.layer == w.layer)
+            .filter(|s| !s.checks.is_empty() || s.uniques.iter().any(|u| u.columns.len() > 1))
+        {
+            Some(link) => {
+                let fields = doc
+                    .model
+                    .layers()
+                    .get(&w.layer)
+                    .map(|n| n.fields.clone())
+                    .unwrap_or_default();
+                let mut list = Column::new()
+                    .spacing(4)
+                    .push(label::strong("Tablonun kısıtları"));
+                for (said, judged) in constraints_said(link, &fields) {
+                    list = list.push(
+                        row![
+                            container(label::body(said)).width(Fill),
+                            label::muted(judged)
+                        ]
+                        .spacing(12)
+                        .align_y(Center),
+                    );
+                }
+                container(list)
+                    .padding([8, 10])
+                    .style(style::container::field_box)
+                    .width(Fill)
+                    .into()
+            }
+            None => iced::widget::space().into(),
+        };
         let usage =
-            iced::widget::column![extras, policy_box(w), self.field_usage_box(w)].spacing(10);
+            iced::widget::column![extras, policy_box(w), self.field_usage_box(w), held].spacing(10);
         let problem = problem_of(&w.rows);
         let renamed = renames_of(&w.rows).len();
         let line = match (&w.said, &problem) {

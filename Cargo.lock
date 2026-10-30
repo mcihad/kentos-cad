@@ -2789,6 +2789,7 @@ dependencies = [
  "kentos-contracts",
  "kentos-expression",
  "kentos-geometry-core",
+ "regex-lite",
  "serde_json",
 ]
 

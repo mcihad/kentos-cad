@@ -495,6 +495,13 @@ fn field_of(c: &gpkg::Column, reading: Reading) -> Option<LayerField> {
     if let Some(n) = length {
         f["length"] = json!(n);
     }
+    // A database's numeric(p, s) keeps s decimals (docs/adr/0755 §3): the field takes no more, so a constraint judged
+    // on its value judges what the table holds.
+    if kind == LayerFieldKind::Decimal
+        && let Some(s) = numeric_scale(&c.decl)
+    {
+        f["scale"] = json!(s);
+    }
     // The table's rules (docs/adr/0750): NOT NULL without a default is a required field; a literal default is the
     // field's, a new object takes it; a default the database works out (`now()`, `uuidv7()`) it gives a new row itself.
     if c.not_null && c.default.is_none() {
@@ -509,6 +516,23 @@ fn field_of(c: &gpkg::Column, reading: Reading) -> Option<LayerField> {
         f["default"] = json!(d);
     }
     serde_json::from_value(f).ok()
+}
+
+/// The decimals a `numeric(p, s)` or `decimal(p, s)` type keeps, when they are a field's (at most
+/// [`kentos_commands::MAX_SCALE`]).
+fn numeric_scale(decl: &str) -> Option<u32> {
+    let d = decl.trim().to_ascii_lowercase();
+    let inner = d
+        .strip_prefix("numeric")
+        .or_else(|| d.strip_prefix("decimal"))?
+        .trim()
+        .strip_prefix('(')?
+        .strip_suffix(')')?;
+    let (_, s) = inner.split_once(',')?;
+    s.trim()
+        .parse::<u32>()
+        .ok()
+        .filter(|s| *s <= kentos_commands::MAX_SCALE)
 }
 
 /// A column's default as a value, when it is a literal (docs/adr/0750): a quoted text (`'İlçe'`,

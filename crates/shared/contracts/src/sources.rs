@@ -77,8 +77,143 @@ pub struct SourceLink {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ParkedPin>>", optional))]
     pub parked: Vec<ParkedPin>,
+    /// The table's CHECK constraints as the link last read them (docs/adr/0755 §1): every write of a record is asked them
+    /// with SQL's own meaning, and one that ties a column to a list of values makes the field's value list. Binding and
+    /// every reading of the table write them anew.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TableCheck>>", optional))]
+    pub checks: Vec<TableCheck>,
+    /// The table's unique constraints and plain unique indexes as the link last read them (docs/adr/0755 §1): no two
+    /// records of the layer hold the same values in their columns.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TableUnique>>", optional))]
+    pub uniques: Vec<TableUnique>,
     /// Whether the table can be written: a feature or attribute table of a file KentOS may write.
     pub writable: bool,
+}
+
+/// The most CHECK constraints and the most unique constraints a link keeps (docs/adr/0755 §1).
+pub const MAX_TABLE_CONSTRAINTS: usize = 256;
+/// The most characters of a CHECK constraint's text a link keeps.
+pub const MAX_CHECK_SQL: usize = 8000;
+/// The most characters of a constraint's and of its columns' names.
+pub const MAX_CONSTRAINT_NAME: usize = 256;
+
+/// A CHECK constraint of a bound table (docs/adr/0755 §1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TableCheck {
+    /// Its name; none for SQLite's constraint without one, which the database names by its text.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// Its condition as the table gives it: the inside of PostgreSQL's `CHECK (…)` (`pg_get_constraintdef`), SQLite's
+    /// as its `CREATE TABLE` text writes it.
+    pub sql: String,
+    /// The table's columns it reads, in the table's order.
+    pub columns: Vec<String>,
+    /// Only the table judges it (docs/adr/0755 §3): it reads a column whose comparisons KentOS cannot follow (a
+    /// collation other than byte order, SQLite's affinity other than the field kind's, PostgreSQL's blank-padded
+    /// `character(n)`); written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub table_only: bool,
+}
+
+/// A unique constraint or a plain unique index of a bound table (docs/adr/0755 §1).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TableUnique {
+    /// Its name; none for SQLite's constraint without one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// Its columns, in its order.
+    pub columns: Vec<String>,
+    /// Two empty (NULL) values count as the same (PostgreSQL's `NULLS NOT DISTINCT`); written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub nulls_equal: bool,
+}
+
+impl TableCheck {
+    /// The name the constraint is told by: its own, else its text (as SQLite names a constraint without one).
+    pub fn said(&self) -> &str {
+        self.name.as_deref().unwrap_or(&self.sql)
+    }
+}
+
+fn bad_name(s: &str) -> bool {
+    s.trim().is_empty()
+        || s.trim() != s
+        || s.chars().count() > MAX_CONSTRAINT_NAME
+        || s.chars().any(char::is_control)
+}
+
+fn columns_problem(columns: &[String], need: bool) -> Option<&'static str> {
+    if need && columns.is_empty() {
+        return Some("sütunu yok");
+    }
+    if columns.len() > MAX_TABLE_CONSTRAINTS {
+        return Some("çok sütunu var");
+    }
+    if columns.iter().any(|c| bad_name(c)) {
+        return Some("sütunlarından birinin adı boş, çok uzun ya da denetim karakteri taşıyor");
+    }
+    if columns
+        .iter()
+        .enumerate()
+        .any(|(i, c)| columns[..i].contains(c))
+    {
+        return Some("bir sütunu iki kez geçiyor");
+    }
+    None
+}
+
+/// What is wrong with a link's constraints, if anything (docs/adr/0755 §1): at most [`MAX_TABLE_CONSTRAINTS`] of each, a
+/// check's text not empty and at most [`MAX_CHECK_SQL`] characters, names and columns' names not blank, a unique
+/// constraint with a column and each column once.
+pub fn table_constraints_problem(checks: &[TableCheck], uniques: &[TableUnique]) -> Option<String> {
+    if checks.len() > MAX_TABLE_CONSTRAINTS || uniques.len() > MAX_TABLE_CONSTRAINTS {
+        return Some(format!(
+            "en çok {MAX_TABLE_CONSTRAINTS} CHECK ve {MAX_TABLE_CONSTRAINTS} tekil kısıt tutulur"
+        ));
+    }
+    for (i, c) in checks.iter().enumerate() {
+        let at = format!("{}. CHECK kısıtı", i + 1);
+        if c.name.as_deref().is_some_and(bad_name) {
+            return Some(format!(
+                "{at}: adı boş, çok uzun ya da denetim karakteri taşıyor"
+            ));
+        }
+        if c.sql.trim().is_empty() || c.sql.trim() != c.sql || c.sql.chars().count() > MAX_CHECK_SQL
+        {
+            return Some(format!(
+                "{at}: metni boş, başında ya da sonunda boşluk var ya da {MAX_CHECK_SQL} karakteri aşıyor"
+            ));
+        }
+        if let Some(why) = columns_problem(&c.columns, false) {
+            return Some(format!("{at}: {why}"));
+        }
+    }
+    for (i, u) in uniques.iter().enumerate() {
+        let at = format!("{}. tekil kısıt", i + 1);
+        if u.name.as_deref().is_some_and(bad_name) {
+            return Some(format!(
+                "{at}: adı boş, çok uzun ya da denetim karakteri taşıyor"
+            ));
+        }
+        if let Some(why) = columns_problem(&u.columns, true) {
+            return Some(format!("{at}: {why}"));
+        }
+    }
+    None
 }
 
 /// The most label pins a bound layer parks, objects counted.
@@ -168,6 +303,9 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
             return Some(format!("{at}: anahtar alanı {why}"));
         }
         if let Some(why) = parked_problem(&s.parked) {
+            return Some(format!("{at}: {why}"));
+        }
+        if let Some(why) = table_constraints_problem(&s.checks, &s.uniques) {
             return Some(format!("{at}: {why}"));
         }
         match s.kind {

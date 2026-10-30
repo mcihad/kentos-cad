@@ -225,6 +225,8 @@ mod dialog_sizes;
 #[cfg(test)]
 mod dialog_size_tests;
 #[cfg(test)]
+mod constraint_screens;
+#[cfg(test)]
 mod form_fit_screens;
 mod layer_info;
 mod layer_list;
