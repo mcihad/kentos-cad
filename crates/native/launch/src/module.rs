@@ -1,7 +1,7 @@
-//! The KentOS modules (docs/adr/0801): KentOS Mimari, KentOS Harita and
-//! KentOS GIS, each a program of its own ([`Module::program`]) built from the
-//! one desktop library; `kentos-cad` is all of them at once (`--modul` picks
-//! one). A project belongs to a module by its type and its CAD work
+//! The KentOS modules (docs/adr/0801, 0802): KentOS Mimari, KentOS Harita and
+//! KentOS GIS, each an application of its own under its own name
+//! ([`Module::program`]): one program file, `kentos-cad`, is all of them at
+//! once and each under its name or `--modul`. A project belongs to a module by its type and its CAD work
 //! (`ProjectSettings.workspace`, `cadWork`).
 
 use serde::{Deserialize, Serialize};
@@ -49,14 +49,25 @@ impl Module {
         }
     }
 
-    /// The module's own program (docs/adr/0801): a binary of its own, built from
-    /// the same desktop library as `kentos-cad`, that works only as this module.
+    /// The module's own program's name (docs/adr/0801, 0802 §1): the one KentOS program file under this
+    /// name (a link to `kentos-cad`, or `kentos-cad --modul <id>`) works only as this module.
     pub const fn program(self) -> &'static str {
         match self {
             Module::Architecture => "kentos-mimari",
             Module::Map => "kentos-harita",
             Module::Gis => "kentos-gis",
         }
+    }
+
+    /// The module a program was started as, by the name it was started under (`kentos-mimari`, a path to it,
+    /// `KENTOS-HARITA.EXE`): one program file is every module under its name (docs/adr/0802 §1); none for
+    /// `kentos-cad` and any other name.
+    pub fn of_program_name(name: &std::ffi::OsStr) -> Option<Module> {
+        let stem = std::path::Path::new(name)
+            .file_stem()?
+            .to_str()?
+            .to_ascii_lowercase();
+        Module::ALL.into_iter().find(|m| m.program() == stem)
     }
 
     /// One line on what it is for.
@@ -223,6 +234,21 @@ mod tests {
                 m.project_type() == "gis"
             );
         }
+    }
+
+    #[test]
+    fn a_program_is_the_module_it_is_named_for() {
+        use std::ffi::OsStr;
+        for m in Module::ALL {
+            assert_eq!(Module::of_program_name(OsStr::new(m.program())), Some(m));
+        }
+        let named = |name: &str| Module::of_program_name(OsStr::new(name));
+        assert_eq!(named("/opt/kentos/bin/kentos-harita"), Some(Module::Map));
+        assert_eq!(named("KENTOS-GIS.EXE"), Some(Module::Gis));
+        assert_eq!(named("./kentos-mimari"), Some(Module::Architecture));
+        assert_eq!(named("kentos-cad"), None, "every module at once");
+        assert_eq!(named("kentos-launcher"), None);
+        assert_eq!(named(""), None);
     }
 
     #[test]

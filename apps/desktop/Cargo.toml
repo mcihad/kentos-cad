@@ -16,27 +16,12 @@ name = "kentos_desktop"
 path = "src/lib.rs"
 doctest = false
 
+# The one program file (docs/adr/0802 §1): every module at once as `kentos-cad`, and KentOS Mimari, KentOS Harita and
+# KentOS GIS under their own names (`kentos-mimari` …, links made by scripts/desktop/module_links.py) or with
+# `--modul`. Four copies of the same code were 4 × 255 MB.
 [[bin]]
 name = "kentos-cad"
 path = "src/main.rs"
-test = false
-
-# KentOS Mimari, KentOS Harita and KentOS GIS: the library fixed to one module, each a program of its own that every
-# build makes (the owner: “her biri ayrı uygulama olarak çalışacak”, docs/adr/0802). No tests of their own: a test
-# run still links one binary.
-[[bin]]
-name = "kentos-mimari"
-path = "src/bin/kentos-mimari.rs"
-test = false
-
-[[bin]]
-name = "kentos-harita"
-path = "src/bin/kentos-harita.rs"
-test = false
-
-[[bin]]
-name = "kentos-gis"
-path = "src/bin/kentos-gis.rs"
 test = false
 
 [dependencies]

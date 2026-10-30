@@ -1,6 +1,7 @@
-//! What starting an app runs (docs/adr/0800 §4). A KentOS module runs its
-//! own program (`kentos-gis`) when it is installed, else `kentos-cad
-//! --modul cbs`, found next to the launcher and then on `PATH`
+//! What starting an app runs (docs/adr/0800 §4). A KentOS module runs the
+//! one KentOS program under its own name (`kentos-gis`, a link to it) when
+//! that is installed, else as `kentos-cad --modul cbs` (docs/adr/0802 §1: one
+//! file, every module), found next to the launcher and then on `PATH`
 //! (`kentos_launch::programs`). Any other program is the manifest's path
 //! (relative to its folder) or a name on `PATH`. A place the user showed
 //! (Konumu seç…) comes first. What is not found says why, so that the card
@@ -79,11 +80,15 @@ pub fn resolve(app: &Manifest, place: Option<&Path>, finder: &dyn Finder) -> Fou
                 };
             }
             // Each module is an application of its own (docs/adr/0802; the owner: “her biri ayrı uygulama
-            // olarak çalışacak”): its own program, never kentos-cad standing in for it.
-            match finder.find(module.program()) {
-                Some(own) => Found::Program(kentos_spec(*module, own)),
+            // olarak çalışacak”) in the one KentOS program: under its own name, else kentos-cad as it.
+            match finder
+                .find(module.program())
+                .or_else(|| finder.find(KENTOS_CAD))
+            {
+                Some(program) => Found::Program(kentos_spec(*module, program)),
                 None => Found::Missing(format!(
-                    "{} bulunamadı (launcher'ın yanında ve PATH'te arandı). {}'yı kurun ya da Konumu seç… ile programı gösterin.",
+                    "{} bulunamadı: ne {} ne kentos-cad launcher'ın yanında ya da PATH'te. {}'yı kurun ya da Konumu seç… ile programı gösterin.",
+                    module.title(),
                     module.program(),
                     module.title()
                 )),
@@ -307,7 +312,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn a_module_runs_its_own_program_and_never_kentos_cad_for_it() {
+    fn a_module_runs_under_its_own_name_else_as_kentos_cad() {
         let own = Fixed(HashMap::from([
             ("kentos-gis", PathBuf::from("/opt/kentos/kentos-gis")),
             ("kentos-cad", PathBuf::from("/opt/kentos/kentos-cad")),
@@ -327,12 +332,24 @@ pub(crate) mod tests {
             "kentos-cad",
             PathBuf::from("/opt/kentos/kentos-cad"),
         )]));
-        // kentos-cad does not stand in for a module (docs/adr/0802): the card says its program is missing.
-        let Found::Missing(why) = resolve(&gis(), None, &cad_only) else {
+        // The one KentOS program without the module's name beside it (docs/adr/0802 §1): kentos-cad as the module.
+        let Found::Program(spec) = resolve(&gis(), None, &cad_only) else {
+            panic!("kentos-cad runs the module");
+        };
+        assert_eq!(spec.program, PathBuf::from("/opt/kentos/kentos-cad"));
+        assert_eq!(
+            spec.with_file(Some(Path::new("/ev/harita.kcad"))).args,
+            os(&["--modul", "cbs", "/ev/harita.kcad"])
+        );
+        // Neither: the card says what to install.
+        let none = Fixed(HashMap::new());
+        let Found::Missing(why) = resolve(&gis(), None, &none) else {
             panic!("missing");
         };
         assert!(
-            why.contains("kentos-gis bulunamadı") && why.contains("KentOS GIS"),
+            why.contains("KentOS GIS bulunamadı")
+                && why.contains("kentos-gis")
+                && why.contains("kentos-cad"),
             "{why}"
         );
         // kentos-cad shown with Konumu seç… is the user's own choice: it starts in the module.

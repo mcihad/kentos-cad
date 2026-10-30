@@ -85,8 +85,9 @@ Bilinmeyen alanlar yok sayılır (ileride eklenecekler eski launcher'ı bozmaz).
 **Web adresi** (`"kind": "url"`): `url` `http://` ya da `https://` ile başlar; sistemin tarayıcısında açılır
 (Linux'ta `xdg-open`, macOS'ta `open`, Windows'ta `explorer`). Web adresinin `files`'ı olmaz.
 
-**KentOS modülü** (`"kind": "kentos"`): `module` `mimari`, `harita` ya da `cbs`. Launcher önce modülün kendi programını
-(`kentos-mimari`, `kentos-harita`, `kentos-gis`), yoksa `kentos-cad --modul <modül>`'ü çalıştırır; ikisi de launcher'ın
+**KentOS modülü** (`"kind": "kentos"`): `module` `mimari`, `harita` ya da `cbs`. Launcher önce modülün kendi adını
+(`kentos-mimari`, `kentos-harita`, `kentos-gis`: tek program dosyasının bağlantıları, ADR 0802 §1), yoksa
+`kentos-cad --modul <modül>`'ü çalıştırır; ikisi de launcher'ın
 yanında, sonra `PATH`'te aranır. Bir dosya `kentos-cad`'e `--modul <modül> <dosya>`, modülün kendi programına yalnız
 `<dosya>` olarak verilir (`kentos_launch::args`).
 

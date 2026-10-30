@@ -557,6 +557,17 @@ use kentos_ui::theme::typography;
 /// The exit code of a command line the program could not read.
 const BAD_ARGUMENTS: u8 = 2;
 
+/// The program's entry (docs/adr/0802 §1): by the name it was started under (`args`' first word), a
+/// module's own program (`kentos-mimari`, a link to this one file) or `kentos-cad`, every module.
+pub fn program_main(args: impl IntoIterator<Item = OsString>) -> ExitCode {
+    let mut args = args.into_iter();
+    let named = args.next();
+    match named.as_deref().and_then(Module::of_program_name) {
+        Some(module) => module_program(module, args),
+        None => all_in_one(args),
+    }
+}
+
 /// `kentos-cad`: its own words first (`snapshot`, `kullan`), then
 /// `[--modul <id>] [dosya]` (kentos-launch's command line). A command line it
 /// cannot read is said on stderr, with exit code 2.
@@ -580,8 +591,8 @@ pub fn all_in_one(args: impl IntoIterator<Item = OsString>) -> ExitCode {
     }
 }
 
-/// A module's own program (`kentos-mimari [dosya]`): `--modul` may name only
-/// this module, any other is refused with the program to start instead.
+/// A module's own program (`kentos-mimari [dosya]`, the one file under the module's name): `--modul` may
+/// name only this module, any other is refused with the program to start instead.
 pub fn module_program(module: Module, args: impl IntoIterator<Item = OsString>) -> ExitCode {
     match program::fixed_launch(module, args) {
         Ok(path) => run(Some(module), path),

@@ -37,15 +37,25 @@ aşırılıklarını ve kaçırdıklarını kodla doğrulayarak düzeltti. Bulgu
 
 ## Karar
 
-### 1. Her modül ayrı bir uygulama
+### 1. Her modül ayrı bir uygulama, tek program dosyası
 
-- `kentos-mimari`, `kentos-harita` ve `kentos-gis` her derlemede `kentos-cad`'in yanında derlenir; özellik kapısı kalktı. Kendi
-  testleri yoktur: test koşusu yine tek ikili bağlar.
-- Her program masaüstüne kendi uygulamasıdır: penceresinin sınıfı ve Wayland uygulama kimliği programın adıdır; Linux için her
-  birinin `.desktop` kaydı `apps/desktop/packaging/linux/`'tadır (`StartupWMClass` aynı ad).
-- Launcher bir modülü yalnız o modülün kendi programıyla başlatır; bulamazsa kart “Bulunamadı” der ve programın adını söyler.
-  `kentos-cad` bir modülün yerine geçmez. Kullanıcı “Konumu seç…” ile `kentos-cad`'i gösterirse o kendi seçimidir: `--modul` ile
-  başlar.
+- **Tek program, modülün adıyla** (30 Ekim, sahibin sorusu üzerine: “release modda bile hepsinin 200 MB üstü boyutları hepsi
+  hemen hemen aynı ne anladık biz bu işten”; kararı “Tamam geç”). Ayrı derlenen dört program aynı kodu dört kez taşıyordu: dördü
+  de 255 MB'tı. Artık tek dosya vardır, `kentos-cad`. Program açıldığı adı okur (`Module::of_program_name`, `program_main`):
+  - `kentos-mimari`, `kentos-harita` ya da `kentos-gis` adıyla açılırsa o modüldür;
+  - `kentos-cad` adıyla açılırsa hepsidir, `--modul` biri seçer.
+
+  Modül adları dosyanın yanında birer bağlantıdır (`scripts/desktop/module_links.py <klasör>`; Windows'ta sabit bağlantı).
+  Release'te masaüstünün ve launcher'ın sembol tabloları silinir (39 MB). Sonuç: 4 × 255 MB yerine tek ~216 MB dosya.
+- Daha önceki hâli (bu turda kalktı): `kentos-mimari`, `kentos-harita` ve `kentos-gis` her derlemede `kentos-cad`'in yanında
+  ayrı ayrı derleniyordu.
+- Her modül masaüstüne kendi uygulamasıdır: penceresinin sınıfı ve Wayland uygulama kimliği modülün adıdır (`kentos-mimari` …).
+  Linux için her birinin `.desktop` kaydı `apps/desktop/packaging/linux/`'tadır: `kentos-cad --modul <id>`, `StartupWMClass` modülün
+  adı.
+- Launcher bir modülü kendi adıyla başlatır; o ad yoksa yanındaki `kentos-cad`'i `--modul` ile başlatır. İkisi de yoksa kart
+  “Bulunamadı” der. Devretme (`start_program`) aynı kuralla çalışır.
+- Her modülü yalnız kendi koduyla derlemek (özellik kapıları) açıktır. Ölçüm: makine kodunun büyük payı ortak katmandadır
+  (komutların sözleşmeleri ve JSON'u, arayüz, çizim). Tahmini kazanç %25–40.
 
 ### 2. İki CAD işi
 

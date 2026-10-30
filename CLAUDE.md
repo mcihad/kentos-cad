@@ -44,8 +44,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 - **Modüllerin sıkı ayrımı (30 Ekim 2026; [ADR 0802](docs/adr/0802-strict-module-separation.md)).**
   Sahibin sözleri: “her biri ayrı uygulama olarak çalışacak”, “bizde iki tür cad var mimari ve harita”, “arama kısmında
   ilgili modülde olmayan özellik aramada çıkmasın”, “blok gis içinde olmasa da olur, adres mimari içinde olmasa da olur”.
-  `kentos-mimari`, `kentos-harita`, `kentos-gis` her derlemede (özellik kapısı yok), kendi pencere kimlikleri ve `.desktop`
-  kayıtlarıyla; launcher modülü yalnız kendi programıyla başlatır. İki CAD işi: `CadWork { Architecture, Map }` (Detay
+  Tek program dosyası: `kentos-cad` açıldığı adı okur (`kentos-mimari`, `kentos-harita`, `kentos-gis` ona bağlantı,
+  `scripts/desktop/module_links.py`; ya da `--modul`); release'te semboller silinir (4 × 255 MB yerine ~216 MB). Her modül
+  kendi pencere kimliği ve `.desktop` kaydıyla; launcher modülü kendi adıyla, yoksa `kentos-cad --modul` ile başlatır. İki CAD işi: `CadWork { Architecture, Map }` (Detay
   kalktı; yerel CAD Mimari'nindir). Yeni proje: Mimari sihirbazsız, Harita ve GIS türsüz iki adım. Modülün komutları
   (`Catalog::module_has`, `App::offers`): Komut ara, komut satırı, kısayollar, `App::run`, hızlı erişim, F1, menüler;
   başka modülün komutu `not_offered`'ın cümlesiyle reddedilir; kabuk komutları da modüle göre (`ribbon.json`'un
@@ -62,7 +63,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `uygulamalar/` klasörleri; herhangi bir program ya da web adresi), ayrı süreçte başlatır, Son dosyalar'ı gösterir;
   güncelleme servisi yoktur, düğmeleri nedenleriyle kapalıdır. Kartlar: Mimari, Harita, GIS; Yakında YOL, 3D, Afet (sahibin
   resimleriyle). Masaüstü artık kütüphanedir (`kentos_desktop`, birim testleri `cargo test -p kentos-desktop --lib`);
-  programlar `kentos-cad` (hepsi, `--modul mimari|harita|cbs`), `kentos-mimari`, `kentos-harita`, `kentos-gis`. CAD
+  program `kentos-cad` (hepsi, `--modul mimari|harita|cbs`; modül adlarıyla da, ADR 0802 §1). CAD
   projesinin işi `cadWork` (`.kcad` şema 135, opt-in): şerit işe göre (Mimari: Mimari sekmesi, Ölçme'de yalnız Sorgu;
   Harita: Plan, Ölçme, altlıklar, servisler ve kaynaklar), işi olmayan CAD çizimi bir kez sorulur, başka modülün dosyası
   o modülün programına devredilir. Ortak sözleşme `crates/native/launch` (modüller, komut satırı, `programs::find`, son
@@ -2590,7 +2591,7 @@ KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.d
 KENTOS_SHOTS_ONLY=duzen-python cargo test -p kentos-desktop ux_screens::python_echo -- --ignored --nocapture   # işlemlerin Python kodu konsolda: seçim ve Taşı, .run/shots/duzen-python* (ADR 0622 §7)
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 cargo test -p kentos-launcher; ./target/debug/kentos-launcher snapshot .run/shots/launcher.png --sayfa uygulamalar --tema koyu --boyut 1440x900   # KentOS Launcher: testler ve pencere açmadan resim (ADR 0800); kart resimleri scripts/launcher/pictures.py
-cargo build -p kentos-desktop   # kentos-cad'in yanında kentos-mimari, kentos-harita, kentos-gis (ADR 0801, 0802; özellik kapısı yok); cargo test -p kentos-desktop --lib module modüllerin komutları ve yüzeyleri; KENTOS_SHOTS_ONLY=… cargo test -p kentos-desktop --lib module_screens -- --ignored --nocapture modül resimleri, .run/shots/moduller-*
+cargo build -p kentos-desktop && python3 scripts/desktop/module_links.py target/debug   # tek program, modül adları ona bağlantı (ADR 0801, 0802 §1; release'te target/release); cargo test -p kentos-desktop --lib module modüllerin komutları ve yüzeyleri; KENTOS_SHOTS_ONLY=… cargo test -p kentos-desktop --lib module_screens -- --ignored --nocapture modül resimleri, .run/shots/moduller-*
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer
 pnpm db:setup            # yalnız yerel geliştirme DB/rolleri, migration, seed
@@ -3640,7 +3641,7 @@ varlığına bakarak kapatmayın.
 ```text
 apps/web/              bağımsız TypeScript/DOM uygulaması
 apps/api/              kentosd: HTTP/WS, auth ve yönetim CLI
-apps/desktop/          masaüstü kütüphanesi (kentos_desktop) ve programları: kentos-cad, kentos-mimari, kentos-harita, kentos-gis; Iced + KentOS UI
+apps/desktop/          masaüstü kütüphanesi (kentos_desktop) ve tek programı kentos-cad (modül adlarıyla KentOS Mimari, Harita, GIS); Iced + KentOS UI
 apps/launcher/         KentOS Launcher (kentos-launcher): manifestlerden uygulamalar, son dosyalar
 apps/ui-showcase/      KentOS UI bileşen vitrini
 python/                Python SDK'sı: paket `kentos`, tipli katman `kentos.cad` (katalogdan üretilir), testleri

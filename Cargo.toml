@@ -288,6 +288,14 @@ debug = false
 lto = "thin"
 codegen-units = 4
 
+# The desktop's and the launcher's programs ship without their symbol tables (docs/adr/0802 §1: 39 of kentos-cad's
+# 255 MB). For a profile with names (perf, a symbolised backtrace): CARGO_PROFILE_RELEASE_PACKAGE_KENTOS_DESKTOP_STRIP=none.
+[profile.release.package.kentos-desktop]
+strip = "symbols"
+
+[profile.release.package.kentos-launcher]
+strip = "symbols"
+
 # The browser build of the core (pnpm rust:wasm): smallest and fastest code, and a
 # panic traps instead of unwinding (the app rebuilds the core then, docs/adr/0008).
 [profile.wasm]

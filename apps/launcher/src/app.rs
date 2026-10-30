@@ -874,9 +874,11 @@ mod tests {
         );
         let none = super::tests::launcher(Fixed(HashMap::new()));
         assert_eq!(none.status(&none.registry.apps[0]), Status::Missing);
-        // kentos-cad alone does not make a module installed: each is a program of its own (docs/adr/0802).
+        // The one KentOS program alone makes every module installed (docs/adr/0802 §1): kentos-cad as each.
         let cad = super::tests::launcher(kentos(&["kentos-cad"]));
-        assert_eq!(cad.status(&cad.registry.apps[0]), Status::Missing);
+        for i in 0..3 {
+            assert_eq!(cad.status(&cad.registry.apps[i]), Status::Installed);
+        }
     }
 
     #[test]
@@ -898,13 +900,12 @@ mod tests {
             .expect("opens");
         assert_eq!(mimari.program, PathBuf::from("/opt/kentos/kentos-mimari"));
         assert_eq!(mimari.args, os(&["/ev/a.kcad"]));
-        let harita = launcher.recent_spec(&row(Some(Module::Map)));
-        assert!(
-            harita
-                .expect_err("not installed")
-                .contains("kentos-harita bulunamadı"),
-            "kentos-cad does not stand in for KentOS Harita"
-        );
+        // No kentos-harita beside it: the one KentOS program as KentOS Harita (docs/adr/0802 §1).
+        let harita = launcher
+            .recent_spec(&row(Some(Module::Map)))
+            .expect("kentos-cad opens it as KentOS Harita");
+        assert_eq!(harita.program, PathBuf::from("/opt/kentos/kentos-cad"));
+        assert_eq!(harita.args, os(&["--modul", "harita", "/ev/a.kcad"]));
         let gis = launcher
             .recent_spec(&row(Some(Module::Gis)))
             .expect("opens");
@@ -987,7 +988,7 @@ mod tests {
             .collect();
         assert_eq!(said.len(), 1);
         assert!(
-            said[0].starts_with("KentOS Harita başlatılamadı: kentos-harita bulunamadı"),
+            said[0].starts_with("KentOS Harita başlatılamadı: KentOS Harita bulunamadı"),
             "{}",
             said[0]
         );
