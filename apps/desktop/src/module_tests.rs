@@ -539,14 +539,31 @@ fn a_modules_wizard_makes_its_own_projects() {
 
 #[test]
 fn a_module_offers_its_own_commands_and_the_shells() {
-    // KentOS Mimari: walls and the shell's; no basemap, raster, parcel, address or CBS time.
+    // KentOS Mimari: walls and the shell's; no basemap, raster, parcel, address or CBS time. Koordinat oku is any
+    // drawing's query (AutoCAD's ID).
     let app = program(Some(Module::Architecture));
-    for id in ["tool.wall", "tool.space", "layer.new", "file.save", "tool.line", "pointcloud.add"] {
+    for id in [
+        "tool.wall",
+        "tool.space",
+        "layer.new",
+        "file.save",
+        "tool.line",
+        "pointcloud.add",
+        "crs.query",
+    ] {
         assert!(app.offers(id), "Mimari offers {id}");
     }
-    for id in ["basemap.osmStandard", "service.add", "raster.add", "tool.parcel", "address.search", "time.slider",
-        "crs.query", "file.import.shp", "file.export.atlas", "tool.netRoute"]
-    {
+    for id in [
+        "basemap.osmStandard",
+        "service.add",
+        "raster.add",
+        "tool.parcel",
+        "address.search",
+        "time.slider",
+        "file.import.shp",
+        "file.export.atlas",
+        "tool.netRoute",
+    ] {
         assert!(!app.offers(id), "Mimari does not offer {id}");
     }
     // KentOS Harita: basemaps, services and sources as CBS has them, its survey; no walls.
@@ -611,4 +628,496 @@ fn komut_ara_the_command_line_and_the_shortcuts_find_only_the_modules_own() {
             assert_ne!(harita.shortcut(chord), Some(c.id), "{chord}");
         }
     }
+}
+
+// ── The strict split (docs/adr/0802): each module's command set ───────────
+
+/// Asserts what a program offers and what it does not.
+fn offers_as(module: Option<Module>, yes: &[&str], no: &[&str]) {
+    let app = program(module);
+    for id in yes {
+        assert!(app.offers(id), "{module:?} offers {id}");
+    }
+    for id in no {
+        assert!(!app.offers(id), "{module:?} does not offer {id}");
+    }
+}
+
+/// What Komut ara finds for a text in a program: its commands' ids, the user's models as `processing.model.<id>`.
+fn found(app: &mut App, query: &str) -> Vec<String> {
+    app.ribbon_search = query.into();
+    app.hits()
+        .into_iter()
+        .map(|h| match h {
+            crate::ribbon_search::Hit::Command(c) => c.id.to_owned(),
+            crate::ribbon_search::Hit::Model { id, .. } => format!("processing.model.{id}"),
+        })
+        .collect()
+}
+
+#[test]
+fn kentos_mimari_offers_a_buildings_commands_and_no_maps() {
+    offers_as(
+        Some(Module::Architecture),
+        &[
+            // AutoCAD's BOUNDARY and ID; the project's own coordinate system stays settable.
+            "tool.boundary",
+            "crs.query",
+            "crs.set",
+            "view.properties",
+            "processing.run.selection.byExpression",
+            "processing.run.selection.byLocation",
+            "data.search",
+            "data.compare",
+            "attachment.add",
+            "attachment.addLink",
+            "tool.identify",
+            "tool.hatchSelected",
+            "tool.areaUnion",
+            "block.library",
+            "style.legend",
+            "template.panel",
+            "tool.northArrow",
+            "pointcloud.style",
+        ],
+        &[
+            // The raster contextual tab's look and analysis.
+            "raster.style",
+            "raster.georef",
+            "raster.mosaic",
+            "processing.run.raster.cog",
+            "processing.run.surface.slope",
+            "processing.run.hydrology.watershed",
+            "processing.run.hydrology.basins",
+            "processing.run.distance.cost",
+            "processing.run.raster.calculator",
+            "processing.run.scan.captureLine",
+            "processing.run.suitability.weightedOverlay",
+            "processing.run.remote.index",
+            "processing.run.multidim.series",
+            "mesh.query",
+            // A parcel's and a route's annotation.
+            "tool.coordinateVertices",
+            "map.edgeLengths",
+            "processing.model.builtin.parcelSheet",
+            "tool.stationLabels",
+            "tool.vertexPoints",
+            "tool.labelsToText",
+            // CBS's layers, labels, filter, data model, charts and toolbox.
+            "layer.labels",
+            "tool.labelMove",
+            "view.unplacedLabels",
+            "layer.filter",
+            "layer.filterFromSelection",
+            "layer.newPoint",
+            "layer.newArea",
+            "layer.info",
+            "layer.dataset",
+            "data.featureTable",
+            "layer.fields",
+            "data.statistics",
+            "data.chart",
+            "chart.bar",
+            "data.forms",
+            "data.domains",
+            "data.subtypes",
+            "data.sources",
+            "processing.toolbox",
+            "processing.newModel",
+            "processing.history",
+            // The shell's map and CBS commands.
+            "draft.overlap",
+            "draft.overlap.layer",
+            "draft.topologyPoints",
+            "analysis.slope",
+            "map.contours",
+            "map.parcelReport",
+            "map.sheet",
+            "tool.subdivide",
+            "tool.stakeout",
+            "sheet.atlas",
+            "processing.run.address.geocode",
+            "processing.run.address.reverse",
+            "processing.run.network.closestFacility",
+            "processing.run.attributes.calculate",
+            "processing.run.layers.merge",
+            "processing.run.geometry.reproject",
+            "processing.run.points.numberVertices",
+            "workspace.cad",
+            "workspace.gis",
+        ],
+    );
+}
+
+#[test]
+fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() {
+    offers_as(
+        Some(Module::Map),
+        &[
+            // Its north arrow, the KentOS block library (Kuzey oku, antet) and STAC's band composite.
+            "tool.northArrow",
+            "block.library",
+            "raster.stac",
+            "processing.run.remote.composite",
+            // A map's terrain and infrastructure analysis.
+            "processing.run.surface.slope",
+            "processing.run.hydrology.watershed",
+            "processing.run.distance.cost",
+            "processing.run.interpolation.idw",
+            "processing.run.proximity.nearest",
+            "processing.run.geometry.buffer",
+            // CBS's layers, labels, filter and data, and the toolbox's tools no ribbon holds.
+            "layer.labels",
+            "layer.filter",
+            "layer.newPoint",
+            "layer.dataset",
+            "data.featureTable",
+            "data.forms",
+            "processing.toolbox",
+            "processing.history",
+            "processing.run.attributes.calculate",
+            "processing.run.address.geocode",
+            "processing.run.layers.splitByAttribute",
+            // A map's shell commands.
+            "analysis.slope",
+            "map.contours",
+            "map.profile",
+            "map.parcelReport",
+            "tool.subdivide",
+            "tool.stakeout",
+            "draft.overlap",
+            "sheet.atlas",
+            "crs.set",
+            "view.properties",
+            "edit.selectFilter.point",
+        ],
+        &[
+            // The architectural kinds of Seçim süzgeci.
+            "edit.selectFilter.wall",
+            "edit.selectFilter.space",
+            "edit.selectFilter.slab",
+            "edit.selectFilter.viewmark",
+            // CBS's spatial statistics, sampling, suitability, remote sensing and meshes.
+            "processing.run.stats.meanCenter",
+            "processing.run.stats.moransI",
+            "processing.run.stats.dbscan",
+            "processing.run.density.kernel",
+            "processing.run.density.line",
+            "processing.run.proximity.matrix",
+            "processing.run.proximity.hub",
+            "processing.run.sample.random",
+            "processing.run.sample.subdivide",
+            "processing.run.suitability.roc",
+            "processing.run.remote.index",
+            "processing.run.remote.qaMask",
+            "processing.run.multidim.meshCalculator",
+            "mesh.query",
+            "mesh.add",
+            // Charts, network analysis and the type's switch.
+            "data.chart",
+            "chart.pie",
+            "processing.run.network.closestFacility",
+            "processing.run.network.odMatrix",
+            "processing.run.network.serviceAreas",
+            "workspace.cad",
+            "workspace.plan3d",
+        ],
+    );
+}
+
+#[test]
+fn kentos_gis_offers_cbs_and_no_cad_drafting() {
+    offers_as(
+        Some(Module::Gis),
+        &[
+            // Its recorded measures and points, a dataset's record, fitting.
+            "cogo.check",
+            "cogo.update",
+            "layer.dataset",
+            "point.editor",
+            "crs.points",
+            "file.import.gnss",
+            "transform.fit",
+            "transform.edgematch",
+            "crs.transform",
+            // CBS analysis and charts.
+            "processing.run.network.closestFacility",
+            "processing.run.stats.moransI",
+            "processing.run.density.kernel",
+            "processing.run.remote.index",
+            "mesh.query",
+            "data.chart",
+            "chart.bar",
+            "tool.vertexPoints",
+            "map.edgeLengths",
+            "map.profile",
+            "analysis.volume",
+            "sheet.atlas",
+            "draft.overlap",
+            "view.properties",
+            "edit.selectFilter.insert",
+        ],
+        &[
+            "edit.selectFilter.wall",
+            "edit.selectFilter.space",
+            "edit.selectFilter.tag",
+            // Harita's drafting and survey.
+            "tool.planRoad",
+            "tool.roadJunctions",
+            "tool.medianClose",
+            "tool.parcel",
+            "tool.coordinateLabel",
+            "tool.coordinateVertices",
+            "tool.stationLabels",
+            "calc.fieldbook",
+            "calc.traverse",
+            "calc.polar",
+            "calc.stakeout",
+            "calc.network",
+            "calc.levelNetwork",
+            "field.send",
+            "tool.subdivide",
+            "tool.stakeout",
+            "map.parcelReport",
+            // CAD's constraints, dimensions, leaders, tables, hatches, annotative scales, pictures and blocks.
+            "tool.constraint",
+            "dimension.space",
+            "dimension.break",
+            "tool.dimensionReassociate",
+            "style.dimensionStyles",
+            "leader.addArm",
+            "leader.blocks",
+            "leader.styles",
+            "table.edit",
+            "table.blockSchedule",
+            "tool.hatchSelected",
+            "tool.hatchEdit",
+            "edit.hatchesToBack",
+            "hatchPatterns.manage",
+            "annotation.make",
+            "tool.annotativePlace",
+            "tool.imageClip",
+            "tool.wall",
+            "tool.blockDefine",
+            "block.panel",
+            "workspace.gis",
+        ],
+    );
+}
+
+#[test]
+fn kentos_cad_offers_every_command_and_a_module_offers_what_its_ribbon_shows() {
+    let app = program(None);
+    for c in catalog().commands() {
+        assert!(app.offers(c.id), "kentos-cad offers {}", c.id);
+    }
+    assert!(app.offers("processing.model.user.olculer"));
+    // Every command a module's ribbon shows, its selection's tabs too, it offers and runs: no button is refused.
+    for (module, work) in [
+        (Module::Architecture, Some(CadWork::Architecture)),
+        (Module::Map, Some(CadWork::Map)),
+        (Module::Gis, None),
+    ] {
+        let mut app = match work {
+            Some(_) => cad_drawing(work),
+            None => app_with_drawing(),
+        };
+        app.program = Some(module);
+        for id in commands(app.ribbon_tabs().chain(app.contextual_tabs())) {
+            assert!(app.offers(id), "{module:?} shows and offers {id}");
+            assert_eq!(app.not_offered(id, id), None, "{module:?}: {id}");
+        }
+    }
+}
+
+#[test]
+fn komut_ara_finds_no_other_modules_work() {
+    let mut mimari = program(Some(Module::Architecture));
+    for query in ["havza", "tesis", "parsel", "altlık", "osm", "raster"] {
+        let hits = found(&mut mimari, query);
+        assert!(hits.is_empty(), "Mimari: {query}: {hits:?}");
+    }
+    // An attachment's web address is no address search; Ölçülendirme's slope dimension no terrain slope.
+    let hits = found(&mut mimari, "adres");
+    assert!(
+        !hits
+            .iter()
+            .any(|id| id.starts_with("address.") || id.contains(".address.")),
+        "{hits:?}"
+    );
+    assert_eq!(hits, ["attachment.addLink"]);
+    let hits = found(&mut mimari, "eğim");
+    assert_eq!(hits, ["tool.dimension"], "the slope dimension, by its EĞİM");
+    // KentOS GIS: no wall, space, block or dimension tool, nor Harita's parcels (Parsel oluştur, İfraz).
+    let mut gis = program(Some(Module::Gis));
+    for query in ["duvar", "mahal", "km yaz", "kısıt", "ifraz"] {
+        let hits = found(&mut gis, query);
+        assert!(hits.is_empty(), "GIS: {query}: {hits:?}");
+    }
+    let hits = found(&mut gis, "parsel");
+    assert_eq!(
+        hits,
+        ["processing.model.builtin.parcelSheet"],
+        "a layer's parcel sheet, not the CAD tool"
+    );
+    for query in ["blok", "ölçü", "kılavuz", "tarama"] {
+        let hits = found(&mut gis, query);
+        assert!(
+            !hits.iter().any(|id| id.starts_with("block.")
+                || id.starts_with("tool.block")
+                || id.starts_with("dimension.")
+                || id.starts_with("leader.")
+                || id.starts_with("table.")
+                || id.starts_with("tool.hatch")
+                || id.starts_with("tool.dim")),
+            "GIS: {query}: {hits:?}"
+        );
+    }
+    // KentOS Harita: basemaps as CBS has them; no wall.
+    let mut harita = program(Some(Module::Map));
+    let hits = found(&mut harita, "osm");
+    assert!(hits.contains(&"basemap.osmStandard".to_owned()), "{hits:?}");
+    assert!(found(&mut harita, "altlık").contains(&"basemap.remove".to_owned()));
+    assert!(found(&mut harita, "duvar").is_empty());
+}
+
+#[test]
+fn run_refuses_another_modules_command_and_says_which_program_has_it() {
+    let mut app = cad_drawing(Some(CadWork::Architecture));
+    app.program = Some(Module::Architecture);
+    let _ = app.update(Message::Run("processing.toolbox"));
+    let said = last_said(&app);
+    assert_eq!(
+        said,
+        "“İşlem araç kutusu” KentOS Mimari'de yok; KentOS Harita'da ve KentOS GIS'te var."
+    );
+    assert!(!app.available("processing.toolbox"));
+    assert_eq!(app.why_disabled("processing.toolbox"), Some(said));
+    // A tool of another module does not start, whatever asked for it.
+    let _ = app.update(Message::Run("tool.parcel"));
+    assert_ne!(app.session.tool_id(), "parcel");
+    assert!(
+        last_said(&app).contains("KentOS Harita'da var"),
+        "{}",
+        last_said(&app)
+    );
+    // Its own run: İçine tıklayarak alan and Koordinat oku.
+    assert!(app.available("tool.boundary"));
+    let _ = app.update(Message::Run("tool.boundary"));
+    assert_eq!(app.session.tool_id(), "boundary");
+    // KentOS GIS refuses Harita's drafting; the type's switch is kentos-cad's alone.
+    let mut gis = app_with_drawing();
+    gis.program = Some(Module::Gis);
+    let _ = gis.update(Message::Run("tool.planRoad"));
+    assert_eq!(
+        last_said(&gis),
+        "“Plan yolu” KentOS GIS'te yok; KentOS Harita'da var."
+    );
+    let _ = gis.update(Message::Run("workspace.cad"));
+    assert_eq!(last_said(&gis), "“CAD” KentOS GIS'te yok.");
+    assert_eq!(gis.work_mode(), Workspace::Gis);
+    assert!(gis.why_disabled("workspace.cad").is_some());
+    // kentos-cad runs any (the type is no security boundary).
+    let mut all = cad_drawing(Some(CadWork::Architecture));
+    let _ = all.update(Message::Run("tool.parcel"));
+    assert_eq!(all.session.tool_id(), "parcel");
+}
+
+#[test]
+fn the_quick_bar_the_shortcuts_window_and_the_drawing_menus_list_the_programs_own() {
+    use kentos_ui::widget::Menu;
+    // The layout is every program's: Duvar put on the bar in KentOS Mimari is not on KentOS Harita's.
+    let mut mimari = program(Some(Module::Architecture));
+    let _ = mimari.update(Message::QuickAccess("tool.wall".into(), true));
+    assert!(mimari.quick_bar().contains(&"tool.wall".to_owned()));
+    let mut harita = program(Some(Module::Map));
+    harita
+        .layout
+        .keep_quick_access(&mimari.layout.quick_access(), std::time::Instant::now());
+    assert_eq!(harita.layout.quick_access(), ["tool.wall"]);
+    assert_eq!(harita.quick_bar(), ["file.save", "edit.undo", "edit.redo"]);
+    // Nor does Harita put another module's command on it.
+    let _ = harita.update(Message::QuickAccess("tool.door".into(), true));
+    assert!(
+        !harita
+            .layout
+            .quick_access()
+            .contains(&"tool.door".to_owned())
+    );
+    let _ = harita.update(Message::QuickAccess("tool.parcel".into(), true));
+    assert!(harita.quick_bar().contains(&"tool.parcel".to_owned()));
+    // F1 lists the keys the program runs.
+    let titles = crate::shortcuts::listed(&harita, "");
+    assert!(
+        !titles.contains(&"Üst kat") && !titles.contains(&"Alt kat"),
+        "{titles:?}"
+    );
+    assert!(titles.contains(&"Parsel oluştur"));
+    let titles = crate::shortcuts::listed(&mimari, "");
+    for gone in ["Parsel oluştur", "Aplikasyon", "İfraz"] {
+        assert!(!titles.contains(&gone), "{gone}: {titles:?}");
+    }
+    assert!(titles.contains(&"Üst kat"));
+    let all = crate::shortcuts::listed(&program(None), "");
+    assert!(all.contains(&"Parsel oluştur") && all.contains(&"Üst kat"));
+    // The drawing's menus: Topolojik düzenleme is a map's aid.
+    let item = |app: &App, id| format!("{:?}", app.command_item(Menu::new(), id));
+    assert!(!item(&mimari, "draft.topology").contains("Topolojik"));
+    assert!(item(&harita, "draft.topology").contains("Topolojik"));
+    assert!(item(&mimari, "view.zoomExtents").contains("Tümünü göster"));
+}
+
+#[test]
+fn the_toolbox_its_tools_and_the_users_models_are_where_islem_arac_kutusu_is() {
+    // The user's model, as one saved in KentOS Harita's toolbox (islemler.json is every program's).
+    let add_model = |app: &mut App| {
+        let mut model = app
+            .processing
+            .registry
+            .model("builtin.parcelSheet")
+            .cloned()
+            .expect("the built-in model");
+        model.id = "user.olculer".into();
+        model.label = "Ölçülerim".into();
+        app.processing
+            .registry
+            .save_model(model)
+            .expect("a user's model");
+    };
+    let mut mimari = program(Some(Module::Architecture));
+    add_model(&mut mimari);
+    assert!(found(&mut mimari, "ölçülerim").is_empty());
+    assert!(!mimari.offers_model("user.olculer"));
+    let _ = mimari.update(Message::Run("processing.model.builtin.parcelSheet"));
+    assert!(last_said(&mimari).contains("KentOS Mimari'de yok"));
+    // Mimari's toolbox keeps İfadeyle seç and Konuma göre seç alone.
+    assert!(
+        mimari.offers_tool("selection.byExpression") && mimari.offers_tool("selection.byLocation")
+    );
+    assert!(!mimari.offers_tool("geometry.buffer") && !mimari.offers_tool("address.geocode"));
+    assert_eq!(mimari.processing_meta(), "2 araç");
+    let mut harita = program(Some(Module::Map));
+    add_model(&mut harita);
+    assert_eq!(
+        found(&mut harita, "ölçülerim"),
+        ["processing.model.user.olculer"]
+    );
+    assert!(harita.offers_tool("geometry.buffer") && harita.offers_tool("address.geocode"));
+    assert!(!harita.offers_tool("network.closestFacility") && !harita.offers_tool("stats.moransI"));
+    let gis = program(Some(Module::Gis));
+    assert!(gis.offers_tool("network.closestFacility") && gis.offers_tool("stats.moransI"));
+    // The counts: each program's own; kentos-cad's every tool.
+    let all = program(None);
+    let count = |app: &App| -> usize {
+        app.processing_meta()
+            .trim_end_matches(" araç")
+            .parse()
+            .expect("a count")
+    };
+    assert_eq!(count(&all), all.processing.registry.tools().len());
+    assert!(
+        count(&mimari) < count(&harita)
+            && count(&harita) < count(&gis)
+            && count(&gis) <= count(&all)
+    );
 }

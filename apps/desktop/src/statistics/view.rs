@@ -116,22 +116,22 @@ impl App {
         .spacing(8)
         .align_y(Center);
         let field = self.charts.field.clone().filter(|f| now.keys.contains(f));
-        let actions = row![
-            bar_button(
+        let mut actions = row![].spacing(10).align_y(Center);
+        // Grafik only where the program has its tab (KentOS GIS's, docs/adr/0802).
+        if self.shows_bottom_tab(crate::bottom::BottomTab::Chart) {
+            actions = actions.push(bar_button(
                 "chart",
                 texts::CHART,
                 texts::CHART_HINT,
                 field.map(|_| msg(Event::Chart)),
-            ),
-            bar_button(
-                "copy",
-                texts::COPY,
-                texts::COPY_HINT,
-                Some(msg(Event::Copy))
-            ),
-        ]
-        .spacing(10)
-        .align_y(Center);
+            ));
+        }
+        let actions = actions.push(bar_button(
+            "copy",
+            texts::COPY,
+            texts::COPY_HINT,
+            Some(msg(Event::Copy)),
+        ));
         container(row![filters, space::horizontal(), actions].align_y(Center))
             .padding([6, 10])
             .width(Fill)
@@ -210,7 +210,10 @@ impl App {
     fn scope_row<'a>(&self) -> Option<Element<'a, Message>> {
         self.stats_bound()?;
         let scope = Select::new(
-            [Choice::new(whole_texts::LOADED), Choice::new(whole_texts::WHOLE)],
+            [
+                Choice::new(whole_texts::LOADED),
+                Choice::new(whole_texts::WHOLE),
+            ],
             Some(usize::from(self.charts.whole.on)),
             |i| msg(Event::Scope(i == 1)),
         );

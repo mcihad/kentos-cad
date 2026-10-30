@@ -29,8 +29,17 @@ use crate::catalog::catalog;
 use crate::layout_plan::{self as plan, BOTTOM_HEIGHT, DOCK_WIDTH, LAYERS_FRACTION};
 use crate::processing::panel::Tab as ProcessingTab;
 
-/// The layout's file, beside `ayarlar.json`.
+/// The layout's file, beside `ayarlar.json`: kentos-cad's.
 pub(crate) const FILE_NAME: &str = "yerlesim.json";
+
+/// The layout file of `program` (docs/adr/0802): kentos-cad's `yerlesim.json`, a module's
+/// `yerlesim-mimari.json`, `yerlesim-harita.json`, `yerlesim-cbs.json`.
+pub(crate) fn file_name(program: Option<kentos_launch::Module>) -> String {
+    program.map_or_else(
+        || FILE_NAME.to_owned(),
+        |m| format!("yerlesim-{}.json", m.id()),
+    )
+}
 
 /// The kept layout and when it is to be written.
 #[derive(Debug)]
@@ -50,10 +59,20 @@ impl Keeper {
         }
     }
 
-    /// The layout kept in `folder`: what the file holds and its rules take.
+    /// The layout kept in `folder`: what the file holds and its rules take (kentos-cad's file; the tests').
+    #[cfg(test)]
     pub(crate) fn open(folder: &Path) -> Self {
-        let path = folder.join(FILE_NAME);
-        let text = std::fs::read_to_string(&path).ok();
+        Self::open_for(folder, None)
+    }
+
+    /// The layout `program` keeps in `folder` (docs/adr/0802: each module's program is an application of its
+    /// own): kentos-cad's in `yerlesim.json`, a module's in `yerlesim-<modül>.json`. A module's program run for
+    /// the first time starts from kentos-cad's sizes; it writes only its own file.
+    pub(crate) fn open_for(folder: &Path, program: Option<kentos_launch::Module>) -> Self {
+        let path = folder.join(file_name(program));
+        let text = std::fs::read_to_string(&path)
+            .ok()
+            .or_else(|| program.and_then(|_| std::fs::read_to_string(folder.join(FILE_NAME)).ok()));
         Self {
             kept: plan::read_layout(text.as_deref()),
             path: Some(path),
@@ -197,6 +216,25 @@ fn tab_key(tab: BottomTab) -> &'static str {
     }
 }
 
+/// A kept bottom tab by its key; Komut geçmişi for one not known.
+fn tab_of_key(key: &str) -> BottomTab {
+    BottomTab::ALL
+        .into_iter()
+        .find(|t| tab_key(*t) == key)
+        .unwrap_or(BottomTab::History)
+}
+
+/// The panel kept in front of Katmanlar' slot by its key; Katmanlar for one not known.
+fn panel_of_key(key: &str) -> Panel {
+    match key {
+        "processing" => Panel::Processing,
+        "blocks" => Panel::Blocks,
+        "templates" => Panel::Templates,
+        "sources" => Panel::Sources,
+        _ => Panel::Layers,
+    }
+}
+
 impl App {
     /// The bottom panel's tab strip: the web's panel height counts it.
     fn bottom_bar() -> f32 {
@@ -219,20 +257,13 @@ impl App {
         }
         self.ribbon_collapsed = keeper.flag("ribbonCollapsed");
         self.command_expanded = keeper.flag("bottomExpanded");
-        self.bottom_tab = match keeper.text("bottomTab") {
-            "coords" => BottomTab::Coords,
-            "points" => BottomTab::Points,
-            "table" => BottomTab::Table,
-            "statistics" => BottomTab::Statistics,
-            "chart" => BottomTab::Chart,
-            "search" => BottomTab::Search,
-            "address" => BottomTab::Address,
-            "topology" => BottomTab::Topology,
-            "audit" => BottomTab::Audit,
-            "serviceInfo" => BottomTab::ServiceInfo,
-            "messages" => BottomTab::Messages,
-            "python" => BottomTab::Python,
-            _ => BottomTab::History,
+        // A kept tab this program has not (kentos-cad's layout, read at a module's first run) is Komut geçmişi
+        // here (docs/adr/0802 §5).
+        let kept = tab_of_key(keeper.text("bottomTab"));
+        self.bottom_tab = if self.shows_bottom_tab(kept) {
+            kept
+        } else {
+            BottomTab::History
         };
         self.processing.panel.tab = if keeper.text("processingTab") == "history" {
             ProcessingTab::History
@@ -243,12 +274,12 @@ impl App {
             .texts("processingFolded")
             .map(str::to_owned)
             .collect();
-        let in_front = match keeper.text("dockTab") {
-            "processing" => Panel::Processing,
-            "blocks" => Panel::Blocks,
-            "templates" => Panel::Templates,
-            "sources" => Panel::Sources,
-            _ => Panel::Layers,
+        // As the tab: a panel this program has not leaves Katmanlar in front.
+        let kept = panel_of_key(keeper.text("dockTab"));
+        let in_front = if self.shows_panel(kept) {
+            kept
+        } else {
+            Panel::Layers
         };
         let fraction = keeper.number("layersFraction");
         let visible = keeper.flag("rightVisible");
@@ -332,6 +363,12 @@ impl App {
     /// (a change is written 250 ms later). Sizes are kept where they are
     /// dragged, not read back: a narrower window shows less but keeps them.
     pub(crate) fn follow_layout(&mut self, now: Instant) {
+        // What this program does not show is never on screen, whichever way it came (module_surfaces.rs).
+        self.keep_own_surfaces();
+        // A tab or panel another program left in front stays kept for it while this one shows its own in its
+        // place, Komut geçmişi or Katmanlar (docs/adr/0802 §5).
+        let others_tab = !self.shows_bottom_tab(tab_of_key(self.layout.text("bottomTab")));
+        let others_panel = !self.shows_panel(panel_of_key(self.layout.text("dockTab")));
         let visible = self.right_panel_shown();
         let docks = self.hidden_docks.as_ref().unwrap_or(&self.docks);
         // The tab in front in Katmanlar' slot: Katmanlar, İşlemler or Bloklar.
@@ -345,19 +382,20 @@ impl App {
         });
         let keeper = &mut self.layout;
         keeper.keep("rightVisible", Value::from(visible), now);
-        keeper.keep(
-            "dockTab",
-            Value::from(match in_front {
-                Some(Panel::Processing) => "processing",
-                Some(Panel::Blocks) => "blocks",
-                Some(Panel::Templates) => "templates",
-                Some(Panel::Sources) => "sources",
-                _ => "layers",
-            }),
-            now,
-        );
+        let front = match in_front {
+            Some(Panel::Processing) => "processing",
+            Some(Panel::Blocks) => "blocks",
+            Some(Panel::Templates) => "templates",
+            Some(Panel::Sources) => "sources",
+            _ => "layers",
+        };
+        if !(others_panel && front == "layers") {
+            keeper.keep("dockTab", Value::from(front), now);
+        }
         keeper.keep("bottomExpanded", Value::from(self.command_expanded), now);
-        keeper.keep("bottomTab", Value::from(tab_key(self.bottom_tab)), now);
+        if !(others_tab && self.bottom_tab == BottomTab::History) {
+            keeper.keep("bottomTab", Value::from(tab_key(self.bottom_tab)), now);
+        }
         keeper.keep(
             "processingTab",
             Value::from(match self.processing.panel.tab {

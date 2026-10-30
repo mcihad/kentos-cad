@@ -550,7 +550,7 @@ fn settings() -> Vec<SettingDescriptor> {
         .hosts(&[Web, Desktop])
         .text(
             "Çizim birimi",
-            "Yeni proje sihirbazında önce seçili gelen çizim: metre Mimari proje, milimetre Detay / imalat; proje kendi birimini saklar (ADR 0165, 0626).",
+            "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar (ADR 0165, 0626, 0802).",
         ),
         choice("newProjects.drawingFont", "barlow", DRAWING_FONTS)
             .hosts(&[Web, Desktop])

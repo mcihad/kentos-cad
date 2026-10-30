@@ -63,7 +63,9 @@
     "address",
     "topology",
     "serviceInfo",
-    "messages"
+    "messages",
+    "audit",
+    "python"
    ]
   },
   "dockTab": {

@@ -480,11 +480,14 @@ mod tests {
             // A local project in millimetres (docs/adr/0165 §2): a new one without a coordinate
             // system, at 1:1 (at 1:1000 a 0.25 mm pen would be 25 cm wide on a part), its unit in
             // Proje ayarları, then a plate 120 × 80 mm with a hole, selected.
+            // A drawing of its own in the millimetres the app gives new projects is a building's
+            // (docs/adr/0802), at 1:1.
+            let _ = app
+                .settings
+                .choose(&[("newProjects.drawingUnit", serde_json::Value::from("mm"))]);
             let _ = app.update(Message::Run("file.new"));
             send(&mut app, Event::New(New::Type(Workspace::Cad)));
             send(&mut app, Event::New(New::Next));
-            // Detay / imalat (docs/adr/0626 §1): millimetres, 1:1.
-            send(&mut app, Event::New(New::Work(2)));
             send(&mut app, Event::New(New::Next));
             send(&mut app, Event::New(New::Name("Mil plakası".into())));
             send(&mut app, Event::New(New::Next));

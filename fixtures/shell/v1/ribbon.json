@@ -251,36 +251,6 @@
     "contextual": true
    },
    {
-    "id": "ctx.dimension",
-    "label": "Ölçü",
-    "contextual": true
-   },
-   {
-    "id": "ctx.leader",
-    "label": "Kılavuz",
-    "contextual": true
-   },
-   {
-    "id": "ctx.hatch",
-    "label": "Tarama",
-    "contextual": true
-   },
-   {
-    "id": "ctx.block",
-    "label": "Blok",
-    "contextual": true
-   },
-   {
-    "id": "ctx.table",
-    "label": "Tablo",
-    "contextual": true
-   },
-   {
-    "id": "ctx.image",
-    "label": "Resim",
-    "contextual": true
-   },
-   {
     "id": "ctx.raster",
     "label": "Raster",
     "contextual": true

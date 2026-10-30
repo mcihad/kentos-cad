@@ -353,6 +353,19 @@ impl App {
         task
     }
 
+    /// The formats of İçe aktar or Dışa aktar this program lists (module_surfaces.rs): KentOS Mimari its
+    /// drawings, the others every one.
+    fn shown_formats<'a>(&'a self, formats: &'a [Format]) -> impl Iterator<Item = &'a Format> + 'a {
+        formats.iter().filter(move |f| self.shows_format(f.id))
+    }
+
+    /// The commands of İçe aktar (`export`: Dışa aktar) this program lists, in their order (the tests read them).
+    #[cfg(test)]
+    pub(crate) fn listed_formats(&self, export: bool) -> Vec<&'static str> {
+        let formats: &[Format] = if export { &EXPORTS } else { &IMPORTS };
+        self.shown_formats(formats).map(|f| f.id).collect()
+    }
+
     /// Whether a row of the left column runs.
     fn nav_enabled(&self, i: usize) -> bool {
         match NAV[i].target {

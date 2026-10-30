@@ -46,7 +46,8 @@ pub enum Section {
 }
 
 impl Section {
-    const ALL: [Section; 7] = [
+    /// Every section in the list's order; a module's program shows its own of them (module_surfaces.rs).
+    pub(crate) const ALL: [Section; 7] = [
         Section::General,
         Section::Units,
         Section::Crs,
@@ -394,8 +395,14 @@ impl App {
             return Task::none();
         }
         if let Event::OpenApp = e {
-            // This window waits under Uygulama ayarları, as it is (app.rs `dialog_back`).
-            self.open_settings_at(crate::settings_sections::Section::NewProjects);
+            // This window waits under Uygulama ayarları, as it is (app.rs `dialog_back`); on Yeni projeler where the
+            // program has it (module_surfaces.rs).
+            let section = crate::settings_sections::Section::NewProjects;
+            self.open_settings_at(if self.shows_settings_section(section) {
+                section
+            } else {
+                crate::settings_sections::Section::Appearance
+            });
             self.dialog_under = Some(crate::app::Dialog::Project);
             return Task::none();
         }
@@ -418,16 +425,26 @@ impl App {
         // The grids a datum choice may name and the user's notation, before the window is borrowed.
         let grids = self.choice_grids();
         let notation = self.draft.geographic;
+        let self_sections = self.project_sections();
         let Some(Window::Settings(s)) = &mut self.project else {
             return Task::none();
         };
+        // A section the program has not (an opener set it) is Genel, as the window shows it.
+        if !self_sections.contains(&s.section) {
+            s.section = Section::General;
+        }
         if let Event::Grid(e) = e {
             s.removing = None;
             return self.grid_event(e);
         }
         let d = &mut s.settings;
         match e {
-            Event::Section(section) => s.section = section,
+            // Only a section this program shows (module_surfaces.rs); the list offers no other.
+            Event::Section(section) => {
+                if self_sections.contains(&section) {
+                    s.section = section;
+                }
+            }
             Event::Name(name) => s.name = name,
             Event::Scale(v) => {
                 d.plot_scale = v;
@@ -930,7 +947,14 @@ impl App {
         if let Some(q) = &s.unit_question {
             return super::unit_change::view(q, |a| event(Event::UnitAnswer(a)));
         }
-        let nav = Section::ALL
+        // The program's own sections (module_surfaces.rs); one it has not shows Genel.
+        let sections = self.project_sections();
+        let current = if sections.contains(&s.section) {
+            s.section
+        } else {
+            Section::General
+        };
+        let nav = sections
             .iter()
             .fold(Column::new().spacing(2).width(190), |nav, section| {
                 nav.push(
@@ -945,13 +969,13 @@ impl App {
                     .on_press(event(Event::Section(*section)))
                     .padding([6, 10])
                     .width(Fill)
-                    .style(style::button::navigation(*section == s.section)),
+                    .style(style::button::navigation(*section == current)),
                 )
             });
         // A level the rows take away that objects name (docs/adr/0720 §3): said under the levels, Kaydet waits.
         let waiting = s.levels_in_use(&doc.model);
         let in_use = waiting.clone();
-        let page: Element<'a, Message> = match s.section {
+        let page: Element<'a, Message> = match current {
             Section::General => self.general(s, doc),
             Section::Crs => self.crs_section(s),
             Section::Heights => super::heights::view(
@@ -1013,10 +1037,10 @@ impl App {
             ].spacing(14).into(),
         };
         let content = column![
-            text(s.section.label())
+            text(current.label())
                 .font(typography::ui_strong())
                 .size(typography::body()),
-            label::caption(s.section.lead()),
+            label::caption(current.lead()),
             // The page scrolls; Vazgeç and Kaydet stay in view whatever the window's height.
             scrollable(page)
                 .direction(style::field::body_scrollbar())
@@ -1030,7 +1054,7 @@ impl App {
         ]
         .spacing(6);
         // A section without values of its own (Koordinat sistemi) has nothing to reset.
-        let own = s.section != Section::Crs;
+        let own = current != Section::Crs;
         let reset = button(label::body("Bu bölümü varsayılana döndür"))
             .on_press_maybe(own.then_some(event(Event::ResetSection)))
             .padding([5, 16])
@@ -1213,25 +1237,28 @@ impl App {
                     on_edit: event(Event::EditDefinition(Target::Own)),
                 },
             ),
-            second_group(s),
+            // The second system and the new projects' default where the program has them (module_surfaces.rs).
+            self.shows_cell(crate::module_surfaces::Cell::SecondCrs)
+                .then(|| second_group(s)),
             super::choices::view(&s.choices, self.choice_grids(), |i, e| {
                 event(Event::Choice(i, e))
             }),
             self.grids_group(s),
-            group(
-                "Yeni projeler",
-                row![
-                    column![
-                        label::body("Yeni projelerin varsayılanı"),
-                        label::caption(default.unwrap_or_default()),
+            self.shows_setting(crate::module_surfaces::AppSetting::NewProjects)
+                .then(|| group(
+                    "Yeni projeler",
+                    row![
+                        column![
+                            label::body("Yeni projelerin varsayılanı"),
+                            label::caption(default.unwrap_or_default()),
+                        ]
+                        .spacing(2)
+                        .width(Fill),
+                        open_app,
                     ]
-                    .spacing(2)
-                    .width(Fill),
-                    open_app,
-                ]
-                .spacing(16)
-                .align_y(iced::Center),
-            ),
+                    .spacing(16)
+                    .align_y(iced::Center),
+                )),
         ]
         .spacing(16)
         .into()

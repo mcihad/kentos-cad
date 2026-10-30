@@ -21,14 +21,9 @@ pub const COMMANDS: [&str; 5] = [
     "server.check",
 ];
 
-/// The side panels F4 hides and shows together (the web's right panel).
-const SIDE_PANELS: [Panel; 5] = [
-    Panel::Layers,
-    Panel::Processing,
-    Panel::Blocks,
-    Panel::Templates,
-    Panel::Properties,
-];
+/// The side panels F4 hides and shows together (the web's right panel): the program's own of them
+/// (module_surfaces.rs). Kaynaklar shares Katmanlar' slot and goes with them too.
+const SIDE_PANELS: [Panel; 6] = Panel::ALL;
 
 impl App {
     pub(crate) fn view_command(&mut self, id: &'static str) -> Task<Message> {
@@ -56,11 +51,15 @@ impl App {
         } else {
             match self.hidden_docks.take() {
                 Some(docks) => self.docks = docks,
-                // Folded to their titles: opened where they are.
+                // Folded to their titles: opened where they are; Katmanlar in front of its slot, as at start.
                 None => {
                     for panel in SIDE_PANELS {
-                        self.docks.show(panel, Side::Right);
+                        if self.shows_panel(panel) {
+                            self.docks.show(panel, Side::Right);
+                        }
                     }
+                    self.docks
+                        .update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
                 }
             }
         }
@@ -68,7 +67,9 @@ impl App {
 
     /// Whether either side panel is on screen (the command's check mark).
     pub(crate) fn right_panel_shown(&self) -> bool {
-        SIDE_PANELS.iter().any(|p| self.docks.is_shown(*p))
+        SIDE_PANELS
+            .iter()
+            .any(|p| self.shows_panel(*p) && self.docks.is_shown(*p))
     }
 
     /// `view.fullscreen`: the window over the whole screen, or back.

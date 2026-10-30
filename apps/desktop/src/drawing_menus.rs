@@ -291,15 +291,23 @@ impl App {
 
     /// A catalog command as a menu item (the web's `commandItem`): its title,
     /// icon and key, its check where it has one; dimmed where it cannot run.
+    /// A command a module's program does not offer is left out (docs/adr/0802):
+    /// the drawing's menus, Yardım and the cloud cells list the program's own.
     pub(crate) fn command_item(&self, menu: Menu<Message>, id: &'static str) -> Menu<Message> {
-        let Some(command) = catalog().get(id) else {
+        let Some(command) = catalog().get(id).filter(|_| self.offers(id)) else {
             return menu;
         };
         let runs = command.standing == Standing::Ported && self.available(id);
         let on_press = runs.then_some(Message::Run(id));
+        // Hakkında names the program it is in (docs/adr/0802): “KentOS Harita hakkında”.
+        let title = if id == "help.about" {
+            format!("{} hakkında", self.program_title())
+        } else {
+            command.title.to_owned()
+        };
         let menu = match self.checked(id) {
-            Some(on) => menu.check(command.title, on, on_press),
-            None => menu.item(command.title, on_press).icon(command.icon),
+            Some(on) => menu.check(title, on, on_press),
+            None => menu.item(title, on_press).icon(command.icon),
         };
         match command.shortcuts.first() {
             Some(keys) => menu.shortcut(*keys),
@@ -505,7 +513,10 @@ impl App {
         let mut menu = menu.separator();
         if self.session.can_calc_point() {
             menu = menu
-                .submenu("Nokta hesapla", crate::point_calc::calc_menu())
+                .submenu(
+                    "Nokta hesapla",
+                    crate::point_calc::calc_menu_without(self.hidden_point_calcs()),
+                )
                 .icon(crate::icons::from_web(Some("calc")));
         }
         let mut menu = menu
@@ -641,7 +652,10 @@ mod tests {
         assert_eq!(app.drawing_menu.map(|m| m.kind), Some(Kind::Command));
         assert!(app.session.is_running(), "a right click is no Enter");
         let menu = format!("{:?}", app.drawing_menu_items());
-        assert!(menu.contains("Onayla / bitir") && menu.contains("İptal"), "{menu}");
+        assert!(
+            menu.contains("Onayla / bitir") && menu.contains("İptal"),
+            "{menu}"
+        );
         let _ = app.update(Message::DrawingMenu(Event::Closed));
         // AutoCAD's time-sensitive right click, chosen: a quick click is Enter.
         let _ = app
@@ -673,9 +687,10 @@ mod tests {
         }
         for quick_enter in [false, true] {
             let mut app = app_with_drawing();
-            let _ = app
-                .settings
-                .choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(quick_enter))]);
+            let _ = app.settings.choose(&[(
+                super::RIGHT_CLICK_ENTER,
+                serde_json::Value::Bool(quick_enter),
+            )]);
             let parcel = Slot(4);
             app.selection.set([parcel]);
             let doc = app.document.as_ref().expect("open");
@@ -693,8 +708,16 @@ mod tests {
             view(&mut app, viewport::Event::Moved(elsewhere));
             view(&mut app, viewport::Event::RightPressed(elsewhere));
             view(&mut app, viewport::Event::RightClick(elsewhere));
-            assert_eq!(app.drawing_menu.map(|m| m.kind), Some(Kind::Grip), "{quick_enter}");
-            assert_eq!(corner(&app), before, "the grip is not dropped at the pointer");
+            assert_eq!(
+                app.drawing_menu.map(|m| m.kind),
+                Some(Kind::Grip),
+                "{quick_enter}"
+            );
+            assert_eq!(
+                corner(&app),
+                before,
+                "the grip is not dropped at the pointer"
+            );
             assert!(app.session.grip_active(), "the grip is still hot");
             // Its menu: the modes and Bırak, not Onayla.
             let menu = format!("{:?}", app.drawing_menu_items());

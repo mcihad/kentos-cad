@@ -138,6 +138,9 @@ pub(crate) const FIELDS: [(&str, Rule); 17] = [
             "topology",
             "serviceInfo",
             "messages",
+            // The desktop's own tabs (docs/adr/0703, 0132): Denetim and Python come back at start too.
+            "audit",
+            "python",
         ]),
     ),
     (

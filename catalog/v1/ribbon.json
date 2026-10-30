@@ -282,6 +282,12 @@
         "works": [
          "map"
         ]
+       },
+       {
+        "command": "tool.boundary",
+        "works": [
+         "architecture"
+        ]
        }
       ],
       "keep": true
@@ -584,10 +590,7 @@
        },
        {
         "command": "crs.query",
-        "size": "small",
-        "works": [
-         "map"
-        ]
+        "size": "small"
        },
        {
         "command": "tool.measureAngle",
@@ -944,7 +947,12 @@
        }
       ],
       "overflow": [
-       "layer.info"
+       {
+        "command": "layer.info",
+        "works": [
+         "map"
+        ]
+       }
       ]
      },
      {
@@ -1012,7 +1020,12 @@
        "text.split",
        "text.check",
        "text.fonts",
-       "tool.labelsToText",
+       {
+        "command": "tool.labelsToText",
+        "works": [
+         "map"
+        ]
+       },
        "tool.readable"
       ]
      },
@@ -1123,6 +1136,13 @@
        {
         "command": "tool.wipeout",
         "size": "small"
+       },
+       {
+        "command": "tool.northArrow",
+        "size": "small",
+        "works": [
+         "map"
+        ]
        }
       ]
      },
@@ -1214,7 +1234,12 @@
            "edit.selectFilter.insert",
            "edit.selectFilter.leader",
            "edit.selectFilter.table",
-           "edit.selectFilter.image",
+           "edit.selectFilter.image"
+          ]
+         },
+         {
+          "label": "Mimari nesneler",
+          "items": [
            "edit.selectFilter.wall",
            "edit.selectFilter.opening",
            "edit.selectFilter.space",
@@ -1225,6 +1250,9 @@
            "edit.selectFilter.tag",
            "edit.selectFilter.viewmark",
            "edit.selectFilter.slab"
+          ],
+          "works": [
+           "architecture"
           ]
          },
          {
@@ -2049,15 +2077,24 @@
       "items": [
        {
         "command": "data.featureTable",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        },
        {
         "command": "layer.fields",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        },
        {
         "command": "data.statistics",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        },
        {
         "command": "data.compare",
@@ -2069,14 +2106,43 @@
        }
       ],
       "overflow": [
-       "data.chart",
-       "data.forms",
-       "data.formEdit",
-       "data.relations",
-       "data.joinViews",
-       "data.formAudit",
+       {
+        "command": "data.forms",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "data.formEdit",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "data.relations",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "data.joinViews",
+        "works": [
+         "map"
+        ]
+       },
+       {
+        "command": "data.formAudit",
+        "works": [
+         "map"
+        ]
+       },
        "data.unmark",
-       "data.sources"
+       {
+        "command": "data.sources",
+        "works": [
+         "map"
+        ]
+       }
       ]
      },
      {
@@ -2093,11 +2159,17 @@
        },
        {
         "command": "processing.toolbox",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        },
        {
         "command": "processing.newModel",
-        "size": "small"
+        "size": "small",
+        "works": [
+         "map"
+        ]
        }
       ]
      },
@@ -2579,17 +2651,7 @@
            "edit.selectFilter.insert",
            "edit.selectFilter.leader",
            "edit.selectFilter.table",
-           "edit.selectFilter.image",
-           "edit.selectFilter.wall",
-           "edit.selectFilter.opening",
-           "edit.selectFilter.space",
-           "edit.selectFilter.grid",
-           "edit.selectFilter.column",
-           "edit.selectFilter.stair",
-           "edit.selectFilter.ramp",
-           "edit.selectFilter.tag",
-           "edit.selectFilter.viewmark",
-           "edit.selectFilter.slab"
+           "edit.selectFilter.image"
           ]
          },
          {
@@ -2731,10 +2793,6 @@
         "size": "small"
        },
        {
-        "command": "tool.parcel",
-        "size": "small"
-       },
-       {
         "command": "tool.text",
         "size": "small"
        }
@@ -2748,9 +2806,6 @@
        "tool.pointsBetween",
        "tool.intersectPoint",
        "tool.centerline",
-       "tool.planRoad",
-       "tool.roadJunctions",
-       "tool.medianClose",
        "tool.sector",
        "tool.rangeRings",
        "tool.fourthCorner"
@@ -2858,7 +2913,6 @@
        "tool.matchProperties",
        "tool.setElevation",
        "tool.curveEdit",
-       "tool.constraint",
        "edit.bringToFront",
        "edit.sendToBack",
        "edit.paste",
@@ -2956,6 +3010,7 @@
        "layer.reproject",
        "layer.showAll",
        "layer.info",
+       "layer.dataset",
        "file.import.maplibre",
        "file.export.maplibre"
       ]
@@ -3120,7 +3175,6 @@
       ],
       "overflow": [
        "lineTypes.manage",
-       "hatchPatterns.manage",
        "layer.impact"
       ]
      },
@@ -3292,64 +3346,6 @@
     "label": "Ölçme",
     "panels": [
      {
-      "label": "Saha",
-      "icon": "fieldBook",
-      "items": [
-       {
-        "command": "calc.fieldbook",
-        "size": "large"
-       },
-       {
-        "command": "file.import.gnss",
-        "size": "small"
-       },
-       {
-        "command": "field.send",
-        "size": "small"
-       }
-      ]
-     },
-     {
-      "label": "Poligon ve alım",
-      "icon": "surveyTraverse",
-      "items": [
-       {
-        "command": "calc.traverse",
-        "size": "large"
-       },
-       {
-        "command": "calc.polar",
-        "size": "large"
-       },
-       {
-        "command": "calc.stakeout",
-        "size": "large"
-       }
-      ]
-     },
-     {
-      "label": "Kestirme ve dengeleme",
-      "icon": "surveyNetwork",
-      "items": [
-       {
-        "command": "calc.forward",
-        "size": "small"
-       },
-       {
-        "command": "calc.resection",
-        "size": "small"
-       },
-       {
-        "command": "calc.network",
-        "size": "small"
-       },
-       {
-        "command": "calc.levelNetwork",
-        "size": "small"
-       }
-      ]
-     },
-     {
       "label": "Noktalar",
       "icon": "point",
       "items": [
@@ -3359,6 +3355,10 @@
        },
        {
         "command": "crs.points",
+        "size": "small"
+       },
+       {
+        "command": "file.import.gnss",
         "size": "small"
        },
        {
@@ -3748,7 +3748,10 @@
       },
       {
        "command": "layer.filterFromSelection",
-       "size": "small"
+       "size": "small",
+       "works": [
+        "map"
+       ]
       }
      ]
     }
@@ -3832,11 +3835,17 @@
       },
       {
        "command": "tool.coordinateLabel",
-       "size": "small"
+       "size": "small",
+       "modes": [
+        "cad"
+       ]
       },
       {
        "command": "field.send",
-       "size": "small"
+       "size": "small",
+       "modes": [
+        "cad"
+       ]
       },
       {
        "command": "tool.copyToLayer",
@@ -3878,8 +3887,16 @@
           "processing.run.interpolation.naturalNeighbor",
           "processing.run.interpolation.spline",
           "processing.run.interpolation.kriging",
-          "processing.run.interpolation.tin",
+          "processing.run.interpolation.tin"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.density.kernel"
+         ],
+         "modes": [
+          "gis"
          ]
         }
        ]
@@ -3909,6 +3926,9 @@
           "processing.run.stats.kMeans"
          ]
         }
+       ],
+       "modes": [
+        "gis"
        ]
       },
       {
@@ -3918,9 +3938,22 @@
         {
          "label": "",
          "items": [
-          "processing.run.proximity.nearest",
+          "processing.run.proximity.nearest"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.proximity.matrix",
-          "processing.run.proximity.hub",
+          "processing.run.proximity.hub"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.proximity.shortestLine",
           "processing.run.attributes.fromEnclosing"
          ]
@@ -4083,7 +4116,10 @@
       },
       {
        "command": "tool.vertexPoints",
-       "size": "small"
+       "size": "small",
+       "works": [
+        "map"
+       ]
       },
       {
        "command": "tool.divide",
@@ -4091,7 +4127,13 @@
       },
       {
        "command": "tool.stationLabels",
-       "size": "small"
+       "size": "small",
+       "works": [
+        "map"
+       ],
+       "modes": [
+        "cad"
+       ]
       },
       {
        "split": "textAlong",
@@ -4135,8 +4177,16 @@
           "processing.run.convert.vertices",
           "processing.run.convert.toPoints",
           "processing.run.sample.alongLines",
-          "processing.run.generalize.smooth",
+          "processing.run.generalize.smooth"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.density.line"
+         ],
+         "modes": [
+          "gis"
          ]
         }
        ]
@@ -4304,19 +4354,36 @@
      "items": [
       {
        "command": "tool.coordinateVertices",
-       "size": "small"
+       "size": "small",
+       "works": [
+        "map"
+       ],
+       "modes": [
+        "cad"
+       ]
       },
       {
        "command": "map.edgeLengths",
-       "size": "small"
+       "size": "small",
+       "works": [
+        "map"
+       ]
       },
       {
        "command": "tool.hatchSelected",
-       "size": "small"
+       "size": "small",
+       "modes": [
+        "cad"
+       ]
       }
      ],
      "overflow": [
-      "processing.model.builtin.parcelSheet"
+      {
+       "command": "processing.model.builtin.parcelSheet",
+       "works": [
+        "map"
+       ]
+      }
      ]
     },
     {
@@ -4354,9 +4421,22 @@
           "processing.run.generate.bounding",
           "processing.run.generate.pole",
           "processing.run.sample.grid",
-          "processing.run.sample.regular",
+          "processing.run.sample.regular"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.sample.random",
-          "processing.run.sample.subdivide",
+          "processing.run.sample.subdivide"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.convert.toPoints",
           "processing.run.convert.vertices",
           "processing.run.convert.polygonsToLines"
@@ -4530,6 +4610,9 @@
        "command": "tool.annotativePlace",
        "size": "small"
       }
+     ],
+     "modes": [
+      "cad"
      ]
     }
    ]
@@ -4539,6 +4622,9 @@
    "label": "Ölçü",
    "kinds": [
     "dimension"
+   ],
+   "modes": [
+    "cad"
    ],
    "panels": [
     {
@@ -4645,6 +4731,9 @@
    "label": "Kılavuz",
    "kinds": [
     "leader"
+   ],
+   "modes": [
+    "cad"
    ],
    "panels": [
     {
@@ -4755,6 +4844,9 @@
    "label": "Tarama",
    "kinds": [
     "hatch"
+   ],
+   "modes": [
+    "cad"
    ],
    "panels": [
     {
@@ -4953,6 +5045,9 @@
    "kinds": [
     "table"
    ],
+   "modes": [
+    "cad"
+   ],
    "panels": [
     {
      "label": "Seçim",
@@ -5036,6 +5131,9 @@
    "label": "Resim",
    "kinds": [
     "image"
+   ],
+   "modes": [
+    "cad"
    ],
    "panels": [
     {
@@ -5165,6 +5263,9 @@
        "command": "raster.mosaic",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ]
     },
     {
@@ -5224,6 +5325,9 @@
         }
        ]
       }
+     ],
+     "works": [
+      "map"
      ]
     },
     {
@@ -5278,6 +5382,9 @@
         }
        ]
       }
+     ],
+     "works": [
+      "map"
      ]
     },
     {
@@ -5299,6 +5406,9 @@
           "processing.run.suitability.roc"
          ]
         }
+       ],
+       "modes": [
+        "gis"
        ]
       },
       {
@@ -5314,9 +5424,25 @@
           "processing.run.remote.accuracy",
           "processing.run.remote.change",
           "processing.run.remote.qaMask",
-          "processing.run.remote.pansharpen",
-          "processing.run.remote.composite",
+          "processing.run.remote.pansharpen"
+         ],
+         "modes": [
+          "gis"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
+          "processing.run.remote.composite"
+         ]
+        },
+        {
+         "label": "",
+         "items": [
           "processing.run.remote.split"
+         ],
+         "modes": [
+          "gis"
          ]
         }
        ]
@@ -5334,8 +5460,14 @@
           "mesh.query"
          ]
         }
+       ],
+       "modes": [
+        "gis"
        ]
       }
+     ],
+     "works": [
+      "map"
      ]
     }
    ]
@@ -5974,6 +6106,30 @@
    "layer.new",
    "layer.newGroup",
    "layer.showAll",
+   "crs.set",
+   "view.properties",
+   "processing.run.selection.byExpression",
+   "processing.run.selection.byLocation"
+  ],
+  "map": [
+   "layer.crs",
+   "layer.reproject",
+   "view.mapCrs",
+   "file.import.fgb",
+   "file.import.gml",
+   "file.import.parquet",
+   "file.import.maplibre",
+   "file.export.maplibre",
+   "source.link",
+   "source.read",
+   "source.write",
+   "source.writeTogether",
+   "source.status",
+   "source.reconcile",
+   "source.relink",
+   "source.unlink",
+   "profile.window",
+   "linearRef.eventLinks",
    "layer.newPoint",
    "layer.newLine",
    "layer.newArea",
@@ -5991,43 +6147,66 @@
    "draft.overlap.layer",
    "draft.overlap.layers",
    "draft.topologyPoints",
-   "crs.set",
    "data.domains",
    "data.subtypes",
    "data.layerRules",
    "data.tableStyles",
    "data.duplicate",
    "data.contingents",
-   "chart.bar",
-   "chart.box",
-   "chart.histogram",
-   "chart.line",
-   "chart.pie",
-   "chart.scatter",
    "processing.history",
-   "processing.run.selection.byExpression",
-   "processing.run.selection.byLocation"
+   "layer.dataset"
   ],
-  "map": [
-   "layer.crs",
-   "layer.reproject",
-   "view.mapCrs",
-   "file.import.fgb",
-   "file.import.gml",
-   "file.import.parquet",
-   "file.import.maplibre",
-   "file.export.maplibre",
-   "mesh.add",
-   "source.link",
-   "source.read",
-   "source.write",
-   "source.writeTogether",
-   "source.status",
-   "source.reconcile",
-   "source.relink",
-   "source.unlink",
-   "profile.window",
-   "linearRef.eventLinks"
-  ]
+  "only": {
+   "analysis.slope": [
+    "harita",
+    "cbs"
+   ],
+   "analysis.volume": [
+    "harita",
+    "cbs"
+   ],
+   "map.contours": [
+    "harita",
+    "cbs"
+   ],
+   "map.profile": [
+    "harita",
+    "cbs"
+   ],
+   "map.sheet": [
+    "harita",
+    "cbs"
+   ],
+   "map.parcelReport": [
+    "harita"
+   ],
+   "tool.subdivide": [
+    "harita"
+   ],
+   "tool.stakeout": [
+    "harita"
+   ],
+   "draft.overlap": [
+    "harita",
+    "cbs"
+   ],
+   "sheet.atlas": [
+    "harita",
+    "cbs"
+   ],
+   "processing.run.network.closestFacility": [
+    "cbs"
+   ],
+   "processing.run.network.odMatrix": [
+    "cbs"
+   ],
+   "processing.run.network.serviceAreas": [
+    "cbs"
+   ],
+   "workspace.cad": [],
+   "workspace.gis": [],
+   "workspace.plan3d": [],
+   "workspace.disaster": []
+  }
  }
 }

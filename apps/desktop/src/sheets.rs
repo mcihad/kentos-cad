@@ -1302,8 +1302,9 @@ impl App {
         Context {
             // The type the interface shows: a project not asked its type is CBS (docs/adr/0165).
             workspace: doc.map(|_| self.work_mode()),
-            // The project's type is the catalog's; the opened drawing does not carry it yet.
-            project_type: None,
+            // The module's type in a module's program (module_surfaces.rs): its templates first, as the profile
+            // lists them; kentos-cad's drawing carries none yet.
+            project_type: self.sheet_project_type(),
             exact_plot_scale:settings.map(|s|s.plot_scale).filter(|s|s.is_finite()&&(1e-6..=1e8).contains(s)),
             capabilities: Capabilities {
                 georeferenced: crs.is_some(),

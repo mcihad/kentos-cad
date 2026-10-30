@@ -286,6 +286,10 @@ impl App {
     /// `address.search`: the panel open on its Adres tab, grown when it is short, the keyboard in the box; on it
     /// already, the panel closes.
     pub(crate) fn open_address_search(&mut self) -> Task<Message> {
+        // A program without the tab says where it is (module_surfaces.rs).
+        if !self.open_bottom_tab(BottomTab::Address) {
+            return Task::none();
+        }
         if self.command_expanded && self.bottom_tab == BottomTab::Address {
             self.toggle_bottom();
             return Task::none();
@@ -526,6 +530,9 @@ impl App {
 
     /// Konumdan adres's place: its address looked for in the source, the tab open on it.
     pub(crate) fn address_at(&mut self, at: Vec2) -> Task<Message> {
+        if !self.open_bottom_tab(BottomTab::Address) {
+            return Task::none();
+        }
         if !(self.command_expanded && self.bottom_tab == BottomTab::Address) {
             self.show_bottom(BottomTab::Address);
             let bar = f64::from(kentos_ui::widget::tabs::height());

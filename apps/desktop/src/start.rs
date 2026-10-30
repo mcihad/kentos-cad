@@ -161,7 +161,7 @@ impl App {
         // A module's program says what it makes and opens (docs/adr/0801).
         let (new_sub, open_sub) = match self.program {
             Some(Module::Architecture) => (
-                "Mimari proje ya da detay: birimi ve ölçeği işle gelir",
+                "Bina projesi; metre, 1:100 ve yerel koordinatlarla hemen açılır",
                 "KentOS Mimari projesi, DWG, DXF veya NCZ çizimi",
             ),
             Some(Module::Map) => (

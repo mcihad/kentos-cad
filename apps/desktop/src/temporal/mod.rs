@@ -876,6 +876,10 @@ impl App {
 
     /// The status bar's words for the scenario shown (“Senaryo: Mevcut durum”), while the project has one.
     pub(crate) fn scenario_words(&self) -> Option<String> {
+        // KentOS GIS's (module_surfaces.rs).
+        if !self.shows_cell(crate::module_surfaces::Cell::Scenario) {
+            return None;
+        }
         let doc = self.document.as_ref()?;
         let layers = doc.model.layers();
         if scenario_groups(layers.nodes()).is_empty() {

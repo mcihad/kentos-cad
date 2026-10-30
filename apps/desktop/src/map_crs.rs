@@ -123,6 +123,10 @@ impl App {
 
     /// The cursor's values in the map system: “E 3226837.120   N 4865123.004”, “40°59′38.0581″K 28°58′45.7302″D”.
     fn map_values(&self, cursor: Option<Vec2>) -> Option<(String, String)> {
+        // The cell is a map's programs' (module_surfaces.rs).
+        if !self.shows_cell(crate::module_surfaces::Cell::MapCrs) {
+            return None;
+        }
         let doc = self.document.as_ref()?;
         let settings = doc.settings();
         let map = kentos_project::systems::map_projection(settings)?;

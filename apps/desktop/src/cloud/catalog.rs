@@ -293,11 +293,13 @@ impl App {
             List::View(v) => words::view(*v).sorts[0],
             List::Device => CatalogSort::Updated,
         };
+        // The program's own projects first (module_surfaces.rs): KentOS Mimari's and KentOS GIS's by their type.
+        let kind = self.cloud_kind();
         self.cloud.catalog = Some(Catalog {
             list,
             search: String::new(),
             search_at: None,
-            kind: None,
+            kind,
             sort,
             org,
             projects: Vec::new(),
@@ -757,10 +759,13 @@ pub(crate) fn empty_text(c: &Catalog, orgs: usize) -> String {
     if c.loading() {
         return "Projeler yükleniyor…".to_owned();
     }
-    let filtered = !c.search.trim().is_empty() || c.kind.is_some();
+    let searched = !c.search.trim().is_empty();
+    // The type filter is the server's lists' (a module's program sets it at first, module_surfaces.rs); this
+    // device's copies are searched by name alone.
+    let filtered = searched || c.kind.is_some();
     match &c.list {
         List::Device => {
-            if filtered {
+            if searched {
                 plan::EMPTY_SEARCH.to_owned()
             } else {
                 "Bu bilgisayarda kopyası tutulan bir proje yok. Bir bulut projesini bir kez açınca kopyası burada tutulur.".to_owned()

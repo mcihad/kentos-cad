@@ -76,6 +76,8 @@ fn settle(app: &mut App, mut snapshot: Snapshot) -> Snapshot {
 /// does not look), another click turns the mode off.
 #[test]
 fn the_status_cell_turns_the_mode_and_its_menu_points() {
+    // The cell is found once and clicked thrice: no other test may change the type's size meanwhile.
+    let _guard = crate::appearance::tests::TYPOGRAPHY.lock();
     let size = Size::new(1440.0, 900.0);
     let mut app = opened(size, "dark");
     let mut snapshot = settled(&mut app, size);

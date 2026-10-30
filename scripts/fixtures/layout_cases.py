@@ -54,7 +54,8 @@ FIELDS = {
     'layersFraction': {'kind': 'number', 'min': LAYERS['min'], 'max': LAYERS['max']},
     'bottomExpanded': {'kind': 'boolean'},
     'bottomHeight': {'kind': 'number', 'min': BOTTOM['min']},
-    'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'table', 'statistics', 'chart', 'search', 'address', 'topology', 'serviceInfo', 'messages']},
+    # The desktop's Denetim and Python tabs come back at start too (docs/adr/0802; the web's when it returns).
+    'bottomTab': {'kind': 'enum', 'values': ['history', 'coords', 'points', 'table', 'statistics', 'chart', 'search', 'address', 'topology', 'serviceInfo', 'messages', 'audit', 'python']},
     'dockTab': {'kind': 'enum', 'values': ['layers', 'processing', 'blocks', 'templates', 'sources']},
     'processingTab': {'kind': 'enum', 'values': ['tools', 'history']},
     'processingFolded': {'kind': 'texts'},

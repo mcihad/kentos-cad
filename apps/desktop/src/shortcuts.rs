@@ -136,12 +136,12 @@ struct Line {
     chords: Vec<String>,
 }
 
-/// The commands with keys, by category in the catalog's order, those the
-/// search finds (its title, keys or names).
-fn groups(query: &str) -> Vec<(&'static str, Vec<Line>)> {
+/// The commands with keys the program offers (`offers`: a module's program its own, docs/adr/0802; its keys run
+/// nothing else), by category in the catalog's order, those the search finds (its title, keys or names).
+fn groups(query: &str, offers: impl Fn(&str) -> bool) -> Vec<(&'static str, Vec<Line>)> {
     let mut out: Vec<(&'static str, Vec<Line>)> = Vec::new();
     for c in catalog().commands() {
-        if c.shortcuts.is_empty() {
+        if c.shortcuts.is_empty() || !offers(c.id) {
             continue;
         }
         let line = Line {
@@ -168,6 +168,15 @@ fn groups(query: &str) -> Vec<(&'static str, Vec<Line>)> {
         }
     }
     out
+}
+
+/// The commands' titles the window lists for a search in this program, in its order (the module tests').
+#[cfg(test)]
+pub(crate) fn listed(app: &App, query: &str) -> Vec<&'static str> {
+    groups(&fold_turkish(query), |id| app.offers(id))
+        .into_iter()
+        .flat_map(|(_, lines)| lines.into_iter().map(|l| l.title))
+        .collect()
 }
 
 /// A key as a cap.
@@ -244,7 +253,7 @@ impl App {
         if !drawing.is_empty() {
             blocks.push((drawing.len(), group("Çizerken", drawing)));
         }
-        for (category, lines) in groups(&query) {
+        for (category, lines) in groups(&query, |id| self.offers(id)) {
             let count = lines.len();
             let rows = lines
                 .into_iter()
@@ -353,18 +362,23 @@ mod tests {
         assert_eq!(chord("Shift+F3"), "Shift+F3");
     }
 
+    /// Every command kentos-cad offers.
+    fn every(_: &str) -> bool {
+        true
+    }
+
     #[test]
     fn the_search_finds_titles_keys_and_names() {
-        let all = groups("");
+        let all = groups("", every);
         assert!(!all.is_empty(), "the catalog has keys");
-        let save = groups(&fold_turkish("ctrl+s"));
+        let save = groups(&fold_turkish("ctrl+s"), every);
         assert!(
             save.iter()
                 .flat_map(|(_, lines)| lines)
                 .any(|l| l.chords.iter().any(|k| k == "Ctrl+S")),
             "found by its key"
         );
-        let snap = groups(&fold_turkish("kenet"));
+        let snap = groups(&fold_turkish("kenet"), every);
         assert!(
             snap.iter()
                 .flat_map(|(_, lines)| lines)
@@ -373,7 +387,7 @@ mod tests {
                     || l.chords.iter().any(|k| fold_turkish(k).contains("KENET"))),
             "only what it matches"
         );
-        assert!(groups("ZZZ-YOK").is_empty());
+        assert!(groups("ZZZ-YOK", every).is_empty());
     }
 
     /// The window for the owner, whole and searched, dark and light, at both

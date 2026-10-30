@@ -436,13 +436,22 @@ impl App {
 
     fn work_out_panel(&self, doc: &Document) -> Panel {
         let selected: Vec<Slot> = self.selection.ids().to_vec();
-        let mut panel = rows::panel(doc, &selected, |ids| {
-            // Summed by the geometry store, as the web sums them: a selection can be large.
-            let ids: Vec<f64> = ids.iter().map(|s| f64::from(s.0)).collect();
-            self.spatial.store().measure(&ids)
-        });
-        // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it.
-        if selected.is_empty() {
+        let crs = self.shows_property_rows(crate::module_surfaces::PropertyRows::Crs);
+        let mut panel = rows::panel(
+            doc,
+            &selected,
+            |ids| {
+                // Summed by the geometry store, as the web sums them: a selection can be large.
+                let ids: Vec<f64> = ids.iter().map(|s| f64::from(s.0)).collect();
+                self.spatial.store().measure(&ids)
+            },
+            crs,
+        );
+        // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
+        // map's programs' (module_surfaces.rs).
+        if selected.is_empty()
+            && self.shows_property_rows(crate::module_surfaces::PropertyRows::Services)
+        {
             let layers = doc.model.layers();
             let id = self.selected_layer.as_deref().unwrap_or(layers.active());
             if let Some(node) = layers.get(id)

@@ -51,10 +51,13 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 
 ### 0.2 Web'e ertelenenler (ADR 0228)
 
-- ADR 0801: CAD projesinin işi `cadWork` (`.kcad` şema 135; Mimari proje, Harita / imar planı, Detay / imalat); web'in
+- ADR 0801, 0802: CAD projesinin işi `cadWork` (`.kcad` şema 135; Mimari proje, Harita / imar planı); web'in
   sihirbazı onu yazar (ortak `fixtures/project/v1/wizard.json` değişti), `cad.settings.set`'in 16 yeni `cadWork`
   durumu web'in işleyicisinde de geçer, şerit `catalog/v1/ribbon.json`'un `works`'üne uyar, işi olmayan CAD çiziminde
   “Bu CAD çizimi hangi iş için?” sorusu ve durum çubuğunun işi; şema 135 WASM yeniden derlenince ortak kodekle okunur.
+  ADR 0802: ortak şerit fikstüründe CBS'nin seçim sekmelerinde Ölçü, Kılavuz, Tarama, Blok, Tablo ve Resim yok (CAD'in);
+  yerleşimin `bottomTab` kuralı `audit` ve `python`'u da alır (`fixtures/shell/v1/layout.json`): web'in `layoutPlan.ts`'i ve
+  şeridi bunlara uyar.
   Ayrı programlar (`kentos-mimari`, `kentos-harita`, `kentos-gis`) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
   karşılığı yoktur.
 - ADR 0755: bağlı tablonun CHECK ve tekil kısıtları bağın `checks` ve `uniques`'inde (`.kcad` şema 134), alanın
@@ -1858,8 +1861,8 @@ Temel kabul senaryosu: kullanıcı polygon aracını seçer, çizim alanında no
 - [x] `UX-15` Birim ve çizim ölçeği sadeleşsin; CAD'de yazılar gerçek boyunda, kaybolup gelmesin (sahibin bildirimi ve
   kararları, 24 Ekim; [ADR 0626](docs/adr/0626-units-scale-and-true-size-texts.md)):
   - **Sihirbaz:** CAD'de yalnız "Ne çiziyorsunuz?" sorulur. Seçenekler Mimari proje (metre, 1:100), Harita / imar
-    planı (metre, 1:1000, ilin sisteminde) ve Detay / imalat (milimetre, 1:1). Yazı boyları ve yazı tipi
-    sihirbazdan çıktı.
+    planı (metre, 1:1000, ilin sisteminde) ve Detay / imalat (milimetre, 1:1; ADR 0802 ile kalktı). Yazı boyları
+    ve yazı tipi sihirbazdan çıktı.
   - **Ad:** her yerde tek ad, “Çizim ölçeği”.
   - **Durum çubuğu:** tek ölçek. CAD'de çizim ölçeği, birim koordinatın yanında; CBS'de görünümün “1:N”'i.
   - **Proje ayarları:** tek “Birim ve ölçek” bölümü.
@@ -3554,16 +3557,22 @@ Kabul: her teslimin test komutu, veri seti, revision ve ölçüm ortamı bellidi
 - [ ] `OPS-09` Cloud dosya/asset erişiminde yetkili kısa ömürlü indirme bağlantısı, audit ve doğrulanmış hash kullan; URL token'larını log veya proje dosyasına yazma. Doğrudan object-store signed URL'nin süre bitene kadar çalışabileceğini politika/UI'da açıkla; anlık iptal gereken akışta her isteği güncel yetkiye bağlayan gateway/token denetimi kullan. Cache/304 ve devam eden aktarımın iptal davranışını da sınayarak doğrula.
 - [x] `OPS-16` KentOS Launcher — **30 Ekim, [ADR 0800](docs/adr/0800-kentos-launcher.md)** (sahibin isteği: görseldeki gibi
   bir launcher; “ileride rust ile yazılmamış yazılımlar da entegre edebiliriz”): ayrı program `kentos-launcher`
-  (`apps/launcher`); uygulamalar `kentos.launcher-app/1` manifestleri (gömülü KentOS Mimari, Harita, GIS; Yakında YOL; kullanıcının ve kurumun klasörleri; herhangi bir dilde program ya da web adresi; Uygulama ekle, Düzenle, Kaldır),
+  (`apps/launcher`); uygulamalar `kentos.launcher-app/1` manifestleri (gömülü KentOS Mimari, Harita, GIS; Yakında YOL, 3D, Afet; kullanıcının ve kurumun klasörleri; herhangi bir dilde program ya da web adresi; Uygulama ekle, Düzenle, Kaldır),
   ayrı süreç ve günlük, Son dosyalar, dürüst Güncellemeler/İndirmeler (güncelleme servisi yok), `snapshot` komutu.
   Ortak sözleşme `crates/native/launch` (modüller, komut satırı, programın bulunması, son dosyalar). Açık: gerçek pencerede
   fare ve klavye kabulü, Windows ve macOS, güncelleme servisi (`OPS-10`).
 - [x] `OPS-17` KentOS Mimari, Harita ve GIS ayrı programlar — **30 Ekim, [ADR 0801](docs/adr/0801-kentos-modules-and-their-programs.md)**
   (sahibin sözleri: “Mimari CAD, Harita CAD ve GIS ayrımı”, “Uygulamaların her biri ayrı binary olacak değil mi”):
   masaüstü kütüphane (`kentos_desktop`) ve programlar (`kentos-cad` hepsi, `--modul`; `kentos-mimari`, `kentos-harita`,
-  `kentos-gis`, `--features module-programs`); CAD projesinin işi `cadWork` (`.kcad` şema 135), işe göre şerit, eski
-  CAD çiziminde bir kez sorulan iş, başka modülün dosyası o modülün programına devredilir. Açık: her programın yalnız
-  kendi kodunu taşıması (özellik kapılarıyla kırpma), modül başına sürüm ve paket (`OPS-10`), gerçek pencerede devir kabulü.
+  `kentos-gis`); CAD projesinin işi `cadWork` (`.kcad` şema 135), işe göre şerit, eski CAD çiziminde bir kez sorulan
+  iş, başka modülün dosyası o modülün programına devredilir. Sıkı ayrım **[ADR 0802](docs/adr/0802-strict-module-separation.md)**
+  (sahibin sözleri: “her biri ayrı uygulama olarak çalışacak”, “bizde iki tür cad var mimari ve harita”): programlar
+  her derlemede, kendi pencere kimlikleri ve `.desktop` kayıtlarıyla; launcher modülü yalnız kendi programıyla başlatır;
+  iki CAD işi; Mimari'de sihirbazsız yeni proje, Harita ve GIS'te türsüz sihirbaz; modülün komutları her girişte
+  (Komut ara, komut satırı, kısayollar, `App::run`, hızlı erişim, F1, menüler) ve yüzeyleri (alt panel, sağ panel,
+  durum çubuğu, ayar pencereleri, katman ve uygulama menüleri, Kaynaklar). Açık: her programın yalnız kendi kodunu
+  taşıması (özellik kapılarıyla kırpma), modül başına sürüm ve paket (`OPS-10`), gerçek pencerede fare ve klavyeyle
+  kabul, programlar arası ayrı yerleşim dosyası.
 - [ ] `OPS-10` Desktop Windows/macOS/Linux paketleri, dosya association, installer/uninstaller, code signing/notarization uygunluğu ve güvenli update/rollback planını kur.
 - [ ] `OPS-11` CPython, font, shader, native format/CRS kütüphanesi ve grid asset'lerinin paket/ABI/lisans envanterini tut; bundle boyutu ve offline çalışmayı test et.
 - [ ] `OPS-12` Web asset/WASM sürümlerini content hash ve protokol uyumluluğuyla dağıt; eski service worker/cache yeni schema ile karışmasın. Güncelleme aktif çizimi kaybettirmesin.

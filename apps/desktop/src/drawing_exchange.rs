@@ -488,7 +488,10 @@ impl App {
             return;
         };
         let ours = serde_json::to_value(doc.model.to_snapshot_v2()).unwrap_or(Value::Null);
-        let rows = take_rows(&ours, &serde_json::to_value(&theirs).unwrap_or(Value::Null));
+        let mut rows = take_rows(&ours, &serde_json::to_value(&theirs).unwrap_or(Value::Null));
+        // A module's program takes only what it works with (docs/adr/0802): no blocks or dimension styles in
+        // KentOS GIS.
+        rows.retain(|r| self.takes_section(r.section));
         self.take_from = Some(Window {
             name: file_name(path),
             theirs: Box::new(theirs),
@@ -497,6 +500,17 @@ impl App {
             same: SameName::Skip,
         });
         self.dialog = Some(Dialog::TakeFrom);
+    }
+
+    /// Whether the program works with a section's kind (docs/adr/0802): blocks and the annotation styles
+    /// where their windows are offered; the rest everywhere.
+    fn takes_section(&self, section: Section) -> bool {
+        match section {
+            Section::Blocks => self.offers("block.panel"),
+            Section::TextStyles => self.offers("style.textStyles"),
+            Section::DimensionStyles => self.offers("style.dimensionStyles"),
+            Section::Layers | Section::Library | Section::LayerStates | Section::Settings => true,
+        }
     }
 
     /// The settings `result` holds, as settings (not an undo step): the
@@ -737,28 +751,33 @@ impl App {
             self.warn(format!("{BLOCK_TITLE}: {locked}"));
             return Task::none();
         }
-        let (output, warnings) =
-            match file_import_block::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-                CommandResult::Completed { output, warnings } => (output, warnings),
-                // A DWG or a DXF naming no unit: its unit chosen in Bloklar › Kitaplık, where its sizes are said
-                // (docs/adr/0726 §2).
-                CommandResult::Failed { error } if error.code == kentos_commands::codes::SOURCE_UNIT_UNKNOWN => {
-                    self.warn(format!(
+        let (output, warnings) = match file_import_block::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
+            CommandResult::Completed { output, warnings } => (output, warnings),
+            // A DWG or a DXF naming no unit: its unit chosen in Bloklar › Kitaplık, where its sizes are said
+            // (docs/adr/0726 §2).
+            CommandResult::Failed { error }
+                if error.code == kentos_commands::codes::SOURCE_UNIT_UNKNOWN =>
+            {
+                self.warn(format!(
                         "{BLOCK_TITLE}: {} Bloklar › Kitaplık'ta birimini seçip blokları oradan yerleştirin.",
                         error.message
                     ));
-                    self.show_blocks_panel();
-                    self.blocks_panel.library_shown = true;
-                    return self.blocks_library_event(crate::blocks_library::Event::Open(path.to_path_buf()));
-                }
-                CommandResult::Failed { error }
-                | CommandResult::Conflict { error }
-                | CommandResult::NeedsInput { error } => {
-                    self.warn(format!("{BLOCK_TITLE}: {}", error.message));
-                    return Task::none();
-                }
-                _ => return Task::none(),
-            };
+                self.show_blocks_panel();
+                self.blocks_panel.library_shown = true;
+                return self
+                    .blocks_library_event(crate::blocks_library::Event::Open(path.to_path_buf()));
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                self.warn(format!("{BLOCK_TITLE}: {}", error.message));
+                return Task::none();
+            }
+            _ => return Task::none(),
+        };
         let Some(id) = output.block else {
             return Task::none();
         };
@@ -1025,6 +1044,33 @@ mod tests {
         let _ = app.update(msg(Event::Cancel));
         assert!(app.take_from.is_none() && app.dialog.is_none());
         assert!(!app.document.as_ref().expect("the drawing").model.is_dirty());
+    }
+
+    #[test]
+    fn kentos_gis_takes_no_blocks_and_a_cad_module_takes_them() {
+        for (module, blocks) in [
+            (kentos_launch::Module::Gis, false),
+            (kentos_launch::Module::Map, true),
+            (kentos_launch::Module::Architecture, true),
+        ] {
+            let mut app = app(crate::traces::folder().join("altyapi-projesi.kcad"));
+            app.program = Some(module);
+            app.open_take_from(&crate::traces::folder().join("altyapi-projesi.kcad"));
+            let w = app.take_from.as_ref().expect("the window");
+            let sections: BTreeSet<&str> = w.rows.iter().map(|r| r.section.heading()).collect();
+            assert_eq!(
+                sections.contains("Bloklar"),
+                blocks,
+                "{module:?}: {sections:?}"
+            );
+            assert!(sections.contains("Katmanlar"), "{module:?}");
+            if !blocks {
+                assert!(
+                    picks_of(&w.rows, &w.checked).blocks.is_empty(),
+                    "{module:?}"
+                );
+            }
+        }
     }
 
     #[test]

@@ -356,6 +356,7 @@ impl App {
                         .designer
                         .as_deref()
                         .map_or("", |d| d.search.as_str()),
+                    &|t| self.offers_tool(t),
                     place,
                 );
                 if let (Some(d), Some(tool)) = (self.processing.designer.as_deref_mut(), tool) {

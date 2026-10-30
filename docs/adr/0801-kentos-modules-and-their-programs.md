@@ -1,6 +1,9 @@
 # ADR 0801: KentOS Mimari, KentOS Harita ve KentOS GIS ayrı programlar; CAD şeridi işe göre
 
-- **Durum:** kabul edildi (2026-10-30).
+- **Durum:** kabul edildi (2026-10-30). Aynı gün [ADR 0802](0802-strict-module-separation.md) üç noktasını değiştirdi: Detay / imalat
+  işi kalktı (iki CAD işi var; yerel CAD Mimari'nindir), modül programları özellik kapısı olmadan her derlemede derlenir
+  (`module-programs` kalktı), şeritte görünmeyen komut artık her modülde çalışmaz (modülün komutları her girişte). Aşağıdaki
+  metin kararın o günkü hâlidir.
 - **İstek:** sahibin sözleri “Mimari CAD, Harita CAD ve GIS ayrımı” ve “Uygulamaların her biri ayrı binary olacak değil mi”
   (evet: her modül kendi çalıştırılabilir programıdır). Önerilen ve sahibin “başla”sıyla kabul ettiği öntanımlılar:
   - **CAD şeridi işe göre.** Mimari proje: Mimari sekmesi var, Plan yok, Ölçme'de yalnız *Sorgu* paneli. Harita / imar planı: Plan

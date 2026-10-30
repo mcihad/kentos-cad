@@ -1,7 +1,7 @@
 //! The Yeni proje wizard's pages (the web's `ui/settings/wizardSteps.ts`,
 //! DESIGN.md §7.10.1, docs/adr/0626 §1): the project's type on cards with their
-//! pictures; what a CAD drawing is for (a building, a plan on real coordinates,
-//! a detail), and a plan's or a CBS project's province and system, the zone
+//! pictures; what a CAD drawing is for (a building or a plan on real
+//! coordinates, docs/adr/0802), and a plan's or a CBS project's province and system, the zone
 //! suggested and shown on a strip of Türkiye's longitudes; its name and a summary.
 
 use iced::widget::{
@@ -149,7 +149,7 @@ pub(super) fn kind<'a>(s: &'a State, theme: &Theme) -> Element<'a, Message> {
             .collect();
         let elsewhere = match program {
             kentos_launch::Module::Gis => {
-                "CAD projeleri KentOS Mimari'de (bina, detay) ve KentOS Harita'da (harita, imar planı) yapılır."
+                "CAD projeleri KentOS Mimari'de (bina) ve KentOS Harita'da (harita, imar planı) yapılır."
             }
             _ => "CBS projeleri KentOS GIS'te yapılır.",
         };

@@ -321,6 +321,10 @@ impl App {
 
     /// İstatistik for a layer (Katmanlar's menu names one), else as it was.
     pub(crate) fn open_statistics(&mut self, layer: Option<String>) {
+        // A program without the tab says where it is (module_surfaces.rs).
+        if !self.open_bottom_tab(BottomTab::Statistics) {
+            return;
+        }
         if let Some(layer) = layer {
             if self.charts.layer.as_ref() != Some(&layer) {
                 self.charts.field = None;
@@ -337,6 +341,10 @@ impl App {
         kind: Option<ChartKind>,
         spec: Option<Spec>,
     ) {
+        // KentOS GIS's and kentos-cad's (module_surfaces.rs); elsewhere said, nothing chosen.
+        if !self.open_bottom_tab(BottomTab::Chart) {
+            return;
+        }
         let at_hand = self.chart_layer();
         let p = &mut self.charts;
         // Another layer has other columns: the kind stays, its columns are chosen again.
@@ -362,6 +370,9 @@ impl App {
 
     /// A İşlemler table as a chart: its tool's suggestion, else bars.
     pub(crate) fn open_table_chart(&mut self, table: ChartTable) {
+        if !self.open_bottom_tab(BottomTab::Chart) {
+            return;
+        }
         let p = &mut self.charts;
         p.table = Some(table);
         p.table_version += 1;

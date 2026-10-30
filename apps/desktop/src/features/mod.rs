@@ -522,6 +522,10 @@ impl App {
     /// Öznitelik tablosu (`data.featureTable`): the bottom panel on its Tablo
     /// tab, as tall as Arama's at least (the rows want room; a taller panel stays).
     pub(crate) fn open_feature_table(&mut self) {
+        // A program without the tab says where it is (module_surfaces.rs).
+        if !self.open_bottom_tab(crate::bottom::BottomTab::Table) {
+            return;
+        }
         self.show_bottom(crate::bottom::BottomTab::Table);
         let least = crate::search::PANEL_HEIGHT;
         let bar = f64::from(kentos_ui::widget::tabs::height());

@@ -1,7 +1,7 @@
 //! What a CAD drawing is drawn for, asked once (docs/adr/0801; as the type of
-//! a project without one is, ask_type.rs): Mimari proje, Harita / imar planı
-//! or Detay / imalat, which decides the KentOS program the project belongs to
-//! and the ribbon's tabs. A CAD project written before works has none.
+//! a project without one is, ask_type.rs): Mimari proje or Harita / imar
+//! planı (docs/adr/0802: two CAD works), which decides the KentOS program the
+//! project belongs to and the ribbon's tabs. A CAD project written before works has none.
 //!
 //! kentos-cad asks it over the drawing on screen once it is open; Seç writes
 //! the work to the project (an edit, not an undo step, as any project

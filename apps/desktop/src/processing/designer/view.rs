@@ -96,7 +96,8 @@ impl App {
             color: &color,
         };
         let cols = row![
-            container(palette::palette(d, registry))
+            // The tools this program offers (docs/adr/0802), as the toolbox lists them.
+            container(palette::palette(d, registry, &|t| self.offers_tool(t)))
                 .width(Length::Fixed(left))
                 .height(Fill),
             vertical_divider(),

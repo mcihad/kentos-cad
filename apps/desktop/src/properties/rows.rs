@@ -224,11 +224,13 @@ pub(crate) fn layer_path(layers: &LayerTree, id: &str) -> String {
     names.join(" / ")
 }
 
-/// What the panel shows for this selection.
+/// What the panel shows for this selection; `crs`: the drawing's coordinate system with nothing selected (a map's
+/// programs and kentos-cad, module_surfaces.rs).
 pub(crate) fn panel(
     doc: &Document,
     selected: &[Slot],
     totals: impl Fn(&[Slot]) -> (f64, f64),
+    crs: bool,
 ) -> Panel {
     let objects: Vec<&Entity> = selected.iter().filter_map(|s| doc.model.get(*s)).collect();
     let layers = doc.model.layers();
@@ -236,7 +238,7 @@ pub(crate) fn panel(
         [] => Panel {
             summary: Summary::Empty,
             meta: None,
-            sections: vec![document_section(doc)],
+            sections: vec![document_section(doc, crs)],
         },
         [one] => {
             let base = one.base();
@@ -291,24 +293,27 @@ fn kind_lower(title: &str) -> String {
         .collect()
 }
 
-/// No selection: the drawing's summary.
-fn document_section(doc: &Document) -> Section {
+/// No selection: the drawing's summary; its coordinate system with `crs`.
+fn document_section(doc: &Document, crs: bool) -> Section {
     let s = doc.settings();
     let layers = doc.model.layers();
     let active = layers
         .get(layers.active())
         .map_or_else(|| "—".to_owned(), |n| layer_path(layers, &n.id));
+    let mut rows = vec![Row::text("Dosya", doc.name())];
+    if crs {
+        rows.push(Row::text("Koordinat sistemi", crate::crs::project_name(s)));
+        rows.push(Row::figure("SRID", crate::crs::project_code(s)));
+    }
+    rows.extend([
+        Row::figure("Çizim ölçeği", format!("1:{}", s.plot_scale)),
+        Row::figure("Nesne sayısı", doc.entity_count().to_string()),
+        Row::text("Etkin katman", active),
+    ]);
     Section {
         id: "doc",
         title: "Çizim".into(),
-        rows: vec![
-            Row::text("Dosya", doc.name()),
-            Row::text("Koordinat sistemi", crate::crs::project_name(s)),
-            Row::figure("SRID", crate::crs::project_code(s)),
-            Row::figure("Çizim ölçeği", format!("1:{}", s.plot_scale)),
-            Row::figure("Nesne sayısı", doc.entity_count().to_string()),
-            Row::text("Etkin katman", active),
-        ],
+        rows,
     }
 }
 

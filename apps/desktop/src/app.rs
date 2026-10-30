@@ -56,6 +56,16 @@ pub enum Panel {
 }
 
 impl Panel {
+    /// Every panel, in the dock's order at start (a module's program docks its own, module_surfaces.rs).
+    pub(crate) const ALL: [Panel; 6] = [
+        Panel::Layers,
+        Panel::Processing,
+        Panel::Blocks,
+        Panel::Templates,
+        Panel::Sources,
+        Panel::Properties,
+    ];
+
     pub fn title(self) -> &'static str {
         match self {
             Panel::Layers => "Katmanlar",
@@ -78,14 +88,21 @@ impl Panel {
         }
     }
 
-    fn layout() -> Docks<Panel> {
+    /// The dock at start: `program`'s panels (none: kentos-cad's, every one; docs/adr/0802 §5).
+    fn layout(program: Option<kentos_launch::Module>) -> Docks<Panel> {
         let mut docks = Docks::new();
         docks.dock(Panel::Layers, Side::Right);
         // İşlemler, Bloklar, Şablonlar and Kaynaklar share the top slot with Katmanlar, as the web's tabs; Katmanlar in front.
-        docks.dock(Panel::Processing, Side::Right);
-        docks.dock(Panel::Blocks, Side::Right);
-        docks.dock(Panel::Templates, Side::Right);
-        docks.dock(Panel::Sources, Side::Right);
+        for panel in [
+            Panel::Processing,
+            Panel::Blocks,
+            Panel::Templates,
+            Panel::Sources,
+        ] {
+            if crate::module_surfaces::shows_panel_in(program, panel) {
+                docks.dock(panel, Side::Right);
+            }
+        }
         docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Layers));
         docks.split(Panel::Properties, Side::Right);
         docks.set_size(Side::Right, DOCK_WIDTH);
@@ -1300,7 +1317,7 @@ impl App {
             ribbon_collapsed: false,
             mode: Mode::Dark,
             accent: Accent::default(),
-            docks: Panel::layout(),
+            docks: Panel::layout(program),
             selected_layer: None,
             selection_layers: Vec::new(),
             layers_follow: false,
@@ -1377,8 +1394,8 @@ impl App {
                 log.push(
                     Level::Info,
                     format!(
-                        "{} hazır. Web'deki bütün komutlar şeritte; masaüstüne taşınmayanlar bunu söyler.",
-                        program.map_or("KentOS CAD masaüstü", kentos_launch::Module::title)
+                        "{} hazır.",
+                        program.map_or("KentOS CAD", kentos_launch::Module::title)
                     ),
                     crate::cloud::now_ms(),
                 );
@@ -2594,6 +2611,12 @@ impl App {
             self.error(format!("Komut bulunamadı: {id}"));
             return Task::none();
         };
+        // A module's program runs only its own commands, whatever asks (docs/adr/0802): a menu, a panel or a cell
+        // left from another program's layout finds the same refusal as a typed name.
+        if let Some(why) = self.not_offered(id, command.title) {
+            self.error(why);
+            return Task::none();
+        }
         match command.standing {
             Standing::Ported => {}
             Standing::OnTheWeb => {
@@ -3325,6 +3348,10 @@ impl App {
     }
 
     pub fn available(&self, id: &str) -> bool {
+        // A command a module's program does not offer is off wherever it shows (docs/adr/0802).
+        if !self.offers(id) {
+            return false;
+        }
         let doc = self.document.as_ref().map(|doc| &doc.model);
         match id {
             "edit.undo" => {
@@ -3411,6 +3438,11 @@ impl App {
     /// Why a command is off, when it says (the web's `whyDisabled`): its tip
     /// shows it.
     pub fn why_disabled(&self, id: &str) -> Option<String> {
+        // Another module's command says which program has it (docs/adr/0802).
+        let title = catalog().get(id).map_or(id, |c| c.title);
+        if let Some(why) = self.not_offered(id, title) {
+            return Some(why);
+        }
         match id {
             "layer.new" | "layer.newGroup" => self.tree_locked().map(str::to_owned),
             id if crate::layer_types::NEW_TYPED.iter().any(|(c, _)| *c == id) => {

@@ -24,10 +24,12 @@ pub const CHIP: &str = "Nokta hesabı";
 pub const CHIP_TIP: &str = "Ölçüyle nokta hesapla (yan nokta, kesişim, açı-mesafe…)";
 
 /// The calculator's rows (the web's `calcMenuItems`): its heading, then each
-/// construction with its icon, what it computes and its alias.
-pub fn calc_menu() -> Menu<Message> {
+/// construction with its icon, what it computes and its alias, but `hidden`: a module's program leaves out
+/// the constructions it has not (docs/adr/0802; KentOS Mimari a route's km and a named point).
+pub fn calc_menu_without(hidden: &[CalcKind]) -> Menu<Message> {
     CALC_KINDS
         .iter()
+        .filter(|def| !hidden.contains(&def.kind))
         .fold(Menu::new().header(MENU_HEADER), |menu, def| {
             menu.item(def.label, Message::PointCalc(def.kind))
                 .icon(crate::icons::from_web(Some(def.icon)))
@@ -40,6 +42,9 @@ impl App {
     /// Starts a construction over the running command, or says why not
     /// when no command waits for a point (the web's `startPointCalc`).
     pub(crate) fn start_point_calc(&mut self, kind: CalcKind) -> Task<Message> {
+        if !self.offers_point_calc(kind) {
+            return Task::none();
+        }
         if !self.session.can_calc_point() {
             self.warn(NOT_NOW);
             return Task::none();

@@ -211,7 +211,7 @@ impl App {
                 mode.label
             ),
             Some(Workspace::Cad) if workless => {
-                " Bu CAD çiziminin işi (Mimari proje, Harita / imar planı, Detay / imalat) henüz seçilmedi. Seçmek için tıklayın: iş bir kez seçilir."
+                " Bu CAD çiziminin işi (Mimari proje ya da Harita / imar planı) henüz seçilmedi. Seçmek için tıklayın: iş bir kez seçilir."
                     .to_owned()
             }
             Some(saved) if saved != current => {

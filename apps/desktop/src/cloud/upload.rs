@@ -136,7 +136,8 @@ impl App {
             tenant,
             name: doc.name().to_owned(),
             storage,
-            project_type: ProjectType::Cad,
+            // The program's own type first (module_surfaces.rs); kentos-cad's, Genel CAD.
+            project_type: self.upload_kind(),
             description: text_editor::Content::new(),
             tags: String::new(),
             key: Uuid::new_v4(),

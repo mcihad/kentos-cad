@@ -35,6 +35,7 @@ use kentos_ui::widget::tree_view::RENAME;
 use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 
 use crate::app::{App, Message};
+use crate::module_surfaces::LayerEntry;
 
 /// Why the layer tree may not change here (the web's `TREE_LOCKED`).
 pub const TREE_LOCKED: &str = "Bu projede katman ağacını değiştirme yetkiniz yok (project.edit); proje sahibinden ya da yöneticisinden isteyin.";
@@ -678,8 +679,13 @@ impl App {
             .icon(icon("layerOut"));
         // A layer drawn from a map service: its service's items, none of the objects' (docs/adr/0208 §14).
         if node.service.is_some() {
-            return self
-                .service_menu(node, menu)
+            // Its service's items where the program has map services (module_surfaces.rs).
+            let menu = if self.shows_layer_entry(LayerEntry::Service) {
+                self.service_menu(node, menu)
+            } else {
+                menu
+            };
+            return menu
                 .separator()
                 .submenu("Görünürlük", visibility)
                 .icon(Icon::Eye)
@@ -706,8 +712,8 @@ impl App {
                 (self.objects_below(node) > 0).then(|| event(Event::ZoomTo(id.clone()))),
             )
             .icon(icon("zoomSelection"));
-        // A layer whose objects came from a service: taken again (docs/adr/0208 §10).
-        if node.feed.is_some() {
+        // A layer whose objects came from a service: taken again (docs/adr/0208 §10), where the program has services.
+        if node.feed.is_some() && self.shows_layer_entry(LayerEntry::Service) {
             menu = menu
                 .item(
                     "Yenile",
@@ -724,16 +730,24 @@ impl App {
                 .submenu("Görünüş", self.layer_look_menu(node))
                 .icon(icon("layerStyle"))
                 .submenu("Veri", self.layer_data_menu(node))
-                .icon(icon("layerFields"))
-                // What it holds (layer_types.rs, docs/adr/0622 §5).
-                .submenu("Katman türü", self.layer_type_menu(node))
-                .icon(crate::layer_types::glyph(node.geometry))
-                // Where its objects came from, and moving them (docs/adr/0583 §1–§2).
-                .submenu("Koordinat sistemi", self.layer_crs_menu(node))
-                .icon(icon("crs"));
+                .icon(icon("layerFields"));
+            // What it holds (layer_types.rs, docs/adr/0622 §5): KentOS GIS's typed layers (module_surfaces.rs).
+            if self.shows_layer_entry(LayerEntry::Kind) {
+                menu = menu
+                    .submenu("Katman türü", self.layer_type_menu(node))
+                    .icon(crate::layer_types::glyph(node.geometry));
+            }
+            // Where its objects came from, and moving them (docs/adr/0583 §1–§2): a map's programs'.
+            if self.shows_layer_entry(LayerEntry::Crs) {
+                menu = menu
+                    .submenu("Koordinat sistemi", self.layer_crs_menu(node))
+                    .icon(icon("crs"));
+            }
         }
-        // Kaynak ▸ on a bound layer (bound.rs, docs/adr/0503).
-        if let Some(link) = self.bound_link(&id) {
+        // Kaynak ▸ on a bound layer (bound.rs, docs/adr/0503), where the program has sources (module_surfaces.rs).
+        if let Some(link) = self.bound_link(&id)
+            && self.shows_layer_entry(LayerEntry::Source)
+        {
             // A part of a table (its area): Kaynağa yaz's neighbours outside it (docs/adr/0531).
             let part = link.extent.is_some();
             let bound = |e: crate::bound::Event| Message::Bound(e);
@@ -804,8 +818,8 @@ impl App {
                 .submenu("Kenet", self.layer_snap_menu(doc.model.layers(), node))
                 .icon(icon("magnet"));
         }
-        // Senaryo ▸ on a scenario group (docs/adr/0210 §10): shown, compared, applied.
-        if node.scenario.is_some() {
+        // Senaryo ▸ on a scenario group (docs/adr/0210 §10): shown, compared, applied; KentOS GIS's (module_surfaces.rs).
+        if node.scenario.is_some() && self.shows_layer_entry(LayerEntry::Scenario) {
             let time = |e: crate::temporal::Event| Message::Time(e);
             menu = menu
                 .submenu(
@@ -909,7 +923,7 @@ impl App {
                 event(Event::LineWeight(id.clone(), *w)),
             )
         });
-        Menu::new()
+        let mut menu = Menu::new()
             .submenu("Renk", self.layer_colors(node))
             .icon(icon("color"))
             .submenu("Çizgi tipi", types)
@@ -936,41 +950,54 @@ impl App {
                 event(Event::Labels(id.clone())),
             )
             .icon(icon("layerLabels"))
-            .separator()
-            // Stil yükle / kaydet (docs/adr/0635 §9): one file, its extension the format.
-            .item("Stil yükle…", event(Event::StyleLoad(id.clone())))
-            .icon(icon("styleLoad"))
-            .item("Stili kaydet…", event(Event::StyleSave(id.clone())))
-            .icon(icon("styleSave"))
-            .separator()
-            // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
-            .item(
-                "Görünüşü SLD olarak kaydet…",
-                event(Event::SldExport(id.clone())),
-            )
-            .icon(icon("sldExport"))
-            .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
-            .icon(icon("sldImport"))
-            // QML (docs/adr/0555): QGIS's own style file, out and in.
-            .item(
-                "Görünüşü QML olarak kaydet…",
-                event(Event::QmlExport(id.clone())),
-            )
-            .icon(icon("qmlExport"))
-            .item("QML'den görünüş al…", event(Event::QmlImport(id.clone())))
-            .icon(icon("qmlImport"))
-            // MapLibre (docs/adr/0560): the look out as a style with its GeoJSON, and a style's in.
-            .item(
-                "Görünüşü MapLibre stili olarak kaydet…",
-                event(Event::MaplibreExport(id.clone())),
-            )
-            .icon(icon("maplibreExport"))
-            .item(
-                "MapLibre stilinden görünüş al…",
-                event(Event::MaplibreImport(id.clone())),
-            )
-            .icon(icon("maplibreImport"))
-            .separator()
+            .separator();
+        // The style files of QGIS, GeoServer and MapLibre: a map's programs' (module_surfaces.rs).
+        // Stil yükle / kaydet (docs/adr/0635 §9): one file, its extension the format.
+        if self.shows_layer_entry(LayerEntry::StyleFiles) {
+            menu = menu
+                .item("Stil yükle…", event(Event::StyleLoad(id.clone())))
+                .icon(icon("styleLoad"))
+                .item("Stili kaydet…", event(Event::StyleSave(id.clone())))
+                .icon(icon("styleSave"))
+                .separator();
+        }
+        // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
+        if self.shows_layer_entry(LayerEntry::Sld) {
+            menu = menu
+                .item(
+                    "Görünüşü SLD olarak kaydet…",
+                    event(Event::SldExport(id.clone())),
+                )
+                .icon(icon("sldExport"))
+                .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
+                .icon(icon("sldImport"));
+        }
+        // QML (docs/adr/0555): QGIS's own style file, out and in.
+        if self.shows_layer_entry(LayerEntry::Qml) {
+            menu = menu
+                .item(
+                    "Görünüşü QML olarak kaydet…",
+                    event(Event::QmlExport(id.clone())),
+                )
+                .icon(icon("qmlExport"))
+                .item("QML'den görünüş al…", event(Event::QmlImport(id.clone())))
+                .icon(icon("qmlImport"));
+        }
+        // MapLibre (docs/adr/0560): the look out as a style with its GeoJSON, and a style's in.
+        if self.shows_layer_entry(LayerEntry::MapLibre) {
+            menu = menu
+                .item(
+                    "Görünüşü MapLibre stili olarak kaydet…",
+                    event(Event::MaplibreExport(id.clone())),
+                )
+                .icon(icon("maplibreExport"))
+                .item(
+                    "MapLibre stilinden görünüş al…",
+                    event(Event::MaplibreImport(id.clone())),
+                )
+                .icon(icon("maplibreImport"));
+        }
+        menu.separator()
             // Değişikliğin etkisi (docs/adr/0314 §4): what a change of its look would reach.
             .item(
                 "Değişikliğin etkisi…",
@@ -987,7 +1014,7 @@ impl App {
         let id = node.id.clone();
         let event = |e: Event| Message::Layer(e);
         let icon = |name: &str| crate::icons::from_web(Some(name));
-        Menu::new()
+        let menu = Menu::new()
             // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
             .item(
                 if node.fields.is_empty() {
@@ -1010,9 +1037,11 @@ impl App {
                 },
                 event(Event::Info(id.clone())),
             )
-            .icon(icon("layerInfo"))
-            // Veri kümesi bilgisi (docs/adr/0633): the layer as a dataset, its dictionary and lineage.
-            .item(
+            .icon(icon("layerInfo"));
+        // Veri kümesi bilgisi (docs/adr/0633): the layer as a dataset, its dictionary and lineage; a map's
+        // programs' (module_surfaces.rs).
+        let menu = if self.shows_layer_entry(LayerEntry::Dataset) {
+            menu.item(
                 if node.derivation.is_some() {
                     "Veri kümesi bilgisi… (türetilmiş)"
                 } else {
@@ -1021,6 +1050,10 @@ impl App {
                 event(Event::Dataset(id.clone())),
             )
             .icon(icon("datasetInfo"))
+        } else {
+            menu
+        };
+        let mut menu = menu
             .separator()
             // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.
             .item(
@@ -1045,33 +1078,44 @@ impl App {
                     .then(|| event(Event::FilterClear(id.clone()))),
             )
             .icon(icon("layerFilterClear"))
-            .separator()
-            // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
-            .item(
-                if node.time.is_some() {
-                    "Zaman ayarları… (zamansal)"
-                } else {
-                    "Zaman ayarları…"
-                },
-                Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
-            )
-            .icon(icon("timeLayer"))
-            .separator()
-            // İstatistik and Grafik (docs/adr/0227 §8): its fields summed up, its chart.
-            .item(
-                "İstatistik",
-                Message::Charts(crate::charts::Event::OpenStatistics(Some(id.clone()))),
-            )
-            .icon(icon("fieldStatistics"))
-            .item(
-                "Grafik",
-                Message::Charts(crate::charts::Event::Open {
-                    layer: Some(id),
-                    kind: None,
-                    spec: None,
-                }),
-            )
-            .icon(icon("chart"))
+            .separator();
+        // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields; KentOS GIS's
+        // (module_surfaces.rs).
+        if self.shows_layer_entry(LayerEntry::Time) {
+            menu = menu
+                .item(
+                    if node.time.is_some() {
+                        "Zaman ayarları… (zamansal)"
+                    } else {
+                        "Zaman ayarları…"
+                    },
+                    Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
+                )
+                .icon(icon("timeLayer"))
+                .separator();
+        }
+        // İstatistik and Grafik (docs/adr/0227 §8): its fields summed up, its chart; as the bottom panel's tabs.
+        if self.shows_bottom_tab(crate::bottom::BottomTab::Statistics) {
+            menu = menu
+                .item(
+                    "İstatistik",
+                    Message::Charts(crate::charts::Event::OpenStatistics(Some(id.clone()))),
+                )
+                .icon(icon("fieldStatistics"));
+        }
+        if self.shows_bottom_tab(crate::bottom::BottomTab::Chart) {
+            menu = menu
+                .item(
+                    "Grafik",
+                    Message::Charts(crate::charts::Event::Open {
+                        layer: Some(id),
+                        kind: None,
+                        spec: None,
+                    }),
+                )
+                .icon(icon("chart"));
+        }
+        menu
     }
 
     /// Whether a selected object is on the layer (Seçimden süzgeç's item).

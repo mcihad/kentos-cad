@@ -43,7 +43,11 @@ fn giris_has_the_webs_katmanlar_sablonlar_and_ozellikler_which_step_down_to_one_
     let mut app = app_with_drawing();
     crate::files_testing::make_cad(&mut app);
     // CAD's Giriş has Katmanlar and Özellikler, Ekle Şablonlar (docs/adr/0622 §3).
-    for (tab, label) in [("home", "Katmanlar"), ("insert", "Şablonlar"), ("home", "Özellikler")] {
+    for (tab, label) in [
+        ("home", "Katmanlar"),
+        ("insert", "Şablonlar"),
+        ("home", "Özellikler"),
+    ] {
         let group = app
             .ribbon_group(tab, panel_in(Workspace::Cad, tab, label))
             .unwrap_or_else(|| panic!("{label} on the desktop"));
@@ -215,13 +219,14 @@ fn a_selection_brings_its_kinds_tab_and_gives_the_ribbon_back_when_it_empties() 
     assert_eq!(app.shown_tab(), "selection");
     let _ = app.update(Message::Run("edit.deselect"));
     assert_eq!(app.shown_tab(), "map", "back to the tab before it");
-    // One kind: its own tab. The parcel's Alan, the line and the polyline's Çizgi, the point's Nokta.
+    // One kind: its own tab. The parcel's Alan, the line and the polyline's Çizgi, the point's Nokta. A hatch
+    // has no tab of its own in a CBS drawing (CAD's, docs/adr/0802): Seçim.
     for (slots, tab) in [
         (vec![Slot(4)], "ctx.area"),
         (vec![Slot(2), Slot(3)], "ctx.line"),
         (vec![Slot(1)], "ctx.point"),
         (vec![Slot(11)], "ctx.text"),
-        (vec![Slot(13)], "ctx.hatch"),
+        (vec![Slot(13)], "selection"),
     ] {
         app.selection.set(slots);
         let _ = app.update(Message::RibbonPanel(Event::Color(None)));
@@ -378,20 +383,19 @@ fn ozellikler_offers_the_webs_values() {
         );
         // A CAD drawing in metres is a plan with its own scales (docs/adr/0622 §2); the
         // web's cases are drawings in millimetres.
-        let unit = c
-            .get("unit")
-            .map_or(kentos_commands::DrawingUnit::Mm, |u| {
-                serde_json::from_value(u.clone()).expect("a unit")
-            });
-        let offered: Vec<serde_json::Value> = kentos_project::wizard::project_scales(cad, unit, current)
-            .into_iter()
-            .map(|s| {
-                serde_json::json!({
-                    "denominator": s as u64,
-                    "text": kentos_project::wizard::scale_text(s)
+        let unit = c.get("unit").map_or(kentos_commands::DrawingUnit::Mm, |u| {
+            serde_json::from_value(u.clone()).expect("a unit")
+        });
+        let offered: Vec<serde_json::Value> =
+            kentos_project::wizard::project_scales(cad, unit, current)
+                .into_iter()
+                .map(|s| {
+                    serde_json::json!({
+                        "denominator": s as u64,
+                        "text": kentos_project::wizard::scale_text(s)
+                    })
                 })
-            })
-            .collect();
+                .collect();
         assert_eq!(
             serde_json::Value::from(offered),
             c["offered"],

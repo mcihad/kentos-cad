@@ -65,9 +65,10 @@ impl App {
             ("help.shortcuts", "Kısayollar", Icon::Help),
             ("help.about", "Hakkında", Icon::Info),
         ];
+        // The program's own name (program.rs).
         let mut menu = menu
             .detail(scrollable(detail).height(Fill))
-            .note("KentOS CAD");
+            .note(self.program_title());
         for (id, title, glyph) in footer {
             menu = menu.action(Action::secondary(glyph, title, event(Event::Run(id))));
         }
@@ -87,7 +88,12 @@ impl App {
             column![
                 row![
                     text("KentOS").font(kentos_ui::theme::typography::ui_strong()),
-                    label::muted(" CAD"),
+                    // “ CAD” in kentos-cad, “ Mimari”, “ Harita”, “ GIS” in a module's program.
+                    label::muted(
+                        self.program_title()
+                            .strip_prefix("KentOS")
+                            .unwrap_or(" CAD")
+                    ),
                 ],
                 label::caption(doc),
             ]
@@ -106,10 +112,25 @@ impl App {
             return why.to_owned();
         }
         match nav.label {
-            "Yeni" => "Mod, koordinat sistemi ve ölçek".to_owned(),
+            // What the program's new project asks (docs/adr/0802 §3): KentOS Mimari nothing.
+            "Yeni" => match self.program {
+                Some(kentos_launch::Module::Architecture) => {
+                    "Bina projesi: metre, 1:100, yerel koordinatlar".to_owned()
+                }
+                Some(kentos_launch::Module::Map) => {
+                    "Harita projesi: il, dilim ve proje adı".to_owned()
+                }
+                Some(kentos_launch::Module::Gis) => {
+                    "CBS projesi: il, dilim ve proje adı".to_owned()
+                }
+                None => "Mod, koordinat sistemi ve ölçek".to_owned(),
+            },
             "Aç" => ".kcad çizim dosyası".to_owned(),
             "Kaydet" => self.save_where(),
             "Farklı kaydet" => "Yeni bir .kcad dosyasına".to_owned(),
+            // The program's own formats (module_surfaces.rs): kentos-cad's line as it was.
+            "İçe aktar" if self.program.is_some() => self.formats_line(&IMPORTS),
+            "Dışa aktar" if self.program.is_some() => self.formats_line(&EXPORTS),
             "İçe aktar" => "DXF, NCN, NCZ, SHP, GeoJSON, KML".to_owned(),
             "Dışa aktar" => "DXF, NCN, GeoJSON, KML, GPX, PDF".to_owned(),
             "Bulut" => self.cloud_line(),
@@ -300,7 +321,22 @@ impl App {
         )
     }
 
-    /// İçe aktar or Dışa aktar: the formats, each with its badge and what it takes or gives.
+    /// The formats of `formats` this program lists, by their badges: “DWG, DXF, NCZ, PDF”.
+    fn formats_line(&self, formats: &[Format]) -> String {
+        self.shown_formats(formats)
+            .map(|f| {
+                if f.badge == "JSON" {
+                    "GeoJSON"
+                } else {
+                    f.badge
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
+
+    /// İçe aktar or Dışa aktar: the formats this program lists (module_surfaces.rs), each with its badge and
+    /// what it takes or gives.
     fn formats_pane(
         &self,
         title: &'static str,
@@ -308,10 +344,9 @@ impl App {
         formats: &'static [Format],
         focus: Option<usize>,
     ) -> Element<'_, Message> {
-        let rows = formats
-            .iter()
-            .enumerate()
-            .fold(Column::new().spacing(1), |list, (i, f)| {
+        let rows = self.shown_formats(formats).enumerate().fold(
+            Column::new().spacing(1),
+            |list, (i, f)| {
                 let runs = self.menu_runs(f.id);
                 let trailing: Element<'_, Message> = match (runs, catalog().get(f.id)) {
                     (true, Some(c)) => {

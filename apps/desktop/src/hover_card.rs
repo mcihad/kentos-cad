@@ -104,12 +104,25 @@ pub(crate) struct Card {
     pub rows: Vec<(&'static str, String, bool)>,
 }
 
-/// The web's `content`: the card for `e`.
+/// The web's `content`: the card for `e`, its parcel rows too.
+#[cfg(test)]
 pub(crate) fn card(
     e: &Entity,
     model: &Model,
     format: &Format,
     color: impl Fn(&str) -> Color,
+) -> Card {
+    card_with(e, model, format, color, true)
+}
+
+/// The card for `e`, its parcel rows with `parcels` (Ada, Mahalle, Nitelik, the deed's area and the parcel's number
+/// in the title: a map's programs and kentos-cad, module_surfaces.rs).
+pub(crate) fn card_with(
+    e: &Entity,
+    model: &Model,
+    format: &Format,
+    color: impl Fn(&str) -> Color,
+    parcels: bool,
 ) -> Card {
     let base = e.base();
     let attr = |key: &str| {
@@ -118,9 +131,10 @@ pub(crate) fn card(
             .filter(|v| !v.is_empty())
             .map(String::as_str)
     };
+    let parcel = |key: &str| if parcels { attr(key) } else { None };
     let kind = kind_title(e.kind());
     let title = match (
-        attr("Parsel"),
+        parcel("Parsel"),
         base.label.as_deref().filter(|l| !l.is_empty()),
     ) {
         (Some(number), _) => format!("Parsel {number}"),
@@ -133,12 +147,12 @@ pub(crate) fn card(
     });
     let mut rows: Vec<(&'static str, String, bool)> = Vec::new();
     for key in ["Ada", "Mahalle", "Nitelik"] {
-        if let Some(value) = attr(key) {
+        if let Some(value) = parcel(key) {
             rows.push((key, value.to_owned(), false));
         }
     }
     // The registered (deed) area as written, beside the computed one.
-    let deed = deed_area_text(base.attrs.get("Tapu alanı (m²)").map(String::as_str));
+    let deed = deed_area_text(parcel("Tapu alanı (m²)"));
     let has_deed = deed.is_some();
     if let Some((text, plain)) = deed {
         rows.push(("Tapu alanı", text, plain));
@@ -316,7 +330,13 @@ impl App {
         let at = self.viewport.cursor?;
         let [x, y] = self.viewport.camera.world_to_screen(at);
         let format = Format::of(doc.settings());
-        let card = card(e, &doc.model, &format, |value| self.drawing_color(value));
+        let card = card_with(
+            e,
+            &doc.model,
+            &format,
+            |value| self.drawing_color(value),
+            self.shows_parcel_rows(),
+        );
         let pointer = Point::new(x.round() as f32, y.round() as f32);
         // The first photo the store has decoded (attachments.rs).
         let photo = self

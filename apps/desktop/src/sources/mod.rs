@@ -435,8 +435,11 @@ fn drawing_of(bytes: &[u8]) -> Result<Arc<ProjectDrawing>, String> {
 }
 
 impl App {
-    /// `data.sources`: the dock shows the Kaynaklar tab.
+    /// `data.sources`: the dock shows the Kaynaklar tab; KentOS Mimari has none (module_surfaces.rs), and says so.
     pub(crate) fn show_sources(&mut self) {
+        if !self.open_panel(Panel::Sources) {
+            return;
+        }
         if !self.right_panel_shown() {
             self.toggle_right_panel();
         }
@@ -726,6 +729,10 @@ impl App {
                 }
             }
             Event::Dropped(path) => {
+                // A program without Kaynaklar takes drawings alone (KentOS Mimari, module_surfaces.rs).
+                if !self.shows_panel(Panel::Sources) {
+                    return self.drop_drawing(path);
+                }
                 if self.document.is_none() {
                     self.output("Açık çizim yok. Önce bir çizim açın (Ctrl+O).");
                     return Task::none();

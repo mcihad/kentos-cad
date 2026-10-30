@@ -14,6 +14,7 @@ use kentos_ui::{label, style};
 use serde_json::Value;
 
 use crate::app::{App, Message};
+use crate::module_surfaces::AppSetting;
 use crate::settings::schema;
 use crate::settings_look as look;
 use crate::settings_view::{
@@ -255,14 +256,37 @@ impl<'a> Fields<'a> {
 }
 
 impl App {
+    /// What a section holds, in a sentence, as this program shows it (module_surfaces.rs): a module's program
+    /// leaves out what it does not show.
+    fn settings_lead(&self, section: Section) -> &'static str {
+        match section {
+            Section::Appearance
+                if !self.shows_setting(AppSetting::Geographic)
+                    && !self.shows_setting(AppSetting::FormOnCreate) =>
+            {
+                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, fare yardımcıları, şeridin bağlamsal sekmeleri, sağ tık, komut satırının AutoCAD adları ve işlemlerin Python kodu."
+            }
+            Section::NewProjects if !self.shows_setting(AppSetting::NewProjectType) => {
+                "Oluşturacağınız her yeni projede başlangıçta önerilecek çizim birimi, çizim yazı tipi ve koordinat sistemi."
+            }
+            _ => section.lead(),
+        }
+    }
+
     /// The window: the sections, the one chosen, and its buttons.
     pub(crate) fn settings_dialog(&self) -> Element<'_, Message> {
         let Some(draft) = &self.settings_draft else {
             return text("").into();
         };
-        let current = draft.section;
+        // The program's own sections (module_surfaces.rs): KentOS Mimari has no Yeni projeler.
+        let current = if self.shows_settings_section(draft.section) {
+            draft.section
+        } else {
+            Section::Appearance
+        };
         let list = Section::ALL
             .iter()
+            .filter(|section| self.shows_settings_section(**section))
             .fold(Column::new().spacing(2), |list, section| {
                 list.push(
                     button(
@@ -309,7 +333,7 @@ impl App {
             text(current.title())
                 .font(typography::ui_strong())
                 .size(typography::heading()),
-            label::caption(current.lead()).style(style::text::muted),
+            label::caption(self.settings_lead(current)).style(style::text::muted),
             // The page scrolls; the buttons stay in view whatever the window's height.
             scrollable(page)
                 .direction(style::field::body_scrollbar())
@@ -423,14 +447,18 @@ impl App {
                 Fields::title("appearance.crosshair"),
                 choices("appearance.crosshair", &f.value("appearance.crosshair")),
             )
-            .help(Fields::help("appearance.crosshair"))
-            // How a geographic second system's values are written (docs/adr/0167 §1).
-            .section("Koordinatlar")
-            .field(
-                Fields::title("display.geographic"),
-                choices("display.geographic", &f.value("display.geographic")),
-            )
-            .help(Fields::help("display.geographic"));
+            .help(Fields::help("appearance.crosshair"));
+        // How a geographic second system's values are written (docs/adr/0167 §1): a map's programs' (module_surfaces.rs).
+        let rest = if self.shows_setting(AppSetting::Geographic) {
+            rest.section("Koordinatlar")
+                .field(
+                    Fields::title("display.geographic"),
+                    choices("display.geographic", &f.value("display.geographic")),
+                )
+                .help(Fields::help("display.geographic"))
+        } else {
+            rest
+        };
         let rest = [
             "drafting.cursorInput",
             "drafting.commandBar",
@@ -438,13 +466,16 @@ impl App {
         ]
         .into_iter()
         .fold(rest, |form, key| f.switch_field(form, key, None));
-        // The ribbon's contextual tabs, the right button and the drawn object's form (docs/adr/0622 §4, §6).
+        // The ribbon's contextual tabs, the right button and the drawn object's form (docs/adr/0622 §4, §6); the
+        // form is a map's programs' (module_surfaces.rs).
+        let form_on_create = self.shows_setting(AppSetting::FormOnCreate);
         let rest = [
             "drafting.contextualTabs",
             "drafting.rightClickEnter",
             "drafting.formOnCreate",
         ]
         .into_iter()
+        .filter(|key| form_on_create || *key != "drafting.formOnCreate")
         .fold(rest.section("Şerit ve fare"), |form, key| {
             f.switch_field(form, key, None)
         });
@@ -461,14 +492,18 @@ impl App {
     }
 
     fn new_projects_section<'a>(&self, f: &Fields<'a>) -> Element<'a, Message> {
-        let mut form = Form::new()
-            .label_width(170.0)
-            .section("Önerilenler")
-            .field(
+        let form = Form::new().label_width(170.0).section("Önerilenler");
+        // A module's program fixes its projects' type (module_surfaces.rs): the choice is kentos-cad's.
+        let form = if self.shows_setting(AppSetting::NewProjectType) {
+            form.field(
                 Fields::title("newProjects.workspace"),
                 choices("newProjects.workspace", &f.value("newProjects.workspace")),
             )
             .help(Fields::help("newProjects.workspace"))
+        } else {
+            form
+        };
+        let mut form = form
             .field(
                 Fields::title("newProjects.drawingUnit"),
                 choices(

@@ -79,10 +79,29 @@ fn ev(e: Event) -> Message {
 const MODELS: &str = "__models";
 
 impl App {
-    /// The tab's header note: “4 araç” or “3 kayıt”.
+    /// Whether this program offers a processing tool (docs/adr/0802): its `processing.run.<tool>` command.
+    pub(crate) fn offers_tool(&self, tool: &str) -> bool {
+        self.offers(&format!("{}{tool}", crate::catalog::PROCESSING_RUN))
+    }
+
+    /// Whether this program offers a model (docs/adr/0802): its `processing.model.<model>` command (the user's
+    /// models where İşlem araç kutusu is).
+    pub(crate) fn offers_model(&self, model: &str) -> bool {
+        self.offers(&format!("{}{model}", crate::catalog::PROCESSING_MODEL))
+    }
+
+    /// The tab's header note: “4 araç” (those this program offers) or “3 kayıt”.
     pub(crate) fn processing_meta(&self) -> String {
         match self.processing.panel.tab {
-            Tab::Tools => format!("{} araç", self.processing.registry.tools().len()),
+            Tab::Tools => format!(
+                "{} araç",
+                self.processing
+                    .registry
+                    .tools()
+                    .iter()
+                    .filter(|t| self.offers_tool(&t.id))
+                    .count()
+            ),
             Tab::History => format!("{} kayıt", self.processing.runner.history().len()),
         }
     }
@@ -138,17 +157,19 @@ impl App {
         });
         let folded_query = fold_turkish(query);
         let mut roots: Vec<Node<'_, Message>> = Vec::new();
-        // Modeller: the models (a search matches their name and description), then Yeni model….
+        // Modeller: the models this program offers (a search matches their name and description), then Yeni model….
         let models: Vec<_> = registry
             .models()
             .iter()
+            .filter(|m| self.offers_model(&m.id))
             .filter(|m| {
                 query.is_empty()
                     || fold_turkish(&format!("{} {}", m.label, m.description))
                         .contains(&folded_query)
             })
             .collect();
-        if !models.is_empty() || query.is_empty() {
+        let new_model = self.offers("processing.newModel");
+        if !models.is_empty() || (query.is_empty() && new_model) {
             let mut branch = category_row(
                 "Modeller",
                 "processing",
@@ -197,7 +218,7 @@ impl App {
                 };
                 branch = branch.push(node);
             }
-            if query.is_empty() {
+            if query.is_empty() && new_model {
                 branch = branch.push(
                     Node::new("Yeni model…")
                         .icon(icon(crate::icons::from_web(Some("modelNew"))).size(15.0))
@@ -206,7 +227,10 @@ impl App {
             }
             roots.push(branch);
         }
-        let keep = |t: &kentos_processing::Tool| hits.as_ref().is_none_or(|h| h.contains(&t.id));
+        // The tools this program offers (docs/adr/0802), those the search finds.
+        let keep = |t: &kentos_processing::Tool| {
+            self.offers_tool(&t.id) && hits.as_ref().is_none_or(|h| h.contains(&t.id))
+        };
         for node in registry.tree(&keep) {
             roots.push(category_node(node, &open));
         }

@@ -14,14 +14,19 @@ contextual tabs, the toolbox has every one.
 import json, sys
 from pathlib import Path
 
-def C(i, size='small', works=()):
+def C(i, size='small', works=(), modes=()):
     c = {"command": i, "size": size}
     if works: c["works"] = list(works)
+    if modes: c["modes"] = list(modes)
     return c
-def L(i, works=()): return C(i, 'large', works)
-def S(i, works=()): return C(i, 'small', works)
-# A seldom used command of a panel's ▾ only some CAD works have (docs/adr/0802).
-def W(i, works): return {"command": i, "works": list(works)}
+def L(i, works=(), modes=()): return C(i, 'large', works, modes)
+def S(i, works=(), modes=()): return C(i, 'small', works, modes)
+# A seldom used command of a panel's ▾ only some CAD works (or one project type) have (docs/adr/0802).
+def W(i, works=(), modes=()):
+    w = {"command": i}
+    if works: w["works"] = list(works)
+    if modes: w["modes"] = list(modes)
+    return w
 def SP(key, size='small'): return {"split": key, "size": size}
 # Boşluk, Niş, Baca: the openings that are no door or window (docs/adr/0719).
 OPENINGS = {"key": "archOpenings", "size": "small", "split": [
@@ -29,33 +34,43 @@ OPENINGS = {"key": "archOpenings", "size": "small", "split": [
     {"command": "tool.niche", "title": "Boşluk", "label": "Niş"},
     {"command": "tool.flue", "title": "Boşluk", "label": "Baca"},
 ]}
-def M(label, blocks, size='small', checklist=False, works=()):
-    # A block is (title, ids) or (title, ids, works): a block only some CAD works have (docs/adr/0802).
+def M(label, blocks, size='small', checklist=False, works=(), modes=()):
+    # A block is (title, ids), (title, ids, works) or (title, ids, works, modes): a block only some CAD works, or one
+    # project type, have (docs/adr/0802). A menu that is no checklist shows its blocks' commands as one list.
     def block(b):
         out = {"label": b[0], "items": b[1]}
         if len(b) > 2 and b[2]: out["works"] = list(b[2])
+        if len(b) > 3 and b[3]: out["modes"] = list(b[3])
         return out
     m = {"menu": label, "size": size, "blocks": [block(b) for b in blocks]}
     if checklist: m["checklist"] = True
     if works: m["works"] = list(works)
+    if modes: m["modes"] = list(modes)
     return m
 def B(name): return {"builtin": name}
-def P(label, icon, items, overflow=(), launcher=None, keep=False, works=()):
+def P(label, icon, items, overflow=(), launcher=None, keep=False, works=(), modes=()):
     p = {"label": label, "icon": icon, "items": items}
     if overflow: p["overflow"] = list(overflow)
     if launcher: p["launcher"] = launcher
     if keep: p["keep"] = True
     if works: p["works"] = list(works)
+    if modes: p["modes"] = list(modes)
     return p
 # A CAD tab, panel, button, menu block or ▾ command only some works show (docs/adr/0801, 0802): `works` names them
 # (architecture, map); none: every work, and a CAD project not asked its work shows them all. A module's program
-# offers only what its works show (docs/adr/0802): Komut ara and the command line find nothing else.
+# offers only what its works show, and what MODULES gives it (docs/adr/0802): Komut ara, the command line, the
+# shortcuts and the ribbon's own run find nothing else.
 def T(i, label, panels, works=()):
     t = {"id": i, "label": label, "panels": panels}
     if works: t["works"] = list(works)
     return t
 MAP = ["map"]
 ARCHITECTURE = ["architecture"]
+# A contextual tab's panel, button, menu block or ▾ command one project type alone shows (docs/adr/0802), as `modes`
+# names a contextual tab's types: CAD's drafting (Koordinat yaz, Km yaz, ölçekli açıklama) a CBS selection does not
+# offer, and CBS's analysis (mekânsal istatistik, uygunluk, uzaktan algılama) no CAD work offers.
+IN_CAD = ["cad"]
+IN_GIS = ["gis"]
 def toTab(tab, title): return {"tab": tab, "title": title}
 def toCmd(cmd, title): return {"command": cmd, "title": title}
 
@@ -68,10 +83,11 @@ ARCH_KINDS = ["edit.selectFilter.wall", "edit.selectFilter.opening", "edit.selec
     "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.stair", "edit.selectFilter.ramp",
     "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab"]
 def select_filter(cad):
-    # The status bar's Süzgeç lists every kind in both types; the drop-down is the same list.
-    kinds = SELECT_KINDS + ARCH_KINDS
-    return M("Seçim süzgeci", [("", ["edit.selectFilter"]), ("Seçilebilir türler", kinds),
-        ("", ["edit.selectFilterAll", "edit.selectFilterNone"])], checklist=True)
+    # The status bar's Süzgeç lists the kinds; the drop-down is the same list. The architectural kinds are a building's
+    # (docs/adr/0802): KentOS Mimari's, never KentOS Harita's or a CBS project's.
+    arch = [("Mimari nesneler", ARCH_KINDS, ARCHITECTURE)] if cad else []
+    return M("Seçim süzgeci", [("", ["edit.selectFilter"]), ("Seçilebilir türler", SELECT_KINDS)] + arch
+        + [("", ["edit.selectFilterAll", "edit.selectFilterNone"])], checklist=True)
 
 BASEMAPS = M("Altlık", [
     ("OpenStreetMap", ["basemap.osmStandard", "basemap.osmTopo", "basemap.osmHot", "basemap.cyclosm"]),
@@ -123,11 +139,19 @@ def file_tab(cad):
     ])
 
 def survey_tab(cad):
-    # A coordinate system's query and a route's station are a map's (docs/adr/0802).
-    query = [P("Sorgu", "measure", [S("tool.measure"), S("tool.area"), S("crs.query", MAP), S("tool.measureAngle"),
+    # A route's station is a map's (docs/adr/0802); Koordinat oku is any drawing's query (AutoCAD's ID).
+    query = [P("Sorgu", "measure", [S("tool.measure"), S("tool.area"), S("crs.query"), S("tool.measureAngle"),
         S("tool.identify"), S("tool.stationOffset", MAP)])] if cad else []
+    if not cad:
+        # The survey computations (karne, poligon, kutupsal alım, kestirme, ağ dengelemesi, aplikasyon) are KentOS
+        # Harita's (docs/adr/0802): a CBS project keeps its points, its recorded measures and fitting.
+        return T("survey", "Ölçme", [
+            P("Noktalar", "point", [L("point.editor"), S("crs.points"), S("file.import.gnss"), S("cogo.check"),
+                S("cogo.update")]),
+            P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),
+        ])
     # A CAD project's survey panels are a map's (docs/adr/0801): a building's Ölçme is its Sorgu.
-    works = MAP if cad else ()
+    works = MAP
     return T("survey", "Ölçme", query + [
     P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send")], works=works),
     P("Poligon ve alım", "surveyTraverse", [L("calc.traverse"), L("calc.polar"), L("calc.stakeout")], works=works),
@@ -186,7 +210,7 @@ CAD = [
           overflow=["tool.nurbs", "tool.xline", "tool.ray", "tool.parallel", "tool.perpIn", "tool.perpOut", "tool.donut",
             "tool.revcloud", "tool.wipeout", "tool.sector", W("tool.rangeRings", MAP), "tool.tangentLine",
             "tool.fourthCorner", "tool.divide", "tool.pointsBetween", "tool.intersectPoint", W("tool.vertexPoints", MAP),
-            W("tool.adjoin", MAP)], keep=True),
+            W("tool.adjoin", MAP), W("tool.boundary", ARCHITECTURE)], keep=True),
         P("Değiştir", "move", [S("tool.move"), S("tool.rotate"), SP("trim"), S("tool.copy"), S("tool.mirror"),
             SP("corner"), S("tool.offset"), S("tool.scale"), S("tool.erase")],
           overflow=["tool.extend", "tool.stretch", "tool.array", "tool.explode", "tool.break", "tool.join",
@@ -226,16 +250,18 @@ CAD = [
             W("raster.stac", MAP)]),
         P("Harita", "basemap", [BASEMAPS, S("service.add"), S("service.feed")],
           overflow=["service.info", "service.connections", "source.postgis"], works=MAP),
+        # A layer's map tips and actions ({$enlem}) are a map's (docs/adr/0802); Bilgi keeps its plain card.
         P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("file.import.photos", MAP)],
-          overflow=["layer.info"]),
+          overflow=[W("layer.info", MAP)]),
         P("Adres", "addressSearch", [S("address.search"), S("address.reverse")],
           overflow=["address.data", "address.compare", "address.providers"], works=MAP),
     ]),
     T("annotate", "Açıklama", [
         P("Yazı", "text", [L("tool.text"), S("tool.mtext"), SP("textAlong"), S("tool.placeTextFile"),
             S("text.findReplace"), S("style.textStyles")],
+          # A layer's labels are a map's (docs/adr/0802): a building labels its objects with Etiket.
           overflow=["text.fieldInsert", "text.fieldsUpdate", "text.number", "text.combine", "text.split", "text.check",
-            "text.fonts", "tool.labelsToText", "tool.readable"]),
+            "text.fonts", W("tool.labelsToText", MAP), "tool.readable"]),
         P("Ölçü", "dimension", [SP("dimension", "lead"), S("tool.dimContinue"), S("tool.dimBaseline"),
             S("tool.quickDimension"), S("style.dimensionStyles")],
           overflow=["tool.centerMark", "tool.dimCenterLine", "tool.dimElevation", "tool.dimensionReassociate",
@@ -245,7 +271,8 @@ CAD = [
         P("Tablo", "table", [L("table.insert"), S("table.edit"), S("table.update")],
           overflow=["table.link", "table.blockSchedule"]),
         P("Tarama", "hatch", [L("tool.hatch"), S("tool.hatchSelected"), S("tool.hatchEdit")]),
-        P("İşaretleme", "revcloud", [S("tool.revcloud"), S("tool.wipeout")]),
+        # A map sheet's north arrow (docs/adr/0802): KentOS Mimari has it in Belgele › İşaret.
+        P("İşaretleme", "revcloud", [S("tool.revcloud"), S("tool.wipeout"), S("tool.northArrow", MAP)]),
         P("Ölçek", "annotationMake", [S("annotation.make"), S("tool.annotativePlace")],
           overflow=["annotation.reset", "annotation.unmake"]),
     ]),
@@ -318,12 +345,15 @@ CAD = [
           overflow=["style.svgEditor", "style.assign", "style.clearSymbol"]),
         P("Standart", "standardsCheck", [S("standards.check"), S("standards.apply"), S("layer.impact")]),
         P("Temizlik", "cleanup", [S("tool.cleanup"), S("tool.audit"), S("layer.purge")]),
-        P("Veri", "featureTable", [S("data.featureTable"), S("layer.fields"), S("data.statistics"),
+        # A layer's typed fields, attribute table, statistics, forms and sources are a map's data (docs/adr/0802); a
+        # building's data is its objects' own. Charts are CBS's (Veri › Tablo).
+        P("Veri", "featureTable", [S("data.featureTable", MAP), S("layer.fields", MAP), S("data.statistics", MAP),
             S("data.compare"), S("data.search")],
-          overflow=["data.chart", "data.forms", "data.formEdit", "data.relations", "data.joinViews",
-            "data.formAudit", "data.unmark", "data.sources"]),
-        P("Otomasyon", "terminal", [L("python.console"), S("commandline.focus"), S("processing.toolbox"),
-            S("processing.newModel")]),
+          overflow=[W("data.forms", MAP), W("data.formEdit", MAP), W("data.relations", MAP), W("data.joinViews", MAP),
+            W("data.formAudit", MAP), "data.unmark", W("data.sources", MAP)]),
+        # İşlemler's toolbox and models are a map's (docs/adr/0802): a building keeps İfadeyle seç and Konuma göre seç.
+        P("Otomasyon", "terminal", [L("python.console"), S("commandline.focus"), S("processing.toolbox", MAP),
+            S("processing.newModel", MAP)]),
         P("Kısıtlar", "constraint", [L("tool.constraint"), S("constraint.show"), S("constraint.parameters")],
           overflow=["constraint.relaxNext"]),
         P("GIS", "exportGis", [S("file.export.gis"), S("gis.derivation")], works=MAP),
@@ -351,20 +381,22 @@ GIS = [
         P("Koordinat sistemi", "crs", [S("crs.set"), S("crs.transform"), S("view.mapCrs")],
           launcher=toCmd("crs.set", "Proje ayarları: koordinat sistemi")),
     ]),
+    # Parsel oluştur and Plan yolu are KentOS Harita's drafting (docs/adr/0802): a CBS parcel is a Kapalı alan with
+    # its layer's form.
     T("edit", "Düzenle", [
         P("Oluştur", "line", [L("tool.point"), L("tool.polyline"), L("tool.polygon"), S("tool.line"), SP("circle"),
-            SP("rectangle"), S("tool.adjoin"), S("tool.parcel"), S("tool.text")],
+            SP("rectangle"), S("tool.adjoin"), S("tool.text")],
           overflow=["tool.arc", "tool.ellipse", "tool.spline", "tool.vertexPoints", "tool.divide", "tool.pointsBetween",
-            "tool.intersectPoint", "tool.centerline", "tool.planRoad", "tool.roadJunctions", "tool.medianClose",
-            "tool.sector", "tool.rangeRings", "tool.fourthCorner"], keep=True),
+            "tool.intersectPoint", "tool.centerline", "tool.sector", "tool.rangeRings", "tool.fourthCorner"], keep=True),
         P("Şablonlar", "templates", [B("templates")], launcher=toCmd("template.panel", "Şablonlar paneli")),
         P("Katmanlar", "layers", [B("layers")], overflow=LAYER_OVERFLOW,
           launcher=toCmd("style.layerStyle", "Katman stili…")),
         P("Değiştir", "move", [S("tool.move"), S("tool.rotate"), SP("trim"), S("tool.vertex"), S("tool.reshape"),
             S("tool.break"), S("tool.offset"), S("tool.join"), S("tool.erase")],
+          # Kısıt is CAD's (docs/adr/0802): CBS shows neither the marks nor Parametreler.
           overflow=["tool.copy", "tool.scale", "tool.mirror", "tool.stretch", "tool.extend", "tool.explode",
             "tool.reverse", "tool.lengthen", "tool.continue", "tool.edgeShift", "tool.align", "tool.alignDistribute",
-            "tool.simplify", "tool.matchProperties", "tool.setElevation", "tool.curveEdit", "tool.constraint",
+            "tool.simplify", "tool.matchProperties", "tool.setElevation", "tool.curveEdit",
             "edit.bringToFront", "edit.sendToBack", "edit.paste", "edit.cut", "edit.copy", "edit.pasteOriginal"],
           keep=True),
         P("Alan işlemleri", "areaUnion", [S("tool.areaUnion"), S("tool.areaSplit"), S("tool.areaSubtract")],
@@ -375,7 +407,7 @@ GIS = [
         P("Katman", "layerAdd", [NEW_LAYER, S("layer.newGroup"), S("layer.fields"), S("style.layerStyle"),
             S("layer.filter"), S("layer.crs")],
           overflow=["layer.filterFromSelection", "layer.filterClear", "layer.reproject", "layer.showAll",
-            "layer.info", "file.import.maplibre", "file.export.maplibre"]),
+            "layer.info", "layer.dataset", "file.import.maplibre", "file.export.maplibre"]),
         P("Tablo", "featureTable", [L("data.featureTable"), S("data.statistics"), S("data.chart")],
           overflow=["chart.bar", "chart.pie", "chart.histogram", "chart.box", "chart.scatter", "chart.line"]),
         P("Form", "forms", [S("data.forms"), S("data.formEdit"), S("data.relations")],
@@ -388,8 +420,9 @@ GIS = [
             M("Çakışma", [("", ["draft.overlap.allow", "draft.overlap.layer", "draft.overlap.layers"])])],
           overflow=["draft.topologyPoints", "tool.topology"]),
         P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("layer.info")]),
+        # A project's hatch patterns serve CAD's hatch objects (docs/adr/0802); CBS fills areas by a layer's symbol.
         P("Standart", "standardsCheck", [S("profile.window"), S("standards.check"), S("standards.apply")],
-          overflow=["lineTypes.manage", "hatchPatterns.manage", "layer.impact"]),
+          overflow=["lineTypes.manage", "layer.impact"]),
         P("Stil", "styles", [L("style.manager"), S("data.search"), S("data.unmark")],
           overflow=["style.svgEditor", "style.assign", "style.clearSymbol"]),
     ]),
@@ -430,25 +463,30 @@ CONTEXTUAL = [
             S("tool.copyToLayer"), S("tool.setElevation")]),
         P("Çizim sırası", "bringToFront", [S("edit.bringToFront"), S("edit.sendToBack")]),
         P("Sembol", "symbolAssign", [S("style.assign"), S("style.clearSymbol")]),
-        P("Seçilenler", "select", [S("tool.selectSimilar"), S("file.saveSelection"), S("layer.filterFromSelection")]),
+        # A layer's filter is a map's (docs/adr/0802).
+        P("Seçilenler", "select", [S("tool.selectSimilar"), S("file.saveSelection"),
+            S("layer.filterFromSelection", MAP)]),
     ]},
     {"id": "ctx.point", "label": "Nokta", "kinds": ["point"], "panels": [
         SEL,
         edit_panel([S("tool.setElevation"), S("tool.matchProperties")]),
-        P("Nokta", "point", [L("point.editor"), S("tool.coordinateLabel"), S("field.send"), S("tool.copyToLayer")]),
+        # Koordinat yaz and Cihaza gönder are KentOS Harita's drafting and survey (docs/adr/0802), not a CBS selection's.
+        P("Nokta", "point", [L("point.editor"), S("tool.coordinateLabel", modes=IN_CAD), S("field.send", modes=IN_CAD),
+            S("tool.copyToLayer")]),
+        # Kernel density, spatial statistics and the distance matrix are CBS analysis (docs/adr/0802).
         P("İşlemler", "processing", [
             M("Üret", [("", [pr("generate.delaunay"), pr("generate.voronoi"), pr("generate.bounding"),
                 pr("generate.concaveHull"), pr("convert.pointsToPath")])], size='large'),
             M("İnterpolasyon", [("", [pr("interpolation.idw"), pr("interpolation.naturalNeighbor"),
-                pr("interpolation.spline"), pr("interpolation.kriging"), pr("interpolation.tin"),
-                pr("density.kernel")])], size='large'),
+                pr("interpolation.spline"), pr("interpolation.kriging"), pr("interpolation.tin")]),
+                ("", [pr("density.kernel")], (), IN_GIS)], size='large'),
             M("İstatistik", [("Merkez ve dağılım", [pr("stats.meanCenter"), pr("stats.medianCenter"),
                 pr("stats.standardDistance"), pr("stats.directionalDistribution")]),
                 ("Desen ve küme", [pr("stats.nearestNeighbor"), pr("stats.moransI"), pr("stats.hotSpot"),
                 pr("stats.localMoran"), pr("stats.dbscan"), pr("stats.dbscanSweep"), pr("stats.kMeans")])],
-              size='large'),
-            M("Yakınlık", [("", [pr("proximity.nearest"), pr("proximity.matrix"), pr("proximity.hub"),
-                pr("proximity.shortestLine"), pr("attributes.fromEnclosing")])], size='large'),
+              size='large', modes=IN_GIS),
+            M("Yakınlık", [("", [pr("proximity.nearest")]), ("", [pr("proximity.matrix"), pr("proximity.hub")], (), IN_GIS),
+                ("", [pr("proximity.shortestLine"), pr("attributes.fromEnclosing")])], size='large'),
         ]),
     ]},
     {"id": "ctx.line", "label": "Çizgi", "kinds": ["line", "polyline", "arc", "spline", "nurbs", "xline", "ray"],
@@ -460,15 +498,17 @@ CONTEXTUAL = [
           overflow=["tool.continue", "tool.reshape", "tool.edgeShift"]),
         P("Köşe", "fillet", [SP("corner"), S("tool.vertex"), S("tool.curveEdit"), S("tool.simplify"),
             S("tool.setElevation")]),
-        P("Dönüştür", "conversion", [S("tool.toArea"), S("tool.vertexPoints"), S("tool.divide"),
-            S("tool.stationLabels"), SP("textAlong")]),
+        # Survey points at the corners and a route's chainage (Km yaz) are a map's (docs/adr/0802); Km yaz is CAD
+        # drafting, a CBS route has Doğrusal referans.
+        P("Dönüştür", "conversion", [S("tool.toArea"), S("tool.vertexPoints", MAP), S("tool.divide"),
+            S("tool.stationLabels", MAP, IN_CAD), SP("textAlong")]),
         P("İşlemler", "processing", [
             M("Geometri", [("", [pr("geometry.buffer"), pr("geometry.simplify"), pr("geometry.clip"),
                 pr("geometry.intersection"), pr("geometry.difference"), pr("geometry.union"),
                 pr("geometry.validity"), pr("geometry.repair")])], size='large'),
             M("Dönüştür", [("", [pr("convert.linesToPolygons"), pr("convert.substring"), pr("convert.densify"),
                 pr("convert.vertices"), pr("convert.toPoints"), pr("sample.alongLines"),
-                pr("generalize.smooth"), pr("density.line")])], size='large'),
+                pr("generalize.smooth")]), ("", [pr("density.line")], (), IN_GIS)], size='large'),
             M("Doğrusal referans", [("", [pr("linearRef.createRoutes"), pr("linearRef.calibrateRoutes"),
                 pr("linearRef.routeEvents"), pr("linearRef.locateAlong"), pr("linearRef.overlayEvents"),
                 pr("linearRef.extractMeasures"), pr("linearRef.eventDrift")])], size='large'),
@@ -482,16 +522,19 @@ CONTEXTUAL = [
         P("Alan", "areaUnion", [L("tool.areaUnion"), S("tool.areaSubtract"), S("tool.areaIntersect"),
             S("tool.areaSplit"), S("tool.partsJoin"), S("tool.partsSplit")],
           overflow=["tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toPolyline"]),
-        P("Yaz ve tara", "coordinateLabel", [S("tool.coordinateVertices"), S("map.edgeLengths"),
-            S("tool.hatchSelected")], overflow=["processing.model.builtin.parcelSheet"]),
+        # A parcel's corner coordinates and edge lengths are a map's (docs/adr/0802); Köşelere koordinat yaz and Çoklu
+        # tara are CAD drafting, a CBS area is filled by its layer's symbol.
+        P("Yaz ve tara", "coordinateLabel", [S("tool.coordinateVertices", MAP, IN_CAD), S("map.edgeLengths", MAP),
+            S("tool.hatchSelected", modes=IN_CAD)], overflow=[W("processing.model.builtin.parcelSheet", MAP)]),
+        # Random points and ST_Subdivide's pieces are CBS sampling (docs/adr/0802), not a map's drafting.
         P("İşlemler", "processing", [
             M("Geometri", [("", [pr("geometry.buffer"), pr("geometry.clip"), pr("geometry.intersection"),
                 pr("geometry.difference"), pr("geometry.union"), pr("geometry.symDifference"),
                 pr("geometry.dissolve"), pr("geometry.simplify"), pr("geometry.validity"), pr("geometry.repair")])],
               size='large'),
-            M("Üret", [("", [pr("generate.bounding"), pr("generate.pole"), pr("sample.grid"), pr("sample.regular"),
-                pr("sample.random"), pr("sample.subdivide"), pr("convert.toPoints"), pr("convert.vertices"),
-                pr("convert.polygonsToLines")])], size='large'),
+            M("Üret", [("", [pr("generate.bounding"), pr("generate.pole"), pr("sample.grid"), pr("sample.regular")]),
+                ("", [pr("sample.random"), pr("sample.subdivide")], (), IN_GIS),
+                ("", [pr("convert.toPoints"), pr("convert.vertices"), pr("convert.polygonsToLines")])], size='large'),
             M("Genelleştir", [("", [pr("generalize.smooth"), pr("generalize.orthogonalize"),
                 pr("generalize.building"), pr("generalize.aggregate"), pr("generalize.dropParts"),
                 pr("generalize.eliminate"), pr("generalize.coverageSimplify")])], size='large'),
@@ -507,23 +550,27 @@ CONTEXTUAL = [
             S("text.number"), S("style.textStyles")],
           overflow=["text.fieldInsert", "text.fieldsUpdate", "text.check", "text.fonts"]),
         P("Eğri boyunca", "textAlong", [SP("textAlong")]),
-        P("Ölçek", "annotationMake", [S("annotation.make"), S("annotation.unmake"), S("tool.annotativePlace")]),
+        # Ölçekli açıklama is a sheet's paper scale (docs/adr/0323): CAD's; CBS sizes labels by the view's scale.
+        P("Ölçek", "annotationMake", [S("annotation.make"), S("annotation.unmake"), S("tool.annotativePlace")],
+          modes=IN_CAD),
     ]},
-    {"id": "ctx.dimension", "label": "Ölçü", "kinds": ["dimension"], "panels": [
+    # Dimensions, leaders, hatches, tables and pictures are CAD's objects (docs/adr/0802): a CBS selection of them (an
+    # imported DXF's) takes Seçim, as blocks do.
+    {"id": "ctx.dimension", "label": "Ölçü", "kinds": ["dimension"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
         P("Ölçü", "dimension", [S("dimension.space"), S("dimension.break"), S("dimension.unbreak"),
             S("tool.dimensionReassociate"), S("style.dimensionStyles")]),
         P("Ölçek", "annotationMake", [S("annotation.make"), S("annotation.unmake"), S("tool.annotativePlace")]),
     ]},
-    {"id": "ctx.leader", "label": "Kılavuz", "kinds": ["leader"], "panels": [
+    {"id": "ctx.leader", "label": "Kılavuz", "kinds": ["leader"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
         P("Kılavuz", "leader", [S("leader.addArm"), S("leader.removeArm"), S("leader.align"), S("leader.collect"),
             S("leader.blocks"), S("leader.styles")]),
         P("Ölçek", "annotationMake", [S("annotation.make"), S("annotation.unmake"), S("tool.annotativePlace")]),
     ]},
-    {"id": "ctx.hatch", "label": "Tarama", "kinds": ["hatch"], "panels": [
+    {"id": "ctx.hatch", "label": "Tarama", "kinds": ["hatch"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
         P("Tarama", "hatch", [L("tool.hatchEdit"), S("edit.hatchesToBack"), S("hatchPatterns.manage")]),
@@ -536,20 +583,22 @@ CONTEXTUAL = [
             S("block.freeze"), S("block.card"), S("tool.xclip"), S("block.panel")]),
         P("Çizim sırası", "bringToFront", [S("edit.bringToFront"), S("edit.sendToBack")]),
     ]},
-    {"id": "ctx.table", "label": "Tablo", "kinds": ["table"], "panels": [
+    {"id": "ctx.table", "label": "Tablo", "kinds": ["table"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
         P("Tablo", "table", [L("table.edit"), S("table.update"), S("table.link"), S("table.blockSchedule")]),
     ]},
-    {"id": "ctx.image", "label": "Resim", "kinds": ["image"], "panels": [
+    {"id": "ctx.image", "label": "Resim", "kinds": ["image"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
         P("Resim", "imageInsert", [L("tool.imageClip"), S("edit.sendToBack"), S("edit.bringToFront")]),
     ]},
+    # A raster's look, its fitting and analysis are a map's (docs/adr/0802): KentOS Mimari adds no raster. Suitability,
+    # remote sensing and the multidimensional tools are CBS analysis; a map keeps Bant birleştir for STAC's bands.
     {"id": "ctx.raster", "label": "Raster", "kinds": ["raster"], "panels": [
         SEL,
         P("Raster", "rasterAdd", [L("raster.style"), S("raster.georef"), S(pr("raster.cog")), S("raster.gpkgWrite"),
-            S("raster.mosaic")]),
+            S("raster.mosaic")], works=MAP),
         P("Yüzey", "aspect", [
             M("Yüzey analizi", [("", [pr("surface.slope"), pr("surface.aspect"), pr("surface.hillshade"),
                 pr("surface.colorRelief"), pr("surface.contours"), pr("surface.curvature"), pr("surface.ruggedness"),
@@ -559,7 +608,7 @@ CONTEXTUAL = [
                 pr("hydrology.streams")])], size='large'),
             M("Uzaklık ve maliyet", [("", [pr("distance.euclidean"), pr("distance.cost"), pr("distance.path"),
                 pr("distance.corridor")])], size='large'),
-        ]),
+        ], works=MAP),
         P("Raster işlemleri", "clipRaster", [
             M("Hesap", [("", [pr("raster.calculator"), pr("raster.reclassify"), pr("raster.clipByMask"),
                 pr("raster.mosaic"), pr("raster.resample")])], size='large'),
@@ -567,17 +616,17 @@ CONTEXTUAL = [
                 pr("raster.focalStatistics")])], size='large'),
             M("Vektöre", [("", [pr("raster.toPolygons"), pr("raster.toLines"), pr("raster.toPoints"),
                 pr("scan.captureLine"), pr("scan.closeArea"), pr("scan.contourElevations")])], size='large'),
-        ]),
+        ], works=MAP),
         P("Uygulamalar", "weightedOverlay", [
             M("Uygunluk", [("", [pr("suitability.weightedOverlay"), pr("suitability.weightedSum"),
                 pr("suitability.fuzzyMembership"), pr("suitability.fuzzyOverlay"), pr("suitability.pairwise"),
-                pr("suitability.roc")])], size='large'),
+                pr("suitability.roc")])], size='large', modes=IN_GIS),
             M("Uzaktan algılama", [("", [pr("remote.index"), pr("remote.supervised"), pr("remote.unsupervised"),
-                pr("remote.accuracy"), pr("remote.change"), pr("remote.qaMask"), pr("remote.pansharpen"),
-                pr("remote.composite"), pr("remote.split")])], size='large'),
+                pr("remote.accuracy"), pr("remote.change"), pr("remote.qaMask"), pr("remote.pansharpen")], (), IN_GIS),
+                ("", [pr("remote.composite")]), ("", [pr("remote.split")], (), IN_GIS)], size='large'),
             M("Çok boyutlu", [("", [pr("multidim.profile"), pr("multidim.series"), pr("multidim.meshCalculator"),
-                "mesh.query"])], size='large'),
-        ]),
+                "mesh.query"])], size='large', modes=IN_GIS),
+        ], works=MAP),
     ]},
     {"id": "ctx.pointcloud", "label": "Nokta bulutu", "kinds": ["pointcloud"], "panels": [
         SEL,
@@ -633,22 +682,38 @@ for tab in CONTEXTUAL:
             panel["works"] = list(ARCHITECTURE)
 
 # A module's program offers what its ribbon holds and nothing a ribbon of another module alone holds (docs/adr/0802):
-# Komut ara, the command line and the shortcuts find nothing else. These commands only CBS's ribbon holds belong to
-# a CAD module's program too: every module's (a layer made, its labels and filter, the drawing aids of the status bar,
-# a layer's value lists and rules, the processing history), and Harita's (a layer's coordinate system, bound sources,
-# CBS's file formats, the map's system).
+# Komut ara, the command line, the shortcuts and `App::run` find nothing else. These commands only CBS's ribbon holds
+# (or only the architectural tabs) belong to a CAD module's program too: every module's (`everywhere`: a layer made,
+# the project's coordinate system, Nesne özellikleri, İfadeyle seç and Konuma göre seç), and Harita's (`map`: a layer's
+# coordinate system, labels, filter and typed kinds, its value lists and rules, bound sources, CBS's file formats, the
+# map's system, the processing history, a dataset's record).
+# `only`: commands no ribbon holds that only these modules' programs offer (an empty list: kentos-cad's alone, as the
+# project type's switch: a module's projects keep their type). A processing tool or model no ribbon holds or names is
+# offered where İşlem araç kutusu is (catalog.rs); every other command no ribbon holds is the shell's, every module's.
 MODULES = {
-    "everywhere": ["layer.new", "layer.newGroup", "layer.showAll", "layer.newPoint", "layer.newLine", "layer.newArea",
-        "layer.newAnnotation", "layer.filter", "layer.filterClear", "layer.labels", "tool.labelMove", "tool.labelPin",
-        "tool.labelHide", "tool.labelRotate", "view.pinnedLabels", "view.unplacedLabels", "draft.overlap.allow",
-        "draft.overlap.layer", "draft.overlap.layers", "draft.topologyPoints", "crs.set", "data.domains", "data.subtypes",
-        "data.layerRules", "data.tableStyles", "data.duplicate", "data.contingents", "chart.bar", "chart.box",
-        "chart.histogram", "chart.line", "chart.pie", "chart.scatter", "processing.history",
+    "everywhere": ["layer.new", "layer.newGroup", "layer.showAll", "crs.set", "view.properties",
         "processing.run.selection.byExpression", "processing.run.selection.byLocation"],
     "map": ["layer.crs", "layer.reproject", "view.mapCrs", "file.import.fgb", "file.import.gml", "file.import.parquet",
-        "file.import.maplibre", "file.export.maplibre", "mesh.add", "source.link", "source.read", "source.write",
+        "file.import.maplibre", "file.export.maplibre", "source.link", "source.read", "source.write",
         "source.writeTogether", "source.status", "source.reconcile", "source.relink", "source.unlink", "profile.window",
-        "linearRef.eventLinks"],
+        "linearRef.eventLinks", "layer.newPoint", "layer.newLine", "layer.newArea", "layer.newAnnotation",
+        "layer.filter", "layer.filterClear", "layer.labels", "tool.labelMove", "tool.labelPin", "tool.labelHide",
+        "tool.labelRotate", "view.pinnedLabels", "view.unplacedLabels", "draft.overlap.allow", "draft.overlap.layer",
+        "draft.overlap.layers", "draft.topologyPoints", "data.domains", "data.subtypes", "data.layerRules",
+        "data.tableStyles", "data.duplicate", "data.contingents", "processing.history", "layer.dataset"],
+    "only": {
+        # A map's terrain, sheets and parcels (some still to come); İfraz, Aplikasyon and the parcel table are Harita's.
+        "analysis.slope": ["harita", "cbs"], "analysis.volume": ["harita", "cbs"], "map.contours": ["harita", "cbs"],
+        "map.profile": ["harita", "cbs"], "map.sheet": ["harita", "cbs"], "map.parcelReport": ["harita"],
+        "tool.subdivide": ["harita"], "tool.stakeout": ["harita"],
+        # Çakışma's lamp (a parcel's neighbours) and the sheet's atlas (a page for each feature).
+        "draft.overlap": ["harita", "cbs"], "sheet.atlas": ["harita", "cbs"],
+        # Network analysis needs Ağlar…, which only KentOS GIS has.
+        "processing.run.network.closestFacility": ["cbs"], "processing.run.network.odMatrix": ["cbs"],
+        "processing.run.network.serviceAreas": ["cbs"],
+        # The project type's switch: a module's projects keep their module's type.
+        "workspace.cad": [], "workspace.gis": [], "workspace.plan3d": [], "workspace.disaster": [],
+    },
 }
 
 doc = {

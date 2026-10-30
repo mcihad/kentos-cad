@@ -2,13 +2,12 @@
 //! drives its own (apps/web/scripts/e2e/smoke.mjs), and its pictures.
 
 use iced::keyboard::key::Named;
-use kentos_commands::{DrawingUnit, Workspace};
+use kentos_commands::{CadWork, DrawingUnit, Workspace};
 use kentos_project::wizard::{Coords, Kind, Step};
 
-/// The works' cards (docs/adr/0626 §1): a building, a plan on real coordinates, a detail.
+/// The works' cards (docs/adr/0626 §1, 0802: two CAD works): a building and a plan on real coordinates.
 const BUILDING: usize = 0;
 const PLAN: usize = 1;
-const DETAIL: usize = 2;
 
 use super::Event;
 use crate::app::{App, Dialog, Message};
@@ -82,12 +81,17 @@ fn a_cad_project_on_real_coordinates_walks_the_three_steps() {
 }
 
 #[test]
-fn a_local_cad_project_is_drawn_in_its_unit_from_one_to_one() {
+fn a_local_cad_project_is_a_building_drawn_in_its_unit_from_one_to_one() {
+    // Two CAD works (docs/adr/0802): a drawing of its own is a building's whatever its unit; in the
+    // millimetres the app gives new projects it is drawn at full size.
     let mut app = app_with_drawing();
+    let _ = app
+        .settings
+        .choose(&[("newProjects.drawingUnit", serde_json::Value::from("mm"))]);
     open(&mut app);
     send(&mut app, Event::Type(Workspace::Cad));
     send(&mut app, Event::Next);
-    send(&mut app, Event::Work(DETAIL));
+    assert_eq!(state(&app).draft.cad_work(), Some(CadWork::Architecture));
     send(&mut app, Event::Next);
     assert_eq!(state(&app).draft.scale(), 1.0, "a part at full size");
     send(&mut app, Event::Name("Mil plakası".into()));
@@ -98,6 +102,7 @@ fn a_local_cad_project_is_drawn_in_its_unit_from_one_to_one() {
         (s.srid, s.drawing_unit, s.plot_scale),
         (0, Some(DrawingUnit::Mm), 1.0)
     );
+    assert_eq!(s.cad_work(), Some(CadWork::Architecture));
     assert!(
         last_said(&app).contains("Yerel (koordinat sistemi yok), 1:1."),
         "{}",
@@ -127,8 +132,8 @@ fn a_new_local_project_starts_in_the_unit_of_the_apps_settings() {
         (state(&app).draft.kind, state(&app).draft.unit),
         (Kind::Cad, DrawingUnit::Cm)
     );
-    // No work is in centimetres: none is chosen, the drawing's own unit and its scale go on.
-    assert_eq!(state(&app).draft.work(), None);
+    // A drawing of its own in centimetres is a building's (docs/adr/0802); its own unit and its scale go on.
+    assert_eq!(state(&app).draft.cad_work(), Some(CadWork::Architecture));
     assert_eq!(state(&app).draft.scale(), 50.0);
     // A project with a system keeps the unit asked for before.
     send(&mut app, Event::Go(1));
@@ -251,18 +256,24 @@ fn a_work_brings_its_unit_and_scale_and_another_type_its_own() {
     send(&mut app, Event::Type(Workspace::Cad));
     // A new CAD project is a building: metres, 1:100, from 0,0 (docs/adr/0626 §1).
     let d = &state(&app).draft;
-    assert_eq!((d.coords, d.unit, d.scale()), (Coords::Local, DrawingUnit::M, 100.0));
-    send(&mut app, Event::Work(DETAIL));
-    let d = &state(&app).draft;
-    assert_eq!((d.coords, d.unit(), d.scale()), (Coords::Local, DrawingUnit::Mm, 1.0));
+    assert_eq!(
+        (d.coords, d.unit, d.scale()),
+        (Coords::Local, DrawingUnit::M, 100.0)
+    );
     send(&mut app, Event::Work(PLAN));
     let d = &state(&app).draft;
-    assert_eq!((d.coords, d.unit(), d.scale()), (Coords::Real, DrawingUnit::M, 1000.0));
+    assert_eq!(
+        (d.coords, d.unit(), d.scale()),
+        (Coords::Real, DrawingUnit::M, 1000.0)
+    );
     send(&mut app, Event::Work(BUILDING));
     assert_eq!(state(&app).draft.scale(), 100.0);
-    // A card that is no work's does nothing.
-    send(&mut app, Event::Work(7));
-    assert_eq!(state(&app).draft.work().map(|w| w.name), Some("Mimari proje"));
+    // A card that is no work's does nothing: there are two (docs/adr/0802), the detail's is gone.
+    send(&mut app, Event::Work(2));
+    assert_eq!(
+        state(&app).draft.work().map(|w| w.name),
+        Some("Mimari proje")
+    );
 }
 
 /// Pictures of the wizard for the owner, dark and light, at 1440 × 900 and
@@ -313,10 +324,14 @@ fn screens() {
             send(&mut app, Event::Next);
             send(&mut app, Event::Work(BUILDING));
             picture(&mut app, "2-cad-mimari");
-            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(18))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.textSize", serde_json::Value::from(18))]);
             app.apply_settings();
             picture(&mut app, "2-cad-mimari-buyuk");
-            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(13))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.textSize", serde_json::Value::from(13))]);
             app.apply_settings();
             send(&mut app, Event::Work(PLAN));
             send(&mut app, Event::Search("trab".into()));
@@ -331,14 +346,18 @@ fn screens() {
             send(&mut app, Event::Back);
             send(&mut app, Event::Type(Workspace::Cad));
             send(&mut app, Event::Next);
-            send(&mut app, Event::Work(DETAIL));
+            send(&mut app, Event::Work(BUILDING));
             send(&mut app, Event::Next);
-            send(&mut app, Event::Name("Mil plakası".into()));
+            send(&mut app, Event::Name("Konut A blok".into()));
             picture(&mut app, "5-ad");
-            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(18))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.textSize", serde_json::Value::from(18))]);
             app.apply_settings();
             picture(&mut app, "5-ad-buyuk");
-            let _ = app.settings.choose(&[("appearance.textSize", serde_json::Value::from(13))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.textSize", serde_json::Value::from(13))]);
             app.apply_settings();
             send(&mut app, Event::Name(String::new()));
             send(&mut app, Event::Next);
@@ -379,12 +398,17 @@ fn axes_screens() {
             .settings
             .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
         app.apply_settings();
+        if kind == Workspace::Cad {
+            // A part in millimetres at full size: a building's drawing of its own in the unit the app gives
+            // new projects (docs/adr/0802).
+            let _ = app
+                .settings
+                .choose(&[("newProjects.drawingUnit", serde_json::Value::from("mm"))]);
+        }
         open(&mut app);
         send(&mut app, Event::Type(kind));
         send(&mut app, Event::Next);
-        if kind == Workspace::Cad {
-            send(&mut app, Event::Work(DETAIL));
-        } else {
+        if kind == Workspace::Gis {
             send(&mut app, Event::Province(35));
         }
         send(&mut app, Event::Next);

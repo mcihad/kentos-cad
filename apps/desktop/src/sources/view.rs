@@ -31,6 +31,7 @@ use super::{
 use crate::db_connections::{Event as Db, Then, msg as db};
 use crate::app::{App, Message};
 use crate::icons::from_web;
+use crate::module_surfaces::SourceSection;
 
 /// A row's height at the body text's size (the tree's).
 const ROW: f32 = 28.0;
@@ -380,8 +381,13 @@ impl App {
                 self.folder_lines(path, folder_name(path), true, 1, &mut lines);
             }
         }
-        self.database_lines(&mut lines);
-        self.service_lines(&mut lines);
+        // Veritabanları and Servisler: the programs' that have them (module_surfaces.rs).
+        if self.shows_source_section(SourceSection::Databases) {
+            self.database_lines(&mut lines);
+        }
+        if self.shows_source_section(SourceSection::Services) {
+            self.service_lines(&mut lines);
+        }
         let open = s.open.contains(KENTOS);
         lines.push(Line::Section {
             key: KENTOS,
@@ -1016,6 +1022,13 @@ impl App {
             .size(typography::body())
             .padding([4, 8])
             .width(Fill);
+        // Bağlantı ekle and Servis ekle with their sections (module_surfaces.rs).
+        let database = self
+            .shows_source_section(SourceSection::Databases)
+            .then_some(database);
+        let service = self
+            .shows_source_section(SourceSection::Services)
+            .then_some(service);
         let bar = container(
             column![
                 row![add, space::horizontal(), database, service].align_y(Center),

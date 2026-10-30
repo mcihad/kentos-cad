@@ -302,6 +302,10 @@ impl App {
 
     /// `topology.check`: the tab open and the check run (said when the project has no rules).
     pub(crate) fn open_topology_check(&mut self) -> Task<Message> {
+        // A program without the tab says where it is (module_surfaces.rs).
+        if !self.open_bottom_tab(BottomTab::Topology) {
+            return Task::none();
+        }
         self.show_bottom(BottomTab::Topology);
         let bar = f64::from(kentos_ui::widget::tabs::height());
         if f64::from(self.bottom_log()) + bar < crate::search::PANEL_HEIGHT {

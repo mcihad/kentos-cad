@@ -210,7 +210,8 @@ impl App {
     }
 
     /// Whether this program offers a command (docs/adr/0802): every one in kentos-cad, a module's own in a
-    /// module's program (Komut ara, the command line and the shortcuts find nothing else).
+    /// module's program (Komut ara, the command line, the shortcuts, the quick access bar, F1 and the drawing's
+    /// menus find nothing else; `App::run` refuses it, `App::available` is false).
     pub(crate) fn offers(&self, id: &str) -> bool {
         self.program.is_none_or(|m| catalog().module_has(m, id))
     }

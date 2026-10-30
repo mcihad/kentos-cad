@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 129 | 284 | 44 | 48 | 505 |
+| semantic | 165 | 249 | 43 | 48 | 505 |
 | geometry | 1 | 5 | 1 | 2 | 9 |
 | processing | 0 | 131 | 22 | 2 | 155 |
 | none | 0 | 14 | 6 | 2 | 22 |
-| query | 6 | 24 | 2 | 8 | 40 |
-| session | 7 | 81 | 57 | 9 | 154 |
-| host | 1 | 21 | 14 | 1 | 37 |
-| **toplam** | 144 | 560 | 146 | 72 | 922 |
+| query | 7 | 22 | 2 | 9 | 40 |
+| session | 17 | 71 | 57 | 9 | 154 |
+| host | 3 | 19 | 14 | 1 | 37 |
+| **toplam** | 193 | 511 | 145 | 73 | 922 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 850 satırdan 42'i: geometry 7, none 20, processing 3, query 12.
+CBS'ye özgü olmayan 849 satırdan 41'i: geometry 7, none 20, processing 3, query 11.
 
 ### Sonucu çağıran hesaplar (geometry) — 7
 
@@ -78,14 +78,13 @@ CBS'ye özgü olmayan 850 satırdan 42'i: geometry 7, none 20, processing 3, que
 | `map.contours` | Eşyükselti üret… | none | — |  |
 | `map.edgeLengths` | Kenar ölçülerini yaz… | shared | — |  |
 
-### Okuma, Python'da yok (query) — 12
+### Okuma, Python'da yok (query) — 11
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
-| `calc.stakeout` | Aplikasyon… | shared | — |  |
+| `calc.stakeout` | Aplikasyon… | cad | — |  |
 | `cogo.check` | Kayıtlı ölçüleri denetle… | shared | — |  |
 | `crs.query` | Koordinat oku | shared | — |  |
-| `data.chart` | Grafik | shared | — |  |
 | `data.search` | Veride ara | shared | — |  |
 | `data.statistics` | Alan istatistikleri | shared | — |  |
 | `service.info` | Servis bilgisi | shared | — |  |

@@ -433,6 +433,10 @@ impl App {
     /// the results want when it is shorter, the keyboard in the box with
     /// its words chosen.
     pub(crate) fn open_data_search(&mut self) -> Task<Message> {
+        // A program without the tab says where it is (module_surfaces.rs).
+        if !self.open_bottom_tab(BottomTab::Search) {
+            return Task::none();
+        }
         self.show_bottom(BottomTab::Search);
         let bar = f64::from(kentos_ui::widget::tabs::height());
         if f64::from(self.bottom_log()) + bar < PANEL_HEIGHT {

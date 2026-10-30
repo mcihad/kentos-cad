@@ -1143,7 +1143,7 @@
       "version": 1,
       "group": "newProjects",
       "title": "Çizim birimi",
-      "description": "Yeni proje sihirbazında önce seçili gelen çizim: metre Mimari proje, milimetre Detay / imalat; proje kendi birimini saklar (ADR 0165, 0626).",
+      "description": "Kendi koordinatlı yeni CAD projesinin birimi: metre bir bina, milimetre bir parça; proje kendi birimini saklar (ADR 0165, 0626, 0802).",
       "sensitive": false,
       "apply": "live"
     },

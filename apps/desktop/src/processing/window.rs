@@ -69,11 +69,16 @@ impl App {
         let server = self.server_place();
         let at_server = self.processing_at_server();
         let body = row![
-            scrollable(form(window, &env, at_server))
-                .id(FORM)
-                .direction(style::field::body_scrollbar())
-                .width(Fill)
-                .height(Fill),
+            scrollable(form(
+                window,
+                &env,
+                at_server,
+                self.shows_bottom_tab(crate::bottom::BottomTab::Chart),
+            ))
+            .id(FORM)
+            .direction(style::field::body_scrollbar())
+            .width(Fill)
+            .height(Fill),
             container(
                 scrollable(side(window, &self.processing, &server))
                     .direction(style::field::body_scrollbar())
@@ -98,7 +103,12 @@ impl App {
 }
 
 /// The form: Girdi, Ayarlar, Çıktı and Gelişmiş ayarlar.
-fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>, at_server: bool) -> Element<'a, Message> {
+fn form<'a>(
+    window: &'a ToolDialog,
+    env: &Env<'a, '_>,
+    at_server: bool,
+    chart: bool,
+) -> Element<'a, Message> {
     let shown: Vec<&ParamDef> = window
         .tool
         .parameters
@@ -177,7 +187,7 @@ fn form<'a>(window: &'a ToolDialog, env: &Env<'a, '_>, at_server: bool) -> Eleme
         out = out.push(section);
     }
     if let super::RunStatus::Ok { table: Some(t), .. } = &window.status {
-        out = out.push(result(t));
+        out = out.push(result(t, chart));
     }
     out.into()
 }
@@ -194,8 +204,9 @@ fn number_cell(text: &str) -> bool {
 /// The run's table under the form (Özet istatistik and the geometry tools'
 /// reports, docs/adr/0200 §7, 0201): its title with Panoya kopyala and CSV
 /// olarak kaydet, then the table; a column of numbers (every filled cell one)
-/// right-aligned in figures, names and texts from the left.
-fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
+/// right-aligned in figures, names and texts from the left. Grafik only where the program has its tab
+/// (docs/adr/0802).
+fn result(t: &super::dialog::ResultTable, chart: bool) -> Element<'_, Message> {
     let small = |glyph: &str, text: &'static str, e: Event| {
         button(
             row![
@@ -268,37 +279,45 @@ fn result(t: &super::dialog::ResultTable) -> Element<'_, Message> {
         })
         .collect();
     let height = (28.0 * (t.rows.len() as f32 + 1.0) + 8.0).min(240.0);
+    let mut head = row![
+        container(
+            label::caption("Sonuç")
+                .font(typography::ui_strong())
+                .style(style::text::muted)
+        )
+        .width(Fill),
+    ]
+    .spacing(4)
+    .align_y(Center);
+    if chart {
+        head = head.push(tip(
+            small("chart", "Grafik", Event::ChartTable),
+            Tip::new("Grafik").body("Tabloyu alt panelin Grafik sekmesinde gösterir: ROC eğrisi, kesit, zaman serisi ve histogram kendi grafikleriyle, öbürleri çubukla."),
+            iced::widget::tooltip::Position::Top,
+        ));
+    }
     column![
-        row![
-            container(
-                label::caption("Sonuç")
-                    .font(typography::ui_strong())
-                    .style(style::text::muted)
-            )
-            .width(Fill),
-            tip(
-                small("chart", "Grafik", Event::ChartTable),
-                Tip::new("Grafik").body("Tabloyu alt panelin Grafik sekmesinde gösterir: ROC eğrisi, kesit, zaman serisi ve histogram kendi grafikleriyle, öbürleri çubukla."),
-                iced::widget::tooltip::Position::Top,
-            ),
-            small("copy", "Panoya kopyala", Event::CopyTable),
-            // Kaydet ▾ (docs/adr/0223 §2): the table as XLSX, ODS or CSV.
-            MenuButton::new(
-                container(
-                    row![
-                        icon(crate::icons::from_web(Some("export"))).size(14.0),
-                        label::caption("Kaydet"),
-                        icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
-                    ]
-                    .spacing(5)
-                    .align_y(Center),
-                )
-                .padding([3, 8]),
-                || crate::table_write::items(Menu::new(), |f| ev(Event::SaveTableAs(f))),
-            ),
-        ]
-        .spacing(4)
-        .align_y(Center),
+        head.push(
+            row![
+                small("copy", "Panoya kopyala", Event::CopyTable),
+                // Kaydet ▾ (docs/adr/0223 §2): the table as XLSX, ODS or CSV.
+                MenuButton::new(
+                    container(
+                        row![
+                            icon(crate::icons::from_web(Some("export"))).size(14.0),
+                            label::caption("Kaydet"),
+                            icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+                        ]
+                        .spacing(5)
+                        .align_y(Center),
+                    )
+                    .padding([3, 8]),
+                    || crate::table_write::items(Menu::new(), |f| ev(Event::SaveTableAs(f))),
+                ),
+            ]
+            .spacing(4)
+            .align_y(Center)
+        ),
         horizontal_divider(),
         container(Table::new(columns).extend(body).horizontal().height(height))
             .style(style::container::field_box)

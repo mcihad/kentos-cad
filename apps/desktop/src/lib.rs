@@ -293,6 +293,9 @@ mod modes;
 #[cfg(test)]
 mod module_screens;
 #[cfg(test)]
+mod module_surface_tests;
+mod module_surfaces;
+#[cfg(test)]
 mod module_tests;
 #[cfg(test)]
 mod multipart_scenes;
@@ -669,11 +672,12 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
             {
                 app.warn(problem);
             }
-            // The layout kept last time (yerlesim.json beside the settings, docs/adr/0115).
+            // The layout kept last time (yerlesim.json beside the settings, docs/adr/0115), each program's
+            // own (docs/adr/0802).
             if let Some(dir) = settings::Settings::config_dir() {
                 // Each window's size (pencereler.json, docs/adr/0746).
                 app.dialog_sizes = dialog_sizes::Keeper::open(&dir);
-                app.layout = layout::Keeper::open(&dir);
+                app.layout = layout::Keeper::open_for(&dir, program);
                 app.apply_layout();
             }
             // Without a drawing named, the start screen (when the preference wants it).

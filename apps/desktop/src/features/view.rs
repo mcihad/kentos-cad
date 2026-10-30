@@ -122,15 +122,20 @@ impl App {
         let n = ids.len();
         let chosen = match self.features.join.view.as_deref() {
             Some(v) => views.iter().position(|(id, _)| id == v).map(|k| n + k),
-            None => rows.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+            None => rows
+                .layer
+                .as_ref()
+                .and_then(|l| ids.iter().position(|id| id == l)),
         };
         let choices = rows
             .layers
             .iter()
             .map(|(_, path, c)| Choice::new(format!("{path} ({c})")))
-            .chain(views.iter().map(|(_, name)| {
-                Choice::new(format!("{} {name}", super::joins::words::MARK))
-            }))
+            .chain(
+                views
+                    .iter()
+                    .map(|(_, name)| Choice::new(format!("{} {name}", super::joins::words::MARK))),
+            )
             .collect::<Vec<_>>();
         Select::new(choices, chosen, move |i| {
             if i < n {
@@ -244,24 +249,34 @@ impl App {
             texts::EXPORT_HINT,
             || crate::table_write::items(Menu::new(), |f| msg(Event::Export(f))),
         );
-        // İncele ▾ (docs/adr/0546 §2): İstatistik and Grafik over the rows the table shows.
+        // İncele ▾ (docs/adr/0546 §2): İstatistik and Grafik over the rows the table shows, each where the
+        // program has its tab (docs/adr/0802).
+        let statistics = self.shows_bottom_tab(crate::bottom::BottomTab::Statistics);
+        let chart = self.shows_bottom_tab(crate::bottom::BottomTab::Chart);
         let analyse = bar_menu(
             from_web(Some("chartBar")),
             None,
             out_words::ANALYSE.to_owned(),
             out_words::ANALYSE_HINT,
             move || {
+                let mut menu = Menu::new();
                 if !has_layer {
-                    return Menu::new();
+                    return menu;
                 }
-                Menu::new()
-                    .item(
-                        out_words::STATISTICS,
-                        Some(msg(Event::Analyse(Analyse::Statistics))),
-                    )
-                    .icon(from_web(Some("chartHistogram")))
-                    .item(out_words::CHART, Some(msg(Event::Analyse(Analyse::Chart))))
-                    .icon(from_web(Some("chartPie")))
+                if statistics {
+                    menu = menu
+                        .item(
+                            out_words::STATISTICS,
+                            Some(msg(Event::Analyse(Analyse::Statistics))),
+                        )
+                        .icon(from_web(Some("chartHistogram")));
+                }
+                if chart {
+                    menu = menu
+                        .item(out_words::CHART, Some(msg(Event::Analyse(Analyse::Chart))))
+                        .icon(from_web(Some("chartPie")));
+                }
+                menu
             },
         );
         // ⋯: what a table is rarely asked for: a record, a copy of the selected, values pasted, the fields.
@@ -273,16 +288,10 @@ impl App {
             texts::MORE_HINT,
             move || {
                 Menu::new()
-                    .item(
-                        texts::ADD_RECORD,
-                        has_layer.then(|| msg(Event::AddRecord)),
-                    )
+                    .item(texts::ADD_RECORD, has_layer.then(|| msg(Event::AddRecord)))
                     .icon(from_web(Some("tableRowBelow")))
                     .detail(texts::ADD_RECORD_HINT)
-                    .item(
-                        texts::DUPLICATE,
-                        selected.then(|| msg(Event::Duplicate)),
-                    )
+                    .item(texts::DUPLICATE, selected.then(|| msg(Event::Duplicate)))
                     .icon(from_web(Some("copy")))
                     .detail(texts::DUPLICATE_HINT)
                     .item(
@@ -359,7 +368,10 @@ impl App {
         let bar = self.features_bar(&rows, self.viewport.bounds.width);
         // A bound layer's table: its source, state and the one way out (docs/adr/0546 §3).
         let bar: Element<'_, Message> = match self.features_source_line(&rows) {
-            Some(line) => iced::widget::column![bar, line].spacing(2).padding(iced::Padding::ZERO.bottom(4)).into(),
+            Some(line) => iced::widget::column![bar, line]
+                .spacing(2)
+                .padding(iced::Padding::ZERO.bottom(4))
+                .into(),
             None => bar,
         };
         // Kaynağın tümü: the source's rows instead of the working copy's (docs/adr/0591 §4).
@@ -452,7 +464,13 @@ impl App {
         let min_width = 56.0
             + visible
                 .iter()
-                .map(|&j| if table_columns[j].key.is_none() { 110.0 } else { 140.0 })
+                .map(|&j| {
+                    if table_columns[j].key.is_none() {
+                        110.0
+                    } else {
+                        140.0
+                    }
+                })
                 .sum::<f32>()
             + 8.0 * visible.len() as f32;
         let table = Table::new(columns)
@@ -629,8 +647,13 @@ impl App {
 }
 
 /// The table's foot: a thin line over it, its words on the left, `end` on the right.
-pub(crate) fn foot_line<'a>(words: Element<'a, Message>, end: Option<Element<'a, Message>>) -> Element<'a, Message> {
-    let mut line = row![container(words).width(Fill)].spacing(8).align_y(Center);
+pub(crate) fn foot_line<'a>(
+    words: Element<'a, Message>,
+    end: Option<Element<'a, Message>>,
+) -> Element<'a, Message> {
+    let mut line = row![container(words).width(Fill)]
+        .spacing(8)
+        .align_y(Center);
     if let Some(end) = end {
         line = line.push(end);
     }

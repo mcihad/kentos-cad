@@ -160,8 +160,10 @@ impl App {
     }
 
     /// The coordinate system cell's right-click menu: Koordinat sistemi…
-    /// and İkinci sistem ▸.
+    /// and İkinci sistem ▸; a map's programs have Harita sistemi ▸ too, and
+    /// KentOS Mimari Koordinat sistemi… alone (module_surfaces.rs).
     pub(crate) fn crs_cell_menu(&self) -> Menu<Message> {
+        use crate::module_surfaces::Cell;
         let set = crate::catalog::catalog().get("crs.set");
         let mut menu = Menu::new().item(
             set.map_or("Koordinat sistemi…", |c| c.title),
@@ -170,11 +172,18 @@ impl App {
         if let Some(c) = set {
             menu = menu.icon(c.icon);
         }
-        menu.submenu("İkinci sistem", self.second_menu())
-            .icon(crate::icons::from_web(Some("crsSecond")))
-            // The system the drawing is shown in (docs/adr/0583 §3).
-            .submenu("Harita sistemi", self.map_menu())
-            .icon(crate::icons::from_web(Some("mapCrs")))
+        if self.shows_cell(Cell::SecondCrs) {
+            menu = menu
+                .submenu("İkinci sistem", self.second_menu())
+                .icon(crate::icons::from_web(Some("crsSecond")));
+        }
+        // The system the drawing is shown in (docs/adr/0583 §3).
+        if self.shows_cell(Cell::MapCrs) {
+            menu = menu
+                .submenu("Harita sistemi", self.map_menu())
+                .icon(crate::icons::from_web(Some("mapCrs")));
+        }
+        menu
     }
 
     /// The second system's values at `cursor`, as the status bar writes
@@ -205,6 +214,10 @@ impl App {
     /// its name and the cursor's values; a click lists İkinci sistem, the
     /// tip says how sure the values are (§5).
     pub(crate) fn second_cell(&self, cursor: Option<Vec2>) -> Option<Element<'_, Message>> {
+        // A map's programs' (module_surfaces.rs).
+        if !self.shows_cell(crate::module_surfaces::Cell::SecondCrs) {
+            return None;
+        }
         let second = Second::of(self.document.as_ref()?.settings())?;
         let face = row![
             label::muted(second.short()),
@@ -235,6 +248,9 @@ impl App {
     /// values, so it does not change as the cursor comes and goes; none
     /// without a second system.
     pub(crate) fn second_width(&self) -> f32 {
+        if !self.shows_cell(crate::module_surfaces::Cell::SecondCrs) {
+            return 0.0;
+        }
         let Some(doc) = &self.document else {
             return 0.0;
         };

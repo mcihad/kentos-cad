@@ -315,6 +315,10 @@ impl App {
 
     /// The Kat cell's words while the project has levels: “Kat: Zemin kat”, “Kat: Katsız”.
     pub(crate) fn level_words(&self) -> Option<String> {
+        // A building's (module_surfaces.rs): the Kat cell and Etkin aracın ayarları' Kat row go with it.
+        if !self.shows_cell(crate::module_surfaces::Cell::Level) {
+            return None;
+        }
         let doc = self.document.as_ref()?;
         let levels = doc.model.settings().arch.as_ref().map(|a| &a.levels)?;
         if levels.is_empty() {

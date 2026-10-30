@@ -10,7 +10,7 @@ use kentos_ui::widget::context_menu::Menu;
 use serde_json::Value;
 
 use crate::app::{App, Message};
-use crate::catalog::catalog;
+use crate::catalog::{Item, catalog};
 use crate::selecting::kind_title;
 
 /// A kind's icon in the filter's menu and in Sıradakini seç's list: its
@@ -64,26 +64,42 @@ fn kinds_text(mask: u32) -> String {
         .join(", ")
 }
 
-/// Seçim süzgeci's list (the web's `SELECT_FILTER_KINDS`): the kinds in
-/// their menu's order, then every kind or none at once.
-fn select_filter_blocks() -> Vec<(&'static str, Vec<&'static str>)> {
-    let kinds = KINDS
-        .iter()
-        .filter_map(|kind| {
-            catalog()
-                .commands()
-                .iter()
-                .find(|c| c.id.strip_prefix("edit.selectFilter.") == Some(kind))
-                .map(|c| c.id)
-        })
-        .collect();
-    vec![
-        ("Seçilebilir türler", kinds),
-        ("", vec!["edit.selectFilterAll", "edit.selectFilterNone"]),
-    ]
-}
-
 impl App {
+    /// Seçim süzgeci's list (the web's `SELECT_FILTER_KINDS`): the shown ribbon's Seçim süzgeci ▾ under
+    /// its on/off row, so the architectural kinds only where the work is a building's (docs/adr/0802), then
+    /// every kind or none at once. Without the menu, the kinds whose commands the program offers.
+    fn select_filter_blocks(&self) -> Vec<(&'static str, Vec<&'static str>)> {
+        let shown = self
+            .ribbon_tabs()
+            .flat_map(|tab| tab.panels.iter())
+            .flat_map(|panel| panel.items.iter())
+            .find_map(|item| match item {
+                Item::Menu {
+                    label: "Seçim süzgeci",
+                    blocks,
+                    ..
+                } => Some(blocks.get(1..).unwrap_or_default().to_vec()),
+                _ => None,
+            });
+        shown.unwrap_or_else(|| {
+            let kinds = KINDS
+                .iter()
+                .filter_map(|kind| {
+                    catalog()
+                        .commands()
+                        .iter()
+                        .find(|c| c.id.strip_prefix("edit.selectFilter.") == Some(kind))
+                        .map(|c| c.id)
+                })
+                .filter(|id| self.offers(id))
+                .collect();
+            vec![
+                ("Seçilebilir türler", kinds),
+                ("", vec!["edit.selectFilterAll", "edit.selectFilterNone"]),
+            ]
+        })
+    }
+
     /// Önceki seçim's objects still in the drawing and shown, in their order: the query's `objects`
     /// (docs/adr/0275), the filter's kinds with it, over the store as it is (the command brings it up to the
     /// drawing first).
@@ -169,7 +185,7 @@ impl App {
     /// §5). The ribbon's Seçim süzgeci ▾ shows the same list under its on/off
     /// row (`view::checklist_of`).
     pub(crate) fn select_filter_menu(&self) -> Menu<Message> {
-        let blocks = select_filter_blocks();
+        let blocks = self.select_filter_blocks();
         let checked: Vec<Option<bool>> = blocks
             .iter()
             .flat_map(|(_, ids)| ids.iter())
@@ -208,8 +224,12 @@ mod tests {
 
     #[test]
     fn the_cell_s_menu_lists_every_kind_by_short_name_and_icon_and_stays_open() {
-        let menu = format!("{:?}", app().select_filter_menu());
+        // KentOS Mimari: every kind, the building's under their own header.
+        let mut cad = app();
+        cad.program = Some(kentos_launch::Module::Architecture);
+        let menu = format!("{:?}", cad.select_filter_menu());
         assert!(menu.contains("Header(\"Seçilebilir türler\")"), "{menu}");
+        assert!(menu.contains("Header(\"Mimari nesneler\")"), "{menu}");
         for kind in KINDS {
             let name = kind_title(kind);
             assert!(
@@ -232,6 +252,22 @@ mod tests {
         assert!(menu.contains("RunKept(\"edit.selectFilter.image\")"));
         assert!(menu.contains("RunKept(\"edit.selectFilterNone\")"));
         assert!(!menu.contains("Run(\""), "{menu}");
+        // A map's program and a CBS one: no architectural kind (docs/adr/0802).
+        for module in [kentos_launch::Module::Map, kentos_launch::Module::Gis] {
+            let mut other = app();
+            other.program = Some(module);
+            let menu = format!("{:?}", other.select_filter_menu());
+            assert!(!menu.contains("Mimari nesneler"), "{module:?}: {menu}");
+            assert!(
+                !menu.contains("edit.selectFilter.wall"),
+                "{module:?}: {menu}"
+            );
+            assert!(
+                menu.contains("edit.selectFilter.image"),
+                "{module:?}: {menu}"
+            );
+            assert_eq!(menu.matches("stay: true").count(), 17 + 2, "{module:?}");
+        }
     }
 
     #[test]
@@ -241,9 +277,18 @@ mod tests {
         let titles: Vec<&str> = blocks.iter().map(|(title, _)| *title).collect();
         assert_eq!(titles, ["", "Seçilebilir türler", ""]);
         assert_eq!(blocks[0].1, ["edit.selectFilter"]);
-        // The cell's list, row for row.
-        assert_eq!(blocks[1..], select_filter_blocks()[..]);
+        // The cell's list, row for row: kentos-cad's CBS ribbon before any drawing.
         let app = app();
+        assert_eq!(blocks[1..], app.select_filter_blocks()[..]);
+        // KentOS Mimari's has the building's kinds in their own block.
+        let mut building = App::boot(None).0;
+        building.program = Some(kentos_launch::Module::Architecture);
+        let titles: Vec<&str> = building
+            .select_filter_blocks()
+            .iter()
+            .map(|(title, _)| *title)
+            .collect();
+        assert_eq!(titles, ["Seçilebilir türler", "Mimari nesneler", ""]);
         let ids: Vec<&str> = blocks
             .iter()
             .flat_map(|(_, ids)| ids.iter().copied())

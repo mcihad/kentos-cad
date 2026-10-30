@@ -139,6 +139,7 @@ impl App {
         let mut options: Vec<Element<'_, Message>> = options.collect();
         // Nokta hesabı, whenever the command waits for a point (the web's `cmdbar__calc`).
         if self.session.can_calc_point() {
+            let hidden_calc = self.hidden_point_calcs();
             let face = row![
                 icon(crate::icons::from_web(Some("calc"))).size(14.0),
                 label::caption(crate::point_calc::CHIP),
@@ -163,7 +164,9 @@ impl App {
                     }
                 });
             options.push(kentos_ui::widget::tip(
-                kentos_ui::widget::MenuButton::new(face, crate::point_calc::calc_menu),
+                kentos_ui::widget::MenuButton::new(face, move || {
+                    crate::point_calc::calc_menu_without(hidden_calc)
+                }),
                 kentos_ui::widget::Tip::new(crate::point_calc::CHIP_TIP),
                 iced::widget::tooltip::Position::Bottom,
             ));

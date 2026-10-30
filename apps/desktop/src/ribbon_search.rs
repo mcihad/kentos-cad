@@ -118,7 +118,8 @@ impl App {
             .map(|(score, c)| (score, Hit::Command(c)))
             .collect();
         if !q.is_empty() {
-            for m in self.user_models() {
+            // The user's models where this program offers them (docs/adr/0802: where İşlem araç kutusu is).
+            for m in self.user_models().filter(|m| self.offers_model(&m.id)) {
                 let title = format!("{}…", m.label);
                 let folded = fold_turkish(&title);
                 let score = if folded.starts_with(&q) {

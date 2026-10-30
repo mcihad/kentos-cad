@@ -41,17 +41,30 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kısıtları”. 59 durum ve 183 kayıt SQLite ile PostgreSQL'in kendi cevabıyla (`table_checks_cases.py`), 25 komut durumu
   (`source_constraints_cases.py`), PostGIS'te `muhasebe.fis`.
 
+- **Modüllerin sıkı ayrımı (30 Ekim 2026; [ADR 0802](docs/adr/0802-strict-module-separation.md)).**
+  Sahibin sözleri: “her biri ayrı uygulama olarak çalışacak”, “bizde iki tür cad var mimari ve harita”, “arama kısmında
+  ilgili modülde olmayan özellik aramada çıkmasın”, “blok gis içinde olmasa da olur, adres mimari içinde olmasa da olur”.
+  `kentos-mimari`, `kentos-harita`, `kentos-gis` her derlemede (özellik kapısı yok), kendi pencere kimlikleri ve `.desktop`
+  kayıtlarıyla; launcher modülü yalnız kendi programıyla başlatır. İki CAD işi: `CadWork { Architecture, Map }` (Detay
+  kalktı; yerel CAD Mimari'nindir). Yeni proje: Mimari sihirbazsız, Harita ve GIS türsüz iki adım. Modülün komutları
+  (`Catalog::module_has`, `App::offers`): Komut ara, komut satırı, kısayollar, `App::run`, hızlı erişim, F1, menüler;
+  başka modülün komutu `not_offered`'ın cümlesiyle reddedilir; kabuk komutları da modüle göre (`ribbon.json`'un
+  `modules`'ü). Modülün yüzeyleri (`module_surfaces.rs`): alt panelin sekmeleri, sağ panelin bölmeleri, durum çubuğu,
+  ayar pencerelerinin bölümleri, katman menüsü, uygulama menüsünün biçimleri, Kaynaklar, bırakılan dosyalar.
+  `kentos-cad` her şeyi sunar.
+
 - **KentOS Launcher ve ayrı modül programları (30 Ekim 2026; [ADR 0800](docs/adr/0800-kentos-launcher.md), [ADR 0801](docs/adr/0801-kentos-modules-and-their-programs.md)).**
   Sahibin isteği: görseldeki gibi bir launcher, Mimari CAD, Harita CAD ve GIS ayrı programlar, ileride Rust olmayan
   yazılımlar da. `kentos-launcher` (`apps/launcher`) uygulamaları `kentos.launcher-app/1` manifestlerinden okur (gömülüler,
   `uygulamalar/` klasörleri; herhangi bir program ya da web adresi), ayrı süreçte başlatır, Son dosyalar'ı gösterir;
-  güncelleme servisi yoktur, düğmeleri nedenleriyle kapalıdır. Masaüstü artık kütüphanedir (`kentos_desktop`, birim
-  testleri `cargo test -p kentos-desktop --lib`); programlar `kentos-cad` (hepsi, `--modul mimari|harita|cbs`) ve
-  `--features module-programs` ile `kentos-mimari`, `kentos-harita`, `kentos-gis`. CAD projesinin işi `cadWork`
-  (`.kcad` şema 135, opt-in): şerit işe göre (Mimari: Mimari sekmesi, Ölçme'de yalnız Sorgu; Harita: Plan ve Ölçme;
-  Detay: ikisi de yok), işi olmayan CAD çizimi bir kez sorulur, başka modülün dosyası o modülün programına devredilir.
-  Ortak sözleşme `crates/native/launch` (modüller, komut satırı, `programs::find`, son dosyalar). Her programın yalnız
-  kendi kodunu taşıması, paketleme ve modül başına sürüm açıktır (TODOS.md `OPS-10`, `OPS-16`, `OPS-17`).
+  güncelleme servisi yoktur, düğmeleri nedenleriyle kapalıdır. Kartlar: Mimari, Harita, GIS; Yakında YOL, 3D, Afet (sahibin
+  resimleriyle). Masaüstü artık kütüphanedir (`kentos_desktop`, birim testleri `cargo test -p kentos-desktop --lib`);
+  programlar `kentos-cad` (hepsi, `--modul mimari|harita|cbs`), `kentos-mimari`, `kentos-harita`, `kentos-gis`. CAD
+  projesinin işi `cadWork` (`.kcad` şema 135, opt-in): şerit işe göre (Mimari: Mimari sekmesi, Ölçme'de yalnız Sorgu;
+  Harita: Plan, Ölçme, altlıklar, servisler ve kaynaklar), işi olmayan CAD çizimi bir kez sorulur, başka modülün dosyası
+  o modülün programına devredilir. Ortak sözleşme `crates/native/launch` (modüller, komut satırı, `programs::find`, son
+  dosyalar). Her programın yalnız kendi kodunu taşıması, paketleme ve modül başına sürüm açıktır (TODOS.md `OPS-10`,
+  `OPS-16`, `OPS-17`).
 
 - **Bağlı tablonun hesaplanan ve kimlik sütunları (30 Ekim 2026; [ADR0754](docs/adr/0754-bound-table-generated-and-identity-columns.md)).**
   Tablonun kendisinin yaptığı değer sütunun varsayılanının yerinde, DDL'in yan tümcesiyle (`kentos_geopackage::made`,
@@ -886,7 +899,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   - Yeni CAD projesi yalnız “Ne çiziyorsunuz?” diye sorulur (`kentos_project::wizard::WORKS`):
     - Mimari proje: metre, 1:100, yerel;
     - Harita / imar planı: metre, 1:1000, ilin sisteminde;
-    - Detay / imalat: milimetre, 1:1, yerel.
+    - Detay / imalat: milimetre, 1:1, yerel (ADR 0802 ile kalktı: iki CAD işi var, yerel CAD Mimari'nindir).
 
     Yazı boyları ve yazı tipi Proje ayarları'ndadır. Bu kural ADR 0624'ün mm / 1:1 varsayılanının ve ADR 0622 §2'nin
     sihirbaz yükseklikleri ile durum çubuğunun yerine geçer.
@@ -2574,7 +2587,7 @@ KENTOS_SNAPSHOT_BACKEND=wgpu KENTOS_PROBE_FILE=$HOME/Downloads/deneme_suşehri.d
 KENTOS_SHOTS_ONLY=duzen-python cargo test -p kentos-desktop ux_screens::python_echo -- --ignored --nocapture   # işlemlerin Python kodu konsolda: seçim ve Taşı, .run/shots/duzen-python* (ADR 0622 §7)
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 cargo test -p kentos-launcher; ./target/debug/kentos-launcher snapshot .run/shots/launcher.png --sayfa uygulamalar --tema koyu --boyut 1440x900   # KentOS Launcher: testler ve pencere açmadan resim (ADR 0800); kart resimleri scripts/launcher/pictures.py
-cargo build -p kentos-desktop --features module-programs   # kentos-cad'in yanında kentos-mimari, kentos-harita, kentos-gis (ADR 0801); KENTOS_SHOTS_ONLY=… cargo test -p kentos-desktop --lib module_screens -- --ignored --nocapture modül resimleri, .run/shots/moduller-*
+cargo build -p kentos-desktop   # kentos-cad'in yanında kentos-mimari, kentos-harita, kentos-gis (ADR 0801, 0802; özellik kapısı yok); cargo test -p kentos-desktop --lib module modüllerin komutları ve yüzeyleri; KENTOS_SHOTS_ONLY=… cargo test -p kentos-desktop --lib module_screens -- --ignored --nocapture modül resimleri, .run/shots/moduller-*
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer
 pnpm db:setup            # yalnız yerel geliştirme DB/rolleri, migration, seed

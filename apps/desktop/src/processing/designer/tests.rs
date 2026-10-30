@@ -442,6 +442,45 @@ fn a_number_input_keeps_what_is_typed_on_the_way() {
     assert_eq!(input.0.get("min"), None);
 }
 
+/// A module's program lists in the parts only the tools it offers (docs/adr/0802), as its toolbox does, its search
+/// too; a carry takes the tool at its place in that list. KentOS Harita has no network analysis or spatial statistics.
+#[test]
+fn the_parts_list_the_tools_the_program_offers() {
+    let mut app = app_with_parcels();
+    app.program = Some(kentos_launch::Module::Map);
+    let _ = app.update(Message::Run("processing.newModel"));
+    assert_eq!(app.dialog, Some(Dialog::ModelDesigner));
+    let listed = |app: &App, search: &str| -> Vec<String> {
+        let offered = |t: &str| app.offers_tool(t);
+        (0..)
+            .map_while(|place| {
+                super::palette::tool_at(&app.processing.registry, search, &offered, place)
+            })
+            .collect()
+    };
+    let tools = listed(&app, "");
+    assert!(tools.iter().any(|t| t == "geometry.buffer"), "{tools:?}");
+    assert!(
+        !tools.iter().any(|t| t.starts_with("network.")
+            || t.starts_with("stats.")
+            || t.starts_with("suitability.")),
+        "{tools:?}"
+    );
+    assert!(listed(&app, "moran").is_empty());
+    // kentos-cad's parts hold every tool.
+    let all = app_with_parcels();
+    let every = listed(&all, "");
+    assert!(every.len() > tools.len() && every.iter().any(|t| t.starts_with("network.")));
+    assert!(!listed(&all, "moran").is_empty());
+    // A carry takes the place's tool of the program's own list.
+    event(&mut app, Event::Search("tampon".into()));
+    event(&mut app, Event::Carry(0));
+    assert_eq!(
+        designer(&app).carrying,
+        listed(&app, "tampon").first().cloned()
+    );
+}
+
 /// The web's picture of a model with two problems: a start point asked for
 /// and not given, and a step reading an input that is gone.
 fn problem_model() -> Model {

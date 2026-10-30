@@ -303,6 +303,8 @@ impl App {
                     .fold(menu.separator(), |menu, id| self.command_item(menu, id))
             });
         let full = self.fullscreen;
+        // The program's name in Yardım's tip (program.rs).
+        let program = self.program_title();
         // The coordinate system's right-click menu: Koordinat sistemi…, İkinci sistem ▸ (docs/adr/0167 §1).
         let crs_menu = self.crs_cell_menu();
         // Komut ara between the name and the coordinate system (ribbon_search.rs).
@@ -387,7 +389,7 @@ impl App {
             // The area is the tab row's height: the row sits in its middle.
             container(
                 row.push(fullscreen_view(full))
-                    .push(help_button(help.clone())),
+                    .push(help_button(help.clone(), program)),
             )
             .height(Fill)
             .align_y(iced::Center)
@@ -551,13 +553,16 @@ impl App {
             .collect()
     }
 
-    /// The models the user made (not the built-in ones), in the library's order.
+    /// The models the user made (not the built-in ones), in the library's order: where the program offers
+    /// them (İşlem araç kutusu's programs, docs/adr/0802). The ribbon's model buttons, the command line's
+    /// names and a model's typed name read them.
     pub(crate) fn user_models(&self) -> impl Iterator<Item = &kentos_processing::Model> {
         let registry = &self.processing.registry;
         registry
             .models()
             .iter()
             .filter(|m| !registry.is_builtin_model(&m.id))
+            .filter(|m| self.offers_model(&m.id))
     }
 
     pub(crate) fn ribbon_button(&self, item: &Item) -> Option<Button<'static, Message>> {
@@ -1333,7 +1338,7 @@ impl App {
                         .menu(
                             crate::point_calc::CHIP,
                             Some(crate::icons::from_web(Some("calc"))),
-                            crate::point_calc::calc_menu(),
+                            crate::point_calc::calc_menu_without(self.hidden_point_calcs()),
                         )
                         .menu_tip(crate::point_calc::CHIP_TIP)
                 } else {
@@ -1510,8 +1515,11 @@ impl App {
                     .menu(move || self.compact_aids_menu()),
             );
         } else {
+            // The program's own lamps: Topoloji and Çakışma are a map's (module_surfaces.rs).
             for (id, name) in STATUS_AIDS {
-                bar = bar.push(self.status_aid(id, name, fit >= 7));
+                if self.shows_aid(id) {
+                    bar = bar.push(self.status_aid(id, name, fit >= 7));
+                }
             }
         }
         if let Some(doc) = &self.document {
@@ -1561,12 +1569,17 @@ impl App {
             bar = bar.separator().push(self.mode_cell(fit < 6));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
-                // system on its right-click menu (docs/adr/0167 §1).
+                // system on its right-click menu where the program has one (docs/adr/0167 §1, module_surfaces.rs).
+                let second = if self.shows_cell(crate::module_surfaces::Cell::SecondCrs) {
+                    "; ikinci sistem sağ tık menüsünde"
+                } else {
+                    ""
+                };
                 let cell = Readout::new(label::muted(crate::crs::project_name(settings)))
                     .icon(crate::icons::from_web(Some("crs")))
                     .on_press(Message::Run("crs.set"))
                     .tip(Tip::new("Koordinat sistemi").body(format!(
-                        "{}. {} sağa, {} yukarı değerdir. Değiştirmek için tıklayın; ikinci sistem sağ tık menüsünde.",
+                        "{}. {} sağa, {} yukarı değerdir. Değiştirmek için tıklayın{second}.",
                         crate::crs::project_title(settings),
                         f.east_label(),
                         f.north_label()
@@ -1752,6 +1765,7 @@ impl App {
             SEPARATOR
                 + STATUS_AIDS
                     .iter()
+                    .filter(|(id, _)| self.shows_aid(id))
                     .map(|(_, name)| text(name) + 14.0 + pad)
                     .sum::<f32>()
         };
@@ -1835,16 +1849,24 @@ impl App {
                     .row("Çizim motoru", label::body("KentOS'un wgpu hattı"))
                     .row("Koordinat sistemi", label::body(crs))
                     .row("Sunucu", label::body(self.server_text()));
+                // The program's own name and line; its own commands counted (docs/adr/0802).
+                let about = self.program.map_or(
+                    "Harita, kadastro ve imar için CAD/CBS masaüstü uygulaması.",
+                    kentos_launch::Module::note,
+                );
+                let commands: Vec<_> = catalog()
+                    .commands()
+                    .iter()
+                    .filter(|c| self.offers(c.id))
+                    .collect();
                 overlay::modal(
-                    Dialog::new("KentOS CAD")
-                        .push(label::body(
-                            "Harita, kadastro ve imar için CAD/CBS masaüstü uygulaması.",
-                        ))
+                    Dialog::new(self.program_title())
+                        .push(label::body(about))
                         .push(rows)
                         .push(label::caption(format!(
                             "Masaüstüne taşınan komut: {} / {}. Web uygulamasıyla aynı Rust hesap çekirdeğini ve sözleşmelerini kullanır.",
-                            catalog().commands().iter().filter(|c| c.standing == Standing::Ported).count(),
-                            catalog().commands().len()
+                            commands.iter().filter(|c| c.standing == Standing::Ported).count(),
+                            commands.len()
                         )))
                         .action(close())
                         .width(440.0),
@@ -2344,8 +2366,9 @@ fn fullscreen_view(on: bool) -> Element<'static, Message> {
 }
 
 /// Yardım at the end of the tab row (the web's ribbon ?): the menu bar's
-/// Yardım menu from the inventory (Komut ara, Klavye kısayolları, KentOS CAD hakkında).
-fn help_button(items: Menu<Message>) -> Element<'static, Message> {
+/// Yardım menu from the inventory (Komut ara, Klavye kısayolları, the
+/// program's Hakkında), `program` its name (KentOS CAD, KentOS Mimari …).
+fn help_button(items: Menu<Message>, program: &'static str) -> Element<'static, Message> {
     let menu = MenuButton::new(
         container(kentos_ui::icon::icon(crate::icons::from_web(Some("help"))).size(16.0))
             .padding([4, 5]),
@@ -2353,7 +2376,7 @@ fn help_button(items: Menu<Message>) -> Element<'static, Message> {
     );
     kentos_ui::widget::tip(
         menu,
-        Tip::new("Yardım").body("Klavye kısayolları ve KentOS CAD hakkında."),
+        Tip::new("Yardım").body(format!("Klavye kısayolları ve {program} hakkında.")),
         iced::widget::tooltip::Position::Bottom,
     )
 }

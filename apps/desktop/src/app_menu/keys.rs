@@ -116,8 +116,15 @@ impl App {
     fn pane_rows(&self, pane: Pane) -> Vec<(Option<Message>, bool)> {
         let run = |app: &App, id: &'static str| (Some(event(Event::Run(id))), app.menu_runs(id));
         match pane {
-            Pane::Import => IMPORTS.iter().map(|f| run(self, f.id)).collect(),
-            Pane::Export => EXPORTS.iter().map(|f| run(self, f.id)).collect(),
+            // The formats the program lists, as the pane shows them (module_surfaces.rs).
+            Pane::Import => self
+                .shown_formats(&IMPORTS)
+                .map(|f| run(self, f.id))
+                .collect(),
+            Pane::Export => self
+                .shown_formats(&EXPORTS)
+                .map(|f| run(self, f.id))
+                .collect(),
             Pane::Overview => {
                 let mut rows: Vec<(Option<Message>, bool)> =
                     TILES.iter().map(|(id, ..)| run(self, id)).collect();

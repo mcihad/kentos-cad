@@ -4,9 +4,14 @@ use crate::catalog::{Standing, catalog};
 use kentos_ui::widget::Menu;
 
 impl App {
+    /// The narrow status bar's Yardımcılar: the aids the wide one shows as lamps, the program's own
+    /// (Topoloji and Çakışma are a map's, docs/adr/0802).
     pub(crate) fn compact_aids_menu(&self) -> Menu<Message> {
         let mut menu = Menu::new().header("Çizim yardımcıları");
         for (id, name) in crate::view::STATUS_AIDS {
+            if !self.shows_aid(id) {
+                continue;
+            }
             let Some(command) = catalog().get(id) else {
                 continue;
             };
@@ -27,16 +32,23 @@ impl App {
                 menu = menu.shortcut(*keys);
             }
         }
-        menu.separator()
-            .submenu("Kenet seçenekleri", self.snap_cell_menu())
-            .submenu("Çakışma seçenekleri", self.overlap_menu())
-            .submenu("Seçim süzgeci türleri", self.select_filter_menu())
-            .check(
-                "Topolojik düzenlemede noktalar da",
-                self.checked("draft.topologyPoints").unwrap_or(false),
-                Message::RunKept("draft.topologyPoints"),
-            )
-            .stay()
+        menu = menu
+            .separator()
+            .submenu("Kenet seçenekleri", self.snap_cell_menu());
+        if self.shows_aid("draft.overlap") {
+            menu = menu.submenu("Çakışma seçenekleri", self.overlap_menu());
+        }
+        menu = menu.submenu("Seçim süzgeci türleri", self.select_filter_menu());
+        if self.shows_aid("draft.topology") {
+            menu = menu
+                .check(
+                    "Topolojik düzenlemede noktalar da",
+                    self.checked("draft.topologyPoints").unwrap_or(false),
+                    Message::RunKept("draft.topologyPoints"),
+                )
+                .stay();
+        }
+        menu
     }
 }
 
@@ -146,6 +158,34 @@ mod tests {
             app.document.as_ref().unwrap().model.to_snapshot_v2(),
             before
         );
+    }
+
+    #[test]
+    fn kentos_mimari_s_aids_have_no_map_s_lamps_or_their_options() {
+        let mut app = app_with_drawing();
+        make_cad(&mut app);
+        app.program = Some(kentos_launch::Module::Architecture);
+        let text = format!("{:?}", app.compact_aids_menu());
+        for label in [
+            "Topoloji",
+            "Çakışma",
+            "Çakışma seçenekleri",
+            "Topolojik düzenlemede noktalar da",
+        ] {
+            assert!(!text.contains(&format!("\"{label}\"")), "{label}: {text}");
+        }
+        for label in [
+            "Kenet",
+            "Orto",
+            "Kenet seçenekleri",
+            "Seçim süzgeci türleri",
+        ] {
+            assert!(text.contains(label), "{label}: {text}");
+        }
+        // A map's program has them.
+        app.program = Some(kentos_launch::Module::Map);
+        let text = format!("{:?}", app.compact_aids_menu());
+        assert!(text.contains("Çakışma seçenekleri"), "{text}");
     }
 
     #[test]

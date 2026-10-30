@@ -72,7 +72,8 @@ pub enum BottomTab {
 }
 
 impl BottomTab {
-    const ALL: [BottomTab; 13] = [
+    /// Every tab in the web's order; a module's program shows its own of them (module_surfaces.rs).
+    pub(crate) const ALL: [BottomTab; 13] = [
         BottomTab::History,
         BottomTab::Coords,
         BottomTab::Points,
@@ -87,6 +88,44 @@ impl BottomTab {
         BottomTab::Messages,
         BottomTab::Python,
     ];
+
+    /// Its name on its tab (the web's tab strip names it so; a trace's `panel`).
+    pub(crate) fn title(self) -> &'static str {
+        match self {
+            BottomTab::History => plan::TAB_HISTORY,
+            BottomTab::Coords => plan::TAB_COORDS,
+            BottomTab::Points => plan::TAB_POINTS,
+            BottomTab::Table => plan::TAB_TABLE,
+            BottomTab::Statistics => plan::TAB_STATISTICS,
+            BottomTab::Chart => plan::TAB_CHART,
+            BottomTab::Search => plan::TAB_SEARCH,
+            BottomTab::Address => plan::TAB_ADDRESS,
+            BottomTab::Topology => plan::TAB_TOPOLOGY,
+            BottomTab::Audit => crate::arch_audit::TAB,
+            BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
+            BottomTab::Messages => plan::TAB_MESSAGES,
+            BottomTab::Python => "Python",
+        }
+    }
+
+    /// Its icon on its tab (the web's icon names).
+    fn glyph(self) -> &'static str {
+        match self {
+            BottomTab::History => "history",
+            BottomTab::Coords => "table",
+            BottomTab::Points => "pointEditor",
+            BottomTab::Table => "featureTable",
+            BottomTab::Statistics => "fieldStatistics",
+            BottomTab::Chart => "chart",
+            BottomTab::Search => "dataSearch",
+            BottomTab::Address => "addressSearch",
+            BottomTab::Topology => "topologyCheck",
+            BottomTab::Audit => "archAudit",
+            BottomTab::ServiceInfo => "serviceInfo",
+            BottomTab::Messages => "warning",
+            BottomTab::Python => "terminal",
+        }
+    }
 }
 
 /// The tab row's two buttons (Geçmişi temizle, Paneli kapat) and their margins.
@@ -140,55 +179,26 @@ impl App {
         if !self.command_expanded {
             return self.command_line();
         }
-        let tabs = Tabs::new(
-            [
-                Tab::new(plan::TAB_HISTORY)
-                    .icon(from_web(Some("history")))
-                    .closable(false),
-                Tab::new(plan::TAB_COORDS)
-                    .icon(from_web(Some("table")))
-                    .closable(false),
-                Tab::new(plan::TAB_POINTS)
-                    .icon(from_web(Some("pointEditor")))
-                    .closable(false),
-                Tab::new(plan::TAB_TABLE)
-                    .icon(from_web(Some("featureTable")))
-                    .closable(false),
-                Tab::new(plan::TAB_STATISTICS)
-                    .icon(from_web(Some("fieldStatistics")))
-                    .closable(false),
-                Tab::new(plan::TAB_CHART)
-                    .icon(from_web(Some("chart")))
-                    .closable(false),
-                Tab::new(plan::TAB_SEARCH)
-                    .icon(from_web(Some("dataSearch")))
-                    .closable(false),
-                Tab::new(plan::TAB_ADDRESS)
-                    .icon(from_web(Some("addressSearch")))
-                    .closable(false),
-                Tab::new(plan::TAB_TOPOLOGY)
-                    .icon(from_web(Some("topologyCheck")))
-                    .closable(false),
-                Tab::new(crate::arch_audit::TAB)
-                    .icon(from_web(Some("archAudit")))
-                    .closable(false),
-                Tab::new(plan::TAB_SERVICE_INFO)
-                    .icon(from_web(Some("serviceInfo")))
-                    .closable(false),
-                Tab::new(plan::TAB_MESSAGES)
-                    .icon(from_web(Some("warning")))
-                    .closable(false)
-                    .badge(self.log.unseen()),
-                Tab::new("Python")
-                    .icon(from_web(Some("terminal")))
-                    .closable(false),
-            ],
-            BottomTab::ALL
-                .iter()
-                .position(|t| *t == self.bottom_tab)
-                .unwrap_or(0),
-            |i| Message::BottomTab(BottomTab::ALL[i]),
-        );
+        // The program's own tabs (module_surfaces.rs, docs/adr/0802 §5): kentos-cad's are every one.
+        let shown = self.bottom_tabs();
+        let faces: Vec<Tab<'_>> = shown
+            .iter()
+            .map(|t| {
+                let face = Tab::new(t.title())
+                    .icon(from_web(Some(t.glyph())))
+                    .closable(false);
+                if *t == BottomTab::Messages {
+                    face.badge(self.log.unseen())
+                } else {
+                    face
+                }
+            })
+            .collect();
+        let active = shown
+            .iter()
+            .position(|t| *t == self.bottom_tab)
+            .unwrap_or(0);
+        let tabs = Tabs::new(faces, active, move |i| Message::BottomTab(shown[i]));
         let log = self.bottom_log();
         // The top edge sizes the panel within the web's limits (at least 96 px,
         // at most 0.6 of the window, the tab row counted; layout.rs); the
@@ -233,21 +243,7 @@ impl App {
     /// The open panel's tab by its title, as the web's tab strip names it
     /// (a trace's `panel`, docs/adr/0178); none while the panel is closed.
     pub(crate) fn bottom_tab_title(&self) -> Option<&'static str> {
-        self.command_expanded.then_some(match self.bottom_tab {
-            BottomTab::History => plan::TAB_HISTORY,
-            BottomTab::Coords => plan::TAB_COORDS,
-            BottomTab::Points => plan::TAB_POINTS,
-            BottomTab::Table => plan::TAB_TABLE,
-            BottomTab::Statistics => plan::TAB_STATISTICS,
-            BottomTab::Chart => plan::TAB_CHART,
-            BottomTab::Search => plan::TAB_SEARCH,
-            BottomTab::Address => plan::TAB_ADDRESS,
-            BottomTab::Topology => plan::TAB_TOPOLOGY,
-            BottomTab::Audit => crate::arch_audit::TAB,
-            BottomTab::ServiceInfo => plan::TAB_SERVICE_INFO,
-            BottomTab::Messages => plan::TAB_MESSAGES,
-            BottomTab::Python => "Python",
-        })
+        self.command_expanded.then_some(self.bottom_tab.title())
     }
 
     /// The panel's lists' height: the kept panel height as the window shows
@@ -313,8 +309,15 @@ impl App {
     }
 
     /// Opens the panel on a tab (`view.coords`, a tab clicked); Uyarılar on
-    /// screen has its lines seen.
+    /// screen has its lines seen. A tab this program does not have opens
+    /// Komut geçmişi instead (module_surfaces.rs; F2 on a tab another program
+    /// left in the shared layout).
     pub(crate) fn show_bottom(&mut self, tab: BottomTab) {
+        let tab = if self.shows_bottom_tab(tab) {
+            tab
+        } else {
+            BottomTab::History
+        };
         self.bottom_tab = tab;
         self.command_expanded = true;
         if tab == BottomTab::Messages {

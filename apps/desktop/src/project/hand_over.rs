@@ -126,7 +126,7 @@ impl App {
                     "“{}” bir CAD çizimi; {here} yalnız CBS projelerini açar. Hangi programda açılsın?",
                     s.name
                 ),
-                "Mimari proje ve Detay / imalat KentOS Mimari'de, Harita / imar planı KentOS Harita'da açılır; çizimin işi orada sorulur. Dosya değişmez."
+                "Mimari proje KentOS Mimari'de, Harita / imar planı KentOS Harita'da açılır; çizimin işi orada sorulur. Dosya değişmez."
                     .to_owned(),
             ),
         };

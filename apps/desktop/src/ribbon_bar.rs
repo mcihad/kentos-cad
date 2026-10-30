@@ -18,17 +18,20 @@ use crate::ribbon_plan::{self as plan, Row, SplitEntry};
 
 impl App {
     /// The quick access bar: the fixed three, then what the user added
-    /// that this app has, in the order added.
+    /// that this app has, in the order added. The layout is every program's
+    /// (yerlesim.json): a command another module's program put there is not
+    /// on this one's bar (docs/adr/0802), and comes back where it is offered.
     pub(crate) fn quick_bar(&self) -> Vec<String> {
         quick_access_of(&self.layout.quick_access(), |id| {
-            catalog().get(id).is_some()
+            catalog().get(id).is_some() && self.offers(id)
         })
     }
 
     /// A command put on the bar (at its end) or taken off; the fixed three
-    /// (the web's, as the inventory writes them) stay.
+    /// (the web's, as the inventory writes them) stay, and a module's program
+    /// puts on it only its own commands (docs/adr/0802).
     pub(crate) fn quick_access_changed(&mut self, id: &str, on: bool) {
-        if catalog().quick().contains(&id) {
+        if catalog().quick().contains(&id) || (on && !self.offers(id)) {
             return;
         }
         let kept = plan::with_quick_access(&self.layout.quick_access(), id, on);

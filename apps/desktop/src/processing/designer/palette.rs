@@ -32,9 +32,9 @@ enum Row_ {
     Tool(Box<Tool>),
 }
 
-/// The tool list as shown: categories flattened with their tools, only the
-/// search's hits while one is typed.
-fn rows(registry: &Registry, search: &str) -> Vec<Row_> {
+/// The tool list as shown: categories flattened with the tools the program
+/// offers (`offered`, docs/adr/0802), only the search's hits while one is typed.
+fn rows(registry: &Registry, search: &str, offered: &dyn Fn(&str) -> bool) -> Vec<Row_> {
     let query = search.trim();
     let hits: Option<Vec<String>> = (!query.is_empty()).then(|| {
         registry
@@ -43,7 +43,8 @@ fn rows(registry: &Registry, search: &str) -> Vec<Row_> {
             .map(|t| t.id.clone())
             .collect()
     });
-    let tree = registry.tree(&|t| hits.as_ref().is_none_or(|h| h.contains(&t.id)));
+    let tree =
+        registry.tree(&|t| offered(&t.id) && hits.as_ref().is_none_or(|h| h.contains(&t.id)));
     fn flat(n: &CategoryNode, out: &mut Vec<Row_>) {
         out.push(Row_::Group(n.category.label));
         out.extend(n.tools.iter().cloned().map(|t| Row_::Tool(Box::new(t))));
@@ -59,8 +60,13 @@ fn rows(registry: &Registry, search: &str) -> Vec<Row_> {
 }
 
 /// The tool at a place of the list (only tools have places), for a carry.
-pub(super) fn tool_at(registry: &Registry, search: &str, place: usize) -> Option<String> {
-    rows(registry, search)
+pub(super) fn tool_at(
+    registry: &Registry,
+    search: &str,
+    offered: &dyn Fn(&str) -> bool,
+    place: usize,
+) -> Option<String> {
+    rows(registry, search, offered)
         .into_iter()
         .filter_map(|r| match r {
             Row_::Tool(t) => Some(t.id),
@@ -81,7 +87,11 @@ fn title<'a>(text: &'a str) -> Element<'a, Message> {
     .into()
 }
 
-pub(super) fn palette<'a>(d: &'a Designer, registry: &'a Registry) -> Element<'a, Message> {
+pub(super) fn palette<'a>(
+    d: &'a Designer,
+    registry: &'a Registry,
+    offered: &dyn Fn(&str) -> bool,
+) -> Element<'a, Message> {
     // Girdi ekle: two to a row, the icon in the info blue.
     let mut grid = Column::new().spacing(4);
     for pair in INPUT_TYPES.chunks(2) {
@@ -133,7 +143,7 @@ pub(super) fn palette<'a>(d: &'a Designer, registry: &'a Registry) -> Element<'a
     .style(style::container::field_box);
 
     let mut place = 0usize;
-    let nodes: Vec<Node<'a, Message>> = rows(registry, &d.search)
+    let nodes: Vec<Node<'a, Message>> = rows(registry, &d.search, offered)
         .into_iter()
         .map(|r| match r {
             Row_::Group(name) => Node::new(name).heading(),
