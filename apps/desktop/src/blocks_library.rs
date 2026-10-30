@@ -13,9 +13,7 @@ use std::sync::Arc;
 use iced::widget::{Canvas, Column, button, column, container, row, text, tooltip};
 use iced::{Center, Element, Fill, Task, Theme};
 use kentos_commands::blocks::name_key;
-use kentos_commands::{
-    BlockFileMode, BlockUnits, CommandResult, DrawingUnit, Entity, ImportBlock,
-};
+use kentos_commands::{BlockFileMode, BlockUnits, CommandResult, DrawingUnit, Entity, ImportBlock};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, file_import_block};
 use kentos_ui::icon::{Icon, icon};
@@ -100,7 +98,11 @@ pub enum Event {
     Go(Option<PathBuf>),
     /// A drawing's blocks shown, read when they are not yet.
     Open(PathBuf),
-    Read(PathBuf, Option<DrawingUnit>, Result<Arc<FileBlocks>, String>),
+    Read(
+        PathBuf,
+        Option<DrawingUnit>,
+        Result<Arc<FileBlocks>, String>,
+    ),
     /// The unit a drawing naming none is read in.
     Unit(PathBuf, DrawingUnit),
     /// Yerleştir: a block of the drawing by its name, or the whole drawing.
@@ -217,16 +219,21 @@ pub fn read_file(path: &Path, unit: Option<DrawingUnit>) -> Result<FileBlocks, S
     let kept = doc
         .entities()
         .filter(|e| !matches!(e, Entity::Image(_) | Entity::Raster(_) | Entity::Table(_)));
-    let whole = kentos_native_application::sheets_fit::extent_of(&doc, kept).map(|[x0, y0, x1, y1]| Item {
-        name: path
-            .file_stem()
-            .map_or_else(String::new, |s| s.to_string_lossy().into_owned()),
-        size: known.then_some((x1 - x0, y1 - y0)),
-        units: None,
-        paths: Vec::new(),
-    });
+    let whole =
+        kentos_native_application::sheets_fit::extent_of(&doc, kept).map(|[x0, y0, x1, y1]| Item {
+            name: path
+                .file_stem()
+                .map_or_else(String::new, |s| s.to_string_lossy().into_owned()),
+            size: known.then_some((x1 - x0, y1 - y0)),
+            units: None,
+            paths: Vec::new(),
+        });
     Ok(FileBlocks {
-        unit: if known { unit.or(Some(doc.settings().unit())) } else { None },
+        unit: if known {
+            unit.or(Some(doc.settings().unit()))
+        } else {
+            None
+        },
         whole,
         blocks,
     })
@@ -291,12 +298,19 @@ impl Library {
         let root = self.root_of(file)?;
         let mut parts = vec![name_of(root)];
         if let Ok(rest) = file.parent().unwrap_or(file).strip_prefix(root) {
-            parts.extend(rest.components().map(|c| c.as_os_str().to_string_lossy().into_owned()));
+            parts.extend(
+                rest.components()
+                    .map(|c| c.as_os_str().to_string_lossy().into_owned()),
+            );
         }
         if !whole && let Some(stem) = file.file_stem() {
             parts.push(stem.to_string_lossy().into_owned());
         }
-        let parts: Vec<String> = parts.into_iter().map(|p| p.trim().to_owned()).filter(|p| !p.is_empty()).collect();
+        let parts: Vec<String> = parts
+            .into_iter()
+            .map(|p| p.trim().to_owned())
+            .filter(|p| !p.is_empty())
+            .collect();
         (!parts.is_empty()).then(|| parts.join("/"))
     }
 }
@@ -330,7 +344,13 @@ impl App {
             }
             Event::RemoveRoot(path) => {
                 self.blocks_panel.library.remove(&path);
-                self.say(Level::Info, format!("Bloklar: “{}” kitaplığı listeden çıkarıldı; dosyalarına dokunulmadı.", name_of(&path)));
+                self.say(
+                    Level::Info,
+                    format!(
+                        "Bloklar: “{}” kitaplığı listeden çıkarıldı; dosyalarına dokunulmadı.",
+                        name_of(&path)
+                    ),
+                );
             }
             Event::Go(folder) => {
                 self.blocks_panel.library.at = folder;
@@ -416,13 +436,21 @@ impl App {
         let Some(id) = id else {
             return Task::none();
         };
-        let name = doc.model.block(id).map(|b| b.name.clone()).unwrap_or_default();
+        let name = doc
+            .model
+            .block(id)
+            .map(|b| b.name.clone())
+            .unwrap_or_default();
         let left: Vec<String> = warnings.into_iter().map(|w| w.message).collect();
         let said = if output.skipped.is_empty() {
             format!(
                 "“{name}” kitaplıktan alındı ({} blok){}. Yerleştirme noktasına tıklayın.",
                 output.added.len() + output.changed.len(),
-                if left.is_empty() { String::new() } else { format!("; {}", left.join(" ").trim_end_matches('.')) }
+                if left.is_empty() {
+                    String::new()
+                } else {
+                    format!("; {}", left.join(" ").trim_end_matches('.'))
+                }
             )
         } else {
             format!(
@@ -437,15 +465,17 @@ impl App {
     /// The Kitaplık view: the search, the place shown, and the libraries, folders, drawings or blocks.
     pub(crate) fn blocks_library_view(&self) -> Element<'_, Message> {
         let lib = &self.blocks_panel.library;
-        let search = SearchBox::new(lib.query.clone(), "Kitaplıkta ara", |t| msg(Event::Search(t)))
-            .fill()
-            .height(28.0);
+        let search = SearchBox::new(lib.query.clone(), "Kitaplıkta ara", |t| {
+            msg(Event::Search(t))
+        })
+        .fill();
         let add = tip(
             button(icon(Icon::Plus).size(14.0))
                 .on_press(msg(Event::AddRoot))
-                .padding(6)
+                .padding(kentos_ui::theme::metrics::icon(14.0))
                 .style(style::button::ghost),
-            Tip::new("Kitaplık ekle…").body("DWG, DXF ya da KCAD çizimlerinin bulunduğu bir klasörü kitaplık yapar."),
+            Tip::new("Kitaplık ekle…")
+                .body("DWG, DXF ya da KCAD çizimlerinin bulunduğu bir klasörü kitaplık yapar."),
             tooltip::Position::Bottom,
         );
         let bar = container(row![search, add].spacing(2).align_y(Center))
@@ -475,24 +505,37 @@ impl App {
                 .style(style::button::ghost)
                 .into()
         };
-        let mut parts: Vec<Element<'_, Message>> = vec![part("Kitaplıklar".into(), None, lib.at.is_none())];
+        let mut parts: Vec<Element<'_, Message>> =
+            vec![part("Kitaplıklar".into(), None, lib.at.is_none())];
         if let Some(at) = &lib.at
             && let Some(root) = lib.root_of(at)
         {
             let mut here = root.clone();
             parts.push(icon(Icon::ChevronRight).size(10.0).into());
-            parts.push(part(name_of(root), Some(here.clone()), lib.open.is_none() && at == root));
+            parts.push(part(
+                name_of(root),
+                Some(here.clone()),
+                lib.open.is_none() && at == root,
+            ));
             if let Ok(rest) = at.strip_prefix(root) {
                 for c in rest.components() {
                     here = here.join(c);
                     parts.push(icon(Icon::ChevronRight).size(10.0).into());
-                    parts.push(part(name_of(&here), Some(here.clone()), lib.open.is_none() && &here == at));
+                    parts.push(part(
+                        name_of(&here),
+                        Some(here.clone()),
+                        lib.open.is_none() && &here == at,
+                    ));
                 }
             }
         }
         if let Some(file) = &lib.open {
             parts.push(icon(Icon::ChevronRight).size(10.0).into());
-            parts.push(label::strong(name_of(file)).wrapping(text::Wrapping::None).into());
+            parts.push(
+                label::strong(name_of(file))
+                    .wrapping(text::Wrapping::None)
+                    .into(),
+            );
         }
         container(row(parts).spacing(2).align_y(Center))
             .padding([0, 8])
@@ -516,18 +559,24 @@ impl App {
                 .wrapping(text::Wrapping::None),
         );
         if let Some(meta) = meta {
-            names = names.push(label::caption(meta).wrapping(text::Wrapping::None).style(|t: &Theme| {
-                text::Style {
+            names = names.push(label::caption(meta).wrapping(text::Wrapping::None).style(
+                |t: &Theme| text::Style {
                     color: Some(Tokens::of(t).faint),
-                }
-            }));
+                },
+            ));
         }
-        let face = button(row![glyph, names].spacing(8).padding([0, 8]).align_y(Center).height(Fill))
-            .on_press(press)
-            .padding(0)
-            .width(Fill)
-            .height(Fill)
-            .style(style::button::row(false));
+        let face = button(
+            row![glyph, names]
+                .spacing(8)
+                .padding([0, 8])
+                .align_y(Center)
+                .height(Fill),
+        )
+        .on_press(press)
+        .padding(0)
+        .width(Fill)
+        .height(Fill)
+        .style(style::button::row(false));
         match tip_words {
             Some((title, body)) => tip(face, Tip::new(title).body(body), tooltip::Position::Left),
             None => face.into(),
@@ -579,7 +628,12 @@ impl App {
             .into_iter()
             .filter(keep)
             .map(|d| (true, folder.join(d)))
-            .chain(files.into_iter().filter(keep).map(|f| (false, folder.join(f))))
+            .chain(
+                files
+                    .into_iter()
+                    .filter(keep)
+                    .map(|f| (false, folder.join(f))),
+            )
             .collect();
         if lines.is_empty() {
             return container(label::caption(if query.is_empty() {
@@ -607,7 +661,9 @@ impl App {
                     .map(|e| e.to_string_lossy().to_uppercase())
                     .unwrap_or_default();
                 self.library_line(
-                    icon(crate::icons::from_web(Some("importDxf"))).size(15.0).into(),
+                    icon(crate::icons::from_web(Some("importDxf")))
+                        .size(15.0)
+                        .into(),
                     name_of(path),
                     Some(format!("{kind} çizimi")),
                     msg(Event::Open(path.clone())),
@@ -625,10 +681,16 @@ impl App {
         let reading = lib.read.get(file).cloned().unwrap_or(Reading::Busy);
         let read = match reading {
             Reading::Busy => {
-                return container(label::caption("Çizim okunuyor…")).padding([8, 12]).width(Fill).into();
+                return container(label::caption("Çizim okunuyor…"))
+                    .padding([8, 12])
+                    .width(Fill)
+                    .into();
             }
             Reading::Failed(why) => {
-                return container(label::caption(why)).padding([8, 12]).width(Fill).into();
+                return container(label::caption(why))
+                    .padding([8, 12])
+                    .width(Fill)
+                    .into();
             }
             Reading::Done(f) => f,
         };
@@ -650,7 +712,9 @@ impl App {
             } else {
                 "Dosyanın birimi (seçilen):"
             };
-            head = head.push(label::caption(say).wrapping(text::Wrapping::WordOrGlyph)).push(units);
+            head = head
+                .push(label::caption(say).wrapping(text::Wrapping::WordOrGlyph))
+                .push(units);
         }
         let file_path = file.to_path_buf();
         let query = name_key(lib.query.trim());
@@ -676,39 +740,65 @@ impl App {
                     .style(move |theme: &Theme| thumb_tile(theme, false))
                     .into()
             } else {
-                container(Canvas::new(Thumb { paths: item.paths.clone() }).width(side).height(side))
-                    .style(move |theme: &Theme| thumb_tile(theme, false))
-                    .into()
+                container(
+                    Canvas::new(Thumb {
+                        paths: item.paths.clone(),
+                    })
+                    .width(side)
+                    .height(side),
+                )
+                .style(move |theme: &Theme| thumb_tile(theme, false))
+                .into()
             };
             let size = item.size.map(|(w, d)| {
-                format!("{} × {} {}", format.length_bare(w), format.length_bare(d), format.length_unit_label())
+                format!(
+                    "{} × {} {}",
+                    format.length_bare(w),
+                    format.length_bare(d),
+                    format.length_unit_label()
+                )
             });
             let meta = match (block, size) {
                 (None, Some(s)) => format!("Dosyanın tamamı · {s}"),
                 (None, None) => "Dosyanın tamamı".to_owned(),
-                (Some(_), Some(s)) => format!("{s} · {}", kentos_interaction::block_insert::unit_words(item.units)),
+                (Some(_), Some(s)) => format!(
+                    "{s} · {}",
+                    kentos_interaction::block_insert::unit_words(item.units)
+                ),
                 (Some(_), None) => "Boyu birim seçilince".to_owned(),
             };
             let name = item.name.clone();
             let words = column![
-                text(name.clone()).font(typography::ui()).size(typography::body()).wrapping(text::Wrapping::None),
-                label::caption(meta).wrapping(text::Wrapping::None).style(|t: &Theme| text::Style {
-                    color: Some(Tokens::of(t).faint),
-                }),
+                text(name.clone())
+                    .font(typography::ui())
+                    .size(typography::body())
+                    .wrapping(text::Wrapping::None),
+                label::caption(meta)
+                    .wrapping(text::Wrapping::None)
+                    .style(|t: &Theme| text::Style {
+                        color: Some(Tokens::of(t).faint),
+                    }),
             ]
             .spacing(1)
             .width(Fill);
             let place = msg(Event::Place(file_path.clone(), block.clone()));
-            let face = button(row![picture, words].spacing(8).padding([0, 8]).align_y(Center).height(Fill))
-                .on_press_maybe(can_place.then_some(place.clone()))
-                .padding(0)
-                .width(Fill)
-                .height(Fill)
-                .style(style::button::row(false));
+            let face = button(
+                row![picture, words]
+                    .spacing(8)
+                    .padding([0, 8])
+                    .align_y(Center)
+                    .height(Fill),
+            )
+            .on_press_maybe(can_place.then_some(place.clone()))
+            .padding(0)
+            .width(Fill)
+            .height(Fill)
+            .style(style::button::row(false));
             let face = tip(
                 face,
                 Tip::new(name).body(if can_place {
-                    "Basın: çizime alınır ve Blok ekle başlar; kategorisi kitaplığın klasörleri.".to_owned()
+                    "Basın: çizime alınır ve Blok ekle başlar; kategorisi kitaplığın klasörleri."
+                        .to_owned()
                 } else {
                     "Önce dosyanın birimini seçin.".to_owned()
                 }),

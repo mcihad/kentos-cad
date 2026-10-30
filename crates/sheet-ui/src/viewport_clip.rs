@@ -241,15 +241,18 @@ impl Designer {
                 .height(110.),
         );
         Dialog::new("Görünüm penceresi kırpması")
+            .on_close(crate::Message::CloseDialog)
             .width(520.)
             .scroll(body)
             .action(
                 button(label::body("Vazgeç"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(Message::CloseDialog)
                     .style(style::button::secondary),
             )
             .action(
                 button(label::strong("Uygula"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press_maybe(d.boundary().is_ok().then_some(on(ClipMessage::Apply)))
                     .style(style::button::primary),
             )

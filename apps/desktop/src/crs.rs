@@ -17,7 +17,7 @@
 //! web's list is; a new project and the project settings choose from the
 //! same list.
 
-use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Length};
 use kentos_commands::{
     Bounds, Convention, CrsDefinition, CrsPlane, CrsSource, CrsSystem, DatumRef, DeclaredCrs,
@@ -582,9 +582,13 @@ pub fn picker<'a, Message: Clone + 'a>(
         text(name.clone())
             .font(typography::ui_strong())
             .size(typography::body()),
-        container(label::mono_caption(code_text))
-            .padding([1, 6])
-            .style(style::container::badge),
+        container(if code_text.starts_with(|c: char| c.is_ascii_digit()) {
+            label::mono_caption(code_text)
+        } else {
+            label::caption(code_text)
+        })
+        .padding([1, 6])
+        .style(style::container::badge),
     ]
     .spacing(8)
     .align_y(Center);
@@ -592,7 +596,7 @@ pub fn picker<'a, Message: Clone + 'a>(
         face = face.push(iced::widget::space::horizontal()).push(
             button(label::body("Düzenle"))
                 .on_press(defined.on_edit.clone())
-                .padding([3, 12])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary),
         );
     }
@@ -681,12 +685,10 @@ pub fn picker<'a, Message: Clone + 'a>(
     if found.is_empty() {
         list = list.push(container(label::muted("Eşleşen koordinat sistemi yok.")).padding(8));
     }
-    let search_box = text_input("SRID ya da ad yazın, ör. 5256 veya TM36", query)
-        .on_input(on_search)
-        .padding([5, 8])
-        .size(typography::body())
-        .style(style::field::input);
-    let search_box = kentos_ui::widget::focus_ring(search_box);
+    let search_box =
+        kentos_ui::widget::text_field("SRID ya da ad yazın, ör. 5256 veya TM36", query)
+            .on_input(on_search);
+    let search_box = search_box;
     let mut browser = Column::new().spacing(6).push(
         row![icon(Icon::Search).size(14.0).tone(Tone::Muted), search_box]
             .spacing(6)

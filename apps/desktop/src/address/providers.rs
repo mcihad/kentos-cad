@@ -14,7 +14,7 @@ use std::collections::{HashMap, HashSet};
 use std::time::Instant;
 
 use iced::futures::channel::oneshot;
-use iced::widget::{Column, button, column, container, row, scrollable, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_cloud::fetch::{self, Method, Request};
 use kentos_services::geocode::providers::{
@@ -25,8 +25,8 @@ use kentos_services::geocode::request;
 use kentos_services::query::encode;
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use kentos_processing::address::AddressHost;
@@ -491,7 +491,7 @@ impl App {
                     .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe(on)
         };
         let chosen = list.get(w.chosen);
@@ -546,21 +546,19 @@ impl App {
                 ),
             ),
         };
-        overlay::modal(
-            Frame::new(TITLE)
-                .fill(row![left, right].spacing(16).height(Fill))
-                .push(words::summary(vec![line]))
-                .action(words::secondary(CLEAR, Some(msg(Event::ClearCache))))
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(
-                    SAVE,
-                    (problem.is_none() && (w.written() != w.opened || !w.keys.is_empty()))
-                        .then(|| msg(Event::Save)),
-                ))
-                .width(1000.0)
-                .max_height(660.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .fill(row![left, right].spacing(16).height(Fill))
+            .push(words::summary(vec![line]))
+            .action(words::secondary(CLEAR, Some(msg(Event::ClearCache))))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(
+                SAVE,
+                (problem.is_none() && (w.written() != w.opened || !w.keys.is_empty()))
+                    .then(|| msg(Event::Save)),
+            ))
+            .width(1000.0)
+            .max_height(660.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The chosen provider's card and settings.
@@ -575,15 +573,9 @@ impl App {
             .into()
         };
         let field = |value: String, on: fn(String) -> Event, width: f32| -> Element<'a, Message> {
-            container(
-                text_input("", &value)
-                    .size(typography::body())
-                    .padding([4, 8])
-                    .on_input(move |t| msg(on(t)))
-                    .style(style::field::input),
-            )
-            .width(Length::Fixed(typography::scaled(width)))
-            .into()
+            container(kentos_ui::widget::text_field("", &value).on_input(move |t| msg(on(t))))
+                .width(Length::Fixed(typography::scaled(width)))
+                .into()
         };
         let mut card = Column::new().spacing(8).padding([0, 8]);
         card = card.push(label::strong(p.name.clone()));
@@ -640,7 +632,7 @@ impl App {
         if p.key != KeyRule::None {
             let key = w.key(&p.id);
             let shown = w.shown.contains(&p.id);
-            let input = text_input(
+            let input = kentos_ui::widget::text_field(
                 if p.key == KeyRule::Required {
                     "Anahtar (gerekli)"
                 } else {
@@ -648,11 +640,8 @@ impl App {
                 },
                 &key,
             )
-            .size(typography::body())
-            .padding([4, 8])
             .secure(!shown)
-            .on_input(|t| msg(Event::Key(t)))
-            .style(style::field::input);
+            .on_input(|t| msg(Event::Key(t)));
             card = card.push(labelled(
                 "Anahtar",
                 row![

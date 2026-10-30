@@ -139,7 +139,7 @@ pub struct DatePicker<'a, Message> {
     now: DateTime,
     week_numbers: bool,
     clearable: bool,
-    inline: bool,
+    cell: bool,
 }
 
 impl<'a, Message: 'a> DatePicker<'a, Message> {
@@ -152,7 +152,7 @@ impl<'a, Message: 'a> DatePicker<'a, Message> {
             now: DateTime::now(0),
             week_numbers: true,
             clearable: true,
-            inline: false,
+            cell: false,
         }
     }
 
@@ -199,10 +199,10 @@ impl<'a, Message: 'a> DatePicker<'a, Message> {
         self
     }
 
-    /// Satır içi boy: alanın yanındaki takvim düğmesi tablo ve özellik
-    /// hücresine sığar ([`metrics::inline`]).
-    pub fn inline(mut self) -> Self {
-        self.inline = true;
+    /// Izgara hücresini dolduran görünüm (docs/adr/0804): takvim düğmesi satır
+    /// yüksekliğinde; hücre durumları çizer.
+    pub fn cell(mut self) -> Self {
+        self.cell = true;
         self
     }
 }
@@ -234,9 +234,9 @@ impl<'a, Message: 'a> TimePicker<'a, Message> {
         Self(self.0.clearable(clearable))
     }
 
-    /// Satır içi boy (bkz. [`DatePicker::inline`]).
-    pub fn inline(self) -> Self {
-        Self(self.0.inline())
+    /// Hücreyi dolduran görünüm (bkz. [`DatePicker::cell`]).
+    pub fn cell(self) -> Self {
+        Self(self.0.cell())
     }
 }
 
@@ -283,19 +283,19 @@ impl<'a, Message: 'a> From<DatePicker<'a, Message>> for Element<'a, Message> {
 
         let reduce = move |state: &mut State, pick: Pick| reduce(state, pick, props, &on_change);
 
-        let inline = picker.inline;
+        let in_cell = picker.cell;
         let dropdown = match picker.anchor {
             Some(anchor) => Dropdown::new(anchor, init, move |state| panel(state, props), reduce)
                 .trigger(
                     button(container(icon(glyph).size(14.0)).center_y(Fill))
                         .on_press(())
-                        .padding([0, 5])
-                        .height(if inline {
-                            metrics::inline()
+                        .padding([0, if in_cell { 7 } else { 5 }])
+                        .height(metrics::control())
+                        .style(if in_cell {
+                            style::button::cell_tool
                         } else {
-                            metrics::control()
-                        })
-                        .style(style::button::flat),
+                            style::button::flat
+                        }),
                 ),
             None => Dropdown::new(
                 display(props, glyph),
@@ -503,7 +503,7 @@ fn calendar<'a>(state: &State, props: Props) -> Element<'a, Pick> {
                 .align_y(Center),
             )
             .on_press_maybe((state.view != View::Years).then_some(Pick::Zoom))
-            .padding([3, 8])
+            .padding(crate::theme::metrics::action_small())
             .style(style::button::flat),
         )
         .center_x(Fill),
@@ -524,7 +524,7 @@ fn calendar<'a>(state: &State, props: Props) -> Element<'a, Pick> {
 fn nav<'a>(glyph: Icon, pick: Pick) -> Element<'a, Pick> {
     button(icon(glyph).size(14.0))
         .on_press(pick)
-        .padding([4, 6])
+        .padding(crate::theme::metrics::icon_small(14.0))
         .style(style::button::flat)
         .into()
 }
@@ -753,7 +753,7 @@ fn footer<'a>(props: Props) -> Element<'a, Pick> {
 fn small<'a>(content: &'a str, pick: Pick, primary: bool) -> Element<'a, Pick> {
     button(label::body(content))
         .on_press(pick)
-        .padding([3, 10])
+        .padding(crate::theme::metrics::action_small())
         .style(if primary {
             style::button::primary
         } else {

@@ -6,7 +6,7 @@
 
 use std::fmt;
 
-use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable, text};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     AngleUnit, AreaUnit, CrsDefinition, DrawingFont, DrawingUnit, ProjectSettings, Workspace,
@@ -354,15 +354,28 @@ impl State {
     }
 
     /// A level the rows take away that objects or a sheet's map name (docs/adr/0720 §3): why it stays; Kaydet waits.
-    pub(super) fn levels_in_use(&self, doc: &kentos_domain::Document) -> Option<kentos_commands::CommandError> {
-        let arch = super::arch::read(&self.arch, self.arch_detail, self.arch_method, self.settings.arch.as_ref()).ok()?;
+    pub(super) fn levels_in_use(
+        &self,
+        doc: &kentos_domain::Document,
+    ) -> Option<kentos_commands::CommandError> {
+        let arch = super::arch::read(
+            &self.arch,
+            self.arch_detail,
+            self.arch_method,
+            self.settings.arch.as_ref(),
+        )
+        .ok()?;
         kentos_native_application::settings_set::levels_in_use(doc, &arch)
     }
 
     fn arch_blocked(&self) -> bool {
         super::arch::read(
-            &self.arch, self.arch_detail, self.arch_method, self.settings.arch.as_ref(),
-        ).is_err()
+            &self.arch,
+            self.arch_detail,
+            self.arch_method,
+            self.settings.arch.as_ref(),
+        )
+        .is_err()
     }
 
     /// The draft's system: its SRID, and whether it is the project's own definition.
@@ -748,8 +761,12 @@ impl App {
         // Mimari through `cad.settings.set` first (docs/adr/0339 §3): a level a wall names is kept, and nothing is
         // saved then.
         let mut arch = super::arch::read(
-            &s.arch, s.arch_detail, s.arch_method, s.settings.arch.as_ref(),
-        ).unwrap_or_default();
+            &s.arch,
+            s.arch_detail,
+            s.arch_method,
+            s.settings.arch.as_ref(),
+        )
+        .unwrap_or_default();
         // The phase view is Mimari › Evre's, not this form's (docs/adr/0346 §2): it stays as it was.
         arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
         // So are Denetim's exceptions (docs/adr/0732 §3).
@@ -784,16 +801,17 @@ impl App {
             | kentos_commands::CommandResult::NeedsInput { error } = result
             {
                 // A level objects name stays (docs/adr/0720 §3): they are selected, to give them another level.
-                let named: Vec<kentos_domain::Slot> = if error.code == kentos_commands::codes::LEVEL_IN_USE {
-                    error
-                        .uids
-                        .iter()
-                        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
-                        .filter_map(|u| doc.model.slot_of(u))
-                        .collect()
-                } else {
-                    Vec::new()
-                };
+                let named: Vec<kentos_domain::Slot> =
+                    if error.code == kentos_commands::codes::LEVEL_IN_USE {
+                        error
+                            .uids
+                            .iter()
+                            .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                            .filter_map(|u| doc.model.slot_of(u))
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
                 if named.is_empty() {
                     self.warn(error.message);
                 } else {
@@ -871,16 +889,17 @@ impl App {
             | kentos_commands::CommandResult::NeedsInput { error } = result
             {
                 // A level objects name stays (docs/adr/0720 §3): they are selected, to give them another level.
-                let named: Vec<kentos_domain::Slot> = if error.code == kentos_commands::codes::LEVEL_IN_USE {
-                    error
-                        .uids
-                        .iter()
-                        .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
-                        .filter_map(|u| doc.model.slot_of(u))
-                        .collect()
-                } else {
-                    Vec::new()
-                };
+                let named: Vec<kentos_domain::Slot> =
+                    if error.code == kentos_commands::codes::LEVEL_IN_USE {
+                        error
+                            .uids
+                            .iter()
+                            .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                            .filter_map(|u| doc.model.slot_of(u))
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
                 if named.is_empty() {
                     self.warn(error.message);
                 } else {
@@ -1033,8 +1052,12 @@ impl App {
                     |m| event(Event::ArchMethod(m)),
                 ),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),
-                super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(e))),
-            ].spacing(14).into(),
+                super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(
+                    e
+                ))),
+            ]
+            .spacing(14)
+            .into(),
         };
         let content = column![
             text(current.label())
@@ -1057,7 +1080,7 @@ impl App {
         let own = current != Section::Crs;
         let reset = button(label::body("Bu bölümü varsayılana döndür"))
             .on_press_maybe(own.then_some(event(Event::ResetSection)))
-            .padding([5, 16])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::ghost);
         let reset: Element<'a, Message> = if own {
             reset.into()
@@ -1089,7 +1112,8 @@ impl App {
                     .then(|| event(Event::Save)),
                 ))
                 .width(900.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(ProjectEvent::Close))),
         )
     }
 
@@ -1146,13 +1170,10 @@ impl App {
     }
 
     fn general<'a>(&'a self, s: &'a State, doc: &'a Document) -> Element<'a, Message> {
-        let name = text_input("Proje adı", &s.name)
+        let name = kentos_ui::widget::text_field("Proje adı", &s.name)
             .on_input(|t| event(Event::Name(t)))
-            .padding([5, 8])
-            .size(typography::body())
-            .width(260)
-            .style(style::field::input);
-        let name = kentos_ui::widget::focus_ring(name);
+            .width(260);
+        let name = name;
         let font = Select::new(
             FONTS.iter().map(|(_, name)| Choice::new(*name)),
             FONTS.iter().position(|(f, _)| {
@@ -1287,7 +1308,7 @@ impl App {
                         .on_press(event(Event::Grid(crate::grids::Event::Remove(
                             e.id.clone()
                         ))))
-                        .padding([5, 16])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::danger),
                     words::secondary("Vazgeç", Some(event(Event::GridAsk(None)))),
                 ]

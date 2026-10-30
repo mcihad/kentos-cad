@@ -24,7 +24,7 @@ use iced::widget::{button, column};
 use iced::{Element, Task};
 use kentos_commands::DocumentSnapshotV1;
 use kentos_kcad::{Code, Sniff, Step};
-use kentos_ui::widget::{Dialog, overlay, progress};
+use kentos_ui::widget::{Dialog, progress};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
@@ -168,23 +168,42 @@ pub fn read(
                 return Err(at("Bu dosya açılabilir bir KCAD, DWG, DXF veya NCZ çizimi değil. Diğer veri türleri için İçe aktar kullanın.".into()));
             };
             let mut watch = kentos_formats::watch::Steps(|done, total| {
-                tell(Stage::Reading { done: done as usize, total: total as usize });
+                tell(Stage::Reading {
+                    done: done as usize,
+                    total: total as usize,
+                });
                 !stop.load(Ordering::Relaxed)
             });
-            let opened = match kentos_native_application::cad_open::read(path, &data, format, &mut watch) {
-                Ok(opened) => opened,
-                Err(_) if stop.load(Ordering::Relaxed) => return Ok(None),
-                Err(e) => return Err(at(e)),
-            };
-            if stop.load(Ordering::Relaxed) { return Ok(None); }
-            let mut notes = vec![format!("{} ayrı bir CAD çizimi olarak açıldı. Kaydet, KentOS (.kcad) dosyası oluşturur; kaynak dosya korunur.", path.display())];
-            if let Some(unit) = &opened.unit {
-                notes.push(crate::exchange::drawing_import::unit_said(unit, opened.document.settings().unit()));
+            let opened =
+                match kentos_native_application::cad_open::read(path, &data, format, &mut watch) {
+                    Ok(opened) => opened,
+                    Err(_) if stop.load(Ordering::Relaxed) => return Ok(None),
+                    Err(e) => return Err(at(e)),
+                };
+            if stop.load(Ordering::Relaxed) {
+                return Ok(None);
             }
-            notes.extend(opened.report.notes.iter().chain(&opened.report.skipped).map(|n| format!("{}: {}", n.what, n.reason)));
+            let mut notes = vec![format!(
+                "{} ayrı bir CAD çizimi olarak açıldı. Kaydet, KentOS (.kcad) dosyası oluşturur; kaynak dosya korunur.",
+                path.display()
+            )];
+            if let Some(unit) = &opened.unit {
+                notes.push(crate::exchange::drawing_import::unit_said(
+                    unit,
+                    opened.document.settings().unit(),
+                ));
+            }
+            notes.extend(
+                opened
+                    .report
+                    .notes
+                    .iter()
+                    .chain(&opened.report.skipped)
+                    .map(|n| format!("{}: {}", n.what, n.reason)),
+            );
             tell(Stage::Source(notes));
             Ok(Some(Document::of_model(opened.document)))
-        },
+        }
     }
 }
 
@@ -374,7 +393,9 @@ impl App {
             Event::Picked(None) | Event::PickedTab(None) => {}
             Event::Progress { id, stage } => {
                 if let Some(o) = self.opening.as_mut().filter(|o| o.id == id) {
-                    if let Stage::Source(notes) = &stage { o.notes = notes.clone(); }
+                    if let Stage::Source(notes) = &stage {
+                        o.notes = notes.clone();
+                    }
                     if let Stage::Project {
                         name,
                         layers,
@@ -529,7 +550,7 @@ impl App {
         }
         let stop = button(label::body("Vazgeç"))
             .on_press(Message::Opening(Event::Cancel))
-            .padding([5, 16])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary);
         let body = column![
             label::body(o.name.clone()),
@@ -541,13 +562,13 @@ impl App {
             ),
         ]
         .spacing(10);
-        Some(overlay::modal(
+        Some(
             Dialog::new("Çizim açılıyor")
                 .push(body)
                 .action(stop)
-                .width(460.0),
-            Message::Opening(Event::Cancel),
-        ))
+                .width(460.0)
+                .modal(Message::Opening(Event::Cancel)),
+        )
     }
 }
 
@@ -569,7 +590,9 @@ mod tests {
     fn external_cad_opens_from_the_open_command_without_a_project() {
         for file in ["dxf-units/mm.dxf", "dwg/mm.dwg", "ncz/01-her-tur.ncz"] {
             let dir = scratch("external-cad");
-            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/formats/v1").join(file);
+            let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/formats/v1")
+                .join(file);
             let original = std::fs::read(&path).expect("source");
             let mut app = app_with_drawing();
             app.document = None;
@@ -577,7 +600,10 @@ mod tests {
             let task = app.run("file.open");
             drive(&mut app, task);
             let doc = app.document.as_ref().expect("opened without New project");
-            assert_eq!(doc.settings().workspace, Some(kentos_commands::Workspace::Cad));
+            assert_eq!(
+                doc.settings().workspace,
+                Some(kentos_commands::Workspace::Cad)
+            );
             assert!(doc.path.is_none());
             assert!(doc.model.is_dirty());
             assert!(doc.entity_count() > 0);
@@ -585,7 +611,10 @@ mod tests {
             let task = app.run("file.save");
             drive(&mut app, task);
             let back = Document::read(&dir.join("kayit.kcad")).expect("native reopen");
-            assert_eq!(back.model.to_snapshot_v2(), app.document.as_ref().expect("open").model.to_snapshot_v2());
+            assert_eq!(
+                back.model.to_snapshot_v2(),
+                app.document.as_ref().expect("open").model.to_snapshot_v2()
+            );
             assert_eq!(std::fs::read(&path).expect("original"), original);
             let _ = std::fs::remove_dir_all(dir);
         }
@@ -596,18 +625,28 @@ mod tests {
     fn local_cad_files_open_save_and_reopen_without_changing_the_sources() {
         let folder = std::env::var("KENTOS_CAD_OPEN_SAMPLES").expect("sample folder");
         let dir = scratch("real-cad-open");
-        for path in std::fs::read_dir(folder).expect("folder").filter_map(Result::ok).map(|e|e.path())
-            .filter(|p| kentos_native_application::cad_open::Format::of(p).is_some()) {
+        for path in std::fs::read_dir(folder)
+            .expect("folder")
+            .filter_map(Result::ok)
+            .map(|e| e.path())
+            .filter(|p| kentos_native_application::cad_open::Format::of(p).is_some())
+        {
             let before = std::fs::read(&path).expect("source");
-            let doc = Document::read(&path).unwrap_or_else(|e|panic!("{}: {e}", path.display()));
+            let doc = Document::read(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
             let unit = doc.settings().unit();
             let objects = doc.entity_count();
-            let saved = dir.join(path.file_name().expect("name")).with_extension("kcad");
+            let saved = dir
+                .join(path.file_name().expect("name"))
+                .with_extension("kcad");
             kentos_headless::files::write(&doc.model, &saved).expect("native save");
             let back = Document::read(&saved).expect("reopen");
             assert_eq!(back.model.to_snapshot_v2(), doc.model.to_snapshot_v2());
             assert_eq!(std::fs::read(&path).expect("source unchanged"), before);
-            println!("{}: {objects} nesne, birim {} — aç/kaydet/yeniden aç geçti", path.display(), unit.mark());
+            println!(
+                "{}: {objects} nesne, birim {} — aç/kaydet/yeniden aç geçti",
+                path.display(),
+                unit.mark()
+            );
         }
         let _ = std::fs::remove_dir_all(dir);
     }

@@ -15,13 +15,13 @@
 //! Kuzey yukarı turns the view back; Görünümü döndür is the tool
 //! (`kentos_interaction::view_twist`).
 
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{NamedView, ViewsEdit, ViewsEdited, ViewsOp};
 use kentos_interaction::{Level, ViewChange};
 use kentos_native_application::{ExecutionContext, views_edit};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, Elided, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -334,11 +334,9 @@ impl App {
             ),
         ]
         .spacing(8);
-        let name = text_input("Görünümün adı", &w.name)
+        let name = kentos_ui::widget::text_field("Görünümün adı", &w.name)
             .on_input(|t| msg(Event::Name(t)))
-            .on_submit(msg(Event::Save))
-            .padding([5, 8])
-            .style(style::field::input);
+            .on_submit(msg(Event::Save));
         let saving = row![
             words::primary(SAVE, editable.then(|| msg(Event::Save))),
             words::secondary(
@@ -361,15 +359,13 @@ impl App {
                 ),
             ))
             .push(actions)
-            .push(words::field(NAME, focus_ring(name), None))
+            .push(words::field(NAME, name, None))
             .push(saving);
-        overlay::modal(
-            Frame::new(VIEWS_TITLE)
-                .push(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .width(520.0),
-            msg(Event::Close),
-        )
+        Frame::new(VIEWS_TITLE)
+            .push(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .width(520.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): a view's row by its name, Ad and the buttons.

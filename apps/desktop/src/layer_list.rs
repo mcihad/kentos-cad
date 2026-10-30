@@ -19,8 +19,8 @@ use iced::{Element, Fill, Task};
 use kentos_commands::{LayerNode, LayerNodeType};
 use kentos_geometry_core::display::fixed;
 use kentos_interaction::Level;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -267,15 +267,13 @@ impl App {
             Kind::Info,
             format!("{layers} katman ve {groups} grup, ağacın sırasıyla."),
         )]);
-        overlay::modal(
-            Frame::new(LIST_TITLE)
-                .push(Column::new().spacing(12).push(summary).push(list))
-                .action(words::secondary(COPY, Some(msg(Event::Copy))))
-                .action(words::secondary(SAVE, Some(msg(Event::Save))))
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(920.0),
-            msg(Event::Close),
-        )
+        Frame::new(LIST_TITLE)
+            .push(Column::new().spacing(12).push(summary).push(list))
+            .action(words::secondary(COPY, Some(msg(Event::Copy))))
+            .action(words::secondary(SAVE, Some(msg(Event::Save))))
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(920.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's buttons by their words (a trace's `dialog` step).

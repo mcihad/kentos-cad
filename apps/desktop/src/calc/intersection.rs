@@ -311,7 +311,9 @@ impl Form {
         }
         let done = computed.result.is_some();
         footer(
-            Dialog::new("Kestirme").scroll(body),
+            Dialog::new("Kestirme")
+                .on_close(crate::calc::event(crate::calc::Event::Close))
+                .scroll(body),
             model,
             self.layer.as_deref(),
             done,

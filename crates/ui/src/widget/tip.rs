@@ -96,7 +96,7 @@ impl Tip {
         }
 
         if let Some(detail) = self.detail {
-            content = content.push(label::mono_caption(detail));
+            content = content.push(label::caption(detail));
         }
 
         container(content)

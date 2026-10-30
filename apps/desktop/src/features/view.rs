@@ -5,8 +5,8 @@
 //! field), a refused value its reason on hover.
 
 use iced::widget::text::Wrapping;
-use iced::widget::{button, container, mouse_area, row, space, text_input};
-use iced::{Center, Color, Element, Fill, Length, Theme};
+use iced::widget::{button, container, mouse_area, row, space};
+use iced::{Center, Color, Element, Fill, Length, Padding, Theme};
 use kentos_commands::{LayerField, LayerFieldKind, check_value};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
@@ -14,7 +14,7 @@ use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::search_box::SearchBox;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, SortOrder, Table};
+use kentos_ui::widget::table::{self, Column as TableColumn, Row as TableLine, SortOrder, Table};
 use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 
 use super::outgoing::{Analyse, ColumnsEvent, words as out_words};
@@ -37,7 +37,7 @@ fn bar_button<'a>(
     tip(
         button(icon(from_web(Some(glyph))).size(16.0))
             .style(style::button::ghost)
-            .padding(5)
+            .padding(kentos_ui::theme::metrics::icon(16.0))
             .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,
@@ -145,7 +145,6 @@ impl App {
             }
         })
         .placeholder(texts::NO_LAYERS)
-        .inline()
         .prefix(texts::LAYER)
     }
 
@@ -155,19 +154,15 @@ impl App {
         let search = SearchBox::new(panel.search.clone(), texts::SEARCH, |t| {
             msg(Event::Search(t))
         })
-        .fill()
-        .height(28.0);
+        .fill();
         let show = Select::new(
             Show::ALL.iter().map(|s| Choice::new(s.label())),
             Show::ALL.iter().position(|s| *s == panel.show),
             |i| msg(Event::Show(Show::ALL[i])),
         )
-        .inline()
         .prefix(texts::SHOW);
-        let filter = text_input(texts::FILTER, &panel.filter)
+        let filter = kentos_ui::widget::text_field(texts::FILTER, &panel.filter)
             .on_input(|t| msg(Event::Filter(t)))
-            .size(typography::body())
-            .padding([4, 8])
             .style(style::field::validated(rows.filter_error.is_some()));
         let hint = rows
             .filter_error
@@ -178,7 +173,7 @@ impl App {
                 container(filter).width(Length::Fixed(200.0)),
                 button(icon(from_web(Some("expression"))).size(16.0))
                     .style(style::button::subtle)
-                    .padding(4)
+                    .padding(kentos_ui::theme::metrics::icon_small(16.0))
                     .on_press(msg(Event::Builder)),
             ]
             .spacing(2)
@@ -425,9 +420,14 @@ impl App {
                 (_, Some(kentos_commands::LayerFieldKind::Json)) => Length::Fixed(220.0),
                 _ => Length::Fixed(140.0),
             };
+            let width = super::column_key(&rows, j)
+                .and_then(|key| panel.widths.get(&key).copied())
+                .map_or(width, Length::Fixed);
             let column = TableColumn::new(title)
                 .width(width)
-                .sortable(order, msg(Event::Sort(j + 1)));
+                .sortable(order, msg(Event::Sort(j + 1)))
+                .resizable(move |width| msg(Event::Width(j, width)))
+                .on_fit(msg(Event::Fit(j)));
             columns.push(if c.order == "number" {
                 column.align_right()
             } else {
@@ -461,21 +461,13 @@ impl App {
                 .collect()
         };
         let visible = rows.visible.clone();
-        let min_width = 56.0
-            + visible
-                .iter()
-                .map(|&j| {
-                    if table_columns[j].key.is_none() {
-                        110.0
-                    } else {
-                        140.0
-                    }
-                })
-                .sum::<f32>()
-            + 8.0 * visible.len() as f32;
+        // The head's band and the rows' lines go on to the panel's edge when the columns end before it.
+        let min_width = self.viewport.bounds.width;
+        let column_count = visible.len() + 1;
         let table = Table::new(columns)
             .height(Fill)
             .horizontal()
+            .grid()
             .min_width(min_width)
             .virtualized(count, move |i| {
                 let at = shown[i];
@@ -488,9 +480,10 @@ impl App {
                         .on_double_click(msg(Event::Zoom(i)))
                         .into(),
                 ];
-                for &j in &visible {
+                for (place, &j) in visible.iter().enumerate() {
                     let c = &table_columns[j];
                     let value = line.cells[j].shown.clone();
+                    let pads = table::cell_pads(place + 1, column_count);
                     if editing == Some((slot, j)) {
                         let field = c.field.as_ref();
                         let listed = field.is_some_and(|f| {
@@ -515,10 +508,12 @@ impl App {
                             });
                             let (choices, codes, at) = choices_of(f, &raw, offered);
                             cells.push(
-                                Select::new(choices, at, move |k| {
-                                    msg(Event::Choose(codes[k].clone()))
-                                })
-                                .borderless()
+                                kentos_ui::widget::Cell::new(
+                                    Select::new(choices, at, move |k| {
+                                        msg(Event::Choose(codes[k].clone()))
+                                    })
+                                    .cell(),
+                                )
                                 .into(),
                             );
                         } else {
@@ -526,6 +521,7 @@ impl App {
                             cells.push(cell::edit_box(
                                 &edit_text,
                                 numeric,
+                                pads,
                                 |t| msg(Event::Input(t)),
                                 msg(Event::Enter),
                                 msg(Event::Finish(None)),
@@ -535,49 +531,45 @@ impl App {
                         continue;
                     }
                     let problem = problems.get(&(at, j)).cloned();
-                    let shown: Element<'_, Message> = match (&problem, c.key.is_none()) {
-                        // A value its field refuses (an empty required one too): the
-                        // warning tint over the cell, as the web's `ftable__bad`.
-                        (Some(_), _) => container(
-                            label::body(value)
-                                .style(style::text::warning)
-                                .wrapping(Wrapping::None),
-                        )
+                    let number = c.order == "number";
+                    let face = Face {
+                        muted: c.key.is_none(),
+                        number,
+                    };
+                    // What the cell says and the ground the rules or a refused value give it.
+                    let look = look_of(j + 1).filter(|l| !l.is_plain() && problem.is_none());
+                    let (shown, ground) = match (&problem, look) {
+                        // A value its field refuses (an empty required one too): the warning tint over the
+                        // cell, as the web's `ftable__bad`.
+                        (Some(_), _) => (
+                            table::text(value).style(style::text::warning).into(),
+                            Some(Ground::Refused),
+                        ),
+                        // The rules' look over the cell: the row's background is the line's tint, a field's
+                        // own background the cell's (docs/adr/0413 §4).
+                        (None, Some(look)) => styled_cell(
+                            value,
+                            face,
+                            look,
+                            row_look.as_ref().and_then(|r| r.background.clone()),
+                        ),
+                        (None, None) if face.muted => {
+                            (table::text(value).style(style::text::muted).into(), None)
+                        }
+                        (None, None) if number => (table::number(value).into(), None),
+                        (None, None) => (table::text(value).into(), None),
+                    };
+                    // The whole cell takes the double click: an empty value too.
+                    let shown: Element<'_, Message> = container(shown)
                         .width(Fill)
                         .height(Fill)
-                        .align_y(Center)
-                        .padding([0, 4])
-                        .style(|t: &Theme| container::Style {
-                            background: Some(iced::Background::Color(Color {
-                                a: 0.16,
-                                ..Tokens::of(t).warning
-                            })),
-                            ..container::Style::default()
+                        .align_x(if number {
+                            iced::alignment::Horizontal::Right
+                        } else {
+                            iced::alignment::Horizontal::Left
                         })
-                        .into(),
-                        // One line in a cell: a long value is cut at the cell's edge, not wrapped
-                        // under itself.
-                        (None, true) => label::muted(value).wrapping(Wrapping::None).into(),
-                        (None, false) if c.order == "number" => {
-                            label::mono(value).wrapping(Wrapping::None).into()
-                        }
-                        (None, false) => label::body(value).wrapping(Wrapping::None).into(),
-                    };
-                    // The rules' look over the cell: the row's background is the line's tint, a
-                    // field's own background the cell's (docs/adr/0413 §4).
-                    let shown: Element<'_, Message> =
-                        match look_of(j + 1).filter(|l| !l.is_plain() && problem.is_none()) {
-                            Some(look) => styled_cell(
-                                &line.cells[j].shown,
-                                Face {
-                                    muted: c.key.is_none(),
-                                    number: c.order == "number",
-                                },
-                                look,
-                                row_look.as_ref().and_then(|r| r.background.clone()),
-                            ),
-                            None => shown,
-                        };
+                        .align_y(Center)
+                        .into();
                     let shown: Element<'_, Message> = match problem {
                         Some(p) => tip(
                             shown,
@@ -586,12 +578,23 @@ impl App {
                         ),
                         None => shown,
                     };
-                    cells.push(if c.key.is_some() {
+                    let shown: Element<'_, Message> = if c.key.is_some() {
                         mouse_area(shown)
                             .on_double_click(msg(Event::Edit(i, j)))
                             .into()
                     } else {
                         shown
+                    };
+                    cells.push(match ground {
+                        Some(ground) => kentos_ui::widget::Cell::flat(
+                            container(shown)
+                                .padding(Padding::ZERO.left(pads.0).right(pads.1))
+                                .width(Fill)
+                                .height(Fill),
+                        )
+                        .tint(move |theme: &Theme| ground.color(theme))
+                        .into(),
+                        None => shown,
                     });
                 }
                 TableLine::new(cells)
@@ -749,6 +752,7 @@ impl App {
 const MOST_LISTED: usize = 2000;
 
 /// How a column shows its values: Tür muted, numbers in figures.
+#[derive(Debug, Clone, Copy)]
 struct Face {
     muted: bool,
     number: bool,
@@ -772,11 +776,11 @@ pub(crate) fn readable_on(background: Color) -> Color {
 /// A cell by the table's rules (docs/adr/0413 §4): its own background when a field's rule gives one
 /// other than the row's, its text's colour (readable on the background when none is given) and weight.
 fn styled_cell<'a>(
-    value: &str,
+    value: String,
     face: Face,
     look: kentos_commands::CellLook,
     row_background: Option<String>,
-) -> Element<'a, Message> {
+) -> (Element<'a, Message>, Option<Ground>) {
     let own = look
         .background
         .as_deref()
@@ -794,33 +798,29 @@ fn styled_cell<'a>(
         (false, true) => typography::ui_strong(),
         (false, false) => typography::ui(),
     };
-    let text = if face.muted && colour.is_none() {
-        label::muted(value.to_owned())
-    } else {
-        label::body(value.to_owned())
-    }
-    .font(font)
-    .wrapping(Wrapping::None);
+    let text = table::text(value).font(font);
     let text = match colour {
         Some(c) => text.style(move |_: &Theme| iced::widget::text::Style { color: Some(c) }),
+        None if face.muted => text.style(style::text::muted),
         None => text,
     };
-    match own {
-        None => text.into(),
-        Some(background) => container(text)
-            .width(Fill)
-            .height(Fill)
-            .align_x(if face.number {
-                iced::alignment::Horizontal::Right
-            } else {
-                iced::alignment::Horizontal::Left
-            })
-            .align_y(Center)
-            .padding([0, 4])
-            .style(move |_: &Theme| container::Style {
-                background: Some(iced::Background::Color(background)),
-                ..container::Style::default()
-            })
-            .into(),
+    (text.into(), own.map(Ground::Own))
+}
+
+/// A cell's own ground, from line to line.
+#[derive(Debug, Clone, Copy)]
+enum Ground {
+    /// A value its field refuses: the warning tint.
+    Refused,
+    /// The rules' background.
+    Own(Color),
+}
+
+impl Ground {
+    fn color(self, theme: &Theme) -> Color {
+        match self {
+            Ground::Refused => Tokens::of(theme).warning.scale_alpha(0.16),
+            Ground::Own(color) => color,
+        }
     }
 }

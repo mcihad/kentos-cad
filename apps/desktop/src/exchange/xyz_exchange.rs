@@ -129,9 +129,12 @@ impl App {
             return;
         };
         let plan = match &self.document {
-            Some(doc) => xyz_table::export(&doc.model, &s.input(self.export_name(".xyz"), self.export_time()))
-                .map(|m| m.output)
-                .map_err(|(_, message, _)| message),
+            Some(doc) => xyz_table::export(
+                &doc.model,
+                &s.input(self.export_name(".xyz"), self.export_time()),
+            )
+            .map(|m| m.output)
+            .map_err(|(_, message, _)| message),
             None => Err("Açık çizim yok.".into()),
         };
         if let Some(Window::XyzExport(s)) = &mut self.exchange {
@@ -313,7 +316,10 @@ impl App {
             Ok(out) => {
                 lines.push(words::text_line(
                     Line::Info,
-                    format!("{} satır, {} nesneden; {} satırın kotu çizimin kotu.", out.points, out.objects, out.with_z),
+                    format!(
+                        "{} satır, {} nesneden; {} satırın kotu çizimin kotu.",
+                        out.points, out.objects, out.with_z
+                    ),
                 ));
                 lines.push(words::text_line(
                     Line::Info,
@@ -351,9 +357,13 @@ impl App {
             Dialog::new("XYZ dışa aktar")
                 .scroll(body)
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("Dışa aktar…", ready.then(|| event(Event::Save))))
+                .action(words::primary(
+                    "Dışa aktar…",
+                    ready.then(|| event(Event::Save)),
+                ))
                 .width(660.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

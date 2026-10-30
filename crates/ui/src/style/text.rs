@@ -19,11 +19,11 @@ pub fn muted(theme: &Theme) -> Style {
     }
 }
 
-/// Üçüncül metin: küçük notlar, alanların yardımı, sayılar (web'in
-/// `--c-text-3`'ü).
+/// Küçük notlar, alanların yardımı, birimler, sayılar: okunur kalan en sessiz
+/// yazı tonu ([`Tokens::soft`]; docs/adr/0804).
 pub fn faint(theme: &Theme) -> Style {
     Style {
-        color: Some(Tokens::of(theme).faint),
+        color: Some(Tokens::of(theme).soft()),
     }
 }
 

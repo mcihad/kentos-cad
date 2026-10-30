@@ -218,7 +218,7 @@ fn icon_button<'a>(
                 .center_x(typography::scaled(26.0))
                 .center_y(typography::scaled(26.0)),
         )
-        .padding(0)
+        .padding(kentos_ui::theme::metrics::icon_small(15.0))
         .style(ui_style::button::tool(pressed == Some(true)))
         .on_press(press),
         Tip::new(words.to_owned()),
@@ -233,7 +233,7 @@ fn small<'a>(glyph: Icon, words: &str, tip_text: &str, press: Message) -> Elemen
                 .spacing(6)
                 .align_y(Center),
         )
-        .padding([3, 9])
+        .padding(kentos_ui::theme::metrics::action_small())
         .style(ui_style::button::secondary)
         .on_press(press),
         Tip::new(tip_text.to_owned()),
@@ -410,12 +410,13 @@ pub fn place_view<'a>(ed: &SvgEditor) -> Element<'a, Message> {
     ]
     .spacing(10);
     Dialog::new("Altlığın konumu ve boyu")
+        .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
         .push(body)
         .push(
             row![
                 space::horizontal(),
                 button(label::body("Tamam").style(ui_style::text::on_accent))
-                    .padding([5, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(ui_style::button::primary)
                     .on_press(change(|ed| ed.files.dialog = None)),
             ]

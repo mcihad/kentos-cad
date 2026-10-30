@@ -43,7 +43,7 @@ fn bar_button<'a>(
                 .align_y(Center),
         )
         .style(style::button::secondary)
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,
@@ -174,9 +174,8 @@ impl App {
         {
             // As wide as its place: the box's own width (206 px, more with a
             // larger interface text) ran under the layer choice beside it.
-            let search = SearchBox::new(search.clone(), texts::SEARCH, |t| msg(Event::Search(t)))
-                .fill()
-                .height(28.0);
+            let search =
+                SearchBox::new(search.clone(), texts::SEARCH, |t| msg(Event::Search(t))).fill();
             let mut choices = vec![Choice::new(texts::ALL_LAYERS)];
             choices.extend(labels.iter().map(Choice::new));
             let names = names.clone();
@@ -373,6 +372,7 @@ impl App {
                     return cell::edit_box(
                         &text,
                         numeric,
+                        kentos_ui::widget::table::cell_pads(j, COLUMNS.len()),
                         |t| msg(Event::Input(t)),
                         msg(Event::Finish(Some(Walk::Down))),
                         msg(Event::Finish(None)),
@@ -403,6 +403,7 @@ impl App {
                 }
             };
         let table = Table::new(columns)
+            .grid()
             .virtualized(count, move |i| {
                 let Some(&slot) = shown.get(i) else {
                     // The draft after the points.

@@ -61,11 +61,17 @@ pub fn matches(app: &Manifest, query: &str) -> bool {
         .all(|word| haystack.contains(word))
 }
 
-/// The grid's columns for `width`: as many cards of at least `least` as fit,
-/// two to four.
-pub fn columns(width: f32, least: f32, gap: f32) -> usize {
-    let fit = ((width + gap) / (least + gap)).floor();
-    (fit.max(0.0) as usize).clamp(2, 4)
+/// The grid's columns for `count` plates in `width`: all of them on one row
+/// when there are two to four and each is at least `least` wide (a last plate
+/// alone on its row reads as a mistake), else as many at least `comfortable`
+/// wide as fit, two to four.
+pub fn columns(width: f32, count: usize, comfortable: f32, least: f32, gap: f32) -> usize {
+    let fit = |plate: f32| ((width + gap) / (plate + gap)).floor().max(0.0) as usize;
+    if (2..=4).contains(&count) && fit(least) >= count {
+        count
+    } else {
+        fit(comfortable).clamp(2, 4)
+    }
 }
 
 /// A card's width in `width` with `columns` cards: whole pixels, so that
@@ -101,6 +107,18 @@ impl Counts {
             }
         }
         counts
+    }
+
+    /// “6 uygulama: 3 kurulu, 3 yakında”: the header's sentence.
+    pub fn sentence(self) -> String {
+        let mut parts = self.parts().into_iter();
+        let apps = parts.next().unwrap_or_default();
+        let rest: Vec<String> = parts.collect();
+        if rest.is_empty() {
+            apps
+        } else {
+            format!("{apps}: {}", rest.join(", "))
+        }
     }
 
     /// “5 uygulama”, “3 kurulu”, “2 yakında”: the parts that are not zero
@@ -170,17 +188,23 @@ mod tests {
     }
 
     #[test]
-    fn the_grid_has_two_to_four_columns_of_whole_pixels() {
-        // 1440 × 900 at 13 px: the content is 1172 wide, cards at least 320.
-        assert_eq!(columns(1172.0, 320.0, 16.0), 3);
-        // 1100 × 650: 832 wide.
-        assert_eq!(columns(832.0, 320.0, 16.0), 2);
-        assert_eq!(columns(400.0, 320.0, 16.0), 2, "never one");
-        assert_eq!(columns(3000.0, 320.0, 16.0), 4, "never five");
-        // At 18 px the least card is 443 wide: two columns at 1440.
-        assert_eq!(columns(1069.0, 443.0, 22.0), 2);
-        assert_eq!(card_width(1172.0, 3, 16.0), 380.0);
-        assert_eq!(card_width(833.0, 2, 16.0), 408.0, "floored");
+    fn the_grid_keeps_a_few_plates_on_one_row_and_has_two_to_four_columns() {
+        let columns = |width, count| columns(width, count, 300.0, 220.0, 8.0);
+        // Three plates: on one row at 1440 and at the smallest window, large on a wide one.
+        assert_eq!(columns(1168.0, 3), 3);
+        assert_eq!(columns(814.0, 3), 3);
+        assert_eq!(columns(1480.0, 3), 3);
+        // Too narrow for three on a row: two, and the third under them.
+        assert_eq!(columns(640.0, 3), 2);
+        // Many plates: as many comfortable ones as fit.
+        assert_eq!(columns(1168.0, 6), 3);
+        assert_eq!(columns(1480.0, 6), 4);
+        assert_eq!(columns(3000.0, 9), 4, "never five");
+        assert_eq!(columns(400.0, 9), 2, "never one");
+        // One plate keeps a comfortable plate's width.
+        assert_eq!(columns(1168.0, 1), 3);
+        assert_eq!(card_width(1168.0, 3, 8.0), 384.0);
+        assert_eq!(card_width(833.0, 2, 8.0), 412.0, "floored");
     }
 
     #[test]
@@ -196,7 +220,12 @@ mod tests {
             counts.parts(),
             ["5 uygulama", "3 kurulu", "1 çalışıyor", "2 yakında"]
         );
+        assert_eq!(
+            counts.sentence(),
+            "5 uygulama: 3 kurulu, 1 çalışıyor, 2 yakında"
+        );
         assert_eq!(Counts::of([]).parts(), ["0 uygulama"]);
+        assert_eq!(Counts::of([]).sentence(), "0 uygulama");
         assert_eq!(
             Counts::of([Status::Missing, Status::Web]).parts(),
             ["2 uygulama", "1 kurulu", "1 bulunamadı"]

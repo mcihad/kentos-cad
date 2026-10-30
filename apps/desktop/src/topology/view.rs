@@ -58,7 +58,7 @@ fn bar_button<'a>(
                 .align_y(Center),
         )
         .style(style::button::secondary)
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,
@@ -117,9 +117,9 @@ impl App {
         .into_iter()
         .flatten()
         .chain(checked.into_iter().flat_map(|c| {
-            c.g.incomplete
-                .iter()
-                .map(|gap| plan::incomplete_text(&self.topology_layer_name(&gap.layer), &gap.reason))
+            c.g.incomplete.iter().map(|gap| {
+                plan::incomplete_text(&self.topology_layer_name(&gap.layer), &gap.reason)
+            })
         }))
         .collect();
         let banner = (!notes.is_empty()).then(|| {
@@ -132,18 +132,23 @@ impl App {
                     self.topology.running.is_none().then(|| msg(Event::Recheck)),
                 )
             });
-            container(notes.into_iter().fold(Column::new().spacing(2), |col, n| {
-                col.push(
-                    row![
-                        icon(from_web(Some("warning")))
-                            .size(14.0)
-                            .tone(Tone::Warning),
-                        label::body(n)
-                    ]
-                    .spacing(8)
-                    .align_y(Center),
-                )
-            }).extend(recheck))
+            container(
+                notes
+                    .into_iter()
+                    .fold(Column::new().spacing(2), |col, n| {
+                        col.push(
+                            row![
+                                icon(from_web(Some("warning")))
+                                    .size(14.0)
+                                    .tone(Tone::Warning),
+                                label::body(n)
+                            ]
+                            .spacing(8)
+                            .align_y(Center),
+                        )
+                    })
+                    .extend(recheck),
+            )
             .padding([4, 10])
             .width(Fill)
             .style(|theme: &iced::Theme| container::Style {
@@ -347,7 +352,9 @@ impl App {
                     .map(|k| {
                         let label = self.topology_fix_label(f, k);
                         match self.topology.previews.iter().find(|(p, _)| p == k) {
-                            Some((_, Ok(words))) => (*k, label, (!words.is_empty()).then(|| words.clone()), true),
+                            Some((_, Ok(words))) => {
+                                (*k, label, (!words.is_empty()).then(|| words.clone()), true)
+                            }
                             Some((_, Err(why))) => (*k, label, Some(why.clone()), false),
                             None => (*k, label, None, true),
                         }
@@ -372,15 +379,17 @@ impl App {
                     if fixes.is_empty() {
                         return Menu::new().item(texts::FIX_NONE, None);
                     }
-                    fixes.iter().fold(Menu::new(), |menu, (key, words, detail, open)| {
-                        let menu = menu
-                            .item(words.clone(), open.then(|| msg(Event::Fix(key))))
-                            .icon(from_web(Some(fix_icon(key))));
-                        match detail {
-                            Some(d) => menu.detail(d.clone()),
-                            None => menu,
-                        }
-                    })
+                    fixes
+                        .iter()
+                        .fold(Menu::new(), |menu, (key, words, detail, open)| {
+                            let menu = menu
+                                .item(words.clone(), open.then(|| msg(Event::Fix(key))))
+                                .icon(from_web(Some(fix_icon(key))));
+                            match detail {
+                                Some(d) => menu.detail(d.clone()),
+                                None => menu,
+                            }
+                        })
                 }),
                 Tip::new(texts::FIX).body(texts::FIX_HINT),
                 iced::widget::tooltip::Position::Top,

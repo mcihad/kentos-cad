@@ -2,7 +2,7 @@
 //! name and category, or the note on a layer style's symbol; what the window
 //! said; Vazgeç and Kaydet (Uygula); and the question on closing with changes.
 
-use iced::widget::{Row, button, column, container, row, space, text_input};
+use iced::widget::{Row, button, column, container, row, space};
 use iced::{Center, Element, Fill, Length, Theme};
 use kentos_native_style::designer::texts;
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -21,11 +21,9 @@ pub(super) fn footer(d: &Designer) -> Element<'_, Message> {
         foot = foot.push(label::caption(texts::INLINE).style(style::text::muted));
     } else {
         let field = |id: &str, hint: &str, value: &str, width: f32, on: fn(String) -> Event| {
-            text_input(hint, value)
+            kentos_ui::widget::text_field(hint, value)
                 .id(field_id(id))
                 .on_input(move |t| ev(on(t)))
-                .padding([4, 7])
-                .size(typography::body())
                 .style(style::field::validated(false))
                 .width(Length::Fixed(typography::from_default(width)))
         };
@@ -76,7 +74,7 @@ pub(super) fn footer(d: &Designer) -> Element<'_, Message> {
     foot.push(container(status).width(Fill))
         .push(
             button(label::body("Vazgeç"))
-                .padding([5, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(ev(Event::Close)),
         )
@@ -89,7 +87,7 @@ pub(super) fn footer(d: &Designer) -> Element<'_, Message> {
                 .spacing(6)
                 .align_y(Center),
             )
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
             .on_press(ev(Event::Save)),
         )
@@ -136,7 +134,7 @@ pub(super) fn question(d: &Designer) -> Element<'_, Message> {
     .width(Fill);
     let answer = |words: String, e: Event| {
         button(label::body(words))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(e))
     };
@@ -145,7 +143,7 @@ pub(super) fn question(d: &Designer) -> Element<'_, Message> {
         space::horizontal(),
         answer("Vazgeç".to_owned(), Event::Stay),
         button(label::body(format!("{save} ve kapat")).style(style::text::on_accent))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
             .on_press(ev(Event::SaveAndClose)),
     ]

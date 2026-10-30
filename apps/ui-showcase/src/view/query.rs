@@ -19,7 +19,7 @@ use kentos_ui::label;
 use kentos_ui::spatial::SelectionMode;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
-use kentos_ui::widget::{Dialog, QueryBuilder, Segmented, overlay};
+use kentos_ui::widget::{Dialog, QueryBuilder, Segmented};
 
 use crate::app::{QueryDialog, Showcase};
 use crate::command::{self, Command};
@@ -110,17 +110,17 @@ impl Showcase {
             .action(
                 button(label::body("Vazgeç"))
                     .on_press(Message::QueryClosed)
-                    .padding([5, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body(apply))
                     .on_press_maybe(problem.is_none().then_some(Message::QueryApplied))
-                    .padding([5, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             );
 
-        overlay::modal(dialog, Message::QueryClosed)
+        dialog.modal(Message::QueryClosed)
     }
 }
 

@@ -137,6 +137,7 @@ impl Showcase {
 
         let dialog = Dialog::new("Çizim kaydedilmedi")
             .hint("Ctrl+S")
+            .on_close(pressed("Kapat"))
             .width(440.0)
             .push(label::muted(
                 "Çizimler katmanındaki değişiklikler kaydedilmedi. Kapatmadan önce \
@@ -145,13 +146,13 @@ impl Showcase {
             .action(
                 button(label::body("Kaydetme"))
                     .on_press(pressed("Kaydetme"))
-                    .padding([5, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body("Kaydet"))
                     .on_press(pressed("Kaydet"))
-                    .padding([5, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             );
 
@@ -240,19 +241,23 @@ impl Showcase {
             entry(
                 "İletişim kutusu",
                 "kentos_ui::widget::Dialog",
-                "Başlık, gövde ve sağa hizalı eylemlerden oluşan kutu. Kendi başına bir \
-                 kaplama değildir; overlay::modal ile ortalanır ve arkası karartılır.",
+                "Başlık, gövde ve sağa hizalı eylemlerden oluşan kutu. Dialog::modal ortalar, arkasını \
+                 karartır ve başlıkta kapatma düğmesi gösterir; no_close düğmeyi gizler. Köşe ve \
+                 kenarlardan boyutlanır: çekilebildiğini çerçevesinin köşesi söyler, imleç gelince o \
+                 kenar aydınlanır. Çift tık ya da başlıktaki düğme tam ekran yapar.",
                 column![
                     dialog,
                     button(label::body("Kısayollar iletişim kutusunu aç"))
                         .on_press(Message::HelpToggled)
-                        .padding([4, 12])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::secondary),
                 ]
                 .spacing(12),
                 Some(
-                    "overlay::modal(\n    Dialog::new(\"Çizim kaydedilmedi\").push(body).action(save),\n    \
-                     Message::CloseDialog,\n)",
+                    "Dialog::new(\"Çizim kaydedilmedi\")\n    .push(body)\n    .action(save)\n    \
+                     .modal(Message::CloseDialog) // arkası kararır, × ve dışarısı kapatır\n\n\
+                     Dialog::new(title).no_close().modal(message) // × yok\n\
+                     Dialog::new(title).on_close(message)         // × kendi mesajıyla",
                 ),
             ),
             entry(
@@ -318,7 +323,7 @@ impl Showcase {
                  gösterilmez; düğmeyle açın.",
                 button(label::body("Uygulama menüsünü aç"))
                     .on_press(Message::AppMenuToggled)
-                    .padding([4, 12])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
                 Some(
                     "AppMenu::new(Message::CloseMenu)\n    \
@@ -344,7 +349,7 @@ impl Showcase {
             column![
                 button(label::body("Arkadaki düğme"))
                     .on_press(Message::Gallery(Demo::StagePressed))
-                    .padding([4, 12])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
                 label::caption(presses),
                 button(label::caption("Pencereleri ilk yerlerine al").style(style::text::default))
@@ -654,11 +659,15 @@ impl Showcase {
     }
 }
 
-/// Katman özetinin satırı: sönük ad, eş aralıklı değer.
+/// Katman özetinin satırı: sönük ad, değer; sayılar eş aralıklı.
 fn summary_row<'a>(name: &'a str, value: &'a str) -> Element<'a, Message> {
     row![
         label::muted(name).width(typography::scaled(72.0)),
-        label::mono(value),
+        if value.starts_with(|c: char| c.is_ascii_digit()) {
+            label::mono(value)
+        } else {
+            label::body(value)
+        },
     ]
     .spacing(8)
     .into()

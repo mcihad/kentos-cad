@@ -9,7 +9,7 @@
 use std::fmt;
 use std::path::PathBuf;
 
-use iced::widget::{Column, text_input};
+use iced::widget::Column;
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     CommandWarning, ExportGis, GisAnnotations, GisExported, GisFormat, GisTableRole,
@@ -424,10 +424,7 @@ impl App {
         ));
         if s.format == GisFormat::PostGis {
             let field = |placeholder: &str, value: &str, on: fn(String) -> Event| {
-                text_input(placeholder, value)
-                    .padding([5, 8])
-                    .font(kentos_ui::theme::typography::ui())
-                    .size(kentos_ui::theme::typography::body())
+                kentos_ui::widget::text_field(placeholder, value)
                     .style(kentos_ui::style::field::validated(false))
                     .on_input(move |t| event(on(t)))
                     .width(Fill)
@@ -484,7 +481,8 @@ impl App {
                         .then(|| event(Event::Save)),
                 ))
                 .width(680.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

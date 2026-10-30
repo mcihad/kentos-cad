@@ -694,6 +694,8 @@ pub struct ContextMenu<'a, Message> {
     id: Option<widget::Id>,
     /// Menü düğmesinin durumu kenarla gösterilir (kendi zemini olan alan).
     edge: bool,
+    /// Durumu çevresindeki hücre çizer ([`Cell`](super::cell::Cell)).
+    bare: bool,
 }
 
 /// Menüyü açan tıklama ve menünün yeri.
@@ -728,6 +730,7 @@ impl<'a, Message: Clone + 'a> ContextMenu<'a, Message> {
             controlled: None,
             id: None,
             edge: false,
+            bare: false,
         }
     }
 
@@ -791,6 +794,13 @@ impl<'a, Message: Clone + 'a> MenuButton<'a, Message> {
     /// harf ipucu).
     pub fn id(mut self, id: impl Into<widget::Id>) -> Self {
         self.0.id = Some(id.into());
+        self
+    }
+
+    /// Izgara hücresinde: üzerine gelme ve açıklık hücrede çizilir
+    /// ([`Cell`](super::cell::Cell), docs/adr/0804), düğme bir şey çizmez.
+    pub fn bare(mut self) -> Self {
+        self.0.bare = true;
         self
     }
 
@@ -1043,7 +1053,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         cursor: mouse::Cursor,
         viewport: &Rectangle,
     ) {
-        if self.trigger == Trigger::Primary && !self.edge {
+        if self.trigger == Trigger::Primary && !self.edge && !self.bare {
             let open = tree.state.downcast_ref::<State>().anchor.is_some();
             let t = Tokens::of(theme);
 
@@ -1114,6 +1124,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         renderer: &Renderer,
         operation: &mut dyn widget::Operation,
     ) {
+        let open = tree.state.downcast_ref::<State>().anchor.is_some();
+        operation.custom(None, layout.bounds(), &mut super::cell::Opened(open));
         let state: &mut dyn std::any::Any = tree.state.downcast_mut::<State>();
         operation.custom(self.id.as_ref(), layout.bounds(), state);
         self.content

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""The KentOS Launcher cards' pictures (docs/adr/0800 §3): a card's picture
-at twice its size, 720 × 360, cut to the card's 2:1 and kept as a 256-colour
-PNG so the six stay under 1.5 MB together.
+"""The KentOS Launcher plates' pictures (docs/adr/0803 §3): a plate's picture
+at about twice its size, 800 × 450, the owner's 16:9 whole, kept as a 256-colour
+PNG (libimagequant's palette) so the six stay under 2 MB together.
 
     python3 scripts/launcher/pictures.py --fit mimari=plan.png harita=imar.png …
     python3 scripts/launcher/pictures.py --kentos target/release/kentos-cad
 
 `--fit` takes the owner's own pictures (the bundled ones since 30 October
-2026): each is cut about its middle to 2:1 and scaled. `--kentos` draws real
+2026): each is cut about its middle to 16:9, which his are already, and scaled. `--kentos` draws real
 screenshots instead, without a window, with the desktop program's own
 `snapshot` command from the repository's drawings and traces; it overwrites
 the owner's pictures of the four programs KentOS can draw (mimari, harita,
@@ -29,12 +29,12 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "apps/launcher/assets/pictures"
-SIZE = (720, 360)
-BUDGET = 1_500_000
+SIZE = (800, 450)
+BUDGET = 2_000_000
 
 # Each screenshot: the snapshot's arguments (a drawing and its view, or a trace and
 # its step) and the box cut from the 1440 × 900 window: left, top, right, bottom,
-# twice as wide as high, inside the drawing area (0 … 1128 × 146 … 803).
+# twice as wide as high, inside the drawing area (0 … 1128 × 146 … 803); `save` then cuts it to 16:9.
 PICTURES: dict[str, tuple[list[str], tuple[int, int, int, int]]] = {
     # A 3+1 house: walls, doors, rooms, furniture, the plot and its trees.
     "mimari": (
@@ -60,12 +60,10 @@ def save(picture: Image.Image, path: Path) -> int:
     picture = picture.convert("RGB")
     if picture.size != SIZE:
         width, height = picture.size
-        cut = min(height, width // 2)
-        top, left = (height - cut) // 2, (width - 2 * cut) // 2
-        picture = picture.crop((left, top, left + 2 * cut, top + cut)).resize(SIZE, Image.LANCZOS)
-    picture.quantize(colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG).save(
-        path, optimize=True
-    )
+        wide, high = min(width, height * SIZE[0] // SIZE[1]), min(height, width * SIZE[1] // SIZE[0])
+        left, top = (width - wide) // 2, (height - high) // 2
+        picture = picture.crop((left, top, left + wide, top + high)).resize(SIZE, Image.LANCZOS)
+    picture.quantize(colors=256, method=Image.Quantize.LIBIMAGEQUANT).save(path, optimize=True)
     size = path.stat().st_size
     print(f"{path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}: {size:,} bayt")
     return size

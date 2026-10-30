@@ -196,7 +196,7 @@ impl Designer {
         let chip = |name: String| {
             button(label::caption(name.clone()))
                 .on_press(bm(BindingMessage::Insert(name)))
-                .padding([2, 8])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary)
         };
         let mut ready = row![].spacing(4);
@@ -239,25 +239,26 @@ impl Designer {
             )).style(style::text::muted));
         }
         let mut w = Dialog::new(format!("ƒ {}{unit}: {}", d.property.label, d.item_name))
+            .on_close(crate::Message::CloseDialog)
             .push(container(body).width(Fill));
         if d.bound {
             w = w.aside(
                 button(label::body("Bağı kaldır"))
                     .on_press(bm(BindingMessage::Unbind))
-                    .padding([6, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::danger),
             );
         }
         w.action(
             button(label::body("Vazgeç"))
                 .on_press(Message::CloseDialog)
-                .padding([6, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
         )
         .action(
             button(label::body("Kaydet"))
                 .on_press_maybe(matches!(d.check, Some(Ok(()))).then(|| bm(BindingMessage::Save)))
-                .padding([6, 16])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::primary),
         )
         .width(560.0)

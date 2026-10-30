@@ -64,7 +64,7 @@ impl Form {
                 vec![tip(
                     button(icon(crate::icons::from_web(Some("zoomSelection"))).size(14.0))
                         .on_press(edge_event(Event::Show(r)))
-                        .padding(6)
+                        .padding(kentos_ui::theme::metrics::icon(14.0))
                         .style(style::button::ghost),
                     Tip::new(format!("{}. bağı çizimde göster", r + 1)).body(
                         "Pencere kenara çekilir, bağın iki çizgisi seçilip bağa yakınlaşılır. Tıklayın ya da Enter'a basın: pencere geri gelir.",
@@ -78,6 +78,7 @@ impl Form {
             body = body.push(summary);
         }
         let mut dialog = Dialog::new(TITLE)
+            .on_close(crate::calc::event(crate::calc::Event::Close))
             .scroll(body)
             .action(footer_button(
                 "Raporu kopyala",
@@ -166,7 +167,7 @@ impl Form {
         let pick = tip(
             button(icon(crate::icons::from_web(Some("target"))).size(14.0))
                 .on_press(edge_event(Event::PickBorder))
-                .padding(6)
+                .padding(kentos_ui::theme::metrics::icon(14.0))
                 .style(style::button::ghost),
             Tip::new("Sınırı çizimden seç").body(
                 "Sahneden seç: pafta kenarı ya da çerçevesi (çizgi, çoklu çizgi ya da alan).",
@@ -176,7 +177,7 @@ impl Form {
         let clear = tip(
             button(icon(crate::icons::from_web(Some("close"))).size(12.0))
                 .on_press_maybe(picked.is_some().then(|| edge_event(Event::ClearBorder)))
-                .padding(6)
+                .padding(kentos_ui::theme::metrics::icon(12.0))
                 .style(style::button::ghost),
             Tip::new("Sınırı kaldır"),
             Position::Top,

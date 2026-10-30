@@ -6,7 +6,6 @@
 
 use iced::widget::{
     Column, Id, Row, button, column, container, mouse_area, row, rule, scrollable, space, text,
-    text_input,
 };
 use iced::{Background, Border, Center, Element, Fill, FillPortion, Padding, Theme};
 use kentos_interaction::fixed;
@@ -441,15 +440,10 @@ pub(in crate::project) fn choice_card<'a>(
 fn place(s: &State) -> Vec<Element<'_, Message>> {
     let d = &s.draft;
     let list_height = typography::from_default(206.0);
-    let search = kentos_ui::widget::focus_ring(
-        text_input("İl adı ya da plaka kodu", &s.query)
-            .id(Id::new(super::SEARCH))
-            .on_input(|q| event(Event::Search(q)))
-            .on_submit(event(Event::SearchFirst))
-            .padding(metrics::padding(metrics::control(), 8.0))
-            .size(typography::body())
-            .style(style::field::input),
-    );
+    let search = kentos_ui::widget::text_field("İl adı ya da plaka kodu", &s.query)
+        .id(Id::new(super::SEARCH))
+        .on_input(|q| event(Event::Search(q)))
+        .on_submit(event(Event::SearchFirst));
     let found = provinces::search(&s.query);
     let mut rows = Column::new().spacing(1);
     for p in &found {
@@ -608,16 +602,11 @@ fn list<'a>(rows: Column<'a, Message>, height: f32) -> Element<'a, Message> {
 
 pub(super) fn details(s: &State, current: Option<Note>) -> Element<'_, Message> {
     let d = &s.draft;
-    let name = kentos_ui::widget::focus_ring(
-        text_input("Proje adı", &d.name)
-            .id(Id::new(super::NAME))
-            .on_input(|t| event(Event::Name(t)))
-            .on_submit(event(Event::Next))
-            .padding(metrics::padding(metrics::control(), 8.0))
-            .size(typography::body())
-            .width(typography::from_default(420.0))
-            .style(style::field::input),
-    );
+    let name = kentos_ui::widget::text_field("Proje adı", &d.name)
+        .id(Id::new(super::NAME))
+        .on_input(|t| event(Event::Name(t)))
+        .on_submit(event(Event::Next))
+        .width(typography::from_default(420.0));
     let summary = Column::with_children(d.summary().into_iter().map(|(k, v)| {
         row![
             container(label::muted(k)).width(typography::from_default(110.0)),

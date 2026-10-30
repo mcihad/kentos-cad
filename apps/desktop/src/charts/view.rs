@@ -183,7 +183,7 @@ impl App {
                 .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe(has_table.then(|| msg(Event::Copy))),
             Tip::new(texts::COPY).body(texts::COPY_HINT),
             iced::widget::tooltip::Position::Top,

@@ -1,7 +1,7 @@
 //! Bileşen sayfaları: düğmeler ve veri.
 
 use iced::widget::{
-    Row, button, checkbox, column, container, pick_list, row, slider, space, text_input, tooltip,
+    Row, button, checkbox, column, container, pick_list, row, slider, space, tooltip,
 };
 use iced::{Center, Element, Fill, Theme};
 
@@ -31,6 +31,62 @@ use crate::view::library;
 type ButtonStyle = Box<dyn Fn(&Theme, button::Status) -> button::Style>;
 
 impl Showcase {
+    /// Veri tablosu örneği: sıralanan, sütunları sürüklenen örnek parseller.
+    fn parcels_table(&self) -> Element<'_, Message> {
+        use kentos_ui::widget::table::SortOrder;
+
+        use crate::gallery::{Demo, PARCEL_COLUMNS, parcel_cells};
+
+        let gallery = &self.gallery;
+        let cells = parcel_cells();
+        let mut order: Vec<usize> = (0..cells.len()).collect();
+        if let Some((column, descending)) = gallery.parcel_sort {
+            // Alanlar sayı olarak; öbürleri doğal sırayla.
+            let key = |row: usize| -> f64 {
+                cells[row][column]
+                    .replace(' ', "")
+                    .parse()
+                    .unwrap_or_default()
+            };
+            order.sort_by(|a, b| {
+                let by_number = key(*a).total_cmp(&key(*b));
+                let by_text = cells[*a][column].cmp(&cells[*b][column]);
+                let found = if column == 2 { by_text } else { by_number };
+                if descending { found.reverse() } else { found }
+            });
+        }
+        let columns =
+            PARCEL_COLUMNS.iter().enumerate().map(|(i, title)| {
+                let sorted = gallery.parcel_sort.filter(|(column, _)| *column == i).map(
+                    |(_, descending)| {
+                        if descending {
+                            SortOrder::Descending
+                        } else {
+                            SortOrder::Ascending
+                        }
+                    },
+                );
+                let column = table::Column::new(*title)
+                    .width(gallery.parcel_widths[i])
+                    .sortable(sorted, Message::Gallery(Demo::ParcelSort(i)))
+                    .resizable(move |width| Message::Gallery(Demo::ParcelWidth(i, width)))
+                    .on_fit(Message::Gallery(Demo::ParcelFit(i)));
+                if i == 2 { column } else { column.align_right() }
+            });
+        let rows = order.into_iter().map(|row| {
+            table::Row::new(cells[row].iter().enumerate().map(|(i, value)| {
+                if i == 2 {
+                    table::text(value.clone()).into()
+                } else {
+                    table::number(value.clone()).into()
+                }
+            }))
+            .selected(gallery.parcel_row == Some(row))
+            .on_press(Message::Gallery(Demo::ParcelRow(row)))
+        });
+        Table::new(columns).grid().extend(rows).into()
+    }
+
     pub(super) fn buttons_page(&self) -> Vec<Element<'_, Message>> {
         let styles: Vec<(&'static str, Vec<Element<'_, Message>>, &'static str)> = vec![
             (
@@ -400,8 +456,8 @@ impl Showcase {
                     table::Row::new([
                         swatch(layer.color),
                         label::body(layer.name.as_str()).into(),
-                        label::caption(layer.kind.label()).into(),
-                        label::mono_caption(layer.features.len().to_string()).into(),
+                        label::muted(layer.kind.label()).into(),
+                        label::mono(layer.features.len().to_string()).into(),
                     ])
                     .selected(self.gallery.row == index)
                     .on_press(Message::Gallery(Demo::RowSelected(index)))
@@ -509,15 +565,34 @@ impl Showcase {
             entry(
                 "Tablo",
                 "kentos_ui::widget::Table",
-                "Sütunlar genişlik ve hizayla tanımlanır; başlık ve satırlar aynı aralıkla \
-                 dizildiği için hizalı kalır. Satıra tıklayarak seçin. Hücrelerdeki onay \
-                 kutusu ve düğmeler satır tıklamasından önce olayı alır.",
+                "Başlık kendi bandındadır, altında güçlü bir çizgi; satırlar başlıkla aynı yüksekliktedir, \
+                 aralarında ince çizgi. Satıra tıklayarak seçin; üzerine gelinen satır, tıklanmasa da \
+                 aydınlanır. Hücrelerdeki onay kutusu ve düğmeler satır tıklamasından önce olayı alır.",
                 container(layers).width(420),
                 Some(
                     "Table::new([\n    \
                      table::Column::new(\"Ad\").width(Fill),\n    \
                      table::Column::new(\"Öğe\").width(30).align_right(),\n])\n\
                      .push(table::Row::new([name, count]).selected(true).on_press(message))",
+                ),
+            ),
+            entry(
+                "Veri tablosu",
+                "kentos_ui::widget::Table::grid",
+                "Hücre hücre okunan tablolar için sütun çizgileri satırların arasından da geçer. Başlığın \
+                 bütün hücresi basılır: ok sıralı sütunda vurgu renginde, öbürlerinde imleç üstündeyken \
+                 soluktur; sağa hizalı başlıkta yazının solundadır, yazı sayıların hizasından ayrılmaz. \
+                 Sütunun sağ kenarını sürükleyin, çift tık içeriğe sığdırır. Sığmayan yazı “…” ile biter.",
+                container(self.parcels_table()).width(620),
+                Some(
+                    "Table::new([\n    \
+                     table::Column::new(\"Kullanım\")\n        \
+                     .width(self.width)\n        \
+                     .sortable(order, Message::Sort(2))\n        \
+                     .resizable(|width| Message::Width(2, width))\n        \
+                     .on_fit(Message::Fit(2)),\n])\n\
+                     .grid()\n\
+                     .push(table::Row::new([table::text(name).into()]))",
                 ),
             ),
             entry(
@@ -664,7 +739,7 @@ impl Showcase {
                  InputField ve Select bunu kendileri yapar.",
                 self.fields_sample(),
                 Some(
-                    "text_input(\"Katman adı\", &value)\n    \
+                    "kentos_ui::widget::text_field(\"Katman adı\", &value)\n    \
                      .padding(metrics::padding(metrics::control(), 8.0)) // 28 piksel\n    \
                      .style(style::field::input)\n\
                      pick_list(Crs::ALL, selected, on_select)\n    \
@@ -781,8 +856,8 @@ impl Showcase {
                 label::mono_caption(number::integer(index as i64 + 1)).into(),
                 label::body(format!("{}/{}", parcel.block, parcel.lot)).into(),
                 label::body(parcel.district).into(),
-                label::caption(parcel.usage).into(),
-                label::mono_caption(format!("{} m²", number::real(parcel.area, 2))).into(),
+                label::muted(parcel.usage).into(),
+                label::mono(format!("{} m²", number::real(parcel.area, 2))).into(),
             ])
             .selected(index == selected)
             .on_press(Message::Gallery(Demo::ParcelSelected(index)))
@@ -837,10 +912,7 @@ impl Showcase {
             Node::new(name)
                 .icon(icon(glyph).size(14.0).tone(Tone::Muted))
                 .check(checked, Message::Gallery(Demo::ProjectFileChecked(index)))
-                .cells([
-                    label::caption(kind).into(),
-                    label::mono_caption(size).into(),
-                ])
+                .cells([label::muted(kind).into(), label::mono(size).into()])
                 .selected(gallery.project_selected == Some(row))
                 .muted(!checked)
                 .on_press(Message::Gallery(Demo::ProjectSelected(row)))
@@ -880,8 +952,8 @@ impl Showcase {
                 .check(check, Message::Gallery(Demo::ProjectFolderChecked(index)))
                 .expanded(open, Message::Gallery(Demo::ProjectToggled(index)))
                 .cells([
-                    label::caption("Klasör").into(),
-                    label::mono_caption(format!("{} dosya", files.len())).into(),
+                    label::muted("Klasör").into(),
+                    label::muted(format!("{} dosya", files.len())).into(),
                 ])
                 .selected(gallery.project_selected == Some(row))
                 .on_press(Message::Gallery(Demo::ProjectSelected(row)));
@@ -936,13 +1008,9 @@ impl Showcase {
         column![
             row![
                 label::muted("Metin").width(110),
-                text_input("Katman adı", &gallery.text)
+                kentos_ui::widget::text_field("Katman adı", &gallery.text)
                     .on_input(|text| Message::Gallery(Demo::TextChanged(text)))
-                    .font(typography::ui())
-                    .size(typography::body())
-                    .padding(metrics::padding(metrics::control(), 8.0))
-                    .width(280)
-                    .style(style::field::input),
+                    .width(280),
             ]
             .spacing(12)
             .align_y(Center),

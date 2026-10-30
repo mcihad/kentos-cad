@@ -106,8 +106,8 @@ ile karo arasında en az 3:1 karşıtlık vardır.
 
 ### Resimler (`picture`)
 
-Yerleşikler: `mimari`, `harita`, `cbs`, `yol`, `3d`, `afet` (sahibin resimleri; `scripts/launcher/pictures.py --fit` ile). Kartın resim alanı 2:1'dir;
-kendi resminiz için kartın iki katı boyda, 2:1 bir PNG verin (ör. 720 × 360). Oranı başka olan resim alanı doldurur,
+Yerleşikler: `mimari`, `harita`, `cbs`, `yol`, `3d`, `afet` (sahibin resimleri; `scripts/launcher/pictures.py --fit` ile). Levhanın resim alanı 16:9'dur;
+kendi resminiz için iki katı boyda, 16:9 bir PNG verin (ör. 800 × 450). Oranı başka olan resim alanı doldurur,
 taşan kenarları kesilir. En çok 4096 × 4096 piksel. Okunamayan resim bildirilir, kart resim yerine karonun renginde
 simgeyle çıkar.
 
@@ -163,10 +163,13 @@ Hepsi [`ornekler/`](ornekler) klasöründe; bir test hepsinin uyarısız okundu�
 ```sh
 kentos-launcher snapshot çıktı.png [--sayfa uygulamalar|son|guncellemeler|indirmeler|ayarlar|ekle|ikonlar]
                 [--tema koyu|acik] [--boyut 1440x900] [--yazi 13|18] [--secili kentos-harita] [--bildirimler]
+                [--ara harita] [--ilk] [--imlec 820,240] [--tik 602,357]
 python3 scripts/launcher/pictures.py --fit 3d=sehir.png afet=afet.png   # sahibin resimlerini kartlara uydurur (altı ad)
 python3 scripts/launcher/pictures.py --kentos /yol/kentos-cad   # dört kartın resmini KentOS'un kendisiyle yeniden çeker
+python3 scripts/launcher/art.py   # kenar çubuğundaki imar planı çizimini yeniden yazar (--check güncel mi diye bakar)
 ```
 
 `snapshot` sabit veriyle çizer (yerleşik uygulamalar, `/opt/kentos/bin`'de bulunan `kentos-cad`, sabit bir son dosyalar
 listesi, çalışan program yok): resimler her makinede aynıdır; kullanıcının hiçbir dosyası okunmaz ya da yazılmaz.
+`--ilk` KentOS'un bulunmadığı ve son dosyanın olmadığı ilk açılışı çizer; `--imlec` üzerine gelinen, `--tik` tıklanan yeri verir.
 Simge sayfasının (`--sayfa ikonlar`) on sekiz satırı 900 piksele sığmaz; `--boyut 1440x1280` ile çizin.

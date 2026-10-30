@@ -10,7 +10,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use iced::futures::channel::oneshot;
-use iced::widget::{Column, button, column, container, row, text_input};
+use iced::widget::{Column, button, column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{ProcessingRun, RunSink, SinkMode};
 use kentos_domain::Document;
@@ -19,7 +19,6 @@ use kentos_processing::command::command_values;
 use kentos_processing::{ParamKind, Tool};
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::theme::typography;
 use kentos_ui::widget::radio::RadioGroup;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Switch, Tip, tip};
@@ -212,10 +211,7 @@ pub(crate) fn place_view(window: &ToolDialog) -> Element<'_, Message> {
         );
     let mut out = Column::new().spacing(10).push(places);
     let field = |placeholder: &str, value: &str, on: fn(String) -> SinkEvent| {
-        text_input(placeholder, value)
-            .padding([5, 8])
-            .font(typography::ui())
-            .size(typography::body())
+        kentos_ui::widget::text_field(placeholder, value)
             .style(style::field::validated(false))
             .on_input(move |t| ev(on(t)))
             .width(Fill)
@@ -231,7 +227,7 @@ pub(crate) fn place_view(window: &ToolDialog) -> Element<'_, Message> {
         Place::Drawing => {}
         Place::File => {
             let choose = button(label::body("Seç…"))
-                .padding([5, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(ev(SinkEvent::ChoosePath));
             out = out.push(

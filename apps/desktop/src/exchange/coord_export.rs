@@ -415,7 +415,8 @@ impl App {
                     (!points.is_empty() && !s.writing).then(|| event(Event::Run)),
                 ))
                 .width(720.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

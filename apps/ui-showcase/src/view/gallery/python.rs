@@ -91,7 +91,7 @@ impl Showcase {
                 .align_y(iced::Center)
             )
             .on_press(event(Event::Copy))
-            .padding([5, 9])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::flat),
             button(
                 row![
@@ -102,7 +102,7 @@ impl Showcase {
                 .align_y(iced::Center)
             )
             .on_press(event(Event::Restart))
-            .padding([5, 9])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::flat),
         ]
         .spacing(16)

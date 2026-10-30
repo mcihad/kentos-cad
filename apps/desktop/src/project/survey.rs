@@ -6,11 +6,10 @@
 //! empty tolerance is not checked; what does not hold is said under its
 //! field, and Kaydet waits.
 
-use iced::widget::{Column, column, row, text_input};
+use iced::widget::{Column, column, row};
 use iced::{Center, Element};
 use kentos_commands::AngleUnit;
 use kentos_project::survey_form::{self, Field};
-use kentos_ui::theme::typography;
 use kentos_ui::widget::{Banner, Switch};
 use kentos_ui::{label, style};
 
@@ -25,19 +24,13 @@ fn field<'a>(
     problem: Option<&'static str>,
     on: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    let input = text_input(placeholder, value)
+    let input = kentos_ui::widget::text_field(placeholder, value)
         .on_input(on)
-        .padding([5, 8])
-        .size(typography::body())
-        .width(120)
-        .style(style::field::input);
+        .width(120);
     let mut c = Column::new().spacing(4).push(
-        row![
-            kentos_ui::widget::focus_ring(input),
-            label::body(unit).width(28)
-        ]
-        .spacing(8)
-        .align_y(Center),
+        row![input, label::body(unit).width(28)]
+            .spacing(8)
+            .align_y(Center),
     );
     if let Some(p) = problem {
         c = c.push(label::caption(p).style(style::text::danger).width(156));

@@ -1,6 +1,6 @@
 # ADR 0746: Boyutlandırılan, tam ekran yapılan ve boyunu hatırlayan pencereler
 
-- **Durum:** kabul edildi (2026-10-29).
+- **Durum:** kabul edildi (2026-10-29); köşe tutamacının görünüşü [ADR 0804](0804-one-control-height-cells-and-frames.md) ile değişti (ayrı işaret yok, çerçevenin kendisi).
 - **İstek:** sahibin isteği:
   > pencere bileşenimizi genişletilebilir büyütülebilir yap … büyüttük pencere o büyüklüğü saklasın, bir sonraki
   > açılmasında aynı büyüklükte açılsın … tam ekran yapılabilsin, arkasındaki pencereyi doldursun ama kenarlarda

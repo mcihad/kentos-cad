@@ -5,7 +5,7 @@ use iced::widget::button;
 
 use kentos_ui::label;
 use kentos_ui::style;
-use kentos_ui::widget::{Dialog, ShortcutList, overlay};
+use kentos_ui::widget::{Dialog, ShortcutList};
 
 use crate::app::Showcase;
 use crate::message::Message;
@@ -108,10 +108,10 @@ impl Showcase {
             .action(
                 button(label::body("Kapat"))
                     .on_press(Message::HelpToggled)
-                    .padding([5, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             );
 
-        overlay::modal(dialog, Message::HelpToggled)
+        dialog.modal(Message::HelpToggled)
     }
 }

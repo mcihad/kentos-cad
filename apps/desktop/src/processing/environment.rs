@@ -4,7 +4,7 @@
 //! way (`kentos_processing::raster_env::resolve`): the visible box or the chosen objects' box, the snap raster by its
 //! persistent id, the cell size typed in the drawing's unit.
 
-use iced::widget::{Column, button, column, container, row, text_input};
+use iced::widget::{Column, button, column, container, row};
 use iced::{Center, Element, Fill};
 use kentos_commands::{Entity, RasterEnvironment};
 use kentos_domain::Document;
@@ -221,10 +221,7 @@ pub(crate) fn section<'a>(
     .prefix("Hizalama rasteri");
     let field =
         |placeholder: &'static str, value: &str, bad: bool, on: fn(String) -> EnvironmentEvent| {
-            text_input(placeholder, value)
-                .padding([5, 8])
-                .font(typography::ui())
-                .size(typography::body())
+            kentos_ui::widget::text_field(placeholder, value)
                 .style(style::field::validated(bad))
                 .on_input(move |t| ev(on(t)))
                 .width(Fill)
@@ -263,7 +260,7 @@ pub(crate) fn section<'a>(
     if count > 0 {
         body = body.push(
             button(label::body("Temizle"))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(ev(EnvironmentEvent::Clear)),
         );

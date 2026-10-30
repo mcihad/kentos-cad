@@ -9,7 +9,7 @@
 //! Kaydet waits; Kaydet writes each changed network through
 //! `cad.network.define` (a project setting, not an undo step).
 
-use iced::widget::{Column, Space, button, column, container, row, scrollable, text_input};
+use iced::widget::{Column, Space, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDefine,
@@ -25,8 +25,8 @@ use kentos_interaction::network::{Answer, NetworkAsk, NetworkQuestion, NetworkRe
 use kentos_interaction::{Format, Level, ViewChange};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use super::Event as Networks;
@@ -643,7 +643,7 @@ impl App {
                     .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe(on)
         };
         let left = column![
@@ -721,17 +721,15 @@ impl App {
             ),
         };
         let ready = problem.is_none() && self.window_changed(w);
-        overlay::modal(
-            // The panes take what is left of the window's height and scroll themselves; the buttons stay in view.
-            Frame::new(TITLE)
-                .fill(row![left, right].spacing(16).height(Fill))
-                .push(words::summary(vec![line]))
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
-                .width(1000.0)
-                .max_height(660.0),
-            msg(Event::Cancel),
-        )
+        // The panes take what is left of the window's height and scroll themselves; the buttons stay in view.
+        Frame::new(TITLE)
+            .fill(row![left, right].spacing(16).height(Fill))
+            .push(words::summary(vec![line]))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
+            .width(1000.0)
+            .max_height(660.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn network_form<'a>(&'a self, w: &'a Window, f: &'a NetworkForm) -> Element<'a, Message> {
@@ -741,22 +739,16 @@ impl App {
                      value: &'a str,
                      on: Box<dyn Fn(String) -> Event + 'a>|
          -> Element<'a, Message> {
-            text_input(hint, value)
-                .size(typography::body())
-                .padding([4, 8])
+            kentos_ui::widget::text_field(hint, value)
                 .on_input(move |t| msg(on(t)))
-                .style(style::field::input)
                 .into()
         };
         let number =
             |value: &'a str, on: Box<dyn Fn(String) -> Event + 'a>| -> Element<'a, Message> {
                 container(
-                    text_input("", value)
-                        .size(typography::body())
-                        .padding([4, 8])
+                    kentos_ui::widget::text_field("", value)
                         .align_x(iced::alignment::Horizontal::Right)
-                        .on_input(move |t| msg(on(t)))
-                        .style(style::field::input),
+                        .on_input(move |t| msg(on(t))),
                 )
                 .width(Length::Fixed(typography::scaled(96.0)))
                 .into()
@@ -790,21 +782,21 @@ impl App {
                     .align_y(Center),
                 )
                 .style(style::button::secondary)
-                .padding([2, 8])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .on_press_maybe(on)
                 .into()
             };
         let remove = |on: Message| -> Element<'a, Message> {
             button(icon(from_web(Some("close"))).size(12.0))
                 .style(style::button::ghost)
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(12.0))
                 .on_press(on)
                 .into()
         };
         let builder = |field: Field| -> Element<'a, Message> {
             button(icon(from_web(Some("expression"))).size(14.0))
                 .style(style::button::ghost)
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(14.0))
                 .on_press(msg(Event::Builder(field)))
                 .into()
         };
@@ -839,8 +831,7 @@ impl App {
             Some(small(
                 "plus",
                 "Katman ekle",
-                (f.edges.len() < kentos_commands::NETWORK_LAYER_LIMIT)
-                    .then(|| msg(Event::EdgeAdd)),
+                (f.edges.len() < kentos_commands::NETWORK_LAYER_LIMIT).then(|| msg(Event::EdgeAdd)),
             )),
         ));
         for (i, e) in f.edges.iter().enumerate() {
@@ -1170,8 +1161,10 @@ impl App {
             }
             form = form.push(
                 row![
-                    container(Select::new(choices, at, move |k| msg(Event::DeviceLayer(i, k))))
-                        .width(Length::FillPortion(2)),
+                    container(Select::new(choices, at, move |k| msg(Event::DeviceLayer(
+                        i, k
+                    ))))
+                    .width(Length::FillPortion(2)),
                     container(input(
                         "terminaller: yg: Yüksek gerilim; ag: Alçak gerilim",
                         &d.terminals,
@@ -1331,7 +1324,10 @@ impl App {
         let mut when = row![].spacing(6).align_y(Center);
         for (slot, (hint, typed)) in [
             ("günlerin alanı: kapanis_gun (Pzt-Cum)", &f.closure_days),
-            ("saatlerin alanı: kapanis_saat (22:00-06:00)", &f.closure_hours),
+            (
+                "saatlerin alanı: kapanis_saat (22:00-06:00)",
+                &f.closure_hours,
+            ),
         ]
         .into_iter()
         .enumerate()
@@ -1774,7 +1770,8 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
             if let Some(&(r, _)) = REACHES.get(k) {
                 f.subnet_reach = r;
                 if r.is_some() && f.subnet_attribute.trim().is_empty() {
-                    f.subnet_attribute = kentos_interaction::network::form::DEFAULT_SUBNET_ATTRIBUTE.into();
+                    f.subnet_attribute =
+                        kentos_interaction::network::form::DEFAULT_SUBNET_ATTRIBUTE.into();
                 }
             }
         }
@@ -1785,13 +1782,14 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
         }
         Event::ProfileAdd => {
             let n = f.profiles.len() + 1;
-            f.profiles.push(kentos_interaction::network::form::ProfileRow {
-                name: format!("Profil {n}"),
-                limits: String::new(),
-                forbidden: String::new(),
-                top_speed: String::new(),
-                both_ways: false,
-            });
+            f.profiles
+                .push(kentos_interaction::network::form::ProfileRow {
+                    name: format!("Profil {n}"),
+                    limits: String::new(),
+                    forbidden: String::new(),
+                    top_speed: String::new(),
+                    both_ways: false,
+                });
         }
         Event::ProfileRemove(i) if i < f.profiles.len() => {
             f.profiles.remove(i);

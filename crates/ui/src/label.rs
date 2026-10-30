@@ -59,7 +59,7 @@ pub fn mono_caption<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
     caption(content).font(ty::mono())
 }
 
-/// Öne çıkan tek bir sayı (eş aralıklı, gövdenin 5/3'ü).
+/// Öne çıkan tek bir sayı (gövdenin 5/3'ü): hizalanacağı bir sütun yok, arayüzün yazısıyla.
 pub fn figure<'a>(content: impl IntoFragment<'a>) -> Text<'a> {
-    text(content).size(ty::figure()).font(ty::mono())
+    text(content).size(ty::figure()).font(ty::ui_strong())
 }

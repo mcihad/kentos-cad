@@ -8,13 +8,14 @@ use std::path::PathBuf;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    ArchPhase, CommandResult, Entity, ExportTable, OpeningForm, ScheduleChange, ScheduleColumn, ScheduleField,
-    ScheduleFilter, ScheduleOf, ScheduleOperation, ScheduleSort, SchedulesEdit, TableNumbers, TableSource,
+    ArchPhase, CommandResult, Entity, ExportTable, OpeningForm, ScheduleChange, ScheduleColumn,
+    ScheduleField, ScheduleFilter, ScheduleOf, ScheduleOperation, ScheduleSort, SchedulesEdit,
+    TableNumbers, TableSource,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message, Picker};
@@ -23,8 +24,17 @@ use crate::exchange::words;
 /// The windows' titles, which a trace names them by.
 pub const TITLE: &str = "Çizelge ayarları";
 pub const EXPORT_TITLE: &str = "Çizelgeyi dosyaya yaz";
-const PHASES: [ArchPhase; 4] = [ArchPhase::Existing, ArchPhase::Demolish, ArchPhase::New, ArchPhase::Temporary];
-const FORMATS: [(&str, &str); 3] = [("xlsx", "Excel (.xlsx)"), ("ods", "OpenDocument (.ods)"), ("csv", "CSV (.csv)")];
+const PHASES: [ArchPhase; 4] = [
+    ArchPhase::Existing,
+    ArchPhase::Demolish,
+    ArchPhase::New,
+    ArchPhase::Temporary,
+];
+const FORMATS: [(&str, &str); 3] = [
+    ("xlsx", "Excel (.xlsx)"),
+    ("ods", "OpenDocument (.ods)"),
+    ("csv", "CSV (.csv)"),
+];
 
 #[derive(Clone, Debug)]
 pub struct Window {
@@ -90,9 +100,22 @@ fn flip<T: PartialEq + Clone>(list: &mut Option<Vec<T>>, v: T) {
 impl App {
     fn schedule_window_of(&self, uid: &str, export: bool) -> Option<Window> {
         let doc = self.document.as_ref()?;
-        let slot = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.model.slot_of(u))?;
-        let Some(Entity::Table(t)) = doc.model.get(slot) else { return None };
-        let Some(TableSource::Schedule { of, columns, filter, sort, group, total, .. }) = &t.source else {
+        let slot = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.model.slot_of(u))?;
+        let Some(Entity::Table(t)) = doc.model.get(slot) else {
+            return None;
+        };
+        let Some(TableSource::Schedule {
+            of,
+            columns,
+            filter,
+            sort,
+            group,
+            total,
+            ..
+        }) = &t.source
+        else {
             return None;
         };
         let mut w = Window {
@@ -130,7 +153,10 @@ impl App {
     /// How many data rows the change writes, from the command's plan.
     fn schedule_preview(&self, w: &Window) -> Result<u32, String> {
         let doc = self.document.as_ref().ok_or_else(String::new)?;
-        match kentos_native_application::schedules_edit::plan_in(&doc.model, &Self::schedule_input(w)) {
+        match kentos_native_application::schedules_edit::plan_in(
+            &doc.model,
+            &Self::schedule_input(w),
+        ) {
             CommandResult::Completed { output, .. } => match &output.table {
                 Entity::Table(t) => Ok(match &t.source {
                     Some(TableSource::Schedule { members, .. }) => {
@@ -140,9 +166,9 @@ impl App {
                 }),
                 _ => Ok(0),
             },
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Ok(0),
         }
     }
@@ -154,7 +180,11 @@ impl App {
                 let uid = uid.clone();
                 self.schedule = self.schedule_window_of(&uid, export);
                 if self.schedule.is_some() {
-                    self.dialog = Some(if export { Dialog::ScheduleExport } else { Dialog::Schedule });
+                    self.dialog = Some(if export {
+                        Dialog::ScheduleExport
+                    } else {
+                        Dialog::Schedule
+                    });
                 }
                 return Task::none();
             }
@@ -171,15 +201,24 @@ impl App {
             }
             _ => {}
         }
-        let Some(w) = self.schedule.as_mut() else { return Task::none() };
+        let Some(w) = self.schedule.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Column(field, on) => {
                 if on {
                     if !w.columns.iter().any(|c| c.field == field) {
-                        w.columns.push(ScheduleColumn { field, title: None, attr: None });
+                        w.columns.push(ScheduleColumn {
+                            field,
+                            title: None,
+                            attr: None,
+                        });
                     }
                 } else if w.columns.len() > 1
-                    && let Some(i) = w.columns.iter().position(|c| c.field == field && c.field != ScheduleField::Attr)
+                    && let Some(i) = w
+                        .columns
+                        .iter()
+                        .position(|c| c.field == field && c.field != ScheduleField::Attr)
                 {
                     w.columns.remove(i);
                     // A sort key past the columns goes; a later one moves with its column.
@@ -192,7 +231,11 @@ impl App {
                 }
             }
             Event::Up(i) | Event::Down(i) => {
-                let j = if matches!(event, Event::Up(_)) { i.checked_sub(1) } else { Some(i + 1) };
+                let j = if matches!(event, Event::Up(_)) {
+                    i.checked_sub(1)
+                } else {
+                    Some(i + 1)
+                };
                 if let Some(j) = j.filter(|j| *j < w.columns.len()) {
                     w.columns.swap(i, j);
                     for k in &mut w.sort {
@@ -213,7 +256,10 @@ impl App {
                     w.sort.clear();
                 } else {
                     let old = w.sort.first().copied().unwrap_or_default();
-                    let key = ScheduleSort { column: (i - 1) as u32, ..old };
+                    let key = ScheduleSort {
+                        column: (i - 1) as u32,
+                        ..old
+                    };
                     if w.sort.is_empty() {
                         w.sort.push(key);
                     } else {
@@ -236,7 +282,13 @@ impl App {
             Event::Total(on) => w.total = on,
             Event::Format(i) => w.format = FORMATS[i.min(FORMATS.len() - 1)].0,
             Event::Groups(on) => w.groups = on,
-            Event::Numbers(exact) => w.numbers = if exact { TableNumbers::Exact } else { TableNumbers::Shown },
+            Event::Numbers(exact) => {
+                w.numbers = if exact {
+                    TableNumbers::Exact
+                } else {
+                    TableNumbers::Shown
+                }
+            }
             _ => {}
         }
         if let Some(w) = self.schedule.clone() {
@@ -250,8 +302,12 @@ impl App {
 
     /// Tamam: the change as one `cad.schedules.edit` step.
     fn schedule_apply(&mut self) -> Task<Message> {
-        let Some(w) = self.schedule.clone() else { return Task::none() };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(w) = self.schedule.clone() else {
+            return Task::none();
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         match kentos_native_application::schedules_edit::execute(
             &mut ExecutionContext::new(&mut doc.model),
             Self::schedule_input(&w),
@@ -259,16 +315,23 @@ impl App {
             CommandResult::Completed { output, .. } => {
                 let rows = match &output.table {
                     Entity::Table(t) => match &t.source {
-                        Some(TableSource::Schedule { members, .. }) => members.iter().filter(|m| !m.is_empty()).count(),
+                        Some(TableSource::Schedule { members, .. }) => {
+                            members.iter().filter(|m| !m.is_empty()).count()
+                        }
                         _ => 0,
                     },
                     _ => 0,
                 };
-                self.announce(Level::Success, format!("Çizelge değişti: {rows} satır. Geri al ile dönülür."));
+                self.announce(
+                    Level::Success,
+                    format!("Çizelge değişti: {rows} satır. Geri al ile dönülür."),
+                );
                 self.schedule = None;
                 self.dialog = None;
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 if let Some(s) = self.schedule.as_mut() {
                     s.preview = Err(error.message);
                 }
@@ -280,7 +343,9 @@ impl App {
 
     /// Yaz…: the path asked (a trace gives it through `Picker::File`).
     fn schedule_write_ask(&mut self) -> Task<Message> {
-        let Some(w) = &self.schedule else { return Task::none() };
+        let Some(w) = &self.schedule else {
+            return Task::none();
+        };
         if let Picker::File(path) = &self.picker {
             return Task::done(msg(Event::Written(Some(path.clone()))));
         }
@@ -307,7 +372,9 @@ impl App {
     }
 
     fn schedule_written(&mut self, path: Option<PathBuf>) {
-        let (Some(path), Some(w), Some(doc)) = (path, self.schedule.clone(), &self.document) else { return };
+        let (Some(path), Some(w), Some(doc)) = (path, self.schedule.clone(), &self.document) else {
+            return;
+        };
         let input = ExportTable {
             path: path.display().to_string(),
             uid: w.uid.clone(),
@@ -317,7 +384,13 @@ impl App {
         };
         match kentos_headless::file_commands::export_table(&doc.model, &input) {
             Ok((out, _)) => {
-                self.announce(Level::Success, format!("{} yazıldı: {} satır, {} sütun.", out.path, out.rows, out.columns));
+                self.announce(
+                    Level::Success,
+                    format!(
+                        "{} yazıldı: {} satır, {} sütun.",
+                        out.path, out.rows, out.columns
+                    ),
+                );
                 for note in out.notes {
                     self.say(Level::Info, note);
                 }
@@ -330,13 +403,23 @@ impl App {
 
     /// The types the drawing's objects of `of` have, in the natural order (Tür süzgeci's choices).
     fn schedule_types(&self, of: ScheduleOf) -> Vec<String> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        let place = if of == ScheduleOf::Spaces { "usage" } else { "type" };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let place = if of == ScheduleOf::Spaces {
+            "usage"
+        } else {
+            "type"
+        };
         let mut out: Vec<String> = doc
             .model
             .entities()
             .filter(|e| e.kind() == of.kind())
-            .filter_map(|e| doc.model.arch_value(e, place, None).map(|v| doc.model.arch_value_text(&v, false)))
+            .filter_map(|e| {
+                doc.model
+                    .arch_value(e, place, None)
+                    .map(|v| doc.model.arch_value_text(&v, false))
+            })
             .filter(|t| !t.is_empty())
             .collect();
         out.sort_by(|a, b| kentos_geometry_core::text::natural::natural_cmp(a, b));
@@ -345,26 +428,50 @@ impl App {
     }
 
     pub(crate) fn schedule_view(&self) -> Element<'_, Message> {
-        let Some(w) = &self.schedule else { return label::body("").into() };
+        let Some(w) = &self.schedule else {
+            return label::body("").into();
+        };
         if w.export {
             return self.schedule_export_view(w);
         }
         let section = |title: &'static str| label::strong(title);
         // Sütunlar: the kind's fields in order, each on or off; the chosen ones in the schedule's order, movable.
         let mut fields = Column::new().spacing(4);
-        for f in ScheduleField::ALL.iter().filter(|f| f.reads(w.of) && **f != ScheduleField::Attr) {
+        for f in ScheduleField::ALL
+            .iter()
+            .filter(|f| f.reads(w.of) && **f != ScheduleField::Attr)
+        {
             let on = w.columns.iter().any(|c| c.field == *f);
-            let kind = if f.edits_in(w.of) { "nesneye yazılır" } else { "hesaplanır" };
-            fields = fields.push(words::check(on, format!("{} · {kind}", f.title()), Some(msg(Event::Column(*f, !on)))));
+            let kind = if f.edits_in(w.of) {
+                "nesneye yazılır"
+            } else {
+                "hesaplanır"
+            };
+            fields = fields.push(words::check(
+                on,
+                format!("{} · {kind}", f.title()),
+                Some(msg(Event::Column(*f, !on))),
+            ));
         }
         let mut order = Column::new().spacing(4);
         for (i, c) in w.columns.iter().enumerate() {
-            let up = button(label::body("↑")).style(style::button::secondary).padding([2, 8]).on_press_maybe((i > 0).then(|| msg(Event::Up(i))));
+            let up = button(label::body("↑"))
+                .style(style::button::secondary)
+                .padding(kentos_ui::theme::metrics::action_small())
+                .on_press_maybe((i > 0).then(|| msg(Event::Up(i))));
             let down = button(label::body("↓"))
                 .style(style::button::secondary)
-                .padding([2, 8])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .on_press_maybe((i + 1 < w.columns.len()).then(|| msg(Event::Down(i))));
-            order = order.push(row![label::body(format!("{}. {}", i + 1, c.heading())).width(Fill), up, down].spacing(6).align_y(Center));
+            order = order.push(
+                row![
+                    label::body(format!("{}. {}", i + 1, c.heading())).width(Fill),
+                    up,
+                    down
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
         }
         // Süzgeç.
         let mut filter = Column::new().spacing(4);
@@ -372,7 +479,12 @@ impl App {
             .document
             .as_ref()
             .and_then(|d| d.model.settings().arch.as_ref())
-            .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect())
+            .map(|a| {
+                a.levels
+                    .iter()
+                    .map(|l| (l.id.clone(), l.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default();
         if !levels.is_empty() {
             filter = filter.push(label::caption("Kat (hiçbiri: hepsi)"));
@@ -388,7 +500,11 @@ impl App {
         }
         let types = self.schedule_types(w.of);
         if !types.is_empty() {
-            filter = filter.push(label::caption(if w.of == ScheduleOf::Spaces { "Kullanım (hiçbiri: hepsi)" } else { "Tür (hiçbiri: hepsi)" }));
+            filter = filter.push(label::caption(if w.of == ScheduleOf::Spaces {
+                "Kullanım (hiçbiri: hepsi)"
+            } else {
+                "Tür (hiçbiri: hepsi)"
+            }));
             for t in types {
                 let on = w.filter.types.as_ref().is_some_and(|l| l.contains(&t));
                 filter = filter.push(words::check(on, t.clone(), Some(msg(Event::Type(t)))));
@@ -411,21 +527,58 @@ impl App {
         let mut sorting = Column::new().spacing(4).push(container(sort).width(260.0));
         if key.is_some() {
             sorting = sorting
-                .push(words::check(k.descending, "Azalan", Some(msg(Event::Descending(!k.descending)))))
-                .push(words::check(k.header, "Grup başlığı", Some(msg(Event::Header(!k.header)))))
-                .push(words::check(k.footer, "Ara toplam", Some(msg(Event::Footer(!k.footer)))));
+                .push(words::check(
+                    k.descending,
+                    "Azalan",
+                    Some(msg(Event::Descending(!k.descending))),
+                ))
+                .push(words::check(
+                    k.header,
+                    "Grup başlığı",
+                    Some(msg(Event::Header(!k.header))),
+                ))
+                .push(words::check(
+                    k.footer,
+                    "Ara toplam",
+                    Some(msg(Event::Footer(!k.footer))),
+                ));
         }
         sorting = sorting
-            .push(words::check(w.group, "Aynı satırları birleştir", Some(msg(Event::Group(!w.group)))))
-            .push(words::check(w.total, "Genel toplam", Some(msg(Event::Total(!w.total)))));
+            .push(words::check(
+                w.group,
+                "Aynı satırları birleştir",
+                Some(msg(Event::Group(!w.group))),
+            ))
+            .push(words::check(
+                w.total,
+                "Genel toplam",
+                Some(msg(Event::Total(!w.total))),
+            ));
         let preview = match &w.preview {
-            Ok(n) => words::summary(vec![words::text_line(words::Kind::Ok, format!("{n} veri satırı yazılır."))]),
+            Ok(n) => words::summary(vec![words::text_line(
+                words::Kind::Ok,
+                format!("{n} veri satırı yazılır."),
+            )]),
             Err(why) => words::summary(vec![words::text_line(words::Kind::Warn, why.clone())]),
         };
         let columns = row![
-            Column::new().spacing(8).push(section("Sütunlar")).push(fields).push(section("Sıra")).push(order).width(Fill),
-            Column::new().spacing(8).push(section("Süzgeç")).push(filter).width(Fill),
-            Column::new().spacing(8).push(section("Sıralama ve gruplar")).push(sorting).width(Fill),
+            Column::new()
+                .spacing(8)
+                .push(section("Sütunlar"))
+                .push(fields)
+                .push(section("Sıra"))
+                .push(order)
+                .width(Fill),
+            Column::new()
+                .spacing(8)
+                .push(section("Süzgeç"))
+                .push(filter)
+                .width(Fill),
+            Column::new()
+                .spacing(8)
+                .push(section("Sıralama ve gruplar"))
+                .push(sorting)
+                .width(Fill),
         ]
         .spacing(16);
         let body = Column::new()
@@ -436,21 +589,30 @@ impl App {
             )))
             .push(iced::widget::scrollable(columns).height(420.0))
             .push(preview);
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
-                .action(words::primary("Tamam", w.preview.is_ok().then(|| msg(Event::Apply))))
-                .width(900.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
+            .action(words::primary(
+                "Tamam",
+                w.preview.is_ok().then(|| msg(Event::Apply)),
+            ))
+            .width(900.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn schedule_export_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
-        let picked = FORMATS.iter().position(|(f, _)| *f == w.format).unwrap_or(0);
-        let format = Select::new(FORMATS.iter().map(|(_, l)| Choice::new(*l)).collect::<Vec<_>>(), Some(picked), |i| {
-            msg(Event::Format(i))
-        });
+        let picked = FORMATS
+            .iter()
+            .position(|(f, _)| *f == w.format)
+            .unwrap_or(0);
+        let format = Select::new(
+            FORMATS
+                .iter()
+                .map(|(_, l)| Choice::new(*l))
+                .collect::<Vec<_>>(),
+            Some(picked),
+            |i| msg(Event::Format(i)),
+        );
         let exact = w.numbers == TableNumbers::Exact;
         let body = Column::new()
             .spacing(10)
@@ -462,13 +624,11 @@ impl App {
             } else {
                 "Sayılar çizelgede görüldüğü gibi, projenin basamağıyla yazılır. Nesneye yazılan sütunlar (numara, ad, kaplama) hiçbir zaman yuvarlanmaz."
             }));
-        overlay::modal(
-            Frame::new(EXPORT_TITLE)
-                .push(body)
-                .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
-                .action(words::primary("Yaz…", Some(msg(Event::Write))))
-                .width(560.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(EXPORT_TITLE)
+            .push(body)
+            .action(words::secondary("Vazgeç", Some(msg(Event::Cancel))))
+            .action(words::primary("Yaz…", Some(msg(Event::Write))))
+            .width(560.0)
+            .modal(msg(Event::Cancel))
     }
 }

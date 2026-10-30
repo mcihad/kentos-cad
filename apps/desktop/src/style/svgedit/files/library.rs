@@ -4,7 +4,7 @@
 //! yöneticisi, so it keeps its own picker). A system drawing opens as the
 //! user's copy.
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length};
 use kentos_native_style::library::{ItemKind, Source};
 use kentos_ui::label;
@@ -116,7 +116,7 @@ impl App {
                 .direction(ui_style::field::body_scrollbar())
                 .into()
         };
-        let search = text_input("Ad ya da kategori ara", &picker.query)
+        let search = kentos_ui::widget::text_field("Ad ya da kategori ara", &picker.query)
             .id(iced::widget::Id::from("svge:libsearch"))
             .on_input(|t| {
                 change(move |ed| {
@@ -125,10 +125,9 @@ impl App {
                     }
                 })
             })
-            .padding([4, 7])
-            .size(typography::body())
             .style(ui_style::field::validated(false));
         Dialog::new("Kitaplıktan SVG çizimi aç")
+            .on_close(crate::style::svgedit::change(|ed| ed.files.dialog = None))
             .push(
                 row![
                     container(search).width(Fill),
@@ -144,7 +143,7 @@ impl App {
                         .style(ui_style::text::muted),
                     space::horizontal(),
                     button(label::body("Vazgeç"))
-                        .padding([5, 14])
+                        .padding(kentos_ui::theme::metrics::action())
                         .style(ui_style::button::secondary)
                         .on_press(change(|ed| ed.files.dialog = None)),
                 ]

@@ -84,7 +84,7 @@ impl Form {
                 .align_y(Center),
         )
         .on_press(fb(Event::Open))
-        .padding([5, 12])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary);
         let what = match (&self.file, &self.book) {
             (Some(file), Some(book)) => {
@@ -130,6 +130,7 @@ impl Form {
             body = body.push(s);
         }
         Dialog::new(TITLE)
+            .on_close(crate::calc::event(crate::calc::Event::Close))
             .scroll(body)
             .width(1040.0)
             .action(footer_button(

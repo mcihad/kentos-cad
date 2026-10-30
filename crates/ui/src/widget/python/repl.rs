@@ -95,7 +95,7 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
         let mut header = row![
             icon(Icon::Terminal).size(16.0),
             text(self.title)
-                .font(strong_font())
+                .font(typography::ui_strong())
                 .size(typography::body()),
         ];
         // The host's controls take the room between the title and the status
@@ -110,13 +110,15 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
         } else {
             row![
                 icon(Icon::Eraser).size(13.0),
-                text("Temizle").font(font()).size(typography::caption())
+                text("Temizle")
+                    .font(typography::ui())
+                    .size(typography::body())
             ]
         };
         let header = header
             .push(
                 text(format!("●  {}", status.label()))
-                    .font(font())
+                    .font(typography::ui())
                     .size(typography::caption())
                     .wrapping(advanced_text::Wrapping::None)
                     .style(move |theme: &Theme| text::Style {
@@ -136,8 +138,8 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             transcript = transcript.push(
                 column![
                     text(">>>").font(strong_font()).size(typography::figure()).style(|theme: &Theme| text::Style { color: Some(Tokens::of(theme).accent) }),
-                    text("Python oturumunuz hazır.").font(font()).size(typography::body()),
-                    text("Bir ifade yazın. Enter çalıştırır; Shift+Enter yeni satır açar.\n↑ ve ↓ önceki komutları getirir.").font(font()).size(typography::caption()).style(style::text::muted),
+                    text("Python oturumunuz hazır.").font(typography::ui()).size(typography::body()),
+                    text("Bir ifade yazın. Enter çalıştırır; Shift+Enter yeni satır açar.\n↑ ve ↓ önceki komutları getirir.").font(typography::ui()).size(typography::caption()).style(style::text::muted),
                 ].spacing(8)
             );
         }
@@ -152,7 +154,7 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             };
             let kind = entry.kind;
             let label = text(marker)
-                .font(strong_font())
+                .font(typography::ui_strong())
                 .size(typography::caption())
                 .width(64)
                 .style(move |theme: &Theme| {
@@ -271,14 +273,14 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             row![
                 icon(if running { Icon::Stop } else { Icon::Play }).size(12.0),
                 text(if running { "Durdur" } else { "Çalıştır" })
-                    .font(font())
-                    .size(typography::caption())
+                    .font(typography::ui())
+                    .size(typography::body())
             ]
             .spacing(6)
             .align_y(iced::Center),
         )
         .on_press_maybe((running || !state.input.content.is_empty()).then_some(action))
-        .padding([6, 11])
+        .padding(crate::theme::metrics::action())
         .style(if running {
             style::button::danger
         } else {
@@ -292,7 +294,7 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             let side = column![
                 go,
                 text(timing)
-                    .font(font())
+                    .font(typography::ui())
                     .size(typography::caption())
                     .style(style::text::muted)
             ]
@@ -314,13 +316,13 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
             .height(self.height)
         } else {
             let footer = row![
-                text("Enter çalıştır · Shift+Enter satır · ↑↓ geçmiş")
-                    .font(font())
+                text("Enter çalıştırır, Shift+Enter yeni satır, ↑↓ geçmiş")
+                    .font(typography::ui())
                     .size(typography::caption())
                     .width(Fill)
                     .style(style::text::muted),
                 text(timing)
-                    .font(font())
+                    .font(typography::ui())
                     .size(typography::caption())
                     .style(style::text::muted),
                 go,

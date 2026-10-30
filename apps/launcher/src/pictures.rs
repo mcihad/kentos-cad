@@ -1,7 +1,7 @@
-//! The cards' pictures (docs/adr/0800 §3): the owner's pictures of each
-//! program, those still to come too (30 October 2026), cut to a card's 2:1
-//! and scaled to twice its size by `scripts/launcher/pictures.py --fit`
-//! (720 × 360, 256-colour PNG), bundled with the launcher. A manifest names
+//! The plates' pictures (docs/adr/0803 §3): the owner's pictures of each
+//! program, those still to come too (30 October 2026), whole at 16:9 and
+//! scaled to about twice a plate's size by `scripts/launcher/pictures.py --fit`
+//! (800 × 450, 256-colour PNG), bundled with the launcher. A manifest names
 //! one (`"picture": "mimari"`) or gives a PNG of its own. Pictures are
 //! decoded once and kept as textures.
 
@@ -183,15 +183,15 @@ mod tests {
     use super::*;
 
     #[test]
-    fn every_bundled_picture_is_a_card_at_twice_its_size_and_small() {
+    fn every_bundled_picture_is_a_plate_at_about_twice_its_size_and_small() {
         let mut total = 0;
         for shot in Shot::ALL {
             let pixels = decode(shot.bytes()).expect("decodes");
-            assert_eq!((pixels.width, pixels.height), (720, 360), "{shot:?}");
+            assert_eq!((pixels.width, pixels.height), (800, 450), "{shot:?}");
             assert_eq!(Shot::parse(shot.key()), Some(shot));
             total += shot.bytes().len();
         }
-        assert!(total <= 1_500_000, "the pictures weigh {total} bytes");
+        assert!(total <= 2_000_000, "the pictures weigh {total} bytes");
     }
 
     #[test]

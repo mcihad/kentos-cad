@@ -4,7 +4,7 @@
 //! fed by the tool's default, a fixed value (the tool window's own
 //! control), a model input or an earlier step's output.
 
-use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, scrollable, space};
 use iced::{Alignment, Center, Element, Fill, Length};
 use kentos_interaction::Format;
 use kentos_processing::categories::Category;
@@ -129,11 +129,8 @@ fn text_field<'a>(
     value: &str,
     on_input: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    text_input(placeholder, value)
+    kentos_ui::widget::text_field(placeholder, value)
         .on_input(on_input)
-        .padding([5, 8])
-        .font(typography::ui())
-        .size(typography::body())
         .style(style::field::validated(false))
         .into()
 }
@@ -176,7 +173,7 @@ fn danger<'a>(text: &'a str, on_press: Message) -> Element<'a, Message> {
         .spacing(6)
         .align_y(Center),
     )
-    .padding([5, 6])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::ghost)
     .on_press(on_press)
     .into()
@@ -300,7 +297,7 @@ fn model_settings<'a>(d: &'a Designer, registry: &'a Registry) -> Element<'a, Me
                     .width(Fill),
                     tip(
                         button(icon(Icon::Close).size(14.0))
-                            .padding(4)
+                            .padding(kentos_ui::theme::metrics::icon_small(14.0))
                             .style(style::button::ghost)
                             .on_press(ev(Event::RemoveOutput(i))),
                         Tip::new(words::model::remove_output(&o.label)),
@@ -522,13 +519,14 @@ fn input_settings<'a>(
                 let n = name.clone();
                 rows.push(field_row(
                     title,
-                    text_input(if optional { words::input::NONE } else { "" }, &shown)
-                        .on_input(move |t| ev(Event::Input(n.clone(), InputField::Number(key, t))))
-                        .padding([5, 8])
-                        .font(typography::mono())
-                        .size(typography::body())
-                        .style(style::field::validated(false))
-                        .into(),
+                    kentos_ui::widget::text_field(
+                        if optional { words::input::NONE } else { "" },
+                        &shown,
+                    )
+                    .on_input(move |t| ev(Event::Input(n.clone(), InputField::Number(key, t))))
+                    .font(typography::mono())
+                    .style(style::field::validated(false))
+                    .into(),
                     None,
                 ));
             }

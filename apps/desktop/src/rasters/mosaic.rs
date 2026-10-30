@@ -6,7 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, CommandWarning, MosaicOrder, MosaicResolution, RastersMosaic, RastersMosaicked,
@@ -149,7 +149,10 @@ fn msg(e: Event) -> Message {
 }
 
 fn name_of(p: &Path) -> String {
-    p.file_name().map_or_else(|| p.display().to_string(), |n| n.to_string_lossy().into_owned())
+    p.file_name().map_or_else(
+        || p.display().to_string(),
+        |n| n.to_string_lossy().into_owned(),
+    )
 }
 
 /// A number typed with a dot or a comma; none when empty, an error when not a number.
@@ -170,7 +173,11 @@ fn default_path(first: &Path) -> PathBuf {
     let folder = first.parent().map(Path::to_path_buf).unwrap_or_default();
     let mut k = 1;
     loop {
-        let name = if k == 1 { "mozaik.vrt".to_owned() } else { format!("mozaik-{k}.vrt") };
+        let name = if k == 1 {
+            "mozaik.vrt".to_owned()
+        } else {
+            format!("mozaik-{k}.vrt")
+        };
         let p = folder.join(name);
         if !p.exists() {
             return p;
@@ -194,7 +201,11 @@ impl App {
     /// The window opened with these files, as Dosya ekle… would give them (the screenshots' and the tests').
     #[cfg(test)]
     pub(crate) fn raster_mosaic_with(&mut self, files: Vec<PathBuf>, order: Order) {
-        let mut s = State { sources: files, order, ..State::default() };
+        let mut s = State {
+            sources: files,
+            order,
+            ..State::default()
+        };
         s.chosen = None;
         self.rasters.mosaic = Some(s);
         self.dialog = Some(Asking::RasterMosaic);
@@ -208,7 +219,11 @@ impl App {
                 let mut f: Vec<PathBuf> = std::fs::read_dir(path)
                     .map(|d| d.filter_map(|e| e.ok().map(|e| e.path())).collect())
                     .unwrap_or_default();
-                f.retain(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("tif") || e.eq_ignore_ascii_case("tiff")));
+                f.retain(|p| {
+                    p.extension().is_some_and(|e| {
+                        e.eq_ignore_ascii_case("tif") || e.eq_ignore_ascii_case("tiff")
+                    })
+                });
                 f.sort();
                 f
             } else {
@@ -231,16 +246,22 @@ impl App {
 
     fn raster_mosaic_path_pick(&mut self) -> Task<Message> {
         let start = self.rasters.mosaic.as_ref().and_then(|s| {
-            s.path.clone().or_else(|| s.sources.first().map(|f| default_path(f)))
+            s.path
+                .clone()
+                .or_else(|| s.sources.first().map(|f| default_path(f)))
         });
         if let Picker::File(path) = &self.picker
-            && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("vrt"))
+            && path
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("vrt"))
         {
             return Task::done(msg(Event::PathPicked(Some(path.clone()))));
         }
         Task::perform(
             async move {
-                let mut d = rfd::AsyncFileDialog::new().set_title("Sanal mozaik: VRT dosyası").add_filter("VRT", &["vrt"]);
+                let mut d = rfd::AsyncFileDialog::new()
+                    .set_title("Sanal mozaik: VRT dosyası")
+                    .add_filter("VRT", &["vrt"]);
                 if let Some(p) = &start {
                     if let Some(folder) = p.parent() {
                         d = d.set_directory(folder);
@@ -254,8 +275,14 @@ impl App {
     }
 
     /// The command's input from the window's choices; why not when a number typed is not one.
-    fn raster_mosaic_input(&self, s: &State, layer: Option<String>) -> Result<RastersMosaic, String> {
-        let first = s.sources.first().ok_or_else(|| "Dosya seçilmedi: Dosya ekle… ile GeoTIFF dosyalarını seçin.".to_owned())?;
+    fn raster_mosaic_input(
+        &self,
+        s: &State,
+        layer: Option<String>,
+    ) -> Result<RastersMosaic, String> {
+        let first = s.sources.first().ok_or_else(|| {
+            "Dosya seçilmedi: Dosya ekle… ile GeoTIFF dosyalarını seçin.".to_owned()
+        })?;
         let path = s.path.clone().unwrap_or_else(|| default_path(first));
         Ok(RastersMosaic {
             sources: s.sources.iter().map(|p| p.display().to_string()).collect(),
@@ -266,7 +293,11 @@ impl App {
             nodata: typed(&s.nodata, "Nodata")?,
             layer,
             overwrite: Some(s.overwrite),
-            drawing: self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.display().to_string()),
+            drawing: self
+                .document
+                .as_ref()
+                .and_then(|d| d.path.as_ref())
+                .map(|p| p.display().to_string()),
             expected_revision: None,
         })
     }
@@ -282,9 +313,14 @@ impl App {
             Some(match (self.raster_mosaic_input(s, None), &self.document) {
                 (Err(why), _) => Err(why),
                 (Ok(_), None) => Err("Açık çizim yok.".into()),
-                (Ok(input), Some(doc)) => match rasters_mosaic::plan(&ExecutionContext::new(&mut doc.model.clone()), &input) {
+                (Ok(input), Some(doc)) => match rasters_mosaic::plan(
+                    &ExecutionContext::new(&mut doc.model.clone()),
+                    &input,
+                ) {
                     CommandResult::Completed { output, warnings } => Ok((output, warnings)),
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                        Err(error.message)
+                    }
                     other => Err(format!("{other:?}")),
                 },
             })
@@ -343,7 +379,11 @@ impl App {
             Event::PickPath => return self.raster_mosaic_path_pick(),
             Event::PathPicked(None) => return Task::none(),
             Event::PathPicked(Some(p)) => {
-                let p = if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("vrt")) { p } else { p.with_extension("vrt") };
+                let p = if p.extension().is_some_and(|e| e.eq_ignore_ascii_case("vrt")) {
+                    p
+                } else {
+                    p.with_extension("vrt")
+                };
                 s.overwrite = true;
                 s.path = Some(p);
             }
@@ -464,8 +504,14 @@ impl App {
         let format = self
             .document
             .as_ref()
-            .map_or_else(kentos_interaction::Format::default, |d| kentos_interaction::Format::of(d.settings()));
-        let plan = s.planned.as_ref().and_then(|p| p.as_ref().ok()).map(|(m, _)| m);
+            .map_or_else(kentos_interaction::Format::default, |d| {
+                kentos_interaction::Format::of(d.settings())
+            });
+        let plan = s
+            .planned
+            .as_ref()
+            .and_then(|p| p.as_ref().ok())
+            .map(|(m, _)| m);
         let mut body = Column::new().spacing(12);
         // The files, top first: their place on the plan's mosaic.
         let rows: Vec<table::Row<'_, Message>> = s
@@ -480,9 +526,15 @@ impl App {
                 let rank = used.map_or_else(|| "—".to_owned(), |u| u.rank.to_string());
                 let size = used.map_or_else(String::new, |u| format!("{} × {}", u.width, u.height));
                 let pixel = used.map_or_else(String::new, |u| {
-                    format!("{} × {}", format.length_bare(u.pixel[0]), format.length_bare(u.pixel[1]))
+                    format!(
+                        "{} × {}",
+                        format.length_bare(u.pixel[0]),
+                        format.length_bare(u.pixel[1])
+                    )
                 });
-                let date = used.and_then(|u| u.date.clone()).map_or_else(|| "—".to_owned(), |d| d.replace('T', " "));
+                let date = used
+                    .and_then(|u| u.date.clone())
+                    .map_or_else(|| "—".to_owned(), |d| d.replace('T', " "));
                 table::Row::new([
                     label::caption(rank).into(),
                     label::body(name_of(p)).into(),
@@ -499,7 +551,9 @@ impl App {
             table::Column::new("Sıra").width(40).align_right(),
             table::Column::new("Dosya").width(Length::Fill),
             table::Column::new("Boyut").width(84).align_right(),
-            table::Column::new(format!("Piksel ({})", format.length_unit_label())).width(92).align_right(),
+            table::Column::new(format!("Piksel ({})", format.length_unit_label()))
+                .width(92)
+                .align_right(),
             table::Column::new("Tarih").width(132),
         ])
         .extend(rows)
@@ -508,7 +562,7 @@ impl App {
         let small = |caption: &'static str, on: Option<Message>| {
             button(label::body(caption))
                 .on_press_maybe(on)
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(kentos_ui::style::button::secondary)
         };
         let chosen = s.chosen.filter(|&k| k < s.sources.len());
@@ -516,41 +570,60 @@ impl App {
             small("Dosya ekle…", Some(msg(Event::AddFiles))),
             small("Kaldır", chosen.map(|_| msg(Event::Remove))),
             small("Yukarı", chosen.filter(|&k| k > 0).map(|_| msg(Event::Up))),
-            small("Aşağı", chosen.filter(|&k| k + 1 < s.sources.len()).map(|_| msg(Event::Down))),
+            small(
+                "Aşağı",
+                chosen
+                    .filter(|&k| k + 1 < s.sources.len())
+                    .map(|_| msg(Event::Down))
+            ),
         ]
         .spacing(6);
         body = body.push(words::field(
             "Dosyalar (Sıra 1 en üstte)",
-            Column::new().spacing(6).push(container(list).width(Fill)).push(tools),
+            Column::new()
+                .spacing(6)
+                .push(container(list).width(Fill))
+                .push(tools),
             None,
         ));
-        let order = Segmented::new([Order::Given, Order::Finest, Order::Newest], s.order, |o| msg(Event::Order(o)));
+        let order = Segmented::new([Order::Given, Order::Finest, Order::Newest], s.order, |o| {
+            msg(Event::Order(o))
+        });
         body = body.push(words::field(
             "Örtüşen yerde üstteki",
             order,
             Some(match s.order {
-                Order::Given => "Listenin ilk dosyası üstte; Yukarı ve Aşağı ile sıralayın.".to_owned(),
+                Order::Given => {
+                    "Listenin ilk dosyası üstte; Yukarı ve Aşağı ile sıralayın.".to_owned()
+                }
                 Order::Finest => "Pikseli küçük olan üstte; eşitlerde listenin sırası.".to_owned(),
                 Order::Newest => "TIFF tarihi yeni olan üstte; tarihsizler en altta.".to_owned(),
             }),
         ));
         let input = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, value)
-                    .on_input(move |t| msg(on(t)))
-                    .padding([5, 8])
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, value).on_input(move |t| msg(on(t)))
         };
-        let pixel = Segmented::new([Pixel::Highest, Pixel::Lowest, Pixel::Average], s.pixel, |p| msg(Event::Pixel(p)));
+        let pixel = Segmented::new(
+            [Pixel::Highest, Pixel::Lowest, Pixel::Average],
+            s.pixel,
+            |p| msg(Event::Pixel(p)),
+        );
         body = body.push(
             row![
-                container(words::field("Mozaiğin pikseli", pixel, None)).width(Length::FillPortion(3)),
-                container(words::field("Piksel boyu", input("Dosyalardan", &s.size, Event::Size), None))
-                    .width(Length::FillPortion(1)),
-                container(words::field("Nodata", input("Dosyalardan", &s.nodata, Event::Nodata), None))
-                    .width(Length::FillPortion(1)),
+                container(words::field("Mozaiğin pikseli", pixel, None))
+                    .width(Length::FillPortion(3)),
+                container(words::field(
+                    "Piksel boyu",
+                    input("Dosyalardan", &s.size, Event::Size),
+                    None
+                ))
+                .width(Length::FillPortion(1)),
+                container(words::field(
+                    "Nodata",
+                    input("Dosyalardan", &s.nodata, Event::Nodata),
+                    None
+                ))
+                .width(Length::FillPortion(1)),
             ]
             .spacing(16),
         );
@@ -575,7 +648,14 @@ impl App {
         } else {
             label::muted("Yalnız dosya yazılır.").into()
         };
-        body = body.push(row![container(add).width(Length::FillPortion(1)), container(layer).width(Length::FillPortion(1))].spacing(16).align_y(iced::Center));
+        body = body.push(
+            row![
+                container(add).width(Length::FillPortion(1)),
+                container(layer).width(Length::FillPortion(1))
+            ]
+            .spacing(16)
+            .align_y(iced::Center),
+        );
         // What the plan says.
         let mut lines = Vec::new();
         match &s.planned {
@@ -614,7 +694,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
                 .action(words::primary("Oluştur", can.then(|| msg(Event::Run))))
                 .width(720.0)
-                .max_height(800.0),
+                .max_height(800.0)
+                .on_close(Some(msg(Event::Close))),
         )
     }
 }
@@ -625,7 +706,9 @@ mod tests {
     use crate::files_testing::{app_with_drawing, drive};
 
     fn fixture(name: &str) -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/raster/v1/mosaic").join(name)
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/raster/v1/mosaic")
+            .join(name)
     }
 
     fn send(app: &mut App, e: Event) {
@@ -684,7 +767,10 @@ mod tests {
         assert!(vrt.is_file(), "the VRT is written, its extension given");
         let added = rasters(&app);
         assert_eq!(added.len(), 1);
-        assert_eq!(added[0].raster.file.as_deref(), Some(vrt.display().to_string().as_str()));
+        assert_eq!(
+            added[0].raster.file.as_deref(),
+            Some(vrt.display().to_string().as_str())
+        );
         assert!(app.document.as_ref().unwrap().model.can_undo());
         // One step takes back the layer and the raster; the file stays.
         app.document.as_mut().unwrap().model.undo();

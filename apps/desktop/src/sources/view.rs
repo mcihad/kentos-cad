@@ -9,7 +9,7 @@
 
 use std::path::{Path, PathBuf};
 
-use iced::widget::{button, column, container, mouse_area, row, space, text, text_input, tooltip};
+use iced::widget::{button, column, container, mouse_area, row, space, text, tooltip};
 use iced::{Center, Element, Fill, Length, Theme};
 use kentos_commands::{LayerNode, LayerNodeType, ProjectStorage, ProjectSummary, SourceTable};
 use kentos_interaction::sources::{
@@ -28,8 +28,8 @@ use super::{
     ProjectDrawing, RECENT, Read, SAVED, SERVICES, SavedService, connection_key, folder_key,
     folder_name, list_key, msg, project_key, service_key, table_key, tables_key,
 };
-use crate::db_connections::{Event as Db, Then, msg as db};
 use crate::app::{App, Message};
+use crate::db_connections::{Event as Db, Then, msg as db};
 use crate::icons::from_web;
 use crate::module_surfaces::SourceSection;
 
@@ -990,7 +990,7 @@ impl App {
                 .align_y(Center),
             )
             .on_press(msg(Event::AddFolder))
-            .padding([4, 8])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::ghost),
             Tip::new("Klasör ekle").body(
                 "Bilgisayarınızdaki bir klasörü listeye ekler; içindeki GeoJSON, Shapefile, DXF, NCZ, GPX, NMEA ve koordinat listesi dosyaları katman olarak eklenebilir.",
@@ -1000,7 +1000,7 @@ impl App {
         let database = tip(
             button(icon(from_web(Some("sourceDatabase"))).size(16.0))
                 .on_press(db(Db::New(Then::Browse)))
-                .padding([4, 6])
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .style(style::button::ghost),
             Tip::new("Bağlantı ekle").body(
                 "Bir PostgreSQL/PostGIS veritabanı bağlantısı tanımlar: sunucu, veritabanı, kullanıcı ve parola. Tabloları Veritabanları altında listelenir, çift tıkla bağlı katman olur.",
@@ -1010,18 +1010,19 @@ impl App {
         let service = tip(
             button(icon(from_web(Some("serviceAdd"))).size(16.0))
                 .on_press(Message::Run("service.add"))
-                .padding([4, 6])
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .style(style::button::ghost),
             Tip::new("Servis ekle").body(
                 "Harita servisi penceresini açar; eklenen servis Servisler'in Kayıtlı servisler'inde kalır.",
             ),
             tooltip::Position::Bottom,
         );
-        let search = text_input("Kaynaklarda ara: ad, tür, EPSG, şema", &self.sources.search)
-            .on_input(|t| msg(Event::Search(t)))
-            .size(typography::body())
-            .padding([4, 8])
-            .width(Fill);
+        let search = kentos_ui::widget::text_field(
+            "Kaynaklarda ara: ad, tür, EPSG, şema",
+            &self.sources.search,
+        )
+        .on_input(|t| msg(Event::Search(t)))
+        .width(Fill);
         // Bağlantı ekle and Servis ekle with their sections (module_surfaces.rs).
         let database = self
             .shows_source_section(SourceSection::Databases)
@@ -1121,7 +1122,11 @@ impl App {
                     body.push_str(f);
                 }
                 body.push_str("\nAçınca şemaları ve tabloları listelenir; sağ tıkla düzenleyin.");
-                let face = tip(face, Tip::new(c.name.clone()).body(body), tooltip::Position::Left);
+                let face = tip(
+                    face,
+                    Tip::new(c.name.clone()).body(body),
+                    tooltip::Position::Left,
+                );
                 let name = c.name.clone();
                 ContextMenu::new(face, move |_| connection_menu(&name)).into()
             }
@@ -1655,7 +1660,7 @@ impl App {
             Some(_) => tip(
                 button(icon(from_web(Some("zoomSelection"))).size(15.0))
                     .on_press(add.clone())
-                    .padding([2, 4])
+                    .padding(kentos_ui::theme::metrics::icon_small(15.0))
                     .style(style::button::ghost),
                 Tip::new("Katmana git")
                     .body("Tablo bu çizimde bağlı; katmanını Katmanlar'da seçer ve gösterir."),
@@ -1664,7 +1669,7 @@ impl App {
             None => tip(
                 button(icon(from_web(Some("layerAdd"))).size(15.0))
                     .on_press(add.clone())
-                    .padding([2, 4])
+                    .padding(kentos_ui::theme::metrics::icon_small(15.0))
                     .style(style::button::ghost),
                 Tip::new("Bağlı katman olarak aç"),
                 tooltip::Position::Left,
@@ -1690,11 +1695,11 @@ impl App {
                     "table"
                 })))
                 .size(15.0),
-text(t.name.clone())
-                .font(typography::ui())
-                .size(typography::body())
-                .width(Fill)
-                .wrapping(text::Wrapping::None),
+                text(t.name.clone())
+                    .font(typography::ui())
+                    .size(typography::body())
+                    .width(Fill)
+                    .wrapping(text::Wrapping::None),
                 words,
                 action,
             ],
@@ -1858,7 +1863,11 @@ impl App {
         // Short beside the name, as QGIS's Browser keeps its rows: the whole of it in the tip.
         let short = if faint {
             "bağlanamaz".to_owned()
-        } else if matches!(r.kind, kentos_postgis::probe::RelationKind::View | kentos_postgis::probe::RelationKind::MaterializedView) {
+        } else if matches!(
+            r.kind,
+            kentos_postgis::probe::RelationKind::View
+                | kentos_postgis::probe::RelationKind::MaterializedView
+        ) {
             "view".to_owned()
         } else {
             r.estimate
@@ -1890,8 +1899,16 @@ impl App {
             None => body.push_str("\nÇift tık ya da Katman olarak ekle: bağlı katman olarak açılır; değişiklikler Kaynağa yaz ile veritabanına yazılır."),
         }
         let row = mouse_area(self.row_button(face, msg(Event::Focus(key.to_owned())), chosen));
-        let row = if faint { row } else { row.on_double_click(add.clone()) };
-        let face = tip(row, Tip::new(r.name.clone()).body(body), tooltip::Position::Left);
+        let row = if faint {
+            row
+        } else {
+            row.on_double_click(add.clone())
+        };
+        let face = tip(
+            row,
+            Tip::new(r.name.clone()).body(body),
+            tooltip::Position::Left,
+        );
         if faint {
             return face;
         }
@@ -1962,7 +1979,7 @@ fn add_button<'a>(on: Message) -> Element<'a, Message> {
     tip(
         button(icon(from_web(Some("layerAdd"))).size(15.0))
             .on_press(on)
-            .padding([2, 4])
+            .padding(kentos_ui::theme::metrics::icon_small(15.0))
             .style(style::button::ghost),
         Tip::new("Katman olarak ekle"),
         tooltip::Position::Left,

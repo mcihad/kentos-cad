@@ -14,7 +14,7 @@
 //! The window edits a copy of the relations; Kaydet writes what changed through
 //! `cad.relations.edit` (removes, updates, creates, in that order) and closes the window.
 
-use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, LayerNodeType, ProjectRelation, RelateOp, RelationDelete, RelationState,
@@ -25,7 +25,7 @@ use kentos_native_application::sources::relate;
 use kentos_native_application::{ExecutionContext, relations_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -410,10 +410,10 @@ impl App {
             .align_y(Center),
         ]
         .spacing(14);
-        overlay::modal(
-            Frame::new(TITLE).push(body).width(720.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .width(720.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn relation_editor<'a>(
@@ -443,14 +443,11 @@ impl App {
             msg(Event::Policy(POLICIES[i].0))
         });
         let explain = at.map_or("", |i| POLICIES[i].2);
-        let name = text_input("İlişkinin adı", &r.name)
-            .size(typography::body())
-            .on_input(|t| msg(Event::Name(t)))
-            .padding([5, 8])
-            .style(style::field::input);
+        let name = kentos_ui::widget::text_field("İlişkinin adı", &r.name)
+            .on_input(|t| msg(Event::Name(t)));
         let mut col = Column::new()
             .spacing(10)
-            .push(words::field("Ad", focus_ring(name), None))
+            .push(words::field("Ad", name, None))
             .push(words::field(
                 "Üst katman",
                 pick(&r.parent, Event::Parent),

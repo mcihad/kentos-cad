@@ -12,14 +12,14 @@
 
 use std::path::PathBuf;
 
-use iced::widget::{Column, container, row, scrollable, text_input};
+use iced::widget::{Column, container, row, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_commands::{AtlasExported, CommandResult, CommandWarning, ExportAtlas};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
 use kentos_plot::atlas::{AtlasInput, AtlasPlanned};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog, focus_ring, overlay};
+use kentos_ui::widget::{Dialog, overlay};
 use kentos_ui::{label, style};
 
 use super::words::{self, Kind as Line};
@@ -429,7 +429,11 @@ impl App {
                     return Task::none();
                 };
                 let input = ExportAtlas {
-                    drawing:self.document.as_ref().and_then(|d|d.path.as_ref()).map(|p|p.to_string_lossy().into_owned()),
+                    drawing: self
+                        .document
+                        .as_ref()
+                        .and_then(|d| d.path.as_ref())
+                        .map(|p| p.to_string_lossy().into_owned()),
                     path: path.display().to_string(),
                     sheet: row.id.clone(),
                     // The save dialog asked about writing over it.
@@ -554,14 +558,9 @@ impl App {
     pub(super) fn atlas_export_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
         let format = self.number_format();
         let input = |hint: &str, value: &str, on: fn(String) -> Event| {
-            focus_ring(
-                text_input(hint, value)
-                    .on_input(move |t| event(on(t)))
-                    .padding([5, 8])
-                    .width(Fill)
-                    .size(kentos_ui::theme::typography::body())
-                    .style(style::field::input),
-            )
+            kentos_ui::widget::text_field(hint, value)
+                .on_input(move |t| event(on(t)))
+                .width(Fill)
         };
         let mut body = Column::new().spacing(12);
         let mut preview = Column::new().spacing(12);
@@ -607,8 +606,11 @@ impl App {
             .as_ref()
             .and_then(|d| kentos_project::systems::own(d.settings()))
             .map_or_else(|| "yok".to_owned(), |n| n.name);
-        let systems = std::iter::once(Choice::new(format!("Projenin sistemi ({own})")))
-            .chain(s.systems.iter().map(|(code, name)| Choice::new(format!("{name} (EPSG:{code})"))));
+        let systems = std::iter::once(Choice::new(format!("Projenin sistemi ({own})"))).chain(
+            s.systems
+                .iter()
+                .map(|(code, name)| Choice::new(format!("{name} (EPSG:{code})"))),
+        );
         body = body.push(words::field(
             "Koordinat sistemi",
             Select::new(systems, Some(s.crs), |i| event(Event::Crs(i))),
@@ -744,7 +746,12 @@ impl App {
                     && let Some(doc) = &self.document
                 {
                     let layer = p.layer();
-                    for l in doc.settings().sources.iter().filter(|l| l.extent.is_some() && l.layer != layer) {
+                    for l in doc
+                        .settings()
+                        .sources
+                        .iter()
+                        .filter(|l| l.extent.is_some() && l.layer != layer)
+                    {
                         let name = doc
                             .model
                             .layers()
@@ -762,7 +769,10 @@ impl App {
                     lines.push(words::text_line(
                         Line::Info,
                         match r.pages {
-                            None => format!("Kaynaktan okundu: “{}” tablosundan {} satır.", r.table, r.rows),
+                            None => format!(
+                                "Kaynaktan okundu: “{}” tablosundan {} satır.",
+                                r.table, r.rows
+                            ),
                             Some(n) => format!(
                                 "Kaynaktan okunacak: “{}” tablosu her sayfada, {} sayfa.",
                                 r.table, n
@@ -858,7 +868,8 @@ impl App {
                     ready.then(|| event(Event::Save)),
                 ))
                 .width(1040.0)
-                .max_height(760.0),
+                .max_height(760.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

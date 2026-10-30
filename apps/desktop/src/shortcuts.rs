@@ -4,11 +4,11 @@
 //! its icon and command line names; a search over all of it. The keys are
 //! the catalog's, as the web binds them.
 
-use iced::widget::{Column, Row, column, container, row, text_input};
+use iced::widget::{Column, Row, column, container, row};
 use iced::{Center, Element, Fill, Task, Theme};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog, overlay};
+use kentos_ui::widget::Dialog;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
@@ -181,7 +181,7 @@ pub(crate) fn listed(app: &App, query: &str) -> Vec<&'static str> {
 
 /// A key as a cap.
 fn kbd<'a>(key: String) -> Element<'a, Message> {
-    container(label::mono_caption(key))
+    container(label::caption(key))
         .padding([1, 6])
         .style(|theme: &Theme| {
             let t = Tokens::of(theme);
@@ -320,15 +320,11 @@ impl App {
         } else {
             row![left.width(Fill), right.width(Fill)].spacing(28).into()
         };
-        let search = text_input("Komut ya da tuş ara", &self.shortcuts_query)
+        let search = kentos_ui::widget::text_field("Komut ya da tuş ara", &self.shortcuts_query)
             .id(SEARCH)
-            .on_input(Message::ShortcutsSearch)
-            .size(typography::body())
-            .padding([5, 8])
-            .style(style::field::input);
-        let search = kentos_ui::widget::focus_ring(search);
-        overlay::modal(
-            Dialog::new("Fare ve klavye kısayolları")
+            .on_input(Message::ShortcutsSearch);
+        let search = search;
+        Dialog::new("Fare ve klavye kısayolları")
                 .hint("F1")
                 .push(label::muted(
                     "Harf kısayolları klavyenizdeki harfe göre çalışır; Türkçe Q ve F düzeninde de aynı harfe basın. Komutları takma adıyla komut satırına yazıp Enter’a da basabilirsiniz.",
@@ -341,13 +337,13 @@ impl App {
                 }))
                 .action(
                     iced::widget::button(iced::widget::text("Kapat"))
+.padding(kentos_ui::theme::metrics::action())
                         .on_press(Message::DialogClosed)
                         .style(style::button::secondary),
                 )
                 .width(880.0)
-                .max_height(760.0),
-            Message::DialogClosed,
-        )
+                .max_height(760.0)
+.modal(Message::DialogClosed)
     }
 }
 

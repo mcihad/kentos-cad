@@ -7,7 +7,7 @@
 
 use std::fmt;
 
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, Entity, FieldEdit, FieldFormat, FieldSource, FieldUnit, FieldsEdit, NumberPlace,
@@ -19,7 +19,7 @@ use kentos_native_application::{ExecutionContext, fields_edit, texts_check, text
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{self, Table};
-use kentos_ui::widget::{Dialog as Frame, Segmented, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -591,13 +591,9 @@ impl App {
         };
         let input =
             |placeholder: &'static str, value: &str, on: fn(String) -> Event, width: f32| {
-                focus_ring(
-                    text_input(placeholder, value)
-                        .on_input(move |t| msg(on(t)))
-                        .padding([5, 8])
-                        .width(width)
-                        .style(style::field::input),
-                )
+                kentos_ui::widget::text_field(placeholder, value)
+                    .on_input(move |t| msg(on(t)))
+                    .width(width)
             };
         let doc = self.document.as_ref();
         let words_of = doc.and_then(|d| match d.model.get(w.text) {
@@ -651,7 +647,7 @@ impl App {
                     .align_y(Center),
             )
             .on_press(msg(Event::Pick))
-            .padding([5, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary);
             first = first.push(words::field(
                 "Nesne",
@@ -735,17 +731,15 @@ impl App {
             Err(why) => vec![words::text_line(Kind::Warn, why)],
         };
         body = body.push(words::summary(preview));
-        overlay::modal(
-            Frame::new(FIELD_TITLE)
-                .push(body)
-                .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
-                .action(words::primary(
-                    "Ekle",
-                    w.input(self).is_ok().then(|| msg(Event::Insert)),
-                ))
-                .width(640.0),
-            msg(Event::Close),
-        )
+        Frame::new(FIELD_TITLE)
+            .push(body)
+            .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
+            .action(words::primary(
+                "Ekle",
+                w.input(self).is_ok().then(|| msg(Event::Insert)),
+            ))
+            .width(640.0)
+            .modal(msg(Event::Close))
     }
 
     pub(crate) fn text_number_view(&self) -> Element<'_, Message> {
@@ -754,13 +748,9 @@ impl App {
         };
         let input =
             |placeholder: &'static str, value: &str, on: fn(String) -> Event, width: f32| {
-                focus_ring(
-                    text_input(placeholder, value)
-                        .on_input(move |t| msg(on(t)))
-                        .padding([5, 8])
-                        .width(width)
-                        .style(style::field::input),
-                )
+                kentos_ui::widget::text_field(placeholder, value)
+                    .on_input(move |t| msg(on(t)))
+                    .width(width)
             };
         let mut lines = vec![words::text_line(
             Kind::Info,
@@ -838,17 +828,15 @@ impl App {
                 .spacing(18)
                 .align_y(iced::Bottom),
             );
-        overlay::modal(
-            Frame::new(NUMBER_TITLE)
-                .push(body)
-                .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
-                .action(words::primary(
-                    "Numarala",
-                    self.number_input().is_ok().then(|| msg(Event::Number)),
-                ))
-                .width(560.0),
-            msg(Event::Close),
-        )
+        Frame::new(NUMBER_TITLE)
+            .push(body)
+            .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
+            .action(words::primary(
+                "Numarala",
+                self.number_input().is_ok().then(|| msg(Event::Number)),
+            ))
+            .width(560.0)
+            .modal(msg(Event::Close))
     }
 
     pub(crate) fn text_check_view(&self) -> Element<'_, Message> {
@@ -915,17 +903,15 @@ impl App {
         )
         .style(style::container::field_box)
         .width(Fill);
-        overlay::modal(
-            Frame::new(CHECK_TITLE)
-                .push(
-                    Column::new()
-                        .spacing(12)
-                        .push(words::summary(vec![words::text_line(Kind::Info, summary)]))
-                        .push(list),
-                )
-                .action(words::primary("Kapat", Some(msg(Event::Close))))
-                .width(720.0),
-            msg(Event::Close),
-        )
+        Frame::new(CHECK_TITLE)
+            .push(
+                Column::new()
+                    .spacing(12)
+                    .push(words::summary(vec![words::text_line(Kind::Info, summary)]))
+                    .push(list),
+            )
+            .action(words::primary("Kapat", Some(msg(Event::Close))))
+            .width(720.0)
+            .modal(msg(Event::Close))
     }
 }

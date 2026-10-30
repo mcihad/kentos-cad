@@ -234,7 +234,6 @@ impl App {
         )
         .id(LAYER_SEARCH)
         .fill()
-        .height(28.0)
         .on_down(Message::LayerSearchDown);
         let p = self.layer_props;
         let on = p.any();

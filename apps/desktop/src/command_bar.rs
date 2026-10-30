@@ -229,7 +229,7 @@ impl App {
 
 /// A key as the keyboard shows it: `S`, `Enter`, `Sağ tık`.
 fn key(name: &str) -> Element<'_, Message> {
-    container(label::mono_caption(name))
+    container(label::caption(name))
         .padding([0, 4])
         .style(style::container::keycap)
         .into()

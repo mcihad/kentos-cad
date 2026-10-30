@@ -112,14 +112,14 @@ impl App {
                     // The header's meta: “#12”, “3 nesne” (the web's panel meta).
                     // “4 araç”, “3 kayıt” (the web's panel meta); the tab scrolls its own lists.
                     (Panel::Processing, Some(_)) => {
-                        pane.actions(label::caption(self.processing_meta()))
+                        pane.meta(label::caption(self.processing_meta()))
                     }
                     (Panel::Blocks, Some(_)) => pane.actions(self.blocks_panel_actions()),
                     (Panel::Templates, _) => pane.actions(self.templates_panel_actions()),
                     // Kaynaklar's list scrolls itself (sources/view.rs).
                     (Panel::Sources, _) => pane,
                     (Panel::Properties, Some(doc)) => match self.properties_meta(doc) {
-                        Some(meta) => pane.actions(label::caption(meta)),
+                        Some(meta) => pane.meta(label::caption(meta)),
                         None => pane,
                     },
                     _ => pane.scrollable(),
@@ -927,7 +927,9 @@ impl App {
         let over = preview::layer(
             &camera,
             marks,
-            self.session.preview(&format).or_else(|| self.arch_audit_preview()),
+            self.session
+                .preview(&format)
+                .or_else(|| self.arch_audit_preview()),
             None,
             None,
             doc.model
@@ -1516,12 +1518,13 @@ impl App {
                         .shaping(iced::widget::text::Shaping::Advanced)
                         .wrapping(iced::widget::text::Wrapping::None),
                 )
-                    .width(
-                        (typography::measured_width("Yardımcılar", typography::body(), false) + 2.)
-                            * 12. / typography::body(),
-                    )
-                    .icon(Icon::More)
-                    .menu(move || self.compact_aids_menu()),
+                .width(
+                    (typography::measured_width("Yardımcılar", typography::body(), false) + 2.)
+                        * 12.
+                        / typography::body(),
+                )
+                .icon(Icon::More)
+                .menu(move || self.compact_aids_menu()),
             );
         } else {
             // The program's own lamps: Topoloji and Çakışma are a map's (module_surfaces.rs).
@@ -1557,9 +1560,9 @@ impl App {
                             thousands(self.viewport.camera.screen_scale())
                         )))
                         .icon(crate::icons::from_web(Some("plotScale")))
-                        .tip(Tip::new("Ölçek").body(
-                            "Görünümün ölçeği. Listeden seçin ya da yazın.",
-                        ))
+                        .tip(
+                            Tip::new("Ölçek").body("Görünümün ölçeği. Listeden seçin ya da yazın."),
+                        )
                         .menu(move || crate::screen_scale::scale_menu(&scales))
                         .into()
                     }
@@ -1851,6 +1854,7 @@ impl App {
     pub(crate) fn dialog_view(&self, dialog: Asking) -> Element<'_, Message> {
         let close = || {
             button(text("Kapat"))
+                .padding(kentos_ui::theme::metrics::action())
                 .on_press(Message::DialogClosed)
                 .style(style::button::secondary)
         };
@@ -1877,8 +1881,7 @@ impl App {
                     .iter()
                     .filter(|c| self.offers(c.id))
                     .collect();
-                overlay::modal(
-                    Dialog::new(self.program_title())
+                Dialog::new(self.program_title())
                         .push(label::body(about))
                         .push(rows)
                         .push(label::caption(format!(
@@ -1887,9 +1890,8 @@ impl App {
                             commands.len()
                         )))
                         .action(close())
-                        .width(440.0),
-                    Message::DialogClosed,
-                )
+                        .width(440.0)
+.modal(Message::DialogClosed)
             }
             // The web's “Fare ve klavye kısayolları” (shortcuts.rs).
             Asking::Shortcuts => self.shortcuts_view(),
@@ -2376,7 +2378,7 @@ fn fullscreen_view(on: bool) -> Element<'static, Message> {
     kentos_ui::widget::tip(
         button(kentos_ui::icon::icon(crate::icons::from_web(Some(glyph))).size(14.0))
             .on_press(Message::Run("view.fullscreen"))
-            .padding([4, 5])
+            .padding(kentos_ui::theme::metrics::icon_small(14.0))
             .style(style::button::flat),
         if on { about.detail("Esc") } else { about },
         iced::widget::tooltip::Position::Bottom,

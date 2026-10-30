@@ -12,7 +12,7 @@
 use std::collections::HashMap;
 
 use iced::widget::canvas::{self, Frame, Path, Stroke};
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Center, Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
     DimensionArrow, DimensionStyleDef, DimensionTextPlace, DrawingFont, DrawingUnit,
@@ -20,7 +20,7 @@ use kentos_commands::{
 };
 use kentos_interaction::{Format, Level, style_tables};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Choice, Confirm, Dialog as Frame_, Elided, Select, focus_ring, overlay};
+use kentos_ui::widget::{Choice, Confirm, Dialog as Frame_, Elided, Select, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -872,20 +872,18 @@ impl App {
         }
         let body = body.push(row![side, main].spacing(16));
         let can_save = problem.is_none() && self.styles_changed();
-        let window = overlay::modal(
-            Frame_::new(title)
-                .push(body)
-                // A file's styles are taken into the saved table: not over a draft not saved yet.
-                .action(words::secondary(EXPORT, Some(msg(Event::Export))))
-                .action(words::secondary(
-                    IMPORT,
-                    (!self.styles_changed()).then(|| msg(Event::Import)),
-                ))
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
-                .width(760.0),
-            msg(Event::Cancel),
-        );
+        let window = Frame_::new(title)
+            .push(body)
+            // A file's styles are taken into the saved table: not over a draft not saved yet.
+            .action(words::secondary(EXPORT, Some(msg(Event::Export))))
+            .action(words::secondary(
+                IMPORT,
+                (!self.styles_changed()).then(|| msg(Event::Import)),
+            ))
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
+            .width(760.0)
+            .modal(msg(Event::Cancel));
         let Some(id) = &w.asking else {
             return window;
         };
@@ -920,18 +918,15 @@ impl App {
     ) -> Element<'a, Message> {
         let typed = w.typed.get(key).cloned().unwrap_or_default();
         let wrong = number(&typed).is_err();
-        let input = text_input("", &typed)
+        let input = kentos_ui::widget::text_field("", &typed)
             .on_input(move |t| msg(Event::Number(key, t)))
-            .padding([5, 8])
             .style(style::field::validated(wrong));
-        words::field(label, focus_ring(input), Some(hint.to_owned()))
+        words::field(label, input, Some(hint.to_owned()))
     }
 
     fn text_style_form<'a>(&'a self, w: &'a Window, s: &'a TextStyleDef) -> Element<'a, Message> {
-        let name = text_input("Stilin adı", &s.name)
-            .on_input(|t| msg(Event::Name(t)))
-            .padding([5, 8])
-            .style(style::field::input);
+        let name =
+            kentos_ui::widget::text_field("Stilin adı", &s.name).on_input(|t| msg(Event::Name(t)));
         let font = Select::new(
             DrawingFont::ALL.iter().map(|f| Choice::new(f.label())),
             DrawingFont::ALL.iter().position(|f| *f == s.font),
@@ -943,7 +938,7 @@ impl App {
         });
         let mut form = Column::new()
             .spacing(10)
-            .push(words::field(NAME, focus_ring(name), None))
+            .push(words::field(NAME, name, None))
             .push(
                 // Each with its label above, as the web's (Kalınlık, Biçim).
                 row![
@@ -985,10 +980,8 @@ impl App {
         s: &'a DimensionStyleDef,
         project: DrawingFont,
     ) -> Element<'a, Message> {
-        let name = text_input("Stilin adı", &s.name)
-            .on_input(|t| msg(Event::Name(t)))
-            .padding([5, 8])
-            .style(style::field::input);
+        let name =
+            kentos_ui::widget::text_field("Stilin adı", &s.name).on_input(|t| msg(Event::Name(t)));
         let arrows = Select::new(
             ARROW_CHOICES.iter().map(|(_, l)| Choice::new(*l)),
             ARROW_CHOICES.iter().position(|(a, _)| *a == s.arrow),
@@ -1027,22 +1020,15 @@ impl App {
         )
         .searchable(false);
         let affix = |label: &'static str, value: &'a Option<String>, on: fn(String) -> Event| {
-            let input = text_input("", value.as_deref().unwrap_or_default())
-                .on_input(move |t| msg(on(t)))
-                .padding([5, 8])
-                .style(style::field::input);
-            container(words::field(
-                label,
-                focus_ring(input),
-                Some("Boş: yok".to_owned()),
-            ))
-            .width(Fill)
+            let input = kentos_ui::widget::text_field("", value.as_deref().unwrap_or_default())
+                .on_input(move |t| msg(on(t)));
+            container(words::field(label, input, Some("Boş: yok".to_owned()))).width(Fill)
         };
         let n = |i: usize| container(self.number_field(w, DIMENSION_NUMBERS[i])).width(Fill);
         // The rows' labels on one line and their fields on the next, hints or not.
         Column::new()
             .spacing(10)
-            .push(words::field(NAME, focus_ring(name), None))
+            .push(words::field(NAME, name, None))
             .push(
                 row![
                     n(0),

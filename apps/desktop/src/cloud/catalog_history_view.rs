@@ -8,7 +8,7 @@
 //! a new project, and the question before a checkpoint goes.
 
 use iced::widget::text::Wrapping;
-use iced::widget::{Column, Row, column, container, row, text_editor, text_input};
+use iced::widget::{Column, Row, column, container, row, text_editor};
 use iced::{Background, Border, Center, Element, Fill, Length, Theme};
 use kentos_commands::{Checkpoint, FileRevision, ProjectState, ProjectStorage, ProjectSummary};
 use kentos_ui::icon::Icon;
@@ -335,14 +335,11 @@ impl App {
                         p.name
                     )
                 };
-                let name = text_input("Örn. Belediyeye teslim", &f.name)
+                let name = kentos_ui::widget::text_field("Örn. Belediyeye teslim", &f.name)
                     .id(iced::widget::Id::new(FORM_NAME))
                     .on_input_maybe((!f.busy).then_some(|t| cloud(Event::HistoryName(t))))
-                    .on_submit(cloud(Event::HistorySubmit))
-                    .size(typography::body())
-                    .padding([5, 8])
-                    .style(style::field::input);
-                let name = kentos_ui::widget::focus_ring(name);
+                    .on_submit(cloud(Event::HistorySubmit));
+                let name = name;
                 let note = text_editor(&f.note)
                     .placeholder("İsteğe bağlı: neden, kime, hangi aşama")
                     .on_action(|a| cloud(Event::HistoryNote(a)))
@@ -421,14 +418,11 @@ impl App {
                 .map(|b| format!("• {b}"))
                 .join("\n");
                 let placeholder = format!("{} ({label_of})", p.name);
-                let name = text_input(&placeholder, &f.name)
+                let name = kentos_ui::widget::text_field(&placeholder, &f.name)
                     .id(iced::widget::Id::new(FORM_NAME))
                     .on_input_maybe((!f.busy).then_some(|t| cloud(Event::HistoryName(t))))
-                    .on_submit(cloud(Event::HistorySubmit))
-                    .size(typography::body())
-                    .padding([5, 8])
-                    .style(style::field::input);
-                let name = kentos_ui::widget::focus_ring(name);
+                    .on_submit(cloud(Event::HistorySubmit));
+                let name = name;
                 let place: Element<'_, Message> = if f.places.len() < 2 {
                     container(
                         label::body(
@@ -488,7 +482,7 @@ impl App {
                     .width(540.0)
             }
         };
-        Some(overlay::modal(window, cloud(Event::HistoryFormClose)))
+        Some(window.modal(cloud(Event::HistoryFormClose)))
     }
 }
 

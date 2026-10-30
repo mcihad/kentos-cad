@@ -7,7 +7,7 @@
 
 use std::fmt;
 
-use iced::widget::{Column, Row, button, column, container, row, text_input};
+use iced::widget::{Column, Row, button, column, container, row};
 use iced::{Alignment, Center, Element, Fill, Length};
 use kentos_interaction::Format;
 use kentos_processing::expression::{FUNCTIONS, VARIABLES};
@@ -21,7 +21,7 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Menu, MenuButton, Segmented, Switch, Tip, focus_ring, tip};
+use kentos_ui::widget::{Menu, MenuButton, Segmented, Switch, Tip, tip};
 use serde_json::{Value, json};
 
 use super::Event;
@@ -154,10 +154,7 @@ fn input<'a>(
     invalid: bool,
     ev: fn(Event) -> Message,
 ) -> iced::widget::TextInput<'a, Message> {
-    text_input(placeholder, value)
-        .padding([5, 8])
-        .font(typography::ui())
-        .size(typography::body())
+    kentos_ui::widget::text_field(placeholder, value)
         .style(style::field::validated(invalid))
         .on_submit(ev(Event::Run))
 }
@@ -319,7 +316,7 @@ fn number<'a>(
         .font(typography::mono())
         .align_x(Alignment::End)
         .width(Length::Fixed(typography::scaled(120.0)));
-    let mut line = row![focus_ring(field)].spacing(8).align_y(Center);
+    let mut line = row![field].spacing(8).align_y(Center);
     if !unit.is_empty() {
         line = line.push(label::caption(unit).style(style::text::muted));
     }
@@ -340,14 +337,12 @@ fn text<'a>(
         .on_input(move |t| ev(Event::Text(name.clone(), t)));
     // A one or two letter field is short and centred (the web's `pfield__text--short`).
     if max_length.is_some_and(|m| m <= 2) {
-        focus_ring(
-            field
-                .align_x(Alignment::Center)
-                .width(Length::Fixed(typography::scaled(64.0))),
-        )
-        .into()
+        field
+            .align_x(Alignment::Center)
+            .width(Length::Fixed(typography::scaled(64.0)))
+            .into()
     } else {
-        focus_ring(field.width(Fill)).into()
+        field.width(Fill).into()
     }
 }
 
@@ -470,10 +465,7 @@ fn layer<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
     let field = input("Yeni katmanın adı", &new_name, false, ev)
         .on_input(move |t| ev(Event::LayerName(name.clone(), t)))
         .width(Fill);
-    column![list, focus_ring(field)]
-        .spacing(8)
-        .width(Fill)
-        .into()
+    column![list, field].spacing(8).width(Fill).into()
 }
 
 fn point_field<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
@@ -630,11 +622,9 @@ fn field<'a>(
     let combo: Element<'a, Message> = if allow_new {
         let name = def.name.clone();
         row![
-            focus_ring(
-                input("Alan adı", &value, invalid, ev)
-                    .on_input(move |t| ev(Event::Text(name.clone(), t)))
-                    .width(Fill)
-            ),
+            input("Alan adı", &value, invalid, ev)
+                .on_input(move |t| ev(Event::Text(name.clone(), t)))
+                .width(Fill),
             open
         ]
         .spacing(2)
@@ -690,7 +680,7 @@ fn save_file<'a>(def: &'a ParamDef, suffix: &'a str, env: &Env<'a, '_>) -> Eleme
         .spacing(6)
         .align_y(Center),
     )
-    .padding([5, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press(ev(Event::ChooseSave(def.name.clone())));
     let mut line = row![container(shown).width(Fill).clip(true)]
@@ -700,7 +690,7 @@ fn save_file<'a>(def: &'a ParamDef, suffix: &'a str, env: &Env<'a, '_>) -> Eleme
         let name = def.name.clone();
         line = line.push(
             button(label::body("×"))
-                .padding([5, 9])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::ghost)
                 .on_press(ev(Event::Value(name, json!("")))),
         );
@@ -757,7 +747,7 @@ fn file<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
         .spacing(6)
         .align_y(Center),
     )
-    .padding([5, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press(ev(Event::ChooseFile(def.name.clone())));
     let mut out = column![
@@ -876,7 +866,7 @@ fn network<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
         .spacing(6)
         .align_y(Center),
     )
-    .padding([5, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press(ev(Event::Command("network.manage")));
     if networks.is_empty() {
@@ -998,11 +988,11 @@ fn expression<'a>(
         .font(typography::mono())
         .width(Fill);
     // İfade oluşturucu on this field's text (expression/, DESIGN.md §7.16).
-    let mut line = row![focus_ring(line)].spacing(6).align_y(Center);
+    let mut line = row![line].spacing(6).align_y(Center);
     if env.builder {
         line = line.push(tip(
             button(icon(crate::icons::from_web(Some("expression"))).size(16.0))
-                .padding([4, 6])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(Message::Builder(crate::expression::Event::OpenProcessing(
                     def.name.clone(),
@@ -1023,7 +1013,7 @@ fn expression<'a>(
     for (f, count) in fields.iter().take(CHIP_FIELDS) {
         chips = chips.push(tip(
             button(label::caption(f.clone()))
-                .padding([3, 8])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary)
                 .on_press(insert(field_token(f))),
             Tip::new(format!("{count} nesnede var; ifadeye ekle")),
@@ -1125,7 +1115,7 @@ fn raster_name<'a>(name: String, listed: bool) -> Element<'a, Message> {
 fn remove_row<'a>(on_press: Message) -> Element<'a, Message> {
     tip(
         button(icon(Icon::Close).size(12.0))
-            .padding(4)
+            .padding(kentos_ui::theme::metrics::icon_small(12.0))
             .style(style::button::ghost)
             .on_press(on_press),
         Tip::new(kentos_processing::raster_rows::REMOVE)
@@ -1170,7 +1160,7 @@ fn raster_values<'a>(
         }
         let mut line = Row::new()
             .push(raster_name(r.name.clone(), r.listed))
-            .push(container(focus_ring(field.width(Fill))).width(Length::FillPortion(3)))
+            .push(container(field.width(Fill)).width(Length::FillPortion(3)))
             .spacing(6)
             .align_y(Center);
         if !r.listed {
@@ -1195,7 +1185,7 @@ fn raster_values<'a>(
         let field =
             input(ADD, &draft, false, ev).on_input(move |t| ev(Event::Draft(name.clone(), t)));
         let add = button(label::body(ADD_BUTTON))
-            .padding([5, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press_maybe((!draft.trim().is_empty()).then(|| {
                 ev(Event::Value(
@@ -1203,11 +1193,7 @@ fn raster_values<'a>(
                     with_name(&value, number, &draft),
                 ))
             }));
-        col = col.push(
-            row![focus_ring(field.width(Fill)), add]
-                .spacing(6)
-                .align_y(Center),
-        );
+        col = col.push(row![field.width(Fill), add].spacing(6).align_y(Center));
     }
     col.into()
 }
@@ -1288,11 +1274,12 @@ fn field_map<'a>(
     let mut col = Column::new().spacing(4).width(Fill);
     if !view.rows.is_empty() {
         let head = |t: &'static str, share: u16| {
-            container(label::caption(t).style(style::text::muted))
+            container(kentos_ui::widget::table::title(t))
+                .padding([0, 8])
                 .width(Length::FillPortion(share))
                 .clip(true)
         };
-        col = col.push(
+        col = col.push(kentos_ui::widget::table::band(
             row![
                 head(fm::TARGET, wide),
                 head(fm::SOURCE, mid),
@@ -1300,7 +1287,7 @@ fn field_map<'a>(
                 Row::new().width(cross)
             ]
             .spacing(6),
-        );
+        ));
     }
     for (i, r) in view.rows.iter().enumerate() {
         let warn = r.problem.is_some();
@@ -1319,10 +1306,7 @@ fn field_map<'a>(
             }
         };
         let (name, current) = (def.name.clone(), map.clone());
-        let typed = text_input(fm::TARGET, &r.target)
-            .padding([5, 8])
-            .font(typography::ui())
-            .size(typography::body())
+        let typed = kentos_ui::widget::text_field(fm::TARGET, &r.target)
             .style(framed)
             .on_input(move |t| set(&name, &fm::with_part(&current, i, Part::Target, &t)))
             .on_submit(ev(Event::Run));
@@ -1350,9 +1334,7 @@ fn field_map<'a>(
                 .style(style::container::field_box),
             menu,
         );
-        let combo = row![focus_ring(typed.width(Fill)), open]
-            .spacing(2)
-            .align_y(Center);
+        let combo = row![typed.width(Fill), open].spacing(2).align_y(Center);
         let source = js_trim_owned(&r.source);
         let at = if source.is_empty() {
             Some(0)
@@ -1380,16 +1362,13 @@ fn field_map<'a>(
             source
         });
         let (name, current) = (def.name.clone(), map.clone());
-        let fallback = text_input("", &r.default)
-            .padding([5, 8])
-            .font(typography::ui())
-            .size(typography::body())
+        let fallback = kentos_ui::widget::text_field("", &r.default)
             .style(framed)
             .on_input(move |t| set(&name, &fm::with_part(&current, i, Part::Default, &t)))
             .on_submit(ev(Event::Run));
         let remove = tip(
             button(icon(Icon::Close).size(12.0))
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(12.0))
                 .style(style::button::ghost)
                 .on_press(set(&def.name, &fm::without_row(&map, i))),
             Tip::new(fm::REMOVE),
@@ -1399,7 +1378,7 @@ fn field_map<'a>(
             row![
                 container(combo).width(Length::FillPortion(wide)),
                 container(pick).width(Length::FillPortion(mid)),
-                container(focus_ring(fallback.width(Fill))).width(Length::FillPortion(narrow)),
+                container(fallback.width(Fill)).width(Length::FillPortion(narrow)),
                 container(remove).width(cross).center_x(cross),
             ]
             .spacing(6)
@@ -1414,7 +1393,7 @@ fn field_map<'a>(
             .spacing(6)
             .align_y(Center),
     )
-    .padding([5, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press(set(&def.name, &fm::with_new_row(&map)));
     let fill = tip(
@@ -1426,7 +1405,7 @@ fn field_map<'a>(
             .spacing(6)
             .align_y(Center),
         )
-        .padding([5, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press_maybe(
             view.fills
@@ -1540,15 +1519,17 @@ fn layers_list<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message>
     .height(typography::scaled(
         (ROW * leaves.len().clamp(3, 8) as f32).min(220.0),
     ));
-    let head = row![
-        container(iced::widget::text("")).width(typography::scaled(28.0)),
-        container(label::caption("Katman").style(style::text::muted)).width(Fill),
-        container(label::caption("Nesne").style(style::text::muted))
-            .width(typography::scaled(56.0))
-            .align_x(Alignment::End),
-    ]
-    .spacing(8)
-    .padding([4, 8]);
+    let head = kentos_ui::widget::table::band(
+        row![
+            container(iced::widget::text("")).width(typography::scaled(28.0)),
+            container(kentos_ui::widget::table::title("Katman")).width(Fill),
+            container(kentos_ui::widget::table::title("Nesne"))
+                .width(typography::scaled(56.0))
+                .align_x(Alignment::End),
+        ]
+        .spacing(8)
+        .padding([0, 8]),
+    );
     let table = container(Column::new().push(head).push(list))
         .style(style::container::field_box)
         .width(Fill);

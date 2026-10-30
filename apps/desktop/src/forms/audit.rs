@@ -20,7 +20,7 @@ use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, forms_audit};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, overlay};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -279,12 +279,10 @@ impl App {
             .spacing(8)
             .align_y(Center),
         );
-        overlay::modal(
-            Frame::new(format!("{TITLE} · {}", w.name))
-                .push(body)
-                .width(760.0),
-            msg(Event::Close),
-        )
+        Frame::new(format!("{TITLE} · {}", w.name))
+            .push(body)
+            .width(760.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step).

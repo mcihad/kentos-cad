@@ -3,7 +3,7 @@
 //! click adds next to the selected box (and connects to it); a tool carried
 //! out of the list is let go on the diagram.
 
-use iced::widget::{Column, Row, button, column, container, row, text_input};
+use iced::widget::{Column, Row, button, column, container, row};
 use iced::{Center, Element, Fill, Length};
 use kentos_processing::designer::texts::palette as words;
 use kentos_processing::model_edit::INPUT_TYPES;
@@ -130,11 +130,8 @@ pub(super) fn palette<'a>(
     let search = container(
         row![
             icon(Icon::Search).size(14.0).tone(Tone::Muted),
-            text_input(words::SEARCH, &d.search)
-                .on_input(|t| ev(Event::Search(t)))
-                .padding([4, 0])
-                .size(typography::body())
-                .style(style::field::bare_input),
+            kentos_ui::widget::bare_field(words::SEARCH, &d.search)
+                .on_input(|t| ev(Event::Search(t))),
         ]
         .spacing(6)
         .align_y(Center),

@@ -18,7 +18,7 @@
 
 use std::path::PathBuf;
 
-use iced::widget::{button, column, container, row, text_input};
+use iced::widget::{button, column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::ProjectSettings;
 use kentos_geometry_core::crs::{
@@ -462,16 +462,11 @@ fn wide_field<'a>(
     placeholder: &'static str,
     on_input: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
-    let input = text_input(placeholder, value)
+    let input = kentos_ui::widget::text_field(placeholder, value)
         .on_input(on_input)
-        .padding([5, 8])
         .width(Fill)
-        .font(typography::mono())
-        .size(typography::body())
-        .style(style::field::input);
-    column![label::caption(title), kentos_ui::widget::focus_ring(input)]
-        .spacing(4)
-        .into()
+        .font(typography::mono());
+    column![label::caption(title), input].spacing(4).into()
 }
 
 /// Liste's columns by the source's fields' names.
@@ -611,7 +606,7 @@ impl Form {
         let swap = tip(
             button(icon(crate::icons::from_web(Some("reverse"))).size(16.0))
                 .on_press(message(Event::Swap))
-                .padding([6, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary),
             Tip::new("Kaynakla hedefi değiştir"),
             iced::widget::tooltip::Position::Top,
@@ -649,7 +644,7 @@ impl Form {
                     .align_y(Center),
                 )
                 .on_press_maybe(own.then(|| message(Event::Pick)))
-                .padding([5, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary);
                 let show = tip(
                     show,
@@ -774,7 +769,9 @@ impl Form {
             Mode::Point => matches!(self.point(settings, f), Some(Ok(_))),
             Mode::List => self.listed(settings, f).is_some(),
         };
-        let mut dialog = Dialog::new(TITLE).scroll(body);
+        let mut dialog = Dialog::new(TITLE)
+            .on_close(crate::calc::event(crate::calc::Event::Close))
+            .scroll(body);
         if self.mode == Mode::List {
             dialog = dialog.action(footer_button(
                 "CSV olarak kaydet",

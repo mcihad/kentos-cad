@@ -10,7 +10,7 @@
 //! dataset's raster has its Veri seti section (docs/adr/0243 §11): each
 //! slice dimension's value, Zaman sürgüsünü izle, a mesh's lines and colour.
 
-use iced::widget::{Column, Row, button, column, container, row, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, space};
 use iced::{Center, Color, Element, Fill, Length, Task};
 use kentos_commands::{
     CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry, RASTER_RAMPS,
@@ -541,14 +541,9 @@ impl App {
             msg(Event::Stretch(v.0))
         });
         let field_input = |t: Typed, placeholder: &str, width: f32| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, &s.texts[t as usize])
-                    .on_input(move |v| msg(Event::Type(t, v)))
-                    .padding([5, 8])
-                    .width(width)
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, &s.texts[t as usize])
+                .on_input(move |v| msg(Event::Type(t, v)))
+                .width(width)
         };
         let mut body = Column::new().spacing(14);
         if let Some(d) = &s.dataset {
@@ -644,7 +639,8 @@ impl App {
                     problem.is_none().then(|| msg(Event::Apply)),
                 ))
                 .width(620.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(msg(Event::Close))),
         )
     }
 
@@ -681,14 +677,9 @@ impl App {
             ));
         }
         if d.mesh.is_some() {
-            let colour = kentos_ui::widget::focus_ring(
-                text_input("#2B3440", &s.edges_text)
-                    .on_input(|v| msg(Event::EdgesColour(v)))
-                    .padding([5, 8])
-                    .width(110.0)
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            );
+            let colour = kentos_ui::widget::text_field("#2B3440", &s.edges_text)
+                .on_input(|v| msg(Event::EdgesColour(v)))
+                .width(110.0);
             part = part.push(
                 row![
                     words::check(

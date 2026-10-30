@@ -347,6 +347,14 @@ impl Launcher {
             .collect()
     }
 
+    /// The apps the search lets through, on their shelves: those that are out
+    /// (each on its plate) and those still to come.
+    pub fn shelves(&self) -> (Vec<&Manifest>, Vec<&Manifest>) {
+        self.visible()
+            .into_iter()
+            .partition(|a| self.status(a) != Status::Soon)
+    }
+
     /// The card drawn as the one to start: the one under the pointer, else the selected one.
     pub fn hot(&self) -> Option<&str> {
         self.hovered.as_deref().or(self.selected.as_deref())
@@ -746,20 +754,36 @@ impl Launcher {
     }
 
     fn move_selection(&mut self, dx: i32, dy: i32) {
-        let ids: Vec<String> = self.visible().iter().map(|a| a.id.clone()).collect();
-        if ids.is_empty() {
+        // The rows as they are drawn: the plates', then the coming apps'.
+        let columns = self.columns.get().max(1);
+        let (out, coming) = self.shelves();
+        let rows: Vec<Vec<String>> = out
+            .chunks(columns)
+            .chain(coming.chunks(columns))
+            .map(|row| row.iter().map(|a| a.id.clone()).collect())
+            .collect();
+        let Some(first) = rows.first().and_then(|row| row.first()).cloned() else {
             return;
-        }
-        let columns = self.columns.get().max(1) as i32;
-        let at = self
-            .selected
-            .as_ref()
-            .and_then(|id| ids.iter().position(|i| i == id));
-        let next = match at {
-            None => 0,
-            Some(at) => (at as i32 + dx + dy * columns).clamp(0, ids.len() as i32 - 1) as usize,
         };
-        self.selected = Some(ids[next].clone());
+        let at = self.selected.as_ref().and_then(|id| {
+            rows.iter()
+                .enumerate()
+                .find_map(|(r, row)| row.iter().position(|i| i == id).map(|c| (r, c)))
+        });
+        let next = match at {
+            None => first,
+            Some((r, c)) => {
+                // Up or down keeps the column; along goes through the rows' order.
+                let last_row = rows.len() as i32 - 1;
+                let r = (r as i32 + dy).clamp(0, last_row) as usize;
+                let c = c.min(rows[r].len() - 1);
+                let along: Vec<&String> = rows.iter().flatten().collect();
+                let before: usize = rows[..r].iter().map(Vec::len).sum();
+                let i = ((before + c) as i32 + dx).clamp(0, along.len() as i32 - 1);
+                along[i as usize].clone()
+            }
+        };
+        self.selected = Some(next);
         self.hovered = None;
     }
 }

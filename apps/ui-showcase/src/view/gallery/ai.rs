@@ -112,7 +112,7 @@ impl Showcase {
         speed = speed.push(space::horizontal()).push(
             button(text("Örneği sıfırla").size(typography::caption()))
                 .on_press(event(Event::Reset))
-                .padding([5, 9])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::flat),
         );
         let mut details = column![text("Bu sayfa örnek verilerle akış üretir. Metin akışı, soru yanıtlama, araç onayı, durdurma ve yeniden denemeyi deneyebilirsiniz.").size(typography::body()).style(style::text::muted)].spacing(6);

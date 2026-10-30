@@ -9,13 +9,13 @@ use kentos_commands::{
     Entity, ViewMarkForm, ViewMarksOperation, ViewMarksReferenced, ViewTarget, ViewsOp,
 };
 use kentos_ui::icon::icon;
-use kentos_ui::widget::{Dialog as Frame, overlay};
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
-use kentos_interaction::Level;
 use crate::traces::Control;
+use kentos_interaction::Level;
 
 /// The window's title, which a trace names it by.
 pub const TITLE: &str = "Başvurular";
@@ -60,7 +60,9 @@ fn icon_of(form: ViewMarkForm) -> &'static str {
 impl App {
     fn view_refs_read(&self) -> Option<ViewMarksReferenced> {
         let doc = self.document.as_ref()?;
-        Some(kentos_native_application::viewmarks::references_of(&doc.model))
+        Some(kentos_native_application::viewmarks::references_of(
+            &doc.model,
+        ))
     }
 
     /// Başvurular (`arch.viewRefs`): the window, the selected mark chosen.
@@ -129,7 +131,11 @@ impl App {
                 }
             }
             Event::Show(k) => {
-                let uid = self.view_refs.as_ref().and_then(|w| w.refs.marks.get(k)).map(|m| m.uid.clone());
+                let uid = self
+                    .view_refs
+                    .as_ref()
+                    .and_then(|w| w.refs.marks.get(k))
+                    .map(|m| m.uid.clone());
                 if let Some(slot) = uid.and_then(|u| self.view_refs_slot(&u)) {
                     self.zoom_to_objects(&[f64::from(slot.0)]);
                 }
@@ -138,7 +144,11 @@ impl App {
                 }
             }
             Event::Bind(t) => {
-                let target = self.view_refs.as_ref().and_then(|w| w.refs.targets.get(t)).map(|t| t.target.clone());
+                let target = self
+                    .view_refs
+                    .as_ref()
+                    .and_then(|w| w.refs.targets.get(t))
+                    .map(|t| t.target.clone());
                 if let Some(target) = target {
                     self.view_refs_edit(ViewMarksOperation::Retarget { target });
                 }
@@ -186,7 +196,14 @@ impl App {
             self.warn("Görünüm yalnız detay işaretinin sınırından oluşturulur.");
             return;
         };
-        let base = format!("Detay {}", if mark.mark.is_empty() { "?" } else { &mark.mark });
+        let base = format!(
+            "Detay {}",
+            if mark.mark.is_empty() {
+                "?"
+            } else {
+                &mark.mark
+            }
+        );
         let mut name = base.clone();
         let mut k = 2;
         while self.named_views().iter().any(|v| v.name == name) {
@@ -206,7 +223,10 @@ impl App {
         self.view_refs_edit(ViewMarksOperation::Retarget {
             target: ViewTarget::view(&kentos_commands::view_key(&view)),
         });
-        self.say(Level::Success, format!("“{name}” görünümü oluşturuldu ve detay ona bağlandı."));
+        self.say(
+            Level::Success,
+            format!("“{name}” görünümü oluşturuldu ve detay ona bağlandı."),
+        );
     }
 
     pub(crate) fn view_refs_view(&self) -> Element<'_, Message> {
@@ -223,13 +243,17 @@ impl App {
                     w.refs.targets.len()
                 )
             } else {
-                format!("{} işaret, {} hedef.", w.refs.marks.len(), w.refs.targets.len())
+                format!(
+                    "{} işaret, {} hedef.",
+                    w.refs.marks.len(),
+                    w.refs.targets.len()
+                )
             },
         )]);
         let small = |text: &'static str, on: Option<Message>| {
             button(label::body(text))
                 .on_press_maybe(on)
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
         };
         let mut marks = Column::new().spacing(6).push(label::strong("İşaretler"));
@@ -243,22 +267,40 @@ impl App {
                 .iter()
                 .find(|t| Some(&t.target) == m.target.as_ref())
                 .map_or_else(
-                    || if m.target.is_some() { "hedefi yok".to_owned() } else { "hedefsiz".to_owned() },
+                    || {
+                        if m.target.is_some() {
+                            "hedefi yok".to_owned()
+                        } else {
+                            "hedefsiz".to_owned()
+                        }
+                    },
                     |t| t.name.clone(),
                 );
             let title = format!(
                 "{} {} → {}",
                 m.form.label(),
-                if m.mark.is_empty() { "(sıra)" } else { &m.mark },
+                if m.mark.is_empty() {
+                    "(sıra)"
+                } else {
+                    &m.mark
+                },
                 target
             );
             let text = Column::new()
                 .spacing(2)
                 .push(label::body(title))
-                .push(label::caption(format!("Balon: {} / {}", m.words.top, m.words.bottom)));
+                .push(label::caption(format!(
+                    "Balon: {} / {}",
+                    m.words.top, m.words.bottom
+                )));
             let chosen = w.chosen == Some(k);
             let mut line = row![
-                icon(crate::icons::from_web(Some(if m.broken { "warning" } else { icon_of(m.form) }))).size(18.0),
+                icon(crate::icons::from_web(Some(if m.broken {
+                    "warning"
+                } else {
+                    icon_of(m.form)
+                })))
+                .size(18.0),
                 container(text).width(Fill),
                 small(SHOW, Some(msg(Event::Show(k)))),
             ]
@@ -286,15 +328,28 @@ impl App {
         }
         let chosen = w.chosen.is_some();
         for (k, t) in w.refs.targets.iter().enumerate() {
-            let kind = if t.target.view.is_some() { "Adlı görünüm" } else { "Pafta penceresi" };
-            let text = Column::new().spacing(2).push(label::body(t.name.clone())).push(label::caption(format!(
-                "{kind}; numarası {}{}; {} işaret",
-                t.number,
-                t.order.map_or_else(String::new, |o| format!(", sırası {o}")),
-                t.marks.len()
-            )));
+            let kind = if t.target.view.is_some() {
+                "Adlı görünüm"
+            } else {
+                "Pafta penceresi"
+            };
+            let text = Column::new()
+                .spacing(2)
+                .push(label::body(t.name.clone()))
+                .push(label::caption(format!(
+                    "{kind}; numarası {}{}; {} işaret",
+                    t.number,
+                    t.order
+                        .map_or_else(String::new, |o| format!(", sırası {o}")),
+                    t.marks.len()
+                )));
             let mut line = row![
-                icon(crate::icons::from_web(Some(if t.target.view.is_some() { "namedViews" } else { "sheet" }))).size(18.0),
+                icon(crate::icons::from_web(Some(if t.target.view.is_some() {
+                    "namedViews"
+                } else {
+                    "sheet"
+                })))
+                .size(18.0),
                 container(text).width(Fill),
             ]
             .spacing(10)
@@ -315,17 +370,18 @@ impl App {
                 .height(iced::Length::Shrink)
                 .height(400.0),
         );
-        overlay::modal(
-            Frame::new(TITLE)
-                .push(body)
-                .action(words::primary(CLOSE, Some(msg(Event::Close))))
-                .width(760.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(760.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first mark's and target's.
-    pub(crate) fn view_refs_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn view_refs_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         if self.view_refs.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

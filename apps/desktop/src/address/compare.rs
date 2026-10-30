@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use iced::futures::SinkExt as _;
 use iced::futures::channel::mpsc;
-use iced::widget::{Column, container, row, text_input};
+use iced::widget::{Column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     ADDRESS_COMPARE_MAX_LIMIT, AddressPart, AddressRegister, AddressesCompare, AddressesCompared,
@@ -22,7 +22,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, addresses_compare, registry};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, Elided, Segmented, VirtualList, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided, Segmented, VirtualList};
 use kentos_ui::{label, style};
 
 use super::Event as Address;
@@ -38,7 +38,15 @@ const CLOSE: &str = "Kapat";
 const NONE: &str = "—";
 const ROW: f32 = 26.0;
 /// The register's columns the window asks for, in its order: code, street, door number, neighbourhood, district, x, y.
-const COLUMNS: [&str; 7] = ["Adres kodu", "Yol", "Kapı no", "Mahalle", "İlçe", "X (doğu)", "Y (kuzey)"];
+const COLUMNS: [&str; 7] = [
+    "Adres kodu",
+    "Yol",
+    "Kapı no",
+    "Mahalle",
+    "İlçe",
+    "X (doğu)",
+    "Y (kuzey)",
+];
 
 /// Where the register is.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -159,7 +167,10 @@ fn msg(e: Event) -> Message {
 }
 
 /// The register's first row, and a workbook's sheets: what a file's columns are chosen from.
-fn header(path: &std::path::Path, sheet: Option<&str>) -> Result<(Vec<String>, Vec<String>), String> {
+fn header(
+    path: &std::path::Path,
+    sheet: Option<&str>,
+) -> Result<(Vec<String>, Vec<String>), String> {
     let bytes = std::fs::read(path).map_err(|e| format!("{} okunamadı: {e}", path.display()))?;
     let read = read_with(
         &bytes,
@@ -187,14 +198,21 @@ fn header(path: &std::path::Path, sheet: Option<&str>) -> Result<(Vec<String>, V
 /// address code too), `X`/`Y` (or east and north) for the position.
 fn guess(columns: &[String]) -> [Option<usize>; 7] {
     let g = fields::doors(columns);
-    let at = |name: &Option<String>| name.as_ref().and_then(|n| columns.iter().position(|c| c == n));
+    let at = |name: &Option<String>| {
+        name.as_ref()
+            .and_then(|n| columns.iter().position(|c| c == n))
+    };
     let folded = |c: &str| {
         kentos_geometry_core::ops::geocode::fold(c)
             .chars()
             .filter(char::is_ascii_alphanumeric)
             .collect::<String>()
     };
-    let axis = |names: &[&str]| columns.iter().position(|c| names.contains(&folded(c).as_str()));
+    let axis = |names: &[&str]| {
+        columns
+            .iter()
+            .position(|c| names.contains(&folded(c).as_str()))
+    };
     let code = at(&g.code).or_else(|| axis(&["adresno", "adresnumarasi", "uavtno", "uavtkodu"]));
     [
         code,
@@ -322,7 +340,9 @@ impl App {
         iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
             let answer = addresses_compare::plan_in(&model, &input);
             drop(model);
-            let _ = iced::futures::executor::block_on(out.send(msg(Event::Answered(ticket, Box::new(answer)))));
+            let _ = iced::futures::executor::block_on(
+                out.send(msg(Event::Answered(ticket, Box::new(answer)))),
+            );
         })
     }
 
@@ -371,7 +391,10 @@ impl App {
                     async {
                         let file = rfd::AsyncFileDialog::new()
                             .set_title("Adres kaydı")
-                            .add_filter("Tablo (CSV, metin, XLSX, ODS)", &["csv", "txt", "tsv", "xlsx", "ods"])
+                            .add_filter(
+                                "Tablo (CSV, metin, XLSX, ODS)",
+                                &["csv", "txt", "tsv", "xlsx", "ods"],
+                            )
                             .pick_file()
                             .await?;
                         Some(file.path().to_path_buf())
@@ -419,7 +442,10 @@ impl App {
             }
             Event::Layer(k) => {
                 let id = layers.get(k).map(|(id, _)| id.clone());
-                let columns = id.as_deref().map(|l| fields_of(self, l)).unwrap_or_default();
+                let columns = id
+                    .as_deref()
+                    .map(|l| fields_of(self, l))
+                    .unwrap_or_default();
                 let Some(w) = self.address.compare.as_mut() else {
                     return Task::none();
                 };
@@ -579,7 +605,9 @@ impl App {
                 return self.run_address_compare();
             }
             Ok(v) => {
-                let why = v["error"]["message"].as_str().unwrap_or("Kayıttan yazılamadı.");
+                let why = v["error"]["message"]
+                    .as_str()
+                    .unwrap_or("Kayıttan yazılamadı.");
                 self.warn(why.to_owned());
             }
             Err(e) => self.warn(format!("Kayıttan yazılamadı: {e:?}")),
@@ -608,10 +636,10 @@ impl App {
         let source = Segmented::new(Source::ALL, w.source, |s| msg(Event::Source(s)));
         let place: Element<'_, Message> = match w.source {
             Source::File => {
-                let name = w.path.as_ref().map_or_else(
-                    || "Dosya seçilmedi".to_owned(),
-                    |p| p.display().to_string(),
-                );
+                let name = w
+                    .path
+                    .as_ref()
+                    .map_or_else(|| "Dosya seçilmedi".to_owned(), |p| p.display().to_string());
                 let mut line = row![
                     container(
                         Elided::new(name)
@@ -676,7 +704,8 @@ impl App {
                 container(column_select(6)).width(Fill),
                 container(words::field(
                     "Tolerans (m)",
-                    text_input("10", &w.tolerance).on_input(|t| msg(Event::Tolerance(t))),
+                    kentos_ui::widget::text_field("10", &w.tolerance)
+                        .on_input(|t| msg(Event::Tolerance(t))),
                     None,
                 ))
                 .width(Fill),
@@ -686,7 +715,11 @@ impl App {
         let mut body = Column::new()
             .spacing(12)
             .push(words::field("Adres verisi", locator, None))
-            .push(words::field("Adres kaydı", Column::new().spacing(6).push(source).push(place), None));
+            .push(words::field(
+                "Adres kaydı",
+                Column::new().spacing(6).push(source).push(place),
+                None,
+            ));
         if !w.columns.is_empty() {
             body = body.push(words::field(
                 "Sütunlar",
@@ -703,7 +736,12 @@ impl App {
         }
         match &w.answer {
             None => {}
-            Some(Err(why)) => body = body.push(words::summary(vec![words::text_line(Kind::Warn, why.clone())])),
+            Some(Err(why)) => {
+                body = body.push(words::summary(vec![words::text_line(
+                    Kind::Warn,
+                    why.clone(),
+                )]))
+            }
             Some(Ok(a)) => {
                 can_write = a.differing > 0;
                 body = body.push(words::summary(vec![words::text_line(
@@ -716,26 +754,26 @@ impl App {
                 )]));
                 let tabs: Vec<Tab> = List::ALL.iter().map(|l| Tab(*l, l.count(a))).collect();
                 let current = Tab(w.list, w.list.count(a));
-                body = body.push(Segmented::new(tabs, current, |t: Tab| msg(Event::List(t.0))));
+                body = body.push(Segmented::new(tabs, current, |t: Tab| {
+                    msg(Event::List(t.0))
+                }));
                 body = body.push(self.compared_rows(w, a));
             }
         }
-        overlay::modal(
-            Frame::new(TITLE)
-                .scroll(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .action(words::secondary(
-                    WRITE,
-                    (can_write && w.asking.is_none()).then(|| msg(Event::Write)),
-                ))
-                .action(words::primary(
-                    COMPARE,
-                    w.asking.is_none().then(|| msg(Event::Compare)),
-                ))
-                .width(760.0)
-                .max_height(760.0),
-            msg(Event::Close),
-        )
+        Frame::new(TITLE)
+            .scroll(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .action(words::secondary(
+                WRITE,
+                (can_write && w.asking.is_none()).then(|| msg(Event::Write)),
+            ))
+            .action(words::primary(
+                COMPARE,
+                w.asking.is_none().then(|| msg(Event::Compare)),
+            ))
+            .width(760.0)
+            .max_height(760.0)
+            .modal(msg(Event::Close))
     }
 
     /// The chosen list's rows: its words left, its detail right; pressed, its door or objects shown.
@@ -834,7 +872,13 @@ impl App {
     /// The window's answer (tests read it).
     #[cfg(test)]
     pub(crate) fn address_compared(&self) -> Option<&AddressesCompared> {
-        self.address.compare.as_ref()?.answer.as_ref()?.as_ref().ok()
+        self.address
+            .compare
+            .as_ref()?
+            .answer
+            .as_ref()?
+            .as_ref()
+            .ok()
     }
 
     /// Chooses the register file without its dialog (tests and scenes).

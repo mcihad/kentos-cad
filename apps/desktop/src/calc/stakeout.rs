@@ -164,7 +164,7 @@ impl Form {
             .align_y(Center),
         )
         .on_press(event(Event::FromSelection))
-        .padding([5, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary);
         let head = row![
             label::caption(
@@ -261,6 +261,7 @@ impl Form {
         }
         let done = read.stakes.is_some();
         Dialog::new(TITLE)
+            .on_close(crate::calc::event(crate::calc::Event::Close))
             .scroll(body)
             .action(footer_button(
                 "Cihaza gönder…",

@@ -301,7 +301,7 @@ fn railed<'a, Message: Clone + 'a>(
         footer = footer.push(
             button(label::body("Geri"))
                 .on_press_maybe(wizard.on_back)
-                .padding([5, 12])
+                .padding(crate::theme::metrics::action())
                 .style(style::button::ghost),
         );
     }
@@ -536,7 +536,7 @@ fn action<'a, Message: Clone + 'a>(
 ) -> Element<'a, Message> {
     button(content)
         .on_press_maybe(message)
-        .padding([5, 16])
+        .padding(crate::theme::metrics::action())
         .style(if primary {
             style::button::primary
         } else {

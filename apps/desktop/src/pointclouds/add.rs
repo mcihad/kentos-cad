@@ -14,7 +14,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, button, column, container, row, text_input};
+use iced::widget::{Column, button, column, container, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
     CloudFormat, CloudSource, CommandResult, CreateOperation, EntitiesCreate, EntityGeometry,
@@ -840,17 +840,12 @@ impl App {
             .spacing(12)
             .push(words::field("Kaynak", from, None));
         if s.from == From::Address {
-            let input = kentos_ui::widget::focus_ring(
-                text_input("https://…/bulut.copc.laz", &s.address)
-                    .on_input(|t| msg(Event::Address(t)))
-                    .on_submit(msg(Event::ReadAddress))
-                    .padding([5, 8])
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            );
+            let input = kentos_ui::widget::text_field("https://…/bulut.copc.laz", &s.address)
+                .on_input(|t| msg(Event::Address(t)))
+                .on_submit(msg(Event::ReadAddress));
             let read = button(label::body("Oku"))
                 .on_press_maybe((!s.address.trim().is_empty()).then(|| msg(Event::ReadAddress)))
-                .padding([5, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(kentos_ui::style::button::secondary);
             body = body.push(words::field(
                 "Adres",
@@ -938,7 +933,8 @@ impl App {
                     self.cloud_add_can(s).then(|| msg(Event::Run)),
                 ))
                 .width(660.0)
-                .max_height(780.0),
+                .max_height(780.0)
+                .on_close(Some(msg(Event::Close))),
         )
     }
 
@@ -1150,14 +1146,9 @@ impl App {
                 ),
             )
         };
-        let name = kentos_ui::widget::focus_ring(
-            text_input("Katmanın adı", &s.layer)
-                .on_input(|t| msg(Event::Layer(t)))
-                .on_submit(msg(Event::Run))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(kentos_ui::style::field::input),
-        );
+        let name = kentos_ui::widget::text_field("Katmanın adı", &s.layer)
+            .on_input(|t| msg(Event::Layer(t)))
+            .on_submit(msg(Event::Run));
         out = out.push(
             row![
                 container(keep).width(iced::Length::FillPortion(3)),

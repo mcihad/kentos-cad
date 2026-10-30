@@ -6,8 +6,9 @@
 //! - Kapatma düğmesi etkin sekmede ve üzerine gelinen sekmede görünür.
 //!   Kaydedilmemiş sekmede yerinde bir nokta durur. Orta tık da kapatır.
 //! - Sekmeler sürüklenerek sıralanır ([`Tabs::on_reorder`]).
-//! - Sekmeler şeritten taşmaz: sığmayanlar sağdaki listeden seçilir, etkin
-//!   sekme her zaman görünür. Uzun başlıklar kısılır, sonu solar.
+//! - Sekmeler daralmaz: her biri başlığı kadar geniştir (docs/adr/0806). Sığmayan şerit kayar: sağda `‹ ›` okları ve
+//!   bütün sekmelerin listesi çıkar, tekerlek de kaydırır; kesilen kenar solar, seçilen sekme görünür yapılır.
+//!   Yalnız en geniş sınırı aşan başlık kısılır, sonu solar.
 //! - [`Tabs::bottom`] ile şerit içeriğin altına asılır.
 //!
 //! ```ignore
@@ -23,8 +24,6 @@
 //!     sheet,
 //! ]
 //! ```
-
-use std::ops::Range;
 
 use iced::advanced::layout::{self, Layout, Node};
 use iced::advanced::overlay;
@@ -46,14 +45,14 @@ use crate::theme::accent::mix;
 use crate::theme::{Tokens, typography};
 use crate::widget::context_menu::{Menu, MenuButton};
 
-/// Şeridin yüksekliği ve sekme genişliğinin sınırları, 12 piksellik gövde
-/// metnine göre.
-const HEIGHT: f32 = 28.0;
+/// Sekme genişliğinin sınırları ve şeridin okları, 12 piksellik gövde metnine göre.
 pub(crate) const MIN_WIDTH: f32 = 64.0;
 pub(crate) const MAX_WIDTH: f32 = 200.0;
-/// Sığmayan sekmelerin daralabildiği en dar genişlik; altında listeye
-/// taşarlar.
-pub(crate) const SHRINK: f32 = 110.0;
+const ARROW: f32 = 20.0;
+/// Tekerleğin bir çentiğinin kaydırdığı.
+const WHEEL: f32 = 48.0;
+/// Şeridin kesilen kenarının solan genişliği.
+const EDGE: f32 = 18.0;
 
 /// Başlığın solundaki boşluk; kapatma düğmesi olmayan sekmede sağında da.
 pub(crate) const PAD: f32 = 12.0;
@@ -69,9 +68,14 @@ const FADE: f32 = 20.0;
 /// Sürüklemenin başladığı uzaklık.
 pub(crate) const DRAG: f32 = 5.0;
 
-/// Şeridin yüksekliği, geçerli yazı boyutunda.
+/// Şeridin yüksekliği, geçerli yazı boyutunda: satırların modülü (docs/adr/0804).
 pub fn height() -> f32 {
-    typography::scaled(HEIGHT)
+    crate::theme::metrics::row()
+}
+
+/// Şeridin bir okunun (ve listesinin) genişliği, geçerli yazı boyutunda.
+pub(crate) fn arrow_width() -> f32 {
+    typography::scaled(ARROW)
 }
 
 /// Bir sekme.
@@ -140,8 +144,11 @@ pub struct Tabs<'a, Message> {
     on_new: Option<Message>,
     /// Yeni sekme ikonu.
     plus: Element<'a, Message>,
-    /// Sığmayan sekmelerin listesi.
+    /// Bütün sekmelerin listesi: şerit sığmayınca.
     list: Element<'a, Message>,
+    /// Şeridin okları: sola, sağa.
+    prev: Element<'a, Message>,
+    next: Element<'a, Message>,
 }
 
 struct Entry<'a, Message> {
@@ -230,7 +237,7 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
 
         let list = MenuButton::new(
             container(icon(Icon::ChevronDown).size(12.0))
-                .center_x(height())
+                .center_x(arrow_width())
                 .center_y(height()),
             move || {
                 choices
@@ -279,6 +286,8 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
             on_new: None,
             plus: icon(Icon::Plus).size(12.0).into(),
             list: list.into(),
+            prev: icon(Icon::ChevronLeft).size(12.0).into(),
+            next: icon(Icon::ChevronRight).size(12.0).into(),
         }
     }
 
@@ -310,142 +319,106 @@ impl<'a, Message: Clone + 'a> Tabs<'a, Message> {
     }
 }
 
-/// Sekmelerin genişlikleri ve taşma: hepsi sığıyorsa doğal genişlikleri.
-/// Sığmıyorsa etkin sekme doğal genişliğinde kalır, diğerleri aynı üst
-/// sınıra kadar daralır; her sekme kendi tabanında (`floors`) durur. Öbür
-/// sekmeler tabanlarındayken de sığmıyorsa etkin sekme en fazla
-/// `active_floor`'a kadar daralır; o da yetmezse sığmayanlar taşar.
-pub(crate) fn fit(
-    natural: &[f32],
-    active: usize,
+/// Şeridin kayması: sekmeler daralmaz, sığmayan şerit kayar (docs/adr/0806). Etkin sekme değişince ya da şeridin yeri
+/// değişince etkin sekme görünür yapılır; okuyan kişinin kaydırması başka zaman geri alınmaz.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct Scroll {
+    offset: f32,
+    active: Option<usize>,
     room: f32,
-    floors: &[f32],
-    active_floor: f32,
-) -> (Vec<f32>, bool) {
-    if natural.iter().sum::<f32>() <= room {
-        return (natural.to_vec(), false);
+    widths: Vec<f32>,
+}
+
+impl Scroll {
+    /// Bu karenin sekmeleri ve yeri: sekmelerin başlangıcının ne kadar sola kaydığı.
+    pub(crate) fn settle(&mut self, widths: &[f32], active: usize, room: f32) -> f32 {
+        let changed = self.active != Some(active) || (self.room - room).abs() > 0.5;
+        self.widths.clear();
+        self.widths.extend_from_slice(widths);
+        self.room = room;
+        if changed {
+            self.active = Some(active);
+            self.offset = self.revealing(active);
+        }
+        self.offset = self.offset.clamp(0.0, self.most());
+        self.offset
     }
 
-    let kept = natural.get(active).copied().unwrap_or(0.0);
-    let lows: Vec<f32> = natural
-        .iter()
-        .zip(floors.iter().chain(std::iter::repeat(&0.0)))
-        .map(|(tab, floor)| tab.min(*floor))
-        .collect();
-    let others: f32 = (0..natural.len())
-        .filter(|index| *index != active)
-        .map(|index| lows[index])
-        .sum();
-    let at_floor = |kept: f32| {
-        (0..natural.len())
-            .map(|index| if index == active { kept } else { lows[index] })
-            .collect::<Vec<f32>>()
-    };
+    fn total(&self) -> f32 {
+        self.widths.iter().sum()
+    }
 
-    if kept + others > room {
-        let smallest = active_floor.min(kept);
+    fn most(&self) -> f32 {
+        (self.total() - self.room).max(0.0)
+    }
 
-        return if smallest + others <= room {
-            (at_floor((room - others).floor()), false)
-        } else {
-            (at_floor(kept), natural.len() > 1)
+    /// Sola kayacak yer var mı.
+    pub(crate) fn can_back(&self) -> bool {
+        self.offset > 0.5
+    }
+
+    /// Sağa kayacak yer var mı.
+    pub(crate) fn can_forth(&self) -> bool {
+        self.offset < self.most() - 0.5
+    }
+
+    /// Sekmeyi bütünüyle gösteren kayma; zaten görünüyorsa aynısı.
+    fn revealing(&self, index: usize) -> f32 {
+        let Some(width) = self.widths.get(index) else {
+            return self.offset;
         };
-    }
-
-    // Su doldurma: tabanına inen sekme tabanda kalır, kalan yer öbür
-    // sekmelere eşit bölünür.
-    let mut pinned = vec![false; natural.len()];
-
-    loop {
-        let free: Vec<usize> = (0..natural.len())
-            .filter(|index| *index != active && !pinned[*index])
-            .collect();
-        let budget = room
-            - kept
-            - (0..natural.len())
-                .filter(|index| pinned[*index])
-                .map(|index| lows[index])
-                .sum::<f32>();
-        let cap = level(
-            &free.iter().map(|index| natural[*index]).collect::<Vec<_>>(),
-            budget,
-        );
-        let sunk: Vec<usize> = free
-            .iter()
-            .copied()
-            .filter(|index| natural[*index].min(cap) < lows[*index])
-            .collect();
-
-        if sunk.is_empty() {
-            let widths = (0..natural.len())
-                .map(|index| {
-                    if index == active {
-                        natural[index]
-                    } else if pinned[index] {
-                        lows[index]
-                    } else {
-                        natural[index].min(cap)
-                    }
-                })
-                .collect();
-
-            return (widths, false);
-        }
-
-        for index in sunk {
-            pinned[index] = true;
+        let left: f32 = self.widths[..index].iter().sum();
+        let right = left + width;
+        if left < self.offset || *width > self.room {
+            left
+        } else if right > self.offset + self.room {
+            right - self.room
+        } else {
+            self.offset
         }
     }
-}
 
-/// Genişliklerin toplamı `budget`'ı geçmesin diye hepsine uygulanan en
-/// geniş üst sınır; en darlardan başlayarak kalan yer eşit bölünür.
-fn level(widths: &[f32], budget: f32) -> f32 {
-    let mut sorted = widths.to_vec();
-    sorted.sort_by(f32::total_cmp);
+    /// Bu sekmeyi bir sonraki yerleşimde görünür yapar (kısmen görünene basıldı).
+    pub(crate) fn reveal(&mut self, index: usize) -> bool {
+        let offset = self.revealing(index);
+        let moved = (offset - self.offset).abs() > 0.5;
+        self.offset = offset;
+        moved
+    }
 
-    let mut used = 0.0;
-
-    for (index, width) in sorted.iter().enumerate() {
-        let share = (budget - used) / (sorted.len() - index) as f32;
-
-        if share <= *width {
-            return share.floor();
+    /// Bir sekme ileri ya da geri: her basış tam bir sekme kaydırır, sekmenin başı şeridin soluna oturur. Kaydıysa doğru.
+    pub(crate) fn step(&mut self, forth: bool) -> bool {
+        let before = self.offset;
+        let mut left = 0.0;
+        let mut target = None;
+        for width in &self.widths {
+            if forth {
+                if left > self.offset + 0.5 {
+                    target = Some(left);
+                    break;
+                }
+            } else if left < self.offset - 0.5 {
+                target = Some(left);
+            }
+            left += width;
         }
-
-        used += width;
+        if let Some(target) = target {
+            self.offset = target.clamp(0.0, self.most());
+        }
+        (self.offset - before).abs() > 0.5
     }
 
-    f32::INFINITY
-}
-
-/// Görünen sekmeler. `first` önceki karedeki ilk görünen sekmedir: sekmeler
-/// yerinde durur, yalnızca etkin sekme dışarıda kalınca şerit kayar. Sonda
-/// boşluk kalırsa soldaki sekmeler de gösterilir.
-pub(crate) fn window(widths: &[f32], active: usize, first: usize, room: f32) -> Range<usize> {
-    let Some(last) = widths.len().checked_sub(1) else {
-        return 0..0;
-    };
-    let active = active.min(last);
-    let fits = |range: Range<usize>| widths[range].iter().sum::<f32>() <= room;
-
-    let mut start = first.min(active);
-
-    while start < active && !fits(start..active + 1) {
-        start += 1;
+    /// Tekerlek: yukarı ya da sola çevirmek başa doğru götürür. Kaydıysa doğru.
+    pub(crate) fn wheel(&mut self, delta: mouse::ScrollDelta) -> bool {
+        let (x, y) = match delta {
+            mouse::ScrollDelta::Lines { x, y } => (x * WHEEL, y * WHEEL),
+            mouse::ScrollDelta::Pixels { x, y } => (x, y),
+        };
+        let amount = if x.abs() > y.abs() { x } else { y };
+        let before = self.offset;
+        self.offset = (self.offset - amount).clamp(0.0, self.most());
+        (self.offset - before).abs() > 0.5
     }
-
-    let mut end = active + 1;
-
-    while end <= last && fits(start..end + 1) {
-        end += 1;
-    }
-
-    while start > 0 && fits(start - 1..end) {
-        start -= 1;
-    }
-
-    start..end
 }
 
 /// Sekmenin bölgesi.
@@ -454,13 +427,16 @@ enum Target {
     Tab(usize),
     Close(usize),
     New,
+    /// Şeridin okları.
+    Prev,
+    Next,
 }
 
 impl Target {
     fn tab(self) -> Option<usize> {
         match self {
             Target::Tab(index) | Target::Close(index) => Some(index),
-            Target::New => None,
+            Target::New | Target::Prev | Target::Next => None,
         }
     }
 }
@@ -474,9 +450,11 @@ struct State {
     dragging: Option<usize>,
     /// Sürüklenen sekmenin bırakılacağı sıra.
     drop: Option<usize>,
-    /// İlk görünen sekme.
-    first: usize,
-    /// Sığmayan sekme var; liste düğmesi gösterilir.
+    /// Şeridin kayması.
+    scroll: Scroll,
+    /// Sekmelerin göründüğü genişlik.
+    room: f32,
+    /// Sekmeler sığmıyor: oklar ve liste gösterilir.
     overflow: bool,
     /// Başlığı sığmayan sekmeler; başlığın sonu solar.
     clipped: Vec<bool>,
@@ -484,18 +462,34 @@ struct State {
 
 /// Yerleşimden okunan bölgeler.
 struct Geometry {
+    /// Sekmelerin göründüğü şerit; dışında kalan sekme parçası basılmaz.
+    strip: Rectangle,
     /// Görünen sekmeler: sırası ve sınırı.
     tabs: Vec<(usize, Rectangle)>,
     closes: Vec<(usize, Rectangle)>,
     new: Option<Rectangle>,
+    /// Şeridin okları: şerit sığmıyorsa.
+    arrows: Option<(Rectangle, Rectangle)>,
 }
 
 impl Geometry {
-    fn of<Message>(tabs: &Tabs<'_, Message>, layout: Layout<'_>) -> Self {
-        let height = layout.bounds().height;
+    fn of<Message>(tabs: &Tabs<'_, Message>, layout: Layout<'_>, state: &State) -> Self {
+        let bounds = layout.bounds();
+        let height = bounds.height;
         let mut children = layout.children();
         let plus = children.next();
         let _list = children.next();
+        let prev = children.next();
+        let next = children.next();
+        let slot = |glyph: Option<Layout<'_>>| {
+            let center = glyph.map_or(Point::ORIGIN, |glyph| glyph.bounds().center());
+            let width = arrow_width();
+            Rectangle::new(
+                Point::new(center.x - width / 2.0, bounds.y),
+                Size::new(width, height),
+            )
+        };
+        let arrows = state.overflow.then(|| (slot(prev), slot(next)));
 
         let mut visible = Vec::new();
         let mut closes = Vec::new();
@@ -515,21 +509,37 @@ impl Geometry {
         }
 
         Self {
+            strip: Rectangle {
+                width: state.room,
+                ..bounds
+            },
             tabs: visible,
             closes,
             new: plus
                 .filter(|_| tabs.on_new.is_some())
                 .map(|plus| square(plus.bounds().center(), height)),
+            arrows,
         }
     }
 
     fn target(&self, point: Point) -> Option<Target> {
-        if let Some((index, _)) = self.closes.iter().find(|(_, area)| area.contains(point)) {
-            return Some(Target::Close(*index));
+        if let Some((prev, next)) = self.arrows {
+            if prev.contains(point) {
+                return Some(Target::Prev);
+            }
+            if next.contains(point) {
+                return Some(Target::Next);
+            }
         }
 
-        if let Some((index, _)) = self.tabs.iter().find(|(_, tab)| tab.contains(point)) {
-            return Some(Target::Tab(*index));
+        if self.strip.contains(point) {
+            if let Some((index, _)) = self.closes.iter().find(|(_, area)| area.contains(point)) {
+                return Some(Target::Close(*index));
+            }
+
+            if let Some((index, _)) = self.tabs.iter().find(|(_, tab)| tab.contains(point)) {
+                return Some(Target::Tab(*index));
+            }
         }
 
         self.new
@@ -591,6 +601,9 @@ pub(crate) fn square(center: Point, side: f32) -> Rectangle {
     )
 }
 
+/// Sekmelerden önceki parçalar: yeni sekme, liste ve iki ok.
+const EXTRAS: usize = 4;
+
 impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Message> {
     fn tag(&self) -> tree::Tag {
         tree::Tag::of::<State>()
@@ -601,22 +614,30 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
     }
 
     fn children(&self) -> Vec<Tree> {
-        [Tree::new(&self.plus), Tree::new(&self.list)]
-            .into_iter()
-            .chain(self.tabs.iter().map(|entry| Tree {
-                tag: tree::Tag::stateless(),
-                state: tree::State::None,
-                children: entry.parts.iter().map(Tree::new).collect(),
-            }))
-            .collect()
+        [
+            Tree::new(&self.plus),
+            Tree::new(&self.list),
+            Tree::new(&self.prev),
+            Tree::new(&self.next),
+        ]
+        .into_iter()
+        .chain(self.tabs.iter().map(|entry| Tree {
+            tag: tree::Tag::stateless(),
+            state: tree::State::None,
+            children: entry.parts.iter().map(Tree::new).collect(),
+        }))
+        .collect()
     }
 
     fn diff(&self, tree: &mut Tree) {
-        tree.children.resize_with(2 + self.tabs.len(), Tree::empty);
+        tree.children
+            .resize_with(EXTRAS + self.tabs.len(), Tree::empty);
         tree.children[0].diff(&self.plus);
         tree.children[1].diff(&self.list);
+        tree.children[2].diff(&self.prev);
+        tree.children[3].diff(&self.next);
 
-        for (tab, entry) in tree.children[2..].iter_mut().zip(&self.tabs) {
+        for (tab, entry) in tree.children[EXTRAS..].iter_mut().zip(&self.tabs) {
             tab.diff_children(&entry.parts);
         }
     }
@@ -629,7 +650,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
         let height = height();
         let width = limits.resolve(Length::Fill, height, Size::ZERO).width;
         let (min, max) = (typography::scaled(MIN_WIDTH), typography::scaled(MAX_WIDTH));
-        let (extras, trees) = tree.children.split_at_mut(2);
+        let (extras, trees) = tree.children.split_at_mut(EXTRAS);
 
         // Başlıkların doğal boyutları ve sekmelerin genişlikleri.
         let labels: Vec<Node> = self
@@ -651,35 +672,28 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
             .map(|(entry, label)| (PAD + label.size().width + entry.trail()).clamp(min, max))
             .collect();
 
-        // Sığmayan sekmeler önce eşit ölçüde daralır (etkin sekme okunur
-        // kalır); okunur genişliğin altına inmeleri gerekirse sığmayanlar
-        // listeye taşar.
+        // Sekmeler daralmaz: sığmayan şerit kayar, oklar ve liste sağda durur.
         let new = if self.on_new.is_some() { height } else { 0.0 };
-        let (widths, overflow) = fit(
-            &natural,
-            self.active,
-            width - new,
-            &vec![typography::scaled(SHRINK); natural.len()],
-            f32::INFINITY,
-        );
-        let room = width - new - if overflow { height } else { 0.0 };
-        let widths: Vec<f32> = widths.into_iter().map(|tab| tab.min(room)).collect();
+        let arrow = arrow_width();
+        let overflow = natural.iter().sum::<f32>() + new > width;
+        let controls = if overflow { 3.0 * arrow } else { 0.0 };
+        let room = (width - new - controls).max(0.0);
+        let widths: Vec<f32> = natural.iter().map(|tab| tab.min(room)).collect();
 
         let state = tree.state.downcast_mut::<State>();
-        let visible = window(&widths, self.active, state.first, room);
-        state.first = visible.start;
+        let offset = state.scroll.settle(&widths, self.active, room);
+        state.room = room;
         state.overflow = overflow;
         state.clipped.clear();
 
-        let mut x = 0.0;
+        let mut x = -offset;
         let mut tabs = Vec::with_capacity(self.tabs.len());
 
-        for (index, ((entry, tree), (label, width))) in self
+        for ((entry, tree), (label, width)) in self
             .tabs
             .iter_mut()
             .zip(trees.iter_mut())
             .zip(labels.into_iter().zip(widths))
-            .enumerate()
         {
             // Genişlik başlıktan hesaplandığı için yuvarlama payı bırakılır.
             let tab = Rectangle::with_size(Size::new(width, height));
@@ -687,11 +701,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                 .clipped
                 .push(label.size().width > entry.room(tab).width + 0.5);
 
-            if !visible.contains(&index) {
+            // Şeridin dışında kalan sekme çizilmez.
+            if x + width <= 0.0 || x >= room {
                 tabs.push(Node::with_children(
                     Size::ZERO,
                     vec![Node::default(), Node::default()],
                 ));
+                x += width;
                 continue;
             }
 
@@ -721,24 +737,39 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
             &layout::Limits::new(Size::ZERO, Size::new(height, height)),
         );
         let side = plus.size().width;
-        let plus = plus.move_to(square(Point::new(x + new / 2.0, height / 2.0), side).position());
+        // Şerit kayarken + okların yanında durur.
+        let plus_x = if overflow { room } else { x };
+        let plus =
+            plus.move_to(square(Point::new(plus_x + new / 2.0, height / 2.0), side).position());
 
-        let list = if overflow {
-            self.list
-                .as_widget_mut()
-                .layout(
-                    &mut extras[1],
-                    renderer,
-                    &layout::Limits::new(Size::ZERO, Size::new(height, height)),
-                )
-                .move_to(Point::new(width - height, 0.0))
+        let glyph = |element: &mut Element<'a, Message>, tree: &mut Tree, center: f32| {
+            let node = element.as_widget_mut().layout(
+                tree,
+                renderer,
+                &layout::Limits::new(Size::ZERO, Size::new(arrow, height)),
+            );
+            let size = node.size();
+            node.move_to(Point::new(
+                center - size.width / 2.0,
+                (height - size.height) / 2.0,
+            ))
+        };
+        let (list, prev, next) = if overflow {
+            let (list_tree, rest) = extras[1..].split_at_mut(1);
+            let (prev_tree, next_tree) = rest.split_at_mut(1);
+            let end = width - 3.0 * arrow;
+            (
+                glyph(&mut self.list, &mut list_tree[0], end + 2.5 * arrow),
+                glyph(&mut self.prev, &mut prev_tree[0], end + 0.5 * arrow),
+                glyph(&mut self.next, &mut next_tree[0], end + 1.5 * arrow),
+            )
         } else {
-            Node::default()
+            (Node::default(), Node::default(), Node::default())
         };
 
         Node::with_children(
             Size::new(width, height),
-            [plus, list].into_iter().chain(tabs).collect(),
+            [plus, list, prev, next].into_iter().chain(tabs).collect(),
         )
     }
 
@@ -773,13 +804,20 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
             }
         }
 
-        let geometry = Geometry::of(self, layout);
         let state = tree.state.downcast_mut::<State>();
+        let geometry = Geometry::of(self, layout, state);
         let target = cursor
             .position_over(layout.bounds())
             .and_then(|point| geometry.target(point));
 
         match event {
+            Event::Mouse(mouse::Event::WheelScrolled { delta }) => {
+                if state.overflow && cursor.is_over(layout.bounds()) && state.scroll.wheel(*delta) {
+                    shell.invalidate_layout();
+                    shell.request_redraw();
+                    shell.capture_event();
+                }
+            }
             Event::Mouse(mouse::Event::CursorMoved { position }) => {
                 if let Some((index, origin)) = state.origin
                     && state.dragging.is_none()
@@ -809,10 +847,22 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                     return;
                 };
 
-                // Sekme basılınca seçilir; sürüklenirse sıralanır.
+                // Oklar şeridi birer sekme kaydırır.
+                if matches!(target, Target::Prev | Target::Next) {
+                    if state.scroll.step(target == Target::Next) {
+                        shell.invalidate_layout();
+                        shell.request_redraw();
+                    }
+                    shell.capture_event();
+                    return;
+                }
+
+                // Sekme basılınca seçilir; sürüklenirse sıralanır. Kısmen görünen sekme görünür olur.
                 if let Target::Tab(index) = target {
                     if index != self.active {
                         shell.publish((self.on_select)(index));
+                    } else if state.scroll.reveal(index) {
+                        shell.invalidate_layout();
                     }
 
                     state.origin = cursor.position().map(|point| (index, point));
@@ -855,7 +905,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                                 shell.publish(message.clone());
                             }
                         }
-                        Some(Target::Tab(_)) | None => {}
+                        Some(Target::Tab(_) | Target::Prev | Target::Next) | None => {}
                     }
                 }
 
@@ -898,11 +948,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
 
         let target = cursor
             .position_over(layout.bounds())
-            .and_then(|point| Geometry::of(self, layout).target(point));
+            .and_then(|point| Geometry::of(self, layout, state).target(point));
 
         match target {
             Some(Target::Close(_) | Target::New) => mouse::Interaction::Pointer,
-            Some(Target::Tab(_)) | None => mouse::Interaction::None,
+            Some(Target::Prev) if state.scroll.can_back() => mouse::Interaction::Pointer,
+            Some(Target::Next) if state.scroll.can_forth() => mouse::Interaction::Pointer,
+            Some(Target::Tab(_) | Target::Prev | Target::Next) | None => mouse::Interaction::None,
         }
     }
 
@@ -924,99 +976,110 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
         let mut children = layout.children();
         let plus = children.next();
         let list = children.next();
+        let prev = children.next();
+        let next = children.next();
+        let strip_rect = Rectangle {
+            width: state.room,
+            ..bounds
+        };
 
-        for (index, ((entry, tree), tab)) in self
-            .tabs
-            .iter()
-            .zip(&tree.children[2..])
-            .zip(children)
-            .enumerate()
-        {
-            let bounds = tab.bounds();
+        // Sekmeler şeridin içinde: kesilen kenarlar soluk.
+        renderer.with_layer(strip_rect, |renderer| {
+            for (index, ((entry, tree), tab)) in self
+                .tabs
+                .iter()
+                .zip(&tree.children[EXTRAS..])
+                .zip(children)
+                .enumerate()
+            {
+                let bounds = tab.bounds();
 
-            if bounds.width <= 0.0 {
-                continue;
-            }
-
-            let active = index == self.active;
-            let hovered = state.hovered.and_then(Target::tab) == Some(index);
-            let under = self::tab(
-                renderer,
-                &t,
-                bounds,
-                Look {
-                    active,
-                    hovered,
-                    bottom: self.bottom,
-                    accent: true,
-                },
-            );
-
-            let mut parts = tab.children();
-            let (Some(label), Some(glyph)) = (parts.next(), parts.next()) else {
-                continue;
-            };
-            let text_color = if active || hovered { t.text } else { t.muted };
-            let draw_label = |renderer: &mut Renderer| {
-                entry.parts[0].as_widget().draw(
-                    &tree.children[0],
-                    renderer,
-                    theme,
-                    &renderer::Style { text_color },
-                    label,
-                    mouse::Cursor::Unavailable,
-                    viewport,
-                );
-            };
-
-            // Sığmayan başlık kısılır, sonu sekmenin zeminine doğru solar.
-            if state.clipped.get(index).copied().unwrap_or(false) {
-                let room = entry.room(bounds);
-
-                renderer.with_layer(room, draw_label);
-                renderer.with_layer(room, |renderer| fade(renderer, room, under));
-            } else {
-                draw_label(renderer);
-            }
-
-            // Üzerine gelinen sekmede kapatma düğmesi; yoksa kaydedilmemiş
-            // sekmenin noktası; o da yoksa etkin sekmenin kapatma düğmesi.
-            let close_hovered = state.hovered == Some(Target::Close(index));
-
-            if entry.closable && (hovered || (active && !entry.dirty)) {
-                if close_hovered {
-                    renderer.fill_quad(
-                        Quad {
-                            bounds: close_area(bounds),
-                            border: border::rounded(crate::theme::shape::radius(3.0)),
-                            ..Quad::default()
-                        },
-                        Background::Color(t.layer(0.12)),
-                    );
+                if bounds.width <= 0.0 {
+                    continue;
                 }
 
-                entry.parts[1].as_widget().draw(
-                    &tree.children[1],
+                let active = index == self.active;
+                let hovered = state.hovered.and_then(Target::tab) == Some(index);
+                let under = self::tab(
                     renderer,
-                    theme,
-                    &renderer::Style {
-                        text_color: if close_hovered { t.text } else { t.muted },
+                    &t,
+                    bounds,
+                    Look {
+                        active,
+                        hovered,
+                        bottom: self.bottom,
+                        accent: true,
                     },
-                    glyph,
-                    mouse::Cursor::Unavailable,
-                    viewport,
                 );
-            } else if entry.dirty {
-                renderer.fill_quad(
-                    Quad {
-                        bounds: square(close_area(bounds).center(), 7.0),
-                        border: border::rounded(crate::theme::shape::radius(3.5)),
-                        ..Quad::default()
-                    },
-                    Background::Color(if active { t.text } else { t.muted }),
-                );
+
+                let mut parts = tab.children();
+                let (Some(label), Some(glyph)) = (parts.next(), parts.next()) else {
+                    continue;
+                };
+                let text_color = if active || hovered { t.text } else { t.muted };
+                let draw_label = |renderer: &mut Renderer| {
+                    entry.parts[0].as_widget().draw(
+                        &tree.children[0],
+                        renderer,
+                        theme,
+                        &renderer::Style { text_color },
+                        label,
+                        mouse::Cursor::Unavailable,
+                        viewport,
+                    );
+                };
+
+                // Sığmayan başlık kısılır, sonu sekmenin zeminine doğru solar.
+                if state.clipped.get(index).copied().unwrap_or(false) {
+                    let room = entry.room(bounds);
+
+                    renderer.with_layer(room, draw_label);
+                    renderer.with_layer(room, |renderer| fade(renderer, room, under));
+                } else {
+                    draw_label(renderer);
+                }
+
+                // Üzerine gelinen sekmede kapatma düğmesi; yoksa kaydedilmemiş
+                // sekmenin noktası; o da yoksa etkin sekmenin kapatma düğmesi.
+                let close_hovered = state.hovered == Some(Target::Close(index));
+
+                if entry.closable && (hovered || (active && !entry.dirty)) {
+                    if close_hovered {
+                        renderer.fill_quad(
+                            Quad {
+                                bounds: close_area(bounds),
+                                border: border::rounded(crate::theme::shape::radius(3.0)),
+                                ..Quad::default()
+                            },
+                            Background::Color(t.layer(0.12)),
+                        );
+                    }
+
+                    entry.parts[1].as_widget().draw(
+                        &tree.children[1],
+                        renderer,
+                        theme,
+                        &renderer::Style {
+                            text_color: if close_hovered { t.text } else { t.muted },
+                        },
+                        glyph,
+                        mouse::Cursor::Unavailable,
+                        viewport,
+                    );
+                } else if entry.dirty {
+                    renderer.fill_quad(
+                        Quad {
+                            bounds: square(close_area(bounds).center(), 7.0),
+                            border: border::rounded(crate::theme::shape::radius(3.5)),
+                            ..Quad::default()
+                        },
+                        Background::Color(if active { t.text } else { t.muted }),
+                    );
+                }
             }
-        }
+
+            fade_edges(renderer, strip_rect, &state.scroll, t.window);
+        });
 
         if let Some(plus) = plus
             && self.on_new.is_some()
@@ -1061,11 +1124,42 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
                 cursor,
                 viewport,
             );
+            for (glyph, element, child, target, can) in [
+                (
+                    prev,
+                    &self.prev,
+                    &tree.children[2],
+                    Target::Prev,
+                    state.scroll.can_back(),
+                ),
+                (
+                    next,
+                    &self.next,
+                    &tree.children[3],
+                    Target::Next,
+                    state.scroll.can_forth(),
+                ),
+            ] {
+                let Some(glyph) = glyph else {
+                    continue;
+                };
+                draw_arrow(
+                    renderer,
+                    &t,
+                    theme,
+                    element,
+                    child,
+                    glyph,
+                    can,
+                    state.hovered == Some(target),
+                    viewport,
+                );
+            }
         }
 
         // Sürüklenen sekmenin bırakılacağı yer.
         if let (Some(from), Some(to)) = (state.dragging, state.drop)
-            && let Some(x) = Geometry::of(self, layout).marker(from, to)
+            && let Some(x) = Geometry::of(self, layout, state).marker(from, to)
         {
             renderer.fill_quad(
                 Quad {
@@ -1124,6 +1218,77 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Tabs<'a, Mess
 impl<'a, Message: Clone + 'a> From<Tabs<'a, Message>> for Element<'a, Message> {
     fn from(tabs: Tabs<'a, Message>) -> Self {
         Element::new(tabs)
+    }
+}
+
+/// Şeridin bir oku: kayacak yer yoksa sönük; üzerine gelince zemini aydınlanır.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn draw_arrow<'a, Message: 'a>(
+    renderer: &mut Renderer,
+    t: &Tokens,
+    theme: &Theme,
+    element: &Element<'a, Message>,
+    tree: &Tree,
+    glyph: Layout<'_>,
+    can: bool,
+    hot: bool,
+    viewport: &Rectangle,
+) {
+    if can && hot {
+        renderer.fill_quad(
+            Quad {
+                bounds: square(glyph.bounds().center(), arrow_width() - 2.0),
+                border: border::rounded(crate::theme::shape::radius(3.0)),
+                ..Quad::default()
+            },
+            Background::Color(t.layer(0.08)),
+        );
+    }
+    element.as_widget().draw(
+        tree,
+        renderer,
+        theme,
+        &renderer::Style {
+            text_color: if !can {
+                t.disabled()
+            } else if hot {
+                t.text
+            } else {
+                t.muted
+            },
+        },
+        glyph,
+        mouse::Cursor::Unavailable,
+        viewport,
+    );
+}
+
+/// Şeridin kesilen kenarları: o yönde daha sekme var, zemine doğru solar.
+pub(crate) fn fade_edges(renderer: &mut Renderer, strip: Rectangle, scroll: &Scroll, under: Color) {
+    let width = EDGE.min(strip.width / 2.0);
+    let shade = |renderer: &mut Renderer, x: f32, angle: f32| {
+        renderer.fill_quad(
+            Quad {
+                bounds: Rectangle {
+                    x,
+                    y: strip.y,
+                    width,
+                    height: strip.height - 2.0,
+                },
+                ..Quad::default()
+            },
+            Background::Gradient(Gradient::Linear(
+                Linear::new(Degrees(angle))
+                    .add_stop(0.0, Color { a: 0.0, ..under })
+                    .add_stop(1.0, under),
+            )),
+        );
+    };
+    if scroll.can_back() {
+        shade(renderer, strip.x, 270.0);
+    }
+    if scroll.can_forth() {
+        shade(renderer, strip.x + strip.width - width, 90.0);
     }
 }
 
@@ -1227,92 +1392,73 @@ fn fill(renderer: &mut Renderer, bounds: Rectangle, color: Color) {
 mod tests {
     use super::*;
 
-    #[test]
-    fn the_active_tab_stays_visible() {
-        let widths = [100.0; 10];
-
-        // Hepsi sığar.
-        assert_eq!(window(&widths, 3, 0, 1000.0), 0..10);
-
-        // Etkin sekme görünen aralıktaysa şerit kaymaz.
-        assert_eq!(window(&widths, 2, 0, 450.0), 0..4);
-        assert_eq!(window(&widths, 3, 0, 450.0), 0..4);
-
-        // Dışarıdaysa en sağa gelecek kadar kayar; geri dönerken en sola
-        // gelecek kadar.
-        assert_eq!(window(&widths, 7, 0, 450.0), 4..8);
-        assert_eq!(window(&widths, 5, 4, 450.0), 4..8);
-        assert_eq!(window(&widths, 1, 4, 450.0), 1..5);
-
-        // Sonda boşluk kalırsa soldakiler de görünür (ör. sekme kapanınca).
-        assert_eq!(window(&widths[..6], 5, 4, 450.0), 2..6);
-
-        // Tek sekme bile sığmıyorsa yalnızca etkin sekme.
-        assert_eq!(window(&widths, 6, 0, 50.0), 6..7);
-        assert_eq!(window(&[], 0, 0, 100.0), 0..0);
+    fn scrolled(widths: &[f32], active: usize, room: f32) -> Scroll {
+        let mut scroll = Scroll::default();
+        scroll.settle(widths, active, room);
+        scroll
     }
 
     #[test]
-    fn crowded_tabs_shrink_before_they_overflow() {
-        let natural = [80.0, 200.0, 150.0, 200.0];
+    fn tabs_keep_their_widths_and_the_strip_scrolls_to_the_active_one() {
+        let widths = [100.0; 10];
+        // All fit: nothing moves.
+        assert_eq!(scrolled(&widths, 3, 1000.0).offset, 0.0);
+        // The active one at the start stays put, the one past the edge comes in at the edge.
+        assert_eq!(scrolled(&widths, 2, 450.0).offset, 0.0);
+        assert_eq!(scrolled(&widths, 7, 450.0).offset, 350.0);
+        // Back to one on the left: it comes in at the left edge.
+        let mut scroll = scrolled(&widths, 7, 450.0);
+        assert_eq!(scroll.settle(&widths, 1, 450.0), 100.0);
+        // A tab wider than the strip shows its start.
+        assert_eq!(scrolled(&[100.0, 600.0, 100.0], 1, 300.0).offset, 100.0);
+        // Nothing to show.
+        assert_eq!(scrolled(&[], 0, 100.0).offset, 0.0);
+    }
 
-        // Sığıyor.
+    #[test]
+    fn the_readers_scrolling_is_kept_until_the_active_tab_changes() {
+        let widths = [100.0; 10];
+        let mut scroll = scrolled(&widths, 0, 450.0);
+        assert!(scroll.step(true));
+        assert_eq!(scroll.offset, 100.0, "a whole tab");
+        assert!(scroll.step(true));
+        assert_eq!(scroll.offset, 200.0);
+        // The next frame keeps it, though the active tab is out of sight now.
+        assert_eq!(scroll.settle(&widths, 0, 450.0), 200.0);
+        // The active tab changes: it is shown.
+        assert_eq!(scroll.settle(&widths, 9, 450.0), 550.0);
+        assert!(!scroll.can_forth());
+        assert!(scroll.can_back());
+        assert!(!scroll.step(true), "at the end");
+        assert!(scroll.step(false));
         assert_eq!(
-            fit(&natural, 0, 700.0, &[110.0; 4], f32::INFINITY),
-            (natural.to_vec(), false)
+            scroll.offset, 500.0,
+            "the cut one comes in at the left edge"
         );
+        // A narrower strip shows the active tab again; a wider one takes the room back.
+        assert_eq!(scroll.settle(&widths, 9, 300.0), 700.0);
+        assert_eq!(scroll.settle(&widths, 9, 2000.0), 0.0);
+        assert!(!scroll.can_back() && !scroll.can_forth());
+    }
 
-        // Dar sekme yerinde kalır, geniş sekmeler eşit daralır.
-        assert_eq!(
-            fit(&natural, 0, 560.0, &[110.0; 4], f32::INFINITY),
-            (vec![80.0, 165.0, 150.0, 165.0], false)
+    #[test]
+    fn the_wheel_scrolls_the_strip_within_its_ends() {
+        let widths = [100.0; 4];
+        let mut scroll = scrolled(&widths, 0, 250.0);
+        assert!(
+            !scroll.wheel(mouse::ScrollDelta::Lines { x: 0.0, y: 1.0 }),
+            "at the start"
         );
-
-        // Etkin sekme doğal genişliğinde kalır.
-        assert_eq!(
-            fit(&natural, 1, 500.0, &[110.0; 4], f32::INFINITY),
-            (vec![80.0, 200.0, 110.0, 110.0], false)
-        );
-        assert_eq!(
-            fit(&natural, 0, 500.0, &[110.0; 4], f32::INFINITY),
-            (vec![80.0, 140.0, 140.0, 140.0], false)
-        );
-
-        // Okunur genişliğin altına inilmez; sığmayanlar listeye taşar.
-        assert_eq!(
-            fit(&natural, 3, 400.0, &[110.0; 4], f32::INFINITY),
-            (vec![80.0, 110.0, 110.0, 200.0], true)
-        );
-        assert_eq!(
-            fit(&[300.0], 0, 100.0, &[110.0], f32::INFINITY),
-            (vec![300.0], false)
-        );
-
-        // Her sekme kendi tabanında durur (ör. yalnızca ikon kalan sekme).
-        assert_eq!(
-            fit(
-                &natural,
-                1,
-                400.0,
-                &[40.0, 110.0, 40.0, 110.0],
-                f32::INFINITY
-            ),
-            (vec![45.0, 200.0, 45.0, 110.0], false)
-        );
-
-        // Öbürleri tabandayken etkin sekme de daralabilir.
-        assert_eq!(
-            fit(&natural, 1, 300.0, &[40.0, 110.0, 40.0, 110.0], 100.0),
-            (vec![40.0, 110.0, 40.0, 110.0], false)
-        );
-        assert_eq!(
-            fit(&natural, 1, 280.0, &[40.0, 110.0, 40.0, 110.0], 100.0),
-            (vec![40.0, 200.0, 40.0, 110.0], true)
-        );
+        assert!(scroll.wheel(mouse::ScrollDelta::Lines { x: 0.0, y: -1.0 }));
+        assert_eq!(scroll.offset, WHEEL);
+        assert!(scroll.wheel(mouse::ScrollDelta::Pixels { x: -1000.0, y: 0.0 }));
+        assert_eq!(scroll.offset, 150.0, "the end");
     }
 
     fn strip_of(count: usize, first: usize) -> Geometry {
         Geometry {
+            strip: Rectangle::new(Point::ORIGIN, Size::new(10_000.0, 28.0)),
+            arrows: None,
             tabs: (0..count)
                 .map(|slot| {
                     (
@@ -1480,5 +1626,65 @@ mod interaction {
         );
         assert_eq!(strip.tabs, ["C", "D", "A", "E"]);
         assert_eq!(strip.active, 3);
+    }
+
+    #[test]
+    fn a_strip_that_does_not_fit_scrolls_by_its_arrows_and_wheel_and_keeps_its_tabs_whole() {
+        let mut snapshot = Snapshot::new(Size::new(300.0, 60.0)).expect("çizici kurulamadı");
+        let mut strip = Strip {
+            tabs: vec!["A", "B", "C", "D", "E", "F", "G", "H"],
+            active: 0,
+        };
+        let mut update = |strip: &mut Strip, message| strip.update(message);
+        let width = typography::scaled(MIN_WIDTH);
+        let y = height() / 2.0;
+        let arrow = super::arrow_width();
+        // The + stands beside the arrows, the list at the far end.
+        let next = Point::new(300.0 - 1.5 * arrow, y);
+        let prev = Point::new(300.0 - 2.5 * arrow, y);
+        let room = 300.0 - 3.0 * arrow - height();
+
+        snapshot.settle(&mut strip, Strip::view, &mut update);
+        // Each press brings in one more tab.
+        snapshot.input(&mut strip, Strip::view, &mut update, Input::Click(next));
+        snapshot.input(&mut strip, Strip::view, &mut update, Input::Click(next));
+        assert_eq!(strip.active, 0, "scrolling selects nothing");
+        // A press at the strip's left end is now on the third tab.
+        let first_seen = 2;
+        let offset = first_seen as f32 * width;
+        snapshot.input(
+            &mut strip,
+            Strip::view,
+            &mut update,
+            Input::Click(Point::new(width * first_seen as f32 - offset + 14.0, y)),
+        );
+        assert_eq!(strip.active, first_seen);
+        // Back.
+        for _ in 0..4 {
+            snapshot.input(&mut strip, Strip::view, &mut update, Input::Click(prev));
+        }
+        snapshot.input(
+            &mut strip,
+            Strip::view,
+            &mut update,
+            Input::Click(Point::new(20.0, y)),
+        );
+        assert_eq!(strip.active, 0);
+        // The wheel over the strip goes as far as the last tab.
+        for _ in 0..40 {
+            snapshot.input(
+                &mut strip,
+                Strip::view,
+                &mut update,
+                Input::Scroll(Point::new(60.0, y), -1.0),
+            );
+        }
+        snapshot.input(
+            &mut strip,
+            Strip::view,
+            &mut update,
+            Input::Click(Point::new(room - width + 14.0, y)),
+        );
+        assert_eq!(strip.active, 7, "the last tab ends at the strip's end");
     }
 }

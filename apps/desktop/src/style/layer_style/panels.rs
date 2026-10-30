@@ -109,16 +109,14 @@ impl App {
             super::compose::section(window, others)
         ]
         .spacing(16);
-        let base = overlay::modal(
-            Dialog::new(title)
-                .push(top)
-                .scroll_fill(container(body).padding([0, 4]).width(Fill))
-                .push(horizontal_divider())
-                .push(footer(window))
-                .width(WIDTH)
-                .max_height(HEIGHT),
-            ev(Event::Close),
-        );
+        let base = Dialog::new(title)
+            .push(top)
+            .scroll_fill(container(body).padding([0, 4]).width(Fill))
+            .push(horizontal_divider())
+            .push(footer(window))
+            .width(WIDTH)
+            .max_height(HEIGHT)
+            .modal(ev(Event::Close));
         if window.asking {
             stack![base, overlay::modal(question(&name), ev(Event::Stay))].into()
         } else {
@@ -218,12 +216,12 @@ fn footer<'a>(window: &LayerStyleWindow) -> Element<'a, Message> {
     row![
         container(status).width(Fill),
         button(label::body("Vazgeç"))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(Event::Close)),
         tip(
             button(label::body("Uygula"))
-                .padding([5, 14])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(ev(Event::Apply)),
             Tip::new("Haritada göster, pencere açık kalsın"),
@@ -237,7 +235,7 @@ fn footer<'a>(window: &LayerStyleWindow) -> Element<'a, Message> {
             .spacing(6)
             .align_y(Center)
         )
-        .padding([5, 14])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::primary)
         .on_press(ev(Event::Done)),
     ]
@@ -270,7 +268,7 @@ fn question<'a>(name: &str) -> Element<'a, Message> {
     .width(Fill);
     let answer = |text: &'static str, e: Event| {
         button(label::body(text))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(ev(e))
     };
@@ -279,7 +277,7 @@ fn question<'a>(name: &str) -> Element<'a, Message> {
         space::horizontal(),
         answer("Vazgeç", Event::Stay),
         button(label::body("Uygula ve kapat").style(style::text::on_accent))
-            .padding([5, 14])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
             .on_press(ev(Event::Done)),
     ]
@@ -402,7 +400,7 @@ fn small_button<'a>(
         None => label::body(text).into(),
     };
     button(face)
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::secondary)
         .on_press_maybe(press)
         .into()

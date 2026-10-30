@@ -10,7 +10,7 @@ use std::fmt;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use iced::widget::{Column, Row, column, container, row, scrollable, text_input};
+use iced::widget::{Column, Row, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     CoordColumn, CoordDelimiter, CoordRead, CoordReadOptions, DecimalMark, HeaderMode,
@@ -576,7 +576,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
                 .width(860.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 
@@ -812,13 +813,10 @@ impl App {
         ]
         .spacing(16);
         if s.target.is_none() {
-            let name = text_input("Yeni katmanın adı", &s.name)
+            let name = kentos_ui::widget::text_field("Yeni katmanın adı", &s.name)
                 .on_input(|t| event(Event::Name(t)))
-                .on_submit(event(Event::Run))
-                .padding([5, 8])
-                .size(kentos_ui::theme::typography::body())
-                .style(style::field::input);
-            let name = kentos_ui::widget::focus_ring(name);
+                .on_submit(event(Event::Run));
+            let name = name;
             parts = parts.push(
                 container(words::field(
                     "Yeni katmanın adı",

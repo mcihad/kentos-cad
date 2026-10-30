@@ -570,7 +570,7 @@ impl<'a, Message: Clone + 'a> From<Timeline<'a, Message>> for Element<'a, Messag
             tip(
                 button(icon(glyph).size(14.0))
                     .on_press(on_event(event))
-                    .padding(5)
+                    .padding(crate::theme::metrics::icon(14.0))
                     .style(style::button::flat),
                 Tip::new(name),
                 tooltip::Position::Top,
@@ -587,7 +587,7 @@ impl<'a, Message: Clone + 'a> From<Timeline<'a, Message>> for Element<'a, Messag
                 .size(14.0),
             )
             .on_press(on_event(Event::Play(!playback.playing)))
-            .padding(5)
+            .padding(crate::theme::metrics::icon(14.0))
             .style(style::button::toggle(playback.playing)),
             Tip::new(if playback.playing {
                 "Duraklat"
@@ -658,7 +658,7 @@ impl<'a, Message: Clone + 'a> From<Timeline<'a, Message>> for Element<'a, Messag
             .push(tip(
                 button(icon(Icon::Retry).size(14.0))
                     .on_press(on_event(Event::Loop(!playback.looping)))
-                    .padding(5)
+                    .padding(crate::theme::metrics::icon(14.0))
                     .style(style::button::toggle(playback.looping)),
                 Tip::new(if playback.looping {
                     "Döngü açık: sonda başa döner"

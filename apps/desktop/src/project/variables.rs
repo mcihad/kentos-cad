@@ -87,11 +87,7 @@ fn field<'a>(
     mono: bool,
     on: impl Fn(String) -> Message + 'a,
 ) -> text_input::TextInput<'a, Message> {
-    let input = text_input(placeholder, value)
-        .on_input(on)
-        .padding([4, 7])
-        .size(typography::body())
-        .style(style::field::input);
+    let input = kentos_ui::widget::text_field(placeholder, value).on_input(on);
     if mono {
         input.font(typography::mono())
     } else {
@@ -221,7 +217,7 @@ pub(super) fn view<'a>(
         .align_y(Center),
     )
     .on_press(on_add)
-    .padding([4, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary);
     let own: Element<'a, Message> = if rows.is_empty() {
         Banner::info(

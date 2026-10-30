@@ -18,7 +18,7 @@ use kentos_domain::Slot;
 use kentos_interaction::blocks as actions;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::style;
-use kentos_ui::widget::{Dialog as Frame, Tip, overlay, tip};
+use kentos_ui::widget::{Dialog as Frame, Tip, tip};
 
 use crate::app::{App, Dialog, Message};
 use crate::attribute_table::{self as table, COLUMNS, Extent, Row};
@@ -424,7 +424,7 @@ impl App {
             move |r| {
                 let pick = button(icon(Icon::Target).size(14.0))
                     .on_press_maybe(can_pick.then(|| msg(Event::Pick(r))))
-                    .padding(6)
+                    .padding(kentos_ui::theme::metrics::icon(14.0))
                     .style(style::button::ghost);
                 vec![tip(
                     pick,
@@ -441,17 +441,15 @@ impl App {
         if let Err(why) = &w.answer {
             body = body.push(words::text_line(Kind::Error, why.clone()));
         }
-        overlay::modal(
-            Frame::new(ATTRIBUTES_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Close))))
-                .action(words::primary(
-                    SAVE,
-                    w.answer.is_ok().then(|| msg(Event::Save)),
-                ))
-                .width(860.0),
-            msg(Event::Close),
-        )
+        Frame::new(ATTRIBUTES_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Close))))
+            .action(words::primary(
+                SAVE,
+                w.answer.is_ok().then(|| msg(Event::Save)),
+            ))
+            .width(860.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): the
@@ -503,7 +501,7 @@ impl App {
 /// The rows' options (docs/adr/0317 §1): a line for each row, its tag, the six options, a multiline one's box width
 /// and its field template.
 fn options_view(w: &Window) -> Element<'_, Message> {
-    use iced::widget::{row, text_input};
+    use iced::widget::row;
     use kentos_ui::widget::tree_view::{Check, check_box};
     let mut list = Column::new()
         .spacing(6)
@@ -534,22 +532,18 @@ fn options_view(w: &Window) -> Element<'_, Message> {
         }
         if item.options.multiline {
             line = line.push(
-                text_input("Kutu genişliği", &item.box_text)
+                kentos_ui::widget::text_field("Kutu genişliği", &item.box_text)
                     .on_input(move |t| msg(Event::BoxWidth(r, t)))
-                    .padding([3, 6])
-                    .width(96)
-                    .style(style::field::input),
+                    .width(96),
             );
         }
         line = line.push(
-            text_input(
+            kentos_ui::widget::text_field(
                 "Alan şablonu, ör. {NO}/{TUR}",
                 item.options.field.as_deref().unwrap_or(""),
             )
             .on_input(move |t| msg(Event::Field(r, t)))
-            .padding([3, 6])
-            .width(iced::Fill)
-            .style(style::field::input),
+            .width(iced::Fill),
         );
         list = list.push(line);
     }

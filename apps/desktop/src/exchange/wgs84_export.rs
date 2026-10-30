@@ -390,7 +390,8 @@ impl App {
                     can.then(|| event(Event::Run)),
                 ))
                 .width(820.0)
-                .max_height(780.0),
+                .max_height(780.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 

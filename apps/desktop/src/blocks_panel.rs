@@ -167,9 +167,13 @@ impl App {
             .filter(|(b, _)| {
                 // The category shown: the block's or one below it (docs/adr/0317 §4).
                 self.blocks_panel.category.as_ref().is_none_or(|c| {
-                    b.card.as_ref().and_then(|k| k.category.as_ref()).is_some_and(|k| {
-                        name_key(k) == name_key(c) || name_key(k).starts_with(&format!("{}/", name_key(c)))
-                    })
+                    b.card
+                        .as_ref()
+                        .and_then(|k| k.category.as_ref())
+                        .is_some_and(|k| {
+                            name_key(k) == name_key(c)
+                                || name_key(k).starts_with(&format!("{}/", name_key(c)))
+                        })
                 })
             })
             .filter(|(b, _)| {
@@ -180,10 +184,14 @@ impl App {
                         .as_deref()
                         .is_some_and(|d| name_key(d).contains(&query))
                     || b.card.as_ref().is_some_and(|k| {
-                        k.category.as_deref().is_some_and(|c| name_key(c).contains(&query))
+                        k.category
+                            .as_deref()
+                            .is_some_and(|c| name_key(c).contains(&query))
                             || k.tags.iter().any(|t| name_key(t).contains(&query))
                     })
-                    || b.attributes.iter().any(|a| name_key(&a.tag).contains(&query))
+                    || b.attributes
+                        .iter()
+                        .any(|a| name_key(&a.tag).contains(&query))
             })
             .map(|(b, placed)| Listed {
                 id: b.id,
@@ -504,7 +512,7 @@ impl App {
         tip(
             button(icon(glyph).size(16.0))
                 .on_press_maybe(self.available(id).then_some(Message::Run(id)))
-                .padding([4, 5])
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .style(style::button::ghost),
             Tip::new(title.to_owned()),
             tooltip::Position::Bottom,
@@ -516,14 +524,11 @@ impl App {
         // Bu çizim | Kitaplık (docs/adr/0726 §1), as AutoCAD's Blocks palette has Current Drawing and Libraries.
         let shown = self.blocks_panel.library_shown;
         let side = |library: bool, words: &'static str| {
-            button(
-                container(label::caption(words))
-                    .center_x(Fill),
-            )
-            .on_press(msg(Event::Source(library)))
-            .padding([3, 8])
-            .width(Fill)
-            .style(style::button::toggle(shown == library))
+            button(container(label::caption(words)).center_x(Fill))
+                .on_press(msg(Event::Source(library)))
+                .padding([3, 8])
+                .width(Fill)
+                .style(style::button::toggle(shown == library))
         };
         let source = container(row![side(false, "Bu çizim"), side(true, "Kitaplık")].spacing(4))
             .padding(iced::Padding {
@@ -545,8 +550,7 @@ impl App {
             msg(Event::Search(t))
         })
         .id(SEARCH)
-        .fill()
-        .height(28.0);
+        .fill();
         // Blok oluştur, Blok ekle and Blokları temizle beside the search (the web's toolbar).
         let search = container(
             row![
@@ -677,7 +681,7 @@ impl App {
             tip(
                 button(icon(crate::icons::from_web(Some(glyph))).size(14.0))
                     .on_press(msg(Event::Cards(on)))
-                    .padding(5)
+                    .padding(kentos_ui::theme::metrics::icon(14.0))
                     .style(style::button::toggle(p.cards == on)),
                 Tip::new(words),
                 tooltip::Position::Bottom,
@@ -736,8 +740,7 @@ impl App {
             }
             m
         };
-        let category: Element<'_, Message> =
-            kentos_ui::widget::MenuButton::new(face, menu).into();
+        let category: Element<'_, Message> = kentos_ui::widget::MenuButton::new(face, menu).into();
         container(
             row![
                 toggle(false, "blockList", "Liste"),
@@ -878,7 +881,9 @@ impl App {
         ] {
             menu = menu.item(word, msg(Event::Units(id, u, true)));
         }
-        menu.detail("Sayıları koru: blok yanlış birimde alınmışsa boyunu birimlerin oranıyla düzeltir.")
+        menu.detail(
+            "Sayıları koru: blok yanlış birimde alınmışsa boyunu birimlerin oranıyla düzeltir.",
+        )
     }
 
     /// The row's menu (the web's `menuFor`).
@@ -908,9 +913,14 @@ impl App {
             .shortcut("F2")
             .item("Öznitelikler…", msg(Event::Attributes(id)))
             .icon(crate::icons::from_web(Some("blockAttributes")))
-            .item("Öznitelikleri eşitle", (inserts > 0).then(|| msg(Event::Sync(id))))
+            .item(
+                "Öznitelikleri eşitle",
+                (inserts > 0).then(|| msg(Event::Sync(id))),
+            )
             .icon(crate::icons::from_web(Some("blockSync")))
-            .detail("Yerleştirmelerin değerlerini tanıma uydurur: kalkan etiketler, sabitler, alanlar.")
+            .detail(
+                "Yerleştirmelerin değerlerini tanıma uydurur: kalkan etiketler, sabitler, alanlar.",
+            )
             .item(
                 "Alanları güncelle",
                 (inserts > 0 && fields).then(|| msg(Event::Fields(id))),
@@ -928,7 +938,10 @@ impl App {
             .icon(crate::icons::from_web(Some("export")))
             .item("Dosyaya yaz…", msg(Event::WriteFile(id)))
             .icon(crate::icons::from_web(Some("blockWrite")))
-            .item("Başka çizimden yeniden tanımla…", msg(Event::RedefineFrom(id)))
+            .item(
+                "Başka çizimden yeniden tanımla…",
+                msg(Event::RedefineFrom(id)),
+            )
             .icon(crate::icons::from_web(Some("blockRedefineFile")))
             .submenu("Birim", self.units_menu(id))
             .icon(crate::icons::from_web(Some("units")));
@@ -985,16 +998,28 @@ impl App {
                 (inserts > 0).then(|| msg(Event::ReplaceWith(id, b.id))),
             );
         }
-        menu.detail("Yerleştirmeler yerinde kalır; uyan öznitelik değerleri taşınır, uymayanlar söylenir.")
+        menu.detail(
+            "Yerleştirmeler yerinde kalır; uyan öznitelik değerleri taşınır, uymayanlar söylenir.",
+        )
     }
 
     /// Öznitelikleri eşitle (`fields` false) and Alanları güncelle through `cad.blocks.edit`.
     pub(crate) fn blocks_sync(&mut self, id: BlockId, fields: bool) {
         use kentos_commands::{BlockEditOperation, CommandResult};
-        let Some(doc) = self.document.as_mut() else { return };
-        let name = doc.model.block(id).map(|b| b.name.clone()).unwrap_or_default();
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let name = doc
+            .model
+            .block(id)
+            .map(|b| b.name.clone())
+            .unwrap_or_default();
         let input = actions::input(
-            if fields { BlockEditOperation::Fields } else { BlockEditOperation::Sync },
+            if fields {
+                BlockEditOperation::Fields
+            } else {
+                BlockEditOperation::Sync
+            },
             Some(id),
         );
         let ran = kentos_native_application::blocks_edit::execute(
@@ -1020,8 +1045,15 @@ impl App {
                 if !s.added.is_empty() {
                     parts.push(format!("varsayılanını gösterenler: {}", s.added.join(", ")));
                 }
-                let what = if fields { "alanları güncellendi" } else { "öznitelikleri eşitlendi" };
-                self.say(Level::Success, format!("“{name}” bloğunun {what}: {}.", parts.join("; ")));
+                let what = if fields {
+                    "alanları güncellendi"
+                } else {
+                    "öznitelikleri eşitlendi"
+                };
+                self.say(
+                    Level::Success,
+                    format!("“{name}” bloğunun {what}: {}.", parts.join("; ")),
+                );
                 for w in warnings {
                     self.warn(w.message);
                 }
@@ -1036,8 +1068,15 @@ impl App {
     /// Başka blokla değiştir: `from`'s inserts place `to` (`cad.blocks.replace`).
     fn blocks_replace(&mut self, from: BlockId, to: BlockId) {
         use kentos_commands::{BlocksReplace, CommandResult};
-        let Some(doc) = self.document.as_mut() else { return };
-        let names = |id| doc.model.block(id).map(|b| b.name.clone()).unwrap_or_default();
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let names = |id| {
+            doc.model
+                .block(id)
+                .map(|b| b.name.clone())
+                .unwrap_or_default()
+        };
         let (a, b) = (names(from), names(to));
         let input = BlocksReplace {
             from: Some(from),
@@ -1057,7 +1096,10 @@ impl App {
                     output.replaced.len()
                 );
                 if !output.dropped.is_empty() {
-                    line.push_str(&format!(" “{b}” bloğunda karşılığı olmayan değerler düştü: {}.", output.dropped.join(", ")));
+                    line.push_str(&format!(
+                        " “{b}” bloğunda karşılığı olmayan değerler düştü: {}.",
+                        output.dropped.join(", ")
+                    ));
                 }
                 self.say(Level::Success, line);
                 for w in warnings {
@@ -1076,10 +1118,10 @@ impl App {
 pub(crate) fn size_text(app: &App, id: BlockId) -> Option<String> {
     let doc = app.document.as_ref()?;
     let b = doc.model.block(id)?;
-    let paths = app
-        .spatial
-        .store()
-        .insert_outlines(&id.to_text(), Vec2::new(0.0, 0.0), 1.0, 0.0, false);
+    let paths =
+        app.spatial
+            .store()
+            .insert_outlines(&id.to_text(), Vec2::new(0.0, 0.0), 1.0, 0.0, false);
     let e = crate::attribute_table::outline_extent(&paths)?;
     let format = app.format();
     let unit = b.units.map_or_else(

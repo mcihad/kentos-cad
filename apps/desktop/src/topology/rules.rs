@@ -7,7 +7,7 @@
 //! the table and Kaydet waits for it. Kaydet writes the project's setting
 //! (not an undo step, as the layer states).
 
-use iced::widget::{Column, button, container, row, text, text_input};
+use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     TOPOLOGY_TOLERANCE, TopologyRule, TopologyRuleKind, TopologySettings, TopologyValue,
@@ -16,8 +16,8 @@ use kentos_geometry_core::ops::topology_rules::Kind;
 use kentos_interaction::{Format, Level};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -411,11 +411,8 @@ impl App {
                     TopologyValue::Angle => shown(v / angle_radians(&format)),
                 })
                 .unwrap_or_default();
-            let field = text_input(&default, &r.value)
-                .size(typography::body())
-                .padding([3, 6])
-                .align_x(iced::alignment::Horizontal::Right)
-                .style(style::field::input);
+            let field = kentos_ui::widget::text_field(&default, &r.value)
+                .align_x(iced::alignment::Horizontal::Right);
             let field = if r.kind.value().is_some() {
                 field.on_input(move |t| msg(Event::Value(i, t)))
             } else {
@@ -459,7 +456,7 @@ impl App {
                     .align_y(Center),
             )
             .style(style::button::secondary)
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .on_press_maybe(on)
         };
         let actions = row![
@@ -488,12 +485,9 @@ impl App {
             .push(
                 row![
                     container(
-                        text_input("", &w.tolerance)
+                        kentos_ui::widget::text_field("", &w.tolerance)
                             .on_input(|t| msg(Event::Tolerance(t)))
-                            .size(typography::body())
-                            .padding([3, 6])
                             .align_x(iced::alignment::Horizontal::Right)
-                            .style(style::field::input)
                     )
                     .width(Length::Fixed(typography::scaled(110.0))),
                     label::caption(format.length_unit_label()),
@@ -505,21 +499,19 @@ impl App {
                 "Bu uzaklıktaki iki yer aynı yerdir; bundan dar çakışma ve boşluk sayılmaz.",
             ));
         let ready = problem.is_none() && self.rules_changed(w);
-        overlay::modal(
-            Frame::new(RULES_TITLE)
-                .push(
-                    Column::new()
-                        .spacing(10)
-                        .push(tolerance)
-                        .push(table)
-                        .push(actions)
-                        .push(words::summary(vec![line])),
-                )
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
-                .width(900.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(RULES_TITLE)
+            .push(
+                Column::new()
+                    .spacing(10)
+                    .push(tolerance)
+                    .push(table)
+                    .push(actions)
+                    .push(words::summary(vec![line])),
+            )
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(SAVE, ready.then(|| msg(Event::Save))))
+            .width(900.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): the

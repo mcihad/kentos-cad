@@ -22,14 +22,14 @@
 //! id or its path, a state whose name the project has skipped
 //! (docs/adr/0311 §3). The window stays open; Kapat closes it.
 
-use iced::widget::{Column, button, container, row, text_input};
+use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{LayerState, LayerStatesOperation, LayersStates};
 use kentos_domain::layer_states::{self, LayerStateParts};
 use kentos_interaction::Level;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::{Dialog as Frame, Elided, focus_ring, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -584,10 +584,8 @@ impl App {
             words::secondary(IMPORT, editable.then(|| msg(Event::Import))),
         ]
         .spacing(8);
-        let name = text_input("Durumun adı", &w.name)
-            .on_input(|t| msg(Event::Name(t)))
-            .padding([5, 8])
-            .style(style::field::input);
+        let name =
+            kentos_ui::widget::text_field("Durumun adı", &w.name).on_input(|t| msg(Event::Name(t)));
         let checks = row![
             words::check(w.locks, LOCKS, Some(msg(Event::Locks(!w.locks)))),
             words::check(w.styles, STYLES, Some(msg(Event::Styles(!w.styles)))),
@@ -608,20 +606,18 @@ impl App {
         let body = body
             .push(words::field("Kayıtlı durumlar", list, None))
             .push(actions)
-            .push(words::field(NAME, focus_ring(name), None))
+            .push(words::field(NAME, name, None))
             .push(words::field(
                 "Kaydedilecekler",
                 checks,
                 Some("Görünürlük, dondurma ve yazdırma her durumda kaydedilir.".to_owned()),
             ))
             .push(saving);
-        overlay::modal(
-            Frame::new(STATES_TITLE)
-                .push(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .width(520.0),
-            msg(Event::Close),
-        )
+        Frame::new(STATES_TITLE)
+            .push(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .width(520.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): a

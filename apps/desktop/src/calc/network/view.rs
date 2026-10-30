@@ -258,7 +258,9 @@ impl NetworkForm {
         }
         let done = matches!(&s.result, Some(Ok(_)));
         footer(
-            Dialog::new(NETWORK_TITLE).scroll(body),
+            Dialog::new(NETWORK_TITLE)
+                .on_close(crate::calc::event(crate::calc::Event::Close))
+                .scroll(body),
             Some(layer_select(model, self.layer.as_deref())),
             done,
         )
@@ -476,9 +478,15 @@ impl LevelForm {
             );
         }
         let done = matches!(&s.result, Some(Ok(_)));
-        footer(Dialog::new(LEVEL_TITLE).scroll(body), None, done)
-            .width(1040.0)
-            .into()
+        footer(
+            Dialog::new(LEVEL_TITLE)
+                .on_close(crate::calc::event(crate::calc::Event::Close))
+                .scroll(body),
+            None,
+            done,
+        )
+        .width(1040.0)
+        .into()
     }
 
     /// The points' result rows: name, height, its standard deviation, and

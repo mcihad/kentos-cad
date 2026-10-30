@@ -5,7 +5,7 @@
 //! many objects it takes, among its parent's (`kentos_native_style::tally`).
 
 use iced::widget::tooltip::Position;
-use iced::widget::{Column, button, column, container, row, space, text_input};
+use iced::widget::{Column, button, column, container, row, space};
 use iced::{Center, Element, Fill, Length};
 use kentos_native_style::renderer::{Rule, SymbolSet};
 use kentos_native_style::tally::RuleCount;
@@ -48,11 +48,11 @@ pub(super) fn rules_panel<'a>(
             .spacing(5)
             .align_y(Center),
     )
-    .padding([4, 10])
+    .padding(kentos_ui::theme::metrics::action())
     .style(style::button::secondary)
     .on_press(ev(Event::AddRule));
     let add_else = button(label::body("Değilse kuralı ekle"))
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .style(style::button::ghost)
         .on_press(ev(Event::AddElse));
     column![
@@ -95,10 +95,8 @@ fn block<'a>(
         _ => None,
     };
     let condition: Element<'a, Message> = if is_else {
-        text_input("değilse: diğer kuralların almadıkları", "")
-            .padding([4, 7])
+        kentos_ui::widget::text_field("değilse: diğer kuralların almadıkları", "")
             .font(typography::mono())
-            .size(typography::body())
             .style(style::field::validated(false))
             .width(Fill)
             .into()

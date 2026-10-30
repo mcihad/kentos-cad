@@ -349,7 +349,7 @@ impl<'a, Message: Clone + 'a> From<Legend<'a, Message>> for Element<'a, Message>
                         .align_y(Center);
 
                         if let Some(detail) = detail {
-                            content = content.push(label::mono_caption(detail));
+                            content = content.push(label::caption(detail));
                         }
 
                         match on_press {

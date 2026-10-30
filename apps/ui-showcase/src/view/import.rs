@@ -2,7 +2,7 @@
 //! özet.
 
 use iced::widget::text::Wrapping;
-use iced::widget::{Column, Row, column, container, pick_list, row, space, text_input};
+use iced::widget::{Column, Row, column, container, pick_list, row, space};
 use iced::{Center, Element, Fill};
 
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -183,9 +183,9 @@ fn columns_step<'a>(wizard: &'a ImportWizard) -> Element<'a, Message> {
                 )
             },
         )
-        .font(typography::mono())
+        .font(typography::ui())
         .text_size(typography::body())
-        .padding([3, 8])
+        .padding(kentos_ui::theme::metrics::field())
         .width(typography::scaled(180.0))
         .style(style::field::pick_list)
         .menu_style(style::field::menu)
@@ -301,12 +301,9 @@ fn summary_step<'a>(wizard: &'a ImportWizard, problem: Option<String>) -> Elemen
 
     let invalid = problem.is_some();
     let mut name = column![
-        text_input("Katman adı", &wizard.name)
+        kentos_ui::widget::text_field("Katman adı", &wizard.name)
             .on_input(Message::ImportName)
             .on_submit(Message::ImportNext)
-            .font(typography::ui())
-            .size(typography::body())
-            .padding([4, 8])
             .style(style::field::validated(invalid)),
     ]
     .spacing(4)

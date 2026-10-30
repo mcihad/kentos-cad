@@ -1,14 +1,14 @@
 //! Drawing-set editor: draft fields survive row switches; saving uses typed core operations.
-use iced::{Element, Fill};
+use crate::{Designer, Message, designer::Dialog as Window};
 use iced::widget::{button, column, row, scrollable};
-use kentos_sheet::{SheetBook, Item, Owner, RectUm, ItemKind, TableSource, TableColumn};
-use kentos_sheet::drawing_set::{DrawingInfo, DrawingIndex, SetDrawingInfo, SetDrawingSet};
-use kentos_sheet::ops::{Op, AddItems};
+use iced::{Element, Fill};
+use kentos_sheet::drawing_set::{DrawingIndex, DrawingInfo, SetDrawingInfo, SetDrawingSet};
+use kentos_sheet::ops::{AddItems, Op};
+use kentos_sheet::{Item, ItemKind, Owner, RectUm, SheetBook, TableColumn, TableSource};
 use kentos_ui::{
     label, style,
     widget::{Dialog, InputField, Switch},
 };
-use crate::{Designer, Message, designer::Dialog as Window};
 #[derive(Clone, Debug)]
 struct Entry {
     id: String,
@@ -211,6 +211,7 @@ impl Designer {
             );
             list = list.push(
                 button(label::body(title))
+                    .padding(kentos_ui::theme::metrics::action())
                     .width(Fill)
                     .style(if i == d.active {
                         style::button::primary
@@ -271,21 +272,25 @@ impl Designer {
             body = body.push(label::body(error).style(style::text::danger));
         }
         Dialog::new("Pafta seti")
+            .on_close(crate::Message::CloseDialog)
             .scroll(body)
             .width(760.)
             .max_height(640.)
             .aside(
                 button(label::body("Vazgeç"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(Message::CloseDialog)
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body("Öndeki paftaya dizin ekle"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(msg(SetMessage::InsertIndex))
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body("Kaydet"))
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press(msg(SetMessage::Save))
                     .style(style::button::primary),
             )

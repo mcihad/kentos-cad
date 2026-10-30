@@ -10,17 +10,17 @@
 
 use std::collections::HashSet;
 
-use iced::widget::{Column, Id, button, container, row, text, text_input};
+use iced::widget::{Column, Id, button, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_domain::Slot;
 use kentos_geometry_core::text::edit::Find;
 use kentos_interaction::Level;
 use kentos_interaction::find_replace::{Blocked, Match, Query, matches, write_query};
 use kentos_ui::icon::{Icon, Tone, icon};
+use kentos_ui::style;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList, focus_ring, overlay};
-use kentos_ui::{label, style};
+use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -204,21 +204,18 @@ impl App {
         let Some(w) = &self.find_replace else {
             return text("").into();
         };
-        let find = text_input(
+        let find = kentos_ui::widget::text_field(
             "Aranacak yazı; * herhangi bir dizi (Joker açıkken)",
             &w.find,
         )
         .id(Id::new(FIND_FIELD))
-        .on_input(|t| msg(Event::Find(t)))
-        .padding([5, 8])
-        .style(style::field::input);
-        let replace = text_input("Yeni yazı; boş bırakılırsa silinir", &w.replace)
-            .on_input(|t| msg(Event::Replace(t)))
-            .padding([5, 8])
-            .style(style::field::input);
+        .on_input(|t| msg(Event::Find(t)));
+        let replace =
+            kentos_ui::widget::text_field("Yeni yazı; boş bırakılırsa silinir", &w.replace)
+                .on_input(|t| msg(Event::Replace(t)));
         let fields = row![
-            container(words::field(FIND, focus_ring(find), None)).width(Fill),
-            container(words::field(REPLACE, focus_ring(replace), None)).width(Fill),
+            container(words::field(FIND, find, None)).width(Fill),
+            container(words::field(REPLACE, replace, None)).width(Fill),
         ]
         .spacing(18);
         let nothing_selected = self.selection.is_empty() && !w.selection_only;
@@ -287,14 +284,16 @@ impl App {
             ));
         }
 
-        let head = row![
-            container(text("")).width(typography::scaled(28.0)),
-            container(label::caption("Katman")).width(Fill),
-            container(label::caption("Metin")).width(Fill),
-            container(label::caption("Yeni metin")).width(Fill),
-        ]
-        .spacing(8)
-        .padding([4, 8]);
+        let head = kentos_ui::widget::table::band(
+            row![
+                container(text("")).width(typography::scaled(28.0)),
+                container(kentos_ui::widget::table::title("Katman")).width(Fill),
+                container(kentos_ui::widget::table::title("Metin")).width(Fill),
+                container(kentos_ui::widget::table::title("Yeni metin")).width(Fill),
+            ]
+            .spacing(8)
+            .padding([0, 8]),
+        );
         let list = VirtualList::new(w.matches.len(), typography::scaled(ROW), move |i| {
             let m = &w.matches[i];
             let checked = m.blocked.is_none() && !w.unchecked.contains(&m.slot);
@@ -380,18 +379,16 @@ impl App {
             .push(options)
             .push(words::summary(lines))
             .push(table);
-        overlay::modal(
-            Frame::new(FIND_TITLE)
-                .push(body)
-                .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .action(words::secondary(
-                    CHOSEN,
-                    some_checked.then(|| msg(Event::Chosen)),
-                ))
-                .action(words::primary(ALL, any.then(|| msg(Event::All))))
-                .width(680.0),
-            msg(Event::Close),
-        )
+        Frame::new(FIND_TITLE)
+            .push(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .action(words::secondary(
+                CHOSEN,
+                some_checked.then(|| msg(Event::Chosen)),
+            ))
+            .action(words::primary(ALL, any.then(|| msg(Event::All))))
+            .width(680.0)
+            .modal(msg(Event::Close))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): Bul

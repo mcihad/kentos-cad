@@ -168,7 +168,7 @@ fn step_row<'a>(
     let tool = |name: &str, words: &str, press: Option<Message>| -> Element<'a, Message> {
         tip(
             button(icon(glyph(name)).size(13.0))
-                .padding([2, 4])
+                .padding(kentos_ui::theme::metrics::icon_small(13.0))
                 .style(style::button::ghost)
                 .on_press_maybe(press),
             Tip::new(words.to_owned()),

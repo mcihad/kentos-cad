@@ -413,7 +413,9 @@ impl App {
         // The rows refused go beside the file, when it is on disk.
         let source_path = match &source {
             Source::GeoJson(f) | Source::Kml(f) | Source::Zip { file: f, .. } => f.path.clone(),
-            Source::Shapefile(files) => shapefile_set(files).ok().and_then(|set| files[set.shp].path.clone()),
+            Source::Shapefile(files) => shapefile_set(files)
+                .ok()
+                .and_then(|set| files[set.shp].path.clone()),
         }
         .unwrap_or_default();
         let mut state = State {
@@ -587,14 +589,13 @@ impl App {
             .iter()
             .filter_map(|l| self.gis_target(s, l).0)
             .collect();
-        let plan = (s.merge.on && self.gis_can_import(s)).then(|| {
-            self.gis_import_on_copy(s)
-                .map(|out| out.merged)
-        });
+        let plan = (s.merge.on && self.gis_can_import(s))
+            .then(|| self.gis_import_on_copy(s).map(|out| out.merged));
         let (Some(Window::GisImport(s)), Some(doc)) = (&mut self.exchange, &self.document) else {
             return;
         };
-        s.merge.learn(&doc.model, targets.iter().map(String::as_str), &[]);
+        s.merge
+            .learn(&doc.model, targets.iter().map(String::as_str), &[]);
         s.merged = plan;
     }
 
@@ -606,13 +607,17 @@ impl App {
         let mut copy = doc.model.clone();
         let cx = &mut ExecutionContext::new(&mut copy);
         let answer = match &s.source {
-            Source::Shapefile(_) | Source::Zip { .. } => file_import_shp::execute_read(cx, input.shp(), read),
+            Source::Shapefile(_) | Source::Zip { .. } => {
+                file_import_shp::execute_read(cx, input.shp(), read)
+            }
             Source::GeoJson(_) => file_import_geojson::execute_read(cx, input.geojson(), read),
             Source::Kml(_) => file_import_kml::execute_read(cx, input.kml(), read),
         };
         match answer {
             CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                Err(error.message)
+            }
             other => Err(format!("İçe aktarılamadı: {other:?}")),
         }
     }
@@ -890,7 +895,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("İçe aktar", can.then(|| event(Event::Run))))
                 .width(900.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 
@@ -1020,7 +1026,9 @@ impl App {
             lines.push(words::text_line(Line::Error, unusable.clone()));
         }
         match &s.merged {
-            Some(Ok(merged)) => lines.extend(merge_form::report_lines(merged, |id| self.layer_path(id))),
+            Some(Ok(merged)) => {
+                lines.extend(merge_form::report_lines(merged, |id| self.layer_path(id)))
+            }
             Some(Err(why)) => lines.push(words::text_line(Line::Warn, why.clone())),
             None => {}
         }

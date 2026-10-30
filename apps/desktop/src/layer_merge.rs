@@ -30,7 +30,7 @@ use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList, overlay};
+use kentos_ui::widget::{Dialog as Frame, Elided, VirtualList};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -335,13 +335,15 @@ impl App {
             .map(|(kind, line)| words::text_line(*kind, line.clone()))
             .collect();
 
-        let head = row![
-            container(text("")).width(typography::scaled(28.0)),
-            container(label::caption("Katman")).width(Fill),
-            container(label::caption("Nesne")).width(typography::scaled(56.0)),
-        ]
-        .spacing(8)
-        .padding([4, 8]);
+        let head = kentos_ui::widget::table::band(
+            row![
+                container(text("")).width(typography::scaled(28.0)),
+                container(kentos_ui::widget::table::title("Katman")).width(Fill),
+                container(kentos_ui::widget::table::title("Nesne")).width(typography::scaled(56.0)),
+            ]
+            .spacing(8)
+            .padding([0, 8]),
+        );
         let rows: Vec<(String, String, bool, bool, usize)> = leaves
             .iter()
             .zip(&counts)
@@ -415,14 +417,12 @@ impl App {
             .push(target)
             .push(words::summary(lines))
             .push(table);
-        overlay::modal(
-            Frame::new(MERGE_TITLE)
-                .push(body)
-                .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-                .action(words::primary(MERGE, said.ready.then(|| msg(Event::Merge))))
-                .width(560.0),
-            msg(Event::Cancel),
-        )
+        Frame::new(MERGE_TITLE)
+            .push(body)
+            .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
+            .action(words::primary(MERGE, said.ready.then(|| msg(Event::Merge))))
+            .width(560.0)
+            .modal(msg(Event::Cancel))
     }
 
     /// The window's controls by their words (a trace's `dialog` step): a

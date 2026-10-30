@@ -95,7 +95,7 @@ impl<'a, Message: Clone + 'a> From<Banner<'a, Message>> for Element<'a, Message>
             line = line.push(
                 button(icon(Icon::Close).size(12.0))
                     .on_press(message)
-                    .padding(4)
+                    .padding(crate::theme::metrics::icon_small(12.0))
                     .style(style::button::ghost),
             );
         }
@@ -217,7 +217,7 @@ impl<'a, Message: Clone + 'a> From<EmptyState<'a, Message>> for Element<'a, Mess
             let actions = state.actions.into_iter().map(|(text, message, primary)| {
                 button(label::body(text))
                     .on_press(message)
-                    .padding([4, 14])
+                    .padding(crate::theme::metrics::action())
                     .style(if primary {
                         style::button::primary
                     } else {

@@ -45,7 +45,7 @@ fn bar_button<'a>(
                 .align_y(Center),
         )
         .style(style::button::secondary)
-        .padding([4, 10])
+        .padding(kentos_ui::theme::metrics::action())
         .on_press_maybe(on),
         Tip::new(words).body(hint),
         iced::widget::tooltip::Position::Top,

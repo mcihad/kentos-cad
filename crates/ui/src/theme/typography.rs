@@ -195,6 +195,11 @@ impl Typography {
         (self.size * 5.0 / 3.0).round()
     }
 
+    /// Varsayılan yazı boyutunda (13 piksel) tasarlanmış ölçünün bu ayardaki karşılığı.
+    pub fn from_default(&self, px: f32) -> f32 {
+        (px * self.size / Self::DEFAULT.size).round()
+    }
+
     /// Gövde metni 12 piksel iken tasarlanmış ölçünün bu ayardaki karşılığı.
     pub fn scaled(&self, px: f32) -> f32 {
         (px * self.size / BASE).round()

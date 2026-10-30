@@ -436,6 +436,7 @@ impl App {
         let edited = matches!(&s.found, Some(Ok((out, _))) if out.edited > 0);
         overlay::blocking(
             Dialog::new("GIS türevini denetle")
+                .on_close(message(Exchange::Close))
                 .scroll(body)
                 .action(words::secondary("Kapat", Some(message(Exchange::Close))))
                 .action(words::secondary(

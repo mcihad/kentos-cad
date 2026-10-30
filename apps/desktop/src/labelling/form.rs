@@ -8,7 +8,7 @@
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-use iced::widget::{Column, Row, button, column, container, row, text_editor, text_input};
+use iced::widget::{Column, Row, button, column, container, row, text_editor};
 use iced::{Center, Element, Fill, Theme};
 use kentos_commands::{
     AreaLabelMode, CalloutKind, LabelAbbreviate, LabelAlign, LabelBackground, LabelCallout,
@@ -473,16 +473,14 @@ impl<'a> Host<'a> {
             .get(&key)
             .cloned()
             .unwrap_or_else(|| value_text(self.style, key));
-        let input = text_input(placeholder, &text)
+        let input = kentos_ui::widget::text_field(placeholder, &text)
             .on_input(move |t| msg(Event::Type(key, t)))
-            .padding([5, 8])
-            .size(typography::body())
             .style(style::field::validated(self.invalid.contains(&key)));
         let input = match width {
             Some(w) => input.width(typography::scaled(w)),
             None => input.width(Fill),
         };
-        kentos_ui::widget::focus_ring(input).into()
+        input.into()
     }
 
     /// A number field with its unit.
@@ -606,7 +604,7 @@ fn text_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
         let builder = kentos_ui::widget::tip(
             button(icon(from_web(Some("expression"))).size(16.0))
                 .style(style::button::ghost)
-                .padding(4)
+                .padding(kentos_ui::theme::metrics::icon_small(16.0))
                 .on_press(msg(Event::Builder(Field::Text))),
             kentos_ui::widget::Tip::new("İfade oluşturucu…"),
             iced::widget::tooltip::Position::Top,

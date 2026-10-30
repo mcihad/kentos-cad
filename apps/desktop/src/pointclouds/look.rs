@@ -10,7 +10,7 @@
 //! `pointcloudStyle` as one undo step (Nokta bulutu stili), Vazgeç leaves the
 //! cloud as it was. A new look only colours the nodes again; their points stay.
 
-use iced::widget::{Column, Row, button, column, container, row, space, text_input};
+use iced::widget::{Column, Row, button, column, container, row, space};
 use iced::{Center, Color, Element, Fill, Task};
 use kentos_commands::{
     CloudRender, CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry,
@@ -462,14 +462,9 @@ impl App {
             },
         );
         let field_input = |t: Typed, placeholder: &str, width: f32| {
-            kentos_ui::widget::focus_ring(
-                text_input(placeholder, &s.texts[t as usize])
-                    .on_input(move |v| msg(Event::Type(t, v)))
-                    .padding([5, 8])
-                    .width(width)
-                    .size(kentos_ui::theme::typography::body())
-                    .style(kentos_ui::style::field::input),
-            )
+            kentos_ui::widget::text_field(placeholder, &s.texts[t as usize])
+                .on_input(move |v| msg(Event::Type(t, v)))
+                .width(width)
         };
         let mut body = Column::new().spacing(14);
         let hint = match st.render {
@@ -509,7 +504,7 @@ impl App {
                         .is_some_and(Result::is_ok)
                         .then(|| msg(Event::Auto)),
                 )
-                .padding([5, 12])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(kentos_ui::style::button::secondary);
             body = body.push(words::field(
                 "Aralık",
@@ -595,7 +590,8 @@ impl App {
                     problem.is_none().then(|| msg(Event::Apply)),
                 ))
                 .width(640.0)
-                .max_height(820.0),
+                .max_height(820.0)
+                .on_close(Some(msg(Event::Close))),
         )
     }
 
@@ -646,7 +642,7 @@ impl App {
             line = line.push(
                 button(label::body("Hepsini göster"))
                     .on_press(msg(Event::AllClasses))
-                    .padding([3, 10])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(kentos_ui::style::button::secondary),
             );
             part = part.push(line);

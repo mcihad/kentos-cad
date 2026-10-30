@@ -1,5 +1,6 @@
 //! The field of a cell edited in Noktalar (docs/adr/0153 §3; the web's
-//! `PointTable.editor`): a text box in the cell, the accent line round it.
+//! `PointTable.editor`): the cell itself from line to line, the accent on its edge (KentOS UI's `Cell`,
+//! docs/adr/0805); its text starts where the cell's text stands, so nothing moves when an edit starts.
 //! Enter sends `on_enter` (the edit is written and goes down the column), a
 //! press outside it `on_leave` (written, the edit stops; the press goes on
 //! where it was made), Esc `on_cancel` (given up). Tab is the app's key
@@ -15,7 +16,6 @@ use iced::advanced::{Clipboard, Shell};
 use iced::keyboard::{self, key};
 use iced::widget::text_input;
 use iced::{Element, Event, Length, Rectangle, Renderer, Size, Theme, mouse};
-use kentos_ui::style;
 use kentos_ui::theme::typography;
 
 /// The field's id: the app gives it the keyboard when an edit starts.
@@ -29,16 +29,22 @@ struct EditBox<'a, Message> {
     on_cancel: Message,
 }
 
-/// The cell's field holding `value`, right-aligned for a number.
+/// The cell's field holding `value`, right-aligned for a number; `pads` are the column's (`table::cell_pads`).
 pub fn edit_box<'a, Message: Clone + 'a>(
     value: &str,
     numeric: bool,
+    pads: (f32, f32),
     on_input: impl Fn(String) -> Message + 'a,
     on_enter: Message,
     on_leave: Message,
     on_cancel: Message,
 ) -> Element<'a, Message> {
-    let input = text_input("", value)
+    let input = kentos_ui::widget::bare_field("", value)
+        .padding(
+            kentos_ui::theme::metrics::padding(kentos_ui::widget::table::row_height(), 0.0)
+                .left(pads.0)
+                .right(pads.1),
+        )
         .id(FIELD)
         .on_input(on_input)
         .on_submit(on_enter)
@@ -47,19 +53,17 @@ pub fn edit_box<'a, Message: Clone + 'a>(
         } else {
             typography::ui()
         })
-        .size(typography::body())
-        .padding([1, 6])
         .align_x(if numeric {
             iced::alignment::Horizontal::Right
         } else {
             iced::alignment::Horizontal::Left
-        })
-        .style(style::field::input);
-    Element::new(EditBox {
+        });
+    kentos_ui::widget::Cell::new(Element::new(EditBox {
         input: input.into(),
         on_leave,
         on_cancel,
-    })
+    }))
+    .into()
 }
 
 impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for EditBox<'a, Message> {

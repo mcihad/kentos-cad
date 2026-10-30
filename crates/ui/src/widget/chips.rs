@@ -90,7 +90,7 @@ impl<'a, Message: Clone + 'a> ChipInput<'a, Message> {
                             .wrapping(Wrapping::None),
                         button(icon(Icon::Close).size(8.0))
                             .on_press((on_change)(rest))
-                            .padding(3)
+                            .padding(crate::theme::metrics::icon_small(8.0))
                             .style(style::button::subtle),
                     ]
                     .spacing(2)
@@ -532,9 +532,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ChipInput<'a,
                 bounds,
                 border: Border {
                     color: if focused {
-                        t.accent
+                        t.accent_line()
                     } else if state.hovered {
-                        t.muted
+                        t.border_strong()
                     } else {
                         t.border
                     },

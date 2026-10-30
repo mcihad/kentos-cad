@@ -3,7 +3,7 @@
 //! inspector over the help, as the web's FlowView and FlowInspector.
 
 use iced::widget::tooltip::Position as Beside;
-use iced::widget::{Column, Stack, button, canvas, column, container, row, space, text_input};
+use iced::widget::{Column, Stack, button, canvas, column, container, row, space};
 use iced::{Alignment, Center, Element, Fill, Length};
 use kentos_expression::editor::flow::{FlowNode, NodeKind, Type};
 use kentos_expression::editor::{self as core, Kind};
@@ -77,7 +77,7 @@ pub(crate) fn area(b: &Builder, mode: Mode) -> Element<'_, Message> {
     let tool = |glyph: Icon, words: &'static str, e: FlowEvent| {
         tip(
             button(icon(glyph).size(15.0))
-                .padding([3, 5])
+                .padding(kentos_ui::theme::metrics::icon_small(15.0))
                 .style(style::button::ghost)
                 .on_press(fev(e)),
             Tip::new(words),
@@ -132,7 +132,7 @@ pub(crate) fn area(b: &Builder, mode: Mode) -> Element<'_, Message> {
         if flow.error.is_some() {
             line = line.push(
                 button(label::caption("Metin'de düzelt"))
-                    .padding([3, 8])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary)
                     .on_press(ev(Event::Mode(super::ViewMode::Text))),
             );
@@ -216,7 +216,7 @@ pub(crate) fn inspector(b: &Builder, mode: Mode) -> Option<Element<'_, Message>>
                         .spacing(6)
                         .align_y(Center)
                 )
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(fev(FlowEvent::Remove(n.id.clone()))),
             ]
@@ -254,14 +254,11 @@ fn editor<'a>(b: &'a Builder, n: &'a FlowNode) -> Option<Element<'a, Message>> {
         NodeKind::Number | NodeKind::Text => {
             let number = n.kind == NodeKind::Number;
             let mut col = Column::new().spacing(4).push(
-                text_input(if number { "0" } else { "" }, &b.flow.draft)
+                kentos_ui::widget::text_field(if number { "0" } else { "" }, &b.flow.draft)
                     .id(VALUE)
                     .on_input(|s| fev(FlowEvent::Draft(s)))
                     .on_submit(fev(FlowEvent::Commit))
-                    .font(typography::mono())
-                    .size(typography::body())
-                    .padding([4, 8])
-                    .style(style::field::input),
+                    .font(typography::mono()),
             );
             if let Some(e) = &b.flow.draft_error {
                 col = col.push(label::caption(e.clone()).style(style::text::danger));
@@ -406,7 +403,7 @@ fn ports(n: &FlowNode) -> Element<'_, Message> {
         if p.removable {
             line = line.push(tip(
                 button(icon(Icon::Close).size(12.0))
-                    .padding([2, 4])
+                    .padding(kentos_ui::theme::metrics::icon_small(12.0))
                     .style(style::button::ghost)
                     .on_press(fev(FlowEvent::RemovePort(n.id.clone(), k))),
                 Tip::new("Bu girişi kaldır"),
@@ -440,7 +437,7 @@ fn ports(n: &FlowNode) -> Element<'_, Message> {
                 .spacing(6)
                 .align_y(Center),
             )
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::secondary)
             .on_press(fev(FlowEvent::AddPort(n.id.clone()))),
         );

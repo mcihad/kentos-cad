@@ -282,7 +282,9 @@ impl App {
             Event::User(t) => self.with_editor(|e| e.user = t),
             Event::Password(t) => self.with_editor(|e| e.password = t),
             Event::KeepPassword => self.with_editor(|e| e.keep_password = !e.keep_password),
-            Event::Ssl(i) => self.with_editor(|e| e.ssl = SSL_MODES.get(i).copied().unwrap_or_default()),
+            Event::Ssl(i) => {
+                self.with_editor(|e| e.ssl = SSL_MODES.get(i).copied().unwrap_or_default())
+            }
             Event::PublicOnly => self.with_editor(|e| e.public_only = !e.public_only),
             Event::Geometryless => self.with_editor(|e| e.geometryless = !e.geometryless),
             Event::PasteToggle => {
@@ -552,16 +554,18 @@ impl App {
         if taken.is_empty() && left.is_empty() {
             return self.output(format!("{} dosyasında bağlantı yok.", path.display()));
         }
-        let mut said = format!(
-            "{} bağlantı alındı: {}.",
-            taken.len(),
-            taken.join(", ")
-        );
+        let mut said = format!("{} bağlantı alındı: {}.", taken.len(), taken.join(", "));
         if without > 0 {
-            said.push_str(&format!(" {without} bağlantının parolası dosyada yok; ilk bağlanışta sorulur."));
+            said.push_str(&format!(
+                " {without} bağlantının parolası dosyada yok; ilk bağlanışta sorulur."
+            ));
         }
         self.announce(
-            if left.is_empty() { Level::Success } else { Level::Warn },
+            if left.is_empty() {
+                Level::Success
+            } else {
+                Level::Warn
+            },
             said,
         );
         for why in left {
@@ -572,7 +576,11 @@ impl App {
 
     /// The password `connection` needs, asked for `retry`, with why.
     pub(crate) fn ask_db_password(&mut self, connection: &str, reason: String, retry: Retry) {
-        if self.db_password.as_ref().is_some_and(|a| a.connection == connection) {
+        if self
+            .db_password
+            .as_ref()
+            .is_some_and(|a| a.connection == connection)
+        {
             return;
         }
         self.db_password = Some(PasswordAsk {
@@ -631,7 +639,9 @@ impl App {
         result: Result<Arc<Catalog>, Diagnosis>,
     ) -> Task<Message> {
         match retry {
-            Retry::Browse(name) => self.sources_event(crate::sources::Event::Browsed(name.clone(), result, false)),
+            Retry::Browse(name) => {
+                self.sources_event(crate::sources::Event::Browsed(name.clone(), result, false))
+            }
             Retry::Postgis(name) => self.exchange_event(crate::exchange::Event::Postgis(
                 crate::exchange::postgis::Event::Listed(name.clone(), result, false),
             )),
@@ -665,7 +675,10 @@ impl App {
             .on_submit(msg(Event::AskSubmit))
             .id("db-parola");
         let body = column![
-            label::body(format!("“{}” ({summary}) bağlanmak için parola istiyor.", a.connection)),
+            label::body(format!(
+                "“{}” ({summary}) bağlanmak için parola istiyor.",
+                a.connection
+            )),
             words::field("Parola", field, None),
             words::check(
                 a.keep,
@@ -690,17 +703,19 @@ impl App {
                     "Bağlan",
                     (!a.password.is_empty() && !a.trying).then(|| msg(Event::AskSubmit)),
                 ))
-                .width(460.0),
+                .width(460.0)
+                .on_close(Some(msg(Event::AskClose))),
         )
     }
 
     fn editor_view<'a>(&'a self, e: &'a Editor) -> Element<'a, Message> {
-        let input = |placeholder: &str, value: &'a str, on: fn(String) -> Event, field: Option<Field>| {
-            InputField::new(placeholder, value)
-                .on_input(move |t| msg(on(t)))
-                .on_submit(msg(Event::Save))
-                .invalid(field.is_some_and(|f| e.problem(f).is_some()))
-        };
+        let input =
+            |placeholder: &str, value: &'a str, on: fn(String) -> Event, field: Option<Field>| {
+                InputField::new(placeholder, value)
+                    .on_input(move |t| msg(on(t)))
+                    .on_submit(msg(Event::Save))
+                    .invalid(field.is_some_and(|f| e.problem(f).is_some()))
+            };
         let mut form = Form::new()
             .label_width(130.0)
             .section("Bağlantı")
@@ -845,7 +860,8 @@ impl App {
             .action(words::secondary("Vazgeç", Some(msg(Event::Close))))
             .action(words::primary("Kaydet", Some(msg(Event::Save))))
             .width(620.0)
-            .max_height(760.0),
+            .max_height(760.0)
+            .on_close(Some(msg(Event::Close))),
         )
     }
 }

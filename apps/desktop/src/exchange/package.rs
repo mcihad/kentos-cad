@@ -303,7 +303,8 @@ impl App {
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
                 .action(words::primary("Klasör seç…", Some(event(Event::Pack))))
                 .width(600.0)
-                .max_height(720.0),
+                .max_height(720.0)
+                .on_close(Some(message(Exchange::Close))),
         )
     }
 }

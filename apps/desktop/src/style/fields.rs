@@ -83,14 +83,12 @@ pub fn input<'a, M: Clone + 'a>(
     mono: bool,
     invalid: bool,
 ) -> text_input::TextInput<'a, M> {
-    let mut field = text_input(placeholder, value)
-        .padding([4, 7])
+    let mut field = kentos_ui::widget::text_field(placeholder, value)
         .font(if mono {
             typography::mono()
         } else {
             typography::ui()
         })
-        .size(typography::body())
         .style(style::field::validated(invalid))
         .width(Fill);
     if let Some(id) = id {

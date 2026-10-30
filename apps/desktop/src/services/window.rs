@@ -10,7 +10,7 @@
 //! opaque service goes to the bottom, a clear one over the basemaps. Opened
 //! from a service layer's menu (Servis ayarları) it changes that layer.
 
-use iced::widget::{Column, button, column, container, row, scrollable, text_input};
+use iced::widget::{Column, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
     LayerNodeType, LayerServiceOperation, LayersService, ServiceKind, ServiceLayer,
@@ -19,9 +19,9 @@ use kentos_services::connect::{Choice as Picked, Connecting, Item, suggested_sri
 use kentos_services::presets;
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tree_view::{Check, check_box};
-use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
@@ -564,12 +564,14 @@ impl App {
                 );
                 // Kaynaklar keeps the service among its saved ones (docs/adr/0599 §4).
                 if layer.is_none() && !service.url.trim().is_empty() {
-                    self.sources.folders.add_service(crate::sources::SavedService {
-                        kind: service.kind,
-                        url: service.url.clone(),
-                        name: name.clone(),
-                        connection: service.connection.clone(),
-                    });
+                    self.sources
+                        .folders
+                        .add_service(crate::sources::SavedService {
+                            kind: service.kind,
+                            url: service.url.clone(),
+                            name: name.clone(),
+                            connection: service.connection.clone(),
+                        });
                 }
                 if let Some(id) = &service.connection
                     && let Some(doc) = &self.document
@@ -654,7 +656,7 @@ impl App {
                 (ready && !w.busy).then(|| msg(Event::Add)),
             ));
         }
-        overlay::modal(frame, msg(Event::Cancel))
+        frame.modal(msg(Event::Cancel))
     }
 
     /// The ready basemaps by group, each a button with its icon.
@@ -722,15 +724,12 @@ impl App {
             form = form.push(labelled(
                 "Adres",
                 row![
-                    text_input(KINDS[w.kind].3, &w.url)
-                        .size(typography::body())
-                        .padding([4, 8])
+                    kentos_ui::widget::text_field(KINDS[w.kind].3, &w.url)
                         .on_input(|t| msg(Event::Url(t)))
-                        .on_submit(msg(Event::Connect))
-                        .style(style::field::input),
+                        .on_submit(msg(Event::Connect)),
                     button(label::body("Bağlan"))
                         .style(style::button::primary)
-                        .padding([4, 14])
+                        .padding(kentos_ui::theme::metrics::action())
                         .on_press_maybe(
                             (!w.busy && !w.url.trim().is_empty()).then(|| msg(Event::Connect))
                         ),
@@ -745,7 +744,7 @@ impl App {
             form = form.push(
                 button(label::body("Harita türlerini göster"))
                     .style(style::button::secondary)
-                    .padding([4, 12])
+                    .padding(kentos_ui::theme::metrics::action())
                     .on_press_maybe((!w.busy).then(|| msg(Event::Connect))),
             );
         }
@@ -805,11 +804,8 @@ impl App {
             }
             form = form
                 .push(
-                    text_input("Katman ara", &w.search)
-                        .size(typography::body())
-                        .padding([4, 8])
-                        .on_input(|t| msg(Event::Search(t)))
-                        .style(style::field::input),
+                    kentos_ui::widget::text_field("Katman ara", &w.search)
+                        .on_input(|t| msg(Event::Search(t))),
                 )
                 .push(
                     container(scrollable(list).height(Length::Fixed(typography::scaled(170.0))))
@@ -832,11 +828,8 @@ impl App {
         form = form
             .push(labelled(
                 "Katmanın adı",
-                text_input("Katman ağacındaki adı", &w.name)
-                    .size(typography::body())
-                    .padding([4, 8])
+                kentos_ui::widget::text_field("Katman ağacındaki adı", &w.name)
                     .on_input(|t| msg(Event::Name(t)))
-                    .style(style::field::input)
                     .into(),
             ))
             .push(labelled("Saydamlık", opacity.into()));
@@ -971,11 +964,8 @@ impl App {
                     ))
                     .push(labelled(
                         "Alt alanlar",
-                        text_input("a,b,c ({s} için)", &w.subdomains)
-                            .size(typography::body())
-                            .padding([4, 8])
+                        kentos_ui::widget::text_field("a,b,c ({s} için)", &w.subdomains)
                             .on_input(|t| msg(Event::Subdomains(t)))
-                            .style(style::field::input)
                             .into(),
                     ))
                     .push(check(
@@ -985,20 +975,14 @@ impl App {
                     ))
                     .push(labelled(
                         "En büyük kat",
-                        text_input("19", &w.max_zoom)
-                            .size(typography::body())
-                            .padding([4, 8])
+                        kentos_ui::widget::text_field("19", &w.max_zoom)
                             .on_input(|t| msg(Event::MaxZoom(t)))
-                            .style(style::field::input)
                             .into(),
                     ))
                     .push(labelled(
                         "Atıf",
-                        text_input("© Kaynağın adı", &w.attribution)
-                            .size(typography::body())
-                            .padding([4, 8])
+                        kentos_ui::widget::text_field("© Kaynağın adı", &w.attribution)
                             .on_input(|t| msg(Event::Attribution(t)))
-                            .style(style::field::input)
                             .into(),
                     ));
             }

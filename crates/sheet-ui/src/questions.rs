@@ -271,17 +271,18 @@ impl Designer {
             body = body.push(label::body(p.as_str()).style(style::text::danger));
         }
         Dialog::new(texts::TITLE)
+            .on_close(crate::Message::CloseDialog)
             .push(container(body).max_height(520.0))
             .action(
                 button(label::body(texts::CANCEL))
                     .on_press(Message::CloseDialog)
-                    .padding([6, 14])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
             )
             .action(
                 button(label::body(texts::MAKE))
                     .on_press(qm(QuestionsMessage::Make))
-                    .padding([6, 16])
+                    .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::primary),
             )
             .width(520.0)

@@ -5,9 +5,7 @@
 //! stil değişiklikleri haritaya anında yansır.
 
 use iced::widget::text::Wrapping;
-use iced::widget::{
-    Column, button, column, container, row, scrollable, slider, space, text_input, tooltip,
-};
+use iced::widget::{Column, button, column, container, row, scrollable, slider, space, tooltip};
 use iced::{Center, Color, Element, Fill, Right, Theme};
 
 use kentos_ui::icon::{Icon, icon};
@@ -219,12 +217,10 @@ impl Showcase {
             |name: &'static str, value: &str, invalid: bool, on_input: fn(String) -> Message| {
                 row![
                     label::muted(name).width(typography::scaled(LABEL_WIDTH)),
-                    text_input("ondalık derece", value)
+                    kentos_ui::widget::text_field("ondalık derece", value)
                         .on_input(on_input)
                         .on_submit(Message::GoToCentered)
                         .font(typography::mono())
-                        .size(typography::body())
-                        .padding([3, 6])
                         .style(style::field::validated(invalid)),
                 ]
                 .spacing(8)
@@ -266,13 +262,13 @@ impl Showcase {
             button(label::text("Git").align_x(Center).width(Fill))
                 .on_press_maybe(location.map(|_| Message::GoToCentered))
                 .width(Fill)
-                .padding([3, 10])
+                .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::primary),
             tip(
                 button(label::text("Nokta ekle").align_x(Center).width(Fill))
                     .on_press_maybe(location.filter(|_| drawing).map(|_| Message::GoToPlaced))
                     .width(Fill)
-                    .padding([3, 10])
+                    .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary),
                 Tip::new("Nokta ekle").body(if drawing {
                     "Koordinatı süren çizime ya da ölçüme nokta olarak ekler."
@@ -439,7 +435,7 @@ fn action<'a>(
     tip(
         button(icon(glyph).size(14.0))
             .on_press_maybe(on_press)
-            .padding(4)
+            .padding(kentos_ui::theme::metrics::icon_small(14.0))
             .style(style::button::ghost),
         Tip::new(description),
         tooltip::Position::Bottom,

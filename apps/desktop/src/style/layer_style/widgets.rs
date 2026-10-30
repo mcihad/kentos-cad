@@ -209,11 +209,7 @@ fn fit(s: &str, size: f32, width: f32) -> String {
 
 /// A single-line field in the window's look.
 pub(super) fn input<'a>(placeholder: &str, value: &str) -> text_input::TextInput<'a, Message> {
-    text_input(placeholder, value)
-        .padding([4, 7])
-        .font(typography::ui())
-        .size(typography::body())
-        .style(style::field::validated(false))
+    kentos_ui::widget::text_field(placeholder, value).style(style::field::validated(false))
 }
 
 /// A number field, right-aligned figures, `width` logical pixels.
@@ -242,7 +238,7 @@ pub(super) fn check<'a>(on: bool, press: Message) -> Element<'a, Message> {
 pub(super) fn tool<'a>(glyph: &str, label: &str, press: Option<Message>) -> Element<'a, Message> {
     tip(
         button(icon(crate::icons::from_web(Some(glyph))).size(14.0))
-            .padding([3, 4])
+            .padding(kentos_ui::theme::metrics::icon_small(14.0))
             .style(style::button::ghost)
             .on_press_maybe(press),
         Tip::new(label.to_owned()),
@@ -308,10 +304,8 @@ pub(super) fn expression<'a>(
     compact: bool,
 ) -> Element<'a, Message> {
     let on = field.clone();
-    let line = text_input(placeholder, text)
-        .padding([4, 7])
+    let line = kentos_ui::widget::text_field(placeholder, text)
         .font(typography::mono())
-        .size(typography::body())
         .style(style::field::validated(invalid))
         .on_input(move |t| ev(Event::Expr(on.clone(), t)))
         .width(Fill);

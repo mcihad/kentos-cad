@@ -7,9 +7,7 @@
 use iced::keyboard::Key;
 use iced::keyboard::key::Named;
 use iced::widget::text_editor::{self, Binding, KeyPress};
-use iced::widget::{
-    Column, Row, button, column, container, row, space, text_editor as editor, text_input,
-};
+use iced::widget::{Column, Row, button, column, container, row, space, text_editor as editor};
 use iced::{Center, Element, Fill, Length};
 use kentos_native_style::file::{ConflictMode, kind_of};
 use kentos_native_style::library::{Item, ItemKind, Source, StyleLibrary};
@@ -115,7 +113,7 @@ fn small_button<'a>(
         .spacing(5)
         .align_y(Center),
     )
-    .padding([4, 9])
+    .padding(kentos_ui::theme::metrics::action())
     .style(if danger {
         style::button::danger
     } else {
@@ -206,11 +204,7 @@ pub fn details<'a>(
     }
     let typed = |f: Field, value: String| m.typed.get(&f).cloned().unwrap_or(value);
     let input = |f: Field, value: String, placeholder: &str| -> Element<'a, Message> {
-        text_input(placeholder, &typed(f, value))
-            .padding([4, 7])
-            .font(typography::ui())
-            .size(typography::body())
-            .style(style::field::input)
+        kentos_ui::widget::text_field(placeholder, &typed(f, value))
             .on_input(move |t| ev(Event::Field(f, t)))
             .on_submit(ev(Event::Commit(f)))
             .into()
@@ -623,11 +617,11 @@ fn import_panel<'a>(
                 .spacing(5)
                 .align_y(Center)
             )
-            .padding([4, 10])
+            .padding(kentos_ui::theme::metrics::action())
             .style(style::button::primary)
             .on_press(ev(Event::ImportRun)),
             button(label::body("Vazgeç"))
-                .padding([4, 10])
+                .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::secondary)
                 .on_press(ev(Event::ImportCancel)),
             space::horizontal(),

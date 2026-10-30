@@ -16,11 +16,9 @@
 //! herhangi bir yerine (ikon, birim, boşluk) tıklamak girişi odaklar ve
 //! imleci sona koyar.
 //!
-//! Yükseklik [`metrics`]'ten gelir: varsayılan kontrol yüksekliği yanındaki
-//! seçim kutusu ve sayı girişiyle aynıdır; [`InputField::inline`] tablo ve
-//! özellik hücresi içindir. [`InputField::cell`] çerçeveyi üzerine gelinene
-//! dek gizler: özellik ızgarasında değer düz yazı gibi durur (DESIGN.md
-//! §7.5).
+//! Yükseklik [`metrics`]'ten gelir: bütün girdiler aynı boydadır
+//! ([`metrics::control`], docs/adr/0804). [`InputField::cell`] çerçevesizdir:
+//! ızgara hücresini doldurur, durumlarını hücre çizer (DESIGN.md §7.5).
 //!
 //! ```ignore
 //! InputField::new("Katman ara", &self.search)
@@ -47,7 +45,7 @@ use crate::label;
 use crate::style;
 use crate::style::button::radius;
 use crate::theme::{Tokens, metrics, typography};
-use crate::widget::{Tip, focus_ring, tip};
+use crate::widget::{Tip, tip};
 
 type Paragraph = <Renderer as iced::advanced::text::Renderer>::Paragraph;
 
@@ -66,7 +64,6 @@ pub struct InputField<'a, Message> {
     ends_in_button: bool,
     clear: Option<Message>,
     mono: bool,
-    inline: bool,
     cell: bool,
     invalid: bool,
     width: Length,
@@ -84,7 +81,6 @@ impl<'a, Message: Clone + 'a> InputField<'a, Message> {
             ends_in_button: false,
             clear: None,
             mono: false,
-            inline: false,
             cell: false,
             invalid: false,
             width: Length::Fill,
@@ -196,17 +192,10 @@ impl<'a, Message: Clone + 'a> InputField<'a, Message> {
         self
     }
 
-    /// Satır içi yükseklik (tablo, özellik hücresi, araç çubuğu).
-    pub fn inline(mut self) -> Self {
-        self.inline = true;
-        self
-    }
-
-    /// Özellik hücresi: zemin ve kenar üzerine gelinene ya da odaklanana dek
-    /// görünmez; satır içi yüksekliktedir.
+    /// Izgara hücresi (docs/adr/0804): çerçevesi ve zemini yok, hücreyi doldurur;
+    /// durumları sarıldığı [`Cell`](crate::widget::cell::Cell) çizer.
     pub fn cell(mut self) -> Self {
         self.cell = true;
-        self.inline = true;
         self
     }
 
@@ -218,11 +207,7 @@ impl<'a, Message: Clone + 'a> InputField<'a, Message> {
 
 impl<'a, Message: Clone + 'a> From<InputField<'a, Message>> for Element<'a, Message> {
     fn from(field: InputField<'a, Message>) -> Self {
-        let height = if field.inline {
-            metrics::inline()
-        } else {
-            metrics::control()
-        };
+        let height = metrics::control();
         let size = typography::body();
         let input = field
             .input
@@ -287,7 +272,11 @@ impl<'a, Message: Clone + 'a> From<InputField<'a, Message>> for Element<'a, Mess
             ends_in_button = true;
         }
 
-        let edge = if field.inline { 6.0 } else { 8.0 };
+        let edge = if field.cell {
+            metrics::cell_pad()
+        } else {
+            metrics::FIELD_PAD
+        };
         let frame = Frame {
             children,
             input: input_index,
@@ -295,7 +284,12 @@ impl<'a, Message: Clone + 'a> From<InputField<'a, Message>> for Element<'a, Mess
             width: field.width,
             padding: Padding {
                 left: if leading { edge - 1.0 } else { edge },
-                right: if ends_in_button { 3.0 } else { edge },
+                right: match (ends_in_button, field.cell) {
+                    (true, true) => 0.0,
+                    (true, false) => 3.0,
+                    (false, true) => edge - 2.0,
+                    (false, false) => edge,
+                },
                 ..Padding::ZERO
             },
             cell: field.cell,
@@ -303,11 +297,7 @@ impl<'a, Message: Clone + 'a> From<InputField<'a, Message>> for Element<'a, Mess
             editable: field.editable,
         };
 
-        if field.cell {
-            Element::new(frame)
-        } else {
-            focus_ring(Element::new(frame)).into()
-        }
+        Element::new(frame)
     }
 }
 
@@ -504,38 +494,32 @@ impl<Message> Widget<Message, Theme, Renderer> for Frame<'_, Message> {
         let focused = self.focused(tree);
         let hovered = self.editable && cursor.is_over(bounds);
 
-        let edge = if self.invalid {
-            Some(t.danger)
-        } else if focused {
-            Some(t.accent_line())
-        } else if hovered {
-            Some(t.border_strong())
-        } else if self.cell {
-            None
-        } else {
-            Some(t.border)
-        };
-
-        let background = if self.cell && edge.is_none() {
-            Color::TRANSPARENT
-        } else if self.editable {
-            t.field
-        } else {
-            t.field.scale_alpha(0.6)
-        };
-
-        if edge.is_some() || background.a > 0.0 {
+        // A cell's field draws no frame: the cell around it draws its states (docs/adr/0804).
+        if !self.cell {
+            let edge = if self.invalid {
+                t.danger
+            } else if focused {
+                t.accent_line()
+            } else if hovered {
+                t.border_strong()
+            } else {
+                t.border
+            };
             renderer.fill_quad(
                 Quad {
                     bounds,
                     border: Border {
-                        color: edge.unwrap_or(Color::TRANSPARENT),
+                        color: edge,
                         width: 1.0,
                         radius: radius().into(),
                     },
                     ..Quad::default()
                 },
-                Background::Color(background),
+                Background::Color(if self.editable {
+                    t.field
+                } else {
+                    t.field.scale_alpha(0.6)
+                }),
             );
         }
 
@@ -600,4 +584,31 @@ impl<Message> Widget<Message, Theme, Renderer> for Frame<'_, Message> {
             translation,
         )
     }
+}
+
+/// Düz metin girişi: yazısı, yüksekliği ve görünüşü bütün girdilerle aynı
+/// (docs/adr/0804). Uygulamalar iced'in `text_input`'unu değil bunu kullanır;
+/// yükseklik burada tek yerde belirlenir.
+pub fn text_field<'a, Message: Clone + 'a>(
+    placeholder: &str,
+    value: &str,
+) -> iced::widget::TextInput<'a, Message> {
+    text_input(placeholder, value)
+        .font(typography::ui())
+        .size(typography::body())
+        .padding(metrics::field())
+        .style(style::field::input)
+}
+
+/// Kendi çerçevesi olan alanın içindeki metin girişi (arama satırı: ikon ve
+/// giriş bir `field_box`'ta): çerçevesiz, yanlarda boşluksuz, aynı yükseklikte.
+pub fn bare_field<'a, Message: Clone + 'a>(
+    placeholder: &str,
+    value: &str,
+) -> iced::widget::TextInput<'a, Message> {
+    text_input(placeholder, value)
+        .font(typography::ui())
+        .size(typography::body())
+        .padding(metrics::padding(metrics::control(), 0.0))
+        .style(style::field::bare_input)
 }

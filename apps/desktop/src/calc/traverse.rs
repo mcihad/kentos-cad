@@ -609,7 +609,9 @@ impl Form {
         }
         let new_points = c.result.as_ref().is_some_and(|r| !r.points.is_empty());
         footer(
-            Dialog::new(TITLE).scroll(body),
+            Dialog::new(TITLE)
+                .on_close(crate::calc::event(crate::calc::Event::Close))
+                .scroll(body),
             model,
             self.layer.as_deref(),
             c.result.is_some(),

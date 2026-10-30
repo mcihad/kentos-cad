@@ -181,7 +181,7 @@ pub(super) fn view<'a, Message: Clone + 'a>(
     }
     content = content.push(
         container(
-            text("↑↓ seç · Tab / Enter tamamla · Esc kapat")
+            text("↑↓ seçer, Tab ya da Enter tamamlar, Esc kapatır")
                 .size(typography::caption())
                 .style(style::text::muted),
         )
