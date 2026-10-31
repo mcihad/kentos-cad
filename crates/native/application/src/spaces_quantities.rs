@@ -243,7 +243,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                 let height = x.height.or_else(|| level_height(doc, &x.arch));
                 let id = uid(e);
                 let openings = on_wall.get(&id).cloned().unwrap_or_default();
-                let openings_area: f64 = openings.iter().map(|(_, a)| a).sum();
+                let openings_area = total(openings.iter().map(|(_, a)| *a));
                 let gross = height.map(|h| length * h);
                 let net = gross.map(|g| g - openings_area);
                 let rule = if recessed.contains(&id) {
@@ -271,34 +271,40 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     }
     out.transitions = crate::slab_quantities::transitions(&rooms, &passages);
     let summed = || out.slabs.iter().filter(|s| !s.excluded);
-    let edged = |k: kentos_commands::SlabEdgeKind| summed().filter(|s| s.edge == Some(k)).map(|s| s.edge_length).sum();
-    let (slab_area, slab_volume) = (summed().map(|s| s.net_area).sum(), summed().map(|s| s.volume).sum());
+    let edged = |k: kentos_commands::SlabEdgeKind| summed().filter(|s| s.edge == Some(k)).map(|s| s.edge_length).sum::<f64>() + 0.0;
+    let (slab_area, slab_volume) = (summed().map(|s| s.net_area).sum::<f64>() + 0.0, summed().map(|s| s.volume).sum::<f64>() + 0.0);
     let (railing_length, parapet_length) =
         (edged(kentos_commands::SlabEdgeKind::Railing), edged(kentos_commands::SlabEdgeKind::Parapet));
     out.totals = QuantityTotals {
-        space_area: out.spaces.iter().filter(|s| !s.void).map(|s| s.area).sum(),
-        void_area: out.spaces.iter().filter(|s| s.void).map(|s| s.area).sum(),
-        wall_length: out.walls.iter().map(|w| w.length).sum(),
-        wall_net_area: out.walls.iter().filter_map(|w| w.net_area).sum(),
+        space_area: out.spaces.iter().filter(|s| !s.void).map(|s| s.area).sum::<f64>() + 0.0,
+        void_area: out.spaces.iter().filter(|s| s.void).map(|s| s.area).sum::<f64>() + 0.0,
+        wall_length: out.walls.iter().map(|w| w.length).sum::<f64>() + 0.0,
+        wall_net_area: out.walls.iter().filter_map(|w| w.net_area).sum::<f64>() + 0.0,
         openings: u32::try_from(out.openings.len()).unwrap_or(u32::MAX),
         opening_area: out
             .openings
             .iter()
             .filter(|o| !o.form.is_recess())
             .filter_map(|o| o.area)
-            .sum(),
-        baseboard_length: out.spaces.iter().filter_map(|s| s.baseboard).sum(),
+            .sum::<f64>() + 0.0,
+        baseboard_length: out.spaces.iter().filter_map(|s| s.baseboard).sum::<f64>() + 0.0,
         slab_area,
         slab_volume,
         railing_length,
         parapet_length,
-        ramp_area: out.ramps.iter().map(|r| r.area).sum(),
-        ramp_railing_length: out.ramps.iter().map(|r| r.railing_length).sum(),
-        stair_area: out.stairs.iter().map(|s| s.area).sum(),
-        stair_railing_length: out.stairs.iter().map(|s| s.railing_length).sum(),
+        ramp_area: out.ramps.iter().map(|r| r.area).sum::<f64>() + 0.0,
+        ramp_railing_length: out.ramps.iter().map(|r| r.railing_length).sum::<f64>() + 0.0,
+        stair_area: out.stairs.iter().map(|s| s.area).sum::<f64>() + 0.0,
+        stair_railing_length: out.stairs.iter().map(|s| s.railing_length).sum::<f64>() + 0.0,
         stair_risers: out.stairs.iter().map(|s| s.risers).fold(0u32, u32::saturating_add),
     };
     Ok(out)
+}
+
+/// A sum that is +0 when empty: Rust's f64 `Sum` starts from -0 (+0 added makes it +0), so an empty column said “-0.0” in the API's JSON
+/// (docs/adr/0776 §2).
+fn total(values: impl Iterator<Item = f64>) -> f64 {
+    values.sum::<f64>() + 0.0
 }
 
 /// A ramp measured (docs/adr/0723 §3): its lengths, landings, plan area and railings from its line, its slope as drawn.

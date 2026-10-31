@@ -211,6 +211,7 @@ mod tests {
             drag: None,
             mouse: None,
             double_click: None,
+            click_number: None,
             right_click: None,
             focus: None,
             save_and_reopen: None,

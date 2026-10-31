@@ -11,6 +11,8 @@
 //!   program, the same library fixed to it ([`module_program`]).
 
 #[cfg(test)]
+mod acceptance_flat_tests;
+#[cfg(test)]
 mod acceptance_gis_tests;
 #[cfg(test)]
 mod acceptance_tests;
@@ -515,6 +517,8 @@ mod active_level;
 mod column_scenes;
 #[cfg(test)]
 mod walkthrough_scenes;
+#[cfg(test)]
+mod quality_scenes;
 #[cfg(test)]
 mod opening_scenes;
 #[cfg(test)]

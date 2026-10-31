@@ -144,7 +144,7 @@ fn tagged(app: &mut App) {
 }
 
 /// Duvar ölçüleri round the shell (Bütün kenarlar), written.
-fn dimensions(app: &mut App) {
+pub(crate) fn dimensions(app: &mut App) {
     tagged(app);
     run(app, "tool.wallDimensions");
     click(app, [6.0, -0.25]);

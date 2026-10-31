@@ -855,11 +855,20 @@ impl WallDimensions {
                     && crate::selectable::on_selected_layer(cx.doc, entity)
             })
         };
+        // A wall's face within the aperture first. The store picks a wall inside its body too (docs/adr/0776 §3), as
+        // an area after every edge; here overlapping bodies go to the nearest physical centre below, not the first.
+        let edges: Vec<Slot> = cx
+            .spatial
+            .store()
+            .hit_edge(p.raw, cx.pick_tolerance())
+            .into_iter()
+            .map(|(id, _)| Slot(id as u32))
+            .collect();
         let edge = cx
             .spatial
             .hits(p.raw, cx.pick_tolerance())
             .into_iter()
-            .find(|slot| allowed(*slot));
+            .find(|slot| allowed(*slot) && edges.contains(slot));
         if edge.is_some() {
             return edge;
         }

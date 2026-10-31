@@ -245,8 +245,15 @@ fn a_close_zoom_accepts_the_unhatched_wall_body_far_from_its_edges() {
     b.start("wallDimensions");
     let at = Bench::pointer(10., 0.003);
     b.spatial.sync(&b.doc);
+    // The body's centre is far beyond the faces' aperture; the store picks the wall inside its body (docs/adr/0776
+    // §3), not by an edge.
+    assert!(b.spatial.hits(at.raw, 0.005).contains(&wall));
     assert!(
-        !b.spatial.hits(at.raw, 0.005).contains(&wall),
+        !b.spatial
+            .store()
+            .hit_edge(at.raw, 0.005)
+            .iter()
+            .any(|(id, _)| *id as u32 == wall.0),
         "body centre is far beyond the edge aperture"
     );
     let before = b.doc.to_snapshot_v2();
