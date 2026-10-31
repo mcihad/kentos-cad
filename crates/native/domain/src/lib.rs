@@ -69,6 +69,8 @@ mod layers;
 pub mod leader_ties;
 pub mod opening_follow;
 pub mod space_follow;
+#[cfg(test)]
+mod space_phase_tests;
 pub mod slab_bound;
 pub mod slab_follow;
 pub mod arch_follow;

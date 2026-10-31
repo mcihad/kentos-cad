@@ -213,6 +213,24 @@ impl Store {
                 out.area = Some(a);
             }
         }
+        // An opening is picked in its gap, between its jambs (docs/adr/0798 §3): the wall's body runs on through it
+        // as an area, so a click on a door in the wall picked the wall; the gap is smaller, the door goes first.
+        if interior
+            && let Shape::Opening { place, .. } = &it.shape
+            && place.len() == 4
+        {
+            let ring = [place[0], place[2], place[3], place[1]];
+            if point_in_polygon(p, &ring) {
+                let a = (0..4)
+                    .map(|i| ring[i].x * ring[(i + 1) % 4].y - ring[(i + 1) % 4].x * ring[i].y)
+                    .sum::<f64>()
+                    .abs()
+                    / 2.0;
+                if out.area.is_none_or(|best| a < best) {
+                    out.area = Some(a);
+                }
+            }
+        }
         out
     }
 

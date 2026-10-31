@@ -65,3 +65,25 @@ fn a_rooms_outline_on_a_walls_face_does_not_take_a_click_in_the_wall() {
     // In the room by its face, outside the wall: both by their edges, as before (equals in the drawing's order).
     assert_eq!(s.hits(Vec2::new(E + 4.70, N + 3.0), tol), vec![2.0, 3.0]);
 }
+
+/// docs/adr/0798 §3: the wall's body runs on through its openings as an area; a click in a door's gap, between its
+/// jambs, picks the door (the smaller area) and the wall after it, where Sıradakini seç finds it.
+#[test]
+fn a_click_in_an_openings_gap_picks_the_opening_before_its_wall() {
+    let mut s = store();
+    let door = format!(
+        r#"[{{ "kind": "opening", "id": 4, "layerId": "0", "attrs": {{}}, "at": 2.25, "width": 1.2, "form": "window",
+            "place": [{{ "x": {a}, "y": {n0} }}, {{ "x": {a}, "y": {n1} }}, {{ "x": {b}, "y": {n0} }}, {{ "x": {b}, "y": {n1} }}] }}]"#,
+        a = E + 1.65,
+        b = E + 2.85,
+        n0 = N,
+        n1 = N - 0.25
+    );
+    s.put_json(&door).expect("the window");
+    let tol = 0.08;
+    let hits = s.hits(Vec2::new(E + 2.25, N - 0.125), tol);
+    assert_eq!(hits.first(), Some(&4.0), "{hits:?}");
+    assert!(hits.contains(&1.0), "the wall after it: {hits:?}");
+    // Beside the gap the wall's body is the wall's.
+    assert_eq!(s.hits(Vec2::new(E + 5.0, N - 0.125), tol), vec![1.0]);
+}

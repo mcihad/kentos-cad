@@ -1,0 +1,1051 @@
+{
+ "format": "kentos.acceptance",
+ "version": 1,
+ "id": "change",
+ "title": "Ölçülü değişiklik: var olan 2+1'de net ölçülerle bölme, dış duvar, kapı ve pencere değişiklikleri",
+ "source": "plan/architecture-advanced.md ADV-07 (kabul korpusu); docs/adr/0798",
+ "project": {
+  "name": "Değişiklik",
+  "workspace": "cad",
+  "coords": "local",
+  "drawingUnit": "m",
+  "plotScale": 100
+ },
+ "tolerance": 1e-09,
+ "undone": 10,
+ "steps": [
+  {
+   "name": "Proje ayarları › Mimari: zemin kat, 3.00 m",
+   "command": "cad.settings.set",
+   "input": {
+    "arch": {
+     "levels": [
+      {
+       "id": "zemin",
+       "name": "Zemin kat",
+       "elevation": 0,
+       "height": 3.0
+      }
+     ]
+    }
+   },
+   "label": null,
+   "expect": {
+    "count": 0
+   }
+  },
+  {
+   "name": "Var olan plan: dış kontur İç net 11 × 8 m, 25 cm",
+   "command": "cad.walls.rectangle",
+   "input": {
+    "layerId": "$layer",
+    "frame": {
+     "kind": "corners",
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 11.0,
+      "y": 8.0
+     }
+    },
+    "width": 0.25,
+    "arch": {
+     "level": "zemin"
+    }
+   },
+   "as": "shell",
+   "label": "Duvar",
+   "expect": {
+    "count": 1
+   }
+  },
+  {
+   "name": "Var olan plan: Bölme 1, batı yüzden 4.50",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$shell",
+     "edge": 3
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 4.5,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "zemin"
+       }
+      }
+     ]
+    }
+   },
+   "as": "p1",
+   "label": "Duvar",
+   "expect": {
+    "objects": {
+     "p1": {
+      "pts": [
+       [
+        4.575,
+        8.0
+       ],
+       [
+        4.575,
+        0.0
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: Bölme 2, güney yüzden 4.50",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$shell",
+     "edge": 0
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 4.5,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "zemin"
+       }
+      }
+     ]
+    },
+    "extent": {
+     "kind": "between",
+     "start": {
+      "wall": "$p1",
+      "edge": 0
+     },
+     "end": {
+      "wall": "$shell",
+      "edge": 1
+     }
+    }
+   },
+   "as": "p2",
+   "label": "Duvar",
+   "expect": {
+    "objects": {
+     "p2": {
+      "pts": [
+       [
+        4.575,
+        4.575
+       ],
+       [
+        11.125,
+        4.575
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: Bölme 3, Bölme 1'den 3.50",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$p1",
+     "edge": 0
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 3.5,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "zemin"
+       }
+      }
+     ]
+    },
+    "extent": {
+     "kind": "between",
+     "start": {
+      "wall": "$shell",
+      "edge": 0
+     },
+     "end": {
+      "wall": "$p2",
+      "edge": 0
+     }
+    }
+   },
+   "as": "p3",
+   "label": "Duvar",
+   "expect": {
+    "objects": {
+     "p3": {
+      "pts": [
+       [
+        8.225,
+        4.575
+       ],
+       [
+        8.225,
+        -0.125
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: Bölme 4, doğu yüzden 3.00",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$shell",
+     "edge": 1
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 3.0,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "zemin"
+       }
+      }
+     ]
+    },
+    "extent": {
+     "kind": "between",
+     "start": {
+      "wall": "$p2",
+      "edge": 0
+     },
+     "end": {
+      "wall": "$shell",
+      "edge": 2
+     }
+    }
+   },
+   "as": "p4",
+   "label": "Duvar",
+   "expect": {
+    "count": 5,
+    "objects": {
+     "p4": {
+      "pts": [
+       [
+        7.925,
+        4.575
+       ],
+       [
+        7.925,
+        8.125
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: beş kapı, beş pencere",
+   "command": "cad.openings.create",
+   "input": {
+    "layerId": "$layer",
+    "openings": [
+     {
+      "host": "$p1",
+      "at": 1.7,
+      "form": "door",
+      "width": 0.9
+     },
+     {
+      "host": "$p2",
+      "at": 1.825,
+      "form": "door",
+      "width": 0.9
+     },
+     {
+      "host": "$p2",
+      "at": 5.125,
+      "form": "door",
+      "width": 0.9
+     },
+     {
+      "host": "$p4",
+      "at": 1.725,
+      "form": "door",
+      "width": 0.9
+     },
+     {
+      "host": "$shell",
+      "at": 23.8,
+      "form": "door",
+      "width": 1.0
+     },
+     {
+      "host": "$shell",
+      "at": 2.25,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     },
+     {
+      "host": "$shell",
+      "at": 6.4,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     },
+     {
+      "host": "$shell",
+      "at": 9.7,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     },
+     {
+      "host": "$shell",
+      "at": 17.3,
+      "form": "window",
+      "width": 0.6,
+      "sill": 0.9
+     },
+     {
+      "host": "$shell",
+      "at": 34.0,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     }
+    ]
+   },
+   "as": [
+    "d1",
+    "d2",
+    "d3",
+    "d4",
+    "entrance",
+    "w1",
+    "w2",
+    "w3",
+    "w4",
+    "w5"
+   ],
+   "label": "Kapı",
+   "expect": {
+    "count": 15,
+    "objects": {
+     "d1": {
+      "kind": "opening",
+      "at": 1.7,
+      "width": 0.9,
+      "form": "door"
+     },
+     "d2": {
+      "kind": "opening",
+      "at": 1.825,
+      "width": 0.9,
+      "form": "door"
+     },
+     "d3": {
+      "kind": "opening",
+      "at": 5.125,
+      "width": 0.9,
+      "form": "door"
+     },
+     "d4": {
+      "kind": "opening",
+      "at": 1.725,
+      "width": 0.9,
+      "form": "door"
+     },
+     "entrance": {
+      "kind": "opening",
+      "at": 23.8,
+      "width": 1.0,
+      "form": "door"
+     },
+     "w1": {
+      "kind": "opening",
+      "at": 2.25,
+      "width": 1.2,
+      "form": "window"
+     },
+     "w2": {
+      "kind": "opening",
+      "at": 6.4,
+      "width": 1.2,
+      "form": "window"
+     },
+     "w3": {
+      "kind": "opening",
+      "at": 9.7,
+      "width": 1.2,
+      "form": "window"
+     },
+     "w4": {
+      "kind": "opening",
+      "at": 17.3,
+      "width": 0.6,
+      "form": "window"
+     },
+     "w5": {
+      "kind": "opening",
+      "at": 34.0,
+      "width": 1.2,
+      "form": "window"
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: beş mahal",
+   "command": "cad.spaces.create",
+   "input": {
+    "layerId": "$layer",
+    "spaces": [
+     {
+      "seed": {
+       "x": 2.0,
+       "y": 2.0
+      },
+      "number": "01",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "seed": {
+       "x": 6.0,
+       "y": 2.0
+      },
+      "number": "02",
+      "name": "Yatak odası 1",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "seed": {
+       "x": 10.0,
+       "y": 2.0
+      },
+      "number": "03",
+      "name": "Yatak odası 2",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "seed": {
+       "x": 6.0,
+       "y": 6.0
+      },
+      "number": "04",
+      "name": "Koridor",
+      "usage": "Koridor",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "seed": {
+       "x": 9.5,
+       "y": 6.0
+      },
+      "number": "05",
+      "name": "Banyo",
+      "usage": "Islak hacim",
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": [
+    "salon",
+    "yatak1",
+    "yatak2",
+    "koridor",
+    "banyo"
+   ],
+   "label": "Mahal",
+   "expect": {
+    "count": 20,
+    "measures": {
+     "salon": {
+      "area": 36.0
+     },
+     "yatak1": {
+      "area": 15.75
+     },
+     "yatak2": {
+      "area": 12.15
+     },
+     "koridor": {
+      "area": 10.72
+     },
+     "banyo": {
+      "area": 10.05
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: güney duvarının ölçü sırası",
+   "command": "cad.dimensionsets.create",
+   "input": {
+    "layerId": "$layer",
+    "wall": "$shell",
+    "edge": 0,
+    "at": {
+     "x": 5.5,
+     "y": -1.5
+    },
+    "rows": [
+     "openings",
+     "overall"
+    ]
+   },
+   "as": [
+    "dim1",
+    "dim2",
+    "dim3",
+    "dim4",
+    "dim5",
+    "dim6",
+    "dim7",
+    "dimAll"
+   ],
+   "label": "Otomatik duvar ölçüleri",
+   "expect": {
+    "count": 28,
+    "measures": {
+     "dim1": {
+      "length": 1.65
+     },
+     "dim2": {
+      "length": 1.2
+     },
+     "dim3": {
+      "length": 2.95
+     },
+     "dim4": {
+      "length": 1.2
+     },
+     "dim5": {
+      "length": 2.1
+     },
+     "dim6": {
+      "length": 1.2
+     },
+     "dim7": {
+      "length": 0.7
+     },
+     "dimAll": {
+      "length": 11.0
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: dış yüzlere bağlı döşeme",
+   "command": "cad.slabs.create",
+   "input": {
+    "layerId": "$layer",
+    "slabs": [
+     {
+      "seed": {
+       "x": 2.0,
+       "y": 2.0
+      },
+      "bound": true,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": "slab",
+   "label": "Döşeme",
+   "expect": {
+    "count": 29,
+    "measures": {
+     "slab": {
+      "area": 97.75
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan plan: mahal etiketleri",
+   "command": "cad.tags.create",
+   "input": {
+    "layerId": "$layer",
+    "all": {
+     "kinds": [
+      "space"
+     ]
+    }
+   },
+   "label": "Etiket",
+   "expect": {
+    "count": 34
+   }
+  },
+  {
+   "name": "Var olan plan: mahal çizelgesi",
+   "command": "cad.schedules.create",
+   "input": {
+    "layerId": "$layer",
+    "at": {
+     "x": 14.0,
+     "y": 8.0
+    },
+    "of": "spaces"
+   },
+   "as": "schedule",
+   "label": "Çizelge",
+   "expect": {
+    "count": 35,
+    "output": {
+     "rows": 5
+    }
+   }
+  },
+  {
+   "name": "Değişiklik 1: Yatak 1 net 3.50 → 3.80, Bu ölçüyü koru",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$p3"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "right",
+     "distance": 3.8,
+     "keep": true
+    }
+   },
+   "label": "Duvarı düzenle",
+   "expect": {
+    "count": 35,
+    "measures": {
+     "salon": {
+      "area": 36.0
+     },
+     "yatak1": {
+      "area": 17.1
+     },
+     "yatak2": {
+      "area": 10.8
+     },
+     "koridor": {
+      "area": 10.72
+     },
+     "banyo": {
+      "area": 10.05
+     }
+    },
+    "objects": {
+     "p3": {
+      "pts": [
+       [
+        8.525,
+        4.575
+       ],
+       [
+        8.525,
+        -0.125
+       ]
+      ]
+     }
+    },
+    "output": {
+     "effects": {
+      "right": {
+       "before": 3.5,
+       "after": 3.8
+      },
+      "left": {
+       "before": 2.7,
+       "after": 2.4
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: aynı mesafe yeniden yazılmaz",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$p3"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "right",
+     "distance": 3.8
+    }
+   },
+   "refuse": "nothing_to_set",
+   "expect": {
+    "count": 35
+   }
+  },
+  {
+   "name": "Değişiklik 2: Salon net 4.50 → 4.80; bağ Bölme 3'ü birlikte götürür",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$p1"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "right",
+     "distance": 4.8
+    }
+   },
+   "label": "Duvarı düzenle",
+   "expect": {
+    "count": 35,
+    "measures": {
+     "salon": {
+      "area": 38.4
+     },
+     "yatak1": {
+      "area": 17.1
+     },
+     "yatak2": {
+      "area": 9.45
+     },
+     "koridor": {
+      "area": 9.715
+     },
+     "banyo": {
+      "area": 10.05
+     }
+    },
+    "objects": {
+     "p1": {
+      "pts": [
+       [
+        4.875,
+        8.0
+       ],
+       [
+        4.875,
+        0.0
+       ]
+      ]
+     },
+     "p3": {
+      "pts": [
+       [
+        8.825,
+        4.575
+       ],
+       [
+        8.825,
+        -0.125
+       ]
+      ]
+     },
+     "p2": {
+      "pts": [
+       [
+        4.875,
+        4.575
+       ],
+       [
+        11.125,
+        4.575
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: eksi mesafe",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$p1"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "right",
+     "distance": -1.0
+    }
+   },
+   "refuse": "invalid_wall",
+   "expect": {
+    "count": 35,
+    "measures": {
+     "salon": {
+      "area": 38.4
+     }
+    }
+   }
+  },
+  {
+   "name": "Değişiklik 3: dış duvar 25 → 30 cm, iç yüz yerinde",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$shell"
+    ],
+    "operation": {
+     "kind": "set",
+     "width": 0.3,
+     "keep": "path"
+    }
+   },
+   "label": "Duvarı düzenle",
+   "expect": {
+    "count": 35,
+    "measures": {
+     "salon": {
+      "area": 38.4
+     },
+     "yatak1": {
+      "area": 17.1
+     },
+     "yatak2": {
+      "area": 9.45
+     },
+     "koridor": {
+      "area": 9.715
+     },
+     "banyo": {
+      "area": 10.05
+     },
+     "slab": {
+      "area": 99.76
+     }
+    },
+    "objects": {
+     "shell": {
+      "width": 0.3
+     }
+    }
+   }
+  },
+  {
+   "name": "Değişiklik 4: Yatak 1 kapısı Bölme 1'in yüzünden 0.10",
+   "command": "cad.openings.edit",
+   "input": {
+    "uids": [
+     "$d2"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "start",
+     "face": "left",
+     "distance": 0.1
+    }
+   },
+   "label": "Açıklığı düzenle",
+   "expect": {
+    "count": 35,
+    "objects": {
+     "d2": {
+      "at": 0.625,
+      "host": "$p2"
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: eksi mesafe açıklıkta",
+   "command": "cad.openings.edit",
+   "input": {
+    "uids": [
+     "$d2"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "start",
+     "face": "left",
+     "distance": -0.1
+    }
+   },
+   "refuse": "invalid_opening",
+   "expect": {
+    "count": 35,
+    "objects": {
+     "d2": {
+      "at": 0.625
+     }
+    }
+   }
+  },
+  {
+   "name": "Değişiklik 5: Yatak 2 penceresi doğu yüzden 0.60",
+   "command": "cad.openings.edit",
+   "input": {
+    "uids": [
+     "$w3"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "end",
+     "face": "left",
+     "distance": 0.6
+    }
+   },
+   "label": "Açıklığı düzenle",
+   "expect": {
+    "count": 35,
+    "objects": {
+     "w3": {
+      "at": 9.8
+     }
+    },
+    "measures": {
+     "dim1": {
+      "length": 1.65
+     },
+     "dim2": {
+      "length": 1.2
+     },
+     "dim3": {
+      "length": 2.95
+     },
+     "dim4": {
+      "length": 1.2
+     },
+     "dim5": {
+      "length": 2.2
+     },
+     "dim6": {
+      "length": 1.2
+     },
+     "dim7": {
+      "length": 0.6
+     },
+     "dimAll": {
+      "length": 11.0
+     }
+    }
+   }
+  },
+  {
+   "name": "Metraj: değişikliklerden sonra",
+   "query": "cad.spaces.quantities",
+   "input": {},
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 84.715,
+      "openings": 10,
+      "slabArea": 99.76
+     }
+    }
+   }
+  },
+  {
+   "name": "Kaydet ve aç: aynı kimlikler, aynı nesneler",
+   "reopen": true,
+   "expect": {
+    "count": 35,
+    "kinds": {
+     "wall": 5,
+     "opening": 10,
+     "space": 5,
+     "dimension": 8,
+     "slab": 1,
+     "tag": 5,
+     "table": 1
+    },
+    "measures": {
+     "salon": {
+      "area": 38.4
+     },
+     "yatak1": {
+      "area": 17.1
+     },
+     "yatak2": {
+      "area": 9.45
+     },
+     "koridor": {
+      "area": 9.715
+     },
+     "banyo": {
+      "area": 10.05
+     },
+     "dim1": {
+      "length": 1.65
+     },
+     "dim2": {
+      "length": 1.2
+     },
+     "dim3": {
+      "length": 2.95
+     },
+     "dim4": {
+      "length": 1.2
+     },
+     "dim5": {
+      "length": 2.2
+     },
+     "dim6": {
+      "length": 1.2
+     },
+     "dim7": {
+      "length": 0.6
+     },
+     "dimAll": {
+      "length": 11.0
+     }
+    }
+   }
+  }
+ ],
+ "rooms": {
+  "before": {
+   "salon": 36.0,
+   "yatak1": 15.75,
+   "yatak2": 12.15,
+   "koridor": 10.72,
+   "banyo": 10.05
+  },
+  "after": {
+   "salon": 38.4,
+   "yatak1": 17.1,
+   "yatak2": 9.45,
+   "koridor": 9.715,
+   "banyo": 10.05
+  }
+ }
+}

@@ -55,7 +55,8 @@ justify?: WallJustify,
  */
 style?: string, 
 /**
- * Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
+ * Kaynağı koru: the sources stay. Absent: those a wall covers whole go. Kept, with `layerId`, they are only
+ * read: sources on a locked layer (an underlay) are converted (docs/adr/0798 §3).
  */
 keepSources?: boolean, 
 /**

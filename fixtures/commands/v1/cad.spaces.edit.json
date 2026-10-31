@@ -696,17 +696,17 @@
                   "name": "Oda",
                   "level": "zemin",
                   "method": "net",
-                  "area": 23.16,
-                  "perimeter": 19.25,
+                  "area": 37.44,
+                  "perimeter": 25.2,
                   "height": 2.7,
-                  "volume": 62.532000000000004,
+                  "volume": 101.088,
                   "byMethod": {
-                    "net": 23.16,
-                    "centerline": 25.0,
-                    "gross": 26.91
+                    "net": 37.44,
+                    "centerline": 40.0,
+                    "gross": 42.64
                   },
                   "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
-                  "baseboard": 19.25
+                  "baseboard": 25.2
                 }
               ],
               "walls": [
@@ -780,12 +780,12 @@
               ],
               "openings": [],
               "totals": {
-                "spaceArea": 23.16,
+                "spaceArea": 37.44,
                 "wallLength": 35.0,
                 "wallNetArea": 93.0,
                 "openings": 0,
                 "openingArea": 0.0,
-                "baseboardLength": 19.25
+                "baseboardLength": 25.2
               }
             },
             "warnings": []

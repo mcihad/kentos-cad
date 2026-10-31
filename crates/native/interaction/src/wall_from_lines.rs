@@ -96,7 +96,9 @@ impl WallFromLines {
             keep_sources: m.wall_keep_sources,
             max_width: m.wall_pairs.then_some(m.wall_pair_max),
             angle: None,
-            layer_id: None,
+            // Kept lines are a reference (an underlay, often locked): the walls go to the active layer, as a new
+            // object does (docs/adr/0798 §3); lines replaced leave their walls on their own layer, as before.
+            layer_id: m.wall_keep_sources.then(|| cx.doc.layers().active().to_owned()),
             expected_revision: if m.wall_contours {
                 self.plan.revision.clone()
             } else {

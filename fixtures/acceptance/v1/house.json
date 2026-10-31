@@ -1,0 +1,808 @@
+{
+ "format": "kentos.acceptance",
+ "version": 1,
+ "id": "house",
+ "title": "İki katlı konut: iki kat, kata bağlı merdiven, merdiven boşluğu, kat paftaları, kat yüksekliği değişikliği",
+ "source": "plan/architecture-advanced.md ADV-07 (kabul korpusu); docs/adr/0798",
+ "project": {
+  "name": "Konut",
+  "workspace": "cad",
+  "coords": "local",
+  "drawingUnit": "m",
+  "plotScale": 100
+ },
+ "tolerance": 1e-09,
+ "undone": 10,
+ "steps": [
+  {
+   "name": "Proje ayarları › Mimari: Zemin kat ve 1. kat, 3.00 m",
+   "command": "cad.settings.set",
+   "input": {
+    "arch": {
+     "levels": [
+      {
+       "id": "zemin",
+       "name": "Zemin kat",
+       "elevation": 0,
+       "height": 3.0
+      },
+      {
+       "id": "kat1",
+       "name": "1. kat",
+       "elevation": 3.0,
+       "height": 3.0
+      }
+     ]
+    }
+   },
+   "label": null,
+   "expect": {
+    "count": 0
+   }
+  },
+  {
+   "name": "Zemin kat: dış kontur İç net 10 × 8 m",
+   "command": "cad.walls.rectangle",
+   "input": {
+    "layerId": "$layer",
+    "frame": {
+     "kind": "corners",
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 8.0
+     }
+    },
+    "width": 0.25,
+    "arch": {
+     "level": "zemin"
+    }
+   },
+   "as": "shell",
+   "label": "Duvar",
+   "expect": {
+    "count": 1,
+    "objects": {
+     "shell": {
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Zemin kat: bölme batı yüzden 5.00",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$shell",
+     "edge": 3
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 5.0,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "zemin"
+       }
+      }
+     ]
+    }
+   },
+   "as": "a",
+   "label": "Duvar",
+   "expect": {
+    "count": 2,
+    "objects": {
+     "a": {
+      "pts": [
+       [
+        5.075,
+        8.0
+       ],
+       [
+        5.075,
+        0.0
+       ]
+      ],
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Zemin kat: giriş kapısı, pencere, iç kapı",
+   "command": "cad.openings.create",
+   "input": {
+    "layerId": "$layer",
+    "openings": [
+     {
+      "host": "$shell",
+      "at": 7.5,
+      "form": "door",
+      "width": 1.0
+     },
+     {
+      "host": "$shell",
+      "at": 2.5,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     },
+     {
+      "host": "$a",
+      "at": 4.0,
+      "form": "door",
+      "width": 0.9
+     }
+    ]
+   },
+   "as": [
+    "entrance",
+    "w1",
+    "d1"
+   ],
+   "label": "Kapı",
+   "expect": {
+    "count": 5
+   }
+  },
+  {
+   "name": "Zemin kat: kat yüksekliğine bağlı merdiven, 1.00 geniş, 0.28 basamak",
+   "command": "cad.stairs.create",
+   "input": {
+    "layerId": "$layer",
+    "stairs": [
+     {
+      "pts": [
+       {
+        "x": 0.2,
+        "y": 7.4
+       },
+       {
+        "x": 5.0,
+        "y": 7.4
+       }
+      ],
+      "width": 1.0,
+      "tread": 0.28,
+      "fit": true,
+      "heightFromLevel": true,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": "stair",
+   "label": "Merdiven",
+   "expect": {
+    "count": 6,
+    "objects": {
+     "stair": {
+      "risers": 18,
+      "riserHeight": 0.16666666666666666,
+      "pts": [
+       [
+        0.2,
+        7.4
+       ],
+       [
+        4.96,
+        7.4
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Zemin kat: Salon ve Mutfak",
+   "command": "cad.spaces.create",
+   "input": {
+    "layerId": "$layer",
+    "spaces": [
+     {
+      "seed": {
+       "x": 2.5,
+       "y": 3.0
+      },
+      "number": "Z01",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "seed": {
+       "x": 7.5,
+       "y": 4.0
+      },
+      "number": "Z02",
+      "name": "Mutfak",
+      "usage": "Mutfak",
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": [
+    "salon",
+    "mutfak"
+   ],
+   "label": "Mahal",
+   "expect": {
+    "count": 8,
+    "measures": {
+     "salon": {
+      "area": 40.0
+     },
+     "mutfak": {
+      "area": 38.8
+     }
+    }
+   }
+  },
+  {
+   "name": "1. kat: dış kontur İç net 10 × 8 m",
+   "command": "cad.walls.rectangle",
+   "input": {
+    "layerId": "$layer",
+    "frame": {
+     "kind": "corners",
+     "a": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "b": {
+      "x": 10.0,
+      "y": 8.0
+     }
+    },
+    "width": 0.25,
+    "arch": {
+     "level": "kat1"
+    }
+   },
+   "as": "shell1",
+   "label": "Duvar",
+   "expect": {
+    "count": 9,
+    "objects": {
+     "shell1": {
+      "arch": {
+       "level": "kat1"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "1. kat: bölme batı yüzden 5.00",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$shell1",
+     "edge": 3
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 5.0,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "kat1"
+       }
+      }
+     ]
+    }
+   },
+   "as": "a1",
+   "label": "Duvar",
+   "expect": {
+    "count": 10,
+    "objects": {
+     "a1": {
+      "pts": [
+       [
+        5.075,
+        8.0
+       ],
+       [
+        5.075,
+        0.0
+       ]
+      ],
+      "arch": {
+       "level": "kat1"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "1. kat: merdiven boşluğunun bölmesi kuzey yüzden 1.20",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$shell1",
+     "edge": 2
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 1.2,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "kat1"
+       }
+      }
+     ]
+    },
+    "extent": {
+     "kind": "between",
+     "start": {
+      "wall": "$a1",
+      "edge": 0
+     },
+     "end": {
+      "wall": "$shell1",
+      "edge": 3
+     }
+    }
+   },
+   "as": "b",
+   "label": "Duvar",
+   "expect": {
+    "count": 11,
+    "objects": {
+     "b": {
+      "pts": [
+       [
+        5.075,
+        6.725
+       ],
+       [
+        -0.125,
+        6.725
+       ]
+      ],
+      "arch": {
+       "level": "kat1"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "1. kat: iç kapı, iki pencere",
+   "command": "cad.openings.create",
+   "input": {
+    "layerId": "$layer",
+    "openings": [
+     {
+      "host": "$a1",
+      "at": 5.0,
+      "form": "door",
+      "width": 0.9
+     },
+     {
+      "host": "$shell1",
+      "at": 2.5,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     },
+     {
+      "host": "$shell1",
+      "at": 7.5,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     }
+    ]
+   },
+   "as": [
+    "d2",
+    "w2",
+    "w3"
+   ],
+   "label": "Kapı",
+   "expect": {
+    "count": 14
+   }
+  },
+  {
+   "name": "1. kat: iki yatak odası ve merdiven boşluğu (boşluk)",
+   "command": "cad.spaces.create",
+   "input": {
+    "layerId": "$layer",
+    "spaces": [
+     {
+      "seed": {
+       "x": 2.5,
+       "y": 3.0
+      },
+      "number": "101",
+      "name": "Yatak odası 1",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "kat1"
+      }
+     },
+     {
+      "seed": {
+       "x": 2.5,
+       "y": 7.4
+      },
+      "number": "102",
+      "name": "Merdiven boşluğu",
+      "void": true,
+      "arch": {
+       "level": "kat1"
+      }
+     },
+     {
+      "seed": {
+       "x": 7.5,
+       "y": 4.0
+      },
+      "number": "103",
+      "name": "Yatak odası 2",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "kat1"
+      }
+     }
+    ]
+   },
+   "as": [
+    "yatak1",
+    "well",
+    "yatak2"
+   ],
+   "label": "Mahal",
+   "expect": {
+    "count": 17,
+    "measures": {
+     "yatak1": {
+      "area": 33.25
+     },
+     "yatak2": {
+      "area": 38.8
+     },
+     "well": {
+      "area": 6.0
+     }
+    },
+    "objects": {
+     "well": {
+      "void": true
+     }
+    }
+   }
+  },
+  {
+   "name": "Zemin kat: dış yüzlere bağlı döşeme",
+   "command": "cad.slabs.create",
+   "input": {
+    "layerId": "$layer",
+    "slabs": [
+     {
+      "seed": {
+       "x": 2.5,
+       "y": 3.0
+      },
+      "bound": true,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": "slab0",
+   "label": "Döşeme",
+   "expect": {
+    "count": 18,
+    "measures": {
+     "slab0": {
+      "area": 89.25
+     }
+    }
+   }
+  },
+  {
+   "name": "1. kat: dış yüzlere bağlı döşeme",
+   "command": "cad.slabs.create",
+   "input": {
+    "layerId": "$layer",
+    "slabs": [
+     {
+      "seed": {
+       "x": 2.5,
+       "y": 3.0
+      },
+      "bound": true,
+      "arch": {
+       "level": "kat1"
+      }
+     }
+    ]
+   },
+   "as": "slab1",
+   "label": "Döşeme",
+   "expect": {
+    "count": 19,
+    "measures": {
+     "slab1": {
+      "area": 89.25
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: bağlı döşemeden boşluk kesilmez",
+   "command": "cad.slabs.edit",
+   "input": {
+    "uids": [
+     "$slab1"
+    ],
+    "operation": {
+     "kind": "subtract",
+     "seed": {
+      "x": 2.5,
+      "y": 7.4
+     }
+    }
+   },
+   "refuse": "slab_bound",
+   "expect": {
+    "count": 19,
+    "measures": {
+     "slab1": {
+      "area": 89.25
+     }
+    }
+   }
+  },
+  {
+   "name": "1. kat döşemesi kaynaktan ayrılır",
+   "command": "cad.slabs.edit",
+   "input": {
+    "uids": [
+     "$slab1"
+    ],
+    "operation": {
+     "kind": "detach"
+    }
+   },
+   "label": "Döşemeyi düzenle",
+   "expect": {
+    "count": 19,
+    "measures": {
+     "slab1": {
+      "area": 89.25
+     }
+    }
+   }
+  },
+  {
+   "name": "1. kat döşemesinden merdiven boşluğu kesilir",
+   "command": "cad.slabs.edit",
+   "input": {
+    "uids": [
+     "$slab1"
+    ],
+    "operation": {
+     "kind": "subtract",
+     "seed": {
+      "x": 2.5,
+      "y": 7.4
+     }
+    }
+   },
+   "label": "Döşemeyi düzenle",
+   "expect": {
+    "count": 19,
+    "measures": {
+     "slab1": {
+      "area": 83.25
+     }
+    }
+   }
+  },
+  {
+   "name": "Etiketler: bütün mahaller",
+   "command": "cad.tags.create",
+   "input": {
+    "layerId": "$layer",
+    "all": {
+     "kinds": [
+      "space"
+     ]
+    }
+   },
+   "label": "Etiket",
+   "expect": {
+    "count": 24
+   }
+  },
+  {
+   "name": "Paftalar: her kat için bir plan",
+   "command": "cad.sheets.levels",
+   "input": {},
+   "label": null,
+   "expect": {
+    "count": 24,
+    "output": {
+     "sheets": [
+      {
+       "name": "A-101 Zemin kat planı",
+       "maps": [
+        {
+         "level": "zemin"
+        }
+       ]
+      },
+      {
+       "name": "A-102 1. kat planı",
+       "maps": [
+        {
+         "level": "kat1"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "Metraj: iki katın toplamları",
+   "query": "cad.spaces.quantities",
+   "input": {},
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 150.85,
+      "openings": 6,
+      "slabArea": 172.5
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: kullanılan kat kaldırılmaz",
+   "command": "cad.settings.set",
+   "input": {
+    "arch": {
+     "levels": [
+      {
+       "id": "zemin",
+       "name": "Zemin kat",
+       "elevation": 0,
+       "height": 3.0
+      }
+     ]
+    }
+   },
+   "refuse": "level_in_use",
+   "expect": {
+    "count": 24
+   }
+  },
+  {
+   "name": "Tasarım değişikliği: zemin kat 3.00 → 3.24; merdiven 18 rıhtla izler",
+   "command": "cad.settings.set",
+   "input": {
+    "arch": {
+     "levels": [
+      {
+       "id": "zemin",
+       "name": "Zemin kat",
+       "elevation": 0,
+       "height": 3.24
+      },
+      {
+       "id": "kat1",
+       "name": "1. kat",
+       "elevation": 3.24,
+       "height": 3.0
+      }
+     ]
+    }
+   },
+   "label": null,
+   "expect": {
+    "count": 24,
+    "objects": {
+     "stair": {
+      "risers": 18,
+      "riserHeight": 0.18,
+      "pts": [
+       [
+        0.2,
+        7.4
+       ],
+       [
+        4.96,
+        7.4
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Kaydet ve aç: aynı kimlikler, aynı nesneler",
+   "reopen": true,
+   "expect": {
+    "count": 24,
+    "kinds": {
+     "wall": 5,
+     "opening": 6,
+     "stair": 1,
+     "space": 5,
+     "slab": 2,
+     "tag": 5
+    },
+    "measures": {
+     "salon": {
+      "area": 40.0
+     },
+     "mutfak": {
+      "area": 38.8
+     },
+     "yatak1": {
+      "area": 33.25
+     },
+     "yatak2": {
+      "area": 38.8
+     },
+     "slab0": {
+      "area": 89.25
+     },
+     "slab1": {
+      "area": 83.25
+     }
+    },
+    "objects": {
+     "stair": {
+      "riserHeight": 0.18
+     }
+    }
+   }
+  }
+ ],
+ "rooms": {
+  "after": {
+   "salon": 40.0,
+   "mutfak": 38.8,
+   "yatak1": 33.25,
+   "yatak2": 38.8
+  }
+ }
+}

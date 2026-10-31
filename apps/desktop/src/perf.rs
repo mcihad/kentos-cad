@@ -43,6 +43,7 @@ mod clouds;
 mod file;
 mod frame;
 // The 2+1 apartment of the acceptance flow, 1, 20 and 100 copies (docs/adr/0776 §4).
+mod corpus;
 mod flat;
 // Where a large drawing's memory goes (docs/adr/0654).
 mod memory;

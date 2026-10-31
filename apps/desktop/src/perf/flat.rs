@@ -28,13 +28,13 @@ use crate::app::{App, Message};
 /// One apartment's box, metres, and the step between copies.
 const STEP: [f64; 2] = [14.0, 12.0];
 
-fn ask(app: &mut App, method: &str, params: Value) -> Value {
+pub(super) fn ask(app: &mut App, method: &str, params: Value) -> Value {
     app.agents_answer(&json!({ "id": 1, "method": method, "params": params }))
         .unwrap_or_else(|(code, message)| panic!("{method}: {code}: {message}"))
 }
 
 /// The process's resident memory, MB (`ps`, as macOS and Linux both give it).
-fn resident() -> f64 {
+pub(super) fn resident() -> f64 {
     std::process::Command::new("ps")
         .args(["-o", "rss=", "-p", &std::process::id().to_string()])
         .output()
@@ -44,12 +44,12 @@ fn resident() -> f64 {
         .map_or(f64::NAN, |kb| kb / 1024.0)
 }
 
-fn at(app: &App, x: f64, y: f64) -> Point {
+pub(super) fn at(app: &App, x: f64, y: f64) -> Point {
     let [x, y] = app.viewport.camera.world_to_screen(kentos_interaction::Vec2::new(x, y));
     Point::new(x as f32, y as f32)
 }
 
-fn click(at: Point) -> [Event; 3] {
+pub(super) fn click(at: Point) -> [Event; 3] {
     [
         moved(at),
         Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
@@ -66,7 +66,7 @@ fn uids(app: &App, tables: bool) -> Vec<String> {
 }
 
 /// The resident memory's peak while `work` runs, MB: `ps` read every 5 ms on a thread.
-fn peak<T>(work: impl FnOnce() -> T) -> (T, f64) {
+pub(super) fn peak<T>(work: impl FnOnce() -> T) -> (T, f64) {
     use std::sync::atomic::{AtomicBool, Ordering};
     let stop = std::sync::Arc::new(AtomicBool::new(false));
     let watch = {
@@ -104,7 +104,7 @@ fn copied(app: &mut App, n: usize, tables: bool) -> f64 {
     ms(t)
 }
 
-fn cpu(frames: &[Parts]) -> Vec<f64> {
+pub(super) fn cpu(frames: &[Parts]) -> Vec<f64> {
     frames.iter().map(Parts::cpu).collect()
 }
 
@@ -278,7 +278,7 @@ fn flats() {
 }
 
 /// Today as `YYYY-MM-DD` from the system clock (days since 1970, the civil calendar).
-fn chrono_free_date() -> String {
+pub(super) fn chrono_free_date() -> String {
     let secs = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs()) as i64;

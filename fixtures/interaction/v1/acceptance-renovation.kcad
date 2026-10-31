@@ -1,0 +1,243 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Tadilat",
+ "settings": {
+  "srid": 0,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 100,
+  "workspace": "cad",
+  "drawingUnit": "m",
+  "drawingFont": "barlow",
+  "arch": {
+   "levels": [
+    {
+     "id": "zemin",
+     "name": "Zemin kat",
+     "elevation": 0,
+     "height": 2.8
+    }
+   ]
+  }
+ },
+ "origin": {
+  "x": 0,
+  "y": 0
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "duvar",
+   "name": "DUVAR",
+   "type": "layer",
+   "visible": true,
+   "locked": true,
+   "expanded": true,
+   "style": {
+    "color": "#868E96",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [
+  {
+   "kind": "polyline",
+   "id": 1,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 0.0,
+     "y": 0.0
+    },
+    {
+     "x": 9.0,
+     "y": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 2,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 9.0,
+     "y": 0.0
+    },
+    {
+     "x": 9.0,
+     "y": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 3,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 9.0,
+     "y": 7.0
+    },
+    {
+     "x": 0.0,
+     "y": 7.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 0.0,
+     "y": 7.0
+    },
+    {
+     "x": 0.0,
+     "y": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 5,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": -0.25,
+     "y": -0.25
+    },
+    {
+     "x": 9.25,
+     "y": -0.25
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 9.25,
+     "y": -0.25
+    },
+    {
+     "x": 9.25,
+     "y": 7.25
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 7,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 9.25,
+     "y": 7.25
+    },
+    {
+     "x": -0.25,
+     "y": 7.25
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 8,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": -0.25,
+     "y": 7.25
+    },
+    {
+     "x": -0.25,
+     "y": -0.25
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 9,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 4.0,
+     "y": 7.0
+    },
+    {
+     "x": 4.0,
+     "y": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 10,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 4.15,
+     "y": 7.0
+    },
+    {
+     "x": 4.15,
+     "y": 0.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 11,
+   "layerId": "duvar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 4.15,
+     "y": 3.0
+    },
+    {
+     "x": 5.05,
+     "y": 3.0
+    }
+   ]
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

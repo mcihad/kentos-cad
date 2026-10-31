@@ -889,7 +889,7 @@ impl<'a> Player<'a> {
         if let Some(events) = &step.mouse {
             return self.holding(step, |player| player.hand(events));
         }
-        if let Some(side) = &step.click_number {
+        if let Some(side) = step.click_number.as_ref().or(step.click_lock.as_ref()) {
             let away = |v: &Vec2| match side.as_str() {
                 "west" => Some(v.x),
                 "east" => Some(-v.x),
@@ -900,13 +900,15 @@ impl<'a> Player<'a> {
             if away(&Vec2::new(0.0, 0.0)).is_none() {
                 return Err(format!("bilinmeyen yan {side}"));
             }
-            let n = self
-                .app
-                .session
-                .temporary_numbers()
+            let at = if step.click_lock.is_some() {
+                self.app.session.temporary_locks()
+            } else {
+                self.app.session.temporary_numbers()
+            };
+            let n = at
                 .into_iter()
                 .min_by(|a, b| away(a).unwrap_or(0.0).total_cmp(&away(b).unwrap_or(0.0)))
-                .ok_or("geçici ölçü yok: duvar seçili ve imleç kenarında mı?")?;
+                .ok_or("geçici ölçü ya da kilidi yok: duvar seçili ve imleç kenarında mı?")?;
             return self.click([n.x - self.origin.x, n.y - self.origin.y], mouse::Button::Left);
         }
         if let Some(at) = step.double_click {
@@ -1632,6 +1634,8 @@ fn describe(step: &Step) -> String {
         format!("mouse ({} olay)", events.len())
     } else if let Some(side) = &step.click_number {
         format!("clickNumber {side}")
+    } else if let Some(side) = &step.click_lock {
+        format!("clickLock {side}")
     } else if let Some(at) = step.double_click {
         format!("doubleClick {}", pair(at))
     } else if let Some(at) = step.right_click {

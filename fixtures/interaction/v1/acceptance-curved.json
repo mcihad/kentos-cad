@@ -1,0 +1,481 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "acceptance-curved",
+ "title": "Eğrisel ve şaftlı örnek fareyle ve klavyeyle: teğet yaylı kontur, çizgiden duvar, şaft, döner merdiven",
+ "source": "plan/architecture-advanced.md ADV-07; docs/adr/0798 (fixtures/acceptance/v1/curved.json'un fareyle ve klavyeyle yolu)",
+ "covers": [
+  "ADV-07"
+ ],
+ "document": "acceptance-curved.kcad",
+ "view": {
+  "center": [
+   6.0,
+   4.0
+  ],
+  "metresPerPixel": 0.03
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.01,
+ "steps": [
+  {
+   "note": "§ Kontur: Çoklu çizgi, doğuda teğet yay",
+   "run": "tool.polyline"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0,0"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "10,0"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Y"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "10,8"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "D"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0,8"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "K"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 1
+   }
+  },
+  {
+   "shot": "kontur"
+  },
+  {
+   "note": "§ Çizgiden duvar: ortalı 25 cm",
+   "click": [
+    -1.0,
+    -4.0
+   ],
+   "expect": {
+    "selected": [
+     1
+    ]
+   }
+  },
+  {
+   "run": "tool.wallFromLines"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.25"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 1
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 2,
+      "kind": "wall",
+      "points": [
+       [
+        -6.0,
+        -4.0
+       ],
+       [
+        4.0,
+        -4.0
+       ],
+       [
+        4.0,
+        4.0
+       ],
+       [
+        -6.0,
+        4.0
+       ]
+      ],
+      "bulges": [
+       0.0,
+       1.0,
+       0.0,
+       0.0
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "note": "§ Bölme: batı yüzden 4.00",
+   "run": "tool.wallPartition"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.15"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "4"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -6.0,
+    -2.0
+   ]
+  },
+  {
+   "move": [
+    -4.0,
+    -2.0
+   ]
+  },
+  {
+   "click": [
+    -4.0,
+    -2.0
+   ],
+   "expect": {
+    "entities": 2
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 3,
+      "kind": "wall",
+      "points": [
+       [
+        -1.8,
+        4.0
+       ],
+       [
+        -1.8,
+        -4.0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "note": "§ Şaft: L duvar",
+   "run": "tool.wall"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.15"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "5.35,8"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "5.35,6.8"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "4.2,6.8"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 3
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select"
+   }
+  },
+  {
+   "note": "§ Mahaller: Yatak, Salon, şaft boşluk (V)",
+   "run": "tool.space"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Yatak"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -4.0,
+    0.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Salon"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    2.0,
+    0.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "V"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Şaft"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -1.225,
+    3.375
+   ]
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 6
+   }
+  },
+  {
+   "shot": "mahaller"
+  },
+  {
+   "note": "§ Döner merdiven: cumbada, merkez, başlangıç, yön",
+   "run": "tool.stairCurved"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "G"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "1"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "D"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.28"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    4.0,
+    0.0
+   ]
+  },
+  {
+   "click": [
+    5.5,
+    0.0
+   ]
+  },
+  {
+   "move": [
+    5.06,
+    1.06
+   ]
+  },
+  {
+   "move": [
+    4.0,
+    1.5
+   ]
+  },
+  {
+   "move": [
+    2.94,
+    1.06
+   ]
+  },
+  {
+   "click": [
+    2.94,
+    1.06
+   ],
+   "expect": {
+    "entities": 7
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select"
+   }
+  },
+  {
+   "shot": "merdiven"
+  },
+  {
+   "note": "§ Kaydet ve aç",
+   "saveAndReopen": true,
+   "expect": {
+    "entities": 7
+   }
+  }
+ ]
+}

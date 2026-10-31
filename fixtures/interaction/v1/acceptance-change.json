@@ -1,0 +1,856 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "acceptance-change",
+ "title": "Ölçülü değişiklik fareyle ve klavyeyle: 2+1'in planı, kilitli net ölçü, bağın götürdüğü bölme, kapı ve pencerenin mesafesi",
+ "source": "plan/architecture-advanced.md ADV-07; docs/adr/0798 (fixtures/acceptance/v1/change.json'un fareyle ve klavyeyle yolu)",
+ "covers": [
+  "ADV-07"
+ ],
+ "document": "acceptance-change.kcad",
+ "view": {
+  "center": [
+   5.5,
+   4.0
+  ],
+  "metresPerPixel": 0.03
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.01,
+ "steps": [
+  {
+   "note": "§ Var olan plan — Dış kontur: Dikdörtgen duvar, İç net, 25 cm",
+   "run": "tool.wallRectangle"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.25"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0,0"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "11,8"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 1,
+    "objects": [
+     {
+      "id": 1,
+      "kind": "wall",
+      "points": [
+       [
+        -5.5,
+        -4.0
+       ],
+       [
+        5.5,
+        -4.0
+       ],
+       [
+        5.5,
+        4.0
+       ],
+       [
+        -5.5,
+        4.0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select"
+   }
+  },
+  {
+   "shot": "kontur"
+  },
+  {
+   "note": "§ Var olan plan — Bölmeler: dört Ölçülü bölme",
+   "run": "tool.wallPartition"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.15"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "4.5"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -5.6,
+    -2.0
+   ]
+  },
+  {
+   "move": [
+    -3.5,
+    -2.0
+   ]
+  },
+  {
+   "click": [
+    -3.5,
+    -2.0
+   ],
+   "expect": {
+    "entities": 2
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "B"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "between"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -3.0,
+    -4.1
+   ]
+  },
+  {
+   "click": [
+    -0.925,
+    -1.0
+   ]
+  },
+  {
+   "click": [
+    5.6,
+    -1.0
+   ]
+  },
+  {
+   "move": [
+    0.5,
+    -2.0
+   ]
+  },
+  {
+   "click": [
+    0.5,
+    -2.0
+   ],
+   "expect": {
+    "entities": 3
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "3.5"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -0.875,
+    -2.0
+   ]
+  },
+  {
+   "click": [
+    1.0,
+    -4.1
+   ]
+  },
+  {
+   "click": [
+    1.0,
+    0.575
+   ]
+  },
+  {
+   "move": [
+    0.5,
+    -2.0
+   ]
+  },
+  {
+   "click": [
+    0.5,
+    -2.0
+   ],
+   "expect": {
+    "entities": 4
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "3"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    5.6,
+    2.0
+   ]
+  },
+  {
+   "click": [
+    4.0,
+    0.575
+   ]
+  },
+  {
+   "click": [
+    4.0,
+    4.1
+   ]
+  },
+  {
+   "move": [
+    4.0,
+    2.0
+   ]
+  },
+  {
+   "click": [
+    4.0,
+    2.0
+   ],
+   "expect": {
+    "entities": 5
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 2,
+      "kind": "wall",
+      "points": [
+       [
+        -0.925,
+        4.0
+       ],
+       [
+        -0.925,
+        -4.0
+       ]
+      ]
+     },
+     {
+      "id": 3,
+      "kind": "wall",
+      "points": [
+       [
+        -0.925,
+        0.575
+       ],
+       [
+        5.625,
+        0.575
+       ]
+      ]
+     },
+     {
+      "id": 4,
+      "kind": "wall",
+      "points": [
+       [
+        2.725,
+        0.575
+       ],
+       [
+        2.725,
+        -4.125
+       ]
+      ]
+     },
+     {
+      "id": 5,
+      "kind": "wall",
+      "points": [
+       [
+        2.425,
+        0.575
+       ],
+       [
+        2.425,
+        4.125
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "shot": "bolmeler"
+  },
+  {
+   "note": "§ Var olan plan — Kapılar ve pencereler",
+   "run": "tool.door"
+  },
+  {
+   "move": [
+    -0.925,
+    2.3
+   ]
+  },
+  {
+   "click": [
+    -0.925,
+    2.3
+   ]
+  },
+  {
+   "move": [
+    0.9,
+    0.575
+   ]
+  },
+  {
+   "click": [
+    0.9,
+    0.575
+   ]
+  },
+  {
+   "move": [
+    4.2,
+    0.575
+   ]
+  },
+  {
+   "click": [
+    4.2,
+    0.575
+   ]
+  },
+  {
+   "move": [
+    2.425,
+    2.3
+   ]
+  },
+  {
+   "click": [
+    2.425,
+    2.3
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "1.0"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "move": [
+    0.7,
+    4.1
+   ]
+  },
+  {
+   "click": [
+    0.7,
+    4.1
+   ],
+   "expect": {
+    "entities": 10
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "run": "tool.window"
+  },
+  {
+   "move": [
+    -3.25,
+    -4.1
+   ]
+  },
+  {
+   "click": [
+    -3.25,
+    -4.1
+   ]
+  },
+  {
+   "move": [
+    0.9,
+    -4.1
+   ]
+  },
+  {
+   "click": [
+    0.9,
+    -4.1
+   ]
+  },
+  {
+   "move": [
+    4.2,
+    -4.1
+   ]
+  },
+  {
+   "click": [
+    4.2,
+    -4.1
+   ]
+  },
+  {
+   "move": [
+    5.6,
+    2.3
+   ]
+  },
+  {
+   "click": [
+    5.6,
+    2.3
+   ]
+  },
+  {
+   "move": [
+    -5.6,
+    0.0
+   ]
+  },
+  {
+   "click": [
+    -5.6,
+    0.0
+   ]
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 15
+   }
+  },
+  {
+   "shot": "aciklik"
+  },
+  {
+   "note": "§ Var olan plan — Mahaller: Mahal, adı yazılıp odaya tıklanarak",
+   "run": "tool.space"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Salon"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -3.5,
+    -2.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Yatak odası 1"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    0.5,
+    -2.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Yatak odası 2"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    4.0,
+    -2.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Koridor"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    0.5,
+    2.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Banyo"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    4.0,
+    2.0
+   ]
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 20
+   }
+  },
+  {
+   "shot": "mahaller"
+  },
+  {
+   "note": "§ Değişiklik 1: Yatak 1 3.50 → 3.80, kilitle (Bu ölçüyü koru)",
+   "click": [
+    2.725,
+    -2.0
+   ],
+   "expect": {
+    "selected": [
+     4
+    ]
+   }
+  },
+  {
+   "move": [
+    2.425,
+    -2.0
+   ]
+  },
+  {
+   "clickLock": "west"
+  },
+  {
+   "clickNumber": "west"
+  },
+  {
+   "text": "3.8"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 20,
+    "objects": [
+     {
+      "id": 4,
+      "kind": "wall",
+      "points": [
+       [
+        3.025,
+        0.575
+       ],
+       [
+        3.025,
+        -4.125
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "shot": "kilit"
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "note": "§ Değişiklik 2: Salon 4.50 → 4.80; bağ Bölme 3'ü götürür",
+   "click": [
+    -0.925,
+    -2.0
+   ],
+   "expect": {
+    "selected": [
+     2
+    ]
+   }
+  },
+  {
+   "move": [
+    -1.225,
+    -2.0
+   ]
+  },
+  {
+   "clickNumber": "west"
+  },
+  {
+   "text": "4.8"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 20,
+    "objects": [
+     {
+      "id": 2,
+      "kind": "wall",
+      "points": [
+       [
+        -0.625,
+        4.0
+       ],
+       [
+        -0.625,
+        -4.0
+       ]
+      ]
+     },
+     {
+      "id": 4,
+      "kind": "wall",
+      "points": [
+       [
+        3.325,
+        0.575
+       ],
+       [
+        3.325,
+        -4.125
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "shot": "bag"
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "note": "§ Değişiklik 3: Yatak 1 kapısı Bölme 1'in yüzünden 0.10",
+   "click": [
+    0.9,
+    0.575
+   ],
+   "expect": {
+    "selected": [
+     7
+    ]
+   }
+  },
+  {
+   "move": [
+    0.9,
+    0.375
+   ]
+  },
+  {
+   "clickNumber": "west"
+  },
+  {
+   "text": "0.1"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 20
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "note": "§ Değişiklik 4: Yatak 2 penceresi doğu yüzden 0.60",
+   "click": [
+    4.2,
+    -4.1
+   ],
+   "expect": {
+    "selected": [
+     13
+    ]
+   }
+  },
+  {
+   "move": [
+    4.2,
+    -3.8
+   ]
+  },
+  {
+   "clickNumber": "east"
+  },
+  {
+   "text": "0.6"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 20
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "shot": "degisiklikler"
+  },
+  {
+   "note": "§ Kaydet ve aç",
+   "saveAndReopen": true,
+   "expect": {
+    "entities": 20
+   }
+  }
+ ]
+}
