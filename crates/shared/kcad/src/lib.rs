@@ -724,11 +724,15 @@ pub const SCHEMA_WITH_OPTIONS: u32 = 149;
 /// `slide`, `build.tracks`, `build.bothSides` on a four-leaf slide), a schedule's `tracks` and `panels`; written only
 /// when one is.
 pub const SCHEMA_WITH_MULTI_SLIDE: u32 = 150;
+/// Schema 159 (docs/adr/0795; provisional, renumbered when merged): a schedule of the building program's units
+/// (`of: units`), its fields (`unitKind`, `building`, `wing`, `recordedArea`, `shareWeight`), its filter's
+/// `buildings`, `wings`, `kinds` and its rows' `units`; written only when a schedule has one.
+pub const SCHEMA_WITH_UNIT_SCHEDULES: u32 = 159;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 149] = [
+pub const SCHEMAS: [u32; 150] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -878,6 +882,7 @@ pub const SCHEMAS: [u32; 149] = [
     SCHEMA_WITH_MATERIALS,
     SCHEMA_WITH_OPTIONS,
     SCHEMA_WITH_MULTI_SLIDE,
+    SCHEMA_WITH_UNIT_SCHEDULES,
 ];
 
 /// The file a drawing is saved as.

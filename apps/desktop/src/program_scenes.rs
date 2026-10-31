@@ -10,6 +10,14 @@
 //! KENTOS_SHOTS_ONLY=bina-programi-plan,bina-programi-bolumler,bina-programi-hedefler,bina-programi-durum,bina-programi-denetleniyor,bina-programi-kaydirildi,bina-programi-oznitelik,bina-programi-bol,bina-programi-birlestir cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
+//! docs/adr/0795 (Bölüm çizelgesi): the shares' house with a units schedule beside it (number, name, kind, wing,
+//! levels, net, share, gross, recorded area, spaces; the total), the tool placing one, Çizelge ayarları with the units'
+//! filter, Tabloyu düzenle on a name saying it goes to the program:
+//!
+//! ```text
+//! KENTOS_SHOTS_ONLY=bolum-cizelgesi-plan,bolum-cizelgesi-arac,bolum-cizelgesi-ayarlar,bolum-cizelgesi-duzenle cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! ```
+//!
 //! Test code only.
 
 use std::sync::Arc;
@@ -348,6 +356,65 @@ fn share_refused(app: &mut App) {
     let _ = app.update(Message::Program(Event::RemoveBuilding(0)));
 }
 
+/// A units schedule (docs/adr/0795) right of the plan: its uid and slot.
+fn unit_schedule(app: &mut App) -> (String, Slot) {
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let columns: Vec<Value> = ["number", "name", "unitKind", "wing", "level", "area", "share", "gross", "recordedArea", "count"]
+        .iter()
+        .map(|f| json!({"field": f}))
+        .collect();
+    let made = command(
+        app,
+        "cad.schedules.create",
+        json!({"layerId": layer, "at": p(UP + 7.0, 9.5), "of": "units", "columns": columns, "total": true}),
+    );
+    let uid = made["output"]["uid"].as_str().expect("its id").to_owned();
+    let s = slot(app, &uid);
+    app.selection.clear();
+    (uid, s)
+}
+
+/// The schedule close enough to read, the upper floor beside it.
+fn units_plan(app: &mut App) {
+    share_house(app, "net");
+    let (_, s) = unit_schedule(app);
+    let table = match app.document.as_ref().expect("a drawing").model.get(s) {
+        Some(Entity::Table(t)) => (t.p, t.columns.iter().sum::<f64>(), t.rows.iter().sum::<f64>()),
+        _ => panic!("the schedule"),
+    };
+    let (q, w, h) = table;
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds { min_x: E + UP - 0.5, min_y: q.y - h - 2.0, max_x: q.x + w + 0.3, max_y: q.y + 0.4 },
+        24.0,
+    );
+    hover(app, [UP + 1.0, -1.0]);
+}
+
+/// Bölüm çizelgesi: its ghost at the cursor, its settings visible.
+fn units_tool(app: &mut App) {
+    share_house(app, "net");
+    fit(app, -0.5, -0.5, UP + 21.0, 10.0);
+    app.command_expanded = true;
+    run(app, "tool.scheduleUnits");
+    hover(app, [UP + 7.0, 9.5]);
+}
+
+fn units_settings(app: &mut App) {
+    share_house(app, "net");
+    let (uid, _) = unit_schedule(app);
+    fit(app, -0.5, -0.5, UP + 21.0, 10.0);
+    let _ = app.schedule_event(crate::schedule_window::Event::Open(uid));
+}
+
+/// Tabloyu düzenle on flat 2's name: the status line says it goes to the program.
+fn units_edit(app: &mut App) {
+    share_house(app, "net");
+    let (_, s) = unit_schedule(app);
+    fit(app, -0.5, -0.5, UP + 21.0, 10.0);
+    let _ = app.open_table_editor(s);
+    let _ = app.table_editor_event(crate::tables::editor::Event::Cell(2, 1));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("bina-programi-plan", plan),
@@ -364,6 +431,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("bina-pay-durum", share_status),
         ("bina-pay-plan", share_plan),
         ("bina-pay-silinmez", share_refused),
+        ("bolum-cizelgesi-plan", units_plan),
+        ("bolum-cizelgesi-arac", units_tool),
+        ("bolum-cizelgesi-ayarlar", units_settings),
+        ("bolum-cizelgesi-duzenle", units_edit),
     ]
 }
 
@@ -425,6 +496,56 @@ mod tests {
         assert_eq!(program.buildings[1].levels, vec!["zemin".to_owned()]);
         assert_eq!(program.buildings[1].wings[0].levels, vec!["zemin".to_owned()]);
         assert!(program.building("b").is_none(), "B Blok, which nothing named, is gone");
+    }
+
+    /// docs/adr/0795: the units schedule's rows are the program's groups with the check's numbers; its name cell goes to
+    /// the program in one step and the schedule follows; a space given to another flat moves its row's area; Tabloyu
+    /// düzenle says where a cell goes; the tool places one through the command.
+    #[test]
+    fn the_units_schedule_reads_the_program_and_writes_back_to_it() {
+        let mut app = app_with_drawing();
+        let plan = share_house(&mut app, "net");
+        let (uid, s) = unit_schedule(&mut app);
+        let c = checked(&app);
+        let cells = |app: &App| match app.document.as_ref().expect("a drawing").model.get(s) {
+            Some(Entity::Table(t)) => t.cells.clone(),
+            _ => panic!("the schedule"),
+        };
+        let rows = cells(&app);
+        assert_eq!(rows[0][0], "No");
+        assert_eq!(rows[0][9], "Mahal sayısı");
+        let d2 = c.units.iter().find(|u| u.id == "d2").and_then(|u| u.share.clone()).expect("flat 2's part");
+        let flat2 = rows.iter().find(|r| r[0] == "2").expect("flat 2's row");
+        assert_eq!(flat2[6], d2.share, "the check's share");
+        assert_eq!(flat2[7], d2.gross, "the check's gross");
+        assert_eq!(rows.last().expect("a total")[0], "Toplam");
+        // Its name written through the schedule: the program changes, the row follows, one undo step.
+        let input = json!({"uid": uid, "operation": {"kind": "cell", "row": 2, "column": 1, "value": "Dubleks"}});
+        command(&mut app, "cad.schedules.edit", input);
+        let model = &app.document.as_ref().expect("a drawing").model;
+        assert_eq!(model.program().unit("d2").and_then(|u| u.name.clone()).as_deref(), Some("Dubleks"));
+        assert_eq!(cells(&app)[2][1], "Dubleks");
+        let said = crate::tables::editor::schedule_cell(model, &match model.get(s) {
+            Some(Entity::Table(t)) => t.clone(),
+            _ => panic!("the schedule"),
+        }, (2, 1));
+        assert!(matches!(&said, Some(Ok(w)) if w.contains("Bina programına yazılır: 2 Dubleks")), "{said:?}");
+        let _ = app.update(Message::Run("edit.undo"));
+        assert_eq!(cells(&app)[2][1], "Daire 2");
+        // A space given to flat 1: both rows' areas follow in the same step.
+        let before = cells(&app);
+        command(&mut app, "cad.program.edit", json!({"assign": [{"uids": [plan.space("203")], "unit": "d1"}]}));
+        let after = cells(&app);
+        assert_ne!(before[1][5], after[1][5], "flat 1 grew");
+        assert_ne!(before[2][5], after[2][5], "flat 2 shrank");
+        // The tool places one through the command.
+        let count = |app: &App| {
+            app.document.as_ref().expect("a drawing").model.entities().filter(|e| matches!(e, Entity::Table(_))).count()
+        };
+        let n = count(&app);
+        run(&mut app, "tool.scheduleUnits");
+        click(&mut app, [UP + 7.0, -4.0]);
+        assert_eq!(count(&app), n + 1, "{}", crate::files_testing::last_said(&app));
     }
 
     fn checked(app: &App) -> kentos_commands::ProgramChecked {

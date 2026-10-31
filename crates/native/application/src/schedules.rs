@@ -8,6 +8,12 @@
 //! tag, a wall's thickness, an attribute), else it is worked out and refused (`cell_computed`); a wall's type names its
 //! style, which a schedule does not change. A length is read in the project's unit, a point or a comma before its
 //! decimals; empty words take an optional field away.
+//!
+//! A units schedule (docs/adr/0795) lists the building program's groups: its cell of a number, a name, a recorded area
+//! (in the project's area unit) or a share weight is written to the row's groups in the program, by `cad.program.edit`'s
+//! rule (the program's problem refuses it, `invalid_cell_value`), as one step “Çizelgeyi düzenle”; its filter's
+//! buildings and wings are the program's (`building_not_found`). Its cases are
+//! `fixtures/commands/v1/cad.schedules.{create,edit,query}.units.json`.
 
 use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, ScheduleChange, ScheduleColumn,
@@ -27,7 +33,8 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
 }
 
-/// `invalid_schedule` for a spec that makes none, `level_not_found` and `layer_not_found` for its filter's unknowns.
+/// `invalid_schedule` for a spec that makes none, `level_not_found`, `building_not_found` and `layer_not_found` for its
+/// filter's unknowns.
 fn spec_holds(
     doc: &Document,
     of: ScheduleOf,
@@ -56,6 +63,26 @@ fn spec_holds(
                     codes::LEVEL_NOT_FOUND,
                     format!("Projede “{l}” kimlikli kat yok. Var olan bir katın kimliğini verin."),
                     &format!("{at}filter.levels[{k}]"),
+                ));
+            }
+        }
+        // A units schedule's buildings and wings (docs/adr/0795): the program's.
+        let program = doc.program();
+        for (k, b) in f.buildings.iter().flatten().enumerate() {
+            if program.building(b).is_none() {
+                return Err(fail(
+                    codes::BUILDING_NOT_FOUND,
+                    format!("Bina programında “{b}” kimlikli bina yok. Var olan bir binanın kimliğini verin."),
+                    &format!("{at}filter.buildings[{k}]"),
+                ));
+            }
+        }
+        for (k, w) in f.wings.iter().flatten().enumerate() {
+            if !program.buildings.iter().any(|b| b.wings.iter().any(|x| &x.id == w)) {
+                return Err(fail(
+                    codes::BUILDING_NOT_FOUND,
+                    format!("Bina programında “{w}” kimlikli kanat yok. Var olan bir kanadın kimliğini verin."),
+                    &format!("{at}filter.wings[{k}]"),
                 ));
             }
         }
@@ -141,6 +168,7 @@ fn create_check(
             group: input.group.unwrap_or(false),
             total: input.total.unwrap_or(false),
             members: Vec::new(),
+            units: Vec::new(),
         }),
         styles: Vec::new(),
         formulas: Vec::new(),
@@ -149,11 +177,17 @@ fn create_check(
     Ok((warnings, doc.table_worked_out(&table)))
 }
 
-/// Its data rows: those with objects (a heading's and a subtotal's have none, docs/adr/0733 §4).
+/// Its data rows: those with objects (a heading's and a subtotal's have none, docs/adr/0733 §4); a units schedule's
+/// those with groups (a group may have no space, docs/adr/0795).
 fn rows_of(t: &TableEntity) -> u32 {
     match &t.source {
-        Some(TableSource::Schedule { members, .. }) => {
-            u32::try_from(members.iter().filter(|m| !m.is_empty()).count()).unwrap_or(u32::MAX)
+        Some(TableSource::Schedule { of, members, units, .. }) => {
+            let n = if *of == ScheduleOf::Units {
+                units.iter().filter(|m| !m.is_empty()).count()
+            } else {
+                members.iter().filter(|m| !m.is_empty()).count()
+            };
+            u32::try_from(n).unwrap_or(u32::MAX)
         }
         _ => 0,
     }
@@ -359,7 +393,60 @@ fn written(
     Ok(e)
 }
 
-type Edited = (Vec<CommandWarning>, Slot, TableEntity, Vec<(Slot, Entity)>);
+/// `program` with `value` written to its groups `ids`' field `field` (docs/adr/0795): a number, a name, a recorded area
+/// in the project's area unit, a share weight; refused by the program's own rule.
+fn program_written(
+    doc: &Document,
+    mut program: kentos_commands::BuildingProgram,
+    ids: &[String],
+    field: ScheduleField,
+    value: &str,
+) -> Result<kentos_commands::BuildingProgram, Stop> {
+    let text = (!value.trim().is_empty()).then(|| value.trim().to_owned());
+    let area = match (field, &text) {
+        (ScheduleField::RecordedArea, Some(v)) => {
+            let typed: f64 = v.replace(',', ".").parse().map_err(|_| {
+                bad_value(format!("“{v}” bir alan değil; projenin alan biriminde bir sayı yazın."))
+            })?;
+            let per = match doc.settings().area_unit {
+                kentos_commands::AreaUnit::M2 => 1.0,
+                kentos_commands::AreaUnit::Donum => 1000.0,
+                kentos_commands::AreaUnit::Ha => 10_000.0,
+            };
+            Some(typed * per)
+        }
+        _ => None,
+    };
+    for u in program.units.iter_mut().filter(|u| ids.contains(&u.id)) {
+        match field {
+            ScheduleField::Number => {
+                u.number = text.clone().ok_or_else(|| bad_value("Bölümün numarası boş olamaz.".into()))?;
+            }
+            ScheduleField::Name => u.name = text.clone(),
+            ScheduleField::RecordedArea => u.recorded_area = area,
+            ScheduleField::ShareWeight => u.share_weight = text.as_ref().map(|t| t.replace(',', ".")),
+            _ => {
+                return Err(fail(
+                    codes::CELL_COMPUTED,
+                    "Bu hücre bölümün programdaki kendi alanı değil; düzenlenmez.".into(),
+                    "operation.column",
+                ));
+            }
+        }
+    }
+    if let Some((_, words)) = program.problem() {
+        return Err(bad_value(words));
+    }
+    Ok(program)
+}
+
+type Edited = (
+    Vec<CommandWarning>,
+    Slot,
+    TableEntity,
+    Vec<(Slot, Entity)>,
+    Option<(kentos_commands::BuildingProgram, Vec<String>)>,
+);
 
 fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
     let (slot, t) = schedule_at(doc, &input.uid)?;
@@ -371,6 +458,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
         group,
         total,
         members,
+        units,
     }) = t.source.clone()
     else {
         return Err(fail(
@@ -380,6 +468,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
         ));
     };
     let mut work: Vec<(Slot, Entity)> = Vec::new();
+    let mut program: Option<(kentos_commands::BuildingProgram, Vec<String>)> = None;
     let mut next = t.clone();
     match &input.operation {
         ScheduleOperation::Cell { row, column, value } => {
@@ -412,26 +501,29 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                     codes::CELL_COMPUTED,
                     format!(
                         "“{}” sütunu çizimden hesaplanır; düzenlenmez. Kaynağın kendi alanını değiştirin.",
-                        doc.schedule_heading(c)
+                        doc.schedule_heading_in(of, c)
                     ),
                     "operation.column",
                 ));
             }
             let row_members = &members[r - 1];
+            // A units schedule's row is its groups (docs/adr/0795); one without them is a heading or a subtotal.
+            let row_units = units.get(r - 1).filter(|_| of == ScheduleOf::Units);
             // A heading's or a subtotal's row has no objects (docs/adr/0733 §4).
-            if row_members.is_empty() {
+            if row_units.map_or(row_members.is_empty(), |u| u.is_empty()) {
                 return Err(fail(
                     codes::SCHEDULE_SUMMARY_ROW,
                     format!("Çizelgenin {row}. satırı bir grup başlığı ya da ara toplam; düzenlenmez."),
                     "operation.row",
                 ));
             }
-            if c.field == ScheduleField::Number && row_members.len() > 1 {
+            let many = row_units.map_or(row_members.len(), |u| u.len());
+            if c.field == ScheduleField::Number && many > 1 {
                 return Err(fail(
                     codes::SCHEDULE_GROUP_NUMBER,
                     format!(
-                        "Bu satır {} nesnedir; aynı numara hepsine yazılmaz. Grubu kaldırıp tek tek numaralayın.",
-                        row_members.len()
+                        "Bu satır {many} {}; aynı numara hepsine yazılmaz. Grubu kaldırıp tek tek numaralayın.",
+                        if row_units.is_some() { "bölümdür" } else { "nesnedir" }
                     ),
                     "operation.row",
                 ));
@@ -441,7 +533,10 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                     "Hücrenin yazısı tek satırdır, en çok 200 harftir.".into(),
                 ));
             }
-            for u in row_members {
+            if let Some(ids) = row_units {
+                program = Some((program_written(doc, doc.program(), ids, c.field, value)?, ids.clone()));
+            }
+            for u in row_members.iter().filter(|_| row_units.is_none()) {
                 let Some(s) = Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)) else {
                     continue;
                 };
@@ -474,6 +569,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                 group: g2.unwrap_or(group),
                 total: t2.unwrap_or(total),
                 members: Vec::new(),
+                units: Vec::new(),
             });
             next = doc.table_worked_out(&next);
         }
@@ -493,7 +589,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
             ));
         }
     }
-    Ok((Vec::new(), slot, next, work))
+    Ok((Vec::new(), slot, next, work, program))
 }
 
 /// The edit applied to `doc`: its step, the table as the step leaves it and the objects written to.
@@ -502,22 +598,35 @@ fn apply(
     slot: Slot,
     next: TableEntity,
     work: Vec<(Slot, Entity)>,
-) -> (TableEntity, Vec<String>) {
+    program: Option<(kentos_commands::BuildingProgram, Vec<String>)>,
+) -> (TableEntity, Vec<String>, Vec<String>) {
     let edited: Vec<String> = work
         .iter()
         .filter_map(|(s, _)| doc.uid(*s).map(|u| u.to_string()))
         .collect();
-    let mut all = work;
-    if all.is_empty() {
-        all.push((slot, Entity::Table(next.clone())));
+    let mut written_units = Vec::new();
+    match program {
+        // A units schedule's cell (docs/adr/0795): the program written as `cad.program.edit` writes it; the schedule
+        // follows it in the same step.
+        Some((p, ids)) => {
+            written_units = p.units.iter().filter(|u| ids.contains(&u.id)).map(|u| u.id.clone()).collect();
+            // Checked: the program has no problem.
+            let _ = doc.set_program(p, Vec::new(), EDIT_STEP);
+        }
+        None => {
+            let mut all = work;
+            if all.is_empty() {
+                all.push((slot, Entity::Table(next.clone())));
+            }
+            doc.update_many(all, EDIT_STEP);
+        }
     }
-    doc.update_many(all, EDIT_STEP);
     // As the step's end writes it (a call's group follows when it closes): the schedule's rule on the drawing now.
     let table = match doc.get(slot) {
         Some(Entity::Table(t)) => doc.table_worked_out(t),
         _ => next,
     };
-    (table, edited)
+    (table, edited, written_units)
 }
 
 pub mod edit {
@@ -543,13 +652,14 @@ pub mod edit {
     /// [`plan`] on a document: the schedule as the edit would leave it, on a copy; nothing written.
     pub fn plan_in(doc: &Document, input: &SchedulesEdit) -> CommandResult<SchedulesEdited> {
         match edit_check(doc, input) {
-            Ok((warnings, slot, next, work)) => {
+            Ok((warnings, slot, next, work, program)) => {
                 let mut copy = doc.reading_copy();
-                let (table, edited) = apply(&mut copy, slot, next, work);
+                let (table, edited, units) = apply(&mut copy, slot, next, work, program);
                 CommandResult::Completed {
                     output: SchedulesEdited {
                         table: Entity::Table(table),
                         edited,
+                        units,
                         revision: doc.revision().to_string(),
                     },
                     warnings,
@@ -576,15 +686,16 @@ pub mod edit {
         cx: &mut ExecutionContext<'_>,
         input: SchedulesEdit,
     ) -> CommandResult<SchedulesEdited> {
-        let (warnings, slot, next, work) = match edit_check(cx.doc, &input) {
+        let (warnings, slot, next, work, program) = match edit_check(cx.doc, &input) {
             Ok(checked) => checked,
             Err(stop) => return stop.into(),
         };
-        let (table, edited) = apply(cx.doc, slot, next, work);
+        let (table, edited, units) = apply(cx.doc, slot, next, work, program);
         CommandResult::Completed {
             output: SchedulesEdited {
                 table: Entity::Table(table),
                 edited,
+                units,
                 revision: cx.doc.revision().to_string(),
             },
             warnings,
@@ -600,7 +711,7 @@ pub mod query {
 
     fn read(doc: &Document, input: &SchedulesQuery) -> Result<SchedulesQueried, Stop> {
         let (_, t) = schedule_at(doc, &input.uid)?;
-        let Some(TableSource::Schedule { of, columns, total, members, .. }) = &t.source else {
+        let Some(TableSource::Schedule { of, columns, total, members, units, .. }) = &t.source else {
             return Err(fail(codes::NOT_SCHEDULE, "Tablo bir mimari çizelge değil.".into(), "uid"));
         };
         let heads: std::collections::BTreeSet<u32> = t.merges.iter().map(|m| m.row).collect();
@@ -611,11 +722,18 @@ pub mod query {
             .enumerate()
             .map(|(i, cells)| {
                 let in_members = i.checked_sub(1).and_then(|k| members.get(k));
+                // A units schedule's data row is its groups' (docs/adr/0795): a group may have no space.
+                let in_units = i.checked_sub(1).and_then(|k| units.get(k));
+                let data = if *of == ScheduleOf::Units {
+                    in_units.is_some_and(|m| !m.is_empty())
+                } else {
+                    in_members.is_some_and(|m| !m.is_empty())
+                };
                 let role = if i == 0 {
                     ScheduleRowRole::Heading
                 } else if *total && i + 1 == n {
                     ScheduleRowRole::Total
-                } else if in_members.is_some_and(|m| !m.is_empty()) {
+                } else if data {
                     ScheduleRowRole::Data
                 } else if heads.contains(&(i as u32)) {
                     ScheduleRowRole::Header
@@ -627,6 +745,7 @@ pub mod query {
                     role,
                     cells: cells.clone(),
                     members: if role == ScheduleRowRole::Data { in_members.cloned().unwrap_or_default() } else { Vec::new() },
+                    units: if role == ScheduleRowRole::Data { in_units.cloned().unwrap_or_default() } else { Vec::new() },
                 }
             })
             .collect();
@@ -635,11 +754,11 @@ pub mod query {
             columns: columns
                 .iter()
                 .map(|c| ScheduleColumnInfo {
-                    heading: doc.schedule_heading(c),
+                    heading: doc.schedule_heading_in(*of, c),
                     field: c.field,
                     attr: c.attr.clone(),
                     editable: editable(*of, c.field),
-                    summed: c.field.summed(),
+                    summed: c.field.summed_in(*of),
                 })
                 .collect(),
             rows,

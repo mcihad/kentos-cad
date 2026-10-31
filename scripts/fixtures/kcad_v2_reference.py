@@ -2501,6 +2501,18 @@ def document(d):
             or any(multi_entity(e) for b in d.get("blocks") or [] for e in b.get("entities", []))):
         # Three- and four-leaf sliding doors and windows, their tracks, a schedule of them (docs/adr/0792).
         schema = max(schema, 150)
+
+    def unit_schedule(e):
+        src = e.get("source") or e.get("schedule")
+        return e["kind"] == "table" and isinstance(src, dict) and src.get("kind") == "schedule" and (
+            src.get("of") == "units" or "units" in src
+            or any(isinstance(c, dict) and c.get("field") in ("unitKind", "building", "wing", "recordedArea",
+                                                              "shareWeight") for c in src.get("columns", []))
+            or any(k in (src.get("filter") or {}) for k in ("buildings", "wings", "kinds")))
+    if any(unit_schedule(e) for e in d["entities"]) or any(unit_schedule(e) for b in d.get("blocks", [])
+                                                            for e in b.get("entities", [])):
+        # A schedule of the building program's units (docs/adr/0795; provisional number).
+        schema = max(schema, 159)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3215,6 +3227,7 @@ def broken(minimal_content, minimal_file):
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
     files["schema-version-151.kcad"] = container(root(cmap(parts), version=uint(151)))
+    files["schema-version-160.kcad"] = container(root(cmap(parts), version=uint(160)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5754,6 +5767,23 @@ def build():
     material_bad("id-twice", lambda d: d["settings"]["arch"]["materials"][1].update(id="tugla"))
     material_bad("id-capitals", lambda d: d["entities"][1].update(materialId="Betonarme"))
     material_bad("default-category", lambda d: d["settings"]["arch"]["materials"][2].update(category="other"))
+    # Schema 159 (docs/adr/0795; provisional, renumbered when merged): a units schedule with its fields, its filter's
+    # buildings and kinds and its rows' units; the schemas before refuse it (158 is not a schema yet), as do its rows'
+    # units on a spaces schedule, units not one a row, a phase filter on it.
+    us = document(load("unit-schedules.json"))
+    assert us.count(b"\x67version\x18\x9f") == 1, "the units schedule is schema 159"
+    out["unit-schedules.kcad"] = container(us)
+    out["broken/unit-schedules-in-schema-158.kcad"] = container(us.replace(b"\x67version\x18\x9f", b"\x67version\x18\x9e"))
+    out["broken/unit-schedules-in-schema-148.kcad"] = container(us.replace(b"\x67version\x18\x9f", b"\x67version\x18\x94"))
+
+    def units_bad(name, change):
+        d = load("unit-schedules.json")
+        change(d)
+        out["broken/unit-schedules-" + name + ".kcad"] = container(document(d))
+    units_bad("on-spaces", lambda d: d["entities"][3]["source"].update(
+        of="spaces", columns=[{"field": "number"}], filter={"levels": ["zemin"]}))
+    units_bad("units-short", lambda d: d["entities"][3]["source"]["units"].pop())
+    units_bad("phase-filter", lambda d: d["entities"][3]["source"]["filter"].update(phases=["new"]))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

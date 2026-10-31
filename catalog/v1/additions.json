@@ -2525,6 +2525,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.scheduleUnits",
+      "title": "Bölüm çizelgesi",
+      "short": "Bölüm",
+      "icon": "scheduleUnits",
+      "description": "Bina programının bölümlerinin çizelgesini imleçten yerleştirir: bölüm başına bir satır, programın sırasıyla; no, ad, tür, bina, katlar, net alan, ortak alan payı, brüt ve kayıtlı alan. No, ad, kayıtlı alan ve pay ağırlığı hücresi programa yazılır. Kat, Grup, Toplam, Ara toplam, Sırala görünür ayarlardır.",
+      "aliases": [
+        "BOLUMCIZELGESI",
+        "UNITSCHEDULE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "edit.selectFilter.tag",
       "title": "Seçim süzgecinde Etiket",
       "short": "Etiket",
@@ -3854,6 +3868,7 @@
     "scheduleOpenings": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M3 5.5V1.5M3 1.5a4 4 0 0 1 4 4\" stroke-width=\"1\"/>",
     "scheduleFinishes": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M2.5 4.5l2-3h11l2 3\" stroke-width=\"1\"/>",
     "scheduleFixtures": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M3 4.8v-2.6h4.5v2.6M3 3.6h4.5\" stroke-width=\"1\"/>",
+    "scheduleUnits": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M2.5 4.8V2.2h3.6v2.6M7.6 4.8V2.2h3.6v2.6\" stroke-width=\"1\"/>",
     "scheduleSpaces": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><rect x=\"2.5\" y=\"1.5\" width=\"5.5\" height=\"3.5\" stroke-width=\"1\"/><path d=\"M4 3.3h2.5\" stroke-width=\"0.8\"/>",
     "viewSection": "<path d=\"M2.5 12.5h15\" stroke-dasharray=\"3.2 1.4 0.8 1.4\"/><circle cx=\"4\" cy=\"7\" r=\"2.3\"/><circle cx=\"16\" cy=\"7\" r=\"2.3\"/><path d=\"M1.7 7h4.6M13.7 7h4.6\" stroke-width=\"0.9\"/><path d=\"M4 9.3v3.2M16 9.3v3.2\" stroke-width=\"1.6\"/>",
     "viewElevation": "<circle cx=\"9\" cy=\"11\" r=\"4.2\"/><path d=\"M4.8 11h8.4\" stroke-width=\"0.9\"/><path d=\"m13 7.8 4.7-1.6-1.6 4.7z\" fill=\"currentColor\" stroke=\"none\"/>",

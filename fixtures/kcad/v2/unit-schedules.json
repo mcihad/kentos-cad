@@ -1,0 +1,431 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Bölüm çizelgesi",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ],
+      "program": {
+        "buildings": [
+          {
+            "id": "a",
+            "name": "A Blok",
+            "levels": [
+              "zemin",
+              "kat-1"
+            ],
+            "wings": [
+              {
+                "id": "a-dogu",
+                "name": "Doğu kanadı",
+                "levels": [
+                  "zemin"
+                ]
+              }
+            ]
+          }
+        ],
+        "units": [
+          {
+            "id": "d1",
+            "number": "1",
+            "name": "Daire 1",
+            "building": "a",
+            "wing": "a-dogu",
+            "recordedArea": 60.0,
+            "shareWeight": "120.5"
+          },
+          {
+            "id": "d2",
+            "number": "2",
+            "name": "Daire 2",
+            "building": "a",
+            "shareWeight": "80"
+          },
+          {
+            "id": "ortak",
+            "number": "O",
+            "name": "Ortak alan",
+            "kind": "common",
+            "building": "a"
+          },
+          {
+            "id": "bahce",
+            "number": "B",
+            "kind": "outdoor"
+          }
+        ],
+        "briefs": [
+          {
+            "usage": "Yatak odası",
+            "areaMin": 12.0,
+            "areaMax": 16.0,
+            "minWidth": 2.8,
+            "reach": [
+              "Salon"
+            ]
+          },
+          {
+            "usage": "Balkon",
+            "outdoor": true
+          },
+          {
+            "usage": "Koridor",
+            "minPassage": 1.2,
+            "adjacent": [
+              "Şaft"
+            ]
+          }
+        ],
+        "clearances": [
+          {
+            "block": "Klozet",
+            "width": 0.8,
+            "depth": 0.6
+          }
+        ],
+        "version": "Ofis konut hedefleri 2026-1",
+        "shareRule": "weight"
+      }
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "cizelge",
+      "name": "Çizelge",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "mahal",
+  "uids": [
+    "0192f5a1-7730-7000-8000-000000000001",
+    "0192f5a1-7730-7000-8000-000000000002",
+    "0192f5a1-7730-7000-8000-000000000003",
+    "0192f5a1-7950-7000-8000-000000000004"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.1
+              },
+              {
+                "x": 4.9,
+                "y": 0.1
+              },
+              {
+                "x": 4.9,
+                "y": 3.3
+              },
+              {
+                "x": 0.1,
+                "y": 3.3
+              }
+            ]
+          }
+        }
+      ],
+      "number": "101",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+        "level": "zemin"
+      },
+      "unit": "d1"
+    },
+    {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.1,
+                "y": 0.1
+              },
+              {
+                "x": 2.9,
+                "y": 0.1
+              },
+              {
+                "x": 2.9,
+                "y": 3.9
+              },
+              {
+                "x": 0.1,
+                "y": 3.9
+              }
+            ]
+          }
+        }
+      ],
+      "number": "105",
+      "usage": "Yatak odası",
+      "arch": {
+        "level": "kat-1"
+      },
+      "unit": "d1"
+    },
+    {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 5.1,
+                "y": 0.1
+              },
+              {
+                "x": 6.3,
+                "y": 0.1
+              },
+              {
+                "x": 6.3,
+                "y": 6.9
+              },
+              {
+                "x": 5.1,
+                "y": 6.9
+              }
+            ]
+          }
+        }
+      ],
+      "number": "001",
+      "usage": "Koridor",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "table",
+      "id": 4,
+      "layerId": "cizelge",
+      "attrs": {},
+      "p": {
+        "x": 10.0,
+        "y": 0.0
+      },
+      "rotation": 0.0,
+      "height": 0.125,
+      "rows": [
+        0.25,
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "columns": [
+        0.5,
+        1.0,
+        0.8,
+        1.0,
+        0.8,
+        0.8,
+        0.6
+      ],
+      "cells": [
+        [
+          "No",
+          "Bölüm türü",
+          "Bina",
+          "Kanat",
+          "Kayıtlı alan (m²)",
+          "Pay ağırlığı",
+          "Mahal sayısı"
+        ],
+        [
+          "1",
+          "Bağımsız bölüm",
+          "A Blok",
+          "Doğu kanadı",
+          "60.00",
+          "120.5",
+          "2"
+        ],
+        [
+          "2",
+          "Bağımsız bölüm",
+          "A Blok",
+          "",
+          "",
+          "80",
+          "0"
+        ],
+        [
+          "O",
+          "Ortak alan",
+          "A Blok",
+          "",
+          "",
+          "",
+          "0"
+        ],
+        [
+          "Toplam",
+          "",
+          "",
+          "",
+          "60.00",
+          "",
+          "2"
+        ]
+      ],
+      "aligns": [
+        "left",
+        "left",
+        "left",
+        "left",
+        "right",
+        "left",
+        "right"
+      ],
+      "header": true,
+      "source": {
+        "kind": "schedule",
+        "of": "units",
+        "columns": [
+          {
+            "field": "number"
+          },
+          {
+            "field": "unitKind"
+          },
+          {
+            "field": "building"
+          },
+          {
+            "field": "wing"
+          },
+          {
+            "field": "recordedArea"
+          },
+          {
+            "field": "shareWeight"
+          },
+          {
+            "field": "count"
+          }
+        ],
+        "filter": {
+          "buildings": [
+            "a"
+          ],
+          "kinds": [
+            "unit",
+            "common"
+          ]
+        },
+        "total": true,
+        "members": [
+          [
+            "0192f5a1-7730-7000-8000-000000000001",
+            "0192f5a1-7730-7000-8000-000000000002"
+          ],
+          [],
+          []
+        ],
+        "units": [
+          [
+            "d1"
+          ],
+          [
+            "d2"
+          ],
+          [
+            "ortak"
+          ]
+        ]
+      },
+      "styles": [
+        {
+          "row": 4,
+          "col": 0,
+          "rows": 1,
+          "cols": 7,
+          "bold": true
+        }
+      ]
+    }
+  ]
+}

@@ -130,6 +130,7 @@ pub const TOOLS: &[&str] = &[
     tag_tools::SCHEDULE_SPACES_ID,
     tag_tools::SCHEDULE_FINISHES_ID,
     tag_tools::SCHEDULE_FIXTURES_ID,
+    tag_tools::SCHEDULE_UNITS_ID,
     viewmark_tools::SECTION_ID,
     viewmark_tools::ELEVATION_ID,
     viewmark_tools::DETAIL_ID,
@@ -537,6 +538,9 @@ impl Session {
             )),
             tag_tools::SCHEDULE_FIXTURES_ID => Box::new(tag_tools::ScheduleTool::new(
                 kentos_commands::ScheduleOf::Fixtures,
+            )),
+            tag_tools::SCHEDULE_UNITS_ID => Box::new(tag_tools::ScheduleTool::new(
+                kentos_commands::ScheduleOf::Units,
             )),
             viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(
                 kentos_commands::ViewMarkForm::Section,

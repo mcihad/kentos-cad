@@ -41,6 +41,8 @@ pub const SCHEDULE_SPACES_ID: &str = "scheduleSpaces";
 /// Mahal kaplama çizelgesi and Donatı çizelgesi (docs/adr/0733 §2, §3).
 pub const SCHEDULE_FINISHES_ID: &str = "scheduleFinishes";
 pub const SCHEDULE_FIXTURES_ID: &str = "scheduleFixtures";
+/// Bölüm çizelgesi (docs/adr/0795): the building program's units.
+pub const SCHEDULE_UNITS_ID: &str = "scheduleUnits";
 
 /// The object a tag can be put on under the cursor.
 fn taggable_at(at: Vec2, cx: &Context<'_>) -> Option<Slot> {
@@ -760,16 +762,19 @@ pub enum SchedulePreset {
     Columns,
     Walls,
     Fixtures,
+    /// The building program's units (docs/adr/0795).
+    Units,
 }
 
 impl SchedulePreset {
-    pub const ALL: [SchedulePreset; 6] = [
+    pub const ALL: [SchedulePreset; 7] = [
         SchedulePreset::Openings,
         SchedulePreset::Spaces,
         SchedulePreset::Finishes,
         SchedulePreset::Columns,
         SchedulePreset::Walls,
         SchedulePreset::Fixtures,
+        SchedulePreset::Units,
     ];
 
     pub fn of(self) -> ScheduleOf {
@@ -779,6 +784,7 @@ impl SchedulePreset {
             SchedulePreset::Columns => ScheduleOf::Columns,
             SchedulePreset::Walls => ScheduleOf::Walls,
             SchedulePreset::Fixtures => ScheduleOf::Fixtures,
+            SchedulePreset::Units => ScheduleOf::Units,
         }
     }
 
@@ -797,6 +803,7 @@ impl SchedulePreset {
             SchedulePreset::Columns => "columns",
             SchedulePreset::Walls => "walls",
             SchedulePreset::Fixtures => "fixtures",
+            SchedulePreset::Units => "units",
         }
     }
 
@@ -813,6 +820,8 @@ impl SchedulePreset {
             (SchedulePreset::Columns, true) => &[Type, Width, Count],
             (SchedulePreset::Walls, true) => &[Type, Thickness, Count, Length, Area],
             (SchedulePreset::Fixtures, true) => &[Type, Category, Count],
+            // Alike units by kind and building: their count of spaces, areas, shares and gross summed.
+            (SchedulePreset::Units, true) => &[UnitKind, Building, Count, Area, Share, Gross],
         };
         Some(
             fields
@@ -857,6 +866,7 @@ impl ScheduleTool {
             ScheduleOf::Columns => SchedulePreset::Columns,
             ScheduleOf::Walls => SchedulePreset::Walls,
             ScheduleOf::Fixtures => SchedulePreset::Fixtures,
+            ScheduleOf::Units => SchedulePreset::Units,
         })
     }
 
@@ -867,7 +877,8 @@ impl ScheduleTool {
             // A fixtures schedule counts alike ones on one row.
             group: preset == SchedulePreset::Fixtures,
             total: preset != SchedulePreset::Openings,
-            sorted: true,
+            // A units schedule keeps the program's order (docs/adr/0795).
+            sorted: preset != SchedulePreset::Units,
             subtotals: false,
             active_level: false,
             table: None,
@@ -1003,6 +1014,7 @@ impl Tool for ScheduleTool {
             SchedulePreset::Spaces => SCHEDULE_SPACES_ID,
             SchedulePreset::Finishes => SCHEDULE_FINISHES_ID,
             SchedulePreset::Fixtures => SCHEDULE_FIXTURES_ID,
+            SchedulePreset::Units => SCHEDULE_UNITS_ID,
             _ => SCHEDULE_ID,
         }
     }

@@ -13,4 +13,8 @@ row: number, role: ScheduleRowRole, cells: Array<string>,
  * A data row's objects, by their persistent ids, in the drawing's order: what a cell of an editable column is
  * written to; none for the other rows.
  */
-members: Array<string>, };
+members: Array<string>, 
+/**
+ * A units schedule's data row's program groups by their ids (docs/adr/0795): what its cells are written to.
+ */
+units?: Array<string>, };

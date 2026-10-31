@@ -2089,6 +2089,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 159 (docs/adr/0795): a schedule of the program's units, its fields, filter or rows' units.
+    if objs.iter().any(unit_schedules) || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(unit_schedules)) {
+        return crate::SCHEMA_WITH_UNIT_SCHEDULES;
+    }
     // Schema 150 (docs/adr/0792): a three- or four-leaf sliding door or window, its tracks, a schedule of them.
     let multi = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_multi_slide);
     if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_multi_slide)
@@ -3439,6 +3443,19 @@ pub(crate) fn program_shares(e: &Entity) -> bool {
         Entity::Table(t) if matches!(
             &t.source,
             Some(kentos_contracts::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_share())
+        )
+    )
+}
+
+/// Whether an object needs schema 159 (docs/adr/0795): a schedule of the program's units, a units field or filter, its
+/// rows' units.
+pub(crate) fn unit_schedules(e: &Entity) -> bool {
+    matches!(
+        e,
+        Entity::Table(t) if matches!(
+            &t.source,
+            Some(kentos_contracts::TableSource::Schedule { of, columns, filter, units, .. })
+                if kentos_contracts::schedule_units(*of, columns, filter.as_ref(), units)
         )
     )
 }

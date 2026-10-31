@@ -20146,7 +20146,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.schedules.create` v1 (“Çizelge”): a schedule of `of` placed with its top left corner at `at`, its\nrows written from the drawing, as one undo step.\n\nRefusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `invalid_line_weight`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also\n`slots_exhausted`. Warning: `layer_hidden`.",
+        "description": "Input of `cad.schedules.create` v1 (“Çizelge”): a schedule of `of` placed with its top left corner at `at`, its\nrows written from the drawing, as one undo step.\n\nRefusals, in this order: `not_finite`, `invalid_schedule`, `level_not_found`, `building_not_found`,\n`invalid_line_weight`, `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on\nthe desktop also `slots_exhausted`. Warning: `layer_hidden`.",
         "properties": {
           "at": {
             "$ref": "#/$defs/Vec2",
@@ -20295,6 +20295,7 @@
           "not_finite",
           "invalid_schedule",
           "level_not_found",
+          "building_not_found",
           "invalid_line_weight",
           "layer_not_found",
           "not_a_layer",
@@ -20363,7 +20364,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.\n\nRefusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,\n`schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,\n`invalid_revision`, `revision_conflict`, `layer_locked`.",
+        "description": "Input of `cad.schedules.edit` v1 (“Çizelgeyi düzenle”), one undo step.\n\nRefusals, in this order: `invalid_uid`, `entity_not_found`, `not_schedule`, `cell_out_of_range`, `cell_computed`,\n`schedule_summary_row`, `schedule_group_number`, `invalid_cell_value`, `invalid_schedule`, `level_not_found`,\n`building_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -20405,6 +20406,13 @@
           "table": {
             "$ref": "#/$defs/Entity",
             "description": "The schedule as written again."
+          },
+          "units": {
+            "description": "The program groups a units schedule's cell was written to, by their ids, in the program's order (docs/adr/0795).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -20433,6 +20441,13 @@
           "table": {
             "$ref": "#/$defs/Entity",
             "description": "The schedule as written again."
+          },
+          "units": {
+            "description": "The program groups a units schedule's cell was written to, by their ids, in the program's order (docs/adr/0795).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -20463,6 +20478,7 @@
           "invalid_cell_value",
           "invalid_schedule",
           "level_not_found",
+          "building_not_found",
           "invalid_revision",
           "revision_conflict",
           "layer_locked"
@@ -71205,6 +71221,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Çizelgenin grup başlığı ya da ara toplam satırı nesnelerin değil; düzenlenmez."
+    },
+    {
+      "code": "building_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bina programında bu kimlikte bina ya da kanat yok; var olan bir binanın ya da kanadın kimliğini verin."
     },
     {
       "code": "invalid_cell_value",
@@ -126740,7 +126762,11 @@
             "leaves",
             "drum",
             "pocket",
-            "panels"
+            "panels",
+            "building",
+            "wing",
+            "recordedArea",
+            "shareWeight"
           ],
           "type": "string"
         },
@@ -126808,6 +126834,11 @@
           "const": "tracks",
           "description": "A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its\nstart (docs/adr/0792 §1).",
           "type": "string"
+        },
+        {
+          "const": "unitKind",
+          "description": "A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and\nits share weight (docs/adr/0795): a units schedule's.",
+          "type": "string"
         }
       ]
     },
@@ -126815,10 +126846,29 @@
       "additionalProperties": false,
       "description": "Which objects a schedule lists: those of every list given.",
       "properties": {
+        "buildings": {
+          "description": "A units schedule's groups' buildings, wings and kinds (docs/adr/0795): the buildings' and wings' ids.",
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
         "forms": {
           "description": "An openings schedule's forms.",
           "items": {
             "$ref": "#/$defs/OpeningForm"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "kinds": {
+          "items": {
+            "$ref": "#/$defs/UnitKind"
           },
           "type": [
             "array",
@@ -126863,6 +126913,15 @@
             "array",
             "null"
           ]
+        },
+        "wings": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
         }
       },
       "type": "object"
@@ -126883,6 +126942,11 @@
           "const": "fixtures",
           "description": "The drawing's block inserts: furniture, sanitary fixtures, kitchen modules (docs/adr/0733 §2).",
           "type": "string"
+        },
+        {
+          "const": "units",
+          "description": "The building program's groups (docs/adr/0795): independent units, common and outdoor areas, a row each.",
+          "type": "string"
         }
       ]
     },
@@ -126890,7 +126954,7 @@
       "description": "What `cad.schedules.edit` does.",
       "oneOf": [
         {
-          "description": "The cell of the data row `row` (the table's own row index: 0 is the heading) and the column `column`: `value`\nwritten to each of the row's objects. Empty words clear an optional field.",
+          "description": "The cell of the data row `row` (the table's own row index: 0 is the heading) and the column `column`: `value`\nwritten to each of the row's objects (a units schedule's: to the row's program groups, docs/adr/0795). Empty\nwords clear an optional field.",
           "properties": {
             "column": {
               "format": "uint32",
@@ -127001,6 +127065,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "index"
+        },
+        "units": {
+          "description": "A units schedule's data row's program groups by their ids (docs/adr/0795): what its cells are written to.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [
@@ -135813,6 +135884,16 @@
             },
             "total": {
               "type": "boolean"
+            },
+            "units": {
+              "description": "A units schedule's (docs/adr/0795): each row's program groups by their ids, beside `members` (a unit without\nspaces is still a data row); a heading's and a subtotal's none. Written by the document; absent elsewhere.",
+              "items": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": "array"
             }
           },
           "required": [

@@ -348,6 +348,8 @@ pub(super) struct Features {
     pub(super) program_shares: bool,
     /// Schema 149 (docs/adr/0788): design option sets and a recipe's options.
     pub(super) options: bool,
+    /// Schema 159 (docs/adr/0795): a schedule of the program's units.
+    pub(super) unit_schedules: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -563,6 +565,7 @@ impl Features {
             view_templates: schema >= crate::SCHEMA_WITH_VIEW_TEMPLATES,
             program_shares: schema >= crate::SCHEMA_WITH_PROGRAM_SHARES,
             options: schema >= crate::SCHEMA_WITH_OPTIONS,
+            unit_schedules: schema >= crate::SCHEMA_WITH_UNIT_SCHEDULES,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,
@@ -2224,6 +2227,10 @@ pub(super) fn object(
     // Schema 138 (docs/adr/0771): a turning component, a node decision, a bound slab.
     if !has.building_parts && crate::encode::building_parts(&entity) {
         return Err(r.fail(Code::UnknownField, "dönen bileşen, düğüm kararı ya da bağlı döşeme şema 138 ister"));
+    }
+    // Schema 159 (docs/adr/0795): a schedule of the program's units, its fields, filter or rows' units.
+    if !has.unit_schedules && crate::encode::unit_schedules(&entity) {
+        return Err(r.fail(Code::UnknownField, "bölüm çizelgesi, alanları, süzgeci ya da satırların bölümleri şema 159 ister"));
     }
     // Schema 147 (docs/adr/0784): a schedule's share field.
     if !has.program_shares && crate::encode::program_shares(&entity) {

@@ -1,7 +1,8 @@
 //! Çizelge ayarları and Dosyaya yaz (docs/adr/0733 §5, §7): a placed schedule's columns, filter (level, phase, type,
 //! form), first sort key with its heading and subtotal, grouping and total, changed in one `cad.schedules.edit` step
 //! with the plan's row count as a preview; and its cells written as CSV, XLSX or ODS through `file.export.table` (its
-//! headings and subtotals, its numbers as shown or exact). Opened from Öznitelikler's Çizelge row.
+//! headings and subtotals, its numbers as shown or exact). Opened from Öznitelikler's Çizelge row. A units schedule's
+//! filter is its groups' level, building, wing and kind (docs/adr/0795); its own fields are written to the program.
 
 use std::path::PathBuf;
 
@@ -10,7 +11,7 @@ use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     ArchPhase, CommandResult, Entity, ExportTable, OpeningForm, ScheduleChange, ScheduleColumn,
     ScheduleField, ScheduleFilter, ScheduleOf, ScheduleOperation, ScheduleSort, SchedulesEdit,
-    TableNumbers, TableSource,
+    TableNumbers, TableSource, UnitKind,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
@@ -66,6 +67,10 @@ pub enum Event {
     Phase(ArchPhase),
     Type(String),
     Form(OpeningForm),
+    /// A units schedule's filter (docs/adr/0795): a building's or a wing's id, a kind.
+    Building(String),
+    Wing(String),
+    Kind(UnitKind),
     SortColumn(usize),
     Descending(bool),
     Header(bool),
@@ -251,6 +256,9 @@ impl App {
             Event::Phase(p) => flip(&mut w.filter.phases, p),
             Event::Type(t) => flip(&mut w.filter.types, t),
             Event::Form(f) => flip(&mut w.filter.forms, f),
+            Event::Building(b) => flip(&mut w.filter.buildings, b),
+            Event::Wing(x) => flip(&mut w.filter.wings, x),
+            Event::Kind(k) => flip(&mut w.filter.kinds, k),
             Event::SortColumn(i) => {
                 if i == 0 {
                     w.sort.clear();
@@ -401,6 +409,36 @@ impl App {
         }
     }
 
+    /// A units schedule's filter (docs/adr/0795): the program's buildings, their wings and the kinds, each on or off.
+    fn schedule_unit_filter<'a>(&self, w: &Window, mut filter: Column<'a, Message>) -> Column<'a, Message> {
+        let program = self.document.as_ref().map(|d| d.model.program()).unwrap_or_default();
+        if !program.buildings.is_empty() {
+            filter = filter.push(label::caption("Bina (hiçbiri: hepsi)"));
+            for b in &program.buildings {
+                let on = w.filter.buildings.as_ref().is_some_and(|l| l.contains(&b.id));
+                filter = filter.push(words::check(on, b.name.clone(), Some(msg(Event::Building(b.id.clone())))));
+            }
+        }
+        let wings: Vec<(String, String)> = program
+            .buildings
+            .iter()
+            .flat_map(|b| b.wings.iter().map(move |x| (x.id.clone(), format!("{} · {}", b.name, x.name))))
+            .collect();
+        if !wings.is_empty() {
+            filter = filter.push(label::caption("Kanat (hiçbiri: hepsi)"));
+            for (id, name) in wings {
+                let on = w.filter.wings.as_ref().is_some_and(|l| l.contains(&id));
+                filter = filter.push(words::check(on, name, Some(msg(Event::Wing(id)))));
+            }
+        }
+        filter = filter.push(label::caption("Bölüm türü (hiçbiri: hepsi)"));
+        for k in UnitKind::ALL {
+            let on = w.filter.kinds.as_ref().is_some_and(|l| l.contains(&k));
+            filter = filter.push(words::check(on, k.label(), Some(msg(Event::Kind(k)))));
+        }
+        filter
+    }
+
     /// The types the drawing's objects of `of` have, in the natural order (Tür süzgeci's choices).
     fn schedule_types(&self, of: ScheduleOf) -> Vec<String> {
         let Some(doc) = self.document.as_ref() else {
@@ -442,14 +480,19 @@ impl App {
             .filter(|f| f.reads(w.of) && **f != ScheduleField::Attr)
         {
             let on = w.columns.iter().any(|c| c.field == *f);
-            let kind = if f.edits_in(w.of) {
+            let kind = if f.edits_in(w.of) && w.of == ScheduleOf::Units {
+                "programa yazılır"
+            } else if f.edits_in(w.of) {
                 "nesneye yazılır"
             } else {
                 "hesaplanır"
             };
             fields = fields.push(words::check(
                 on,
-                format!("{} · {kind}", f.title()),
+                format!(
+                    "{} · {kind}",
+                    if w.of == ScheduleOf::Units && *f == ScheduleField::Count { "Mahal sayısı" } else { f.title() }
+                ),
                 Some(msg(Event::Column(*f, !on))),
             ));
         }
@@ -493,12 +536,16 @@ impl App {
                 filter = filter.push(words::check(on, name, Some(msg(Event::Level(id.clone())))));
             }
         }
-        filter = filter.push(label::caption("Evre (hiçbiri: hepsi)"));
-        for p in PHASES {
-            let on = w.filter.phases.as_ref().is_some_and(|l| l.contains(&p));
-            filter = filter.push(words::check(on, p.label(), Some(msg(Event::Phase(p)))));
+        if w.of == ScheduleOf::Units {
+            filter = self.schedule_unit_filter(w, filter);
+        } else {
+            filter = filter.push(label::caption("Evre (hiçbiri: hepsi)"));
+            for p in PHASES {
+                let on = w.filter.phases.as_ref().is_some_and(|l| l.contains(&p));
+                filter = filter.push(words::check(on, p.label(), Some(msg(Event::Phase(p)))));
+            }
         }
-        let types = self.schedule_types(w.of);
+        let types = if w.of == ScheduleOf::Units { Vec::new() } else { self.schedule_types(w.of) };
         if !types.is_empty() {
             filter = filter.push(label::caption(if w.of == ScheduleOf::Spaces {
                 "Kullanım (hiçbiri: hepsi)"
@@ -583,10 +630,17 @@ impl App {
         .spacing(16);
         let body = Column::new()
             .spacing(12)
-            .push(label::caption(format!(
-                "{}. Nesneye yazılan sütunun hücresi Tabloyu düzenle'de satırın nesnelerine yazılır; hesaplanan sütun çizimden okunur.",
-                w.of.label()
-            )))
+            .push(label::caption(if w.of == ScheduleOf::Units {
+                format!(
+                    "{}. Programa yazılan sütunun hücresi Tabloyu düzenle'de satırın bölümlerine, bina programına yazılır; hesaplanan sütun programdan ve mahallerden okunur.",
+                    w.of.label()
+                )
+            } else {
+                format!(
+                    "{}. Nesneye yazılan sütunun hücresi Tabloyu düzenle'de satırın nesnelerine yazılır; hesaplanan sütun çizimden okunur.",
+                    w.of.label()
+                )
+            }))
             .push(iced::widget::scrollable(columns).height(420.0))
             .push(preview);
         Frame::new(TITLE)

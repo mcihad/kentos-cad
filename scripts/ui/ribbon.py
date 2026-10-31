@@ -344,6 +344,7 @@ CAD = [
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},
                 {"command": "tool.scheduleFinishes", "title": "Çizelge", "label": "Mahal kaplama çizelgesi"},
                 {"command": "tool.scheduleFixtures", "title": "Çizelge", "label": "Donatı çizelgesi"},
+                {"command": "tool.scheduleUnits", "title": "Çizelge", "label": "Bölüm çizelgesi"},
                 {"command": "tool.materialLegend", "title": "Çizelge", "label": "Malzeme lejandı"},
             ]}, {"key": "archMarks", "size": "small", "split": [
                 {"command": "tool.viewSection", "title": "İşaret", "label": "Kesit"},
