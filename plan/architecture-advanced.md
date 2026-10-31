@@ -294,7 +294,12 @@ kapatıp yeniden aç. Tek kapı değişikliği iki pafta ve çizelgede izlensin.
 1:20 detayın taraması, yazı/ölçü boyu ve net geçişi PDF'de incelensin.
 Kesit işareti bulunması, gerçek kesit üretimi kabulü yerine geçmesin.
 
-### ADV-07 — Konut çizimini baştan sona ölçülen bir kalite teslimine dönüştür [ ]
+### ADV-07 — Konut çizimini baştan sona ölçülen bir kalite teslimine dönüştür [~]
+
+_Durum (31 Ekim 2026, [ADR 0776](../docs/adr/0776-measured-quality-acceptance-of-an-apartment.md)):_ 2+1 daire gerçek
+girdiyle iz ve bölüm ölçüsü, Python/MCP/masaüstü anlamsal eşitliği, büyük koordinat ve ölçek regresyonları, 1/20/100 daire
+ölçümü, dört küçük düzeltme. Açık: değişikliğin karesel süresi, bellek büyümesi, model alanı kalem kalınlığı, gerçek
+pencerede elle kabul, kabul korpusunun öbür dört örneği.
 
 **Kullanıcı sonucu:** Özellikler tek tek gösterilirken iyi görünüp gerçek
 bir daire çiziminde birbirini bozmamalı. Bu paket diğer altı paketin ortak

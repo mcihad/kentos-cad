@@ -38,6 +38,20 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   bölümü; DXF raporu “Oda modülü örneği”. Tekrarlayan kat, daire modülü, tasarım seçeneği, tanımdan sonra üye ekleme açık.
   43 + 22 ortak durum (`module_cases.py`).
 
+- **2+1 dairenin ölçülen kalite kabulü (31 Ekim 2026; [ADR 0776](docs/adr/0776-measured-quality-acceptance-of-an-apartment.md), ADV-07 [~]).**
+  Aynı daire üç yoldan: masaüstünde gerçek klavye ve fare olaylarıyla iz (`acceptance-flat.json`, 167 adım, üç çeşit;
+  oynatıcıya `clickNumber`: seçili duvarın geçici ölçüsüne tıklar), bölüm bölüm tık/tuş/değer/odak/kurtarma ölçüsü
+  (`scripts/acceptance/trace_metrics.py`); Python, MCP ve masaüstünün ajan bağlantısıyla aynı anlamsal akış
+  (`fixtures/acceptance/v1/flat.json`, 27 adım, beklenenler `acceptance_flat.py`'de KentOS kodu olmadan; her yazan adım
+  geri alınıp yinelenir, iki ret aynı kod, kaydet-aç sonrası aynı kimlikler; `--compare` üç çizimi bağımsız KCAD
+  okuyucusuyla aynı bulur); büyük koordinatta milimetre, ölçek/birim/yakınlık ayrımı testleri ve 1:20/1:50/1:100
+  resimleri (`quality_scenes.rs`); 1, 20 ve 100 dairede kare, önizleme, seçme, değişiklik, Metraj ve bellek
+  (`perf::flat`). Düzeltilen: ölçü mahal ve döşemede alan verir (`query::item`), Metraj'ın boş toplamı +0, duvar
+  gövdesinin içine tıklamak duvarı bulur ve odanın yüzdeki kenarından önce gelir (`store/pick.rs`), Döşeme isteminde Kaynağa bağlı (B). Açık: 100 dairede tasarım
+  değişikliği 1,86 s (karesel, iptalsiz), değişiklik sırasında bellek 1,7 → 3,2 GB, model alanında kalem kalınlığı dünya biriminde
+  (derin yakınlıkta 1 mm ayrıntı banda karışır). Gerçek pencerede elle kabul,
+  acemi kullanıcı ve araç bulma süresi ölçülmedi; pafta GUI'de oynatılmadı.
+
 - **Proje gezgini (31 Ekim 2026; [ADR 0778](docs/adr/0778-project-navigator.md), ADV-06 [~]).**
   Salt okunur `cad.navigator.read`: katlar (nesne sayısı, tarifi o katı çizen görünümler, o katı çizen haritalar), `unleveled`,
   adlı görünümler (tarifin katı, sürümü, ölçeği, bağlı haritalar), paftalar (`cad.sheets.set`'in çerçeveleri), çizelgeler
@@ -2743,6 +2757,9 @@ KENTOS_SHOTS_ONLY=duzen-python cargo test -p kentos-desktop ux_screens::python_e
 KENTOS_SHOTS_ONLY=serit,baglam,olcek cargo test -p kentos-desktop ux_screens -- --ignored --nocapture   # arayüz düzeninin resimleri: her sekme, seçime göre sekmeler, ölçek ve tür, .run/shots/duzen-* (ADR 0622); ux_screens::ribbon_widths panellerin genişliklerini yazar
 cargo test -p kentos-launcher; ./target/debug/kentos-launcher snapshot .run/shots/launcher.png --sayfa uygulamalar --tema koyu --boyut 1440x900   # KentOS Launcher: testler ve pencere açmadan resim (ADR 0800, 0803; --imlec, --tik, --ara, --ilk); levha resimleri scripts/launcher/pictures.py, masadaki çizim scripts/launcher/art.py
 cargo build -p kentos-desktop && python3 scripts/desktop/module_links.py target/debug   # tek program, modül adları ona bağlantı (ADR 0801, 0802 §1; release'te target/release); cargo test -p kentos-desktop --lib module modüllerin komutları ve yüzeyleri; KENTOS_SHOTS_ONLY=… cargo test -p kentos-desktop --lib module_screens -- --ignored --nocapture modül resimleri, .run/shots/moduller-*
+python3 scripts/fixtures/acceptance_flat.py --check; .run/py/bin/python -m unittest python/tests/test_acceptance_flat.py; cargo test -p kentos-mcp --test acceptance_flat; cargo test -p kentos-desktop --lib acceptance_flat quality_scenes; KENTOS_TRACES_ONLY=acceptance-flat cargo test -p kentos-desktop --lib every_trace_passes   # 2+1 dairenin kabulü: 27 adımlık anlamsal akış Python, MCP ve masaüstünde (KENTOS_ACCEPTANCE_OUT=dizin ile üç çizim, `acceptance_flat.py --compare dizin` bağımsız okur), 167 adımlık iz üç çeşitte, büyük koordinat ve ölçek testleri (ADR 0776)
+python3 scripts/acceptance/trace_metrics.py fixtures/interaction/v1/acceptance-flat.json --markdown; cargo test --release -p kentos-desktop --lib perf::flat -- --ignored --nocapture --test-threads=1   # izin bölüm bölüm ölçüsü; 1, 20, 100 dairede kare, önizleme, seçme, değişiklik, Metraj ve bellek (KENTOS_PERF_PARTS=1 değişikliğin parçaları; ADR 0776)
+KENTOS_SHOTS_ONLY=kalite-ayrinti-1mm,kalite-ayrinti-1mm-ince,kalite-ayrinti-1-5,kalite-ayrinti-1-1,kalite-1-100,kalite-1-50,kalite-1-20,kalite-bilesen-1-20 cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture; ./target/debug/kentos-cad kullan acceptance-flat   # regresyon resimleri .run/shots/arac-kalite-*, izin resimleri .run/shots/kullanim/masaustu-acceptance-flat-* (ADR 0776)
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer
 pnpm db:setup            # yalnız yerel geliştirme DB/rolleri, migration, seed

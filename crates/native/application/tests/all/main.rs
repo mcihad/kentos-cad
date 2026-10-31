@@ -91,6 +91,7 @@ mod space_levels;
 mod spaces_discover;
 mod space_columns;
 mod space_scope;
+mod quantities_zero;
 mod space_sources;
 mod space_separators;
 

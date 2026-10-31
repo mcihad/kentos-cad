@@ -26,7 +26,7 @@ mod files;
 
 /// Where `actual` differs from `expected`: only the fields `expected` names;
 /// a point `[x, y]` is `{"x", "y"}` in a drawing; numbers to `tolerance`.
-fn differs(actual: &Value, expected: &Value, tolerance: f64, at: &str, out: &mut Vec<String>) {
+pub(crate) fn differs(actual: &Value, expected: &Value, tolerance: f64, at: &str, out: &mut Vec<String>) {
     if let (Some(e), Some(a)) = (expected.as_array(), actual.as_object())
         && e.len() == 2
         && e.iter().all(Value::is_number)
@@ -66,7 +66,7 @@ fn differs(actual: &Value, expected: &Value, tolerance: f64, at: &str, out: &mut
     }
 }
 
-fn bind(value: &Value, names: &BTreeMap<String, String>) -> Value {
+pub(crate) fn bind(value: &Value, names: &BTreeMap<String, String>) -> Value {
     match value {
         Value::String(s) if s.starts_with('$') => json!(names[&s[1..]]),
         Value::Object(fields) => Value::Object(

@@ -108,13 +108,22 @@ impl Store {
     pub fn hits(&self, p: Vec2, tol: f64) -> Vec<f64> {
         let mut edges: Vec<(f64, f64)> = Vec::new();
         let mut areas: Vec<(f64, f64)> = Vec::new();
+        // A room's outline lies on its walls' faces: inside a wall's body its edge is in reach only because the face
+        // is, so it goes after every area there (docs/adr/0776 §3, B4) and the wall is the click's first.
+        let mut rooms: Vec<(f64, f64)> = Vec::new();
+        let mut in_wall = false;
         for it in self.near(p, tol * 1.5).into_iter().filter(|it| self.pickable(it)) {
             let s = self.score(it, p, tol);
+            in_wall |= matches!(it.shape, Shape::Wall { .. }) && s.area.is_some();
             match (s.edge, s.area) {
+                (Some(d), _) if matches!(it.shape, Shape::Space { .. }) => rooms.push((it.id, d)),
                 (Some(d), _) => edges.push((it.id, d)),
                 (None, Some(a)) => areas.push((it.id, a)),
                 (None, None) => {}
             }
+        }
+        if !in_wall {
+            edges.append(&mut rooms);
         }
         // As `hit`'s strict `<`: a later equal never goes first, a NaN area never moves.
         let order = |a: &(f64, f64), b: &(f64, f64)| {
@@ -128,7 +137,8 @@ impl Store {
         };
         crate::jsmath::stable_sort(&mut edges, &mut |a, b| order(a, b));
         crate::jsmath::stable_sort(&mut areas, &mut |a, b| order(a, b));
-        edges.into_iter().chain(areas).map(|(id, _)| id).collect()
+        crate::jsmath::stable_sort(&mut rooms, &mut |a, b| order(a, b));
+        edges.into_iter().chain(areas).chain(rooms).map(|(id, _)| id).collect()
     }
 
     /// How an object answers a click at `p`: its nearest point or edge
@@ -186,6 +196,20 @@ impl Store {
             if let Some(a) = a
                 && out.area.is_none_or(|best| a < best)
             {
+                out.area = Some(a);
+            }
+        }
+        // A wall is picked inside its body too, as an area (docs/adr/0776 §3): its pieces are its faces' lines, so a
+        // click between the faces of a 25 cm wall farther than the aperture from both picked nothing at 1:100 and
+        // Ölçülü bölme said “click a wall's edge”.
+        if interior
+            && let Shape::Wall { pts, bulges, wall } = &it.shape
+            && let Ok((outer, holes)) = crate::geom::wall::body(pts, bulges.as_deref(), wall)
+            && point_in_polygon(p, &outer)
+            && !holes.iter().flatten().any(|h| point_in_polygon(p, h))
+        {
+            let a = crate::geom::wall::area(pts, bulges.as_deref(), wall).unwrap_or(0.0);
+            if out.area.is_none_or(|best| a < best) {
                 out.area = Some(a);
             }
         }

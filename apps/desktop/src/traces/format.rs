@@ -115,6 +115,9 @@ pub struct Step {
     /// pan or a zoom moves the drawing under it.
     pub(super) mouse: Option<Vec<MouseEvent>>,
     pub(super) double_click: Option<[f64; 2]>,
+    /// The selected wall's or column's temporary number on this side (`west`, `east`, `south`, `north`;
+    /// docs/adr/0710, 0712) clicked where it stands, as the eye finds it on the screen (docs/adr/0776 §1).
+    pub(super) click_number: Option<String>,
     pub(super) right_click: Option<[f64; 2]>,
     pub(super) focus: Option<String>,
     pub(super) save_and_reopen: Option<bool>,

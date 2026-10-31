@@ -464,7 +464,15 @@ fn item(doc: &Document, uid: &str, way: &Way) -> Result<MeasureItem, HeadlessErr
     let s = shape(e);
     let b = entity_bounds(&s);
     let (area, length) = match way {
-        Way::Plane => (entity_area(&s), entity_length(&s)),
+        // A space's or a slab's rings as one area object: its area net of its holes and its rings' length, what
+        // Metraj reads (docs/adr/0776 §2: the API gave none, an agent had to ask cad.spaces.quantities).
+        Way::Plane => match &s {
+            kentos_geometry_core::entity::Shape::Space { parts, .. } => {
+                let p = kentos_geometry_core::geom::space::as_polygon(parts);
+                (entity_area(&p), entity_length(&p))
+            }
+            _ => (entity_area(&s), entity_length(&s)),
+        },
         Way::Ellipsoid(system, height) => on_ellipsoid(e, system, *height)?,
     };
     Ok(MeasureItem {

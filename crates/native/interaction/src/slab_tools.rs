@@ -536,7 +536,10 @@ impl Tool for SlabTool {
             .option_with("Kenar", "E", self.edge.map_or("Yok", SlabEdgeKind::label))
             .option_with("Kat", "L", self.level.label())
             .toggle("Metraj dışı", "X", self.excluded)
-            .toggle("Delik", "D", self.hole);
+            .toggle("Delik", "D", self.hole)
+            // docs/adr/0771 §5, 0776 §3: the command line resolves a letter by the prompt's options; without it here
+            // a typed “B” was taken for a command and ended the tool.
+            .toggle("Kaynağa bağlı", "B", self.bind);
         if self.edge.is_some() {
             p = p.option_with("Kenar eni", "W", f.length(self.edge_width()));
         }
