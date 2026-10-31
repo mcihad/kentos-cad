@@ -920,6 +920,10 @@ def query_answer(d, only=None):
             item["constraint"]["reference"] = True
         if con["rule"]["kind"] in DIMENSIONS:
             item["measured"] = d.measure(con["rule"])
+            # What its parameter keeps, in metres or radians (docs/adr/0780 §2); none for a reference dimension.
+            if not con.get("reference"):
+                name = con["rule"]["parameter"]
+                item["kept"] = to_base(kinds[name], values[name])
         listed.append(item)
     diagnosis = {"status": out["status"], "dof": out["dof"]}
     for key in ("redundant", "conflicting", "singular", "broken"):

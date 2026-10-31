@@ -316,6 +316,7 @@ __all__ = [
     "BlocksReplace",
     "BlocksReplaced",
     "BlocksTableSource",
+    "BondInTheWay",
     "BorderPaperItemKind",
     "BothNetworkDirection",
     "BoundChange",

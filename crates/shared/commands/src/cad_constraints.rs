@@ -171,7 +171,11 @@ pub struct ConstraintsEditPlan {
     pub revision: String,
 }
 
-/// Input of `cad.constraints.query` v1: the constraints of the drawing, or those naming these objects.
+/// Input of `cad.constraints.query` v1: the constraints of the drawing, or those naming these objects, or these
+/// constraints (a refusal's `bonds`, docs/adr/0780 §2), or only the architectural bonds (Bağı göster).
+///
+/// Refusals: `invalid_uid` (`uids[i]` or `ids[i]` not a persistent id), `constraint_not_found` (`ids[i]` no
+/// constraint of the drawing).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -182,6 +186,14 @@ pub struct ConstraintsQuery {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
+    /// Only these constraints (their ids); none: all of them. With `uids` too, those of these naming one of them.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub ids: Vec<String>,
+    /// Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub architectural: bool,
 }
 
 /// A constraint as the query lists it.
@@ -199,6 +211,12 @@ pub struct ListedConstraint {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "constraint")))]
     pub measured: Option<f64>,
+    /// A driving dimension's value: what its parameter keeps, metres or radians (docs/adr/0780 §2); none for a
+    /// reference dimension and the geometric rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "constraint")))]
+    pub kept: Option<f64>,
     /// Whether it holds now.
     pub holds: bool,
 }

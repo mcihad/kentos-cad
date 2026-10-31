@@ -1286,7 +1286,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "Çizimin geometrik ve ölçü kısıtlarını (AutoCAD'in GEOMCONSTRAINT ve DIMCONSTRAINT'i) ekler, kaldırır, sürücü ya da başvuru yapar, öbür çözümüne çevirir ya da çizimi yeniden çözer; kısıtlar ve çözümün oynattığı nesneler tek geri alma adımı “Kısıtlar”. \
                       edit add: kısıtlar sırasıyla eklenir; kural ve parçaları (nesnenin kalıcı kimliği ve parçası: nokta yeri, düz kenar ya da daire). Yön (teğetin yanı, kenara uzaklığın yanı, açının 180°'den küçük olanı, yatay ve düşey uzaklığın küçükten büyüğe) sense: given demedikçe çizimden okunur. Ölçü kısıtının parameter'ı boşsa bir sonraki boş ad (d1, ang1, rad1, dia1); value bir ifadedir (çizim biriminde, açı projenin açı biriminde; 3.5, 120cm, d1 / 2), yoksa çizimin ölçtüğü; reference yalnız ölçer. Ötekileri tekrarlayan kısıt eklenmez (constraint_redundant). \
                       edit remove: kimlikleriyle kısıtlar kalkar, ölçünün parametresi başka parametre okumuyorsa onunla. edit mode: ölçüler sürücü ya da başvuru olur. edit flip: kısıtın öbür çözümü. edit solve: çizim kısıtlarıyla yeniden çözülür. \
-                      Kilitli katmandaki nesne kımıldamaz. Çelişkide (constraint_conflict, çelişenler uids'te), tekil kısıtta ya da çözüm bulunamadığında hiçbir şey yazılmaz. Bir şekli ters çeviren çözüm (shape_flipped) allowFlip olmadan yazılmaz. Çıktı eklenen ve kaldırılan kısıtları, oynayan nesneleri ve çözücünün teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      Kilitli katmandaki nesne kımıldamaz. Çelişkide (constraint_conflict, çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca geçireceğiyle bonds'ta), tekil kısıtta ya da çözüm bulunamadığında hiçbir şey yazılmaz. Bir şekli ters çeviren çözüm (shape_flipped) allowFlip olmadan yazılmaz. Çıktı eklenen ve kaldırılan kısıtları, oynayan nesneleri ve çözücünün teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -1352,7 +1352,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_CONSTRAINTS_QUERY.into(),
             version: crate::CAD_CONSTRAINTS_QUERY_VERSION,
             title: "Kısıtları oku".into(),
-            summary: "Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları) Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan) ve tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz."
+            summary: "Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları, ids verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,

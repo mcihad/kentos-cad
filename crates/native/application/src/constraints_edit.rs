@@ -848,12 +848,19 @@ pub(crate) fn settle(
             ));
         }
         SolveStatus::Inconsistent => {
-            return Err(refuse_ids(
-                codes::CONSTRAINT_CONFLICT,
-                "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı. Çelişen kısıtı kaldırın, değerini değiştirin ya da başvuru yapın.".into(),
-                "edit",
-                ids(&d.conflicting),
-            ));
+            // The architectural bonds in the way, with the one whose taking away lets it through (docs/adr/0780 §1).
+            let words = if solved.arch_bonds.iter().any(|b| b.frees) {
+                format!(
+                    "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı. {}",
+                    crate::constraint_solve::bonds_words(&solved.arch_bonds)
+                )
+            } else {
+                "Kısıtlar birlikte tutamıyor; hiçbir şey yazılmadı. Çelişen kısıtı kaldırın, değerini değiştirin ya da başvuru yapın.".into()
+            };
+            let mut error = checks::error(codes::CONSTRAINT_CONFLICT, words, Some("edit".into()));
+            error.uids = ids(&d.conflicting);
+            error.bonds = solved.arch_bonds.clone();
+            return Err(Stop::failed(error));
         }
         SolveStatus::Singular => {
             return Err(refuse_ids(

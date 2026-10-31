@@ -1352,8 +1352,51 @@
             "status": "failed",
             "error": {
               "code": "constraint_conflict",
-              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
-              "uids": "$any"
+              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Şu bağlardan biri kaldırılınca düzenleme geçer: d1 (Uzaklık), Sabit. Ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any",
+              "bonds": [
+                {
+                  "id": "$any",
+                  "label": "Uzaklık",
+                  "parameter": "d1",
+                  "parts": [
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    }
+                  ],
+                  "kept": 1.2,
+                  "measured": 1.5,
+                  "frees": true
+                },
+                {
+                  "id": "$any",
+                  "label": "Sabit",
+                  "parts": [
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  ],
+                  "frees": true
+                }
+              ]
             }
           },
           "expect": {
@@ -1454,8 +1497,25 @@
             "status": "failed",
             "error": {
               "code": "constraint_conflict",
-              "message": "Sabit bağlı bir duvar ya da açıklık oynatılamaz; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
-              "uids": "$any"
+              "message": "Sabit bağlı bir duvar ya da açıklık oynatılamaz; hiçbir şey yazılmadı. Şu bağ kaldırılınca düzenleme geçer: Sabit. Ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any",
+              "bonds": [
+                {
+                  "id": "$any",
+                  "label": "Sabit",
+                  "parts": [
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  ],
+                  "frees": true
+                }
+              ]
             }
           },
           "expect": {
@@ -1541,7 +1601,8 @@
               "code": "constraint_conflict",
               "message": "$any",
               "path": "edit",
-              "uids": "$any"
+              "uids": "$any",
+              "bonds": "$any"
             }
           },
           "expect": {
@@ -2189,8 +2250,41 @@
             "status": "failed",
             "error": {
               "code": "constraint_conflict",
-              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
-              "uids": "$any"
+              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Şu bağ kaldırılınca düzenleme geçer: Simetrik. Ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any",
+              "bonds": [
+                {
+                  "id": "$any",
+                  "label": "Simetrik",
+                  "parts": [
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-000000000004",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-000000000002",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-000000000005",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  ],
+                  "frees": true
+                }
+              ]
             }
           },
           "expect": {
@@ -3328,8 +3422,36 @@
             "status": "failed",
             "error": {
               "code": "constraint_conflict",
-              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
-              "uids": "$any"
+              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Şu bağ kaldırılınca düzenleme geçer: d1 (Uzaklık). Ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any",
+              "bonds": [
+                {
+                  "id": "$any",
+                  "label": "Uzaklık",
+                  "parameter": "d1",
+                  "parts": [
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-00000000000b",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    {
+                      "uid": "0192f5a1-7100-7000-8000-00000000000c",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    }
+                  ],
+                  "kept": 1.0,
+                  "measured": 1.399999999999995,
+                  "frees": true
+                }
+              ]
             }
           },
           "expect": {

@@ -38,10 +38,11 @@ class _ConstraintsEdit(LocalCommand[ConstraintsEdit, ConstraintsEdited, Constrai
     parametresi başka parametre okumuyorsa onunla. edit mode: ölçüler sürücü ya da
     başvuru olur. edit flip: kısıtın öbür çözümü. edit solve: çizim kısıtlarıyla yeniden
     çözülür. Kilitli katmandaki nesne kımıldamaz. Çelişkide (constraint_conflict,
-    çelişenler uids'te), tekil kısıtta ya da çözüm bulunamadığında hiçbir şey yazılmaz.
-    Bir şekli ters çeviren çözüm (shape_flipped) allowFlip olmadan yazılmaz. Çıktı
-    eklenen ve kaldırılan kısıtları, oynayan nesneleri ve çözücünün teşhisini (durum,
-    serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir.
+    çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca
+    geçireceğiyle bonds'ta), tekil kısıtta ya da çözüm bulunamadığında hiçbir şey
+    yazılmaz. Bir şekli ters çeviren çözüm (shape_flipped) allowFlip olmadan yazılmaz.
+    Çıktı eklenen ve kaldırılan kısıtları, oynayan nesneleri ve çözücünün teşhisini
+    (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir.
     expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
     conflict olur.
     """
@@ -79,12 +80,13 @@ class _ConstraintsEdit(LocalCommand[ConstraintsEdit, ConstraintsEdited, Constrai
         edit remove: kimlikleriyle kısıtlar kalkar, ölçünün parametresi başka parametre
         okumuyorsa onunla. edit mode: ölçüler sürücü ya da başvuru olur. edit flip: kısıtın
         öbür çözümü. edit solve: çizim kısıtlarıyla yeniden çözülür. Kilitli katmandaki
-        nesne kımıldamaz. Çelişkide (constraint_conflict, çelişenler uids'te), tekil kısıtta
-        ya da çözüm bulunamadığında hiçbir şey yazılmaz. Bir şekli ters çeviren çözüm
-        (shape_flipped) allowFlip olmadan yazılmaz. Çıktı eklenen ve kaldırılan kısıtları,
-        oynayan nesneleri ve çözücünün teşhisini (durum, serbestlik, fazla, çelişen, tekil,
-        kopuk kısıtlar, serbest nesneler) verir. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        nesne kımıldamaz. Çelişkide (constraint_conflict, çelişenler uids'te; mimari bağlar
+        parçaları, değerleri ve hangisinin kaldırılınca geçireceğiyle bonds'ta), tekil
+        kısıtta ya da çözüm bulunamadığında hiçbir şey yazılmaz. Bir şekli ters çeviren
+        çözüm (shape_flipped) allowFlip olmadan yazılmaz. Çıktı eklenen ve kaldırılan
+        kısıtları, oynayan nesneleri ve çözücünün teşhisini (durum, serbestlik, fazla,
+        çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir. expectedRevision verilmişse
+        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -185,10 +187,12 @@ edit = _ConstraintsEdit()
 
 class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, ConstraintsListed]):
     """``cad.constraints.query`` v1. Kısıtları oku: Çizimin kısıtlarını (uids verilirse
-    yalnız o nesneleri ananları) Türkçe adları, ölçü kısıtının bugünkü değeri (measured:
-    metre ya da radyan) ve tutup tutmadığıyla (holds), parametreleri ve çizimin
-    çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar,
-    serbest nesneler) verir; hiçbir şey yazmaz.
+    yalnız o nesneleri ananları, ids verilirse yalnız o kısıtları, architectural ile
+    yalnız duvar çizgisi ve pervaz bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının
+    bugünkü değeri (measured: metre ya da radyan), tuttuğu değer (kept) ve tutup
+    tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum,
+    serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir
+    şey yazmaz.
     """
     __slots__ = ()
     id = "cad.constraints.query"
@@ -204,18 +208,23 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
         doc: Document,
         /,
         *,
+        architectural: bool | Unset = UNSET,
+        ids: Sequence[str] | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ConstraintsListed:
-        """Kısıtları oku: Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları)
-        Türkçe adları, ölçü kısıtının bugünkü değeri (measured: metre ya da radyan) ve tutup
-        tutmadığıyla (holds), parametreleri ve çizimin çözücüdeki teşhisini (durum,
-        serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir
-        şey yazmaz.
+        """Kısıtları oku: Çizimin kısıtlarını (uids verilirse yalnız o nesneleri ananları, ids
+        verilirse yalnız o kısıtları, architectural ile yalnız duvar çizgisi ve pervaz
+        bağlarını: Bağı göster) Türkçe adları, ölçü kısıtının bugünkü değeri (measured:
+        metre ya da radyan), tuttuğu değer (kept) ve tutup tutmadığıyla (holds),
+        parametreleri ve çizimin çözücüdeki teşhisini (durum, serbestlik, fazla, çelişen,
+        tekil, kopuk kısıtlar, serbest nesneler) verir; hiçbir şey yazmaz.
 
         Args:
             doc: The drawing it works on.
+            architectural: Only the architectural bonds: the constraints naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+            ids: Only these constraints (their ids); none: all of them. With `uids` too, those of these naming one of them.
             uids: Only the constraints naming one of these objects (persistent ids); none: all of them.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -230,6 +239,8 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, ConstraintsQuery(
+            architectural=architectural,
+            ids=_opt(ids, lambda x: list(x)),
             uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -238,12 +249,16 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
         doc: Document,
         /,
         *,
+        architectural: bool | Unset = UNSET,
+        ids: Sequence[str] | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
     ) -> ConstraintsListed:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, ConstraintsQuery(
+            architectural=architectural,
+            ids=_opt(ids, lambda x: list(x)),
             uids=_opt(uids, lambda x: list(x)),
         ))
 
@@ -252,12 +267,16 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
         doc: Document,
         /,
         *,
+        architectural: bool | Unset = UNSET,
+        ids: Sequence[str] | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, ConstraintsQuery(
+            architectural=architectural,
+            ids=_opt(ids, lambda x: list(x)),
             uids=_opt(uids, lambda x: list(x)),
         ))
 
@@ -266,6 +285,8 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
         doc: Document,
         /,
         *,
+        architectural: bool | Unset = UNSET,
+        ids: Sequence[str] | Unset = UNSET,
         uids: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -277,6 +298,8 @@ class _ConstraintsQuery(LocalCommand[ConstraintsQuery, ConstraintsListed, Constr
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, ConstraintsQuery(
+            architectural=architectural,
+            ids=_opt(ids, lambda x: list(x)),
             uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

@@ -306,6 +306,105 @@ pub(crate) struct Solved {
     pub dof: usize,
     /// Whether the set names any architectural part.
     pub any: bool,
+    /// Of `conflicting`, those whose taking away alone lets the write through (docs/adr/0780 §1).
+    pub frees: Vec<usize>,
+    /// The conflict came while the shifts were written (Kaydır refused one, a bond did not settle), not from the
+    /// bonds' equations.
+    pub late: bool,
+}
+
+/// Solves the architectural constraints of `set` (docs/adr/0770 §4) over the document as it is, with `values` its
+/// parameters in metres; `before`: the shapes an edit's objects had before it (by id), whose moved parts are held.
+/// On a conflict, each conflicting constraint is taken away alone and the set solved again: those that let the write
+/// through are `frees` (docs/adr/0780 §1). A conflict of the bonds' equations is solved again as far as its equations
+/// (the shifts not written: the budget, §4); one that came while the shifts were written, whole.
+pub(crate) fn solve(
+    doc: &Document,
+    set: &ConstraintSet,
+    values: &BTreeMap<String, f64>,
+    holds: &[Held],
+    before: Option<&HashMap<EntityId, Shape>>,
+) -> Solved {
+    let mut out = solve_once(doc, set, values, holds, before);
+    if out.conflicting.is_empty() {
+        return out;
+    }
+    if out.late {
+        for &k in &out.conflicting {
+            let mut without = set.clone();
+            without.constraints.remove(k);
+            if solve_once(doc, &without, values, holds, before)
+                .conflicting
+                .is_empty()
+            {
+                out.frees.push(k);
+            }
+        }
+        return out;
+    }
+    // The equations' conflict: the set read once, each bond left out of its problem in turn.
+    let view = View::new(doc);
+    let read = read(&view, set, values);
+    for &k in &out.conflicting {
+        let Some(b) = read.rules.iter().position(|&r| r == k) else {
+            continue;
+        };
+        let mut without = Read {
+            vars: read.vars.clone(),
+            rules: read.rules.clone(),
+            bonds: read.bonds.clone(),
+            broken: Vec::new(),
+        };
+        without.rules.remove(b);
+        without.bonds.remove(b);
+        if equations(doc, &without, &view, holds, before, false).is_ok() {
+            out.frees.push(k);
+        }
+    }
+    out
+}
+
+/// The bonds' equations over a read set solved, nothing written (docs/adr/0770 §4): the shifts and the freedom (none
+/// unless `shifts`), or the bonds (by index in `read.bonds`) that conflict and why in Turkish.
+fn equations(
+    doc: &Document,
+    read: &Read,
+    view: &View<'_>,
+    holds: &[Held],
+    before: Option<&HashMap<EntityId, Shape>>,
+    shifts: bool,
+) -> Result<(Vec<f64>, usize), (Vec<usize>, String)> {
+    let (mut hold, fixed_moved) = held(doc, read, view, holds, before);
+    // Not an edit's follow (a new bond, a parameter's new value, a solve): a distance that does not hold now keeps its
+    // `a` where it is; its `b` and what follows it move (docs/adr/0770 §4).
+    if before.is_none() {
+        for bond in &read.bonds {
+            if matches!(bond, Bond::Distance { .. })
+                && core::miss(bond).is_some_and(|m| m.abs() > SETTLED)
+            {
+                hold[bond_vars(bond)[0]] = true;
+            }
+        }
+    }
+    if !fixed_moved.is_empty() {
+        return Err((
+            fixed_moved,
+            "Sabit bağlı bir duvar ya da açıklık oynatılamaz".into(),
+        ));
+    }
+    // Asked only whether they hold together: eliminated, the least change not worked out (the budget, §4).
+    let outcome = if shifts {
+        core::solve(&hold, &read.bonds)
+    } else {
+        core::conflict(&hold, &read.bonds).unwrap_or(Outcome::Solved {
+            shifts: Vec::new(),
+            dof: 0,
+        })
+    };
+    match outcome {
+        Outcome::Conflict { bonds, why } => Err((bonds, why_words(why).into())),
+        Outcome::Solved { shifts, dof } => Ok((shifts, dof)),
+    }
 }
 
 /// What a write held: the shifts of the edges and openings it moved (`before`: their shapes before it, by id), and
@@ -417,9 +516,8 @@ fn why_words(why: Why) -> &'static str {
     }
 }
 
-/// Solves the architectural constraints of `set` (docs/adr/0770 §4) over the document as it is, with `values` its
-/// parameters in metres; `before`: the shapes an edit's objects had before it (by id), whose moved parts are held.
-pub(crate) fn solve(
+/// [`solve`] once, without asking which bond frees a conflict.
+fn solve_once(
     doc: &Document,
     set: &ConstraintSet,
     values: &BTreeMap<String, f64>,
@@ -442,41 +540,22 @@ pub(crate) fn solve(
     if read.bonds.is_empty() {
         return out;
     }
-    let (mut hold, fixed_moved) = held(doc, &read, &view, holds, before);
-    // Not an edit's follow (a new bond, a parameter's new value, a solve): a distance that does not hold now keeps its
-    // `a` where it is; its `b` and what follows it move (docs/adr/0770 §4).
-    if before.is_none() {
-        for bond in &read.bonds {
-            if let Bond::Distance { a, .. } = bond
-                && core::miss(bond).is_some_and(|m| m.abs() > SETTLED)
-            {
-                hold[bond_vars(bond)[0]] = true;
-                let _ = a;
-            }
-        }
-    }
     let conflict = |out: &mut Solved, bonds: Vec<usize>, words: String| {
         out.conflicting = bonds.into_iter().map(|b| read.rules[b]).collect();
         out.why = Some(words);
     };
-    if !fixed_moved.is_empty() {
-        conflict(
-            &mut out,
-            fixed_moved,
-            "Sabit bağlı bir duvar ya da açıklık oynatılamaz".into(),
-        );
-        return out;
-    }
-    let shifts = match core::solve(&hold, &read.bonds) {
-        Outcome::Conflict { bonds, why } => {
-            conflict(&mut out, bonds, why_words(why).into());
+    let shifts = match equations(doc, &read, &view, holds, before, true) {
+        Err((bonds, words)) => {
+            conflict(&mut out, bonds, words);
             return out;
         }
-        Outcome::Solved { shifts, dof } => {
+        Ok((shifts, dof)) => {
             out.dof = dof;
             shifts
         }
     };
+    // From here a conflict comes while the shifts are written.
+    out.late = true;
     // Write the shifts: edges as Kaydır does, in the shifts' order, then the openings along their walls.
     let mut moved_walls: Vec<Slot> = Vec::new();
     for (k, v) in read.vars.iter().enumerate() {

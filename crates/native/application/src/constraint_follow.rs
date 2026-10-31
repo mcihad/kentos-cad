@@ -139,17 +139,18 @@ pub(crate) fn follow(
             match d.status {
                 SolveStatus::Inconsistent => {
                     let words = match &solved.arch_why {
-                        // The architectural bonds' own reason first (docs/adr/0770 §4).
+                        // The architectural bonds' own reason first (docs/adr/0770 §4), then the bond whose
+                        // taking away lets the edit through (docs/adr/0780 §1).
                         Some(why) => format!(
-                            "{why}; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin."
+                            "{why}; hiçbir şey yazılmadı. {}",
+                            crate::constraint_solve::bonds_words(&solved.arch_bonds)
                         ),
                         None => "Düzenleme kısıtlarla birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen kısıtı kaldırın ya da kısıtları gevşeterek düzenleyin.".to_owned(),
                     };
-                    return Err(refused(
-                        codes::CONSTRAINT_CONFLICT,
-                        &words,
-                        ids(&d.conflicting),
-                    ));
+                    let mut error = checks::error(codes::CONSTRAINT_CONFLICT, words, None);
+                    error.uids = ids(&d.conflicting);
+                    error.bonds = solved.arch_bonds.clone();
+                    return Err(Stop::failed(error));
                 }
                 SolveStatus::Singular => {
                     return Err(refused(

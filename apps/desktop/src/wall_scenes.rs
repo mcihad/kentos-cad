@@ -29,7 +29,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=gecici-olcu,gecici-olcu-dis,gecici-olcu-yazi-kutusu,gecici-olcu-tasindi,gecici-olcu-geri-alindi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi,duvar-mesafe-etki,duvar-mesafe-bag,duvar-mesafe-bag-etki,duvar-mesafe-bag-izledi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
+//! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi,duvar-mesafe-etki,duvar-mesafe-bag,duvar-mesafe-bag-etki,duvar-mesafe-bag-izledi,duvar-bag-celiski,duvar-bag-kaldirildi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
 //! KENTOS_SHOTS_ONLY=mimari-bolme-yay,mimari-bolme-yay-arasi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0734
 //! ```
 //!
@@ -535,6 +535,93 @@ fn wall_distance_bonded_followed(app: &mut App) {
     hover(app, [4.4, 2.5]);
 }
 
+/// The outer wall's east edge: its index on the closed path.
+fn outer_east_edge(app: &App) -> u32 {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let Some(kentos_commands::Entity::Wall(w)) = doc.get(Slot(1)) else {
+        panic!("the outer wall")
+    };
+    let pts = &w.wall.pts;
+    let n = pts.len();
+    (0..n)
+        .max_by(|&a, &b| {
+            (pts[a].x + pts[(a + 1) % n].x).total_cmp(&(pts[b].x + pts[(b + 1) % n].x))
+        })
+        .expect("an edge") as u32
+}
+
+/// docs/adr/0780 §1: the inner wall bonded to the outer east wall (d1), the outer east wall fixed; 3.60 typed in the
+/// inner wall's west number: the bond would drag the fixed wall, so the card is the refusal and both bonds in the way
+/// are marked where they stand, each saying it lets the move through when taken away.
+fn wall_distance_bond_conflict(app: &mut App) {
+    bonded_and_fixed(app);
+    type_west(app, "3.60");
+}
+
+/// The inner wall's west number clicked and `text` typed in its field.
+fn type_west(app: &mut App, text: &str) {
+    hover(app, [3.6, 2.5]);
+    let n = app.session.temporary_numbers();
+    let west = n
+        .iter()
+        .min_by(|a, b| a.x.total_cmp(&b.x))
+        .copied()
+        .expect("a number");
+    click(app, [west.x - E, west.y - N]);
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input(
+        text.into(),
+    )));
+}
+
+/// The inner wall's east distance bonded (d1) and the outer east wall fixed; the inner wall selected.
+fn bonded_and_fixed(app: &mut App) {
+    wall_distance_bonded(app);
+    let edge = outer_east_edge(app);
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let uid = doc.uid(Slot(1)).expect("an id").to_string();
+    let fix: kentos_commands::ConstraintsEdit = serde_json::from_value(json!({"edit": {"kind": "add", "constraints": [
+        {"rule": {"kind": "fix", "a": {"uid": uid, "element": {"kind": "wall", "edge": edge, "line": "axis"}}}}]}}))
+    .expect("an input");
+    let done = kentos_native_application::constraints_edit::execute(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        fix,
+    );
+    assert!(
+        matches!(done, kentos_commands::CommandResult::Completed { .. }),
+        "{done:?}"
+    );
+    app.selection.set([Slot(2)]);
+}
+
+/// The bond d1 taken away by its padlock (Bağı kaldır), then 3.60 typed: the card says what the move does.
+fn wall_distance_bond_removed(app: &mut App) {
+    bonded_and_fixed(app);
+    remove_east_bond(app);
+    type_west(app, "3.60");
+}
+
+/// The east padlock of the inner wall clicked: its bond (d1) taken away (Bağı kaldır).
+fn remove_east_bond(app: &mut App) {
+    hover(app, [3.6, 2.5]);
+    let numbers = app.session.temporary_numbers();
+    let east = numbers
+        .iter()
+        .max_by(|a, b| a.x.total_cmp(&b.x))
+        .copied()
+        .expect("a number");
+    let lock = app
+        .session
+        .temporary_squares()
+        .into_iter()
+        .min_by(|a, b| {
+            (a.x - east.x)
+                .hypot(a.y - east.y)
+                .total_cmp(&(b.x - east.x).hypot(b.y - east.y))
+        })
+        .expect("a padlock");
+    click(app, [lock.x - E, lock.y - N]);
+}
+
 /// Duvar ölçüleri on the closed room: the right edge under the pointer, its outer face, the window's jambs.
 fn dimensions_edge(app: &mut App) {
     closed_room(app);
@@ -633,6 +720,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("duvar-mesafe-bag", wall_distance_bonded),
         ("duvar-mesafe-bag-etki", wall_distance_bonded_effects),
         ("duvar-mesafe-bag-izledi", wall_distance_bonded_followed),
+        ("duvar-bag-celiski", wall_distance_bond_conflict),
+        ("duvar-bag-kaldirildi", wall_distance_bond_removed),
         ("olcu-kenar", dimensions_edge),
         ("olcu-aciksiz-duvar", dimensions_plain_wall),
         ("olcu-butun-kenarlar", dimensions_around),
@@ -867,6 +956,62 @@ mod bond_tests {
             "the bond let go"
         );
         assert!((inner_x(&app) - before).abs() < 1e-9);
+    }
+
+    /// docs/adr/0780 §1: a value the bonds cannot follow is refused on the card while typing, the bonds in the way
+    /// marked where they stand in the danger colour, each saying it lets the move through; Enter writes nothing. The
+    /// bond taken away by its padlock, the same value goes through.
+    #[test]
+    fn a_conflict_marks_its_bonds_and_their_removal_lets_it_through() {
+        use kentos_interaction::Tone;
+        let mut app = sized();
+        wall_distance_bond_conflict(&mut app);
+        let before = inner_x(&app);
+        let preview = app.session.preview(&app.format()).expect("a preview");
+        assert_eq!(preview.tag_tone, Tone::Danger);
+        let lines = preview.tag.expect("the card").lines;
+        assert!(lines[0].contains("kaldırılınca düzenleme geçer"), "{lines:?}");
+        assert!(lines.iter().any(|l| l.starts_with("• d1")), "{lines:?}");
+        assert!(
+            lines.iter().any(|l| l.starts_with("• Sabit")),
+            "{lines:?}"
+        );
+        // Both bonds' lines drawn thick in the danger colour, each named.
+        let thick = preview
+            .strokes
+            .iter()
+            .filter(|s| s.tone == Tone::Danger && s.width >= 3.0)
+            .count();
+        assert_eq!(thick, 3, "the bond's two faces and the fixed axis");
+        assert_eq!(
+            preview
+                .labels
+                .iter()
+                .filter(|l| l.tone == Tone::Danger && l.text.contains("kaldırılınca geçer"))
+                .count(),
+            2
+        );
+        let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
+        assert_eq!(inner_x(&app), before, "nothing written");
+        let mut app = sized();
+        bonded_and_fixed(&mut app);
+        remove_east_bond(&mut app);
+        assert_eq!(
+            app.document
+                .as_ref()
+                .expect("a drawing")
+                .model
+                .constraints()
+                .constraints
+                .len(),
+            1,
+            "only the fix is left"
+        );
+        type_west(&mut app, "3.60");
+        let preview = app.session.preview(&app.format()).expect("a preview");
+        assert_eq!(preview.tag_tone, Tone::Accent);
+        let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
+        assert!((inner_x(&app) - before).abs() > 0.1, "the wall moved");
     }
 
     /// Typing in the field shows what the value would do, before Enter; nothing is written.

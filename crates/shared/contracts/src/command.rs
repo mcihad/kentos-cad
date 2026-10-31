@@ -103,6 +103,11 @@ pub struct CommandError {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub retryable: bool,
+    /// A `constraint_conflict`'s architectural bonds in the way (docs/adr/0780 §1): what each holds and keeps, and
+    /// which one taken away lets the write through. Empty for every other refusal.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::BondInTheWay>>", optional))]
+    pub bonds: Vec<crate::BondInTheWay>,
 }
 
 /// Something a completed command wants the caller to know.

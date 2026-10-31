@@ -276,16 +276,22 @@ fn rows(vars: usize, bonds: &[Bond]) -> Result<Vec<Row>, (usize, Why)> {
     Ok(out)
 }
 
-/// Solves `bonds` over `held.len()` shifts, the held ones nothing (docs/adr/0770 §4).
-pub fn solve(held: &[bool], bonds: &[Bond]) -> Outcome {
+/// Whether `bonds` hold together over `held.len()` shifts, the held ones nothing, without working the shifts out (a
+/// refusal's bonds that free it, docs/adr/0780 §1): none, or the conflict [`solve`] finds.
+pub fn conflict(held: &[bool], bonds: &[Bond]) -> Option<Outcome> {
+    eliminate(held, bonds).err()
+}
+
+/// The equations eliminated column by column (the pivot rows), or the conflict.
+fn eliminate(held: &[bool], bonds: &[Bond]) -> Result<Vec<Row>, Outcome> {
     let vars = held.len();
     let mut rows = match rows(vars, bonds) {
         Ok(r) => r,
         Err((k, why)) => {
-            return Outcome::Conflict {
+            return Err(Outcome::Conflict {
                 bonds: vec![k],
                 why,
-            };
+            });
         }
     };
     for r in &mut rows {
@@ -321,7 +327,7 @@ pub fn solve(held: &[bool], bonds: &[Bond]) -> Outcome {
         pivots.push(pivot);
     }
     if let Some(bad) = rows.iter().find(|r| r.rhs.abs() > TIE) {
-        return Outcome::Conflict {
+        return Err(Outcome::Conflict {
             bonds: bad
                 .from
                 .iter()
@@ -329,8 +335,18 @@ pub fn solve(held: &[bool], bonds: &[Bond]) -> Outcome {
                 .filter_map(|(k, f)| f.then_some(k))
                 .collect(),
             why: Why::Inconsistent,
-        };
+        });
     }
+    Ok(pivots)
+}
+
+/// Solves `bonds` over `held.len()` shifts, the held ones nothing (docs/adr/0770 §4).
+pub fn solve(held: &[bool], bonds: &[Bond]) -> Outcome {
+    let vars = held.len();
+    let pivots = match eliminate(held, bonds) {
+        Ok(p) => p,
+        Err(conflict) => return conflict,
+    };
     let free = held.iter().filter(|h| !**h).count();
     let rank = pivots.len();
     // The least change: x = Rᵀ·y with (R·Rᵀ)·y = d over the pivot rows (they span the equations' rows).
@@ -440,6 +456,12 @@ mod tests {
                 why: Why::Inconsistent
             }
         );
+        // Asked only whether they hold together (docs/adr/0780 §1): the same conflict; either one alone holds.
+        assert_eq!(
+            conflict(&[true, false], &[d(1.2), d(1.5)]),
+            Some(solve(&[true, false], &[d(1.2), d(1.5)]))
+        );
+        assert_eq!(conflict(&[true, false], &[d(1.5)]), None);
     }
 
     #[test]

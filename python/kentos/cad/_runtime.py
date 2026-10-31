@@ -13,6 +13,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, ClassVar, Final, Generic, TypeVar
 
 from .errors import (
+    BondInTheWay,
     CommandCancelled,
     CommandError,
     CommandFailed,
@@ -228,6 +229,7 @@ def outcome(command: str, answer: Mapping[str, Any], output_type: type[Any] | No
             e.get("revision"),
             tuple(e.get("uids") or ()),
             bool(e.get("retryable", False)),
+            tuple(BondInTheWay.from_json(b) for b in e.get("bonds") or ()),
         ),
     )
 

@@ -280,10 +280,9 @@ def miss(state, rule, values):
     return eq[0][1] if eq else 0.0
 
 
-def follow(state, rules, values, held_ids=None, edited=None):
-    """What the bonds make of the drawing now (`state` after a write): (changed objects by id) or (rule indices,
-    words). `edited`: the objects' state before the write (an edit's follow); none: hold each distance's `a` that does
-    not hold now."""
+def equations(state, rules, values, edited=None):
+    """The bonds' equations solved, nothing written: (shifts, their keys, the rules' parts) or (None, (rule indices,
+    words)) when the equations conflict (docs/adr/0780 §1: a bond that frees such a conflict is found here)."""
     var, parts = items(state, rules)
     held = [False] * len(var)
     for k, key in enumerate(var):
@@ -327,6 +326,19 @@ def follow(state, rules, values, held_ids=None, edited=None):
     x, bad = solve(held, eqs)
     if bad is not None:
         return None, (bad, "Bağlar birlikte tutmuyor")
+    return (x, var, parts), None
+
+
+def follow(state, rules, values, held_ids=None, edited=None, late=None):
+    """What the bonds make of the drawing now (`state` after a write): (changed objects by id) or (rule indices,
+    words). `edited`: the objects' state before the write (an edit's follow); none: hold each distance's `a` that does
+    not hold now. `late` (a list): told whether a conflict came while the shifts were written."""
+    solved, why = equations(state, rules, values, edited)
+    if why is not None:
+        return None, why
+    x, var, parts = solved
+    if late is not None:
+        late.append(True)
     now = dict(state)
     changed = {}
     moved_walls = {}
@@ -361,6 +373,64 @@ def follow(state, rules, values, held_ids=None, edited=None):
         if m is None or abs(m) > SETTLED:
             return None, ([i], "Bağlar duvarların izleyebildiği kadar tutamadı (bağlı duvarlar birbirini engelliyor)")
     return changed, None
+
+
+# ── The bonds in the way (docs/adr/0780 §1) ─────────────────────────────────────────────────────────────────────────
+
+LABELS = {"distance": "Uzaklık", "fix": "Sabit", "symmetric": "Simetrik", "parallel": "Paralel"}
+
+
+def parts_of(rule):
+    return [rule[k] for k in ("a", "b", "axis") if type(rule.get(k)) is dict]
+
+
+def measured_or_none(state, rule):
+    """A distance's clear distance as the drawing is (along the wall for two jambs); none when its parts do not fit."""
+    if rule["kind"] != "distance":
+        return None
+    var, parts = items(state, [rule])
+    a, b = parts[0]
+    if a[0] == "line" and b[0] == "line" and abs(cross(a[3], b[3])) > PARALLEL:
+        return None
+    if a[0] == "jamb" and b[0] == "line" and abs(dot(left(b[3]), a[3])) < CROSSING:
+        return None
+    return measured(state, rule)[0]
+
+
+def in_the_way(state, rules, values, conflicting, edited, ids=None):
+    """Each conflicting rule as a refusal's bond: its parts, its value, what the drawing measures as the write leaves
+    it, and whether the bonds solve without it alone (`frees`). `ids`: the rules' constraint ids (else `$any`)."""
+    out = []
+    # A conflict of the equations is tried again as far as the equations; one that came while the shifts were
+    # written, whole (docs/adr/0780 §1).
+    late = []
+    follow(state, rules, values, edited=edited, late=late)
+    for k in conflicting:
+        r = rules[k]
+        rest = [x for i, x in enumerate(rules) if i != k]
+        _, why = (follow if late else equations)(state, rest, values, edited=edited)
+        b = {"id": ids[k] if ids else "$any", "label": LABELS[r["kind"]]}
+        if r["kind"] == "distance":
+            b["parameter"] = r["parameter"]
+        b["parts"] = parts_of(r)
+        if r["kind"] == "distance" and not r.get("reference"):
+            b["kept"] = values[r["parameter"]]
+        m = measured_or_none(state, r)
+        if m is not None:
+            b["measured"] = m
+        b["frees"] = why is None
+        out.append(b)
+    return out
+
+
+def bonds_words(bonds):
+    """The refusal's last words: the bond (or bonds) whose taking away alone lets the write through, or none."""
+    frees = [f"{b['parameter']} ({b['label']})" if "parameter" in b else b["label"] for b in bonds if b["frees"]]
+    if not frees:
+        return "Tek başına kaldırılınca düzenlemeyi geçiren bağ yok; çelişen bağları kaldırın ya da kısıtları gevşeterek düzenleyin."
+    if len(frees) == 1:
+        return f"Şu bağ kaldırılınca düzenleme geçer: {frees[0]}. Ya da kısıtları gevşeterek düzenleyin."
+    return f"Şu bağlardan biri kaldırılınca düzenleme geçer: {', '.join(frees)}. Ya da kısıtları gevşeterek düzenleyin."
 
 
 # ── Steps ────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -405,7 +475,7 @@ class Case:
         step = {"op": "execute", "input": inp}
         if why is not None:
             step["result"] = {"status": "failed", "error": {"code": "constraint_conflict", "message": "$any",
-                                                            "path": "edit", "uids": "$any"}}
+                                                            "path": "edit", "uids": "$any", "bonds": "$any"}}
             step["expect"] = {"ids": IDS, "revision": "same", "constraintKinds": [r["kind"] for r in self.rules]}
             self.steps.append(step)
             return
@@ -455,10 +525,11 @@ class Case:
         else:
             changed, why = follow(written, self.rules, self.values(), edited=edited)
         if why is not None:
+            bonds = in_the_way(written, self.rules, self.values(), why[0], edited)
             step["result"] = {"status": "failed", "error": {
                 "code": "constraint_conflict",
-                "message": f"{why[1]}; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
-                "uids": "$any"}}
+                "message": f"{why[1]}; hiçbir şey yazılmadı. {bonds_words(bonds)}",
+                "uids": "$any", "bonds": bonds}}
             step["expect"] = {"ids": IDS, "revision": "same"}
             self.steps.append(step)
             return
@@ -530,7 +601,7 @@ class Case:
         step = {"op": "execute", "command": "cad.parameters.edit", "input": inp}
         if why is not None:
             step["result"] = {"status": "failed", "error": {"code": "constraint_conflict", "message": "$any", "path": "edit",
-                                                            "uids": "$any"}}
+                                                            "uids": "$any", "bonds": "$any"}}
             step["expect"] = {"ids": IDS, "revision": "same"}
             self.steps.append(step)
             return
