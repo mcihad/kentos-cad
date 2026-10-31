@@ -122,6 +122,38 @@ fn hundred_at(app: &mut App, view: Option<([f64; 2], f64)>) {
     }
 }
 
+/// docs/adr/0793 §2: the tagged room (walls, openings, room, their tags) copied 14 m east with Kopyala: each copied
+/// tag names its object's copy, so the copy reads its own number and area, and the room's label is not drawn twice.
+fn copied_room(app: &mut App) {
+    crate::tag_scenes::tagged(app);
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let uids: Vec<String> = doc
+        .entities()
+        .filter(|e| matches!(e.kind(), "wall" | "opening" | "space" | "tag"))
+        .filter_map(|e| doc.uid(kentos_domain::Slot(e.base().id)))
+        .map(|u| u.to_string())
+        .collect();
+    let input: kentos_commands::EntitiesTransform = serde_json::from_value(serde_json::json!({
+        "uids": uids, "transform": { "kind": "move", "dx": 14.0, "dy": 0.0 }, "copy": true
+    }))
+    .expect("a copy");
+    let done = kentos_native_application::transform::execute(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        input,
+    );
+    assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    app.viewport.camera.fit(
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 1.5,
+            min_y: N - 2.5,
+            max_x: E + 28.0,
+            max_y: N + 9.0,
+        },
+        24.0,
+    );
+    hover(app, [27.0, -2.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("kalite-ayrinti-1mm", detail),
@@ -133,6 +165,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         }),
         ("kalite-ayrinti-1-5", |app| detail_at(app, 5.0, [0.25, 0.25])),
         ("kalite-ayrinti-1-1", |app| detail_at(app, 1.0, [0.40, 0.30])),
+        ("kalite-etiket-kopya", copied_room),
         ("kalite-1-100", |app| at_scale(app, 100.0)),
         ("kalite-1-50", |app| at_scale(app, 50.0)),
         ("kalite-1-20", |app| at_scale(app, 20.0)),
@@ -184,6 +217,89 @@ mod tests {
         cam.pan_by(1_000_000.0, -500_000.0);
         cam.pan_by(-1_000_000.0, 500_000.0);
         assert_eq!(cam.center, before, "a pan out and back is the view it left");
+    }
+
+    /// docs/adr/0793 §1: at 0.1 mm a pixel (1:0.38) the drawing area holds every paper width of the 1:100 detail to
+    /// its paper width at 1:100, so the walls' 0.5 mm cut lines stay a couple of pixels and the millimetre between
+    /// the two lines (ten pixels) stays clear; a sheet's map holds nothing. Before, a 0.25 mm pen was 25 mm in the
+    /// world and drew 250 pixels wide here.
+    #[test]
+    fn a_paper_width_is_held_where_the_millimetre_is_ten_pixels() {
+        use kentos_native_style::batches::{BatchKind, FillPaintBatch, Unit};
+        let (mut app, _) = App::boot(None);
+        detail(&mut app);
+        let doc = app.document.as_ref().expect("a drawing");
+        app.spatial.sync(&doc.model);
+        let palette = crate::viewport::palette(app.canvas());
+        let styling = app.styles.styling(&app.spatial, &app.settings);
+        let scene = app.viewport.styled_scene(doc, &palette, styling);
+        let held = 1.0 / (kentos_native_style::program::METRES_PER_PX * 100.0);
+        let px_per_m = app.viewport.camera.scale;
+        assert!(px_per_m > 25.0 * held, "zoomed far past 1:100: {px_per_m}");
+        let (mut widths, mut wide) = (0, 0.0_f64);
+        for part in &scene.layers {
+            for b in &part.layer.batches {
+                let width = match &b.kind {
+                    BatchKind::Stroke { width, unit: Unit::World, .. } => *width,
+                    BatchKind::Fill { paint: FillPaintBatch::Hatch { width, unit: Unit::World, .. } } => *width,
+                    _ => continue,
+                };
+                if width <= 0.0 {
+                    continue;
+                }
+                assert!((b.weight_cap - held).abs() < 1e-9, "a paper width held to 1:100's: {}", b.weight_cap);
+                let px = width * px_per_m.min(b.weight_cap);
+                assert!(width * px_per_m > 100.0, "the world would draw it {} px", width * px_per_m);
+                wide = wide.max(px);
+                widths += 1;
+            }
+        }
+        assert!(widths > 0, "the walls and lines draw paper widths");
+        assert!(wide < 5.0, "the widest paper width is {wide} px: the millimetre's ten pixels stay clear");
+    }
+
+    /// docs/adr/0793 §2: Kopyala on a tagged room: every copied tag names its own object's copy, every original tag
+    /// its original, and each copy's words are its object's.
+    #[test]
+    fn a_copied_room_tags_its_own_copies() {
+        let mut app = crate::files_testing::app_with_drawing();
+        app.window_size = iced::Size::new(1440., 900.);
+        let mut shot = kentos_ui::snapshot::Snapshot::software(app.window_size).expect("a renderer");
+        shot.settle(&mut app, App::view, &mut |app, message| {
+            let _ = app.update(message);
+        });
+        crate::tag_scenes::tagged(&mut app);
+        let first = app.document.as_ref().expect("a drawing").model.entities().map(|e| e.base().id).max();
+        copied_room(&mut app);
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let first = first.expect("a drawing with objects");
+        let slot_of = |uid: &str| {
+            kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).map(|s| s.0)
+        };
+        let mut tags = 0;
+        for e in doc.entities() {
+            let kentos_commands::Entity::Tag(t) = e else { continue };
+            let object = slot_of(&t.tag.of).expect("a tag's object in the drawing");
+            assert_eq!(object > first, t.base.id > first, "tag {} names {}", t.base.id, object);
+            if t.base.id > first {
+                let original = doc
+                    .entities()
+                    .find_map(|o| match o {
+                        kentos_commands::Entity::Tag(o)
+                            if o.base.id <= first
+                                && (o.tag.at.x + 14.0 - t.tag.at.x).abs() < 1e-9
+                                && (o.tag.at.y - t.tag.at.y).abs() < 1e-9 =>
+                        {
+                            Some(o.tag.text.clone())
+                        }
+                        _ => None,
+                    })
+                    .expect("its original");
+                assert_eq!(t.tag.text, original, "the copy reads as its original");
+                tags += 1;
+            }
+        }
+        assert!(tags >= 3, "the room's and its openings' tags copied: {tags}");
     }
 
     /// docs/adr/0776 §3, 0626: the screen's zoom changes neither the drawing nor its settings; the drawing scale

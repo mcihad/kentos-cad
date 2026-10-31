@@ -38,6 +38,7 @@ fn hatch(id: u64, width: f64) -> StyledScene {
         max_scale: None,
         group: 0,
         effect: None,
+        weight_cap: 0.0,
     };
     StyledScene {
         layers: vec![Arc::new(StyledLayerPart {

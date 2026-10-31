@@ -71,6 +71,7 @@ fn boxes(rects: &[([f64; 4], [f64; 4])], effect: Option<Arc<Effect>>) -> StyledL
             min_scale: None,
             max_scale: None,
             group: u32::from(effect.is_some()),
+            weight_cap: 0.0,
             effect: effect.clone(),
         });
     }

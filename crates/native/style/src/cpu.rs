@@ -167,6 +167,8 @@ struct Style {
     b: V4,
     c: V4,
     flags: [u32; 4],
+    /// `origin.z`: the logical px a world unit a paper width is held to (docs/adr/0793 §1), 0 none.
+    held: f64,
 }
 
 impl Style {
@@ -189,6 +191,16 @@ impl Style {
             b: v(24),
             c: v(28),
             flags: s.u,
+            held: f64::from(s.origin[2]),
+        }
+    }
+
+    /// `weightK`: picture pixels per unit of a line's width, a paper width held (docs/adr/0793 §1).
+    fn weight_k(&self, view: &CpuView) -> f64 {
+        if self.flags[0] != 0 || self.held <= 0.0 {
+            self.unit_k(view)
+        } else {
+            view.px_per_m.min(self.held * view.dpr)
         }
     }
 
@@ -346,7 +358,7 @@ fn rows_of(corners: &[[f64; 2]], w: u32, h: u32, mut each: impl FnMut(u32, u32))
 
 fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, data: &[f32]) {
     let k = st.unit_k(view);
-    let half_w = (st.a[0] * k).max(1.0) * 0.5;
+    let half_w = (st.a[0] * st.weight_k(view)).max(1.0) * 0.5;
     let blur = (st.b[0] * k).max(1.0);
     let cover = |t: f64| {
         let c = clamp01(t / blur + 0.5);
@@ -523,7 +535,10 @@ fn fill(
             };
             let c = match paint {
                 FillPaintBatch::Solid { .. } => straight(st.color, 1.0),
-                FillPaintBatch::Hatch { .. } => straight(st.color, hatch(st, &dashes, p, k)),
+                FillPaintBatch::Hatch { .. } => {
+                    let kw = if screen { k } else { st.weight_k(view) };
+                    straight(st.color, hatch(st, &dashes, p, k, kw))
+                }
                 FillPaintBatch::Gradient { .. } => gradient(st, p),
                 FillPaintBatch::Pattern { .. } => pattern(st, p, k, view.dpr),
                 FillPaintBatch::Tile { .. } => match &tile {
@@ -553,15 +568,15 @@ fn fill(
 }
 
 /// `hatchFs`: the share of the pixel the hatch inks.
-fn hatch(st: &Style, dashes: &[f64; 8], p: [f64; 2], k: f64) -> f64 {
+fn hatch(st: &Style, dashes: &[f64; 8], p: [f64; 2], k: f64, kw: f64) -> f64 {
     let dir = [st.a[0], st.a[1]];
     let n = [-dir[1], dir[0]];
-    let half_w = (st.a[3] * k).max(1.0) * 0.5;
+    let half_w = (st.a[3] * kw).max(1.0) * 0.5;
     let gap = st.a[2] * k;
     let a = if gap < 3.0 {
         // An even tint that fades from the hairline look to the paper's coverage.
         let hair = (2.0 * half_w / gap.max(1e-4)).min(1.0);
-        let paper = (st.a[3] / st.a[2].max(1e-9)).min(1.0);
+        let paper = (st.a[3] * kw / gap.max(1e-9)).min(1.0);
         let t = clamp01((gap - 1.0) / 2.0);
         paper + (hair - paper) * t
     } else {
@@ -1201,6 +1216,7 @@ mod tests {
             max_scale: None,
             group: 0,
             effect: None,
+            weight_cap: 0.0,
         }
     }
 

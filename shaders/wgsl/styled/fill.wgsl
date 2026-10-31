@@ -22,7 +22,9 @@ struct AreaOut {
   if (screen) { p = i.pos.xy * vec2f(1.0, -1.0) / frame.dpr; k = frame.dpr; }
   let dir = st.a.xy;
   let n = vec2f(-dir.y, dir.x);
-  let halfW = max(st.a.w * k, 1.0) * 0.5;
+  var kw = k;
+  if (!screen) { kw = weightK(); }
+  let halfW = max(st.a.w * kw, 1.0) * 0.5;
   let gap = st.a.z * k;
   var a: f32;
   if (gap < 3.0) {
@@ -30,7 +32,7 @@ struct AreaOut {
     // Average its visible coverage when individual lines can no longer be resolved.
     // Positive physical widths keep the existing paper-coverage transition.
     let hair = min(1.0, 2.0 * halfW / max(gap, 1e-4));
-    let paper = select(hair, min(1.0, st.a.w / max(st.a.z, 1e-9)), st.a.w > 0.0);
+    let paper = select(hair, min(1.0, st.a.w * kw / max(gap, 1e-9)), st.a.w > 0.0);
     a = mix(paper, hair, clamp((gap - 1.0) / 2.0, 0.0, 1.0));
   } else {
     let u = dot(p, n) - st.b.x;

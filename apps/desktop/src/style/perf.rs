@@ -252,6 +252,7 @@ fn look(doc: &Document, screen_scale: f64) -> Look {
         symbol_scale: screen_scale,
         screen: false,
         hairlines: false,
+        hold_weights: false,
         origin: scene::scene_origin(doc),
         view_build: Default::default(),
         view_colors: Default::default(),

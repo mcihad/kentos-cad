@@ -325,6 +325,7 @@ impl SheetMaps {
             symbol_scale: scale.max(1e-6),
             screen: false,
             hairlines: false,
+            hold_weights: false,
             origin,
             view_build: Default::default(),
             view_colors: Default::default(),

@@ -894,6 +894,7 @@ mod tests {
             max_scale: None,
             group: 0,
             effect: None,
+            weight_cap: 0.0,
         };
         let around = |x: f64, y: f64| Some([x - 50.0, y - 50.0, x + 50.0, y + 50.0]);
         assert!(batch_reaches(&batch, &o, around(583_670.0, 4_400_020.0)));
@@ -941,6 +942,7 @@ mod tests {
             max_scale: None,
             group: 0,
             effect: None,
+            weight_cap: 0.0,
         };
         let layer = StyledLayer {
             data,

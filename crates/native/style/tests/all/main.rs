@@ -17,3 +17,4 @@ mod tally;
 mod template_form;
 mod units;
 mod wall_views;
+mod weight_caps;

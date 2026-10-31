@@ -27,6 +27,7 @@
 
 mod annotative;
 pub mod arrays;
+pub mod copy_links;
 pub mod casework;
 pub mod constraints;
 mod constraint_follow;

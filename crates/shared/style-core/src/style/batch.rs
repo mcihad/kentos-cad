@@ -71,6 +71,8 @@ struct Entry {
     /// Its effect group (from 1; 0 none) and the group's effects (docs/adr/0226 §2).
     group: u32,
     effect: Option<String>,
+    /// Its width measured on the ground (docs/adr/0793 §1).
+    ground: bool,
 }
 
 impl Entry {
@@ -167,6 +169,9 @@ pub struct Batches {
     pub data: Vec<f32>,
     pub pictures: Vec<Picture>,
     pub dropped: u64,
+    /// The batches (by their place in `json`) whose stroke or hatch width is measured on the ground, not paper mm
+    /// (docs/adr/0793 §1): the model screen never holds it to its paper width.
+    pub ground: Vec<u32>,
 }
 
 /// A picture a build made: the key a batch draws it by, its size, its
@@ -263,8 +268,11 @@ impl BatchSink {
         kind: Kind,
         level: f64,
         tile: [f64; 2],
+        ground: bool,
         style: impl FnOnce() -> String,
     ) -> usize {
+        // A ground width and a paper one never share a batch, though their styles read alike (docs/adr/0793 §1).
+        let key = if ground { format!("{key}|g") } else { key.to_owned() };
         let k = format!(
             "{key}|{}|{}|{}|{}|{}",
             scale_key(self.scale.min),
@@ -304,6 +312,7 @@ impl BatchSink {
             h: 0.0,
             group: self.group,
             effect: (self.group > 0).then(|| self.group_json.clone()),
+            ground,
         });
         self.index.insert(k, self.entries.len() - 1);
         self.entries.len() - 1
@@ -396,6 +405,8 @@ impl BatchSink {
         });
         let mut json = String::from("[");
         let mut data: Vec<f32> = Vec::new();
+        let mut ground = Vec::new();
+        let mut placed = 0u32;
         for i in order {
             let e = &self.entries[i];
             let enough = match e.kind {
@@ -452,6 +463,10 @@ impl BatchSink {
             }
             json.push('}');
             data.extend(e.data.iter().map(|&x| x as f32));
+            if e.ground {
+                ground.push(placed);
+            }
+            placed += 1;
         }
         json.push(']');
         Batches {
@@ -459,6 +474,7 @@ impl BatchSink {
             data,
             pictures: self.pictures,
             dropped: self.dropped,
+            ground,
         }
     }
 }
@@ -488,7 +504,7 @@ impl Sink for BatchSink {
             None => {
                 let mut key = String::from("s|");
                 style.write_json(&mut key);
-                let e = self.entry(&key, Kind::Stroke, style.level, tile, || {
+                let e = self.entry(&key, Kind::Stroke, style.level, tile, style.ground && style.width > 0.0, || {
                     key[2..].to_string()
                 });
                 self.recent_strokes
@@ -657,7 +673,7 @@ impl BatchSink {
         let mut key = String::from("w|");
         paint.write_json(&mut key);
         let tile = self.tile_of(first[1]);
-        let e = self.entry(&key, Kind::Fill, paint.level(), tile, || {
+        let e = self.entry(&key, Kind::Fill, paint.level(), tile, false, || {
             let mut style = key[2..].to_string();
             style.pop();
             style.push_str(",\"warped\":true}");
@@ -770,7 +786,7 @@ impl BatchSink {
             None => {
                 let mut key = String::from("f|");
                 paint.write_json(&mut key);
-                let e = self.entry(&key, Kind::Fill, paint.level(), tile, || {
+                let e = self.entry(&key, Kind::Fill, paint.level(), tile, paint.ground(), || {
                     key[2..].to_string()
                 });
                 self.recent_fills
@@ -794,7 +810,7 @@ impl BatchSink {
             Some(e) => e,
             None => {
                 let key = style.key();
-                let e = self.entry(&key, Kind::Marker, style.common.level, tile, || {
+                let e = self.entry(&key, Kind::Marker, style.common.level, tile, false, || {
                     let mut s = String::new();
                     style.write_json(&mut s);
                     s
@@ -848,6 +864,7 @@ mod tests {
             join: "miter".into(),
             blur: 0.0,
             level: 0.0,
+            ground: false,
         }
     }
 
@@ -899,6 +916,38 @@ mod tests {
             .filter_map(|x| x.as_f64())
             .collect();
         assert_eq!(centre, [17.0, 15.0]);
+    }
+
+    /// docs/adr/0793 §1: a width measured on the ground keeps a batch of its own beside a paper width whose style
+    /// reads alike, and only it is listed; the style's JSON is the page's as before.
+    #[test]
+    fn a_ground_width_keeps_a_batch_of_its_own_and_is_listed() {
+        let mut sink = BatchSink::new(ANCHOR);
+        let path = [
+            Vec2::new(487_110.0, 4_420_210.0),
+            Vec2::new(487_130.5, 4_420_210.0),
+        ];
+        let ground = StrokeStyle {
+            ground: true,
+            ..line()
+        };
+        let hair = StrokeStyle {
+            ground: true,
+            width: 0.0,
+            ..line()
+        };
+        sink.stroke(&line(), &path, false);
+        sink.stroke(&ground, &path, false);
+        sink.stroke(&line(), &path, false);
+        sink.stroke(&hair, &path, false);
+        let out = sink.finish();
+        let batches: serde_json::Value = serde_json::from_str(&out.json).expect("reads");
+        let batches = batches.as_array().expect("an array");
+        assert_eq!(batches.len(), 3, "paper, ground, a hairline");
+        assert_eq!(batches[0]["style"], batches[1]["style"], "the page reads them alike");
+        assert!(batches[1]["style"].get("ground").is_none());
+        // A zero width is a hairline either way: never listed.
+        assert_eq!(out.ground, [1]);
     }
 
     #[test]

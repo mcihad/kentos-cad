@@ -388,6 +388,10 @@ pub struct StyledBatch {
     /// a group's batches are drawn into a picture of their own, then composed.
     pub group: u32,
     pub effect: Option<std::sync::Arc<Effect>>,
+    /// Logical px per world unit a paper width (a stroke's or a hatch's, paper mm drawn at the plot scale) is held to
+    /// on the model screen (docs/adr/0793 §1): zoomed in past the drawing scale the line keeps its paper width instead
+    /// of swelling with the world. 0 holds nothing (a sheet, a width on the ground or in px).
+    pub weight_cap: f64,
 }
 
 /// A shadow as the page draws it (docs/adr/0226 §2): its offset (x right,
@@ -440,6 +444,9 @@ pub struct DecodeOptions<'a> {
     pub library: &'a StyleLibrary,
     /// Görünüm kipleri's colours (docs/adr/0195 §2).
     pub view: ViewColors,
+    /// The model screen: paper widths held to their size at the drawing scale (docs/adr/0793 §1); a sheet's map and
+    /// a picture leave them in the world.
+    pub hold_weights: bool,
 }
 
 // ── Reading the core's JSON ────────────────────────────────────────────
@@ -1144,8 +1151,19 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
     let described: Value = serde_json::from_str(&out.json)
         .map_err(|e| format!("Stil çekirdeğinin yanıtı okunamadı: {e}"))?;
     let looks = Looks { o };
+    // A paper width w mm is w × plot_scale / 1000 world units; at 1/(METRES_PER_PX × plot_scale) px a unit it is drawn
+    // w mm wide, as the screen shows the drawing scale (docs/adr/0793 §1).
+    let held = if o.hold_weights && o.plot_scale > 0.0 {
+        1.0 / (crate::program::METRES_PER_PX * o.plot_scale)
+    } else {
+        0.0
+    };
+    let ground: std::collections::HashSet<u32> = out.ground.iter().copied().collect();
     let mut batches = Vec::new();
-    for d in described.as_array().into_iter().flatten() {
+    for (at, d) in described.as_array().into_iter().flatten().enumerate() {
+        let paper = |style: &Value| {
+            Unit::read(style.get("unit")) == Unit::World && !ground.contains(&(at as u32))
+        };
         let from = n(d, "from") as usize;
         let len = n(d, "len") as usize;
         let range = from..(from + len).min(out.data.len());
@@ -1187,6 +1205,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     max_scale,
                     group,
                     effect: effect.clone(),
+                    weight_cap: if paper(style) { held } else { 0.0 },
                 }
             }
             "fill" => StyledBatch {
@@ -1204,6 +1223,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                 max_scale,
                 group,
                 effect: effect.clone(),
+                weight_cap: if s(style, "kind") == "hatch" && paper(style) { held } else { 0.0 },
             },
             _ => {
                 let common = style.get("common").unwrap_or(&Value::Null);
@@ -1245,6 +1265,7 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                     max_scale,
                     group,
                     effect: effect.clone(),
+                    weight_cap: 0.0,
                 }
             }
         };

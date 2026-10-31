@@ -34,7 +34,7 @@ pub const STYLE_BYTES: usize = 160;
 
 /// A batch's style block: 36 four-byte words, floats and the four flags,
 /// then its tile's origin (docs/adr/0157: x, y in metres from the layers'
-/// origin, exact in float32; two words unused).
+/// origin, exact in float32; z the logical px a world unit a paper width is held to, docs/adr/0793 §1; w unused).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StyleBlock {
     pub f: [f32; 32],
@@ -131,8 +131,8 @@ const NONE: [f64; 4] = [0.0; 4];
 /// A batch's style block; atlas rectangles are filled in when the image is placed.
 pub fn style_block(b: &StyledBatch) -> StyleBlock {
     let mut s = StyleBlock {
-        // Whole multiples of 2¹⁶ m: exact in float32.
-        origin: [b.origin[0] as f32, b.origin[1] as f32, 0.0, 0.0],
+        // Whole multiples of 2¹⁶ m: exact in float32. z: the px a world unit a paper width is held to (docs/adr/0793 §1).
+        origin: [b.origin[0] as f32, b.origin[1] as f32, b.weight_cap as f32, 0.0],
         ..StyleBlock::default()
     };
     match &b.kind {

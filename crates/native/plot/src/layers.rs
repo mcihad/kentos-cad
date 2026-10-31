@@ -28,6 +28,9 @@ pub struct Look {
     pub screen: bool,
     /// Line weights hidden (Kalınlık off).
     pub hairlines: bool,
+    /// The model screen: a paper width zoomed in past the drawing scale keeps its paper width (docs/adr/0793 §1).
+    /// Paper (a sheet's map, the PDF) leaves every width in the world.
+    pub hold_weights: bool,
     pub origin: Vec2,
     /// Görünüm kipleri (docs/adr/0195): what the build leaves out, and the colours.
     pub view_build: kentos_native_style::View,
@@ -317,6 +320,7 @@ pub fn build_whole(
                     plot_scale: look.symbol_scale,
                     library,
                     view: look.view_colors,
+                    hold_weights: look.hold_weights,
                 },
             )
         })

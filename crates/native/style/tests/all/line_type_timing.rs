@@ -72,6 +72,7 @@ fn build(
             plot_scale: 500.0,
             library: &library,
             view: Default::default(),
+            hold_weights: false,
         },
     )
     .expect("decodes")

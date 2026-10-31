@@ -179,6 +179,7 @@ pub(crate) fn built_layers_profile(
         symbol_scale: scale,
         screen: false,
         hairlines: false,
+        hold_weights: false,
         origin,
         view_build: kentos_native_style::View {
             plot_precision: true,

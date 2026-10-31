@@ -18,7 +18,7 @@ struct SStyle {
   b: vec4f,
   c: vec4f,
   flags: vec4u,      // unit, cap | kind, shape, fit
-  origin: vec4f,     // xy: the batch's tile from the layers' origin, metres, exact (zw unused)
+  origin: vec4f,     // xy: the batch's tile from the layers' origin, metres, exact; z: a paper width's held px a unit (w unused)
 };
 // Two groups (contract version 2): the frame and the atlas together, then the batch's style. A native wgpu
 // device may offer only two bind groups (Iced's does), so the atlas sits beside the frame.
@@ -38,6 +38,13 @@ fn toPx(p: vec2f) -> vec2f {
 }
 fn pxToClip(px: vec2f) -> vec4f { return vec4f(px / (0.5 * frame.viewport), 0.0, 1.0); }
 fn unitK() -> f32 { if (st.flags.x == 0u) { return frame.pxPerM; } return frame.dpr; }
+// A line's width in device px per its unit (contract version 9, docs/adr/0793 §1): a paper width on the model screen
+// (origin.z, the logical px a world unit at the drawing scale) is held there, zoomed in past it the line keeps its paper
+// width instead of swelling with the world; zoomed out it thins with the world, a device pixel at least.
+fn weightK() -> f32 {
+  if (st.flags.x != 0u || st.origin.z <= 0.0) { return unitK(); }
+  return min(frame.pxPerM, st.origin.z * frame.dpr);
+}
 fn fmod(x: f32, y: f32) -> f32 { return x - y * floor(x / y); }
 
 fn corner(i: u32) -> vec2f {
