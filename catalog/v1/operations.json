@@ -2455,6 +2455,13 @@
       ],
       "note": "Pencerenin tanımı, değişikliği, adı, silmesi ve kitaplığı; önizleme komutun planından (ADR 0772 §1, §4)."
     },
+    "arch.materials": {
+      "level": "semantic",
+      "via": [
+        "cad.materials.edit"
+      ],
+      "note": "Malzemeler penceresinin yeni, değiştir, sil, bağla ve metinlerden al'ı; önizleme komutun planından (ADR 0785)."
+    },
     "arch.openingSameType": {
       "level": "query",
       "via": [

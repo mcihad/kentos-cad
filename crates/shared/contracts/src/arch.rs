@@ -175,6 +175,11 @@ pub struct WallComponent {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// The project material it binds to (docs/adr/0785, `settings.arch.materials`), by its id: its `material`, `hatch`
+    /// and `edge` are the material's and follow it. Absent: its own text material, as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material_id: Option<String>,
     /// Its thickness, metres; absent: what the wall's width leaves of the others (one component at most).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -756,6 +761,9 @@ pub fn components_problem(
             None => rest = Some(i),
             Some(_) => {}
         }
+        if let Some(words) = crate::material_ref_problem(&c.material_id) {
+            return Some((at("materialId"), words));
+        }
         if let Some(p) = c.priority
             && !(1..=9).contains(&p)
         {
@@ -1302,9 +1310,26 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ArchModule>>", optional))]
     pub modules: Vec<crate::ArchModule>,
+    /// The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ArchMaterial>>", optional))]
+    pub materials: Vec<crate::ArchMaterial>,
 }
 
 impl ArchSettings {
+    /// Whether it keeps building materials (KCAD 150, docs/adr/0785).
+    pub fn has_materials(&self) -> bool {
+        !self.materials.is_empty()
+    }
+
+    /// The project's material of this id, or else of this name (case aside).
+    pub fn material(&self, key: &str) -> Option<&crate::ArchMaterial> {
+        self.materials.iter().find(|m| m.id == key).or_else(|| {
+            let folded = key.to_lowercase();
+            self.materials.iter().find(|m| m.name.to_lowercase() == folded)
+        })
+    }
+
     pub fn is_empty(&self) -> bool {
         self == &ArchSettings::default()
     }
@@ -1378,6 +1403,9 @@ impl ArchSettings {
             return Some((format!("program.{at}"), why));
         }
         if let Some(problem) = crate::arch_modules_problem(&self.modules) {
+            return Some(problem);
+        }
+        if let Some(problem) = crate::materials_problem(&self.materials) {
             return Some(problem);
         }
         if let Some(why) = crate::annotation::names_problem(
@@ -1497,6 +1525,7 @@ fn component(
         priority: Some(priority),
         name: name.into(),
         material: Some(name.into()),
+        material_id: None,
         thickness,
         edge: None,
         hatch: hatch.map(|(pattern, scale, color)| ComponentHatch {

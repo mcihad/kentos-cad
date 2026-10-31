@@ -275,6 +275,8 @@ pub mod opening_distances;
 pub(crate) mod opening_types;
 pub(crate) mod door_audit;
 pub mod opening_types_edit;
+pub mod materials_edit;
+pub mod material_quantities;
 pub mod openings_query;
 pub mod modules_edit;
 pub mod modules_query;
@@ -874,6 +876,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_OPENINGS_QUERY,
         kentos_commands::CAD_OPENINGS_QUERY_VERSION,
     ),
+    // Malzemeler ([`materials_edit`], docs/adr/0785).
+    (kentos_commands::CAD_MATERIALS_EDIT, kentos_commands::CAD_MATERIALS_EDIT_VERSION),
     // Oda modülleri ([`modules_edit`], [`modules_query`], docs/adr/0775).
     (kentos_commands::CAD_MODULES_EDIT, kentos_commands::CAD_MODULES_EDIT_VERSION),
     (kentos_commands::CAD_MODULES_QUERY, kentos_commands::CAD_MODULES_QUERY_VERSION),

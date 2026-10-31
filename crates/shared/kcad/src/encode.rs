@@ -2077,6 +2077,14 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 150 (docs/adr/0785): the project's materials, a component or a slab bound to one.
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_materials)
+        || objs.iter().any(materials)
+        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(materials))
+        || doc.settings.wall_styles.iter().any(|s| s.components.iter().any(|c| c.material_id.is_some()))
+    {
+        return crate::SCHEMA_WITH_MATERIALS;
+    }
     // Schema 143 (docs/adr/0781): a view recipe's walls' detail or crop.
     if doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.detail.is_some() || r.crop)) {
         return crate::SCHEMA_WITH_RECIPE_DETAIL;
@@ -3359,6 +3367,15 @@ pub(crate) fn building_parts(e: &Entity) -> bool {
                 || w.wall.joins.end_pass.is_some()
         }
         Entity::Slab(s) => s.slab.bound.is_some(),
+        _ => false,
+    }
+}
+
+/// Whether an object needs schema 150 (docs/adr/0785): a wall component or a slab bound to a project material.
+pub(crate) fn materials(e: &Entity) -> bool {
+    match e {
+        Entity::Wall(w) => w.wall.components.iter().any(|c| c.material_id.is_some()),
+        Entity::Slab(s) => s.slab.material_id.is_some(),
         _ => false,
     }
 }

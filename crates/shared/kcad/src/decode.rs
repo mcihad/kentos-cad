@@ -1217,6 +1217,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.building_parts && l.iter().any(|s| s.components.iter().any(|c| c.wrap)) {
                     return Err(r.fail_at(Code::UnknownField, at, "uçta dönen bileşen şema 138 ister"));
                 }
+                if !has.materials && l.iter().any(|s| s.components.iter().any(|c| c.material_id.is_some())) {
+                    return Err(r.fail_at(Code::UnknownField, at, "malzemeye bağlı bileşen şema 150 ister"));
+                }
                 wall_styles = l;
             }
             "arch" if has.walls => {
@@ -1248,6 +1251,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         at,
                         "projenin oda modülleri şema 142'den beri yazılır",
                     ));
+                }
+                if !has.materials && a.has_materials() {
+                    return Err(r.fail_at(Code::UnknownField, at, "projenin malzemeleri şema 150 ister"));
                 }
                 if !has.opening_types && a.has_opening_types() {
                     return Err(r.fail_at(

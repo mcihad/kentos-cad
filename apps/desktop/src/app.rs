@@ -288,6 +288,8 @@ pub enum Dialog {
     WallJoins,
     /// Kapı ve pencere tipleri (opening_types_window.rs, docs/adr/0772); the window is `App::opening_types`.
     OpeningTypes,
+    /// Malzemeler (materials_window.rs, docs/adr/0785); the window is `App::materials`.
+    Materials,
     /// Oda modülleri (room_modules_window.rs, docs/adr/0775); the window is `App::room_modules`.
     RoomModules,
     /// Çizelge ayarları and Çizelgeyi dosyaya yaz (schedule_window.rs, docs/adr/0733 §5, §7); the window is
@@ -618,6 +620,7 @@ pub enum Message {
     WallStyles(crate::wall_styles::Event),
     WallJoins(crate::wall_joins::Event),
     OpeningTypes(crate::opening_types_window::Event),
+    Materials(crate::materials_window::Event),
     RoomModules(crate::room_modules_window::Event),
     TagsCheck(crate::tags_check::Event),
     Schedule(crate::schedule_window::Event),
@@ -1159,6 +1162,8 @@ pub struct App {
     pub(crate) wall_joins: Option<crate::wall_joins::Window>,
     /// Kapı ve pencere tipleri's window (opening_types_window.rs, docs/adr/0772).
     pub(crate) opening_types: Option<crate::opening_types_window::Window>,
+    /// Malzemeler's window (materials_window.rs, docs/adr/0785).
+    pub(crate) materials: Option<crate::materials_window::Window>,
     /// Oda modülleri's window (room_modules_window.rs, docs/adr/0775).
     pub(crate) room_modules: Option<crate::room_modules_window::Window>,
     /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
@@ -1555,6 +1560,7 @@ impl App {
             wall_styles: None,
             wall_joins: None,
             opening_types: None,
+            materials: None,
             room_modules: None,
             tags_check: None,
             schedule: None,
@@ -2212,6 +2218,7 @@ impl App {
             Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::WallJoins(event) => return self.wall_joins_event(event),
             Message::OpeningTypes(event) => return self.opening_types_event(event),
+            Message::Materials(event) => return self.materials_event(event),
             Message::RoomModules(event) => return self.room_modules_event(event),
             Message::TagsCheck(event) => return self.tags_check_event(event),
             Message::Schedule(event) => return self.schedule_event(event),
@@ -2920,6 +2927,8 @@ impl App {
             "arch.wallJoinCheck" => self.open_wall_joins(),
             // Kapı ve pencere tipleri (docs/adr/0772).
             "arch.openingTypes" => self.open_opening_types(),
+            // Malzemeler (docs/adr/0785).
+            "arch.materials" => self.open_materials(),
             // Oda modülleri (docs/adr/0775).
             "arch.modules" => self.open_room_modules(),
             "arch.moduleExcept" => self.room_module_selection_action(false),

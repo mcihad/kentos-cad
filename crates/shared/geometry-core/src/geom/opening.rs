@@ -350,12 +350,46 @@ pub struct Hole {
     pub s0: f64,
     pub s1: f64,
     pub recess: Option<Recess>,
+    /// A door's or a window's frame across the wall (docs/adr/0785 §5): the layers that turn at its jambs turn up to
+    /// its faces; none: up to the middle of the turns (docs/adr/0771 §3).
+    pub frame: Option<HoleFrame>,
 }
 
 impl Hole {
     /// One that goes through the wall on `[s0, s1]`.
     pub fn through(s0: f64, s1: f64) -> Hole {
-        Hole { s0, s1, recess: None }
+        Hole { s0, s1, recess: None, frame: None }
+    }
+
+    /// The same with a frame across the wall.
+    pub fn framed(self, frame: HoleFrame) -> Hole {
+        Hole { frame: Some(frame), ..self }
+    }
+}
+
+/// A frame's depth across its wall and its distance from the face the opening opens to (its `side`; none: centred), the
+/// opening type's `build.frameDepth` and `build.frameOffset` (docs/adr/0772 §3).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct HoleFrame {
+    pub depth: f64,
+    pub offset: Option<f64>,
+    /// It opens to the wall's right face; else its left.
+    pub right: bool,
+}
+
+impl HoleFrame {
+    /// Its band across a wall `t` thick, from the left face (`near`, `far`); none when it fills the wall (a depth not
+    /// above 0 and below `t`). The rule a door's frame is drawn by.
+    pub fn across(&self, t: f64) -> Option<(f64, f64)> {
+        if !(self.depth > 0.0 && self.depth < t) {
+            return None;
+        }
+        let near = self.offset.unwrap_or((t - self.depth) / 2.0).clamp(0.0, t - self.depth);
+        Some(if self.right {
+            (t - near - self.depth, t - near)
+        } else {
+            (near, near + self.depth)
+        })
     }
 }
 
@@ -379,7 +413,15 @@ pub fn hole(at: f64, width: f64, spec: &Spec) -> Option<Hole> {
         }),
         Form::Door | Form::Window | Form::Opening => None,
     };
-    Some(Hole { s0, s1, recess })
+    let frame = match (spec.form, spec.build.frame_depth) {
+        (Form::Door | Form::Window, Some(depth)) => Some(HoleFrame {
+            depth,
+            offset: spec.build.frame_offset,
+            right: spec.side_right,
+        }),
+        _ => None,
+    };
+    Some(Hole { s0, s1, recess, frame })
 }
 
 /// The `at` that puts an opening of `width` centred at `s` given its anchor.
@@ -629,17 +671,18 @@ impl Parts<'_> {
         let fr = spec.frame.clamp(0.0, js_max(half - fit, 0.0));
         let clear = f.length - 2.0 * fr - 2.0 * fit;
         let t = f.thickness;
-        let (dl, dr) = match spec.build.frame_depth {
-            Some(depth) if depth > 0.0 && depth < t => {
-                let near = spec.build.frame_offset.unwrap_or((t - depth) / 2.0).clamp(0.0, t - depth);
-                if spec.side_right {
-                    (t - near - depth, t - near)
-                } else {
-                    (near, near + depth)
+        let (dl, dr) = spec
+            .build
+            .frame_depth
+            .and_then(|depth| {
+                HoleFrame {
+                    depth,
+                    offset: spec.build.frame_offset,
+                    right: spec.side_right,
                 }
-            }
-            _ => (0.0, t),
-        };
+                .across(t)
+            })
+            .unwrap_or((0.0, t));
         Some(Parts {
             place,
             f,

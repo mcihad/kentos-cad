@@ -317,6 +317,10 @@ pub struct LegendMaterial {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub pattern: Option<String>,
+    /// The project material it is (docs/adr/0785), by its id; absent: a text material.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
     /// How many walls have it.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub walls: u32,

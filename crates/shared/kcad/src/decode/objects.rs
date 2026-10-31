@@ -327,6 +327,8 @@ pub(super) struct Features {
     pub(super) arch_bonds: bool,
     /// Schema 138 (docs/adr/0771): turning wall components, node decisions, bound slabs.
     pub(super) building_parts: bool,
+    /// Schema 150 (docs/adr/0785): the project's materials, a component's or a slab's binding.
+    pub(super) materials: bool,
     pub(super) opening_types: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
@@ -538,6 +540,7 @@ impl Features {
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
+            materials: schema >= crate::SCHEMA_WITH_MATERIALS,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
@@ -2204,6 +2207,10 @@ pub(super) fn object(
     // Schema 138 (docs/adr/0771): a turning component, a node decision, a bound slab.
     if !has.building_parts && crate::encode::building_parts(&entity) {
         return Err(r.fail(Code::UnknownField, "dönen bileşen, düğüm kararı ya da bağlı döşeme şema 138 ister"));
+    }
+    // Schema 150 (docs/adr/0785): a component or a slab bound to a project material.
+    if !has.materials && crate::encode::materials(&entity) {
+        return Err(r.fail(Code::UnknownField, "malzemeye bağlı bileşen ya da döşeme şema 150 ister"));
     }
     // Schema 140 (docs/adr/0773): a space's group, a schedule's program field.
     if !has.building_program && crate::encode::building_program(&entity) {

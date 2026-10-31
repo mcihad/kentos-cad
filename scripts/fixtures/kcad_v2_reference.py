@@ -2376,6 +2376,14 @@ def document(d):
     if any("detail" in v.get("recipe", {}) or "crop" in v.get("recipe", {}) for v in d["settings"].get("namedViews", [])):
         # A view recipe's walls' detail or crop (docs/adr/0781).
         schema = max(schema, 143)
+    def bound(e):
+        return (e["kind"] == "wall" and any("materialId" in c for c in e.get("components", []))) or (
+            e["kind"] == "slab" and "materialId" in e)
+    if ((d["settings"].get("arch") or {}).get("materials") or any(bound(e) for e in d["entities"])
+            or any(bound(e) for b in d.get("blocks", []) for e in b.get("entities", []))
+            or any("materialId" in c for s in d["settings"].get("wallStyles", []) for c in s.get("components", []))):
+        # The project's building materials and the bindings to them (docs/adr/0785; provisional 150).
+        schema = max(schema, 150)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3089,7 +3097,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-144.kcad"] = container(root(cmap(parts), version=uint(144)))
+    files["schema-version-151.kcad"] = container(root(cmap(parts), version=uint(151)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5514,6 +5522,23 @@ def build():
         vd.replace(good, cmap({"version": uint(2), "detail": text("fine"), "crop": b"\xf5"})))
     out["broken/view-recipe-crop-false.kcad"] = container(
         vd.replace(good, cmap({"version": uint(2), "detail": text("detailed"), "crop": b"\xf4"})))
+    # Schema 150 (docs/adr/0785, provisional): three materials, a style's and a wall's core and insulation bound, a slab
+    # bound; the schema before refuses them, as does schema 143 (the newest before it), a material without a name, two of
+    # one id, an id with capitals, a default category written.
+    mt = document(load("materials.json"))
+    assert mt.count(b"\x67version\x18\x96") == 1, "the materials are schema 150"
+    out["materials.kcad"] = container(mt)
+    out["broken/materials-in-schema-149.kcad"] = container(mt.replace(b"\x67version\x18\x96", b"\x67version\x18\x95"))
+    out["broken/materials-in-schema-143.kcad"] = container(mt.replace(b"\x67version\x18\x96", b"\x67version\x18\x8f"))
+
+    def material_bad(name, change):
+        d = load("materials.json")
+        change(d)
+        out["broken/materials-" + name + ".kcad"] = container(document(d))
+    material_bad("name-blank", lambda d: d["settings"]["arch"]["materials"][0].update(name=" "))
+    material_bad("id-twice", lambda d: d["settings"]["arch"]["materials"][1].update(id="tugla"))
+    material_bad("id-capitals", lambda d: d["entities"][1].update(materialId="Betonarme"))
+    material_bad("default-category", lambda d: d["settings"]["arch"]["materials"][2].update(category="other"))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

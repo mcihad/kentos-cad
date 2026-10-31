@@ -675,6 +675,40 @@ fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 
+/// A material measured (docs/adr/0785 §4): every wall component and slab of it, a project material by its id or a text
+/// material by its text. A component's area is its wall's net face area (length × height less its openings), its volume
+/// that area times the component's thickness; a slab's its net area and its volume. Walls without a height count, but add
+/// no area; slabs left out of the quantities (`excluded`) are not summed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MaterialRow {
+    /// The project material's id; absent: a text material (not bound).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub id: Option<String>,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub category: Option<crate::MaterialCategory>,
+    /// How it is counted (a text material: by volume).
+    pub quantity: crate::MaterialQuantity,
+    /// The walls with a component of it, and the slabs of it.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub walls: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub slabs: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
+    /// Its quantity by the way it is counted: the area or the volume.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub amount: f64,
+}
+
 /// A slab measured (docs/adr/0722 §5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -959,5 +993,10 @@ pub struct SpacesQuantified {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StairRow>>", optional))]
     pub stairs: Vec<StairRow>,
+    /// The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's
+    /// order, then the text ones in the drawing's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<MaterialRow>>", optional))]
+    pub materials: Vec<MaterialRow>,
     pub totals: QuantityTotals,
 }

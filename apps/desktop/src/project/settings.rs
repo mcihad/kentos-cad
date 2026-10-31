@@ -785,6 +785,8 @@ impl App {
         arch.program = s.initial.arch.as_ref().map(|a| a.program.clone()).unwrap_or_default();
         // So are the room modules (docs/adr/0775).
         arch.modules = s.initial.arch.as_ref().map_or_else(Vec::new, |a| a.modules.clone());
+        // So are the building materials (docs/adr/0785): Malzemeler writes them.
+        arch.materials = s.initial.arch.as_ref().map_or_else(Vec::new, |a| a.materials.clone());
         // So are the level and view the drawing opens with (docs/adr/0720 §1), but not a level taken away here.
         if !arch.levels.is_empty() {
             let kept = |id: &String| arch.levels.iter().any(|l| l.id == *id);

@@ -103,6 +103,8 @@ pub enum Event {
     WallKeep(kentos_commands::WallReference),
     /// An opening's own field chosen, its type replaced (docs/adr/0341 §5): written through `cad.openings.edit`.
     Opening(Slot, kentos_commands::OpeningsOperation),
+    /// A component's or a slab's project material chosen (docs/adr/0785): written through `cad.materials.edit`.
+    Material(kentos_commands::MaterialsOperation),
     /// A room module's action on the object's instance (docs/adr/0775 §3): written through `cad.modules.edit`.
     Module(kentos_commands::ModulesOperation),
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
@@ -866,6 +868,7 @@ impl App {
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Module(op) => properties::edit_module(model, op),
+            Event::Material(op) => properties::edit_material(model, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, *op),
             Event::Slab(slot, op) => properties::edit_slab(model, slot, op),
             Event::SpaceSeparator(slot, on) => {

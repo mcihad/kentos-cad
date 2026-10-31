@@ -34,8 +34,9 @@ pub const TITLE: &str = "Malzeme lejandı";
 pub const HEIGHT: f64 = 2.5;
 pub const MAX_HEIGHT: f64 = 50.0;
 
-/// One row: its name, its component's hatch, how many walls have it.
+/// One row: its name, its component's hatch, how many walls have it; the project material it is (docs/adr/0785 §4).
 struct Row {
+    material: Option<String>,
     name: String,
     hatch: Option<kentos_commands::ComponentHatch>,
     walls: u32,
@@ -50,18 +51,26 @@ fn rows(doc: &Document) -> Vec<Row> {
         };
         let mut seen: Vec<usize> = Vec::new();
         for c in &w.wall.components {
-            let name = c
-                .material
-                .as_deref()
-                .filter(|m| !m.trim().is_empty())
-                .unwrap_or(&c.name)
-                .to_owned();
-            let at = match out.iter().position(|r| r.name == name && r.hatch == c.hatch) {
+            // A bound component is its project material's row, by its id (docs/adr/0785 §4).
+            let bound = c.material_id.as_deref().and_then(|id| doc.materials().iter().find(|m| m.id == id));
+            let (key, name, hatch) = match bound {
+                Some(m) => (Some(m.id.clone()), m.name.clone(), m.hatch.clone()),
+                None => (
+                    None,
+                    c.material.as_deref().filter(|m| !m.trim().is_empty()).unwrap_or(&c.name).to_owned(),
+                    c.hatch.clone(),
+                ),
+            };
+            let at = match out
+                .iter()
+                .position(|r| r.material == key && (key.is_some() || (r.name == name && r.hatch == hatch)))
+            {
                 Some(at) => at,
                 None => {
                     out.push(Row {
+                        material: key,
                         name,
-                        hatch: c.hatch.clone(),
+                        hatch,
                         walls: 0,
                     });
                     out.len() - 1
@@ -192,6 +201,7 @@ fn check(doc: &Document, input: &LegendsMaterials, fresh: impl FnOnce() -> Block
             .map(|r| LegendMaterial {
                 name: r.name.clone(),
                 pattern: r.hatch.as_ref().map(|c| c.pattern.clone()),
+                material: r.material.clone(),
                 walls: r.walls,
             })
             .collect(),

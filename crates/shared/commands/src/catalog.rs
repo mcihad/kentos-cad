@@ -4135,6 +4135,41 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Malzemeler (docs/adr/0785), held together by fixtures/commands/v1/cad.materials.edit.json
+        // (scripts/fixtures/materials_cases.py).
+        CommandDescriptor {
+            id: crate::CAD_MATERIALS_EDIT.into(),
+            version: crate::CAD_MATERIALS_EDIT_VERSION,
+            title: "Malzemeler".into(),
+            summary: "Projenin yapı malzemelerini (kalıcı kimlik, ad, kategori, metrajda alan ya da hacim, kesitin taraması ve kalemi) yönetir ve duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar (docs/adr/0785); tek geri alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation: define (name, id isteğe bağlı: adından; change: category structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern, scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin material metni, taraması ve kalemi, döşemelerin material metni yeni değerleri alır), remove (material; bağlı bir şey varsa material_in_use ve bağlı duvar ve döşemelerin kimlikleri), assign (material: kimlik ya da ad, yoksa bağdan ayırır; targets: wallStyle {style, component}, wall {uid, component}, slab {uid}; bileşen sırası soldan 0'dan), adopt (bağsız her metin malzemeden bir proje malzemesi açar ve bağlar; aynı metnin taraması ya da kalemi farklı bileşenler bağlanmaz, görünüş değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked. Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir. Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar."
+                .into(),
+            aliases: vec!["MALZEME".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MaterialsEdit>(),
+            output: schema::<crate::MaterialsEdited>(),
+            plan: Some(schema::<crate::MaterialsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Tuğla malzemesi, taşıyıcı ve hacimle".into(),
+                    input: json!({"operation": {"kind": "define", "name": "Tuğla", "change": {"category": "structure",
+                        "hatch": {"pattern": "ANSI31", "scale": 1.0, "angle": 0.0}}}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Dış duvar stilinin çekirdeğini tuğlaya bağla".into(),
+                    input: json!({"operation": {"kind": "assign", "material": "tugla",
+                        "targets": [{"kind": "wallStyle", "style": "Dış duvar 25", "component": 1}]}}),
+                    output: None,
+                },
+            ],
+        },
         // Oda modülleri (docs/adr/0775), held together by fixtures/commands/v1/cad.modules.edit.json and
         // cad.modules.query.json (scripts/fixtures/module_cases.py).
         CommandDescriptor {
@@ -11669,6 +11704,9 @@ mod tests {
                     }
                     crate::CAD_MODULES_EDIT => {
                         serde_json::from_value::<crate::ModulesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_MATERIALS_EDIT => {
+                        serde_json::from_value::<crate::MaterialsEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_MODULES_QUERY => {
                         serde_json::from_value::<crate::ModulesQuery>(e.input.clone()).map(|_| ())

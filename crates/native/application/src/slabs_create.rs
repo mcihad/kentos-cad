@@ -159,6 +159,7 @@ fn check(doc: &Document, input: &SlabsCreate) -> Result<Checked, Stop> {
             offset: n.offset.unwrap_or(0.0),
             arch,
             material: n.material.clone(),
+            material_id: None,
             edge: n.edge.as_ref().map(slabs::edge_of),
             excluded: n.excluded.unwrap_or(false),
             bound,

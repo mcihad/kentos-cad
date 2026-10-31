@@ -3493,6 +3493,7 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
     let component = |name: &str, thickness: Option<f64>, hatch: Option<&str>| WallComponent {
         name: name.into(),
         material: None,
+        material_id: None,
         thickness,
         edge: None,
         hatch: hatch.map(|p| ComponentHatch {

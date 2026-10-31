@@ -699,11 +699,15 @@ pub const SCHEMA_WITH_MODULES: u32 = 142;
 /// Schema 143 (docs/adr/0781): a view recipe's walls' detail (`detail`) and crop (`crop`); written only when a recipe has
 /// one.
 pub const SCHEMA_WITH_RECIPE_DETAIL: u32 = 143;
+/// Schema 150 (docs/adr/0785, provisional: renumbered when merged): the project's building materials (the architectural
+/// settings' `materials`) and a wall component's or a slab's binding to one (`materialId`); written only when the project
+/// has one or something is bound.
+pub const SCHEMA_WITH_MATERIALS: u32 = 150;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 142] = [
+pub const SCHEMAS: [u32; 143] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -846,6 +850,7 @@ pub const SCHEMAS: [u32; 142] = [
     SCHEMA_WITH_VIEW_RECIPES,
     SCHEMA_WITH_MODULES,
     SCHEMA_WITH_RECIPE_DETAIL,
+    SCHEMA_WITH_MATERIALS,
 ];
 
 /// The file a drawing is saved as.

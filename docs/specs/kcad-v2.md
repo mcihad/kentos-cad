@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | `2`'den `142`'ye bir sayı; değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-143.kcad`) |
+| `version` | tam sayı | `2`'den `143`'e bir sayı ya da `150` (geçici, docs/adr/0785); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-151.kcad`) |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -745,6 +745,8 @@ kaynağı silinmiş bir modül), önceki şema örneği `broken/modules-in-schem
 (sıfır sürüm, iki örnekte bir nesne, üyeli kaldırılmış modül).
 
 **Şema 143** (docs/adr/0781), görünüş tarifine `detail` (duvar ayrıntısı: `schematic`, `standard`, `detailed`) ve `crop` (yalnız `true`: bağlı harita yalnız görünümün alanını çizer) ekler. Bilinmeyen ayrıntı `unknown_field`, `false` yazılmış `crop` `bad_value`, 142 ve öncesinde ikisi de `unknown_field`. Yazıcı 143'ü yalnız ayrıntılı ya da kırpık tarifi olan projede yazar (`fixtures/kcad/v2/view-recipe-details.json`).
+
+**Şema 150** (docs/adr/0785; geçici numara, birleşimde yeniden numaralanır), mimari ayarlara `materials`'ı (projenin yapı malzemeleri: `id` küçük harf, rakam ve “-” ile 1–64 harf; `name` boş olmayan, kenarı boşluksuz, en çok 128 harf; `category` `structure`, `insulation`, `finish`, `membrane` ya da `other` — varsayılanı `other` yazılmaz; `quantity` `area` ya da `volume` — varsayılanı `volume` yazılmaz; `hatch` bileşen taramasının biçiminde; `cut` bileşen kenarının biçiminde; kimlikler ve adlar, büyük küçük harf ayrımsız, birer kez; 1–256 malzeme, boş liste yazılmaz), duvar bileşenine ve döşemeye `materialId`'yi (bağlandığı malzemenin kimliği) ekler. Kuralı kıran `bad_value`; 143 ve öncesinde `unknown_field`. Yazıcı 150'yi yalnız projenin malzemesi varken ya da bir duvar stili bileşeni, duvar bileşeni veya döşeme bağlıyken seçer. Örnek `materials.kcad` (üç malzeme, çekirdeği ve yalıtımı bağlı stil ve duvarı, bağlı döşeme), önceki şema örnekleri `broken/materials-in-schema-149.kcad` ve `broken/materials-in-schema-143.kcad`, bozuk örnekler `broken/materials-*` (boş ad, iki kez kimlik, büyük harfli kimlik, yazılmış varsayılan kategori).
 
 **Yeni şema eklemenin kuralı** (ADR 0265 §2): her yeni şema `n` için (1) yazıcı `n`'yi yalnız yeni özellik varken yazar; (2) `n`'de yazılmış geçerli bir örnek, bağımsız Python yazıcısıyla; (3) özelliğin `n − 1`'de yazılmış bozuk örneği (`broken/…-in-schema-<n−1>.kcad`) ve `broken/schema-version-<n+1>.kcad`; (4) önceki örneklerin hepsi okunmaya devam eder; (5) `tools/kcad/kcad.py` aynı kuralı okur; (6) örnek kodekten, tipli sütunlardan, bulutun kaynağından ve Python'un tipli katmanından geçer. Bir şema numarası yeniden kullanılmaz. `kentos-kcad`'in `schemas` testi (1)–(3)'ü zorlar.
 

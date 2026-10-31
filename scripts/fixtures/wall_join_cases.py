@@ -89,7 +89,24 @@ class Wall:
         # through holes along the base line (s0, s1).
         self.wraps = list(wraps) if wraps else [False] * len(self.comps)
         self.passes = list(passes)
-        self.holes = [(F(a), F(b)) for a, b in (holes or [])]
+        self.holes = [(F(h[0]), F(h[1])) for h in (holes or [])]
+        # ADR 0785 §5: a hole's frame across the wall (depth, offset from the face it opens to or None, opens right).
+        self.frames = [h[2] if len(h) > 2 else None for h in (holes or [])]
+
+    def frame_band(self, h):
+        """The hole's frame as distances to the path's left (top, bottom), or None (the door's frame rule)."""
+        f = self.frames[h]
+        if f is None:
+            return None
+        depth, offset, right = F(f[0]), (None if f[1] is None else F(f[1])), f[2]
+        t = self.width
+        if not (0 < depth < t):
+            return None
+        near = (t - depth) / 2 if offset is None else offset
+        near = min(max(near, F(0)), t - depth)
+        dl, dr = (t - near - depth, t - near) if right else (near, near + depth)
+        lf = self.boundaries()[0]
+        return lf - dl, lf - dr
 
     def json(self):
         out = {"pts": [[float(x), float(y)] for x, y in self.pts], "width": float(self.width), "justify": self.justify}
@@ -707,20 +724,24 @@ class Solver:
                             if plan["band"][c] > 0:
                                 a, b = sorted((at, at + into * plan["band"][c]))
                                 cuts[c].append((span(c, a, b), span(c + 1, a, b)))
+            sides = [(at, into, plan) for at, into in sides]
             for h, (s0, s1) in enumerate(w.holes):
                 wrapped = plan is not None and s0 - plan["reach"] > 0 and s1 + plan["reach"] < length and all(
                     t1 + plan["reach"] < s0 - plan["reach"] or t0 - plan["reach"] > s1 + plan["reach"]
                     for g, (t0, t1) in enumerate(w.holes) if g != h)
+                # ADR 0785 §5: a framed jamb turns its layers up to the frame's faces.
+                band = w.frame_band(h)
+                own = (wrap_plan(w, band) if band is not None and wrapped else None) or plan
                 for k in range(n + 1):
-                    p = plan["pull"][k] if wrapped else 0
+                    p = own["pull"][k] if wrapped else 0
                     gaps[k].append(span(k, s0 - p, s1 + p))
                 for c in range(n):
-                    p = plan["band"][c] if wrapped else 0
+                    p = own["band"][c] if wrapped else 0
                     cuts[c].append((span(c, s0 - p, s1 + p), span(c + 1, s0 - p, s1 + p)))
                 if wrapped:
-                    sides.append((s0, -1))
-                    sides.append((s1, 1))
-            for at, into in sides:
+                    sides.append((s0, -1, own))
+                    sides.append((s1, 1, own))
+            for at, into, plan in sides:
                 for comp, p0, p1, upper, lower in plan["patches"]:
                     a, b = sorted((at + into * p0, at + into * p1))
                     ring = [beside(a, upper), beside(b, upper), beside(b, lower), beside(a, lower)]
@@ -728,10 +749,9 @@ class Solver:
                 for comp, pull, upper, lower in plan["closures"]:
                     sv = at + into * pull
                     closures.append([comp, [pt(beside(sv, upper)), pt(beside(sv, lower))]])
-                if plan["middle"] is not None:
-                    comp, p0, p1 = plan["middle"]
+                for comp, p0, p1, d in plan["middle"]:
                     a, b = sorted((at + into * p0, at + into * p1))
-                    closures.append([comp, [pt(beside(a, plan["m"])), pt(beside(b, plan["m"]))]])
+                    closures.append([comp, [pt(beside(a, d)), pt(beside(b, d))]])
             for s0, s1 in w.holes:
                 caps.append([pt(beside(s0, o[0])), pt(beside(s0, o[-1]))])
                 caps.append([pt(beside(s1, o[0])), pt(beside(s1, o[-1]))])
@@ -746,10 +766,13 @@ class Solver:
         return out
 
 
-def wrap_plan(w):
+def wrap_plan(w, frame=None):
     """ADR 0771 §3: how the outermost turning layers of each face turn at an end, or None. Lines and components from
     the left face; `pull` how far before the end a line stops, `band` a component's band; the turns (comp, from, to,
-    upper, lower) as pulls; the closing lines (comp, pull, upper, lower) across; the line along the middle."""
+    upper, lower) as pulls; the closing lines (comp, pull, upper, lower) across; the lines where the turns stop (comp,
+    from, to, at). ADR 0785 §5: at a jamb with a frame between `top` and `bottom` (distances to the path's left) the left
+    layers turn down to its top face, the right ones up to its bottom face, the inner components run to the jamb behind
+    it; a frame not between the faces' turning layers gives None (the caller turns to the middle)."""
     n = len(w.comps)
     if n < 2 or not any(w.wraps):
         return None
@@ -766,32 +789,56 @@ def wrap_plan(w):
     for k in range(n - 1, n - R - 1, -1):
         b[k] = b[k + 1] + t[k]
     TL, TR = a[L], b[n - R]
-    m = (o[L] + o[n - R]) / 2 if L and R else (o[n] if L else o[0])
+    if frame is None:
+        m = (o[L] + o[n - R]) / 2 if L and R else (o[n] if L else o[0])
+        top = bottom = m
+    else:
+        top, bottom = frame
+        if not (top >= bottom and (L == 0 or top <= o[L]) and (R == 0 or bottom >= o[n - R])):
+            return None
 
     def inner(d):
-        return TL if d > m else TR if d < m else max(TL, TR)
+        over, under = d >= top, d <= bottom
+        return max(TL, TR) if over and under else TL if over else TR if under else F(0)
     pull = [F(0) if k in (0, n) else a[k] if k <= L else b[k] if k >= n - R else inner(o[k]) for k in range(n + 1)]
     band, patches = [], []
     for c in range(n):
         if c < L:
             band.append(a[c])
-            patches.append((c, a[c], a[c + 1], o[c + 1], m))
+            patches.append((c, a[c], a[c + 1], o[c + 1], top))
         elif c >= n - R:
             band.append(b[c + 1])
-            patches.append((c, b[c + 1], b[c], m, o[c]))
-        elif o[c + 1] >= m:
-            band.append(TL)
-        elif o[c] <= m:
-            band.append(TR)
+            patches.append((c, b[c + 1], b[c], bottom, o[c]))
         else:
-            band.append(max(TL, TR))
-            if TL < TR:
-                patches.append((c, TL, TR, o[c], m))
-            elif TR < TL:
-                patches.append((c, TR, TL, m, o[c + 1]))
-    closures = [(j - 1, a[j], o[j], m) for j in range(1, L + 1)] + [(k, b[k], o[k], m) for k in range(n - R, n)]
-    return {"pull": pull, "band": band, "patches": patches, "closures": closures, "m": m,
-            "middle": (L - 1, F(0), max(TL, TR)) if L and R else None, "reach": max(TL, TR)}
+            pieces = []
+            if o[c] > top:
+                pieces.append((o[c], max(o[c + 1], top), TL))
+            hi, lo = min(o[c], top), max(o[c + 1], bottom)
+            if hi > lo:
+                pieces.append((hi, lo, F(0)))
+            if o[c + 1] < bottom:
+                pieces.append((min(o[c], bottom), o[c + 1], TR))
+            deepest = max([F(0)] + [p for _, _, p in pieces])
+            band.append(deepest)
+            for upper, lower, p in pieces:
+                if p < deepest:
+                    patches.append((c, p, deepest, upper, lower))
+    closures = [(j - 1, a[j], o[j], top) for j in range(1, L + 1)] + [(k, b[k], o[k], bottom) for k in range(n - R, n)]
+    middle = []
+    if frame is None or top == bottom:
+        if L and R:
+            middle.append((L - 1, F(0), max(TL, TR), top))
+        elif frame is not None and L:
+            middle.append((L - 1, F(0), TL, top))
+        elif frame is not None and R:
+            middle.append((n - R, F(0), TR, bottom))
+    else:
+        if L:
+            middle.append((L - 1, F(0), TL, top))
+        if R:
+            middle.append((n - R, F(0), TR, bottom))
+    return {"pull": pull, "band": band, "patches": patches, "closures": closures, "middle": middle,
+            "reach": max(TL, TR)}
 
 
 # What each issue says, as ADR 0340 §2 words it: what is wrong, and what resolves it.
@@ -965,7 +1012,10 @@ def cases():
         one = {"name": name, "walls": [w.json() for w in walls], "joints": s.joints, "issues": s.issues,
                "drawn": drawn}
         if any(w.holes for w in walls):
-            one["openings"] = [[[float(a), float(b)] for a, b in w.holes] for w in walls]
+            one["openings"] = [[[float(a), float(b)] + ([] if f is None else [
+                {k: v for k, v in (("depth", float(f[0])), ("offset", None if f[1] is None else float(f[1])),
+                                   ("right", f[2] or None)) if v is not None}])
+                                for (a, b), f in zip(w.holes, w.frames)] for w in walls]
         if any(p is not None for w in walls for p in w.passes):
             one["nodes"] = s.nodes
         c.append(one)
@@ -1044,6 +1094,23 @@ def cases():
          [Wall([(0, 0), (4, 0), (4, 3), (0, 3)], w2, closed=True), Wall([(4, 0), (7, 0)], w2)])
     case("U duvarı iki ucuyla odanın iki köşesine birleşir",
          [Wall([(0, 0), (4, 0), (4, 3), (0, 3)], w2, closed=True), Wall([(4, 0), (7, 0), (7, 3), (4, 3)], w2)])
+    # ADR 0785 §5: at a framed jamb the turning layers turn up to the frame's faces.
+    case("Doğramaya kadar dönüş: ortalanmış kasa, iki yüz sıvalı", [Wall([(0, 0), (6, 0)], F(25, 100), comps=plaster,
+                                                                         wraps=[True, False, True], caps="open",
+                                                                         holes=[(F(3, 2), F(27, 10), (F(8, 100), None, False))])])
+    case("Doğramaya kadar dönüş: kasa dış yüzden 5 cm, yalıtımlı duvar", [Wall([(0, 0), (6, 0)], F(3, 10), comps=insulated,
+                                                                              wraps=[True, True, False, True], caps="open",
+                                                                              holes=[(F(3, 2), F(27, 10), (F(6, 100), F(5, 100), False))])])
+    case("Doğramaya kadar dönüş: sağa açılan kasa, yalnız dış yüz döner", [Wall([(0, 0), (6, 0)], F(25, 100),
+                                                                                comps=[(ins, 4), (None, 1), (sv, 5)],
+                                                                                wraps=[True, False, False], caps="open",
+                                                                                holes=[(F(2), F(3), (F(7, 100), F(3, 100), True))])])
+    case("Doğramaya kadar dönüş: kasa sıvanın içine taşarsa ortada buluşur", [Wall([(0, 0), (6, 0)], F(25, 100), comps=plaster,
+                                                                                   wraps=[True, False, True], caps="open",
+                                                                                   holes=[(F(3, 2), F(27, 10), (F(8, 100), F(0), False))])])
+    case("Doğramaya kadar dönüş: kasalı ve kasasız iki pencere", [Wall([(0, 0), (8, 0)], w2, comps=plaster,
+                                                                       wraps=[True, False, True], caps="open",
+                                                                       holes=[(1, 2, (F(6, 100), None, False)), (5, F(59, 10))])])
     case("Düğüm kararı: yalın duvar konağa tek sayıyla", [Wall([(0, 0), (6, 0)], w2, comps=layered()),
                                                           Wall([(3, 4), (3, 0)], F(15, 100), passes=(None, [1]))])
     return c

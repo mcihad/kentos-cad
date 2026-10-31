@@ -13,6 +13,10 @@ name: string,
  */
 pattern?: string, 
 /**
+ * The project material it is (docs/adr/0785), by its id; absent: a text material.
+ */
+material?: string, 
+/**
  * How many walls have it.
  */
 walls: number, };

@@ -8,6 +8,11 @@ import type { WallDetail } from "./WallDetail";
  */
 export type WallComponent = { name: string, material?: string, 
 /**
+ * The project material it binds to (docs/adr/0785, `settings.arch.materials`), by its id: its `material`, `hatch`
+ * and `edge` are the material's and follow it. Absent: its own text material, as before.
+ */
+materialId?: string, 
+/**
  * Its thickness, metres; absent: what the wall's width leaves of the others (one component at most).
  */
 thickness?: number, 

@@ -38,6 +38,8 @@ fn changed(s: &SlabFields, c: &SlabChange) -> SlabFields {
     }
     if let Some(v) = &c.material {
         f.material.clone_from(v);
+        // A text of its own leaves the project material (docs/adr/0785 §2).
+        f.material_id = None;
     }
     if let Some(v) = &c.edge {
         f.edge = v.as_ref().map(|e| {

@@ -610,6 +610,9 @@ struct Cut {
     s1: f64,
     lo: f64,
     hi: f64,
+    /// A door's or a window's frame across the wall, its faces as distances to the path's left (top, bottom;
+    /// docs/adr/0785 §5).
+    frame: Option<(f64, f64)>,
 }
 
 /// A tee made: what its gaps need.
@@ -1348,6 +1351,10 @@ impl<'a> Solver<'a> {
                         }
                     }
                 };
+                let frame = h
+                    .frame
+                    .and_then(|f| f.across(spec.width))
+                    .map(|(near, far)| (left - near, left - far));
                 Some(Cut {
                     jambs,
                     spans,
@@ -1355,6 +1362,7 @@ impl<'a> Solver<'a> {
                     s1,
                     lo,
                     hi,
+                    frame,
                 })
             })
             .collect()

@@ -194,6 +194,13 @@ pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_commands::
     said(kentos_native_application::openings_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A component's or a slab's project material from Öznitelikler (docs/adr/0785): `operation` through
+/// `cad.materials.edit`; what to say.
+pub fn edit_material(doc: &mut Document, operation: kentos_commands::MaterialsOperation) -> Vec<String> {
+    let input = kentos_commands::MaterialsEdit { operation, expected_revision: None };
+    said(kentos_native_application::materials_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// A room module's action from Öznitelikler (docs/adr/0775 §3): `operation` through `cad.modules.edit`; what to say.
 pub fn edit_module(doc: &mut Document, operation: kentos_commands::ModulesOperation) -> Vec<String> {
     let input = kentos_commands::ModulesEdit { operation, expected_revision: None };

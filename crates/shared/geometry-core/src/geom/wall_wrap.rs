@@ -20,7 +20,7 @@
 use super::{Body, Cut, Line, Path, Solver, Span, line_path, nearest_s};
 use crate::geom::opening::beside;
 use crate::geom::wall::{self, Spec};
-use crate::jsmath::js_max;
+use crate::jsmath::{js_max, js_min};
 
 /// A stretch of the wall near an end, `p0` to `p1` before it, between the distances `upper` and `lower` to the path's
 /// left: a turning layer's turn, or what an inner component keeps where the two faces' turns differ.
@@ -43,8 +43,10 @@ pub(super) struct Wraps {
     pub patches: Vec<Patch>,
     /// Closing lines across the end: the component it belongs to, its pull, from `upper` to `lower`.
     pub closures: Vec<(usize, f64, f64, f64)>,
-    /// The line along `m` from the end to this pull, and the component it is drawn with; none when one face turns.
-    pub middle: Option<(usize, f64, f64)>,
+    /// The lines where the turns stop, from the end: the component each is drawn with, from and to pulls, at a
+    /// distance to the path's left. Along `m` one line when both faces turn and meet; at a frame's faces one per face
+    /// that turns (docs/adr/0785 §5); none when one face turns to the far face.
+    pub middle: Vec<(usize, f64, f64, f64)>,
     /// The deepest pull.
     pub reach: f64,
 }
@@ -52,6 +54,18 @@ pub(super) struct Wraps {
 /// The wall's turning layers' plan; none when no component turns, the components do not fit, or the turning layers are
 /// not the faces' outermost (the contract refuses those).
 pub(super) fn plan(spec: &Spec) -> Option<Wraps> {
+    plan_at(spec, None)
+}
+
+/// The plan at a jamb whose frame stands across the wall between `top` and `bottom` (distances to the path's left,
+/// `top` nearer the left face; docs/adr/0785 §5): the left face's turning layers turn down to the frame's top face, the
+/// right face's up to its bottom face, and the inner components run to the jamb behind the frame. None when the frame
+/// does not stand between the faces' turning layers (the turns then meet at `m`, as at a jamb without a frame).
+pub(super) fn plan_framed(spec: &Spec, top: f64, bottom: f64) -> Option<Wraps> {
+    plan_at(spec, Some((top, bottom)))
+}
+
+fn plan_at(spec: &Spec, frame: Option<(f64, f64)>) -> Option<Wraps> {
     let comps = &spec.components;
     let n = comps.len();
     if n < 2 || !comps.iter().any(|c| c.wrap) {
@@ -73,19 +87,33 @@ pub(super) fn plan(spec: &Spec) -> Option<Wraps> {
         b[k] = b[k + 1] + t[k];
     }
     let (tl, tr) = (a[l], b[n - r]);
-    let m = match (l > 0, r > 0) {
-        (true, true) => (o[l] + o[n - r]) / 2.0,
-        (true, false) => o[n],
-        _ => o[0],
-    };
     let eps = 1e-9 * js_max(1.0, js_max(o[0].abs(), o[n].abs()));
+    // Where the turns stop: the frame's faces, else both at `m`.
+    let (top, bottom) = match frame {
+        Some((top, bottom)) => {
+            if !(top >= bottom - eps && (l == 0 || top <= o[l] + eps) && (r == 0 || bottom >= o[n - r] - eps)) {
+                return None;
+            }
+            (top, bottom)
+        }
+        None => {
+            let m = match (l > 0, r > 0) {
+                (true, true) => (o[l] + o[n - r]) / 2.0,
+                (true, false) => o[n],
+                _ => o[0],
+            };
+            (m, m)
+        }
+    };
+    let meet = (top - bottom).abs() <= eps;
+    // An inner line's pull: above the frame the left turns', below it the right turns', behind it none.
     let inner = |d: f64| {
-        if d > m + eps {
-            tl
-        } else if d < m - eps {
-            tr
-        } else {
-            js_max(tl, tr)
+        let (over, under) = (d >= top - eps, d <= bottom + eps);
+        match (over, under) {
+            (true, true) => js_max(tl, tr),
+            (true, false) => tl,
+            (false, true) => tr,
+            (false, false) => 0.0,
         }
     };
     let pull = (0..=n)
@@ -111,7 +139,7 @@ pub(super) fn plan(spec: &Spec) -> Option<Wraps> {
                 p0: a[c],
                 p1: a[c + 1],
                 upper: o[c + 1],
-                lower: m,
+                lower: top,
             });
         } else if c >= n - r {
             band.push(b[c + 1]);
@@ -119,42 +147,62 @@ pub(super) fn plan(spec: &Spec) -> Option<Wraps> {
                 comp: c,
                 p0: b[c + 1],
                 p1: b[c],
-                upper: m,
+                upper: bottom,
                 lower: o[c],
             });
-        } else if o[c + 1] >= m - eps {
-            band.push(tl);
-        } else if o[c] <= m + eps {
-            band.push(tr);
         } else {
-            band.push(js_max(tl, tr));
-            if tl < tr {
-                patches.push(Patch {
-                    comp: c,
-                    p0: tl,
-                    p1: tr,
-                    upper: o[c],
-                    lower: m,
-                });
-            } else if tr < tl {
-                patches.push(Patch {
-                    comp: c,
-                    p0: tr,
-                    p1: tl,
-                    upper: m,
-                    lower: o[c + 1],
-                });
+            // The component's pieces above, behind and below the frame, each with its pull; its band stops at the
+            // deepest, and the shallower pieces are filled up to it.
+            let mut pieces: Vec<(f64, f64, f64)> = Vec::new();
+            if o[c] > top + eps {
+                pieces.push((o[c], js_max(o[c + 1], top), tl));
+            }
+            let (hi, lo) = (js_min(o[c], top), js_max(o[c + 1], bottom));
+            if hi > lo + eps {
+                pieces.push((hi, lo, 0.0));
+            }
+            if o[c + 1] < bottom - eps {
+                pieces.push((js_min(o[c], bottom), o[c + 1], tr));
+            }
+            let deepest = pieces.iter().fold(0.0, |m, p| js_max(m, p.2));
+            band.push(deepest);
+            for &(upper, lower, p) in &pieces {
+                if p < deepest {
+                    patches.push(Patch {
+                        comp: c,
+                        p0: p,
+                        p1: deepest,
+                        upper,
+                        lower,
+                    });
+                }
             }
         }
     }
     let mut closures = Vec::new();
     for j in 1..=l {
-        closures.push((j - 1, a[j], o[j], m));
+        closures.push((j - 1, a[j], o[j], top));
     }
     for k in n - r..n {
-        closures.push((k, b[k], o[k], m));
+        closures.push((k, b[k], o[k], bottom));
     }
-    let middle = (l > 0 && r > 0).then(|| (l - 1, 0.0, js_max(tl, tr)));
+    let mut middle = Vec::new();
+    if frame.is_none() || meet {
+        if l > 0 && r > 0 {
+            middle.push((l - 1, 0.0, js_max(tl, tr), top));
+        } else if frame.is_some() && l > 0 {
+            middle.push((l - 1, 0.0, tl, top));
+        } else if frame.is_some() && r > 0 {
+            middle.push((n - r, 0.0, tr, bottom));
+        }
+    } else {
+        if l > 0 {
+            middle.push((l - 1, 0.0, tl, top));
+        }
+        if r > 0 {
+            middle.push((n - r, 0.0, tr, bottom));
+        }
+    }
     Some(Wraps {
         pull,
         band,
@@ -269,6 +317,9 @@ impl Solver<'_> {
         let through: Vec<usize> = (0..holes.len())
             .filter(|&h| holes[h].lo <= right + eps && holes[h].hi >= left - eps)
             .collect();
+        // A jamb with a frame turns its layers up to the frame's faces (docs/adr/0785 §5): its own plan.
+        let mut framed: Vec<Wraps> = Vec::new();
+        let mut sides: Vec<(EndSide, Option<usize>)> = sides.into_iter().map(|s| (s, None)).collect();
         for &h in &through {
             let (s0, s1) = (holes[h].s0, holes[h].s1);
             let fits = (spec.closed || (s0 - w.reach > eps && s1 + w.reach < len - eps))
@@ -278,27 +329,39 @@ impl Solver<'_> {
             if !fits {
                 continue;
             }
+            let own = holes[h].frame.and_then(|(top, bottom)| plan_framed(spec, top, bottom));
+            let at = own.map(|p| {
+                framed.push(p);
+                framed.len() - 1
+            });
+            let plan = at.map_or(w, |k| &framed[k]);
             // Each line's span grown by its pull on both sides; the bands cut by their own.
-            for (k, lp) in paths.iter().enumerate() {
-                if let Some(lp) = lp {
-                    holes[h].spans[k] = span_on(lp, base, s0 - w.pull[k], s1 + w.pull[k], o[k]);
+            let grown: Vec<Option<Span>> = paths
+                .iter()
+                .enumerate()
+                .map(|(k, lp)| lp.as_ref().map(|lp| span_on(lp, base, s0 - plan.pull[k], s1 + plan.pull[k], o[k])))
+                .collect();
+            for (k, g) in grown.into_iter().enumerate() {
+                if let Some(g) = g {
+                    holes[h].spans[k] = g;
                 }
             }
             for c in 0..n {
                 let (Some(pa), Some(pb)) = (&paths[c], &paths[c + 1]) else {
                     continue;
                 };
-                let p = w.band[c];
+                let p = plan.band[c];
                 out.cuts[c].push((
                     span_on(pa, base, s0 - p, s1 + p, o[c]),
                     span_on(pb, base, s0 - p, s1 + p, o[c + 1]),
                 ));
             }
             out.wrapped.push(h);
-            sides.push(EndSide { e: s0, into: -1.0 });
-            sides.push(EndSide { e: s1, into: 1.0 });
+            sides.push((EndSide { e: s0, into: -1.0 }, at));
+            sides.push((EndSide { e: s1, into: 1.0 }, at));
         }
-        for side in &sides {
+        for (side, at) in &sides {
+            let w = at.map_or(w, |k| &framed[k]);
             for p in &w.patches {
                 let (a, b) = side.interval(p.p0, p.p1);
                 if let Some(body) = self.between(i, base, a, b, p.upper, p.lower) {
@@ -315,14 +378,9 @@ impl Solver<'_> {
                     },
                 ));
             }
-            if let Some((comp, p0, p1)) = w.middle {
+            for &(comp, p0, p1, d) in &w.middle {
                 let (a, b) = side.interval(p0, p1);
-                let m = w
-                    .patches
-                    .iter()
-                    .find(|p| p.comp == comp)
-                    .map_or(0.0, |p| p.lower);
-                if let Some(line) = self.stretch(i, base, a, b, m) {
+                if let Some(line) = self.stretch(i, base, a, b, d) {
                     out.closures.push((comp, line));
                 }
             }
