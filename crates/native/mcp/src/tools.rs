@@ -664,6 +664,8 @@ fn command_tool(c: &Value) -> Value {
             // A material's change rewrites the styles, walls and slabs bound to it (docs/adr/0785).
             | "cad.materials.edit"
             | "cad.modules.edit"
+            // Accepting or deleting an option deletes its objects (docs/adr/0788).
+            | "cad.options.edit"
             // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
             | "cad.spaces.edit"
             | "cad.spaces.separators"

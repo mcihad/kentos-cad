@@ -8467,6 +8467,33 @@ class OpeningsOperation(_Union):
         return _variant(_OPENINGS_OPERATION, "OpeningsOperation", "kind", data).from_json(data)
 
 
+class OptionsOperation(_Union):
+    """What `cad.options.edit` does.
+
+    One of:
+
+    - :class:`DefineOptionsOperation` (``kind: define``)
+    - :class:`CopyOptionsOperation` (``kind: copy``)
+    - :class:`AddMembersOptionsOperation` (``kind: addMembers``)
+    - :class:`RemoveMembersOptionsOperation` (``kind: removeMembers``)
+    - :class:`PrimaryOptionsOperation` (``kind: primary``)
+    - :class:`AcceptOptionsOperation` (``kind: accept``)
+    - :class:`DeleteOptionsOperation` (``kind: delete``)
+    - :class:`RenameOptionsOperation` (``kind: rename``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsOperation:
+        return _variant(_OPTIONS_OPERATION, "OptionsOperation", "kind", data).from_json(data)
+
+
 class PaperAnnotationScale(_Union):
     """Annotation representation selection is independent of the physical camera and its lock.
 
@@ -12146,6 +12173,7 @@ class ArchSettings(_Model):
         materials: The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
         modules: The project's room modules and their instances (docs/adr/0775, KCAD 142).
         opening_types: The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
+        options: The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         program: The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
@@ -12161,6 +12189,7 @@ class ArchSettings(_Model):
     materials: list[ArchMaterial] | Unset = UNSET
     modules: list[ArchModule] | Unset = UNSET
     opening_types: list[OpeningType] | Unset = UNSET
+    options: list[OptionSet] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     program: BuildingProgram | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
@@ -12186,6 +12215,8 @@ class ArchSettings(_Model):
             out["modules"] = [e0.to_json() for e0 in self.modules]
         if self.opening_types is not UNSET:
             out["openingTypes"] = [e0.to_json() for e0 in self.opening_types]
+        if self.options is not UNSET:
+            out["options"] = [e0.to_json() for e0 in self.options]
         if self.phase_view is not UNSET:
             out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
         if self.program is not UNSET:
@@ -12211,6 +12242,7 @@ class ArchSettings(_Model):
             materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
             modules=[ArchModule.from_json(e0) for e0 in data["modules"]] if "modules" in data else UNSET,
             opening_types=[OpeningType.from_json(e0) for e0 in data["openingTypes"]] if "openingTypes" in data else UNSET,
+            options=[OptionSet.from_json(e0) for e0 in data["options"]] if "options" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             program=BuildingProgram.from_json(data["program"]) if "program" in data else UNSET,
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
@@ -19136,6 +19168,30 @@ class DerivedEntitiesPlan(_Model):
             added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
             updated=[Entity.from_json(e0) for e0 in data["updated"]] if "updated" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DesignOption(_Model):
+    """One alternative of a set: its id, its name and its objects by their persistent ids."""
+    id: str
+    name: str
+    members: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.members is not UNSET:
+            out["members"] = list(self.members)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DesignOption:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            members=list(data["members"]) if "members" in data else UNSET,
         )
 
 
@@ -43824,6 +43880,428 @@ class OperationStep(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OptionChange(_Model):
+    """A pair of objects found in both options, changed.
+    Attributes:
+        what: What differs: `geometry`, `attributes` or both.
+    """
+    a: str
+    b: str
+    what: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = self.a
+        out["b"] = self.b
+        out["what"] = self.what
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionChange:
+        return cls(
+            a=data["a"],
+            b=data["b"],
+            what=data["what"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionChoice(_Model):
+    """A view's choice of one set's option (docs/adr/0788 §3): the set's id and the option's."""
+    set: str
+    option: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["option"] = self.option
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionChoice:
+        return cls(
+            set=data["set"],
+            option=data["option"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionKindCount(_Model):
+    """How many objects of a kind an option holds.
+    Attributes:
+        count: Unit: count.
+    """
+    kind: str
+    count: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["count"] = self.count
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionKindCount:
+        return cls(
+            kind=data["kind"],
+            count=data["count"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionKindDifference(_Model):
+    """A kind counted in both options of a comparison.
+    Attributes:
+        a: Unit: count.
+        b: Unit: count.
+    """
+    kind: str
+    a: int
+    b: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["a"] = self.a
+        out["b"] = self.b
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionKindDifference:
+        return cls(
+            kind=data["kind"],
+            a=data["a"],
+            b=data["b"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionRow(_Model):
+    """An option as `cad.options.query` reads it: its objects counted by kind, its spaces' area and its walls' length.
+    Attributes:
+        objects: Unit: count.
+        missing: Its objects gone from the drawing. Unit: count.
+        space_area: Its spaces' areas summed, in the drawing's unit squared. Unit: area.
+        wall_length: Its walls' base lines' lengths summed. Unit: length.
+    """
+    id: str
+    name: str
+    primary: bool
+    objects: int
+    missing: int
+    kinds: list[OptionKindCount]
+    space_area: float
+    wall_length: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["primary"] = self.primary
+        out["objects"] = self.objects
+        out["missing"] = self.missing
+        out["kinds"] = [e0.to_json() for e0 in self.kinds]
+        out["spaceArea"] = float(self.space_area)
+        out["wallLength"] = float(self.wall_length)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionRow:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            primary=data["primary"],
+            objects=data["objects"],
+            missing=data["missing"],
+            kinds=[OptionKindCount.from_json(e0) for e0 in data["kinds"]],
+            space_area=float(data["spaceArea"]),
+            wall_length=float(data["wallLength"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionSet(_Model):
+    """A set of alternatives for one part of the plan, one of them primary (the one the drawing shows).
+    Attributes:
+        primary: The id of the option the drawing shows.
+    """
+    id: str
+    name: str
+    primary: str
+    options: list[DesignOption]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["primary"] = self.primary
+        out["options"] = [e0.to_json() for e0 in self.options]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionSet:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            primary=data["primary"],
+            options=[DesignOption.from_json(e0) for e0 in data["options"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionSetRow(_Model):
+    """A set as `cad.options.query` reads it."""
+    id: str
+    name: str
+    primary: str
+    options: list[OptionRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["primary"] = self.primary
+        out["options"] = [e0.to_json() for e0 in self.options]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionSetRow:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            primary=data["primary"],
+            options=[OptionRow.from_json(e0) for e0 in data["options"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionsCompare(_Model):
+    """Two options of one set to compare (docs/adr/0788 §2): `a` the one compared against, `b` the other; objects paired
+    by place as Veri karşılaştır pairs them (docs/adr/0179), within `search` (absent: 0.5 m in the drawing's unit) and
+    the same within `tolerance` (absent: 1 mm).
+    Attributes:
+        search: Unit: length.
+        tolerance: Unit: length.
+    """
+    set: str
+    a: str
+    b: str
+    search: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["a"] = self.a
+        out["b"] = self.b
+        if self.search is not UNSET:
+            out["search"] = None if self.search is None else float(self.search)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsCompare:
+        return cls(
+            set=data["set"],
+            a=data["a"],
+            b=data["b"],
+            search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionsCompared(_Model):
+    """Two options compared: the objects paired as the same, those only in `b` (added) and only in `a` (removed), the
+    pairs changed, and the differences in counts and areas (b − a).
+    Attributes:
+        same: Unit: count.
+        space_area: Unit: area.
+        wall_length: Unit: length.
+        kinds: Each kind's count in `a` and in `b`, where they differ.
+    """
+    set: str
+    a: str
+    b: str
+    same: int
+    space_area: float
+    wall_length: float
+    added: list[str] | Unset = UNSET
+    changed: list[OptionChange] | Unset = UNSET
+    kinds: list[OptionKindDifference] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["a"] = self.a
+        out["b"] = self.b
+        out["same"] = self.same
+        out["spaceArea"] = float(self.space_area)
+        out["wallLength"] = float(self.wall_length)
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
+        if self.changed is not UNSET:
+            out["changed"] = [e0.to_json() for e0 in self.changed]
+        if self.kinds is not UNSET:
+            out["kinds"] = [e0.to_json() for e0 in self.kinds]
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsCompared:
+        return cls(
+            set=data["set"],
+            a=data["a"],
+            b=data["b"],
+            same=data["same"],
+            space_area=float(data["spaceArea"]),
+            wall_length=float(data["wallLength"]),
+            added=list(data["added"]) if "added" in data else UNSET,
+            changed=[OptionChange.from_json(e0) for e0 in data["changed"]] if "changed" in data else UNSET,
+            kinds=[OptionKindDifference.from_json(e0) for e0 in data["kinds"]] if "kinds" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionsEdit(_Model):
+    """Input of `cad.options.edit` v1.
+
+    Refusals: `invalid_input`, `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked`, `option_set_exists`,
+    `option_set_not_found`, `option_not_found`, `option_exists`, `option_member_taken`, `not_in_option`,
+    `option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.
+    """
+    operation: OptionsOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsEdit:
+        return cls(
+            operation=OptionsOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionsEdited(_Model):
+    """Output of `cad.options.edit` (and its plan): the set after, the option made or named, the objects made, deleted
+    and given back to the main model.
+    Attributes:
+        option: The option made (Tanımla, Kopyala) or the one the operation named.
+        released: The objects that are the main model's now (Kabul et, Seçenekten çıkar).
+        set: The set after; none once accepted.
+    """
+    revision: str
+    created: list[str] | Unset = UNSET
+    deleted: list[str] | Unset = UNSET
+    option: str | None | Unset = UNSET
+    released: list[str] | Unset = UNSET
+    set: OptionSet | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        if self.created is not UNSET:
+            out["created"] = list(self.created)
+        if self.deleted is not UNSET:
+            out["deleted"] = list(self.deleted)
+        if self.option is not UNSET:
+            out["option"] = self.option
+        if self.released is not UNSET:
+            out["released"] = list(self.released)
+        if self.set is not UNSET:
+            out["set"] = None if self.set is None else self.set.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsEdited:
+        return cls(
+            revision=data["revision"],
+            created=list(data["created"]) if "created" in data else UNSET,
+            deleted=list(data["deleted"]) if "deleted" in data else UNSET,
+            option=data.get("option", UNSET),
+            released=list(data["released"]) if "released" in data else UNSET,
+            set=UNSET if "set" not in data else None if data["set"] is None else OptionSet.from_json(data["set"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionsQueried(_Model):
+    """Output of `cad.options.query`.
+    Attributes:
+        set: With `uid`: its set and option.
+    """
+    sets: list[OptionSetRow]
+    revision: str
+    compared: OptionsCompared | None | Unset = UNSET
+    option: str | None | Unset = UNSET
+    set: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sets"] = [e0.to_json() for e0 in self.sets]
+        out["revision"] = self.revision
+        if self.compared is not UNSET:
+            out["compared"] = None if self.compared is None else self.compared.to_json()
+        if self.option is not UNSET:
+            out["option"] = self.option
+        if self.set is not UNSET:
+            out["set"] = self.set
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsQueried:
+        return cls(
+            sets=[OptionSetRow.from_json(e0) for e0 in data["sets"]],
+            revision=data["revision"],
+            compared=UNSET if "compared" not in data else None if data["compared"] is None else OptionsCompared.from_json(data["compared"]),
+            option=data.get("option", UNSET),
+            set=data.get("set", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OptionsQuery(_Model):
+    """Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, and two
+    options compared.
+
+    Refusals: `option_set_not_found`, `option_not_found`, `invalid_uid`, `entity_not_found`, `not_in_option`,
+    `invalid_input`.
+    """
+    compare: OptionsCompare | None | Unset = UNSET
+    set: str | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.compare is not UNSET:
+            out["compare"] = None if self.compare is None else self.compare.to_json()
+        if self.set is not UNSET:
+            out["set"] = self.set
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OptionsQuery:
+        return cls(
+            compare=UNSET if "compare" not in data else None if data["compare"] is None else OptionsCompare.from_json(data["compare"]),
+            set=data.get("set", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageEmbedded(_Model):
     """A bound layer's link embedded in the package (docs/adr/0596 §1): removed, the layer holding its objects.
     Attributes:
@@ -68166,6 +68644,7 @@ class ViewRecipe(_Model):
         layer_state: A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.
         level: The level the map draws; none: the map's own.
         mono: Every line black, hatches grey (docs/adr/0783 §1); a pen's colour still wins.
+        options: The design options it shows (docs/adr/0788 §3), a set's choice each; a set not named shows its primary.
         pens: The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a
             view), each category once, in their order.
         phase: The phases it shows (docs/adr/0346 §2); none: the project's phase view.
@@ -68180,6 +68659,7 @@ class ViewRecipe(_Model):
     layer_state: str | None | Unset = UNSET
     level: RecipeLevel | None | Unset = UNSET
     mono: bool | Unset = UNSET
+    options: list[OptionChoice] | Unset = UNSET
     pens: list[RecipePen] | Unset = UNSET
     phase: PhaseView | PhaseViewName | None | Unset = UNSET
     scale: int | None | Unset = UNSET
@@ -68200,6 +68680,8 @@ class ViewRecipe(_Model):
             out["level"] = None if self.level is None else self.level.to_json()
         if self.mono is not UNSET:
             out["mono"] = self.mono
+        if self.options is not UNSET:
+            out["options"] = [e0.to_json() for e0 in self.options]
         if self.pens is not UNSET:
             out["pens"] = [e0.to_json() for e0 in self.pens]
         if self.phase is not UNSET:
@@ -68221,6 +68703,7 @@ class ViewRecipe(_Model):
             layer_state=data.get("layerState", UNSET),
             level=UNSET if "level" not in data else None if data["level"] is None else RecipeLevel.from_json(data["level"]),
             mono=data.get("mono", UNSET),
+            options=[OptionChoice.from_json(e0) for e0 in data["options"]] if "options" in data else UNSET,
             pens=[RecipePen.from_json(e0) for e0 in data["pens"]] if "pens" in data else UNSET,
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(PhaseView, data["phase"]),
             scale=data.get("scale", UNSET),
@@ -79833,6 +80316,205 @@ class DistanceOpeningsOperation(OpeningsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class DefineOptionsOperation(OptionsOperation):
+    """Seçenek kümesi tanımla: the objects `uids` (in no option) become the set `name`'s first option (`option`,
+    absent: “A”), its primary; they stay where they are. A main-model object leaning on one of them (an opening on
+    a wall, a tag on a space) or one of them leaning on another option's object refuses it.
+    """
+    TAG_VALUE: ClassVar[str] = "define"
+    name: str
+    uids: list[str]
+    id: str | None | Unset = UNSET
+    option: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "define"}
+        out["name"] = self.name
+        out["uids"] = list(self.uids)
+        if self.id is not UNSET:
+            out["id"] = self.id
+        if self.option is not UNSET:
+            out["option"] = self.option
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DefineOptionsOperation:
+        return cls(
+            name=data["name"],
+            uids=list(data["uids"]),
+            id=data.get("id", UNSET),
+            option=data.get("option", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CopyOptionsOperation(OptionsOperation):
+    """Seçeneği kopyala: a new option of `set`, an independent copy of the option `option`'s objects in their places
+    (their references to each other made the copies'), named `name` (absent: the next letter); primary when asked.
+    """
+    TAG_VALUE: ClassVar[str] = "copy"
+    set: str
+    option: str
+    name: str | None | Unset = UNSET
+    primary: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "copy"}
+        out["set"] = self.set
+        out["option"] = self.option
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.primary is not UNSET:
+            out["primary"] = self.primary
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CopyOptionsOperation:
+        return cls(
+            set=data["set"],
+            option=data["option"],
+            name=data.get("name", UNSET),
+            primary=data.get("primary", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AddMembersOptionsOperation(OptionsOperation):
+    """Seçeneğe ekle: the main model's objects `uids` join the option."""
+    TAG_VALUE: ClassVar[str] = "addMembers"
+    set: str
+    option: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "addMembers"}
+        out["set"] = self.set
+        out["option"] = self.option
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AddMembersOptionsOperation:
+        return cls(
+            set=data["set"],
+            option=data["option"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveMembersOptionsOperation(OptionsOperation):
+    """Seçenekten çıkar: the objects `uids` (of the set's options) go back to the main model."""
+    TAG_VALUE: ClassVar[str] = "removeMembers"
+    set: str
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "removeMembers"}
+        out["set"] = self.set
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveMembersOptionsOperation:
+        return cls(
+            set=data["set"],
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PrimaryOptionsOperation(OptionsOperation):
+    """Birincil yap: the drawing shows `option` of the set."""
+    TAG_VALUE: ClassVar[str] = "primary"
+    set: str
+    option: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "primary"}
+        out["set"] = self.set
+        out["option"] = self.option
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PrimaryOptionsOperation:
+        return cls(
+            set=data["set"],
+            option=data["option"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AcceptOptionsOperation(OptionsOperation):
+    """Seçeneği kabul et: `option` (absent: the primary) becomes the main model; the set's other options' objects are
+    deleted and the set goes. An object on a locked layer refuses it.
+    """
+    TAG_VALUE: ClassVar[str] = "accept"
+    set: str
+    option: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "accept"}
+        out["set"] = self.set
+        if self.option is not UNSET:
+            out["option"] = self.option
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AcceptOptionsOperation:
+        return cls(
+            set=data["set"],
+            option=data.get("option", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DeleteOptionsOperation(OptionsOperation):
+    """Seçeneği sil: a non-primary option goes with its objects."""
+    TAG_VALUE: ClassVar[str] = "delete"
+    set: str
+    option: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "delete"}
+        out["set"] = self.set
+        out["option"] = self.option
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeleteOptionsOperation:
+        return cls(
+            set=data["set"],
+            option=data["option"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenameOptionsOperation(OptionsOperation):
+    """Yeniden adlandır: the set (no `option`) or one of its options."""
+    TAG_VALUE: ClassVar[str] = "rename"
+    set: str
+    name: str
+    option: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rename"}
+        out["set"] = self.set
+        out["name"] = self.name
+        if self.option is not UNSET:
+            out["option"] = self.option
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameOptionsOperation:
+        return cls(
+            set=data["set"],
+            name=data["name"],
+            option=data.get("option", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AutoPaperAnnotationScale(PaperAnnotationScale):
     TAG_VALUE: ClassVar[str] = "auto"
 
@@ -87903,6 +88585,9 @@ _OPENING_TYPES_OPERATION: dict[str, type[OpeningTypesOperation]] = {"define": De
 _OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "detach": DetachOpeningsOperation, "push": PushOpeningsOperation, "refresh": RefreshOpeningsOperation, "reset": ResetOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
 
 
+_OPTIONS_OPERATION: dict[str, type[OptionsOperation]] = {"define": DefineOptionsOperation, "copy": CopyOptionsOperation, "addMembers": AddMembersOptionsOperation, "removeMembers": RemoveMembersOptionsOperation, "primary": PrimaryOptionsOperation, "accept": AcceptOptionsOperation, "delete": DeleteOptionsOperation, "rename": RenameOptionsOperation}
+
+
 _PAPER_ANNOTATION_SCALE: dict[str, type[PaperAnnotationScale]] = {"auto": AutoPaperAnnotationScale, "fixed": FixedPaperAnnotationScale}
 
 
@@ -88081,6 +88766,7 @@ _XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperat
 
 
 __all__ = [
+    "AcceptOptionsOperation",
     "AccessSource",
     "AccessSourceName",
     "AccuracyReport",
@@ -88100,6 +88786,7 @@ __all__ = [
     "AddItemsPaperOp",
     "AddMasterPaperOp",
     "AddMembersModulesOperation",
+    "AddMembersOptionsOperation",
     "AddParameterEdit",
     "AddSheetPaperOp",
     "AddSlabsOperation",
@@ -88560,6 +89247,7 @@ __all__ = [
     "CoordinatesAnnotationWork",
     "CoordinatesTableSource",
     "CopyOpeningsOperation",
+    "CopyOptionsOperation",
     "CornerHatchOrigin",
     "CornerPick",
     "CornersRectangleFrame",
@@ -88618,10 +89306,12 @@ __all__ = [
     "DefineMaterialsOperation",
     "DefineModulesOperation",
     "DefineOpeningTypesOperation",
+    "DefineOptionsOperation",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
     "DeleteDimensionSetEdit",
     "DeleteFeatureChange",
+    "DeleteOptionsOperation",
     "DeleteRowsTableEdit",
     "DeleteUcsTo",
     "DeleteViewsOp",
@@ -88635,6 +89325,7 @@ __all__ = [
     "DerivationTable",
     "DeriveWork",
     "DerivedEntitiesPlan",
+    "DesignOption",
     "DetachArchOperation",
     "DetachDimensionSetEdit",
     "DetachMasterPaperOp",
@@ -89715,7 +90406,21 @@ __all__ = [
     "OpeningsQueried",
     "OpeningsQuery",
     "OperationStep",
+    "OptionChange",
+    "OptionChoice",
+    "OptionKindCount",
+    "OptionKindDifference",
+    "OptionRow",
+    "OptionSet",
+    "OptionSetRow",
+    "OptionsCompare",
+    "OptionsCompared",
     "OptionsDimensionEdit",
+    "OptionsEdit",
+    "OptionsEdited",
+    "OptionsOperation",
+    "OptionsQueried",
+    "OptionsQuery",
     "OrderTo",
     "OrderToName",
     "OrdinateDimensionMeasure",
@@ -90032,6 +90737,7 @@ __all__ = [
     "PolylinePlan",
     "PredefinedPaperAtlasScale",
     "PreflightSheets",
+    "PrimaryOptionsOperation",
     "ProcessingBatch",
     "ProcessingBatched",
     "ProcessingRan",
@@ -90288,6 +90994,7 @@ __all__ = [
     "RemoveMasterPaperOp",
     "RemoveMaterialsOperation",
     "RemoveMembersModulesOperation",
+    "RemoveMembersOptionsOperation",
     "RemoveModulesOperation",
     "RemoveOpeningTypesOperation",
     "RemoveParameterEdit",
@@ -90301,6 +91008,7 @@ __all__ = [
     "RenameLayerMigrationStep",
     "RenameModulesOperation",
     "RenameOpeningTypesOperation",
+    "RenameOptionsOperation",
     "RenameParameterEdit",
     "RenameSheetPaperOp",
     "RenameViewsOp",

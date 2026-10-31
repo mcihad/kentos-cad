@@ -90,7 +90,7 @@ use kentos_native_application::{
     layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
     layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define,
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
-    openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
+    openings_edit, opening_types_edit, materials_edit, openings_query, modules_edit, modules_query, options_edit, options_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
     settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, slabs_create,
     slabs_edit, snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit,
@@ -1600,6 +1600,18 @@ impl Input for kentos_commands::WallsDistancesInput {
 }
 
 impl Input for kentos_commands::OpeningsDistancesInput {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::OptionsQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::OptionsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -4326,6 +4338,9 @@ fn run_op(
         // Oda modülleri (docs/adr/0775).
         kentos_commands::CAD_MODULES_EDIT => run!(modules_edit, kentos_commands::ModulesEdit),
         kentos_commands::CAD_MODULES_QUERY => run!(modules_query, kentos_commands::ModulesQuery),
+        // Tasarım seçenekleri (docs/adr/0788).
+        kentos_commands::CAD_OPTIONS_EDIT => run!(options_edit, kentos_commands::OptionsEdit),
+        kentos_commands::CAD_OPTIONS_QUERY => run!(options_query, kentos_commands::OptionsQuery),
         kentos_commands::CAD_WALLS_DISTANCES => {
             run!(walls_distances, kentos_commands::WallsDistancesInput)
         }

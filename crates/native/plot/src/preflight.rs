@@ -393,6 +393,7 @@ mod tests {
                 hidden: &map.hidden,
                 pens: &map.pens,
                 mono: map.mono,
+                options: &map.options,
                 doc: &doc,
                 store: spatial.store(),
                 library: &library,

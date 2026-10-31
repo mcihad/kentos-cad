@@ -95,6 +95,7 @@ mod materials;
 mod arch_modules;
 mod view_area;
 pub use view_area::ViewArea;
+pub mod arch_options;
 mod source_steps;
 mod lineage;
 

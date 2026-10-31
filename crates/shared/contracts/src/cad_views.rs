@@ -205,6 +205,10 @@ pub struct ViewRecipe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub template: Option<String>,
+    /// The design options it shows (docs/adr/0788 §3), a set's choice each; a set not named shows its primary.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionChoice>>", optional))]
+    pub options: Vec<crate::OptionChoice>,
 }
 
 fn is_zero(v: &u32) -> bool {
@@ -224,6 +228,7 @@ impl ViewRecipe {
             && self.pens.is_empty()
             && !self.mono
             && self.template.is_none()
+            && self.options.is_empty()
     }
 
     /// The pen of `category`, if the recipe gives one.
@@ -371,13 +376,17 @@ pub fn template_id_of_name(name: &str) -> String {
     format!("t-{}", &view_id_of_name(name)[2..])
 }
 
-/// What is wrong with a template's recipe: the recipe's own rule, then no level, crop or template.
+/// What is wrong with a template's recipe: the recipe's own rule, then no level, crop, template or design options
+/// (docs/adr/0788 §3: like the level, the option a view shows is the view's own).
 pub fn template_problem(r: &ViewRecipe) -> Option<String> {
     if let Some(why) = recipe_problem(r) {
         return Some(why);
     }
     if r.level.is_some() || r.crop || r.template.is_some() {
         return Some("Görünüş şablonu kat, kırpma ya da başka şablon taşımaz: bunlar görünümündür.".into());
+    }
+    if !r.options.is_empty() {
+        return Some("Görünüş şablonu tasarım seçeneği taşımaz: hangi seçeneğin gösterileceği görünümündür.".into());
     }
     None
 }
@@ -433,7 +442,8 @@ pub fn sanitized_view_templates(templates: Vec<ViewTemplate>) -> Vec<ViewTemplat
 }
 
 /// A recipe as a map draws it (docs/adr/0783 §2): one following a template takes its fields, keeping its own version,
-/// level and crop; the template's id is left out. One whose template is gone draws as it is.
+/// level, crop and design options (docs/adr/0788 §3); the template's id is left out. One whose template is gone draws
+/// as it is.
 pub fn resolved_recipe(r: &ViewRecipe, templates: &[ViewTemplate]) -> ViewRecipe {
     let Some(id) = &r.template else {
         return r.clone();
@@ -445,6 +455,7 @@ pub fn resolved_recipe(r: &ViewRecipe, templates: &[ViewTemplate]) -> ViewRecipe
         version: r.version,
         level: r.level.clone(),
         crop: r.crop,
+        options: r.options.clone(),
         template: None,
         ..t.recipe.clone()
     }
@@ -469,6 +480,9 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
     }
     if r.is_empty() {
         return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin.".into());
+    }
+    if let Some(why) = crate::option_choices_problem(&r.options) {
+        return Some(why);
     }
     if let Some(l) = &r.level
         && (l.id.trim().is_empty() || l.id.chars().count() > MOST_VIEW_NAME || l.id.chars().any(char::is_control))

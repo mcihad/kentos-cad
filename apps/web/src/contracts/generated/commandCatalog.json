@@ -21633,6 +21633,373 @@
       ]
     },
     {
+      "id": "cad.options.edit",
+      "version": 1,
+      "title": "Tasarım seçeneği",
+      "summary": "Planın bir parçası için sınırlı alternatifler (mutfak A/B) kurar ve yönetir (docs/adr/0788); her yazma tek geri alma adımı “Tasarım seçeneği”. Çizim, paftalar, metraj ve çizelgeler ana modeli ve her kümenin birincil seçeneğini gösterir; görünüş tarifi (cad.views.edit recipe.options) başka bir seçeneği seçebilir. Aynı kümenin seçenekleri birbirini görmez: duvarları birleşmez, açıklıkları çakışmaz, mahal sınırını ana model ve kendi seçeneğinin duvarlarında bulur. operation: define (name, id ve option isteğe bağlı, uids: hiçbir seçenekte olmayan nesneler; ilk seçenek birincil), copy (set, option, name, primary: seçeneğin nesnelerinin bağımsız kopyası aynı yerde, aralarındaki bağlar kopyalara çevrilir), addMembers (set, option, uids: ana modelden seçeneğe), removeMembers (set, uids: seçenekten ana modele), primary (set, option), accept (set, option yoksa birincil: seçenek ana model olur, öbür seçeneklerin nesneleri silinir, küme kalkar), delete (set, option: birincil olmayan seçenek nesneleriyle silinir), rename (set, option isteğe bağlı, name). Ana modelin bir nesnesi seçeneğin nesnesine ya da bir seçeneğin nesnesi başka bir seçeneğinkine bağlıysa option_leaning. Otomatik birleştirme yoktur. Evre seçenek kimliği değildir.",
+      "aliases": [
+        "SECENEK"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.options.edit` v1.\n\nRefusals: `invalid_input`, `no_entities`, `invalid_uid`, `entity_not_found`, `layer_locked`, `option_set_exists`,\n`option_set_not_found`, `option_not_found`, `option_exists`, `option_member_taken`, `not_in_option`,\n`option_leaning`, `option_primary`, `option_set_full`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/OptionsOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "OptionsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.options.edit` (and its plan): the set after, the option made or named, the objects made, deleted\nand given back to the main model.",
+        "properties": {
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "deleted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "option": {
+            "description": "The option made (Tanımla, Kopyala) or the one the operation named.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "released": {
+            "description": "The objects that are the main model's now (Kabul et, Seçenekten çıkar).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "set": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionSet"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The set after; none once accepted."
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "OptionsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.options.edit` (and its plan): the set after, the option made or named, the objects made, deleted\nand given back to the main model.",
+        "properties": {
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "deleted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "option": {
+            "description": "The option made (Tanımla, Kopyala) or the one the operation named.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "released": {
+            "description": "The objects that are the main model's now (Kabul et, Seçenekten çıkar).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "set": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionSet"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The set after; none once accepted."
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "OptionsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "layer_locked",
+          "option_set_exists",
+          "option_set_not_found",
+          "option_not_found",
+          "option_exists",
+          "option_member_taken",
+          "not_in_option",
+          "option_leaning",
+          "option_primary",
+          "option_set_full",
+          "nothing_to_set",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mutfağın nesnelerinden seçenek kümesi",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Mutfak",
+              "uids": [
+                "0192f5a1-7880-7000-8000-000000000005"
+              ]
+            }
+          }
+        },
+        {
+          "title": "A'nın kopyasından B seçeneği",
+          "input": {
+            "operation": {
+              "kind": "copy",
+              "name": "B",
+              "option": "a",
+              "set": "mutfak"
+            }
+          }
+        },
+        {
+          "title": "B'yi kabul et",
+          "input": {
+            "operation": {
+              "kind": "accept",
+              "option": "b",
+              "set": "mutfak"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.options.query",
+      "version": 1,
+      "title": "Tasarım seçeneklerini oku",
+      "summary": "Projenin tasarım seçeneği kümelerini okur (docs/adr/0788); çizimi değiştirmez. set ile tek küme; her seçeneğin nesne sayısı, türlere göre sayıları, mahallerinin alanı (çizim biriminin karesi), duvarlarının boyu, silinmiş nesneleri. uid ile nesnenin kümesi ve seçeneği. compare (set, a, b, search, tolerance) iki seçeneği Veri karşılaştır'ın kuralıyla konumdan eşler: aynı sayısı, yalnız b'de (added), yalnız a'da (removed), değişen çiftler, alan ve duvar boyu farkı (b − a), sayısı farklı türler.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.options.query` v1 (read-only): the sets (one: `set`), the option an object (`uid`) is in, and two\noptions compared.\n\nRefusals: `option_set_not_found`, `option_not_found`, `invalid_uid`, `entity_not_found`, `not_in_option`,\n`invalid_input`.",
+        "properties": {
+          "compare": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionsCompare"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "set": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uid": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "OptionsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.options.query`.",
+        "properties": {
+          "compared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionsCompared"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "option": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "set": {
+            "description": "With `uid`: its set and option.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/OptionSetRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sets",
+          "revision"
+        ],
+        "title": "OptionsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.options.query`.",
+        "properties": {
+          "compared": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OptionsCompared"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "option": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "set": {
+            "description": "With `uid`: its set and option.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/OptionSetRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sets",
+          "revision"
+        ],
+        "title": "OptionsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "option_set_not_found",
+          "option_not_found",
+          "invalid_uid",
+          "entity_not_found",
+          "not_in_option",
+          "invalid_input"
+        ],
+        "warnings": [
+          "option_member_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mutfağın A ve B seçeneklerini karşılaştır",
+          "input": {
+            "compare": {
+              "a": "a",
+              "b": "b",
+              "set": "mutfak"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.modules.query",
       "version": 1,
       "title": "Oda modüllerini oku",
@@ -41222,7 +41589,9 @@
           "state_not_found",
           "unknown_template",
           "template_exists",
-          "too_many_templates"
+          "too_many_templates",
+          "option_set_not_found",
+          "option_not_found"
         ],
         "warnings": [
           "view_replaced",
@@ -70334,6 +70703,66 @@
       "meaning": "Tanımdan çıkarılan nesnenin bazı örneklerdeki karşılıkları silinmedi (yerel istisna ya da kilitli katman); sıradan nesne olarak kaldılar."
     },
     {
+      "code": "option_set_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda bir seçenek kümesi zaten var; başka bir ad verin."
+    },
+    {
+      "code": "option_set_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda tasarım seçeneği kümesi yok."
+    },
+    {
+      "code": "option_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kümede bu kimlikte ya da adda seçenek yok."
+    },
+    {
+      "code": "option_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kümede bu adda bir seçenek zaten var; başka bir ad verin."
+    },
+    {
+      "code": "option_member_taken",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne zaten bir tasarım seçeneğinde; önce o seçenekten çıkarın."
+    },
+    {
+      "code": "not_in_option",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne bu kümenin bir seçeneğinde değil."
+    },
+    {
+      "code": "option_leaning",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir nesne başka bir seçeneğin ya da ana modelin dışında kalacak bir nesneye bağlı (kapının duvarı, etiketin mahali, ölçünün noktası); bağlı nesneyi de aynı seçeneğe alın."
+    },
+    {
+      "code": "option_primary",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Birincil seçenek silinemez; önce başka bir seçeneği birincil yapın ya da seçeneği kabul edin."
+    },
+    {
+      "code": "option_set_full",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kümede en çok 12 seçenek olur; birini silin ya da kabul edin."
+    },
+    {
+      "code": "option_member_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler."
+    },
+    {
       "code": "not_a_space",
       "kind": "failed",
       "retryable": false,
@@ -74662,6 +75091,13 @@
           "description": "The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.",
           "items": {
             "$ref": "#/$defs/OpeningType"
+          },
+          "type": "array"
+        },
+        "options": {
+          "description": "The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.",
+          "items": {
+            "$ref": "#/$defs/OptionSet"
           },
           "type": "array"
         },
@@ -84548,6 +84984,29 @@
           "type": "array"
         }
       },
+      "type": "object"
+    },
+    "DesignOption": {
+      "additionalProperties": false,
+      "description": "One alternative of a set: its id, its name and its objects by their persistent ids.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "members": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
       "type": "object"
     },
     "DetachedTable": {
@@ -109965,6 +110424,520 @@
         "reverse"
       ],
       "type": "object"
+    },
+    "OptionChange": {
+      "description": "A pair of objects found in both options, changed.",
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "b": {
+          "type": "string"
+        },
+        "what": {
+          "description": "What differs: `geometry`, `attributes` or both.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "a",
+        "b",
+        "what"
+      ],
+      "type": "object"
+    },
+    "OptionChoice": {
+      "additionalProperties": false,
+      "description": "A view's choice of one set's option (docs/adr/0788 §3): the set's id and the option's.",
+      "properties": {
+        "option": {
+          "type": "string"
+        },
+        "set": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "set",
+        "option"
+      ],
+      "type": "object"
+    },
+    "OptionKindCount": {
+      "description": "How many objects of a kind an option holds.",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "count"
+      ],
+      "type": "object"
+    },
+    "OptionKindDifference": {
+      "description": "A kind counted in both options of a comparison.",
+      "properties": {
+        "a": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "b": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "a",
+        "b"
+      ],
+      "type": "object"
+    },
+    "OptionRow": {
+      "description": "An option as `cad.options.query` reads it: its objects counted by kind, its spaces' area and its walls' length.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kinds": {
+          "items": {
+            "$ref": "#/$defs/OptionKindCount"
+          },
+          "type": "array"
+        },
+        "missing": {
+          "description": "Its objects gone from the drawing.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "name": {
+          "type": "string"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "primary": {
+          "type": "boolean"
+        },
+        "spaceArea": {
+          "description": "Its spaces' areas summed, in the drawing's unit squared.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "wallLength": {
+          "description": "Its walls' base lines' lengths summed.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "primary",
+        "objects",
+        "missing",
+        "kinds",
+        "spaceArea",
+        "wallLength"
+      ],
+      "type": "object"
+    },
+    "OptionSet": {
+      "additionalProperties": false,
+      "description": "A set of alternatives for one part of the plan, one of them primary (the one the drawing shows).",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/DesignOption"
+          },
+          "type": "array"
+        },
+        "primary": {
+          "description": "The id of the option the drawing shows.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "primary",
+        "options"
+      ],
+      "type": "object"
+    },
+    "OptionSetRow": {
+      "description": "A set as `cad.options.query` reads it.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/OptionRow"
+          },
+          "type": "array"
+        },
+        "primary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "primary",
+        "options"
+      ],
+      "type": "object"
+    },
+    "OptionsCompare": {
+      "additionalProperties": false,
+      "description": "Two options of one set to compare (docs/adr/0788 §2): `a` the one compared against, `b` the other; objects paired\nby place as Veri karşılaştır pairs them (docs/adr/0179), within `search` (absent: 0.5 m in the drawing's unit) and\nthe same within `tolerance` (absent: 1 mm).",
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "b": {
+          "type": "string"
+        },
+        "search": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "set": {
+          "type": "string"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "set",
+        "a",
+        "b"
+      ],
+      "type": "object"
+    },
+    "OptionsCompared": {
+      "description": "Two options compared: the objects paired as the same, those only in `b` (added) and only in `a` (removed), the\npairs changed, and the differences in counts and areas (b − a).",
+      "properties": {
+        "a": {
+          "type": "string"
+        },
+        "added": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "b": {
+          "type": "string"
+        },
+        "changed": {
+          "items": {
+            "$ref": "#/$defs/OptionChange"
+          },
+          "type": "array"
+        },
+        "kinds": {
+          "description": "Each kind's count in `a` and in `b`, where they differ.",
+          "items": {
+            "$ref": "#/$defs/OptionKindDifference"
+          },
+          "type": "array"
+        },
+        "removed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "same": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "set": {
+          "type": "string"
+        },
+        "spaceArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "wallLength": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "set",
+        "a",
+        "b",
+        "same",
+        "spaceArea",
+        "wallLength"
+      ],
+      "type": "object"
+    },
+    "OptionsOperation": {
+      "description": "What `cad.options.edit` does.",
+      "oneOf": [
+        {
+          "description": "Seçenek kümesi tanımla: the objects `uids` (in no option) become the set `name`'s first option (`option`,\nabsent: “A”), its primary; they stay where they are. A main-model object leaning on one of them (an opening on\na wall, a tag on a space) or one of them leaning on another option's object refuses it.",
+          "properties": {
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "define",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "option": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Seçeneği kopyala: a new option of `set`, an independent copy of the option `option`'s objects in their places\n(their references to each other made the copies'), named `name` (absent: the next letter); primary when asked.",
+          "properties": {
+            "kind": {
+              "const": "copy",
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "option": {
+              "type": "string"
+            },
+            "primary": {
+              "type": "boolean"
+            },
+            "set": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "set",
+            "option"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Seçeneğe ekle: the main model's objects `uids` join the option.",
+          "properties": {
+            "kind": {
+              "const": "addMembers",
+              "type": "string"
+            },
+            "option": {
+              "type": "string"
+            },
+            "set": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "set",
+            "option",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Seçenekten çıkar: the objects `uids` (of the set's options) go back to the main model.",
+          "properties": {
+            "kind": {
+              "const": "removeMembers",
+              "type": "string"
+            },
+            "set": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "set",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Birincil yap: the drawing shows `option` of the set.",
+          "properties": {
+            "kind": {
+              "const": "primary",
+              "type": "string"
+            },
+            "option": {
+              "type": "string"
+            },
+            "set": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "set",
+            "option"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Seçeneği kabul et: `option` (absent: the primary) becomes the main model; the set's other options' objects are\ndeleted and the set goes. An object on a locked layer refuses it.",
+          "properties": {
+            "kind": {
+              "const": "accept",
+              "type": "string"
+            },
+            "option": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "set": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "set"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Seçeneği sil: a non-primary option goes with its objects.",
+          "properties": {
+            "kind": {
+              "const": "delete",
+              "type": "string"
+            },
+            "option": {
+              "type": "string"
+            },
+            "set": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "set",
+            "option"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yeniden adlandır: the set (no `option`) or one of its options.",
+          "properties": {
+            "kind": {
+              "const": "rename",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "option": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "set": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "set",
+            "name"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "OrderTo": {
       "description": "Where the objects go.",
@@ -138671,6 +139644,13 @@
         "mono": {
           "description": "Every line black, hatches grey (docs/adr/0783 §1); a pen's colour still wins.",
           "type": "boolean"
+        },
+        "options": {
+          "description": "The design options it shows (docs/adr/0788 §3), a set's choice each; a set not named shows its primary.",
+          "items": {
+            "$ref": "#/$defs/OptionChoice"
+          },
+          "type": "array"
         },
         "pens": {
           "description": "The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a\nview), each category once, in their order.",

@@ -358,10 +358,10 @@ CAD = [
         P("Proje", "archSettings", [S("arch.audit"), S("arch.program"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
           # Kapı ve pencere tipleri (docs/adr/0772) under ▾: the tab keeps its words at 1440 px.
-          # Oda modülleri (docs/adr/0775) and Malzemeler (docs/adr/0785) under ▾ too.
+          # Oda modülleri (docs/adr/0775) and Malzemeler (docs/adr/0785) under ▾ too; Tasarım seçenekleri (docs/adr/0788) last.
           # Kırpma çerçevesi (docs/adr/0789 §2) beside the navigator: a view's area edited on the model.
           overflow=["arch.sheetSet", "arch.navigator", "tool.viewCrop", "arch.openingTypes", "arch.materials", "arch.modules",
-                    "tool.modulePlace"]),
+                    "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),
     view_tab(True),
     T("manage", "Yönet", [

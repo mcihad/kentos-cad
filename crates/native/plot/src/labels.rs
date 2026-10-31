@@ -132,7 +132,7 @@ pub fn map_labels(doc: &Document, spatial: &Spatial, m: &MapPrim) -> Vec<MapLabe
         &m.layers,
         &m.layer_overrides,
         m.level.as_ref(),
-        (m.phase, &m.hidden, &m.pens, m.mono),
+        (m.phase, &m.hidden, &m.pens, m.mono, &m.options),
         m.extent,
     )
 }
@@ -185,6 +185,7 @@ pub fn labels_in_view(
         &[kentos_contracts::ViewCategory],
         &[kentos_contracts::RecipePen],
         bool,
+        &[kentos_contracts::OptionChoice],
     ),
     extent: Option<[f64; 4]>,
 ) -> Vec<MapLabel> {
@@ -192,8 +193,8 @@ pub fn labels_in_view(
         return Vec::new();
     };
     // A linked view's recipe (docs/adr/0774 §3): the words of the objects its phase or categories leave out, out too.
-    let recipe_out: std::collections::HashSet<u32> = if recipe.0.is_some() || !recipe.1.is_empty() {
-        crate::layers::map_phasing_of(doc, recipe.0, recipe.1).hidden().collect()
+    let recipe_out: std::collections::HashSet<u32> = if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.4.is_empty() {
+        crate::layers::map_phasing_of(doc, recipe.0, recipe.1, recipe.4).hidden().collect()
     } else {
         Default::default()
     };

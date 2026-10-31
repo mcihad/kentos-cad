@@ -81,7 +81,18 @@ const STYLED_KEPT: usize = 4;
 /// The drawing (its session and state), the scale and annotation scale, whether the screen's store draws otherwise
 /// than paper, the bands' rows it took (docs/adr/0636 §2) and the level whose plan it is when that shows stairs from
 /// above, and the wall detail its linked view asks for (docs/adr/0781 §1).
-type ScaledKey = (u64, u64, u64, u64, bool, usize, Option<(String, bool)>, Option<kentos_commands::WallDetail>);
+/// The design options it shows come last (docs/adr/0788 §3).
+type ScaledKey = (
+    u64,
+    u64,
+    u64,
+    u64,
+    bool,
+    usize,
+    Option<(String, bool)>,
+    Option<kentos_commands::WallDetail>,
+    Vec<kentos_commands::OptionChoice>,
+);
 
 /// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
 /// texts, dimensions and leaders as that scale says, and its geometry store; none when that is the drawing. A level's
@@ -143,6 +154,7 @@ impl SheetMaps {
         view: &kentos_sheet::display::MapViewPrim,
         level: Option<&kentos_sheet::kinds::MapLevel>,
         detail: Option<kentos_commands::WallDetail>,
+        options: &[kentos_commands::OptionChoice],
         main: &Spatial,
     ) -> Option<Rc<Scaled>> {
         // A model camera can draw more detail than this paper map, even at the same plot scale.
@@ -171,6 +183,8 @@ impl SheetMaps {
                 .map(|l| (l.id.clone(), l.below)),
             // A linked view's own wall detail (docs/adr/0781 §1).
             detail,
+            // A linked view's design options (docs/adr/0788 §3): their walls join, the primaries' do not.
+            options.to_vec(),
         );
         let upper = key.6.is_some().then_some(level).flatten();
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
@@ -184,12 +198,14 @@ impl SheetMaps {
                 .then(|| drawing.model.at_scale(annotation))
                 .flatten()
                 .or_else(|| {
-                    (walls || unscoped || upper.is_some()).then(|| drawing.model.reading_copy())
+                    (walls || unscoped || upper.is_some() || !options.is_empty())
+                        .then(|| drawing.model.reading_copy())
                 })
                 .map(|model| {
                     let mut spatial = Spatial::new();
                     spatial.set_wall_scale(Some(at));
                     spatial.set_wall_detail(detail);
+                    spatial.set_option_view(options.to_vec());
                     spatial.reload(&model);
                     if let Some(l) = upper {
                         spatial.set_level_view(
@@ -242,6 +258,7 @@ impl SheetMaps {
             &[kentos_commands::ViewCategory],
             &[kentos_commands::RecipePen],
             bool,
+            &[kentos_commands::OptionChoice],
         ),
     ) -> Rc<StyledAt> {
         let scale = view.scale;
@@ -249,7 +266,7 @@ impl SheetMaps {
             .center
             .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
         let own_key = match (own, level) {
-            _ if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.2.is_empty() || recipe.3 => {
+            _ if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.2.is_empty() || recipe.3 || !recipe.4.is_empty() => {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
                 serde_json::to_string(&own.0).unwrap_or_default().hash(&mut h);
@@ -315,7 +332,8 @@ impl SheetMaps {
             phasing: std::sync::Arc::new({
                 // A level's plan (docs/adr/0716): the level under it faint; a linked view's phase and categories
                 // (docs/adr/0774 §3).
-                let mut p = kentos_plot::layers::map_drawing_of(&doc.model, recipe.0, recipe.1, recipe.2, recipe.3);
+                let mut p =
+                    kentos_plot::layers::map_drawing_of(&doc.model, recipe.0, recipe.1, recipe.2, recipe.3, recipe.4);
                 for &id in &faint {
                     p.fade(id);
                 }
@@ -587,6 +605,7 @@ impl MapPainter for SheetPainter<'_> {
                 hidden: &primitive.hidden,
                 pens: &primitive.pens,
                 mono: primitive.mono,
+                options: &primitive.options,
                 doc,
                 store: spatial.store(),
                 library: self.library,
@@ -687,6 +706,7 @@ impl MapPainter for SheetPainter<'_> {
                 r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
                 r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
                 r.primitive.is_some_and(|p| p.mono),
+                r.primitive.map_or(&[][..], |p| &p.options[..]),
             ),
             r.extent,
         );
@@ -697,6 +717,7 @@ impl MapPainter for SheetPainter<'_> {
             hidden: r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
             pens: r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
             mono: r.primitive.is_some_and(|p| p.mono),
+            options: r.primitive.map_or(&[][..], |p| &p.options[..]),
             doc: &drawing.model,
             store: spatial.store(),
             library: self.library,
@@ -773,9 +794,10 @@ impl SheetPainter<'_> {
     fn source<'s>(&'s self, r: &MapRequest<'_>, keep: &'s mut Option<Rc<Scaled>>) -> Source<'s> {
         let level = r.primitive.and_then(|m| m.level.as_ref());
         let detail = r.primitive.and_then(|m| m.wall_detail);
+        let options = r.primitive.map_or(&[][..], |m| &m.options[..]);
         *keep = self
             .drawing
-            .and_then(|d| self.maps.scaled(d, r.view, level, detail, self.spatial));
+            .and_then(|d| self.maps.scaled(d, r.view, level, detail, options, self.spatial));
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -809,6 +831,7 @@ impl SheetPainter<'_> {
                 r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
                 r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
                 r.primitive.is_some_and(|p| p.mono),
+                r.primitive.map_or(&[][..], |p| &p.options[..]),
             ),
         );
         let s = scale;
@@ -926,6 +949,7 @@ impl SheetPainter<'_> {
                 r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
                 r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
                 r.primitive.is_some_and(|p| p.mono),
+                r.primitive.map_or(&[][..], |p| &p.options[..]),
             ),
         );
         let s = scale;
@@ -1042,8 +1066,8 @@ impl SheetPainter<'_> {
             .unwrap_or_default();
         // A linked view's recipe (docs/adr/0774 §3): the words of what its phase or categories leave out.
         let recipe_out: std::collections::HashSet<u32> = match r.primitive {
-            Some(p) if p.phase.is_some() || !p.hidden.is_empty() => {
-                kentos_plot::layers::map_phasing_of(doc, p.phase, &p.hidden).hidden().collect()
+            Some(p) if p.phase.is_some() || !p.hidden.is_empty() || !p.options.is_empty() => {
+                kentos_plot::layers::map_phasing_of(doc, p.phase, &p.hidden, &p.options).hidden().collect()
             }
             _ => Default::default(),
         };
@@ -2027,13 +2051,13 @@ mod tests {
             serde_json::from_value(serde_json::json!({"scale":100.,"rotation":0})).unwrap();
         let maps = SheetMaps::default();
         let copied = maps
-            .scaled(doc, &view, None, None, &main)
+            .scaled(doc, &view, None, None, &[], &main)
             .expect("separate paper index despite equal project scale");
         let (_, paper) = copied.view.as_ref().unwrap();
         assert_eq!(paper.store().wall_view().detail, Detail::Schematic);
         assert_eq!(paper.store().wall_view().scale, 100.);
         main.set_screen_wall_scale(&doc.model, Some(10.));
-        let again = maps.scaled(doc, &view, None, None, &main).unwrap();
+        let again = maps.scaled(doc, &view, None, None, &[], &main).unwrap();
         assert!(
             Rc::ptr_eq(&copied, &again),
             "camera motion does not rebuild the paper cache"
@@ -2041,7 +2065,7 @@ mod tests {
         assert_eq!(doc.model.to_snapshot_v2(), before);
         main.set_screen_wall_scale(&doc.model, None);
         assert!(
-            maps.scaled(doc, &view, None, None, &main).is_none(),
+            maps.scaled(doc, &view, None, None, &[], &main).is_none(),
             "matching ordinary paper index may still be shared"
         );
     }
@@ -2087,7 +2111,7 @@ mod tests {
                 .expect("a view");
         let maps = SheetMaps::default();
         let copy = maps
-            .scaled(&doc, &view, None, None, &main)
+            .scaled(&doc, &view, None, None, &[], &main)
             .expect("a copy at 1:200");
         let (_, spatial) = copy.view.as_ref().expect("its drawing");
         assert_eq!(spatial.ghost_total(), 1);

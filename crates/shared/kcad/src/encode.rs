@@ -2089,6 +2089,16 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 149 (docs/adr/0788): design option sets, a view recipe's options.
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_options)
+        || doc
+            .settings
+            .named_views
+            .iter()
+            .any(|v| v.recipe.as_ref().is_some_and(|r| !r.options.is_empty()))
+    {
+        return crate::SCHEMA_WITH_OPTIONS;
+    }
     // Schema 148 (docs/adr/0785): the project's materials, a component or a slab bound to one.
     if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_materials)
         || objs.iter().any(materials)

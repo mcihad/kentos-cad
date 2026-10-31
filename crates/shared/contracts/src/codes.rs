@@ -1817,6 +1817,27 @@ codes! {
     MODULE_DRIFT_OVERWRITTEN = "module_drift_overwritten", Warning, false, "Elle değiştirilmiş (yerel istisna yapılmamış) bazı örnek nesneleri kaynağın değeriyle yazıldı; korumak için önce yerel istisna yapın.";
     /// Objects of a member taken out of the definition that stayed as ordinary objects: local exceptions or locked.
     MODULE_MEMBER_RELEASED = "module_member_released", Warning, false, "Tanımdan çıkarılan nesnenin bazı örneklerdeki karşılıkları silinmedi (yerel istisna ya da kilitli katman); sıradan nesne olarak kaldılar.";
+    // Tasarım seçenekleri (docs/adr/0788).
+    /// A set's id or name another set of the project has.
+    OPTION_SET_EXISTS = "option_set_exists", Failed, false, "Projede bu kimlikte ya da adda bir seçenek kümesi zaten var; başka bir ad verin.";
+    /// No option set of that id or name.
+    OPTION_SET_NOT_FOUND = "option_set_not_found", Failed, false, "Projede bu kimlikte ya da adda tasarım seçeneği kümesi yok.";
+    /// No option of that id or name in the set.
+    OPTION_NOT_FOUND = "option_not_found", Failed, false, "Kümede bu kimlikte ya da adda seçenek yok.";
+    /// An option's name another option of the set has.
+    OPTION_EXISTS = "option_exists", Failed, false, "Kümede bu adda bir seçenek zaten var; başka bir ad verin.";
+    /// An object already in an option (of this set or another).
+    OPTION_MEMBER_TAKEN = "option_member_taken", Failed, false, "Nesne zaten bir tasarım seçeneğinde; önce o seçenekten çıkarın.";
+    /// An object in no option of the set asked.
+    NOT_IN_OPTION = "not_in_option", Failed, false, "Nesne bu kümenin bir seçeneğinde değil.";
+    /// A main-model object leaning on an option's object, or an option's object leaning on another option's.
+    OPTION_LEANING = "option_leaning", Failed, false, "Bir nesne başka bir seçeneğin ya da ana modelin dışında kalacak bir nesneye bağlı (kapının duvarı, etiketin mahali, ölçünün noktası); bağlı nesneyi de aynı seçeneğe alın.";
+    /// The primary option deleted: the set always shows one.
+    OPTION_PRIMARY = "option_primary", Failed, false, "Birincil seçenek silinemez; önce başka bir seçeneği birincil yapın ya da seçeneği kabul edin.";
+    /// A set with as many options as it may have.
+    OPTION_SET_FULL = "option_set_full", Failed, false, "Kümede en çok 12 seçenek olur; birini silin ya da kabul edin.";
+    /// Objects of an option no longer in the drawing.
+    OPTION_MEMBER_GONE = "option_member_gone", Warning, false, "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler.";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
     INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";

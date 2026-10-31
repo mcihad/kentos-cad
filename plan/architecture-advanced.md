@@ -238,12 +238,14 @@ alanları iki kez saymasın; GUI/Python/MCP aynı hesap ve bulguları üretsin.
 
 ### ADV-05 — İlişkili oda/daire modülleri ve kontrollü tekrar kullanımı [~]
 
-_Durum (31 Ekim 2026, [ADR 0775](../docs/adr/0775-room-modules-and-controlled-reuse.md), [ADR 0779](../docs/adr/0779-room-modules-members-drift-and-flats.md)):_
-tek kat, düz duvarlı oda ve bütün daire modülü; tanım ve örnek ayrı, yerleştirme (taban, açı, ayna, kat, evre, numara,
-bina programının bölümü), planlı kaynak güncelleme (geride kalan örnek bütünüyle eşitlenir), yerel istisna,
-bağımsızlaştırma, kaynağı silme; tanımdan sonra üye ekleme ve çıkarma; elle değişen örnek nesnesinin işaretlenmesi ve
-güncellemede söylenmesi; katları tek adımda tekrarlama. Dört banyo ve iki katta dört daire kabulü geçti. Açık: tasarım
-seçenekleri, çok katlı tek modül, kattaki modülsüz nesnelerin tekrarı, gerçek pencerede elle kabul.
+_Durum (31 Ekim 2026, [ADR 0775](../docs/adr/0775-room-modules-and-controlled-reuse.md), [ADR 0779](../docs/adr/0779-room-modules-members-drift-and-flats.md), [ADR 0788](../docs/adr/0788-design-options.md)):_
+tek kat, düz duvarlı oda ve bütün daire modülü; tanım ve örnek ayrı, yerleştirme, planlı kaynak güncelleme, yerel
+istisna, bağımsızlaştırma, kaynağı silme; üye ekleme ve çıkarma; elle değişen örnek nesnesi; katları tekrarlama.
+Tasarım seçenekleri: küme ve birincil seçenek, bağımsız kopya, birincili değiştirme, iki seçeneğin karşılaştırması
+(sayı, alan, plan farkı), kabul (öbürleri silinir) ve silme; görünüş tarifiyle başka seçeneği gösteren pafta;
+seçenekler birbirini görmez (birleşim, çakışma, mahal sınırı). Dört banyo, iki katta dört daire ve mutfak A/B kabulü
+geçti. Açık: seçenek bileşimi, seçenekler arası eşleme/birleştirme, çok katlı tek modül, kattaki modülsüz nesnelerin
+tekrarı, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Bir banyoyu veya daireyi dört kez çizmek yerine bağlı
 örnekleri kullan; kaynak değişimini inceleyerek uygula. Dayanak A7.

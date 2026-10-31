@@ -73,6 +73,8 @@ pub struct Spatial {
     wall_scale: Option<f64>,
     /// The detail a sheet's map draws the walls at whatever its scale (docs/adr/0781 §1): its view's recipe's.
     wall_detail: Option<kentos_commands::WallDetail>,
+    /// The design options a sheet's map shows (docs/adr/0788 §3: its view's recipe's); empty: each set's primary.
+    option_view: Vec<kentos_commands::OptionChoice>,
     /// Ephemeral model view denominator; never changes the project's paper scale.
     screen_wall_scale: Option<f64>,
     sheet_view:Option<kentos_native_application::viewport_scope::Viewport>,
@@ -165,6 +167,12 @@ impl Spatial {
     /// says so); with [`Spatial::set_wall_scale`], before [`Spatial::reload`].
     pub fn set_wall_detail(&mut self, detail: Option<kentos_commands::WallDetail>) {
         self.wall_detail = detail;
+    }
+
+    /// Shows the design options `choices` name instead of their sets' primaries (docs/adr/0788 §3: a sheet's map
+    /// linked to a view whose recipe says so); before [`Spatial::reload`].
+    pub fn set_option_view(&mut self, choices: Vec<kentos_commands::OptionChoice>) {
+        self.option_view = choices;
     }
 
     pub fn has_screen_wall_scale(&self) -> bool {
@@ -357,6 +365,16 @@ impl Spatial {
     /// Kat görünümü (docs/adr/0715) joins it: the levels it hides are hidden as well, the level it draws faint is
     /// snapped to only. A sheet's map edited in place shows its own level instead (docs/adr/0716).
     fn sync_phases(&mut self, doc: &Document) {
+        // The design options not shown (docs/adr/0788 §4): hidden, their walls joining nothing, their openings cutting
+        // nothing.
+        let options: Vec<f64> = doc
+            .option_hidden_slots(&self.option_view)
+            .into_iter()
+            .map(|s| f64::from(s.0))
+            .collect();
+        if !(options.is_empty() && self.store.no_option_out()) {
+            self.store.set_option_out(options.iter().copied());
+        }
         // A sheet's map edited in place shows its own level (docs/adr/0716), not the session's.
         let (view, active) = match &self.sheet_view {
             Some(v) => match &v.level {
@@ -392,6 +410,7 @@ impl Spatial {
             };
             let mut hidden = kentos_native_application::viewport_scope::hidden_entities(doc);
             hidden.extend(shown.hidden.iter().map(|&id| f64::from(id)));
+            hidden.extend(options.iter().copied());
             self.store.set_phase_hidden(hidden);
             self.store.set_unpicked(unpicked(&shown));
             if *self.level_looks != shown {
@@ -424,9 +443,14 @@ impl Spatial {
             .as_ref()
             .and_then(|a| a.phase_view)
             .unwrap_or_default();
-        let levels = self.level_looks.hidden.iter().map(|&id| f64::from(id));
+        let levels = self
+            .level_looks
+            .hidden
+            .iter()
+            .map(|&id| f64::from(id))
+            .chain(options.iter().copied());
         if view == kentos_commands::PhaseView::All {
-            if self.level_looks.hidden.is_empty() {
+            if self.level_looks.hidden.is_empty() && options.is_empty() {
                 if !self.store.no_phase_hidden() {
                     self.store.set_phase_hidden(std::iter::empty());
                 }

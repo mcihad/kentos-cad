@@ -228,6 +228,21 @@ impl Document {
                         hosts.insert(s.uid);
                     }
                 },
+                // Objects into or out of a design option (docs/adr/0788 §4): their openings may clash or not anew.
+                Op::ArchOptions { before, after } => {
+                    for uid in crate::arch_options::touched_members(before, after) {
+                        let entity = self.store.slot_of(uid).and_then(|s| self.store.get(s)).map(|s| s.entity.clone());
+                        match entity.as_deref().and_then(host_of) {
+                            Some(h) => {
+                                openings.insert(uid);
+                                hosts.insert(h);
+                            }
+                            None => {
+                                hosts.insert(uid);
+                            }
+                        }
+                    }
+                }
                 _ => {}
             }
         }
@@ -278,12 +293,16 @@ impl Document {
         }
         // Two clash where they run into each other and their heights meet or plan would cut both (docs/adr/0719 §3).
         let cut = kentos_contracts::PLAN_CUT_HEIGHT;
+        // Two options of one set never clash (docs/adr/0788 §4): only one of them is ever built.
+        let groups = self.option_groups();
         for list in by_host.values() {
             for (i, (slot, a, fa)) in list.iter().enumerate() {
-                if list
-                    .iter()
-                    .enumerate()
-                    .any(|(j, (_, b, fb))| i != j && overlap(*a, *b) && fa.clashes_with(fb, cut))
+                if list.iter().enumerate().any(|(j, (other, b, fb))| {
+                    i != j
+                        && overlap(*a, *b)
+                        && fa.clashes_with(fb, cut)
+                        && crate::arch_options::options_meet(&groups, *slot, *other)
+                })
                     && let Some((_, f)) = next.get_mut(slot)
                 {
                     f.broken = Some(OpeningBreak::Overlap);

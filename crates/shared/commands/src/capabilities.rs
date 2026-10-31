@@ -2074,6 +2074,34 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    // Tasarım seçenekleri (docs/adr/0788).
+    Entry {
+        id: "cad.options.edit",
+        refusals: &[
+            &["invalid_input", "no_entities", "invalid_uid", "entity_not_found", "layer_locked"],
+            &[
+                "option_set_exists",
+                "option_set_not_found",
+                "option_not_found",
+                "option_exists",
+                "option_member_taken",
+                "not_in_option",
+                "option_leaning",
+                "option_primary",
+                "option_set_full",
+                "nothing_to_set",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.options.query",
+        refusals: &[&["option_set_not_found", "option_not_found", "invalid_uid", "entity_not_found", "not_in_option", "invalid_input"]],
+        warnings: &["option_member_gone"],
+        targets: none,
+    },
     Entry {
         id: "cad.modules.query",
         refusals: &[&["module_not_found", "invalid_uid", "entity_not_found", "not_in_module"]],
@@ -4192,6 +4220,8 @@ const ENTRIES: &[Entry] = &[
             &["invalid_recipe", "level_not_found", "state_not_found"],
             // View templates (docs/adr/0783 §2).
             &["unknown_template", "template_exists", "too_many_templates"],
+            // A recipe's design options (docs/adr/0788 §3).
+            &["option_set_not_found", "option_not_found"],
         ],
         warnings: &["view_replaced", "template_detached"],
         targets: none,

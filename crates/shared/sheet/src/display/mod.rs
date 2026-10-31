@@ -205,6 +205,11 @@ pub struct MapPrim {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub mono: bool,
+    /// The design options it shows (docs/adr/0788 §3: its linked view's recipe); empty: each set's primary. A boxed
+    /// slice: the primitives' enum stays small.
+    #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<kentos_contracts::OptionChoice>>", optional))]
+    pub options: Box<[kentos_contracts::OptionChoice]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,

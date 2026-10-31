@@ -24,6 +24,8 @@ mod dimension_set_exports;
 mod room_modules;
 #[path = "headless/flat_modules.rs"]
 mod flat_modules;
+#[path = "headless/design_options.rs"]
+mod design_options;
 
 #[path = "headless/special_doors.rs"]
 mod special_doors;

@@ -47,7 +47,10 @@ fn define(doc: &mut Document) {
 }
 
 /// The spaces of the module's instances: (instance, level, group, number).
-fn spaces(doc: &Document) -> Vec<(String, Option<String>, Option<String>, Option<String>)> {
+/// A space's name, level, number and group.
+type SpaceRow = (String, Option<String>, Option<String>, Option<String>);
+
+fn spaces(doc: &Document) -> Vec<SpaceRow> {
     let mut out = Vec::new();
     for m in doc.arch_modules() {
         for i in &m.instances {
@@ -197,7 +200,7 @@ fn four_flats_on_two_floors_each_in_its_own_group_follow_their_source() {
         b.p.x += 0.5;
     }
     doc.update(slot, e);
-    assert_eq!(drifted(&doc), [moved.clone()]);
+    assert_eq!(drifted(&doc), std::slice::from_ref(&moved));
     // The first flat's bed turned: the source changes on that key.
     let bed_slot = doc.slot_of(Uuid::parse_str(&uid(10)).unwrap()).unwrap();
     let mut first_bed = doc.get(bed_slot).unwrap().clone();

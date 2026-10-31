@@ -93,6 +93,8 @@ pub enum Event {
     RecipeDetail(usize),
     /// Cut the linked maps to the view's area (docs/adr/0781 §2).
     RecipeCrop(bool),
+    /// A design option set's choice (docs/adr/0788 §3): the set's index, the option's (none: the primary).
+    RecipeOption(usize, Option<usize>),
     RecipeApply,
     RecipeClear,
     /// The template the view follows (docs/adr/0783 §2): none, or the index in the project's templates.

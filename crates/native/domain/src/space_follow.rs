@@ -231,7 +231,8 @@ fn eligible_wall(e: &Entity, s: &SpaceFields) -> bool {
     }
 }
 
-type SourceKey = (Option<String>, SpaceScope, Option<Vec<String>>);
+/// A source view's key: the level, the scope, the sources and the design-option view (docs/adr/0788 §4).
+type SourceKey = (Option<String>, SpaceScope, Option<Vec<String>>, String);
 type SelectedSources = Result<Option<Arc<BTreeSet<Slot>>>, SpaceBreak>;
 
 /// A partial copy cannot keep references into the original drawing. Preserve
@@ -268,6 +269,10 @@ pub struct SpaceSearch<'a> {
     columns: BTreeMap<SourceKey, ColumnAreas>,
     selected: BTreeMap<SourceKey, SelectedSources>,
     boundaries: BTreeMap<SourceKey, BoundarySources>,
+    /// The walls the design-option view in force leaves out (docs/adr/0788 §4), and that view's key.
+    out: Arc<BTreeSet<Slot>>,
+    view_key: String,
+    views: BTreeMap<String, Arc<BTreeSet<Slot>>>,
 }
 
 impl<'a> SpaceSearch<'a> {
@@ -278,14 +283,38 @@ impl<'a> SpaceSearch<'a> {
             columns: BTreeMap::new(),
             selected: BTreeMap::new(),
             boundaries: BTreeMap::new(),
+            out: Arc::new(doc.option_out()),
+            view_key: String::new(),
+            views: BTreeMap::new(),
         }
+    }
+
+    /// [`found`](Self::found) for the space `uid`: among the main model's walls and its own design option's
+    /// (docs/adr/0788 §4), each other set's primary.
+    pub fn found_as(&mut self, uid: crate::Uuid, s: &SpaceFields) -> SpaceFields {
+        if self.doc.arch_options().is_empty() {
+            return self.found(s);
+        }
+        let view = self.doc.option_view_of(uid);
+        let key: String = view.iter().map(|c| format!("{}/{};", c.set, c.option)).collect();
+        let doc = self.doc;
+        let out = self
+            .views
+            .entry(key.clone())
+            .or_insert_with(|| Arc::new(doc.option_hidden_slots(&view).into_iter().collect()))
+            .clone();
+        let (was_out, was_key) = (std::mem::replace(&mut self.out, out), std::mem::replace(&mut self.view_key, key));
+        let found = self.found(s);
+        self.out = was_out;
+        self.view_key = was_key;
+        found
     }
 
     /// Validate every explicit identity, including remote sources whose box
     /// does not touch this room. Missing/changed sources never mean "all".
     pub fn source_slots(&mut self, s: &SpaceFields) -> SelectedSources {
         if s.sources.is_none() && !self.doc.store.has_space_separators() {return Ok(None);}
-        let key = (s.arch.level.clone(),s.scope,s.sources.clone());
+        let key = (s.arch.level.clone(),s.scope,s.sources.clone(),self.view_key.clone());
         self.selected.entry(key).or_insert_with(|| {
             if s.scope_problem().is_some() { return Err(SpaceBreak::SourceUnavailable); }
             let Some(sources)=&s.sources else {
@@ -353,10 +382,11 @@ impl<'a> SpaceSearch<'a> {
     /// edits. Validate the full explicit set before pruning by a room's box.
     fn boundary_sources(&mut self, s: &SpaceFields) -> Result<BoundarySources, SpaceBreak> {
         let selected = self.source_slots(s)?;
-        let key = (s.arch.level.clone(), s.scope, s.sources.clone());
+        let key = (s.arch.level.clone(), s.scope, s.sources.clone(), self.view_key.clone());
+        let out = Arc::clone(&self.out);
         Ok(Arc::clone(self.boundaries.entry(key).or_insert_with(|| Arc::new(
             self.doc.entities()
-                .filter(|e| eligible_wall(e,s) && selected.as_ref().is_none_or(|ids| ids.contains(&Slot(e.base().id))))
+                .filter(|e| eligible_wall(e,s) && !out.contains(&Slot(e.base().id)) && selected.as_ref().is_none_or(|ids| ids.contains(&Slot(e.base().id))))
                 .map(|e| (Slot(e.base().id), boundary_box(e)))
                 .collect()
         ))))
@@ -372,7 +402,8 @@ impl<'a> SpaceSearch<'a> {
     pub fn seed_is_room(&mut self, s: &SpaceFields) -> bool {
         let Some(seed)=s.seed else{return false};
         let Ok(selected) = self.source_slots(s) else {return false};
-        let slots=self.doc.entities().filter(|e|eligible_wall(e,s) && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(e.base().id)))).map(|e|Slot(e.base().id)).collect();
+        let out = Arc::clone(&self.out);
+        let slots=self.doc.entities().filter(|e|eligible_wall(e,s) && !out.contains(&Slot(e.base().id)) && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(e.base().id)))).map(|e|Slot(e.base().id)).collect();
         self.among(slots,seed,s.method,true).is_some()
     }
 
@@ -383,7 +414,7 @@ impl<'a> SpaceSearch<'a> {
         if !s.columns.applies(s.method) { return Ok(s.parts.clone()); }
         let selected = self.source_slots(s)?;
         let level = s.arch.level.clone();
-        let columns = self.columns.entry((level.clone(),s.scope,s.sources.clone())).or_insert_with(|| {
+        let columns = self.columns.entry((level.clone(),s.scope,s.sources.clone(),self.view_key.clone())).or_insert_with(|| {
             self.doc.entities().filter_map(|e| match e {
                 Entity::Column(c) if source_level(s.scope,level.as_deref(),c.column.arch.level.as_deref())
                     && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(c.base.id))) => Some(&c.column),
@@ -456,8 +487,9 @@ impl Document {
 
     pub(crate) fn space_walls_near(&self, area: Box4, level: Option<&str>) -> Vec<CoreWall> {
         let area = grow(area, 1.0);
+        let out = self.option_out();
         self.entities()
-            .filter(|e| takes_level(e, level))
+            .filter(|e| takes_level(e, level) && !out.contains(&Slot(e.base().id)))
             .filter(|e| wall_box(e).is_some_and(|b| meets(&b, &area)))
             .filter_map(core_wall)
             .collect()
@@ -483,9 +515,10 @@ impl Document {
             })
             .flatten();
         let found = near.or_else(|| {
+            let out = self.option_out();
             let all: Vec<CoreWall> = self
                 .entities()
-                .filter(|e| takes_level(e, level))
+                .filter(|e| takes_level(e, level) && !out.contains(&Slot(e.base().id)))
                 .filter_map(core_wall)
                 .collect();
             found_among(&all, seed, s.method)
@@ -534,6 +567,18 @@ impl Document {
                         own.push(after.slot());
                     }
                 }
+                // Objects into or out of a design option, or another primary (docs/adr/0788 §4): the spaces round
+                // their walls find their boundaries anew, and the spaces moved find theirs among their new view.
+                Op::ArchOptions { before, after } => {
+                    for uid in crate::arch_options::touched_members(before, after) {
+                        if let Some(st) = self.store.slot_of(uid).and_then(|s| self.store.get(s)) {
+                            boxes.extend(boundary_box(&st.entity));
+                            if matches!(*st.entity, Entity::Space(_)) {
+                                own.push(st.slot());
+                            }
+                        }
+                    }
+                }
                 _ => {}
             }
         }
@@ -570,7 +615,7 @@ impl Document {
             if s.space.seed.is_none() {
                 continue;
             }
-            let found = search.found(&s.space);
+            let found = search.found_as(current.uid, &s.space);
             if found != s.space {
                 let mut e = s.clone();
                 e.space = found;

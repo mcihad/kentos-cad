@@ -12,6 +12,7 @@ use kentos_commands::{
     PenCategory, PhaseView, RecipeLevel, RecipePen, ViewCategory, ViewRecipe, ViewTemplate, ViewsOp, WallDetail,
 };
 use kentos_interaction::Level;
+use kentos_ui::label;
 use kentos_ui::widget::{Choice, Select};
 
 use crate::app::{App, Message};
@@ -153,6 +154,16 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
     if r.mono {
         parts.push("siyah beyaz".to_owned());
     }
+    // The design options it shows (docs/adr/0788 §3), by their names.
+    let sets = app.document.as_ref().map_or(&[][..], |d| d.model.arch_options());
+    for c in &r.options {
+        let words = sets
+            .iter()
+            .find(|s| s.id == c.set)
+            .and_then(|s| s.options.iter().find(|o| o.id == c.option).map(|o| format!("{} {}", s.name, o.name)))
+            .unwrap_or_else(|| format!("{} {}", c.set, c.option));
+        parts.push(words);
+    }
     parts.push(format!("sürüm {}", r.version));
     parts.join(" · ")
 }
@@ -291,6 +302,11 @@ impl App {
                     .collect()
             })
             .unwrap_or_default();
+        let sets: Vec<kentos_commands::OptionSet> = self
+            .document
+            .as_ref()
+            .map(|d| d.model.arch_options().to_vec())
+            .unwrap_or_default();
         let Some(w) = self.views_window.as_mut() else {
             return;
         };
@@ -322,7 +338,7 @@ impl App {
             Event::RecipeDetail(i) => r.detail = DETAILS.get(i).copied().flatten(),
             Event::RecipeCrop(on) => r.crop = on,
             Event::RecipeTemplate(i) => {
-                let level = r.level.clone();
+                let (level, options) = (r.level.clone(), r.options.clone());
                 let (version, crop) = (r.version, r.crop);
                 match i.and_then(|i| templates.get(i)) {
                     // Following a template: its fields come from it, the level and the crop stay the view's.
@@ -331,6 +347,7 @@ impl App {
                             version,
                             level,
                             crop,
+                            options,
                             template: Some(t.id.clone()),
                             ..ViewRecipe::default()
                         }
@@ -342,6 +359,7 @@ impl App {
                                 version,
                                 level,
                                 crop,
+                                options,
                                 template: None,
                                 ..t.recipe.clone()
                             };
@@ -362,6 +380,19 @@ impl App {
                 }
             }
             Event::TemplateName(name) => w.template_name = name,
+            Event::RecipeOption(i, option) => {
+                if let Some(set) = sets.get(i) {
+                    r.options.retain(|c| c.set != set.id);
+                    if let Some(o) = option.and_then(|j| set.options.get(j)) {
+                        r.options.push(kentos_commands::OptionChoice {
+                            set: set.id.clone(),
+                            option: o.id.clone(),
+                        });
+                        // Kept in the sets' own order.
+                        r.options.sort_by_key(|c| sets.iter().position(|s| s.id == c.set));
+                    }
+                }
+            }
             Event::RecipeHide(c, on) => {
                 r.hidden.retain(|h| *h != c);
                 if on {
@@ -455,6 +486,32 @@ impl App {
             "Bağlı haritaları görünümün alanına kırp",
             Some(m(Event::RecipeCrop(!r.crop))),
         );
+        // A design option set's choice each (docs/adr/0788 §3): its primary unless another is chosen.
+        let sets = self.document.as_ref().map_or(&[][..], |d| d.model.arch_options());
+        let mut options = Column::new().spacing(6);
+        for (i, s) in sets.iter().enumerate() {
+            let primary = s.options.iter().find(|o| o.id == s.primary).map_or("", |o| o.name.as_str());
+            let chosen = r
+                .options
+                .iter()
+                .find(|c| c.set == s.id)
+                .and_then(|c| s.options.iter().position(|o| o.id == c.option))
+                .map_or(0, |j| j + 1);
+            let select = Select::new(
+                std::iter::once(Choice::new(format!("Birincil ({primary})")))
+                    .chain(s.options.iter().map(|o| Choice::new(o.name.clone()))),
+                Some(chosen),
+                move |j| m(Event::RecipeOption(i, j.checked_sub(1))),
+            )
+            .searchable(false);
+            options = options.push(words::field(
+                if i == 0 { "Tasarım seçeneği" } else { "" },
+                row![container(label::caption(s.name.clone())).width(120.0), container(select).width(Fill)]
+                    .spacing(8)
+                    .align_y(iced::Center),
+                None,
+            ));
+        }
         let hide = ViewCategory::ALL
             .iter()
             .fold(iced::widget::Row::new().spacing(10), |acc, c| {
@@ -548,7 +605,8 @@ impl App {
             .spacing(10)
             .push(words::field("Görünüş tarifi", preset, Some(version)))
             .push(row![cell("Şablon", template.into()), cell("Kat", level.into())].spacing(12))
-            .push(below);
+            .push(below)
+            .push(options);
         match followed {
             // Following a template: the level and the crop are the view's, the rest the template's (docs/adr/0783 §2).
             Some(t) => {

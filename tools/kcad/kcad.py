@@ -478,6 +478,9 @@ SHARE_RULES = ("equal", "net", "weight")
 SCHEMA_WITH_MATERIALS = 148
 MATERIAL_ID = re.compile(r"[a-z0-9-]{1,64}")
 MATERIAL_CATEGORIES = ("structure", "insulation", "finish", "membrane", "other")
+# Schema 149 (docs/adr/0788; provisional): a project's design option sets (`options` of its architectural settings)
+# and a view recipe's chosen options.
+SCHEMA_WITH_OPTIONS = 149
 MODULE_KINDS = ("wall", "opening", "space", "insert", "dimension", "tag", "text")
 RECIPE_CATEGORIES = ("dimensions", "tags", "texts", "hatches", "blocks", "spaces", "grids", "viewmarks")
 RECIPE_PHASES = ("all", "existing", "demolition", "proposed")
@@ -792,7 +795,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3424,6 +3427,7 @@ class _Schema:
         self.view_templates = version >= SCHEMA_WITH_VIEW_TEMPLATES
         self.program_shares = version >= SCHEMA_WITH_PROGRAM_SHARES
         self.materials = version >= SCHEMA_WITH_MATERIALS
+        self.options = version >= SCHEMA_WITH_OPTIONS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -5465,6 +5469,16 @@ class _Schema:
         # Schema 146 (docs/adr/0783): pens, black and white, the template it follows.
         if self.view_templates:
             extra = {**extra, "pens": (self.array(pen), False), "mono": (mono, False), "template": (self.text, False)}
+
+        def choice(c):
+            out = self.fields({"set": (self.text, True), "option": (self.text, True)})(c)
+            if not re.match(r"^[a-z0-9-]{1,64}$", out["set"]) or not re.match(r"^[a-z0-9-]{1,64}$", out["option"]):
+                self.fail("bad_value", "görünüş tarifinin seçeneği kümenin ve seçeneğin kimliğiyle verilir")
+            return out
+
+        # Schema 149 (docs/adr/0788 §3): the design options the view shows.
+        if self.options:
+            extra = {**extra, "options": (self.array(choice), False)}
         r = self.fields({"version": (self.uint(32), True), "level": (level, False), "phase": (self.enum(RECIPE_PHASES), False),
                          "layerState": (self.text, False), "hidden": (self.array(category), False),
                          "scale": (self.uint(32), False), **extra})(v)
@@ -5476,7 +5490,7 @@ class _Schema:
             t = r["template"]
             if not t.strip() or len(t) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in t):
                 self.fail("bad_value", "görünüş tarifinin şablonu bir şablonun kimliği olmalı")
-            if set(r) - {"version", "level", "crop", "template"}:
+            if set(r) - {"version", "level", "crop", "template", "options"}:
                 self.fail("bad_value", "şablona bağlı tarifte yalnız kat ve kırpma görünümündür")
         if r["version"] < 1:
             self.fail("bad_value", "görünüş tarifinin sürümü en az 1 olur")
@@ -5488,19 +5502,23 @@ class _Schema:
             self.fail("bad_value", "görünüş tarifinin gizlenen türleri boş olmaz, her biri bir kez")
         if "scale" in r and not 1 <= r["scale"] <= 100_000:
             self.fail("bad_value", "görünüş tarifinin ölçeği 1:1 ile 1:100 000 arasında olur")
+        if "options" in r:
+            sets = [c["set"] for c in r["options"]]
+            if not sets or len(set(sets)) != len(sets):
+                self.fail("bad_value", "görünüş tarifinin seçenekleri boş olmaz, her küme bir kez")
         return r
 
     def view_templates_(self, v):
         """The project's view templates (schema 146, docs/adr/0783 §2): not empty, at most 50; each an id and a name
-        (trimmed, 1–64 characters, no control characters, both unique) and a recipe with no level, crop or template."""
+        (trimmed, 1–64 characters, no control characters, both unique) and a recipe with no level, crop, template or design options (docs/adr/0788 §3)."""
         def one(t):
             out = self.fields({"id": (self.text, True), "name": (self.text, True), "recipe": (self.view_recipe_, True)})(t)
             for k in ("id", "name"):
                 w = out[k]
                 if w != w.strip() or not w or len(w) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in w):
                     self.fail("bad_value", f"“{w}” bir şablon {'kimliği' if k == 'id' else 'adı'} olamaz")
-            if {"level", "crop", "template"} & set(out["recipe"]):
-                self.fail("bad_value", "görünüş şablonu kat, kırpma ya da başka şablon taşımaz")
+            if {"level", "crop", "template", "options"} & set(out["recipe"]):
+                self.fail("bad_value", "görünüş şablonu kat, kırpma, tasarım seçeneği ya da başka şablon taşımaz")
             return out
         all_ = self.array(one)(v)
         if not all_:
@@ -9234,6 +9252,8 @@ class _Schema:
                          **({"openingTypes": (self.array(self.opening_type), False)} if self.opening_types else {}),
                          # Schema 138 (docs/adr/0775): the project's room modules.
                          **({"modules": (self.any, False)} if self.modules else {}),
+                         # Schema 149 (docs/adr/0788): the project's design option sets.
+                         **({"options": (self.any, False)} if self.options else {}),
                          # Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
                          **({"auditExceptions": (self.array(self.fields({
                              "key": (self.text, True), "code": (self.text, True),
@@ -9295,6 +9315,8 @@ class _Schema:
                 mnames.add(m["name"].lower())
         if "modules" in a:
             self.arch_modules(a["modules"])
+        if "options" in a:
+            self.arch_options(a["options"])
         if "openingTypes" in a:
             types = a["openingTypes"]
             if not 1 <= len(types) <= 1000:
@@ -9306,6 +9328,53 @@ class _Schema:
                 ids.add(t["id"])
                 names.add(t["name"].lower())
         return a
+
+    def arch_options(self, sets):
+        """Design option sets (docs/adr/0788 §6): 1–50 sets, ids of lower-case letters, digits and “-” and names each
+        once; each 1–12 options, ids and names once in the set, members lower-case UUID texts, an object in one option
+        only (20 000 at most in all); the primary one of the set's options."""
+        if type(sets) is not list or not 1 <= len(sets) <= 50:
+            self.fail("bad_value", "seçenek kümeleri 1–50 olmalı; boş liste yazılmaz")
+        uuid = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+        ident = re.compile(r"^[a-z0-9-]{1,64}$")
+        ids, names, uids = set(), set(), set()
+
+        def name_ok(n):
+            return type(n) is str and n.strip() and len(n.strip()) <= 120 and not any(unicodedata.category(c) == "Cc" for c in n)
+
+        for s in sets:
+            if type(s) is not dict or set(s) != {"id", "name", "primary", "options"}:
+                self.fail("bad_value", "seçenek kümesinin alanları geçersiz")
+            if type(s["id"]) is not str or not ident.match(s["id"]) or s["id"] in ids:
+                self.fail("bad_value", "seçenek kümesinin kimliği geçersiz ya da yineleniyor")
+            if not name_ok(s["name"]) or s["name"].strip().lower() in names:
+                self.fail("bad_value", "seçenek kümesinin adı boş ya da yineleniyor")
+            ids.add(s["id"])
+            names.add(s["name"].strip().lower())
+            options = s["options"]
+            if type(options) is not list or not 1 <= len(options) <= 12:
+                self.fail("bad_value", "bir kümede 1–12 seçenek olur")
+            oids, onames = set(), set()
+            for o in options:
+                if type(o) is not dict or not {"id", "name"} <= set(o) or not set(o) <= {"id", "name", "members"}:
+                    self.fail("bad_value", "seçeneğin alanları geçersiz")
+                if type(o["id"]) is not str or not ident.match(o["id"]) or o["id"] in oids:
+                    self.fail("bad_value", "seçeneğin kimliği geçersiz ya da kümede yineleniyor")
+                if not name_ok(o["name"]) or o["name"].strip().lower() in onames:
+                    self.fail("bad_value", "seçeneğin adı boş ya da kümede yineleniyor")
+                oids.add(o["id"])
+                onames.add(o["name"].strip().lower())
+                members = o.get("members", [])
+                if "members" in o and (type(members) is not list or not members):
+                    self.fail("bad_value", "seçeneğin boş nesne listesi yazılmaz")
+                for m in members:
+                    if type(m) is not str or not uuid.match(m) or m in uids:
+                        self.fail("bad_value", "seçeneğin nesnesi UUID metni olur ve bir seçenekte geçer")
+                    uids.add(m)
+            if s["primary"] not in oids:
+                self.fail("bad_value", "kümenin birincil seçeneği kümenin seçeneklerinden biri olur")
+        if len(uids) > 20_000:
+            self.fail("bad_value", "seçeneklerde en çok 20 000 nesne olur")
 
     def arch_modules(self, modules):
         """Room modules (docs/adr/0775): 1–200, ids of lower-case letters, digits and “-” and names each once, versions

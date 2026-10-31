@@ -1314,6 +1314,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ArchMaterial>>", optional))]
     pub materials: Vec<crate::ArchMaterial>,
+    /// The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionSet>>", optional))]
+    pub options: Vec<crate::OptionSet>,
 }
 
 impl ArchSettings {
@@ -1349,7 +1353,12 @@ impl ArchSettings {
         !self.opening_types.is_empty()
     }
 
-    /// Whether it keeps room modules (KCAD 138, docs/adr/0775).
+    /// Whether it keeps design option sets (KCAD 153, docs/adr/0788).
+    pub fn has_options(&self) -> bool {
+        !self.options.is_empty()
+    }
+
+    /// Whether it keeps room modules (KCAD 142, docs/adr/0775).
     pub fn has_modules(&self) -> bool {
         !self.modules.is_empty()
     }
@@ -1414,6 +1423,9 @@ impl ArchSettings {
             return Some(problem);
         }
         if let Some(problem) = crate::materials_problem(&self.materials) {
+            return Some(problem);
+        }
+        if let Some(problem) = crate::option_sets_problem(&self.options) {
             return Some(problem);
         }
         if let Some(why) = crate::annotation::names_problem(

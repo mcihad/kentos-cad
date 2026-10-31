@@ -1,0 +1,237 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Tasarım seçenekleri: mutfak A ve B",
+  "uids": [
+    "0192f5a1-7880-7000-8000-000000000001",
+    "0192f5a1-7880-7000-8000-000000000002",
+    "0192f5a1-7880-7000-8000-000000000003",
+    "0192f5a1-7880-7000-8000-000000000004",
+    "0192f5a1-7880-7000-8000-000000000005",
+    "0192f5a1-7880-7000-8000-000000000006"
+  ],
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "namedViews": [
+      {
+        "id": "v-mutfak-b",
+        "name": "Mutfak B",
+        "center": {
+          "x": 3.0,
+          "y": 2.0
+        },
+        "width": 8.0,
+        "height": 6.0,
+        "twist": 0.0,
+        "recipe": {
+          "version": 1,
+          "level": {
+            "id": "zemin"
+          },
+          "options": [
+            {
+              "set": "mutfak",
+              "option": "b"
+            }
+          ]
+        }
+      }
+    ],
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        }
+      ],
+      "options": [
+        {
+          "id": "mutfak",
+          "name": "Mutfak",
+          "primary": "a",
+          "options": [
+            {
+              "id": "a",
+              "name": "A",
+              "members": [
+                "0192f5a1-7880-7000-8000-000000000005"
+              ]
+            },
+            {
+              "id": "b",
+              "name": "B",
+              "members": [
+                "0192f5a1-7880-7000-8000-000000000006"
+              ]
+            },
+            {
+              "id": "c",
+              "name": "Boş"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0,
+    "y": 0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 6.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 4.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 6.0,
+          "y": 4.0
+        },
+        {
+          "x": 0.0,
+          "y": 4.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 4.0
+        },
+        {
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 5,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 3.0,
+          "y": 0.0
+        },
+        {
+          "x": 3.0,
+          "y": 4.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 6,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 2.5,
+          "y": 0.0
+        },
+        {
+          "x": 2.5,
+          "y": 4.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    }
+  ]
+}

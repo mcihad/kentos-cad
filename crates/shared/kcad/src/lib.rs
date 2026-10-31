@@ -717,11 +717,14 @@ pub const SCHEMA_WITH_PROGRAM_SHARES: u32 = 147;
 /// settings' `materials`) and a wall component's or a slab's binding to one (`materialId`); written only when the project
 /// has one or something is bound.
 pub const SCHEMA_WITH_MATERIALS: u32 = 148;
+/// Schema 149 (docs/adr/0788): a project's design option sets
+/// (`settings.arch.options`) and a view recipe's chosen options (`options`); written only when the project has one.
+pub const SCHEMA_WITH_OPTIONS: u32 = 149;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 147] = [
+pub const SCHEMAS: [u32; 148] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -869,6 +872,7 @@ pub const SCHEMAS: [u32; 147] = [
     SCHEMA_WITH_VIEW_TEMPLATES,
     SCHEMA_WITH_PROGRAM_SHARES,
     SCHEMA_WITH_MATERIALS,
+    SCHEMA_WITH_OPTIONS,
 ];
 
 /// The file a drawing is saved as.

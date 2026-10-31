@@ -98,6 +98,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ADR 0786: web'in yazı katmanı da nesne nesne parçalarla ve çizelgenin satır öbekleriyle kurulmalı (masaüstünde
   `Store::labels_shown_parts`, `LabelMemo`, `TableGeom::cells_near`).
 - ADR 0794: web'in pafta ön denetiminde `map_view_cut` (ortak çekirdekte; web'in paneli gösterir).
+- ADR 0788: `cad.options.edit` ve `cad.options.query` web'in işleyicilerinde; görünüş tarifinin `options`'ı ve bağlı
+  haritanın seçimi; Tasarım seçenekleri penceresi, Görünümler'de tarifin Tasarım seçeneği; çizimde ve depoda
+  gösterilmeyen seçeneklerin gizlenmesi ve birleşimden çıkarılması; KCAD şema 149'un okunması ve yazılması
+  (`options.kcad`).
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

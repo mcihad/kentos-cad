@@ -344,6 +344,8 @@ pub(super) struct Features {
     pub(super) view_templates: bool,
     /// Schema 147 (docs/adr/0784): the program's shares, levels of buildings and wings, a schedule's share fields.
     pub(super) program_shares: bool,
+    /// Schema 149 (docs/adr/0788): design option sets and a recipe's options.
+    pub(super) options: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -557,6 +559,7 @@ impl Features {
             module_units: schema >= crate::SCHEMA_WITH_MODULE_UNITS,
             view_templates: schema >= crate::SCHEMA_WITH_VIEW_TEMPLATES,
             program_shares: schema >= crate::SCHEMA_WITH_PROGRAM_SHARES,
+            options: schema >= crate::SCHEMA_WITH_OPTIONS,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,

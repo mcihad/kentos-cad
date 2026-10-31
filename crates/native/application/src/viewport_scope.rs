@@ -96,10 +96,13 @@ pub fn hidden_entities(doc: &Document) -> Vec<f64> {
         })
         .map(|b| b.id)
         .collect();
+    // The design options not shown (docs/adr/0788 §4): each set's primary is.
+    let options = doc.option_out();
     doc.entities()
         .filter(|e| {
             view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden
                 || matches!(e,Entity::Insert(i) if no_plot.contains(&i.block))
+                || options.contains(&kentos_domain::Slot(e.base().id))
         })
         .map(|e| f64::from(e.base().id))
         .collect()

@@ -4211,6 +4211,69 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Tasarım seçenekleri (docs/adr/0788), held together by fixtures/commands/v1/cad.options.edit.json and
+        // cad.options.query.json (scripts/fixtures/option_cases.py).
+        CommandDescriptor {
+            id: crate::CAD_OPTIONS_EDIT.into(),
+            version: crate::CAD_OPTIONS_EDIT_VERSION,
+            title: "Tasarım seçeneği".into(),
+            summary: "Planın bir parçası için sınırlı alternatifler (mutfak A/B) kurar ve yönetir (docs/adr/0788); her yazma tek geri alma adımı “Tasarım seçeneği”. Çizim, paftalar, metraj ve çizelgeler ana modeli ve her kümenin birincil seçeneğini gösterir; görünüş tarifi (cad.views.edit recipe.options) başka bir seçeneği seçebilir. Aynı kümenin seçenekleri birbirini görmez: duvarları birleşmez, açıklıkları çakışmaz, mahal sınırını ana model ve kendi seçeneğinin duvarlarında bulur. operation: define (name, id ve option isteğe bağlı, uids: hiçbir seçenekte olmayan nesneler; ilk seçenek birincil), copy (set, option, name, primary: seçeneğin nesnelerinin bağımsız kopyası aynı yerde, aralarındaki bağlar kopyalara çevrilir), addMembers (set, option, uids: ana modelden seçeneğe), removeMembers (set, uids: seçenekten ana modele), primary (set, option), accept (set, option yoksa birincil: seçenek ana model olur, öbür seçeneklerin nesneleri silinir, küme kalkar), delete (set, option: birincil olmayan seçenek nesneleriyle silinir), rename (set, option isteğe bağlı, name). Ana modelin bir nesnesi seçeneğin nesnesine ya da bir seçeneğin nesnesi başka bir seçeneğinkine bağlıysa option_leaning. Otomatik birleştirme yoktur. Evre seçenek kimliği değildir."
+                .into(),
+            aliases: vec!["SECENEK".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OptionsEdit>(),
+            output: schema::<crate::OptionsEdited>(),
+            plan: Some(schema::<crate::OptionsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Mutfağın nesnelerinden seçenek kümesi".into(),
+                    input: json!({"operation": {"kind": "define", "name": "Mutfak",
+                        "uids": ["0192f5a1-7880-7000-8000-000000000005"]}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "A'nın kopyasından B seçeneği".into(),
+                    input: json!({"operation": {"kind": "copy", "set": "mutfak", "option": "a", "name": "B"}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "B'yi kabul et".into(),
+                    input: json!({"operation": {"kind": "accept", "set": "mutfak", "option": "b"}}),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_OPTIONS_QUERY.into(),
+            version: crate::CAD_OPTIONS_QUERY_VERSION,
+            title: "Tasarım seçeneklerini oku".into(),
+            summary: "Projenin tasarım seçeneği kümelerini okur (docs/adr/0788); çizimi değiştirmez. set ile tek küme; her seçeneğin nesne sayısı, türlere göre sayıları, mahallerinin alanı (çizim biriminin karesi), duvarlarının boyu, silinmiş nesneleri. uid ile nesnenin kümesi ve seçeneği. compare (set, a, b, search, tolerance) iki seçeneği Veri karşılaştır'ın kuralıyla konumdan eşler: aynı sayısı, yalnız b'de (added), yalnız a'da (removed), değişen çiftler, alan ve duvar boyu farkı (b − a), sayısı farklı türler."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OptionsQuery>(),
+            output: schema::<crate::OptionsQueried>(),
+            plan: Some(schema::<crate::OptionsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Mutfağın A ve B seçeneklerini karşılaştır".into(),
+                input: json!({"compare": {"set": "mutfak", "a": "a", "b": "b"}}),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_MODULES_QUERY.into(),
             version: crate::CAD_MODULES_QUERY_VERSION,
@@ -11748,6 +11811,12 @@ mod tests {
                     crate::CAD_MODULES_QUERY => {
                         serde_json::from_value::<crate::ModulesQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_OPTIONS_EDIT => {
+                        serde_json::from_value::<crate::OptionsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_OPTIONS_QUERY => {
+                        serde_json::from_value::<crate::OptionsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_OPENINGS_QUERY => {
                         serde_json::from_value::<crate::OpeningsQuery>(e.input.clone()).map(|_| ())
                     }
@@ -12875,6 +12944,12 @@ mod tests {
                         }
                         crate::CAD_MODULES_QUERY => {
                             serde_json::from_value::<crate::ModulesQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_OPTIONS_EDIT => {
+                            serde_json::from_value::<crate::OptionsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_OPTIONS_QUERY => {
+                            serde_json::from_value::<crate::OptionsQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_QUERY => {
                             serde_json::from_value::<crate::OpeningsQueried>(output.clone()).map(|_| ())

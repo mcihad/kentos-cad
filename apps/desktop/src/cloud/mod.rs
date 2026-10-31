@@ -1078,6 +1078,7 @@ impl App {
             Some(Dialog::OpeningTypes) => self.opening_types = None,
             Some(Dialog::Materials) => self.materials = None,
             Some(Dialog::RoomModules) => self.room_modules = None,
+            Some(Dialog::DesignOptions) => self.design_options = None,
             Some(Dialog::TagsCheck) => self.tags_check = None,
             Some(Dialog::ViewRefs) => self.view_refs = None,
             Some(Dialog::SheetSet) => self.sheet_set = None,

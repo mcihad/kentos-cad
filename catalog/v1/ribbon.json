@@ -1762,7 +1762,8 @@
        "arch.openingTypes",
        "arch.materials",
        "arch.modules",
-       "tool.modulePlace"
+       "tool.modulePlace",
+       "arch.options"
       ]
      }
     ],

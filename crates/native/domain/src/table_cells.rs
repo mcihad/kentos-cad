@@ -325,6 +325,8 @@ impl Document {
                 _ => None,
             }))
             .collect();
+        // Another primary design option, or objects into or out of one (docs/adr/0788 §5): every schedule reads anew.
+        let options_changed = ops.iter().any(|op| matches!(op, Op::ArchOptions { .. }));
         let mut out = Vec::new();
         // Schedules alike but for where they stand work out alike (docs/adr/0782 §3): each is worked out once a step.
         let mut alike: Vec<(Arc<Entity>, Option<TableEntity>)> = Vec::new();
@@ -339,7 +341,7 @@ impl Document {
             // the drawing's objects only the objects of its kinds (docs/adr/0344 §3).
             let reads_drawing = !t.fields.is_empty()
                 || matches!(t.source, Some(TableSource::Blocks { .. }))
-                || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if schedule_kinds(*of).iter().any(|k| kinds.contains(k)));
+                || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if options_changed || schedule_kinds(*of).iter().any(|k| kinds.contains(k)));
             if !reads_drawing && !touched.contains(&current.uid) {
                 continue;
             }
