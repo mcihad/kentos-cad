@@ -57,7 +57,20 @@ pub fn object_of(e: &Entity, layer: &str, id: f64) -> Object {
         .and_then(|json| Json::parse(&json).ok())
         .and_then(|json| CoreEntity::from_json(&json).ok())
         .map(|core| core.shape);
-    let (measured, corners) = shape.as_ref().map_or((Measured::default(), None), |s| {
+    let mut object = object_of_shape(shape.map(std::sync::Arc::new), layer, id);
+    object.kind = kind_label(e).to_owned();
+    object.label = e.base().label.clone();
+    object
+}
+
+/// What the rules see of an object they know by its shape only (a related record, docs/adr/0761): its
+/// measures and corners from the shape, no kind or label.
+pub(crate) fn object_of_shape(
+    shape: Option<std::sync::Arc<kentos_geometry_core::entity::Shape>>,
+    layer: &str,
+    id: f64,
+) -> Object {
+    let (measured, corners) = shape.as_deref().map_or((Measured::default(), None), |s| {
         let anchor = value(s, Geometry::AnchorY).zip(value(s, Geometry::AnchorX));
         (
             Measured {
@@ -69,15 +82,16 @@ pub fn object_of(e: &Entity, layer: &str, id: f64) -> Object {
         )
     });
     Object {
-        kind: kind_label(e).to_owned(),
+        kind: String::new(),
         layer: layer.to_owned(),
         id,
-        label: e.base().label.clone(),
+        label: None,
         measured,
         vertices: corners,
         uid: None,
         attachments: None,
-        shape: shape.map(std::sync::Arc::new),
+        shape,
         added: Default::default(),
+        related: None,
     }
 }

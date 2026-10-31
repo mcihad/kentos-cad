@@ -1436,6 +1436,11 @@ impl App {
         };
         let revision = doc.model.revision().to_string();
         if let (Some(e), Some(doc)) = (self.form_entry.as_mut(), self.document.as_ref()) {
+            // The record as the drawing holds it now (a related record's change worked its calculations
+            // out again, docs/adr/0761): what the typed values go onto.
+            if !e.preview && !e.new_record && e.members.is_empty() {
+                e.before = screen.attrs.clone();
+            }
             e.screen = screen;
             e.revision = revision;
             e.unique_asked.clear();

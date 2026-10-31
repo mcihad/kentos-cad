@@ -671,6 +671,8 @@ pub enum Func {
     ArrayAgg,
     Aggregate,
     FromLayer,
+    // docs/adr/0761: over the record's related records, in a form only.
+    RelatedAggregate,
     // Mekânsal (§2.7).
     Intersects,
     Encloses,
@@ -792,9 +794,9 @@ impl Func {
                 Family::Arrays
             }
             Sum | Mean | Count | CountDistinct | Minimum | Maximum | Median | StdDev
-            | ConcatValues | ArrayAgg | Aggregate | FromLayer | Intersects | Encloses | Inside
-            | CenterIn | IntersectCount | Intersecting | Distance | Nearest | OverlapArea
-            | OverlapLength => Family::World,
+            | ConcatValues | ArrayAgg | Aggregate | FromLayer | RelatedAggregate | Intersects
+            | Encloses | Inside | CenterIn | IntersectCount | Intersecting | Distance | Nearest
+            | OverlapArea | OverlapLength => Family::World,
             ToBool | ToDecimal | ToDms | ToDm | ToBase64 | FromBase64 | Hash | Md5 | Sha256
             | Rand | RandF | Uuid | Clamp | ScaleLinear | ScaleExponential | ScalePolynomial
             | Ltrim | Rtrim | Repeat | Reverse | Title | SubstrCount | ConcatWs | Format | Char

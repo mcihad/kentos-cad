@@ -337,6 +337,7 @@ fn the_additions_give_the_independent_references_values() {
         fields: Vec::new(),
         variables,
         world: true,
+        relations: false,
         ..Default::default()
     };
     let layers = doc["layers"].as_array().expect("layers");
@@ -495,10 +496,12 @@ fn the_calls_to_other_objects_speak_the_drawing_unit() {
         .expect("the evaluated layer")];
     let metres = Schema {
         world: true,
+        relations: false,
         ..Default::default()
     };
     let mm = Schema {
         world: true,
+        relations: false,
         unit: kentos_expression::Unit::per_metre(1000.0),
         ..Default::default()
     };

@@ -77,6 +77,19 @@ fn world(c: &Value) -> World {
                     fields: serde_json::from_value(l["fields"].clone()).expect("fields"),
                     rows,
                     shapes,
+                    // The relations whose child the layer is (docs/adr/0761).
+                    relations: l["relations"]
+                        .as_array()
+                        .map(|rs| {
+                            rs.iter()
+                                .map(|r| kentos_forms::WorldRelation {
+                                    id: r["id"].as_str().unwrap_or_default().to_owned(),
+                                    name: r["name"].as_str().unwrap_or_default().to_owned(),
+                                    field: r["field"].as_str().unwrap_or_default().to_owned(),
+                                })
+                                .collect()
+                        })
+                        .unwrap_or_default(),
                 },
             )
         })
@@ -342,5 +355,39 @@ fn the_checks_are_asked_at_their_moments_as_the_cases_say() {
             .collect();
         let got = form.validate_left(&attrs(&c["attrs"]), &object(&c), moment, &left);
         assert_eq!(bare(&got), c["issues"], "{}", c["name"]);
+    }
+}
+
+/// A calculation, a check and a requirement reading the record's related records (docs/adr/0761).
+#[test]
+fn related_records_aggregate_as_the_cases_say() {
+    let all = cases("relatives");
+    assert!(all.len() >= 20, "{} cases", all.len());
+    for c in all {
+        let name = c["name"].as_str().unwrap_or_default();
+        let pre = bare(&preflight_in(
+            &body(&c),
+            &fields(&c),
+            &variables(&c),
+            &world(&c),
+        ));
+        assert_eq!(pre, c["preflight"], "{name}");
+        if c.get("out").is_none() {
+            continue;
+        }
+        let form = prepared(&c);
+        let object = object(&c);
+        let (out, mut issues) = form.complete(
+            &attrs(&c["attrs"]),
+            &object,
+            c["new"].as_bool().unwrap_or(false),
+        );
+        issues.extend(form.validate(&out, &object));
+        assert_eq!(
+            serde_json::to_value(&out).expect("json"),
+            c["out"],
+            "{name}"
+        );
+        assert_eq!(bare(&issues), c["issues"], "{name}");
     }
 }

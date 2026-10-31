@@ -60,6 +60,13 @@ display_value = lfc.display
 # uzunluk(metin): the text's UTF-16 units, as JavaScript counts them.
 el.FUNCTIONS["UZUNLUK"] = (1, 1, lambda args: None if args[0] is None else float(el.units(el.text(args[0]))))
 
+# ilişkili_toplam (docs/adr/0761): its value is the form's (`resolve_related`); elsewhere it is empty.
+RELATED_CALLS = ("ILISKILI_TOPLAM", "RELATION_AGGREGATE")
+for _name in RELATED_CALLS:
+    el.FUNCTIONS[_name] = (2, 4, lambda args: None)
+# The aggregates the cases use, by their folded names (docs/adr/0214 §2.6).
+RELATED_OPS = ("SAY", "TOPLA", "ORTALAMA", "EN_DUSUK", "EN_YUKSEK", "SAY_BENZERSIZ", "DEGERLERI_BIRLESTIR")
+
 JS_SPACE = kc.JS_SPACE
 MAX_INTEGER = 9007199254740991
 MAX_DIGITS = 30
@@ -274,9 +281,135 @@ def tokenize(src):
 def parse(src):
     """The rule's tree, or None when it does not compile."""
     try:
-        return el.Parser(tokenize(src)).parse()
+        tree = el.Parser(tokenize(src)).parse()
     except el.Invalid:
         return None
+    return tree if related_ok(tree) else None
+
+
+def related_calls(n):
+    """The `ilişkili_toplam` calls in a tree."""
+    out = []
+
+    def walk(n):
+        if isinstance(n, tuple):
+            if n[0] == "call" and n[1] in RELATED_CALLS:
+                out.append(n)
+                return
+            for part in n[1:]:
+                walk(part)
+        elif isinstance(n, list):
+            for part in n:
+                walk(part)
+
+    walk(n)
+    return out
+
+
+def related_ok(tree):
+    """docs/adr/0761: the relation and the operation constant texts, a known operation, only `say` without an
+    expression; no call inside the inner expressions."""
+    for _, _, args in related_calls(tree):
+        if any(a[0] != "lit" or not isinstance(a[1], str) for a in args[:2]):
+            return False
+        op = el.key(args[1][1])
+        if op not in RELATED_OPS or (len(args) == 2 and op != "SAY"):
+            return False
+        if any(related_calls(a) for a in args[2:]):
+            return False
+    return True
+
+
+def related_names(body):
+    """The relations a form's rules name in ilişkili_toplam, as written, each once."""
+    out = []
+
+    def rules(v):
+        if isinstance(v, dict):
+            for k, x in v.items():
+                if isinstance(x, str) and k in ("visibleWhen", "requiredWhen", "readOnlyWhen", "defaultExpr",
+                                                "calculate", "choiceFilter", "rule"):
+                    yield x
+                else:
+                    yield from rules(x)
+        elif isinstance(v, list):
+            for x in v:
+                yield from rules(x)
+
+    for src in rules(body):
+        tree = parse(src)
+        for _, _, args in related_calls(tree) if tree else []:
+            name = args[0][1].strip(JS_SPACE)
+            if name and not any(el.fold(o) == el.fold(name) for o in out):
+                out.append(name)
+    return out
+
+
+def relation_in(world, name):
+    """The relation `name` names in `world`: (child layer, relation) by its id, else by its name."""
+    key = el.fold(name.strip(JS_SPACE))
+    for by in ("id", "name"):
+        for lid, other in (world or {}).items():
+            for r in other.get("relations", []):
+                if el.fold(r[by]) == key:
+                    return other, r
+    return None
+
+
+def related_value(call, world, uid):
+    """docs/adr/0761: the call's value over the related records of the record `uid`, by kentos.statistics/1."""
+    _, _, args = call
+    found = relation_in(world, args[0][1])
+    if found is None:
+        return None
+    other, r = found
+    field = next((f["name"] for f in other["fields"] if key_of(f) == r["field"]), r["field"])
+    op = el.key(args[1][1])
+    items = []
+    for _, attrs in other["rows"]:
+        held = [h.strip(JS_SPACE) for h in attrs.get(field, "").split(";")]
+        if uid is None or uid not in held:
+            continue
+        inner = dict(attrs)  # an inner expression reads the related record's attributes as text
+        if len(args) > 3 and not el.truthy(el.value(args[3], inner)):
+            continue
+        items.append(el.value(args[2], inner) if len(args) > 2 else True)
+    given = [v for v in items if not el.is_empty(v)]
+    if op == "SAY":
+        return float(len(given))
+    nums = []
+    for v in items:
+        t = el.number_text(v) if isinstance(v, float) else v if isinstance(v, str) else None
+        d = sq.read_number(t) if t is not None else None
+        if d is not None:
+            nums.append(d)
+    if op in ("TOPLA", "ORTALAMA"):
+        if not nums:
+            return None
+        total = float(sum(Fraction(m, 10 ** k) for m, k in nums))
+        return total if op == "TOPLA" else total / len(nums)
+    if op in ("EN_DUSUK", "EN_YUKSEK"):
+        if not nums:
+            return None
+        pick = (max if op == "EN_YUKSEK" else min)(nums, key=lambda d: Fraction(d[0], 10 ** d[1]))
+        return float(Fraction(pick[0], 10 ** pick[1]))
+    if op == "SAY_BENZERSIZ":
+        return float(len({el.text(v) for v in given}))
+    if op == "DEGERLERI_BIRLESTIR":
+        return ", ".join(el.text(v) for v in given) if given else None
+    raise AssertionError(op)
+
+
+def resolve_related(tree, world, uid):
+    """The tree with each ilişkili_toplam call turned into its value."""
+    if isinstance(tree, tuple):
+        if tree[0] == "call" and tree[1] in RELATED_CALLS:
+            return ("lit", related_value(tree, world, uid))
+        return tuple(resolve_related(part, world, uid) if isinstance(part, (tuple, list)) else part
+                     for part in tree)
+    if isinstance(tree, list):
+        return [resolve_related(part, world, uid) for part in tree]
+    return tree
 
 
 def names(tree):
@@ -288,6 +421,9 @@ def names(tree):
             if n[0] == "field":
                 if n[1] not in out:
                     out.append(n[1])
+                return
+            # ilişkili_toplam's inner expressions read the related records (docs/adr/0761).
+            if n[0] == "call" and n[1] in RELATED_CALLS:
                 return
             for part in n[1:]:
                 walk(part)
@@ -331,7 +467,10 @@ def scope(fields, attrs, ctx=None):
 
 
 def value_of(src, fields, attrs, ctx=None):
-    return el.value(parse(src), scope(fields, attrs, ctx))
+    tree = parse(src)
+    if ctx and "related" in ctx:
+        tree = resolve_related(tree, ctx["related"], (ctx.get("object") or {}).get("uid"))
+    return el.value(tree, scope(fields, attrs, ctx))
 
 
 def holds(src, fields, attrs, ctx=None):
@@ -647,6 +786,10 @@ def preflight(body, fields, variables=(), world=None):
     stuck = next((k for k in range(len(calcs)) if not done[k]), None)
     if stuck is not None:
         issues.append(issue("form_calc_cycle", True, calcs[stuck][0], calcs[stuck][1], "calculate"))
+    # docs/adr/0761: a relation ilişkili_toplam names that the project has not (a warning: its value is empty).
+    for name in related_names(body):
+        if relation_in(world, name) is None:
+            issues.append(issue("form_relation_unknown", False))
     # docs/adr/0442 §5: a step action's step, the workflow's.
     steps = [s["label"] for s in body.get("workflow", {}).get("steps", [])]
 
@@ -720,6 +863,8 @@ class Form:
         still = {n: v for n, v in self.variables.items() if n not in MOMENT}
         self.unit = 1  # the cases' geometry speaks metres
         self.lists, self.related = {}, {}
+        # docs/adr/0761: the world the rules' ilişkili_toplam reads, when they name a relation.
+        self.relations = world if related_names(body) else None
         for x, _ in self.nodes:
             if x["type"] == "field" and "lookup" in x:
                 self.lists[x["id"]] = self.list_of(x["lookup"], world[x["lookup"]["layer"]], still)
@@ -965,7 +1110,10 @@ class Form:
     def ctx(self, obj, extra=None):
         v = dict(self.variables)
         v.update(extra or {})
-        return {"variables": v, "object": obj or {}}
+        out = {"variables": v, "object": obj or {}}
+        if self.relations is not None:
+            out["related"] = self.relations
+        return out
 
     def waits(self, src):
         """Whether an expression reads a value only a host gives, not given."""
@@ -1677,7 +1825,114 @@ def core():
         "needs": needs,
         "picks": picks_core(),
         "moments": moments_core(),
+        "relatives": relatives_core(),
     }
+
+
+# ── Related records' aggregates (docs/adr/0761) ─────────────────────────
+
+AGG_FIELDS = [
+    {"name": "Kod", "kind": "text"},
+    {"name": "Durum", "kind": "text"},
+    {"name": "Sayı", "kind": "integer"},
+    {"name": "Toplam", "kind": "decimal"},
+    {"name": "Adlar", "kind": "text"},
+    {"name": "Not", "kind": "text"},
+]
+AGG_WORLD = {
+    "malik": {"name": "Malik", "fields": [
+        {"name": "Ad", "kind": "text"}, {"id": "bina", "name": "Bina", "kind": "text"},
+        {"name": "Hisse", "kind": "decimal"}, {"name": "Durum", "kind": "text"}],
+        "rows": [
+            ["m1", {"Ad": "Ayşe", "Bina": "b1", "Hisse": "0.5", "Durum": "Etkin"}],
+            ["m2", {"Ad": "Mehmet", "Bina": "b1", "Hisse": "0.25", "Durum": "Etkin"}],
+            ["m3", {"Ad": "Zeynep", "Bina": "b1", "Hisse": "0.25", "Durum": "Pasif"}],
+            ["m4", {"Ad": "Ali", "Bina": "b2", "Hisse": "1", "Durum": "Etkin"}],
+            ["m5", {"Ad": "Can", "Bina": "", "Hisse": "1", "Durum": "Etkin"}],
+            ["m6", {"Ad": "Ece", "Bina": "b1; b2", "Hisse": "bilinmiyor", "Durum": "Etkin"}],
+        ],
+        "relations": [{"id": "bina-malik", "name": "Malikler", "field": "bina"}]},
+    "bolum": {"name": "Bağımsız bölüm", "fields": [
+        {"name": "No", "kind": "text"}, {"id": "bina", "name": "Bina", "kind": "text"},
+        {"name": "Alan", "kind": "decimal"}],
+        "rows": [
+            ["d1", {"No": "1", "Bina": "b1", "Alan": "120.5"}],
+            ["d2", {"No": "2", "Bina": "b1", "Alan": "95.25"}],
+        ],
+        "relations": [{"id": "bina-bolum", "name": "Bölümler", "field": "bina"}]},
+}
+
+
+def relatives_core():
+    """docs/adr/0761: a calculation, a check and a requirement reading the record's related records."""
+    out = []
+
+    def body(calc=None, target="Sayı", check=None, required=None):
+        items = [{"type": "field", "id": "kod", "field": "Kod"}, {"type": "field", "id": "durum", "field": "Durum"}]
+        if check:
+            items[0]["checks"] = [{"rule": check, "message": "Malik hisselerinin toplamı 1 olmalı."}]
+        for name in ("Sayı", "Toplam", "Adlar"):
+            item = {"type": "field", "id": el.key(name).lower(), "field": name}
+            if calc and name == target:
+                item["calculate"] = calc
+            items.append(item)
+        note = {"type": "field", "id": "not", "field": "Not"}
+        if required:
+            note["requiredWhen"] = required
+        items.append(note)
+        b = {"revision": 1, "items": items}
+        assert kc.body_problem(b) is None
+        return b
+
+    def case(name, b, uid="b1", attrs=None, new=False, world=AGG_WORLD):
+        attrs = dict(attrs or {"Kod": "B-1", "Durum": "Yıkık"})
+        obj = {"uid": uid} if uid else {}
+        c = {"name": name, "fields": AGG_FIELDS, "body": b, "world": world, "object": obj, "attrs": attrs,
+             "new": new, "preflight": preflight(b, AGG_FIELDS, (), world)}
+        if not errors(c["preflight"]):
+            form = Form(b, AGG_FIELDS, (), world)
+            done, issues = form.complete(attrs, obj, new)
+            c["out"], c["issues"] = done, issues + form.validate(done, obj, "save")
+        out.append(c)
+
+    case("say: binanın malikleri, çoktan çoğa bağlı olan da", body("ilişkili_toplam('Malikler', 'say')"))
+    case("say, koşullu: alt kaydın kendi Durum'u", body("ilişkili_toplam('Malikler', 'say', Ad, Durum = 'Etkin')"))
+    case("say, ifadeyle: boş olmayan değerler", body("ilişkili_toplam('Malikler', 'say', Hisse)"))
+    case("topla: sayı olmayan hisse sayılmaz", body("ilişkili_toplam('Malikler', 'topla', Hisse)", "Toplam"))
+    case("topla, koşullu", body("ilişkili_toplam('Malikler', 'topla', Hisse, Durum = 'Etkin')", "Toplam"))
+    case("topla, ifadenin hesabıyla", body("ilişkili_toplam('Malikler', 'topla', Hisse * 100)", "Toplam"))
+    case("ortalama", body("ilişkili_toplam('Malikler', 'ortalama', Hisse)", "Toplam"))
+    case("en_yüksek", body("ilişkili_toplam('Malikler', 'en_yüksek', Hisse)", "Toplam"))
+    case("en_düşük", body("ilişkili_toplam('Malikler', 'en_düşük', Hisse)", "Toplam"))
+    case("değerleri_birleştir: katmanın sırasıyla", body("ilişkili_toplam('Malikler', 'değerleri_birleştir', Ad)",
+                                                          "Adlar"))
+    case("say_benzersiz", body("ilişkili_toplam('Malikler', 'say_benzersiz', Durum)"))
+    case("başka ilişki: bölümlerin alanı", body("ilişkili_toplam('Bölümler', 'topla', Alan)", "Toplam"))
+    case("ilişki kimliğiyle", body("ilişkili_toplam('bina-malik', 'say')"))
+    case("ilişkinin adı harf ve büyüklük farkıyla", body("ilişkili_toplam('MALİKLER', 'say')"))
+    case("İngilizce adıyla", body("relation_aggregate('Malikler', 'say')"))
+    case("başka bina: çoktan çoğa bağ ikisine de sayılır", body("ilişkili_toplam('Malikler', 'say')"), uid="b2",
+         attrs={"Kod": "B-2"})
+    case("alt kaydı olmayan kayıt: say 0", body("ilişkili_toplam('Malikler', 'say')"), uid="b3",
+         attrs={"Kod": "B-3"})
+    case("alt kaydı olmayan kayıt: toplam boş", body("ilişkili_toplam('Malikler', 'topla', Hisse)", "Toplam"),
+         uid="b3", attrs={"Kod": "B-3", "Toplam": "5"})
+    case("yeni kayıt: kimliği yok, alt kaydı yok", body("ilişkili_toplam('Malikler', 'say')"), uid=None,
+         attrs={"Kod": "B-9"}, new=True)
+    case("projede olmayan ilişki: uyarı, değer boş", body("ilişkili_toplam('Kiracılar', 'say')"))
+    case("ilişki dünyada yokken: uyarı", body("ilişkili_toplam('Malikler', 'say')"), world={})
+    case("denetim: etkin hisseler 1 değil", body(check="ilişkili_toplam('Malikler', 'topla', Hisse, "
+                                                      "Durum = 'Etkin') = 1"))
+    case("denetim: bütün hisseler 1", body(check="ilişkili_toplam('Malikler', 'topla', Hisse) = 1"))
+    case("zorunluluk: iki bölümlü binada not zorunlu", body(required="ilişkili_toplam('Bölümler', 'say') >= 2"))
+    case("zorunluluk: bölümsüz binada değil", body(required="ilişkili_toplam('Bölümler', 'say') >= 2"), uid="b2",
+         attrs={"Kod": "B-2"})
+    case("bilinmeyen toplama derlenmez", body("ilişkili_toplam('Malikler', 'çarp', Hisse)"))
+    case("ifadesiz yalnız say olur", body("ilişkili_toplam('Malikler', 'topla')"))
+    case("ilişkinin adı sabit metin olmalı", body("ilişkili_toplam(Kod, 'say')"))
+    case("iç ifadede ilişkili_toplam olmaz", body("ilişkili_toplam('Malikler', 'say', "
+                                                   "ilişkili_toplam('Bölümler', 'say'))"))
+    return out
 
 
 # ── Calculations, choices, soft checks (docs/adr/0402) ─────────────────

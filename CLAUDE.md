@@ -119,6 +119,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `.kcad` şema 137 (opt-in), `FORMATS_VERSION` 100. 31 ortak bağ durumu (`arch_bond_cases.py`), 26 benimseme. Gerçek
   pencerede elle denenmedi; çelişen bağın çizimde vurgusu ve 20 ms bütçesi açık.
 
+- **Formda ilişkili kayıtların toplamı (31 Ekim 2026; [ADR 0761](docs/adr/0761-related-records-aggregate.md), dal `formlar-surer`).**
+  `ilişkili_toplam(ilişki, işlem, ifade, koşul)` (İngilizce `relation_aggregate`): projedeki ilişkinin alt kayıtları üstünde
+  `katman_toplamı`'nın toplamaları, iç ifade alt kaydın alanlarıyla; yalnız formun kurallarında derlenir (`Schema.relations`,
+  `form_schema_in`, başka yerde `RELATIONS_REFUSED`). Form alt kayıtları bir kez üst kimliğe göre dizinler (`relatives::Relatives`,
+  `Object.related`, `OtherLayer.relations`), geometri yalnız okunursa (`related_needs`); bilinmeyen ilişki `form_relation_unknown`.
+  Belge alt kayıt değişince üst kayıtları aynı adımda turlarla tamamlar (`follow_forms`, en çok 8 tur, yalnız gereken formlar);
+  sunucunun bekçisi değişiklik kümesini dünyaya bindirir (`overlay_children`); Formla düzenle yenilenince taban kaydın yeni
+  hâli. Şema değişmez. 29 ortak durum (`relatives`); 10 000 malikte bir malik eklemek 13 ms.
+
 - **Alandan çıkınca denetim (30 Ekim 2026; [ADR 0760](docs/adr/0760-check-on-leaving-the-field.md)).**
   Denetimin `on`'u `leave` da olur (“Alandan çıkınca”): değer değişirken yalnız çıkılan öğede, kaydederken ve iş akışında
   hep sorulur (`Prepared::asked`, `validate_left`, `assess_left`, `kentos_forms::Left`); komutun doğrulaması azalmaz.

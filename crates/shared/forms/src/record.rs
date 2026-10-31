@@ -37,6 +37,9 @@ pub struct Object {
     /// The objects a submission adds referring to the record, by [`added_key`](crate::added_key) (the
     /// other layer and field; docs/adr/0444 §1): counted with those already there, a link taken off -1.
     pub added: std::collections::BTreeMap<String, i32>,
+    /// The related records a form's `ilişkili_toplam` reads (docs/adr/0761): the form gives them; none
+    /// elsewhere, where the call is empty.
+    pub related: Option<crate::relatives::RelatedRecords>,
 }
 
 /// How many attachments an object holds: all of them and its photos.
@@ -75,6 +78,15 @@ pub fn schema_of(fields: &[LayerField], variables: &[Variable]) -> Schema {
     schema_in(fields, variables, Unit::METRE)
 }
 
+/// The schema a form's own rules compile against: [`schema_in`] where `ilişkili_toplam` reads the
+/// record's related records (docs/adr/0761).
+pub fn form_schema_in(fields: &[LayerField], variables: &[Variable], unit: Unit) -> Schema {
+    Schema {
+        relations: true,
+        ..schema_in(fields, variables, unit)
+    }
+}
+
 /// [`schema_of`] whose geometry values speak `unit` (the project's drawing unit: docs/adr/0402 §5).
 pub fn schema_in(fields: &[LayerField], variables: &[Variable], unit: Unit) -> Schema {
     Schema {
@@ -89,6 +101,7 @@ pub fn schema_in(fields: &[LayerField], variables: &[Variable], unit: Unit) -> S
             .collect(),
         variables: variables.to_vec(),
         world: false,
+        relations: false,
         unit,
     }
 }
@@ -145,6 +158,28 @@ impl Scope for RuleScope<'_> {
     }
     fn scale(&self) -> Option<f64> {
         None
+    }
+    fn world(&self) -> Option<&dyn kentos_expression::world::WorldCalls> {
+        self.object
+            .related
+            .as_ref()
+            .map(|_| self as &dyn kentos_expression::world::WorldCalls)
+    }
+}
+
+/// `ilişkili_toplam` answered over the record's related records (docs/adr/0761).
+impl kentos_expression::world::WorldCalls for RuleScope<'_> {
+    fn call(
+        &self,
+        k: usize,
+        _id: f64,
+        _own: &[kentos_expression::scalar::V],
+        out: &mut String,
+    ) -> kentos_expression::scalar::R<'static> {
+        let (Some(c), Some(related)) = (self.expr.world.get(k), &self.object.related) else {
+            return kentos_expression::scalar::R::V(kentos_expression::scalar::V::Null);
+        };
+        related.value(c, self.object.uid.as_deref(), out)
     }
 }
 

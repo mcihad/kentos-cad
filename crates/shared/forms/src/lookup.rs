@@ -36,6 +36,18 @@ pub struct OtherLayer {
     pub fields: Vec<LayerField>,
     pub rows: Vec<(String, Attrs)>,
     pub shapes: Vec<Option<Arc<Shape>>>,
+    /// The project relations whose child this layer is and that the form's `ilişkili_toplam` names
+    /// (docs/adr/0761); its objects' shapes are then given too.
+    pub relations: Vec<WorldRelation>,
+}
+
+/// A project relation a form's rules aggregate over (docs/adr/0761): its id, its name and the child
+/// field's key that holds the parent's persistent id.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct WorldRelation {
+    pub id: String,
+    pub name: String,
+    pub field: String,
 }
 
 /// The other layers a form reads, by their ids.
@@ -815,6 +827,7 @@ mod tests {
                     row("u1", "B-9"),
                 ],
                 shapes: Vec::new(),
+                relations: Vec::new(),
             },
         );
         w

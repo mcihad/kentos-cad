@@ -10,6 +10,7 @@
 //! object, for the column engine and the one-object walk alike.
 
 pub mod aggregate;
+pub mod related;
 pub mod roles;
 mod spatial;
 
@@ -217,6 +218,10 @@ impl WorldCalls for Session<'_> {
         let Some(c) = self.calls.get(k) else {
             return R::V(V::Null);
         };
+        // A form's host answers `ilişkili_toplam` (docs/adr/0761); a layer's world has no relation.
+        if c.func == Func::RelatedAggregate {
+            return R::V(V::Null);
+        }
         let layer = match &c.layer {
             None => match self.place(id) {
                 Some((l, _)) => l,
@@ -259,7 +264,7 @@ impl WorldCalls for Session<'_> {
 }
 
 /// An item as a result: numbers and true/false as they are, text written.
-fn give(it: Option<&Item>, out: &mut String) -> R<'static> {
+pub(crate) fn give(it: Option<&Item>, out: &mut String) -> R<'static> {
     match it {
         None | Some(Item::Null) => R::V(V::Null),
         Some(Item::Num(x)) => R::V(V::Num(*x)),

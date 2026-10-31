@@ -266,6 +266,11 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
         ("form-kaynak-arama", sources_search, neighbourhood_focused),
         ("form-kaynak-tasarim", sources_designer, properties_down),
         ("form-cikinca-tasarim", left_designer, properties_bottom),
+        (
+            "form-iliskili-tasarim",
+            related_sums_designer,
+            properties_down,
+        ),
     ]
 }
 
@@ -764,6 +769,128 @@ fn units_table(app: &mut App) {
     }
     app.selection.set([Slot(building)]);
     run(app, "data.formEdit");
+}
+
+/// A building whose form counts its units, sums their areas and lists their owners from the relation
+/// (docs/adr/0761): the four units linked by a command, the document worked the building out in the same
+/// step; a fifth unit stands unlinked.
+pub(crate) fn related_sums(app: &mut App) {
+    let mut o = Objects::new();
+    let building = o.path(
+        "bina",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 16.0], [0.0, 16.0]],
+        true,
+    );
+    o.data(building, &[("Kod", "B-1")], Some("B-1"));
+    let rows = [
+        ("1", "0", "92.40", "Ayşe Yılmaz"),
+        ("2", "1", "88.15", "Mehmet Kaya"),
+        ("3", "1", "88.15", "Zeynep Arslan"),
+        ("4", "2", "120.75", "Ali Demir"),
+        ("5", "3", "64.30", "Elif Şahin"),
+    ];
+    let mut units = Vec::new();
+    for (no, floor, area, owner) in rows {
+        let id = o.record("bolum");
+        o.data(
+            id,
+            &[("No", no), ("Kat", floor), ("Alan", area), ("Malik", owner)],
+            Some(no),
+        );
+        units.push(id);
+    }
+    let mut form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([
+            { "type": "field", "id": "kod", "field": "Kod" },
+            { "type": "group", "id": "ozet", "label": "Bölümlerden", "columns": 2, "items": [
+                { "type": "field", "id": "sayi", "field": "Bölüm sayısı",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'say')" },
+                { "type": "field", "id": "alan", "field": "Toplam alan",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'topla', Alan)" },
+                { "type": "field", "id": "malikler", "field": "Malikler",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'değerleri_birleştir', Malik)" },
+                { "type": "field", "id": "ust", "field": "Üst kattakiler",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'say', No, Kat >= 2)" } ] },
+            { "type": "related", "id": "bolumler", "label": "Bağımsız bölümler", "layer": "bolum", "field": "Bina",
+              "view": "table", "columns": ["No", "Kat", "Alan", "Malik"] }
+        ]),
+    );
+    form["enforce"] = json!(true);
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" },
+                                { "name": "Bölüm sayısı", "kind": "integer" },
+                                { "name": "Toplam alan", "kind": "decimal", "scale": 2 },
+                                { "name": "Malikler", "kind": "text" },
+                                { "name": "Üst kattakiler", "kind": "integer" }]);
+        let mut bolum = crate::tools_scenes::layer("bolum", "Bağımsız bölüm", "#E5484D", 0.35);
+        bolum["fields"] = json!([{ "name": "No", "kind": "text" }, { "name": "Kat", "kind": "integer" },
+                                 { "name": "Alan", "kind": "decimal", "scale": 2 }, { "name": "Malik", "kind": "text" },
+                                 { "name": "Bina", "kind": "text" }]);
+        layers.push(bina);
+        layers.push(bolum);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+        d["settings"]["relations"] = json!([{ "id": "bina-bolum", "name": "Bağımsız bölümler",
+                                              "parent": "bina", "child": "bolum", "field": "Bina" }]);
+    });
+    link_units(app, building, &units[..4]);
+    app.selection.set([Slot(building)]);
+    run(app, "data.formEdit");
+}
+
+/// `units` linked to `building` by one command (`cad.entities.set`), as Bağla writes them.
+fn link_units(app: &mut App, building: u32, units: &[u32]) {
+    let uid = |app: &App, slot: u32| {
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.uid(Slot(slot)))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
+    let parent = uid(app, building);
+    let children: Vec<String> = units.iter().map(|s| uid(app, *s)).collect();
+    if let Some(doc) = app.document.as_mut() {
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_ENTITIES_SET,
+            kentos_commands::CallOp::Execute,
+            json!({ "uids": children, "attrs": { "Bina": parent }, "operation": "attributes" }),
+        );
+    }
+}
+
+/// The fifth unit linked while the building's form is open: the count, the area, the owners and the
+/// upper floors' count follow in the same step.
+fn related_sums_linked(app: &mut App) {
+    related_sums(app);
+    let last = |layer: &str| {
+        app.document
+            .as_ref()
+            .and_then(|d| {
+                d.model
+                    .by_layer_with_uids(layer)
+                    .map(|(_, e)| e.base().id)
+                    .max()
+            })
+            .unwrap_or(0)
+    };
+    let (building, fifth) = (last("bina"), last("bolum"));
+    link_units(app, building, &[fifth]);
+    let _ = app.refresh_entry();
+}
+
+/// Formlar on the building form, the units' count chosen: its calculation reading the relation.
+fn related_sums_designer(app: &mut App) {
+    related_sums(app);
+    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("sayi".into()));
 }
 
 /// Formlar on the building form, its units item chosen: Görünüm Tablo and its columns (docs/adr/0425).
@@ -3069,6 +3196,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-haritadan-uzakta", map_apart),
         ("form-cikinca-yazarken", left_typing),
         ("form-cikinca-cikti", left_done),
+        ("form-iliskili-toplam", related_sums),
+        ("form-iliskili-eklendi", related_sums_linked),
         ("form-iliski-kartlar", meters_cards),
         ("form-iliski-bekleyen", meters_pending),
         ("form-iliski-yigini", meters_nested),

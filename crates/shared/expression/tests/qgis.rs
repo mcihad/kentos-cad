@@ -268,6 +268,7 @@ fn an_inner_expression_is_refused_where_it_cannot_run() {
     // A call to another layer whose own argument reads the item: refused even where other layers are given.
     let schema = kentos_expression::Schema {
         world: true,
+        relations: false,
         ..Default::default()
     };
     let refused =

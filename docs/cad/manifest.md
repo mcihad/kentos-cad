@@ -21,10 +21,10 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 | geometry | 1 | 5 | 1 | 2 | 9 |
 | processing | 0 | 131 | 22 | 2 | 155 |
 | none | 0 | 14 | 6 | 2 | 22 |
-| query | 9 | 21 | 3 | 9 | 42 |
+| query | 10 | 21 | 2 | 9 | 42 |
 | session | 17 | 71 | 57 | 9 | 154 |
 | host | 3 | 19 | 14 | 1 | 37 |
-| **toplam** | 203 | 508 | 148 | 75 | 934 |
+| **toplam** | 204 | 508 | 147 | 75 | 934 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).

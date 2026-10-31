@@ -109,6 +109,7 @@ impl Calc {
             fields,
             variables: Vec::new(),
             world: false,
+            relations: false,
             ..Default::default()
         };
         let expr = compile_with(source, &schema).map_err(|e| e.text())?;

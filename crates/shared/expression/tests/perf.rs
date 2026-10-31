@@ -384,6 +384,7 @@ fn typed_and_shapes(sizes: &[usize], runs: usize, warm: usize) -> Vec<(String, S
             description: String::new(),
         }],
         world: false,
+        relations: false,
         ..Default::default()
     };
     for &n in sizes {
@@ -575,6 +576,7 @@ fn measures_the_additions() {
     let warm = 3;
     let schema = Schema {
         world: true,
+        relations: false,
         ..Schema::default()
     };
     let measure = |label: &str, budget: f64, run_once: &dyn Fn() -> usize, n: usize| {

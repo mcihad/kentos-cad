@@ -25,6 +25,7 @@ mod object;
 mod preflight;
 pub mod reach;
 mod record;
+mod relatives;
 mod requirements;
 pub mod scenario;
 pub mod scope;
@@ -33,10 +34,11 @@ pub mod table_checks;
 
 pub use generate::{generate, item_id_of, widget_of};
 pub use layer_rules::LayerRules;
-pub use lookup::{OtherLayer, PickMiss, World, labels_of};
+pub use lookup::{OtherLayer, PickMiss, World, WorldRelation, labels_of};
+pub use relatives::{named_relations, related_needs};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
-pub use record::{Attached, Attrs, Object, schema_in, schema_of};
+pub use record::{Attached, Attrs, Object, form_schema_in, schema_in, schema_of};
 pub use requirements::{requirements, unsupported};
 pub use session::{
     CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, Left, MOMENT, Moment, Prepared, added_key,
@@ -111,6 +113,9 @@ pub mod codes {
     pub const MOMENT_ONLY: &str = "form_moment_only";
     /// A list from another layer, or a related item, names a layer the project has not (docs/adr/0404).
     pub const LOOKUP_LAYER: &str = "form_lookup_layer";
+    /// `ilişkili_toplam` names a relation the project has not, or not one ending on a layer (docs/adr/0761;
+    /// a warning: its value is empty).
+    pub const RELATION_UNKNOWN: &str = "form_relation_unknown";
     /// A list from another layer, or a related item, names a field its layer has not.
     pub const LOOKUP_FIELD: &str = "form_lookup_field";
     /// A list from another layer compares, writes or copies fields of kinds that do not go together

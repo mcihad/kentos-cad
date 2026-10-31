@@ -342,3 +342,47 @@ fn evaluates_a_table_of_objects_in_one_call() {
     let c = evaluate_rows(&e, &one, As::TextNumber).unwrap_or_default();
     assert_eq!(c.numbers, [0.666666666667]);
 }
+
+/// docs/adr/0761: `ilişkili_toplam` compiles only where the host answers related records; its arguments
+/// keep their rules wherever it compiles.
+#[test]
+fn a_related_aggregate_compiles_in_a_form_only() {
+    let form = Schema {
+        relations: true,
+        ..Schema::default()
+    };
+    let world = Schema {
+        world: true,
+        ..Schema::default()
+    };
+    let src = "ilişkili_toplam('Malikler', 'topla', Hisse, Durum = 'Etkin')";
+    let e = compile_with(src, &form).expect("a form's rule");
+    assert_eq!(e.world.len(), 1);
+    assert_eq!(e.world[0].layer.as_deref(), Some("Malikler"));
+    assert!(
+        e.fields.is_empty(),
+        "the inner names are the related records'"
+    );
+    for schema in [Schema::default(), world] {
+        let refused = compile_with(src, &schema).expect_err("not a form");
+        assert_eq!(refused.message, crate::RELATIONS_REFUSED);
+        assert_eq!(refused.at, 1);
+    }
+    for bad in [
+        "ilişkili_toplam('Malikler', 'çarp', Hisse)",
+        "ilişkili_toplam('Malikler', 'topla')",
+        "ilişkili_toplam(Kod, 'say')",
+        "ilişkili_toplam('Malikler', 'say', ilişkili_toplam('Bölümler', 'say'))",
+        "ilişkili_toplam('Malikler')",
+    ] {
+        assert!(compile_with(bad, &form).is_err(), "{bad}");
+    }
+    assert!(compile_with("relation_aggregate('Malikler', 'say')", &form).is_ok());
+    // With the other layers' functions where they are not given, both are refused at the first.
+    let both = compile_with(
+        "katman_toplamı('Bina', 'say', 1) + ilişkili_toplam('Malikler', 'say')",
+        &form,
+    )
+    .expect_err("katman_toplamı is not a form's");
+    assert_eq!(both.message, crate::WORLD_REFUSED);
+}

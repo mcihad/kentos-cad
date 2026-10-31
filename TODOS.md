@@ -85,6 +85,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ADR 0770 (ADV-01): web'de Dikdörtgen duvarın Ortak duvar'ı (`adopt`), duvarın geçici ölçüsünde yazarken etki kartı
   (`WallEffects`) ve kilit kareleri (Bu ölçüyü koru, bağı kaldır, bağlı yanın parametresi), kısıt motorunda duvar çizgisi
   ve pervaz parçaları (mimari bağdaştırıcı `ops::arch_bonds`, WASM'a bağlayıcı), `.kcad` şema 137 okuma ve yazma.
+- ADR 0761: formda `ilişkili_toplam` (ilişkili kayıtların sayısı ve toplamı). Web'in formu kaydın alt kayıtlarını çekirdeğin
+  `Prepared`'ıyla okumalı (`kentos_forms` WASM'a bağlanınca dünyanın `relations`'ı ile); web'in belgesi alt kayıt değişince üst
+  kayıtları aynı adımda turlarla yeniden tamamlamalı (masaüstünde `form_follow::follow_forms`); İfade oluşturucu işlevi yalnız
+  form kuralında önermeli. Ortak durumlar `fixtures/forms/v1/cases.json`'un `relatives` grubu.
 - ADR 0760: denetimin `leave` zamanı (Alandan çıkınca). Web'in formu alanın odak kaybında (`change` ya da `blur`) ve
   seçilen değerde o öğeyi çıkılmış saymalı, kararı çekirdekten (`kentos_forms`'un `validate_left`'i WASM'a bağlanınca); web'in
   tasarımcısında Ne zaman'a Alandan çıkınca. Ortak durumlar `fixtures/forms/v1/cases.json`'un `moments` grubu.

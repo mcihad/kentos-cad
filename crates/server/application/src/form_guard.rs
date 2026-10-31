@@ -124,6 +124,35 @@ pub fn world_layers(body: &FormBody) -> Vec<String> {
     out
 }
 
+/// The relations `body`'s `ilişkili_toplam` names (docs/adr/0761), each with its child layer: what the
+/// world gives besides `world_layers`.
+pub fn relation_layers(
+    body: &FormBody,
+    settings: &ProjectSettings,
+) -> Vec<(String, kentos_forms::WorldRelation)> {
+    let named = kentos_forms::named_relations(body);
+    let fold = |t: &str| kentos_expression::js::text::fold_turkish(t.trim());
+    settings
+        .relations
+        .iter()
+        .filter(|r| {
+            named
+                .iter()
+                .any(|n| fold(n) == fold(&r.id) || fold(n) == fold(&r.name))
+        })
+        .map(|r| {
+            (
+                r.child.clone(),
+                kentos_forms::WorldRelation {
+                    id: r.id.clone(),
+                    name: r.name.clone(),
+                    field: r.field.clone(),
+                },
+            )
+        })
+        .collect()
+}
+
 /// The layers a form's spatial lists read (docs/adr/0759 §2), each with how far around a written
 /// record its objects' shapes are needed, in metres (`unit` turns the list's tolerance from the
 /// drawing's unit); none: the whole layer (a nearest list without a tolerance).
@@ -153,25 +182,37 @@ pub fn spatial_reach(body: &FormBody, unit: Unit) -> Vec<(String, Option<f64>)> 
 
 /// The world a form reads: each of `layers` with its name, fields and stored objects (`rows`: a
 /// layer id, a persistent id and its attributes). A layer named in `spatial` carries its objects'
-/// shapes from `shapes` by their ids (docs/adr/0759 §2); one not read there has none.
+/// shapes from `shapes` by their ids (docs/adr/0759 §2); one not read there has none. A relation's child
+/// layer in `relations` carries the relation (docs/adr/0761), even with no row.
 pub fn world_of(
     tree: &[LayerNode],
     rows: &[(String, String, BTreeMap<String, String>)],
     spatial: &[String],
     shapes: &HashMap<String, Arc<Shape>>,
+    relations: &[(String, kentos_forms::WorldRelation)],
 ) -> World {
     let mut world = World::new();
+    let layer_of = |layer: &str| {
+        let node = find(tree, layer);
+        OtherLayer {
+            name: node.map(|n| n.name.clone()).unwrap_or_default(),
+            fields: node.map(|n| n.fields.clone()).unwrap_or_default(),
+            ..OtherLayer::default()
+        }
+    };
     for (layer, uid, attrs) in rows {
-        let entry = world.entry(layer.clone()).or_insert_with(|| {
-            let node = find(tree, layer);
-            OtherLayer {
-                name: node.map(|n| n.name.clone()).unwrap_or_default(),
-                fields: node.map(|n| n.fields.clone()).unwrap_or_default(),
-                rows: Vec::new(),
-                shapes: Vec::new(),
-            }
-        });
+        let entry = world
+            .entry(layer.clone())
+            .or_insert_with(|| layer_of(layer));
         entry.rows.push((uid.clone(), attrs.clone()));
+    }
+    for (child, r) in relations {
+        let entry = world
+            .entry(child.clone())
+            .or_insert_with(|| layer_of(child));
+        if !entry.relations.contains(r) {
+            entry.relations.push(r.clone());
+        }
     }
     for id in spatial {
         if let Some(layer) = world.get_mut(id) {
@@ -641,5 +682,55 @@ mod tests {
         assert!(j.enforced("u", None, &empty).is_some());
         let open = settings(json!([form(false, true)]));
         assert_eq!(judge(&open, &t).enforced("u", Some(&before), &empty), None);
+    }
+
+    /// docs/adr/0761: a building's count of its owners judged over the world's relation: the count the
+    /// owners give holds, another one is refused; the relation named reaches the world with no row too.
+    #[test]
+    fn a_count_of_related_records_is_judged_over_the_relation() {
+        let body = json!({ "revision": 1, "items": [
+            { "type": "field", "id": "durum", "field": "Durum" },
+            { "type": "field", "id": "kat", "field": "Kat", "calculate": "ilişkili_toplam('Malikler', 'say')" }
+        ]});
+        let typed: FormBody = serde_json::from_value(body.clone()).expect("a body");
+        let mut s = settings(
+            json!([{ "id": "bina", "name": "Bina", "layer": "bina", "draft": body,
+            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }],
+            "enforce": true }]),
+        );
+        s.relations = serde_json::from_value(json!([{ "id": "bina-malik", "name": "Malikler",
+            "parent": "bina", "child": "malik", "field": "bina" }]))
+        .expect("relations");
+        let mut t = tree();
+        t.push(
+            serde_json::from_value(json!({
+                "id": "malik", "name": "Malik", "type": "layer", "visible": true, "locked": false,
+                "expanded": true, "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 },
+                "children": [], "fields": [{ "name": "Ad", "kind": "text" }, { "name": "bina", "kind": "text" }]
+            }))
+            .expect("a layer"),
+        );
+        let relations = relation_layers(&typed, &s);
+        assert_eq!(relations.len(), 1);
+        let uid = "11111111-1111-4111-8111-111111111111";
+        let owner = |name: &str| {
+            let attrs: BTreeMap<String, String> = [
+                ("Ad".to_owned(), name.to_owned()),
+                ("bina".to_owned(), uid.to_owned()),
+            ]
+            .into_iter()
+            .collect();
+            ("malik".to_owned(), format!("m-{name}"), attrs)
+        };
+        let rows = vec![owner("Ayşe"), owner("Ali")];
+        let mut j = judge(&s, &t);
+        j.world = world_of(&t, &rows, &[], &HashMap::new(), &relations);
+        let before = building(json!({ "Durum": "iyi", "Kat": "1" }), 10.0);
+        let two = building(json!({ "Durum": "iyi", "Kat": "2" }), 10.0);
+        assert_eq!(j.enforced(uid, Some(&before), &two), None);
+        let three = building(json!({ "Durum": "iyi", "Kat": "3" }), 10.0);
+        assert!(j.enforced(uid, Some(&before), &three).is_some());
+        let empty = world_of(&t, &[], &[], &HashMap::new(), &relations);
+        assert_eq!(empty.get("malik").map(|l| l.relations.len()), Some(1));
     }
 }
