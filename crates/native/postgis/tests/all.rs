@@ -3164,3 +3164,80 @@ fn a_whole_table_binds_in_time() {
         written.as_secs_f64() * 1000.0
     );
 }
+
+/// A form's lists' sources on a real server (docs/adr/0763 §1): a table there and readable is ready; one not there, a
+/// database not there, a wrong login, a table the account may not read and a schema it may not look into are each said
+/// by their own kind.
+#[test]
+#[ignore = "needs the throwaway PostGIS of scripts/fixtures/postgis_cases.py (KENTOS_PG_URL)"]
+fn a_form_says_each_database_source_apart() {
+    use kentos_native_application::provider::Unreached;
+    let Ok(url) = std::env::var("KENTOS_PG_URL") else {
+        eprintln!("KENTOS_PG_URL yok: atlandı");
+        return;
+    };
+    kentos_postgis::register();
+    let p = kentos_native_application::provider::postgis().expect("provider");
+    let wait = std::time::Duration::from_secs(5);
+    let at = |user: &str, database: &str| {
+        url.replace("postgres@", &format!("{user}@"))
+            .rsplit_once('/')
+            .map(|(head, _)| format!("{head}/{database}"))
+            .expect("address")
+    };
+    assert_eq!(p.reach(&url, "kadastro.parsel", wait), Ok(()));
+    let kind = |address: &str, table: &str| {
+        p.reach(address, table, wait)
+            .map_err(|r| (r.problem, r.message))
+    };
+    let (k, m) = kind(&url, "kadastro.yok").expect_err("no table");
+    assert_eq!(k, Unreached::Missing, "{m}");
+    let (k, m) = kind(&at("postgres", "yok_boyle"), "kadastro.parsel").expect_err("no database");
+    assert_eq!(k, Unreached::Missing, "{m}");
+    let (k, m) = kind(&at("tanimsiz", "postgres"), "kadastro.parsel").expect_err("no such user");
+    assert_eq!(k, Unreached::Denied, "{m}");
+    // kisitli has the same password, USAGE on komsu and SELECT on komsu.kisitli alone.
+    assert_eq!(
+        p.reach(&at("kisitli", "postgres"), "komsu.kisitli", wait),
+        Ok(())
+    );
+    let (k, m) = kind(&at("kisitli", "postgres"), "komsu.parsel").expect_err("no select");
+    assert_eq!(k, Unreached::Denied, "{m}");
+    assert!(m.contains("SELECT"), "{m}");
+    let (k, m) = kind(&at("kisitli", "postgres"), "kadastro.parsel").expect_err("no usage");
+    assert_eq!(k, Unreached::Denied, "{m}");
+    // The command says the same through a form whose list's layer is bound to the table kisitli may not read.
+    let layer = |id: &str, name: &str| {
+        json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
+                "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [],
+                "fields": [{ "name": "Parsel", "kind": "text" }, { "name": "kod", "kind": "text" }] })
+    };
+    let form = json!({ "revision": 1, "items": [
+        { "type": "field", "id": "parsel", "field": "Parsel", "lookup": { "layer": "liste", "key": "kod" } }] });
+    let setup = json!({
+        "format": "kentos.document", "version": 1, "name": "Kaynaklar",
+        "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                      "plotScale": 1000, "workspace": "gis",
+                      "forms": [{ "id": "f", "name": "Form", "layer": "bina", "draft": form }],
+                      "sources": [{ "id": "k", "kind": "postgis", "path": at("kisitli", "postgres"),
+                                    "table": "komsu.parsel", "layer": "liste", "revision": "0".repeat(64),
+                                    "digest": "f".repeat(64), "writable": false }] },
+        "origin": { "x": 0.0, "y": 0.0 },
+        "layers": [layer("bina", "Bina"), layer("liste", "Liste")],
+        "activeLayer": "bina", "entities": [], "styles": { "items": [], "categories": [] }
+    });
+    let mut d = Document::from_snapshot(
+        kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup"),
+    )
+    .expect("setup");
+    let answer = run(
+        &mut d,
+        "cad.forms.sources",
+        CallOp::Execute,
+        json!({ "form": "f", "draft": true }),
+    );
+    let source = &ok(&answer)["sources"][0];
+    assert_eq!(source["state"], "denied", "{answer}");
+    assert_eq!(source["code"], "form_source_denied");
+    assert_eq!(source["retry"], "credentials");
+}

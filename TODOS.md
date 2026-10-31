@@ -113,6 +113,21 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ADR 0770 (ADV-01): web'de Dikdörtgen duvarın Ortak duvar'ı (`adopt`), duvarın geçici ölçüsünde yazarken etki kartı
   (`WallEffects`) ve kilit kareleri (Bu ölçüyü koru, bağı kaldır, bağlı yanın parametresi), kısıt motorunda duvar çizgisi
   ve pervaz parçaları (mimari bağdaştırıcı `ops::arch_bonds`, WASM'a bağlayıcı), `.kcad` şema 137 okuma ve yazma.
+- ADR 0764: Veri girişi alt kaydı alt katmanın kendi formuyla yazar (`ChildEntry`, `entry_write_refusal`). Web'in Formla
+  düzenle'si ilişkili kayıtlar öğesinde Değiştir'i alt katmanın canlı formuna, Bağla ve Bağı kopar'ı o formun bağ alanını
+  göstermesine bağlamalı, sunucunun okunmayan alanı yazma reddini (403) Veri girişine göstermeli.
+- ADR 0763: formun listelerinin kaynağı (`cad.forms.sources`: yerel, hazır, ulaşılamıyor, zaman aşımı, yetkisiz, yok,
+  değişti, başka; her birinin kodu ve çıkış yolu). Web'in formu bağlı kaynağı sunucudan sormalı (web dosyaya ve veritabanına
+  doğrudan ulaşmaz: bulut bağdaştırıcısıyla, `FORM-SRC-10`), hazır olmayanı başlıkta kendi satırında Yeniden dene ve çıkış
+  yoluyla göstermeli.
+- ADR 0762: ilişkili kayıtlar öğesinin eylemleri (`actions`: oluştur, güncelle, sil, bağla, bağı kopar, aç, git) ve izinleri.
+  Web'in formu öğenin sunduklarını göstermeli, sunulup izni olmayanı gerekçesiyle soluk göstermeli (`kentos_forms::related_offer`,
+  `ChildPermits`), Sil'i satırda sormalı, yalnız okuyan öğeden açılan alt kaydı salt okunur açmalı; tasarımcıda Eylemler satırı.
+  Sunucunun form bekçisi Veri girişinin alt kayıt değişikliğini öğenin eylemleriyle sınamalı (`FORM-REL-13` ile).
+- ADR 0761: formda `ilişkili_toplam` (ilişkili kayıtların sayısı ve toplamı). Web'in formu kaydın alt kayıtlarını çekirdeğin
+  `Prepared`'ıyla okumalı (`kentos_forms` WASM'a bağlanınca dünyanın `relations`'ı ile); web'in belgesi alt kayıt değişince üst
+  kayıtları aynı adımda turlarla yeniden tamamlamalı (masaüstünde `form_follow::follow_forms`); İfade oluşturucu işlevi yalnız
+  form kuralında önermeli. Ortak durumlar `fixtures/forms/v1/cases.json`'un `relatives` grubu.
 - ADR 0760: denetimin `leave` zamanı (Alandan çıkınca). Web'in formu alanın odak kaybında (`change` ya da `blur`) ve
   seçilen değerde o öğeyi çıkılmış saymalı, kararı çekirdekten (`kentos_forms`'un `validate_left`'i WASM'a bağlanınca); web'in
   tasarımcısında Ne zaman'a Alandan çıkınca. Ortak durumlar `fixtures/forms/v1/cases.json`'un `moments` grubu.

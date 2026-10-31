@@ -3,6 +3,7 @@ import type { ActionKind } from "./ActionKind";
 import type { ActionRuns } from "./ActionRuns";
 import type { AttachmentAccept } from "./AttachmentAccept";
 import type { FormField } from "./FormField";
+import type { RelatedAction } from "./RelatedAction";
 import type { RelatedView } from "./RelatedView";
 
 /**
@@ -50,7 +51,12 @@ min?: number,
 /**
  * The most (1–1000): 1 one to one.
  */
-max?: number, } | { "type": "attachments", id: string, label?: string, 
+max?: number, 
+/**
+ * What it lets do with the children (docs/adr/0762 §1), each once; none: every action but
+ * deleting; empty: the children only listed.
+ */
+actions?: Array<RelatedAction>, } | { "type": "attachments", id: string, label?: string, 
 /**
  * What counts and is added: every attachment, only photos or only documents and addresses.
  */

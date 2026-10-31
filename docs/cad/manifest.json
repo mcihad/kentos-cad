@@ -1790,11 +1790,12 @@
     "cad.forms.fill",
     "cad.forms.submit",
     "cad.forms.transition",
-    "cad.forms.validate"
+    "cad.forms.validate",
+    "cad.forms.sources"
    ],
    "operation": null,
-   "python": "kentos.cad.forms.fill, kentos.cad.forms.submit, kentos.cad.forms.transition, kentos.cad.forms.validate",
-   "mcp": "cad.forms.fill, cad.forms.submit, cad.forms.transition, cad.forms.validate",
+   "python": "kentos.cad.forms.fill, kentos.cad.forms.submit, kentos.cad.forms.transition, kentos.cad.forms.validate, kentos.cad.forms.sources",
+   "mcp": "cad.forms.fill, cad.forms.submit, cad.forms.transition, cad.forms.validate, cad.forms.sources",
    "note": "Kayıt cad.forms.submit ile, birden çok kayıt cad.forms.fill ile tek adımda yazılır; iş akışının adımları cad.forms.transition'dır; pencerenin canlı denetimi cad.forms.validate'in çekirdeğidir (ADR 0401, 0403, 0428).",
    "scope": "shared",
    "desktop": "implemented",
@@ -1811,13 +1812,14 @@
     "cad.forms.test",
     "cad.forms.recompute",
     "cad.forms.compare",
+    "cad.forms.sources",
     "cad.forms.export",
     "cad.forms.import"
    ],
    "operation": null,
-   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate, kentos.cad.forms.test, kentos.cad.forms.recompute, kentos.cad.forms.compare, kentos.cad.forms.export, kentos.cad.forms.import",
-   "mcp": "cad.forms.edit, cad.forms.validate, cad.forms.test, cad.forms.recompute, cad.forms.compare, cad.forms.export, cad.forms.import",
-   "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420); Hesapları yenile cad.forms.recompute'tur (ADR 0421); Değişiklikler cad.forms.compare'in farkıdır (ADR 0427); Dışa aktar ve İçe aktar form paketidir (ADR 0435).",
+   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate, kentos.cad.forms.test, kentos.cad.forms.recompute, kentos.cad.forms.compare, kentos.cad.forms.sources, kentos.cad.forms.export, kentos.cad.forms.import",
+   "mcp": "cad.forms.edit, cad.forms.validate, cad.forms.test, cad.forms.recompute, cad.forms.compare, cad.forms.sources, cad.forms.export, cad.forms.import",
+   "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420); Hesapları yenile cad.forms.recompute'tur (ADR 0421); Değişiklikler cad.forms.compare'in farkıdır (ADR 0427); Dışa aktar ve İçe aktar form paketidir (ADR 0435); listelerin kaynağının durumu cad.forms.sources'tur (ADR 0763).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

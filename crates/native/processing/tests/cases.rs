@@ -2694,6 +2694,7 @@ fn a_layer_filter_leaves_its_objects_out_of_the_calls_to_other_layers() {
     let counts = |doc: &Document| -> Vec<V<'static>> {
         let schema = Schema {
             world: true,
+            relations: false,
             ..Schema::default()
         };
         let expr = kentos_expression::compile_with("kesişen_sayısı('Ağaç')", &schema)

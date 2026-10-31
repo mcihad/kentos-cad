@@ -536,6 +536,83 @@ impl RelatedView {
     }
 }
 
+/// What a related item lets the record's user do with its children (docs/adr/0762 §1): the form's
+/// offer; whether the user may is asked apart (the child layer's lock, the project role).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum RelatedAction {
+    /// Yeni: a child made, linked to the record.
+    Create,
+    /// A child's values changed: its form opens to edit, `cad.forms.submit`'s child values.
+    Update,
+    /// A child deleted (Sil), after it is asked.
+    Delete,
+    /// Bağla: an object of the child layer linked to the record.
+    Link,
+    /// Bağı kopar: a child's link to the record taken off.
+    Unlink,
+    /// Aç: a child's form opened to read.
+    View,
+    /// Git: a child shown and chosen in the drawing.
+    Show,
+}
+
+impl RelatedAction {
+    pub const ALL: [RelatedAction; 7] = [
+        RelatedAction::Create,
+        RelatedAction::Update,
+        RelatedAction::Delete,
+        RelatedAction::Link,
+        RelatedAction::Unlink,
+        RelatedAction::View,
+        RelatedAction::Show,
+    ];
+
+    /// What an item offers when it names none: what related items always did, deleting not.
+    pub const DEFAULT: [RelatedAction; 6] = [
+        RelatedAction::Create,
+        RelatedAction::Update,
+        RelatedAction::Link,
+        RelatedAction::Unlink,
+        RelatedAction::View,
+        RelatedAction::Show,
+    ];
+
+    /// Its word, as the form's window says it.
+    pub fn label(self) -> &'static str {
+        match self {
+            RelatedAction::Create => "Yeni",
+            RelatedAction::Update => "Düzenle",
+            RelatedAction::Delete => "Sil",
+            RelatedAction::Link => "Bağla",
+            RelatedAction::Unlink => "Bağı kopar",
+            RelatedAction::View => "Aç",
+            RelatedAction::Show => "Git",
+        }
+    }
+
+    /// Its name in the form's JSON.
+    pub fn key(self) -> &'static str {
+        match self {
+            RelatedAction::Create => "create",
+            RelatedAction::Update => "update",
+            RelatedAction::Delete => "delete",
+            RelatedAction::Link => "link",
+            RelatedAction::Unlink => "unlink",
+            RelatedAction::View => "view",
+            RelatedAction::Show => "show",
+        }
+    }
+}
+
+/// What a related item offers: its own list, else [`RelatedAction::DEFAULT`].
+pub fn related_offers(actions: Option<&[RelatedAction]>) -> &[RelatedAction] {
+    actions.unwrap_or(&RelatedAction::DEFAULT)
+}
+
 /// A related table holds at most this many columns.
 pub const MOST_RELATED_COLUMNS: usize = 8;
 
@@ -629,6 +706,11 @@ pub enum FormItem {
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
         max: Option<u32>,
+        /// What it lets do with the children (docs/adr/0762 §1), each once; none: every action but
+        /// deleting; empty: the children only listed.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        actions: Option<Vec<RelatedAction>>,
     },
     /// The record's photos and documents (docs/adr/0407 §1): the object's own attachments, added
     /// and removed in the form; their count may be bounded.
@@ -1607,8 +1689,17 @@ pub fn body_problem(body: &FormBody) -> Option<String> {
                 columns,
                 min,
                 max,
+                actions,
                 ..
             } => {
+                if let Some(actions) = actions {
+                    let mut seen = actions.clone();
+                    seen.sort();
+                    seen.dedup();
+                    if seen.len() != actions.len() {
+                        return Some(format!("“{id}” öğesinin eylemleri birer kez yazılır."));
+                    }
+                }
                 if [min, max]
                     .iter()
                     .any(|n| n.is_some_and(|n| n > MOST_RELATED_COUNT))
@@ -2097,6 +2188,49 @@ mod tests {
             enforce: false,
             comments: Vec::new(),
         }
+    }
+
+    #[test]
+    fn a_related_item_names_each_action_once() {
+        let related = |actions: Option<Vec<RelatedAction>>| FormBody {
+            revision: 1,
+            items: vec![FormItem::Related {
+                id: "sayaclar".into(),
+                label: None,
+                layer: "sayac".into(),
+                field: "bina".into(),
+                visible_when: None,
+                view: RelatedView::List,
+                columns: Vec::new(),
+                min: None,
+                max: None,
+                actions,
+            }],
+            ..Default::default()
+        };
+        assert_eq!(body_problem(&related(None)), None);
+        assert_eq!(body_problem(&related(Some(Vec::new()))), None);
+        assert_eq!(
+            body_problem(&related(Some(vec![
+                RelatedAction::Link,
+                RelatedAction::Delete
+            ]))),
+            None
+        );
+        assert_eq!(
+            body_problem(&related(Some(vec![
+                RelatedAction::Link,
+                RelatedAction::Link
+            ])))
+            .as_deref(),
+            Some("“sayaclar” öğesinin eylemleri birer kez yazılır.")
+        );
+        // Written as the form's JSON: absent when none, kept when empty.
+        let none = serde_json::to_value(&related(None).items[0]).unwrap();
+        assert!(none.get("actions").is_none());
+        let empty = serde_json::to_value(&related(Some(Vec::new())).items[0]).unwrap();
+        assert_eq!(empty["actions"], serde_json::json!([]));
+        assert_eq!(related_offers(None), &RelatedAction::DEFAULT);
     }
 
     #[test]

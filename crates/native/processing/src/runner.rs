@@ -482,6 +482,7 @@ impl Runner {
             fields: Vec::new(),
             variables: scene.variables(),
             world: true,
+            relations: false,
             unit: Unit::METRE,
         };
         let expr = compile_with(src, &schema).ok()?;
@@ -863,6 +864,7 @@ impl Runner {
             fields: Vec::new(),
             variables: job.variables.clone(),
             world: true,
+            relations: false,
             unit: Unit::METRE,
         };
         let mut resolved = Resolved::borrowed(&job.values);

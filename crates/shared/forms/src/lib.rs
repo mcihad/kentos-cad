@@ -16,6 +16,8 @@
 //! fields, each read as its kind (a yes/no field is true or false). A hidden field keeps its value;
 //! a rule decides only what the form shows and asks.
 
+mod child_actions;
+mod entry_writes;
 pub mod compare;
 pub mod field_refs;
 mod generate;
@@ -25,18 +27,24 @@ mod object;
 mod preflight;
 pub mod reach;
 mod record;
+mod relatives;
 mod requirements;
 pub mod scenario;
 pub mod scope;
 mod session;
 pub mod table_checks;
 
+pub use child_actions::{
+    ChildEntry, ChildPermits, Offer, child_actions, related_offer, relation_offer,
+};
+pub use entry_writes::{EntryRefusal, entry_write_refusal};
 pub use generate::{generate, item_id_of, widget_of};
 pub use layer_rules::LayerRules;
-pub use lookup::{OtherLayer, PickMiss, World, labels_of};
+pub use lookup::{OtherLayer, PickMiss, World, WorldRelation, labels_of};
+pub use relatives::{named_relations, related_needs};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
-pub use record::{Attached, Attrs, Object, schema_in, schema_of};
+pub use record::{Attached, Attrs, Object, form_schema_in, schema_in, schema_of};
 pub use requirements::{requirements, unsupported};
 pub use session::{
     CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, Left, MOMENT, Moment, Prepared, added_key,
@@ -111,6 +119,9 @@ pub mod codes {
     pub const MOMENT_ONLY: &str = "form_moment_only";
     /// A list from another layer, or a related item, names a layer the project has not (docs/adr/0404).
     pub const LOOKUP_LAYER: &str = "form_lookup_layer";
+    /// `ilişkili_toplam` names a relation the project has not, or not one ending on a layer (docs/adr/0761;
+    /// a warning: its value is empty).
+    pub const RELATION_UNKNOWN: &str = "form_relation_unknown";
     /// A list from another layer, or a related item, names a field its layer has not.
     pub const LOOKUP_FIELD: &str = "form_lookup_field";
     /// A list from another layer compares, writes or copies fields of kinds that do not go together
@@ -155,6 +166,19 @@ pub mod codes {
     pub const LOOKUP_DUPLICATE: &str = "form_lookup_duplicate";
     /// The source of a copy changed after the copy (docs/adr/0439 §3; a warning).
     pub const LOOKUP_STALE: &str = "form_lookup_stale";
+    // A list's source (docs/adr/0763): the list is offered from the working copy meanwhile.
+    /// Its database cannot be reached.
+    pub const SOURCE_OFFLINE: &str = "form_source_offline";
+    /// Its database did not answer in time.
+    pub const SOURCE_TIMEOUT: &str = "form_source_timeout";
+    /// Its database does not let the account in, or the account may not read the table.
+    pub const SOURCE_DENIED: &str = "form_source_denied";
+    /// Its file, database or table is not there.
+    pub const SOURCE_MISSING: &str = "form_source_missing";
+    /// Its file is not the bytes the working copy was read from.
+    pub const SOURCE_CHANGED: &str = "form_source_changed";
+    /// Anything else: the file cannot be read, TLS, no database provider on this host.
+    pub const SOURCE_FAILED: &str = "form_source_failed";
     /// A soft check that is not true (a warning).
     pub const CHECK_WARNING: &str = "form_check_warning";
     /// A unique field's value another object of the layer has.

@@ -570,8 +570,9 @@ fn check_args(
         let place = starts.get(i).copied().unwrap_or(at);
         let Some(t) = text(i) else {
             let what = match (role, f.func) {
+                (Role::Layer, Func::RelatedAggregate) => "İlişkinin adı",
                 (Role::Layer, _) => "Katman adı",
-                (_, Func::Aggregate) => "Toplamanın adı",
+                (_, Func::Aggregate | Func::RelatedAggregate) => "Toplamanın adı",
                 (_, Func::FromLayer) => "Anahtar alanın adı",
                 _ => "Ayraç",
             };
@@ -583,12 +584,28 @@ fn check_args(
                 place,
             ));
         };
-        if f.func == Func::Aggregate && *role == Role::Text && Aggregate::from_name(t).is_none() {
+        if matches!(f.func, Func::Aggregate | Func::RelatedAggregate)
+            && *role == Role::Text
+            && Aggregate::from_name(t).is_none()
+        {
             return Err(err(
                 format!("Bilinmeyen toplama: '{t}'. {} olabilir.", Aggregate::NAMES),
                 place,
             ));
         }
+    }
+    // docs/adr/0761: only `say` counts the related records without an expression.
+    if f.func == Func::RelatedAggregate
+        && args.len() == 2
+        && text(1).and_then(Aggregate::from_name) != Some(Aggregate::Count)
+    {
+        return Err(err(
+            format!(
+                "Bu toplama her alt kayıtta hesaplanacak bir ifade ister; yalnız 'say' ifadesiz olur. Kullanım: {}",
+                f.signature
+            ),
+            starts.get(1).copied().unwrap_or(at),
+        ));
     }
     if f.func.family() == Family::Patterns
         && let Some(p) = text(1)

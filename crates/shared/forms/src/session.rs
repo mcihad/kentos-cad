@@ -10,6 +10,9 @@
 //!   required field is filled and every hard check of a shown, filled field holds; a soft check warns.
 //! - A write through the form changes only the form's fields, none hidden or read-only.
 
+use std::borrow::Cow;
+use std::sync::Arc;
+
 use kentos_contracts::{
     AttachmentAccept, FieldChoice, FormBody, FormField, FormIssue, FormItem, FormItemState,
     FormSeverity, FormWidget, LayerField, check_value, js_trim,
@@ -19,7 +22,8 @@ use kentos_expression::template::{self, Template};
 use kentos_expression::{Expr, Schema, Unit, Variable, compile_with};
 
 use crate::lookup::{List, Related, World, list_of, related_of};
-use crate::record::{Attrs, Object, field_text_of, holds, schema_in, text_of};
+use crate::record::{Attrs, Object, field_text_of, form_schema_in, holds, text_of};
+use crate::relatives::{RelatedRecords, Relatives};
 use crate::{codes, has_errors, issue};
 
 /// The `@` values that change with the moment or the user: a command gives them (`moment`, `user`),
@@ -65,6 +69,9 @@ pub struct Prepared {
     schema: Schema,
     /// The day the rules read (`@tarih`): what a listed value's validity is judged on (docs/adr/0438 §5).
     today: Option<String>,
+    /// The related records the rules' `ilişkili_toplam` reads (docs/adr/0761); none when they name no
+    /// relation.
+    relatives: Option<RelatedRecords>,
 }
 
 /// The ids of the items the user already left on a screen (docs/adr/0760 §1).
@@ -188,7 +195,9 @@ impl Prepared {
         if has_errors(&issues) {
             return Err(issues);
         }
-        let schema = schema_in(fields, variables, unit);
+        let schema = form_schema_in(fields, variables, unit);
+        let relatives = Relatives::of(&crate::named_relations(body), world)
+            .map(|r| RelatedRecords(Arc::new(r)));
         let mut items = Vec::new();
         let ctx = Ctx {
             fields,
@@ -221,7 +230,20 @@ impl Prepared {
                 Some((w, at))
             }),
             schema,
+            relatives,
         })
+    }
+
+    /// `object` as the rules see it: with the related records the form found (docs/adr/0761).
+    fn seen<'o>(&self, object: &'o Object) -> Cow<'o, Object> {
+        match &self.relatives {
+            Some(r) if object.related.as_ref() != Some(r) => {
+                let mut o = object.clone();
+                o.related = Some(r.clone());
+                Cow::Owned(o)
+            }
+            _ => Cow::Borrowed(object),
+        }
     }
 
     /// The form over a layer with record rules (docs/adr/0438 §1): a record breaking one is told on
@@ -426,6 +448,7 @@ impl Prepared {
 
     /// Every item's state for the record, in the form's order.
     pub fn states(&self, attrs: &Attrs, object: &Object) -> Vec<FormItemState> {
+        let object = &*self.seen(object);
         self.items
             .iter()
             .zip(self.flags(attrs, object))
@@ -510,6 +533,7 @@ impl Prepared {
     /// [`Prepared::states`] with what a field's choice filter offers and a note's text for the record:
     /// what a form's screen shows.
     pub fn described(&self, attrs: &Attrs, object: &Object) -> Vec<FormItemState> {
+        let object = &*self.seen(object);
         let notes = self.notes(attrs, object);
         let mut states = self.states(attrs, object);
         for (node, state) in self.items.iter().zip(&mut states) {
@@ -552,6 +576,7 @@ impl Prepared {
     /// A field item's whole list from another layer for the record, past its page (docs/adr/0439 §1):
     /// what a searched list searches; none for an item without one.
     pub fn options(&self, item: &str, attrs: &Attrs, object: &Object) -> Option<Vec<FieldChoice>> {
+        let object = &*self.seen(object);
         let b = self.items.iter().find(|n| n.id == item)?.field.as_ref()?;
         Some(b.lookup.as_ref()?.choices(attrs, object))
     }
@@ -567,6 +592,7 @@ impl Prepared {
         uid: &str,
         values: &Attrs,
     ) -> Option<Result<(String, String), crate::lookup::PickMiss>> {
+        let object = &*self.seen(object);
         let b = self.items.iter().find(|n| n.id == item)?.field.as_ref()?;
         Some(b.lookup.as_ref()?.picked(uid, values, attrs, object))
     }
@@ -574,6 +600,7 @@ impl Prepared {
     /// The listed values a field item offers for the record, in the list's order: none when the item
     /// has no filter (every listed value is offered).
     pub fn choices(&self, item: &str, attrs: &Attrs, object: &Object) -> Option<Vec<String>> {
+        let object = &*self.seen(object);
         let b = self.items.iter().find(|n| n.id == item)?.field.as_ref()?;
         if let Some(list) = &b.lookup {
             return Some(
@@ -635,6 +662,7 @@ impl Prepared {
     /// Each note's text for the record, by its item's id, in the form's order (a plain note as
     /// written).
     pub fn notes(&self, attrs: &Attrs, object: &Object) -> Vec<(String, String)> {
+        let object = &*self.seen(object);
         self.items
             .iter()
             .filter_map(|n| {
@@ -699,6 +727,7 @@ impl Prepared {
     /// a calculation whose value its field refuses (an error: the record is not written), a default
     /// whose value its field refuses (a warning: it is not put in), a record that does not settle.
     pub fn complete(&self, attrs: &Attrs, object: &Object, new: bool) -> (Attrs, Vec<FormIssue>) {
+        let object = &*self.seen(object);
         let mut out = attrs.clone();
         let mut issues = Vec::new();
         if new {
@@ -879,6 +908,7 @@ impl Prepared {
         moment: Moment,
         left: &Left,
     ) -> Vec<FormIssue> {
+        let object = &*self.seen(object);
         let states = self.flags(attrs, object);
         let draft = self.in_draft(attrs);
         let subtype = self.subtype(attrs);
@@ -1368,6 +1398,7 @@ impl Prepared {
         moment: Moment,
         left: &Left,
     ) -> (Attrs, Vec<FormIssue>) {
+        let object = &*self.seen(object);
         let mut written = before.clone();
         let mut issues = Vec::new();
         let mut changed: Vec<usize> = Vec::new();
@@ -1465,6 +1496,7 @@ impl Prepared {
     /// completed, must be valid. Attributes that are not the layer's fields are not the form's. Its
     /// issues hold the soft checks' warnings too.
     pub fn enforce(&self, before: &Attrs, after: &Attrs, object: &Object) -> Vec<FormIssue> {
+        let object = &*self.seen(object);
         let mut issues = Vec::new();
         let mut changed = Vec::new();
         let (completed, worked) = self.complete(after, object, false);

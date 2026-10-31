@@ -509,6 +509,16 @@
         {
           "description": "The objects of another layer whose field holds this record's persistent id (docs/adr/0404 §4):\na list in the form, each opened by its own form.",
           "properties": {
+            "actions": {
+              "description": "What it lets do with the children (docs/adr/0762 §1), each once; none: every action but\ndeleting; empty: the children only listed.",
+              "items": {
+                "$ref": "#/$defs/RelatedAction"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
+            },
             "columns": {
               "description": "The table's columns: the other layer's fields' keys, at most 8; empty: its first four.",
               "items": {
@@ -1260,6 +1270,46 @@
         "relation"
       ],
       "type": "object"
+    },
+    "RelatedAction": {
+      "description": "What a related item lets the record's user do with its children (docs/adr/0762 §1): the form's\noffer; whether the user may is asked apart (the child layer's lock, the project role).",
+      "oneOf": [
+        {
+          "const": "create",
+          "description": "Yeni: a child made, linked to the record.",
+          "type": "string"
+        },
+        {
+          "const": "update",
+          "description": "A child's values changed: its form opens to edit, `cad.forms.submit`'s child values.",
+          "type": "string"
+        },
+        {
+          "const": "delete",
+          "description": "A child deleted (Sil), after it is asked.",
+          "type": "string"
+        },
+        {
+          "const": "link",
+          "description": "Bağla: an object of the child layer linked to the record.",
+          "type": "string"
+        },
+        {
+          "const": "unlink",
+          "description": "Bağı kopar: a child's link to the record taken off.",
+          "type": "string"
+        },
+        {
+          "const": "view",
+          "description": "Aç: a child's form opened to read.",
+          "type": "string"
+        },
+        {
+          "const": "show",
+          "description": "Git: a child shown and chosen in the drawing.",
+          "type": "string"
+        }
+      ]
     },
     "RelatedView": {
       "description": "How a related item shows its objects (docs/adr/0425).",

@@ -37,7 +37,7 @@ pub fn preflight_in(
             problem,
         )];
     }
-    let schema = schema_of(fields, variables);
+    let schema = crate::record::form_schema_in(fields, variables, kentos_expression::Unit::METRE);
     let mut p = Preflight {
         fields,
         world,
@@ -64,6 +64,21 @@ pub fn preflight_in(
         }
     }
     p.calc_cycle();
+    // A relation `ilişkili_toplam` names that the project has not (docs/adr/0761): its value is empty.
+    for name in crate::named_relations(body) {
+        if !crate::relatives::in_world(&name, world) {
+            p.issues.push(issue(
+                codes::RELATION_UNKNOWN,
+                FormSeverity::Warning,
+                None,
+                None,
+                None,
+                format!(
+                    "ilişkili_toplam “{name}” ilişkisini anıyor ama projede bu adla ya da kimlikle bir ilişki yok; değeri boş kalır."
+                ),
+            ));
+        }
+    }
     // The scope over the layer's fields (docs/adr/0539).
     if let Some(problem) =
         crate::scope::scope_problem(body, fields, variables, kentos_expression::Unit::METRE)

@@ -458,6 +458,44 @@ async fn a_veri_girisi_edit_is_merged_over_the_fields_it_reads() {
     // The same request again: the same answer.
     let again = changes::commit(&db.app, &entry, edit).await.unwrap();
     assert!(again.replayed && again.merged == done.merged);
+    // A field the Veri girişi does not read it never writes (docs/adr/0764 §2): a value of its own is
+    // refused whole, never kept silently; the stored note stays.
+    let base3 = kentos_application::projects::features_by_id(&db.app, &entry, &[uid])
+        .await
+        .unwrap()[0]
+        .entity
+        .clone();
+    let mut written = base3.clone();
+    written.base_mut().attrs =
+        serde_json::from_value(json!({ "Durum": "iyi", "Kat": "2", "Not": "Veri girişinin notu" }))
+            .unwrap();
+    let hidden = changes::commit(
+        &db.app,
+        &entry,
+        envelope(
+            &clerk,
+            project,
+            features(vec![FeatureChange::Update {
+                id: id.clone(),
+                entity: written,
+            }]),
+            &[(id.as_str(), v3.as_str())],
+        ),
+    )
+    .await;
+    match hidden {
+        Err(AppError::Forbidden(m)) => {
+            assert!(m.contains("“Not” alanı “Çizim” katmanının"), "{m}")
+        }
+        other => panic!("expected a refusal, got {other:?}"),
+    }
+    let kept: serde_json::Value =
+        sqlx::query_scalar("select properties from kentos.feature where id = $1")
+            .bind(uid)
+            .fetch_one(&db.owner)
+            .await
+            .unwrap();
+    assert_eq!(kept["Not"], "Ofis notu 2");
     // The editor changes Kat; the Veri girişi changes it otherwise from v2's copy: a conflict.
     let base2 = kentos_application::projects::features_by_id(&db.app, &entry, &[uid])
         .await

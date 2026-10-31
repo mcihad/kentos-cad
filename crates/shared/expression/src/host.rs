@@ -77,6 +77,9 @@ pub struct Schema {
     /// (İşlemler and the builder over them, docs/adr/0214 §1); the builder
     /// refuses and hides them elsewhere.
     pub world: bool,
+    /// Whether `ilişkili_toplam` can be used here: a form's rules, whose host answers a record's related
+    /// records (docs/adr/0761). It is refused elsewhere, İşlemler too.
+    pub relations: bool,
     /// The unit the geometry values speak: metres, or a local project's
     /// drawing unit where the values are readings (docs/adr/0165 §2).
     pub unit: Unit,

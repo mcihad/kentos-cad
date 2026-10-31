@@ -80,6 +80,28 @@ pub enum ProviderError {
     },
 }
 
+/// Why a table could not be reached (docs/adr/0763 §1), so a form says each apart and offers its own way out.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Unreached {
+    /// The server's name does not resolve, nothing listens, the network does not reach it.
+    Offline,
+    /// No answer in time.
+    Timeout,
+    /// The login is refused, or the account may not read the table.
+    Denied,
+    /// No such database or table.
+    Missing,
+    /// Anything else (TLS, a certificate, the server at its connection limit).
+    Failed,
+}
+
+/// A table that could not be reached: why, and what happened in plain Turkish.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Reach {
+    pub problem: Unreached,
+    pub message: String,
+}
+
 /// The kind of a table's constraint that refused a write (docs/adr/0755 §5), by PostgreSQL's SQLSTATE of class 23 or
 /// SQLite's extended code.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -249,6 +271,24 @@ pub enum TableClash {
 /// A provider of database tables.
 pub trait TableProvider: Send + Sync {
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError>;
+    /// Whether `table` can be read now, waiting `wait` at most for the database (docs/adr/0763 §1): a connection and
+    /// the catalogue, no row read. A provider that cannot tell the kinds apart asks its tables.
+    fn reach(&self, address: &str, table: &str, _wait: std::time::Duration) -> Result<(), Reach> {
+        match self.tables(address) {
+            Ok(tables) if tables.iter().any(|t| t.name == table) => Ok(()),
+            Ok(_) => Err(Reach {
+                problem: Unreached::Missing,
+                message: format!("Veritabanında “{table}” tablosu yok."),
+            }),
+            Err(e) => Err(Reach {
+                problem: Unreached::Offline,
+                message: match e {
+                    ProviderError::Unreachable(m) | ProviderError::Refused(m) => m,
+                    other => format!("{other:?}"),
+                },
+            }),
+        }
+    }
     /// The rows, all of them or those whose box meets `area` (in the table's system).
     fn read(
         &self,

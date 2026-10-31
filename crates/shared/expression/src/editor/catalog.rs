@@ -135,6 +135,9 @@ pub(crate) fn at_items(schema: &Schema) -> Vec<Item> {
 /// Whether the builder offers a function here: one that looks at other
 /// layers only where they are given (docs/adr/0214 §1).
 pub(crate) fn offered(f: &FuncDef, schema: &Schema) -> bool {
+    if f.func == crate::library::Func::RelatedAggregate {
+        return schema.relations;
+    }
     schema.world || f.func.family() != Family::World
 }
 
@@ -653,6 +656,7 @@ mod tests {
                 },
             ],
             world: false,
+            relations: false,
             ..Default::default()
         }
     }
@@ -688,6 +692,7 @@ mod tests {
         // Where other layers are given, Toplama and Mekânsal list them.
         let with_world = Schema {
             world: true,
+            relations: false,
             ..schema()
         };
         let titles: Vec<&str> = catalog(&with_world, "").iter().map(|s| s.title).collect();
@@ -826,9 +831,11 @@ mod tests {
             .chain(VARIABLES.iter().flat_map(|v| v.examples.iter()))
             .chain(OPERATORS.iter().flat_map(|o| o.examples.iter()));
         let mut checked = 0;
-        // The examples of the functions that look at other layers compile where they are given.
+        // The examples of the functions that look at other layers compile where they are given, and
+        // `ilişkili_toplam`'s in a form (docs/adr/0761).
         let world = crate::Schema {
             world: true,
+            relations: true,
             ..crate::Schema::default()
         };
         for (expression, result) in all {

@@ -62,7 +62,7 @@ pub mod world;
 pub use host::{
     Builtin, FieldDef, FieldRef, FieldSource, FieldType, Geometry, Objects, Schema, Unit, Variable,
 };
-use library::Var;
+use library::{Func, Var};
 use parser::{Node, Parser};
 use program::Program;
 pub use value::Value;
@@ -209,12 +209,21 @@ pub fn compile(source: &str) -> Result<Expr, CompileError> {
 /// calculator) it is an error at its name.
 pub fn compile_with(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
     let e = compile_in(source, schema)?;
-    if schema.world || e.world.is_empty() {
+    let related = |c: &world::WorldCall| c.func == Func::RelatedAggregate;
+    // `ilişkili_toplam` only where the host answers a record's related records (docs/adr/0761).
+    if !schema.relations && e.world.iter().any(related) {
+        return Err(CompileError {
+            message: RELATIONS_REFUSED.into(),
+            at: first_call(source, &["ilişkili_toplam"]).unwrap_or(1),
+        });
+    }
+    if schema.world || e.world.iter().all(related) {
         return Ok(e);
     }
     let names: Vec<&str> = e
         .world
         .iter()
+        .filter(|c| !related(c))
         .filter_map(|c| library::FUNCTIONS.iter().find(|d| d.func == c.func))
         .map(|d| d.name)
         .collect();
@@ -226,6 +235,10 @@ pub fn compile_with(source: &str, schema: &Schema) -> Result<Expr, CompileError>
 
 /// The message where a function that looks at other layers is refused.
 pub const WORLD_REFUSED: &str = "Bu işlev başka katmanlara bakar; burada kullanılamaz.";
+
+/// The message where `ilişkili_toplam` is refused (docs/adr/0761).
+pub const RELATIONS_REFUSED: &str =
+    "ilişkili_toplam yalnız formun hesaplarında ve kurallarında kullanılır; burada kullanılamaz.";
 
 fn compile_in(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
     let mut parser = Parser::new(lexer::tokenize(source)?);
@@ -348,6 +361,13 @@ impl Expr {
             Ok(v) => shown(v),
             Err(walk::Thrown) => Value::Null,
         }
+    }
+
+    /// The value for one object as an item: an array or a map keeps its mark, what threw or is not a
+    /// finite number is empty (an inner expression's value for `ilişkili_toplam`, docs/adr/0761).
+    pub fn item(&self, s: &dyn Scope) -> compound::Item {
+        walk::walk(&self.root, s, &mut None)
+            .map_or(compound::Item::Null, |v| compound::Item::of(v.view()))
     }
 
     /// Whether the expression looks at other objects (docs/adr/0214 §3).

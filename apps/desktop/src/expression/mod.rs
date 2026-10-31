@@ -278,6 +278,7 @@ fn attribute_fields(
             .collect(),
         variables,
         world,
+        relations: false,
         unit,
     }
 }
@@ -962,7 +963,8 @@ impl App {
             Target::Form(rule),
             context,
             value,
-            kentos_forms::schema_in(&fields, &variables, reading_unit(doc.model.settings())),
+            // A form's rule reads the record's related records (docs/adr/0761).
+            kentos_forms::form_schema_in(&fields, &variables, reading_unit(doc.model.settings())),
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());

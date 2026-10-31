@@ -410,6 +410,7 @@ fn check_param(
             // İşlemler give the calls to other layers (docs/adr/0214 §1); the `@` values are read at the run.
             let schema = kentos_expression::Schema {
                 world: true,
+                relations: false,
                 ..kentos_expression::Schema::default()
             };
             kentos_expression::compile_with(src, &schema)

@@ -163,6 +163,7 @@ fn schema(arg: SchemaArg) -> Result<Schema, String> {
             })
             .collect(),
         world,
+        relations: false,
         unit: crate::Unit::per_metre(unit),
     })
 }

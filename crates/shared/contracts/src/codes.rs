@@ -360,6 +360,8 @@ codes! {
     RELATION_IN_USE = "relation_in_use", Failed, false, "Alt kayıtlar ilişkinin bağlarını tutuyor.";
     /// A submission's child through a relation whose parent is not the form's layer (docs/adr/0440 §2).
     RELATION_MISMATCH = "relation_mismatch", Failed, false, "İlişkinin üst katmanı formun katmanı değil.";
+    /// A submission's child doing what the form's related items do not offer (docs/adr/0762 §3).
+    FORM_RELATED_ACTION = "form_related_action", Failed, false, "Formun ilişkili kayıtlar öğesi bu eylemi sunmuyor.";
     /// A release past the fiftieth: the oldest was dropped.
     FORM_RELEASE_DROPPED = "form_release_dropped", Warning, false, "Form en çok 50 yayın tutar; en eskisi kaldırıldı.";
     /// A publish whose scenarios fail (docs/adr/0442 §1).

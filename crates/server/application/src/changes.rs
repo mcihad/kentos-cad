@@ -298,6 +298,40 @@ async fn spatial_shapes(
     Ok(out)
 }
 
+/// `rows` with the commit's `changes` to the relations' child layers laid over them: a created or
+/// updated object's attributes in its place (a new one last), a deleted one gone, one moved off the layer
+/// gone.
+fn overlay_children(
+    rows: &mut Vec<(String, String, BTreeMap<String, String>)>,
+    changes: &[FeatureChange],
+    relations: &[(String, kentos_forms::WorldRelation)],
+) {
+    let child = |layer: &str| relations.iter().any(|(c, _)| c == layer);
+    for change in changes {
+        match change {
+            FeatureChange::Create { id, entity }
+            | FeatureChange::Update { id, entity }
+            | FeatureChange::Edit { id, entity, .. } => {
+                let layer = &entity.base().layer_id;
+                let at = rows.iter().position(|(l, uid, _)| uid == id && child(l));
+                match (at, child(layer)) {
+                    (Some(k), true) => {
+                        rows[k] = (layer.clone(), id.clone(), entity.base().attrs.clone());
+                    }
+                    (Some(k), false) => {
+                        rows.remove(k);
+                    }
+                    (None, true) => {
+                        rows.push((layer.clone(), id.clone(), entity.base().attrs.clone()))
+                    }
+                    (None, false) => {}
+                }
+            }
+            FeatureChange::Delete { id } => rows.retain(|(l, uid, _)| uid != id || !child(l)),
+        }
+    }
+}
+
 /// The forms' guard over the commit's object changes (docs/adr/0411 §2, §4): a Veri girişi's
 /// (`entry`) change is its record's attributes through its layer's published form; a write to a
 /// layer whose form enforces its rules keeps them. The forms judge with the project's variables (the
@@ -338,12 +372,20 @@ async fn guard_forms(
         return Ok(());
     }
     let mut read: Vec<String> = Vec::new();
+    // The relations the forms' `ilişkili_toplam` reads (docs/adr/0761): their child layers too.
+    let mut relations: Vec<(String, kentos_forms::WorldRelation)> = Vec::new();
     for f in &forms {
         if let Some(r) = f.releases.last() {
             for l in crate::form_guard::world_layers(&r.body) {
                 if !read.contains(&l) {
                     read.push(l);
                 }
+            }
+            for (child, rel) in crate::form_guard::relation_layers(&r.body, settings) {
+                if !read.contains(&child) {
+                    read.push(child.clone());
+                }
+                relations.push((child, rel));
             }
         }
     }
@@ -432,13 +474,18 @@ async fn guard_forms(
     if reach.is_none() && !around.is_empty() {
         shapes = spatial_shapes(tx, access, &around, &written, srid).await?;
     }
+    // The commit's own writes to a relation's child layer are what its parents' aggregates read
+    // (docs/adr/0761): the client completed the parents with them.
+    if !relations.is_empty() {
+        overlay_children(&mut rows, changes, &relations);
+    }
     let spatial: Vec<String> = around.into_iter().map(|(l, _)| l).collect();
     let judge = crate::form_guard::Judge {
         settings,
         tree,
         variables,
         unit,
-        world: crate::form_guard::world_of(tree, &rows, &spatial, &shapes),
+        world: crate::form_guard::world_of(tree, &rows, &spatial, &shapes, &relations),
     };
     let ids: Vec<Uuid> = written
         .iter()
@@ -1409,6 +1456,23 @@ pub(crate) async fn commit_in(
                 if let FeatureChange::Update { id, entity } = change
                     && let Some(before) = Uuid::parse_str(id).ok().and_then(|u| stored.get(&u))
                 {
+                    // A field it does not read is kept, never taken silently from its write
+                    // (docs/adr/0764 §2): one it gives a value of its own is refused.
+                    let layer = &before.entity.base().layer_id;
+                    if let Some(why @ kentos_forms::EntryRefusal::Hidden(_)) =
+                        kentos_forms::entry_write_refusal(
+                            &reading.reach,
+                            layer,
+                            &before.entity.base().attrs,
+                            &entity.base().attrs,
+                        )
+                    {
+                        let tree: Vec<LayerNode> =
+                            serde_json::from_value(layers.clone()).unwrap_or_default();
+                        return Err(AppError::forbidden(
+                            why.message(&crate::form_guard::layer_name(&tree, layer)),
+                        ));
+                    }
                     *entity =
                         crate::form_guard::merged(entity.clone(), &before.entity, &reading.reach);
                 }
@@ -2189,4 +2253,66 @@ pub(crate) async fn commit_in(
     };
     idempotency::record(tx, access, &envelope, &text, &result).await?;
     Ok(result)
+}
+
+#[cfg(test)]
+mod overlay_tests {
+    use super::*;
+    use serde_json::json;
+
+    fn point(layer: &str, attrs: serde_json::Value) -> kentos_contracts::Entity {
+        serde_json::from_value(json!({
+            "kind": "point", "id": 1, "layerId": layer, "attrs": attrs, "p": { "x": 0.0, "y": 0.0 }
+        }))
+        .expect("a point")
+    }
+
+    /// docs/adr/0761: the commit's writes to a relation's child layer replace, add and take away rows;
+    /// a row of another layer stays whatever the commit does.
+    #[test]
+    fn the_commit_s_children_lie_over_the_stored_rows() {
+        let relation: (String, kentos_forms::WorldRelation) = (
+            "malik".into(),
+            kentos_forms::WorldRelation {
+                id: "bina-malik".into(),
+                name: "Malikler".into(),
+                field: "bina".into(),
+            },
+        );
+        let row = |layer: &str, id: &str, ad: &str| {
+            (
+                layer.to_owned(),
+                id.to_owned(),
+                [("Ad".to_owned(), ad.to_owned())].into_iter().collect(),
+            )
+        };
+        let mut rows = vec![
+            row("malik", "a", "Ayşe"),
+            row("malik", "b", "Ali"),
+            row("il", "c", "Sivas"),
+        ];
+        let changes = vec![
+            FeatureChange::Update {
+                id: "a".into(),
+                entity: point("malik", json!({ "Ad": "Ayşe Y." })),
+            },
+            FeatureChange::Create {
+                id: "d".into(),
+                entity: point("malik", json!({ "Ad": "Ece" })),
+            },
+            FeatureChange::Delete { id: "b".into() },
+            FeatureChange::Delete { id: "c".into() },
+            FeatureChange::Update {
+                id: "e".into(),
+                entity: point("il", json!({ "Ad": "Tokat" })),
+            },
+        ];
+        overlay_children(&mut rows, &changes, &[relation]);
+        let names: Vec<(&str, &str)> = rows
+            .iter()
+            .map(|(_, id, a)| (id.as_str(), a.get("Ad").map_or("", String::as_str)))
+            .collect();
+        assert_eq!(names, [("a", "Ayşe Y."), ("c", "Sivas"), ("d", "Ece")]);
+        assert!(rows.iter().all(|(l, _, _)| l == "malik" || l == "il"));
+    }
 }

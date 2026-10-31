@@ -2491,6 +2491,9 @@ def body_problem(body):
                 return f"“{iid}” öğesinin boş sütun listesi yazılmaz"
             if len(cols) > 8 or len(set(cols)) != len(cols) or any(not c.strip() for c in cols):
                 return f"“{iid}” öğesinin sütunları geçersiz"
+            acts = i.get("actions", [])
+            if len(set(acts)) != len(acts):
+                return f"“{iid}” öğesinin eylemleri birer kez yazılır"
         if t == "attachments":
             if "label" in i and not _form_name_ok(i["label"]):
                 return f"“{iid}” öğesinin adı geçersiz"
@@ -5749,6 +5752,9 @@ class _Schema:
                     # docs/adr/0444 §1: the fewest and most related objects.
                     "min": (self.uint(32), False),
                     "max": (self.uint(32), False),
+                    # docs/adr/0762 §1: what the item lets do with the children.
+                    "actions": (self.array(self.enum(("create", "update", "delete", "link", "unlink", "view",
+                                                      "show"))), False),
                 },
                 # docs/adr/0407 §1: the record's photos and documents.
                 "attachments": {

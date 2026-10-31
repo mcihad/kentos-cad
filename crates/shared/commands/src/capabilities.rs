@@ -4254,6 +4254,8 @@ const ENTRIES: &[Entry] = &[
                 "unknown_relation",
                 "relation_mismatch",
                 "relation_field_unknown",
+                // docs/adr/0762 §3: what the form's related items offer.
+                "form_related_action",
                 // docs/adr/0754 §3: a field the bound table always makes.
                 "attribute_generated",
             ],
@@ -4415,6 +4417,12 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.forms.compare",
         refusals: &[&["unknown_form", "form_unpublished", "unknown_release"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.forms.sources",
+        refusals: &[&["invalid_input", "unknown_form", "form_unpublished"]],
         warnings: &[],
         targets: none,
     },

@@ -918,6 +918,34 @@ pub(super) const ALL: &[FuncDef] = &[
             "nesnenin mahallesinin adı",
         )],
     },
+    FuncDef {
+        func: Func::RelatedAggregate,
+        name: "ilişkili_toplam",
+        aliases: &["relation_aggregate", "iliskili_toplam"],
+        arity: (2, Some(4)),
+        signature: "ilişkili_toplam(ilişki, işlem, ifade, koşul)",
+        description: "Yalnız formlarda: kaydın projedeki bir ilişkide ona bağlı alt kayıtları üstünde toplama. İşlemler katman_toplamı'ndakiler; 'say' ifadesiz alt kayıtları sayar. Alt kayıt eklenip silinince, bağlanıp bağı kopunca hesap aynı adımda yenilenir",
+        group: Group::Aggregates,
+        args: &[
+            (
+                "ilişki",
+                "Projedeki ilişkinin adı ya da kimliği, sabit metin",
+            ),
+            ("işlem", "Toplamanın adı, sabit metin"),
+            (
+                "ifade",
+                "Her alt kayıtta hesaplanacak değer; 'say' için verilmeyebilir",
+            ),
+            ("koşul", "Verilirse yalnız bunu sağlayan alt kayıtlar"),
+        ],
+        examples: &[
+            ("ilişkili_toplam('Malikler', 'say')", "binanın malik sayısı"),
+            (
+                "ilişkili_toplam('Malikler', 'topla', Hisse, Durum = 'Etkin')",
+                "etkin maliklerin hisseleri toplamı",
+            ),
+        ],
+    },
     // ── Mekânsal (§2.7) ─────────────────────────────────────────────────
     FuncDef {
         func: Func::Intersects,

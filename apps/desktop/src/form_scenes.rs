@@ -266,6 +266,12 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
         ("form-kaynak-arama", sources_search, neighbourhood_focused),
         ("form-kaynak-tasarim", sources_designer, properties_down),
         ("form-cikinca-tasarim", left_designer, properties_bottom),
+        (
+            "form-iliskili-tasarim",
+            related_sums_designer,
+            properties_down,
+        ),
+        ("form-eylemler-tasarim", actions_designer, properties_down),
     ]
 }
 
@@ -764,6 +770,390 @@ fn units_table(app: &mut App) {
     }
     app.selection.set([Slot(building)]);
     run(app, "data.formEdit");
+}
+
+/// A building whose form counts its units, sums their areas and lists their owners from the relation
+/// (docs/adr/0761): the four units linked by a command, the document worked the building out in the same
+/// step; a fifth unit stands unlinked.
+pub(crate) fn related_sums(app: &mut App) {
+    let mut o = Objects::new();
+    let building = o.path(
+        "bina",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 16.0], [0.0, 16.0]],
+        true,
+    );
+    o.data(building, &[("Kod", "B-1")], Some("B-1"));
+    let rows = [
+        ("1", "0", "92.40", "Ayşe Yılmaz"),
+        ("2", "1", "88.15", "Mehmet Kaya"),
+        ("3", "1", "88.15", "Zeynep Arslan"),
+        ("4", "2", "120.75", "Ali Demir"),
+        ("5", "3", "64.30", "Elif Şahin"),
+    ];
+    let mut units = Vec::new();
+    for (no, floor, area, owner) in rows {
+        let id = o.record("bolum");
+        o.data(
+            id,
+            &[("No", no), ("Kat", floor), ("Alan", area), ("Malik", owner)],
+            Some(no),
+        );
+        units.push(id);
+    }
+    let mut form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([
+            { "type": "field", "id": "kod", "field": "Kod" },
+            { "type": "group", "id": "ozet", "label": "Bölümlerden", "columns": 2, "items": [
+                { "type": "field", "id": "sayi", "field": "Bölüm sayısı",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'say')" },
+                { "type": "field", "id": "alan", "field": "Toplam alan",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'topla', Alan)" },
+                { "type": "field", "id": "malikler", "field": "Malikler",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'değerleri_birleştir', Malik)" },
+                { "type": "field", "id": "ust", "field": "Üst kattakiler",
+                  "calculate": "ilişkili_toplam('Bağımsız bölümler', 'say', No, Kat >= 2)" } ] },
+            { "type": "related", "id": "bolumler", "label": "Bağımsız bölümler", "layer": "bolum", "field": "Bina",
+              "view": "table", "columns": ["No", "Kat", "Alan", "Malik"] }
+        ]),
+    );
+    form["enforce"] = json!(true);
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" },
+                                { "name": "Bölüm sayısı", "kind": "integer" },
+                                { "name": "Toplam alan", "kind": "decimal", "scale": 2 },
+                                { "name": "Malikler", "kind": "text" },
+                                { "name": "Üst kattakiler", "kind": "integer" }]);
+        let mut bolum = crate::tools_scenes::layer("bolum", "Bağımsız bölüm", "#E5484D", 0.35);
+        bolum["fields"] = json!([{ "name": "No", "kind": "text" }, { "name": "Kat", "kind": "integer" },
+                                 { "name": "Alan", "kind": "decimal", "scale": 2 }, { "name": "Malik", "kind": "text" },
+                                 { "name": "Bina", "kind": "text" }]);
+        layers.push(bina);
+        layers.push(bolum);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+        d["settings"]["relations"] = json!([{ "id": "bina-bolum", "name": "Bağımsız bölümler",
+                                              "parent": "bina", "child": "bolum", "field": "Bina" }]);
+    });
+    link_units(app, building, &units[..4]);
+    app.selection.set([Slot(building)]);
+    run(app, "data.formEdit");
+}
+
+/// A building's form whose owners item offers `actions` (docs/adr/0762), the owners' layer locked
+/// when `locked`; the owners have a form of their own. Two owners linked, one free to link.
+pub(crate) fn owner_actions(app: &mut App, actions: Value, locked: bool) {
+    let mut o = Objects::new();
+    let building = o.path(
+        "bina",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 16.0], [0.0, 16.0]],
+        true,
+    );
+    o.data(building, &[("Kod", "B-1")], Some("B-1"));
+    let mut owners = Vec::new();
+    for (name, share) in [
+        ("Ayşe Yılmaz", "1/2"),
+        ("Mehmet Kaya", "1/2"),
+        ("Zeynep Arslan", ""),
+    ] {
+        let id = o.record("malik");
+        o.data(id, &[("Ad", name), ("Hisse", share)], Some(name));
+        owners.push(id);
+    }
+    let mut related = json!({ "type": "related", "id": "malikler", "label": "Malikler", "layer": "malik",
+                              "field": "Bina" });
+    if !actions.is_null() {
+        related["actions"] = actions;
+    }
+    let form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([{ "type": "field", "id": "kod", "field": "Kod" }, related]),
+    );
+    let owner_form = published(
+        "malik-formu",
+        "Malik",
+        "malik",
+        json!([{ "type": "field", "id": "ad", "field": "Ad" },
+               { "type": "field", "id": "hisse", "field": "Hisse" }]),
+    );
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" }]);
+        let mut malik = crate::tools_scenes::layer("malik", "Malik", "#E5484D", 0.35);
+        malik["fields"] = json!([{ "name": "Ad", "kind": "text" }, { "name": "Hisse", "kind": "text" },
+                                 { "name": "Bina", "kind": "text" }]);
+        layers.push(bina);
+        layers.push(malik);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form, owner_form]);
+        d["settings"]["relations"] = json!([{ "id": "bina-malik", "name": "Malikler",
+                                              "parent": "bina", "child": "malik", "field": "Bina" }]);
+    });
+    link_units(app, building, &owners[..2]);
+    // Locked after the links are written: a locked layer takes no link.
+    if locked && let Some(doc) = app.document.as_mut() {
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_LAYERS_SET,
+            kentos_commands::CallOp::Execute,
+            json!({ "operation": "locked", "layer": "malik", "value": true }),
+        );
+    }
+    app.selection.set([Slot(building)]);
+    run(app, "data.formEdit");
+}
+
+/// A building's form listing from five layers whose sources stand each a way (docs/adr/0763): a local list, a
+/// GeoPackage read whose file changed since, one whose file moved away, a database nobody listens on and one that
+/// never answers. Formla düzenle says each apart with its way out.
+pub(crate) fn sources_states(app: &mut App) {
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/geopackage/v1");
+    let mut o = Objects::new();
+    let building = o.path(
+        "bina",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 16.0], [0.0, 16.0]],
+        true,
+    );
+    o.data(building, &[("Kod", "B-7")], Some("B-7"));
+    for (layer, rows) in [
+        ("mahalle", &[("01", "Kızılay"), ("02", "Bahçelievler")][..]),
+        (
+            "malik",
+            &[("M-1", "Ayşe Yılmaz"), ("M-2", "Mehmet Kaya")][..],
+        ),
+        ("parsel", &[("101/5", "101 ada 5 parsel")][..]),
+        ("tapu", &[("T-44", "Tapu 44")][..]),
+        ("ruhsat", &[("R-9", "Ruhsat 9")][..]),
+    ] {
+        for (code, name) in rows {
+            let id = o.record(layer);
+            o.data(id, &[("kod", code), ("ad", name)], Some(name));
+        }
+    }
+    let list = |id: &str, field: &str, layer: &str, label: &str| {
+        json!({ "type": "field", "id": id, "field": field, "label": label,
+                "lookup": { "layer": layer, "key": "kod", "label": "ad" } })
+    };
+    let form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([{ "type": "field", "id": "kod", "field": "Kod" },
+               list("mahalle", "Mahalle", "mahalle", "Mahalle"),
+               list("malik", "Malik", "malik", "Malik"),
+               list("parsel", "Parsel", "parsel", "Parsel"),
+               list("tapu", "Tapu", "tapu", "Tapu kaydı"),
+               list("ruhsat", "Ruhsat", "ruhsat", "Yapı ruhsatı")]),
+    );
+    // A port nobody listens on, and one that takes the connection and never answers.
+    let closed = std::net::TcpListener::bind("127.0.0.1:0").expect("port");
+    let refused = closed.local_addr().expect("address").port();
+    drop(closed);
+    let silent = std::net::TcpListener::bind("127.0.0.1:0").expect("port");
+    let quiet = silent.local_addr().expect("address").port();
+    let link = |id: &str, kind: &str, path: String, table: &str, layer: &str, revision: String| {
+        json!({ "id": id, "kind": kind, "path": path, "table": table, "layer": layer, "revision": revision,
+                "digest": "f".repeat(64), "srid": 5256, "writable": true })
+    };
+    let sources = json!([
+        link(
+            "k-1",
+            "geopackage",
+            root.join("iliskili.gpkg").display().to_string(),
+            "malik",
+            "malik",
+            "0".repeat(64)
+        ),
+        link(
+            "k-2",
+            "geopackage",
+            root.join("tasinan-parseller.gpkg").display().to_string(),
+            "parsel",
+            "parsel",
+            "1".repeat(64)
+        ),
+        link(
+            "k-3",
+            "postgis",
+            format!("postgresql://kentos@127.0.0.1:{refused}/tapu"),
+            "public.tapu",
+            "tapu",
+            "2".repeat(64)
+        ),
+        link(
+            "k-4",
+            "postgis",
+            format!("postgresql://kentos@127.0.0.1:{quiet}/belediye"),
+            "imar.ruhsat",
+            "ruhsat",
+            "3".repeat(64)
+        ),
+    ]);
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" }, { "name": "Mahalle", "kind": "text" },
+                                { "name": "Malik", "kind": "text" }, { "name": "Parsel", "kind": "text" },
+                                { "name": "Tapu", "kind": "text" }, { "name": "Ruhsat", "kind": "text" }]);
+        layers.push(bina);
+        for (id, name, colour) in [
+            ("mahalle", "Mahalleler", "#30A46C"),
+            ("malik", "Malikler", "#E5484D"),
+            ("parsel", "Parseller", "#F76B15"),
+            ("tapu", "Tapu kayıtları", "#8E4EC6"),
+            ("ruhsat", "Ruhsatlar", "#0090FF"),
+        ] {
+            let mut l = crate::tools_scenes::layer(id, name, colour, 0.35);
+            l["fields"] =
+                json!([{ "name": "kod", "kind": "text" }, { "name": "ad", "kind": "text" }]);
+            layers.push(l);
+        }
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+        d["settings"]["sources"] = sources;
+    });
+    app.selection.set([Slot(building)]);
+    run(app, "data.formEdit");
+    // The program registers its database provider at start; a picture does it here.
+    kentos_postgis::register();
+    app.entry_sources_now(std::time::Duration::from_millis(400));
+    drop(silent);
+}
+
+/// A Veri girişi's database project (docs/adr/0764 §4): every action offered, the owners' form does not
+/// show their building field: Değiştir open, Bağla and Bağı kopar quiet with the reason, Yeni and Sil too.
+pub(crate) fn actions_entry(app: &mut App) {
+    owner_actions(
+        app,
+        json!([
+            "create", "update", "delete", "link", "unlink", "view", "show"
+        ]),
+        false,
+    );
+    if let Some(doc) = app.document.as_mut() {
+        doc.model
+            .set_object_policy(kentos_domain::ObjectPolicy::AttributesOnly);
+    }
+}
+
+/// Malikler only linked, opened and shown: no Yeni, no Bağı kopar (docs/adr/0762 §1).
+fn actions_link_only(app: &mut App) {
+    owner_actions(app, json!(["link", "view", "show"]), false);
+}
+
+/// Every action offered, the owners' layer locked: the writing ones quiet, the reason under them.
+fn actions_locked(app: &mut App) {
+    owner_actions(
+        app,
+        json!([
+            "create", "update", "delete", "link", "unlink", "view", "show"
+        ]),
+        true,
+    );
+}
+
+/// Sil offered and pressed: the row asks first (docs/adr/0762 §4).
+fn actions_delete_asked(app: &mut App) {
+    owner_actions(
+        app,
+        json!([
+            "create", "update", "delete", "link", "unlink", "view", "show"
+        ]),
+        false,
+    );
+    let first = app
+        .form_entry
+        .as_ref()
+        .expect("the window")
+        .related_of("malikler")[0]
+        .clone();
+    let _ = app.update(Message::FormEntry(entry::Event::DeleteRelated(
+        "malikler".into(),
+        first,
+    )));
+}
+
+/// An owner opened from an item that offers reading, not changing: its form read-only.
+fn actions_view_only(app: &mut App) {
+    owner_actions(app, json!(["view", "show"]), false);
+    let first = app
+        .form_entry
+        .as_ref()
+        .expect("the window")
+        .related_of("malikler")[0]
+        .clone();
+    let _ = app.update(Message::FormEntry(entry::Event::OpenRelated(
+        "malikler".into(),
+        first,
+    )));
+}
+
+/// Formlar on the building form, its owners item chosen: the Eylemler row.
+fn actions_designer(app: &mut App) {
+    owner_actions(app, json!(["link", "view", "show", "delete"]), false);
+    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("malikler".into()));
+}
+
+/// `units` linked to `building` by one command (`cad.entities.set`), as Bağla writes them.
+fn link_units(app: &mut App, building: u32, units: &[u32]) {
+    let uid = |app: &App, slot: u32| {
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.uid(Slot(slot)))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
+    let parent = uid(app, building);
+    let children: Vec<String> = units.iter().map(|s| uid(app, *s)).collect();
+    if let Some(doc) = app.document.as_mut() {
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_ENTITIES_SET,
+            kentos_commands::CallOp::Execute,
+            json!({ "uids": children, "attrs": { "Bina": parent }, "operation": "attributes" }),
+        );
+    }
+}
+
+/// The fifth unit linked while the building's form is open: the count, the area, the owners and the
+/// upper floors' count follow in the same step.
+fn related_sums_linked(app: &mut App) {
+    related_sums(app);
+    let last = |layer: &str| {
+        app.document
+            .as_ref()
+            .and_then(|d| {
+                d.model
+                    .by_layer_with_uids(layer)
+                    .map(|(_, e)| e.base().id)
+                    .max()
+            })
+            .unwrap_or(0)
+    };
+    let (building, fifth) = (last("bina"), last("bolum"));
+    link_units(app, building, &[fifth]);
+    let _ = app.refresh_entry();
+}
+
+/// Formlar on the building form, the units' count chosen: its calculation reading the relation.
+fn related_sums_designer(app: &mut App) {
+    related_sums(app);
+    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("sayi".into()));
 }
 
 /// Formlar on the building form, its units item chosen: Görünüm Tablo and its columns (docs/adr/0425).
@@ -1452,7 +1842,7 @@ fn meters_nested(app: &mut App) {
         .and_then(|d| d.model.uid(Slot(3)))
         .map(|u| u.to_string())
         .unwrap_or_default();
-    entry(app, entry::Event::OpenRelated(child));
+    entry(app, entry::Event::OpenRelated("sayaclar".into(), child));
 }
 
 /// Formlar on the building form, its meters item chosen: İlişki, Görünüm Kartlar, the columns; Başvuru.
@@ -3069,6 +3459,14 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-haritadan-uzakta", map_apart),
         ("form-cikinca-yazarken", left_typing),
         ("form-cikinca-cikti", left_done),
+        ("form-iliskili-toplam", related_sums),
+        ("form-iliskili-eklendi", related_sums_linked),
+        ("form-eylemler-yalniz-bagla", actions_link_only),
+        ("form-eylemler-kilitli", actions_locked),
+        ("form-kaynak-durumlari", sources_states),
+        ("form-alt-kayit-izni", actions_entry),
+        ("form-eylemler-sil-sor", actions_delete_asked),
+        ("form-eylemler-salt-okunur", actions_view_only),
         ("form-iliski-kartlar", meters_cards),
         ("form-iliski-bekleyen", meters_pending),
         ("form-iliski-yigini", meters_nested),
@@ -4833,7 +5231,10 @@ mod tests {
             .clone();
         entry(&mut app, entry::Event::Cancel);
         run(&mut app, "data.formEdit");
-        entry(&mut app, entry::Event::OpenRelated(meter));
+        entry(
+            &mut app,
+            entry::Event::OpenRelated("sayaclar".into(), meter),
+        );
         assert!(app.form_entry.is_some(), "the meters' layer has no form");
     }
 

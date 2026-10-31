@@ -233,6 +233,7 @@ mod tests {
                 })
                 .collect(),
             world: false,
+            relations: false,
             ..Default::default()
         }
     }

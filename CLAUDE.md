@@ -237,6 +237,48 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Sürüklemenin önizlemesi 200/50'de 1,7 ms, 400/100'de 6,1 ms. Şema değişmez. 23 ortak durum
   (`arch_bond_conflict_cases.py`), iz `wall-bond-drag.json`. Gerçek pencerede elle denenmedi.
 
+- **Rollerin sunucuda yapabildikleri matrisle (31 Ekim 2026; [ADR 0765](docs/adr/0765-role-matrix-on-the-server.md), dal `formlar-surer`).**
+  Beş rol × on işlem (ekle, gösterilen ve gizli alanı yaz, şekil, sil, form taslağı, yayın, katman ağacı, indir, paylaş)
+  sunucunun kendi komutlarıyla (`tests/project_roles.rs`), beklentiler bağımsız başvurudan (`role_routes_cases.py`, 50 durum);
+  reddedilen her işlem 403 ve meta sürümü ile veri revizyonu değişmez. Kod değişmedi.
+
+- **Üst kaydın formu alt kayda izin vermez (31 Ekim 2026; [ADR 0764](docs/adr/0764-child-records-are-judged-apart.md), dal `formlar-surer`).**
+  Veri girişinin yazma kuralı tek yerde: `kentos_forms::entry_write_refusal` (canlı formun gösterdiği alan okunur, yokluğu
+  silinmesidir; göstermediği gizli, yokluğu onu korur, farklı değeri yazmadır; canlı formsuz katman `NoForm`), `Reach::through_live_form`.
+  Sunucu `project.changes`'te gizli alana yazmayı birleştirmeden önce 403 ile reddeder (önceden `merged` onu sessizce eskisine
+  döndürüyordu); masaüstü belgesi `ObjectPolicy::AttributesOnly`'de aynı kuralla adımı geri alır (`entry_write_faults`).
+  İlişkili kayıtlar öğesinin `ChildPermits.child` (`ChildEntry`): Değiştir alt katmanın canlı formunu, Bağla ve Bağı kopar o formun
+  bağ alanını ister. Satır kapsamı sunucuda. 20 + 20 ortak durum (`child_writes_cases.py`), resim `form-alt-kayit-izni`.
+
+- **Formun listelerinin kaynağı: ayrı durum, kod ve çıkış yolu (31 Ekim 2026; [ADR 0763](docs/adr/0763-form-list-sources-states.md), dal `formlar-surer`).**
+  Salt okunur `cad.forms.sources` (`form`, `draft`, `waitMs` 100–30 000, yoksa 5 000): formun başka katmandan listelerinin ve
+  ilişkili kayıtlarının katmanları öğe sırasıyla, her birinin durumu `local`, `ready`, `offline`, `timeout`, `denied`, `missing`,
+  `changed`, `failed`; kodları `form_source_*` (`kentos_forms::codes`), çıkış yolu `retry`, `credentials`, `relink`, `read`; liste her
+  durumda çalışma kopyasından. GeoPackage dosyayla (yok, tablo yok, okunamıyor, SHA-256 farklı), veritabanı satır okumadan
+  `TableProvider::reach` ile (PostGIS'te `connect_within` ve `probe::Diagnosis`'in türü, `to_regclass`, `has_table_privilege`,
+  `42501`). Birden çok eşleşme ve değişen kopya zaten `form_lookup_duplicate`, `form_lookup_stale`. Masaüstünde Formla düzenle
+  kaynakları `kentos-form-kaynak` iş parçacığında sorar, hazır olmayanı başlıkta kendi satırında Kaynaktan oku, Yeniden bağla…,
+  Bağlantıyı düzenle… ve Yeniden dene ile söyler. 22 ortak durum (`form_sources_cases.py`), veritabanı durumları kentos-postgis'te
+  ve geçici docker PostGIS'te. Elle gerçek pencerede denenmedi.
+
+- **İlişkili kayıtlar öğesinin eylemleri ve izinleri (31 Ekim 2026; [ADR 0762](docs/adr/0762-related-item-actions.md), dal `formlar-surer`).**
+  `FormItem::Related.actions` (`RelatedAction`: create, update, delete, link, unlink, view, show; yazılmazsa silme dışındakiler,
+  boş liste salt okunur liste; şema değişmez). Formun sunduğu ile kullanıcının izni ayrı: `kentos_forms::related_offer`
+  (`ChildPermits`: kayıt yazılmamış, kaydın katmanı kilitli ya da salt okunur, alt katman kilitli, rol nesne yazamaz, Veri girişi
+  oluşturamaz ve silemez); sunulmayan görünmez, izni olmayan soluk ve gerekçesi ipucunda ve bölümün altında. `cad.forms.submit`'in
+  `children`'ı formun sunduğuyla sınanır (`child_actions`, `relation_offer`; `form_related_action`, yolu `children[i]`). Sil satırda
+  sorulur, `cad.entities.delete`; yalnız okuyan öğeden açılan alt kayıt salt okunur (`Entry.read_only`). Tasarımcıda Eylemler.
+  26 ortak durum (`related_actions_cases.py`).
+
+- **Formda ilişkili kayıtların toplamı (31 Ekim 2026; [ADR 0761](docs/adr/0761-related-records-aggregate.md), dal `formlar-surer`).**
+  `ilişkili_toplam(ilişki, işlem, ifade, koşul)` (İngilizce `relation_aggregate`): projedeki ilişkinin alt kayıtları üstünde
+  `katman_toplamı`'nın toplamaları, iç ifade alt kaydın alanlarıyla; yalnız formun kurallarında derlenir (`Schema.relations`,
+  `form_schema_in`, başka yerde `RELATIONS_REFUSED`). Form alt kayıtları bir kez üst kimliğe göre dizinler (`relatives::Relatives`,
+  `Object.related`, `OtherLayer.relations`), geometri yalnız okunursa (`related_needs`); bilinmeyen ilişki `form_relation_unknown`.
+  Belge alt kayıt değişince üst kayıtları aynı adımda turlarla tamamlar (`follow_forms`, en çok 8 tur, yalnız gereken formlar);
+  sunucunun bekçisi değişiklik kümesini dünyaya bindirir (`overlay_children`); Formla düzenle yenilenince taban kaydın yeni
+  hâli. Şema değişmez. 29 ortak durum (`relatives`); 10 000 malikte bir malik eklemek 13 ms.
+
 - **Alandan çıkınca denetim (30 Ekim 2026; [ADR 0760](docs/adr/0760-check-on-leaving-the-field.md)).**
   Denetimin `on`'u `leave` da olur (“Alandan çıkınca”): değer değişirken yalnız çıkılan öğede, kaydederken ve iş akışında
   hep sorulur (`Prepared::asked`, `validate_left`, `assess_left`, `kentos_forms::Left`); komutun doğrulaması azalmaz.

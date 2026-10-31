@@ -17,8 +17,8 @@ use kentos_contracts::encoding::sha256_hex;
 use kentos_geopackage::{self as gpkg, ColumnKind, DataType, Value};
 use kentos_native_application::provider::{
     Created, DbRelation, Edited, MapWrite, NewTable, Param, ProviderError, ProviderRead,
-    ProviderScan, ProviderShape, ProviderTable, Reference, RowCheck, TableClash, TableConstraints,
-    TableEdit, TableProvider, register_postgis,
+    ProviderScan, ProviderShape, ProviderTable, Reach, Reference, RowCheck, TableClash,
+    TableConstraints, TableEdit, TableProvider, Unreached, register_postgis,
 };
 use sqlx::postgres::{PgConnectOptions, PgConnection, PgRow};
 use sqlx::{Connection, Executor, Row};
@@ -86,7 +86,17 @@ fn qualified(table: &str) -> (String, String, String) {
 }
 
 async fn connect(address: &str) -> Result<PgConnection, ProviderError> {
-    let mut options = PgConnectOptions::from_str(address).map_err(unreachable)?;
+    connect_within(address, CONNECT)
+        .await
+        .map_err(|d| ProviderError::Unreachable(d.message))
+}
+
+/// A connection that waits `wait` at most, its failure said by its kind (docs/adr/0763 §1).
+async fn connect_within(address: &str, wait: Duration) -> Result<PgConnection, probe::Diagnosis> {
+    let mut options = PgConnectOptions::from_str(address).map_err(|e| probe::Diagnosis {
+        problem: probe::Problem::Other,
+        message: e.to_string(),
+    })?;
     let key = connections::Key {
         host: options.get_host().to_ascii_lowercase(),
         port: options.get_port(),
@@ -107,17 +117,43 @@ async fn connect(address: &str) -> Result<PgConnection, ProviderError> {
         database: options.get_database().unwrap_or_default(),
         user: options.get_username(),
     };
-    match tokio::time::timeout(CONNECT, PgConnection::connect_with(&options)).await {
-        Err(_) => Err(ProviderError::Unreachable(format!(
-            "{}:{} {} saniyede yanıt vermedi: sunucu kapalı, adres yanlış ya da ağ engelli olabilir",
-            at.host,
-            at.port,
-            CONNECT.as_secs()
-        ))),
-        Ok(Err(e)) => Err(ProviderError::Unreachable(
-            probe::diagnose(&e, &at, given).message,
-        )),
+    match tokio::time::timeout(wait, PgConnection::connect_with(&options)).await {
+        Err(_) => Err(probe::Diagnosis {
+            problem: probe::Problem::Timeout,
+            message: format!(
+                "{}:{} {} saniyede yanıt vermedi: sunucu kapalı, adres yanlış ya da ağ engelli olabilir",
+                at.host,
+                at.port,
+                seconds(wait)
+            ),
+        }),
+        Ok(Err(e)) => Err(probe::diagnose(&e, &at, given)),
         Ok(Ok(c)) => Ok(c),
+    }
+}
+
+/// A wait in seconds for people: whole when whole, else with one decimal (`0,5`).
+fn seconds(wait: Duration) -> String {
+    let ms = wait.as_millis();
+    if ms.is_multiple_of(1000) {
+        (ms / 1000).to_string()
+    } else {
+        format!("{},{}", ms / 1000, (ms % 1000) / 100)
+    }
+}
+
+/// A connection's failure as a form says it (docs/adr/0763 §1).
+fn unreached(d: probe::Diagnosis) -> Reach {
+    use probe::Problem as P;
+    Reach {
+        problem: match d.problem {
+            P::Host | P::Refused => Unreached::Offline,
+            P::Timeout => Unreached::Timeout,
+            P::PasswordNeeded | P::Password | P::Access => Unreached::Denied,
+            P::Database => Unreached::Missing,
+            P::Tls | P::Certificate | P::Other => Unreached::Failed,
+        },
+        message: d.message,
     }
 }
 
@@ -1305,6 +1341,49 @@ async fn estimated_extent(
 }
 
 impl TableProvider for PostGis {
+    fn reach(&self, address: &str, table: &str, wait: Duration) -> Result<(), Reach> {
+        self.runtime.block_on(async {
+            let started = std::time::Instant::now();
+            let mut conn = connect_within(address, wait).await.map_err(unreached)?;
+            let (quoted, _, _) = qualified(table);
+            let left = wait.saturating_sub(started.elapsed()).max(Duration::from_millis(50));
+            let asked = tokio::time::timeout(
+                left,
+                sqlx::query_as::<_, (bool, Option<bool>)>(
+                    "SELECT to_regclass($1) IS NOT NULL, has_table_privilege(to_regclass($1), 'SELECT')",
+                )
+                .bind(&quoted)
+                .fetch_one(&mut conn),
+            )
+            .await;
+            let _ = conn.close().await;
+            match asked {
+                Err(_) => Err(Reach {
+                    problem: Unreached::Timeout,
+                    message: format!("Veritabanı “{table}” tablosunu {} saniyede söylemedi.", seconds(wait)),
+                }),
+                // A schema the account may not look into (no USAGE) refuses the name's lookup itself.
+                Ok(Err(sqlx::Error::Database(db))) if db.code().as_deref() == Some("42501") => Err(Reach {
+                    problem: Unreached::Denied,
+                    message: format!("Bu kullanıcının “{table}” tablosunun şemasına erişim yetkisi yok (USAGE)."),
+                }),
+                Ok(Err(e)) => Err(Reach {
+                    problem: Unreached::Failed,
+                    message: format!("“{table}” tablosu sorulamadı: {e}"),
+                }),
+                Ok(Ok((false, _))) => Err(Reach {
+                    problem: Unreached::Missing,
+                    message: format!("Veritabanında “{table}” tablosu yok."),
+                }),
+                Ok(Ok((true, Some(false)))) => Err(Reach {
+                    problem: Unreached::Denied,
+                    message: format!("Bu kullanıcının “{table}” tablosunu okuma yetkisi yok (SELECT)."),
+                }),
+                Ok(Ok(_)) => Ok(()),
+            }
+        })
+    }
+
     fn tables(&self, address: &str) -> Result<Vec<ProviderTable>, ProviderError> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
@@ -1625,6 +1704,62 @@ impl TableProvider for PostGis {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // A database that cannot be reached is said by its kind (docs/adr/0763 §1).
+    #[test]
+    fn a_closed_port_is_offline_and_a_silent_server_a_timeout() {
+        let provider = PostGis::new().expect("runtime");
+        let closed = std::net::TcpListener::bind("127.0.0.1:0").expect("port");
+        let port = closed.local_addr().expect("address").port();
+        drop(closed);
+        let at = format!("postgresql://kentos@127.0.0.1:{port}/yok");
+        let r = provider
+            .reach(&at, "public.ilce", Duration::from_millis(2000))
+            .expect_err("closed");
+        assert_eq!(r.problem, Unreached::Offline, "{}", r.message);
+        assert!(
+            r.message.contains("bağlantıyı kabul etmedi"),
+            "{}",
+            r.message
+        );
+        // The kernel takes the connection into the backlog; nobody ever answers.
+        let silent = std::net::TcpListener::bind("127.0.0.1:0").expect("port");
+        let port = silent.local_addr().expect("address").port();
+        let at = format!("postgresql://kentos@127.0.0.1:{port}/sessiz");
+        let started = std::time::Instant::now();
+        let r = provider
+            .reach(&at, "public.ilce", Duration::from_millis(300))
+            .expect_err("silent");
+        assert_eq!(r.problem, Unreached::Timeout, "{}", r.message);
+        assert!(r.message.contains("0,3 saniyede"), "{}", r.message);
+        assert!(started.elapsed() < Duration::from_secs(3));
+        drop(silent);
+    }
+
+    #[test]
+    fn each_connection_problem_is_one_state() {
+        use probe::Problem as P;
+        let of = |problem| {
+            unreached(probe::Diagnosis {
+                problem,
+                message: String::new(),
+            })
+            .problem
+        };
+        assert_eq!(of(P::Host), Unreached::Offline);
+        assert_eq!(of(P::Refused), Unreached::Offline);
+        assert_eq!(of(P::Timeout), Unreached::Timeout);
+        assert_eq!(of(P::PasswordNeeded), Unreached::Denied);
+        assert_eq!(of(P::Password), Unreached::Denied);
+        assert_eq!(of(P::Access), Unreached::Denied);
+        assert_eq!(of(P::Database), Unreached::Missing);
+        assert_eq!(of(P::Tls), Unreached::Failed);
+        assert_eq!(of(P::Certificate), Unreached::Failed);
+        assert_eq!(of(P::Other), Unreached::Failed);
+        assert_eq!(seconds(Duration::from_secs(15)), "15");
+        assert_eq!(seconds(Duration::from_millis(300)), "0,3");
+        assert_eq!(seconds(Duration::from_millis(2500)), "2,5");
+    }
 
     #[test]
     fn geometry_and_geography_columns_read_their_type_and_system() {

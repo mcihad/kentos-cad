@@ -197,6 +197,7 @@ impl MeshCalc {
             // As Raster hesaplayıcı's: the datasets only, no `@` values, no other layers.
             variables: Vec::new(),
             world: false,
+            relations: false,
             ..Default::default()
         };
         let expr = compile_with(&spec.expression, &schema).map_err(|e| e.text())?;

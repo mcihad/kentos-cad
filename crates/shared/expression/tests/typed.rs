@@ -110,6 +110,7 @@ fn schema() -> Schema {
             },
         ],
         world: false,
+        relations: false,
         ..Default::default()
     }
 }

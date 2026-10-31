@@ -17,6 +17,7 @@ mod layer_fields;
 mod layer_rules;
 mod patches;
 mod related;
+mod related_sums;
 mod snapshot_v2;
 mod steps;
 mod style_tables;

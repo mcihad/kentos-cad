@@ -1,0 +1,1802 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.forms.sources",
+ "commandVersion": 1,
+ "title": "Formun kaynakları: listelerin kaynağının durumu, ayrı kodu ve çıkış yolu",
+ "note": "docs/adr/0763. Beklenenler scripts/fixtures/form_sources_cases.py'den, KentOS kodu olmadan: GeoPackage dosyaları fixtures/geopackage/v1'den, SHA-256 hashlib'le, tablolar sqlite3'le. Veritabanının durumları kentos-postgis'in testlerinde ve postgis_cases.py'de.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Formun kaynakları",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "forms": [
+    {
+     "id": "hepsi",
+     "name": "Bütün kaynaklar",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "ilce",
+        "field": "Ilce",
+        "lookup": {
+         "layer": "ilce",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "field",
+        "id": "malik",
+        "field": "Malik",
+        "lookup": {
+         "layer": "malik",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "field",
+        "id": "parsel",
+        "field": "Parsel",
+        "lookup": {
+         "layer": "parsel",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "field",
+        "id": "yapi",
+        "field": "Yapi",
+        "lookup": {
+         "layer": "yapi",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "field",
+        "id": "eski",
+        "field": "Eski",
+        "lookup": {
+         "layer": "eski",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "field",
+        "id": "bozuk",
+        "field": "Bozuk",
+        "lookup": {
+         "layer": "bozuk",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "related",
+        "id": "sayaclar",
+        "layer": "sayac",
+        "field": "bina"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "09b9684773608db462805e31eeb7dad7",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ilce",
+          "field": "Ilce",
+          "lookup": {
+           "layer": "ilce",
+           "key": "kod"
+          }
+         },
+         {
+          "type": "field",
+          "id": "malik",
+          "field": "Malik",
+          "lookup": {
+           "layer": "malik",
+           "key": "kod"
+          }
+         },
+         {
+          "type": "field",
+          "id": "parsel",
+          "field": "Parsel",
+          "lookup": {
+           "layer": "parsel",
+           "key": "kod"
+          }
+         },
+         {
+          "type": "field",
+          "id": "yapi",
+          "field": "Yapi",
+          "lookup": {
+           "layer": "yapi",
+           "key": "kod"
+          }
+         },
+         {
+          "type": "field",
+          "id": "eski",
+          "field": "Eski",
+          "lookup": {
+           "layer": "eski",
+           "key": "kod"
+          }
+         },
+         {
+          "type": "field",
+          "id": "bozuk",
+          "field": "Bozuk",
+          "lookup": {
+           "layer": "bozuk",
+           "key": "kod"
+          }
+         },
+         {
+          "type": "related",
+          "id": "sayaclar",
+          "layer": "sayac",
+          "field": "bina"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "ic-ice",
+     "name": "İç içe",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "tab",
+        "id": "genel",
+        "label": "Genel",
+        "items": [
+         {
+          "type": "group",
+          "id": "kim",
+          "label": "Kim",
+          "items": [
+           {
+            "type": "field",
+            "id": "malik-adi",
+            "field": "Malik",
+            "lookup": {
+             "layer": "malik",
+             "key": "kod"
+            }
+           }
+          ]
+         },
+         {
+          "type": "field",
+          "id": "hayalet",
+          "field": "Eski",
+          "lookup": {
+           "layer": "hayalet",
+           "key": "kod"
+          }
+         }
+        ]
+       },
+       {
+        "type": "tab",
+        "id": "baglar",
+        "label": "Bağlar",
+        "items": [
+         {
+          "type": "related",
+          "id": "malikler",
+          "layer": "malik",
+          "field": "bina"
+         },
+         {
+          "type": "field",
+          "id": "ilce-2",
+          "field": "Ilce",
+          "lookup": {
+           "layer": "ilce",
+           "key": "kod"
+          }
+         },
+         {
+          "type": "field",
+          "id": "malik-2",
+          "field": "Malik",
+          "lookup": {
+           "layer": "malik",
+           "key": "kod"
+          }
+         }
+        ]
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "cb7554d12bb87e04439efa1f95d864c2",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "tab",
+          "id": "genel",
+          "label": "Genel",
+          "items": [
+           {
+            "type": "group",
+            "id": "kim",
+            "label": "Kim",
+            "items": [
+             {
+              "type": "field",
+              "id": "malik-adi",
+              "field": "Malik",
+              "lookup": {
+               "layer": "malik",
+               "key": "kod"
+              }
+             }
+            ]
+           },
+           {
+            "type": "field",
+            "id": "hayalet",
+            "field": "Eski",
+            "lookup": {
+             "layer": "hayalet",
+             "key": "kod"
+            }
+           }
+          ]
+         },
+         {
+          "type": "tab",
+          "id": "baglar",
+          "label": "Bağlar",
+          "items": [
+           {
+            "type": "related",
+            "id": "malikler",
+            "layer": "malik",
+            "field": "bina"
+           },
+           {
+            "type": "field",
+            "id": "ilce-2",
+            "field": "Ilce",
+            "lookup": {
+             "layer": "ilce",
+             "key": "kod"
+            }
+           },
+           {
+            "type": "field",
+            "id": "malik-2",
+            "field": "Malik",
+            "lookup": {
+             "layer": "malik",
+             "key": "kod"
+            }
+           }
+          ]
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "duz",
+     "name": "Listesiz",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "ad",
+        "field": "Ad"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "07b0d14cb0b2b350f87deea03206b9d1",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ad",
+          "field": "Ad"
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "taslak",
+     "name": "Taslağı farklı",
+     "layer": "bina",
+     "draft": {
+      "revision": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "ilce",
+        "field": "Ilce",
+        "lookup": {
+         "layer": "ilce",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "field",
+        "id": "malik",
+        "field": "Malik",
+        "lookup": {
+         "layer": "malik",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "related",
+        "id": "haneler",
+        "layer": "hane",
+        "field": "bina"
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "2a30d0fb9c0b47ffb839813f1fa7ccb5",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "ilce",
+          "field": "Ilce",
+          "lookup": {
+           "layer": "ilce",
+           "key": "kod"
+          }
+         }
+        ]
+       }
+      }
+     ]
+    },
+    {
+     "id": "yayinsiz",
+     "name": "Yayınsız",
+     "layer": "bina",
+     "draft": {
+      "revision": 2,
+      "items": [
+       {
+        "type": "field",
+        "id": "ilce",
+        "field": "Ilce",
+        "lookup": {
+         "layer": "ilce",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "field",
+        "id": "malik",
+        "field": "Malik",
+        "lookup": {
+         "layer": "malik",
+         "key": "kod"
+        }
+       },
+       {
+        "type": "related",
+        "id": "haneler",
+        "layer": "hane",
+        "field": "bina"
+       }
+      ]
+     }
+    },
+    {
+     "id": "hazir",
+     "name": "Yalnız hazır",
+     "layer": "bina",
+     "draft": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "ilce",
+        "field": "Ilce",
+        "lookup": {
+         "layer": "ilce",
+         "key": "kod"
+        }
+       }
+      ]
+     },
+     "releases": [
+      {
+       "version": 1,
+       "digest": "93848bcc64e2beafb77ad67938eb8ffe",
+       "body": {
+        "revision": 1,
+        "items": [
+         {
+          "type": "field",
+          "id": "malik",
+          "field": "Malik",
+          "lookup": {
+           "layer": "malik",
+           "key": "kod"
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "sources": [
+    {
+     "id": "kaynak-1",
+     "kind": "geopackage",
+     "path": "$fixture:geopackage/v1/iliskili.gpkg",
+     "table": "malik",
+     "layer": "malik",
+     "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+     "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+     "srid": 5256,
+     "writable": true
+    },
+    {
+     "id": "kaynak-2",
+     "kind": "geopackage",
+     "path": "$fixture:geopackage/v1/iliskili.gpkg",
+     "table": "parsel",
+     "layer": "parsel",
+     "revision": "0000000000000000000000000000000000000000000000000000000000000000",
+     "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+     "srid": 5256,
+     "writable": true
+    },
+    {
+     "id": "kaynak-3",
+     "kind": "geopackage",
+     "path": "$fixture:geopackage/v1/yok-boyle.gpkg",
+     "table": "bina",
+     "layer": "yapi",
+     "revision": "1111111111111111111111111111111111111111111111111111111111111111",
+     "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+     "srid": 5256,
+     "writable": true
+    },
+    {
+     "id": "kaynak-4",
+     "kind": "geopackage",
+     "path": "$fixture:geopackage/v1/iliskili.gpkg",
+     "table": "kaldirildi",
+     "layer": "eski",
+     "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+     "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+     "srid": 5256,
+     "writable": true
+    },
+    {
+     "id": "kaynak-5",
+     "kind": "geopackage",
+     "path": "$fixture:geopackage/v1/bozuk.gpkg",
+     "table": "bina",
+     "layer": "bozuk",
+     "revision": "2222222222222222222222222222222222222222222222222222222222222222",
+     "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+     "srid": 5256,
+     "writable": true
+    }
+   ]
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "bina",
+    "name": "Binalar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "Ad",
+      "kind": "text"
+     },
+     {
+      "name": "Ilce",
+      "kind": "text"
+     },
+     {
+      "name": "Malik",
+      "kind": "text"
+     },
+     {
+      "name": "Parsel",
+      "kind": "text"
+     },
+     {
+      "name": "Yapi",
+      "kind": "text"
+     },
+     {
+      "name": "Eski",
+      "kind": "text"
+     },
+     {
+      "name": "Bozuk",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "ilce",
+    "name": "İlçeler",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "sayac",
+    "name": "Sayaçlar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "hane",
+    "name": "Haneler",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "malik",
+    "name": "Malikler",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "parsel",
+    "name": "Parseller",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "yapi",
+    "name": "Yapılar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "eski",
+    "name": "Eski kayıtlar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "bozuk",
+    "name": "Bozuk kaynak",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "kod",
+      "kind": "text"
+     },
+     {
+      "name": "bina",
+      "kind": "text"
+     }
+    ]
+   }
+  ],
+  "activeLayer": "bina",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "her durum ayrı: yerel, hazır, değişmiş, dosyası yok, tablosu yok, okunamayan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "hepsi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        },
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "parsel",
+         "name": "Parseller",
+         "items": [
+          "parsel"
+         ],
+         "kind": "geopackage",
+         "table": "parsel",
+         "state": "changed",
+         "code": "form_source_changed",
+         "message": "“Parseller” katmanının dosyası (iliskili.gpkg) okunduktan sonra değişti; kaynaktan yeniden okuyun. Liste son okunan kopyadan sunuluyor.",
+         "retry": "read"
+        },
+        {
+         "layer": "yapi",
+         "name": "Yapılar",
+         "items": [
+          "yapi"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Yapılar” katmanının dosyası (yok-boyle.gpkg) yerinde yok; dosyayı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "eski",
+         "name": "Eski kayıtlar",
+         "items": [
+          "eski"
+         ],
+         "kind": "geopackage",
+         "table": "kaldirildi",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Eski kayıtlar” katmanının tablosu (“kaldirildi”) iliskili.gpkg dosyasında yok; katmanı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "bozuk",
+         "name": "Bozuk kaynak",
+         "items": [
+          "bozuk"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "failed",
+         "code": "form_source_failed",
+         "message": "“Bozuk kaynak” katmanının dosyası (bozuk.gpkg) GeoPackage olarak okunamadı. Liste son okunan kopyadan sunuluyor.",
+         "retry": "retry"
+        },
+        {
+         "layer": "sayac",
+         "name": "Sayaçlar",
+         "items": [
+          "sayaclar"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "listesi olmayan form kaynak söylemez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "duz"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız hazır kaynak: kodu ve yolu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "hazir"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sekme ve gruptaki liste sırasıyla; aynı katman bir kez, öğeleri birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "ic-ice"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik-adi",
+          "malikler",
+          "malik-2"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce-2"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "projede olmayan katman ön denetime kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "ic-ice",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik-adi",
+          "malikler",
+          "malik-2"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce-2"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "son yayın: taslağın eklediği liste yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "taslak: eklenen liste ve ilişkili kayıtlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "taslak",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        },
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "hane",
+         "name": "Haneler",
+         "items": [
+          "haneler"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınsız formun taslağı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yayinsiz",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        },
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "hane",
+         "name": "Haneler",
+         "items": [
+          "haneler"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bekleme en az 100 ms",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "hepsi",
+      "waitMs": 100
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        },
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "parsel",
+         "name": "Parseller",
+         "items": [
+          "parsel"
+         ],
+         "kind": "geopackage",
+         "table": "parsel",
+         "state": "changed",
+         "code": "form_source_changed",
+         "message": "“Parseller” katmanının dosyası (iliskili.gpkg) okunduktan sonra değişti; kaynaktan yeniden okuyun. Liste son okunan kopyadan sunuluyor.",
+         "retry": "read"
+        },
+        {
+         "layer": "yapi",
+         "name": "Yapılar",
+         "items": [
+          "yapi"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Yapılar” katmanının dosyası (yok-boyle.gpkg) yerinde yok; dosyayı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "eski",
+         "name": "Eski kayıtlar",
+         "items": [
+          "eski"
+         ],
+         "kind": "geopackage",
+         "table": "kaldirildi",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Eski kayıtlar” katmanının tablosu (“kaldirildi”) iliskili.gpkg dosyasında yok; katmanı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "bozuk",
+         "name": "Bozuk kaynak",
+         "items": [
+          "bozuk"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "failed",
+         "code": "form_source_failed",
+         "message": "“Bozuk kaynak” katmanının dosyası (bozuk.gpkg) GeoPackage olarak okunamadı. Liste son okunan kopyadan sunuluyor.",
+         "retry": "retry"
+        },
+        {
+         "layer": "sayac",
+         "name": "Sayaçlar",
+         "items": [
+          "sayaclar"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bekleme en çok 30 000 ms",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "hepsi",
+      "waitMs": 30000
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        },
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "parsel",
+         "name": "Parseller",
+         "items": [
+          "parsel"
+         ],
+         "kind": "geopackage",
+         "table": "parsel",
+         "state": "changed",
+         "code": "form_source_changed",
+         "message": "“Parseller” katmanının dosyası (iliskili.gpkg) okunduktan sonra değişti; kaynaktan yeniden okuyun. Liste son okunan kopyadan sunuluyor.",
+         "retry": "read"
+        },
+        {
+         "layer": "yapi",
+         "name": "Yapılar",
+         "items": [
+          "yapi"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Yapılar” katmanının dosyası (yok-boyle.gpkg) yerinde yok; dosyayı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "eski",
+         "name": "Eski kayıtlar",
+         "items": [
+          "eski"
+         ],
+         "kind": "geopackage",
+         "table": "kaldirildi",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Eski kayıtlar” katmanının tablosu (“kaldirildi”) iliskili.gpkg dosyasında yok; katmanı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "bozuk",
+         "name": "Bozuk kaynak",
+         "items": [
+          "bozuk"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "failed",
+         "code": "form_source_failed",
+         "message": "“Bozuk kaynak” katmanının dosyası (bozuk.gpkg) GeoPackage olarak okunamadı. Liste son okunan kopyadan sunuluyor.",
+         "retry": "retry"
+        },
+        {
+         "layer": "sayac",
+         "name": "Sayaçlar",
+         "items": [
+          "sayaclar"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "beklemeyi dosya kaynakları kullanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "hazir",
+      "waitMs": 250
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "hepsi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        },
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "parsel",
+         "name": "Parseller",
+         "items": [
+          "parsel"
+         ],
+         "kind": "geopackage",
+         "table": "parsel",
+         "state": "changed",
+         "code": "form_source_changed",
+         "message": "“Parseller” katmanının dosyası (iliskili.gpkg) okunduktan sonra değişti; kaynaktan yeniden okuyun. Liste son okunan kopyadan sunuluyor.",
+         "retry": "read"
+        },
+        {
+         "layer": "yapi",
+         "name": "Yapılar",
+         "items": [
+          "yapi"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Yapılar” katmanının dosyası (yok-boyle.gpkg) yerinde yok; dosyayı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "eski",
+         "name": "Eski kayıtlar",
+         "items": [
+          "eski"
+         ],
+         "kind": "geopackage",
+         "table": "kaldirildi",
+         "state": "missing",
+         "code": "form_source_missing",
+         "message": "“Eski kayıtlar” katmanının tablosu (“kaldirildi”) iliskili.gpkg dosyasında yok; katmanı yeniden bağlayın. Liste son okunan kopyadan sunuluyor.",
+         "retry": "relink"
+        },
+        {
+         "layer": "bozuk",
+         "name": "Bozuk kaynak",
+         "items": [
+          "bozuk"
+         ],
+         "kind": "geopackage",
+         "table": "bina",
+         "state": "failed",
+         "code": "form_source_failed",
+         "message": "“Bozuk kaynak” katmanının dosyası (bozuk.gpkg) GeoPackage olarak okunamadı. Liste son okunan kopyadan sunuluyor.",
+         "retry": "retry"
+        },
+        {
+         "layer": "sayac",
+         "name": "Sayaçlar",
+         "items": [
+          "sayaclar"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan taslakla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "taslak",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "sources": [
+        {
+         "layer": "ilce",
+         "name": "İlçeler",
+         "items": [
+          "ilce"
+         ],
+         "state": "local"
+        },
+        {
+         "layer": "malik",
+         "name": "Malikler",
+         "items": [
+          "malik"
+         ],
+         "kind": "geopackage",
+         "table": "malik",
+         "state": "ready"
+        },
+        {
+         "layer": "hane",
+         "name": "Haneler",
+         "items": [
+          "haneler"
+         ],
+         "state": "local"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama kaynakları sormaz",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "form": "hepsi"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama taslakla",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "form": "yayinsiz",
+      "draft": true
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bekleme 100 ms'den az",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "hepsi",
+      "waitMs": 99
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "waitMs 99: bekleme 100 ile 30000 milisaniye arasında verilir.",
+       "path": "waitMs"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bekleme 30 000 ms'den çok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "hepsi",
+      "waitMs": 30001
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "waitMs 30001: bekleme 100 ile 30000 milisaniye arasında verilir.",
+       "path": "waitMs"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bekleme formdan önce denetlenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yok",
+      "waitMs": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "waitMs 0: bekleme 100 ile 30000 milisaniye arasında verilir.",
+       "path": "waitMs"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan form",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yayınsız formun son yayını yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "form": "yayinsiz"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_unpublished",
+       "message": "“Yayınsız” formu hiç yayınlanmadı. Önce yayınlayın ya da taslağıyla çalışın.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama da yayını ister",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "form": "yayinsiz"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "form_unpublished",
+       "message": "“Yayınsız” formu hiç yayınlanmadı. Önce yayınlayın ya da taslağıyla çalışın.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan da formu ister",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "form": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_form",
+       "message": "“yok” kimlikli bir form yok. Formlar penceresinden var olan bir formu seçin.",
+       "path": "form"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

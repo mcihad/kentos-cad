@@ -52922,5 +52922,5993 @@
    ],
    "issues": []
   }
+ ],
+ "relatives": [
+  {
+   "name": "say: binanın malikleri, çoktan çoğa bağlı olan da",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Sayı": "4"
+   },
+   "issues": []
+  },
+  {
+   "name": "say, koşullu: alt kaydın kendi Durum'u",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say', Ad, Durum = 'Etkin')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Sayı": "3"
+   },
+   "issues": []
+  },
+  {
+   "name": "say, ifadeyle: boş olmayan değerler",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say', Hisse)"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Sayı": "4"
+   },
+   "issues": []
+  },
+  {
+   "name": "topla: sayı olmayan hisse sayılmaz",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Malikler', 'topla', Hisse)"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Toplam": "1"
+   },
+   "issues": []
+  },
+  {
+   "name": "topla, koşullu",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Malikler', 'topla', Hisse, Durum = 'Etkin')"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Toplam": "0.75"
+   },
+   "issues": []
+  },
+  {
+   "name": "topla, ifadenin hesabıyla",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Malikler', 'topla', Hisse * 100)"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Toplam": "100"
+   },
+   "issues": []
+  },
+  {
+   "name": "ortalama",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Malikler', 'ortalama', Hisse)"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Toplam": "0.333333333333"
+   },
+   "issues": []
+  },
+  {
+   "name": "en_yüksek",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Malikler', 'en_yüksek', Hisse)"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Toplam": "0.5"
+   },
+   "issues": []
+  },
+  {
+   "name": "en_düşük",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Malikler', 'en_düşük', Hisse)"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Toplam": "0.25"
+   },
+   "issues": []
+  },
+  {
+   "name": "değerleri_birleştir: katmanın sırasıyla",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar",
+      "calculate": "ilişkili_toplam('Malikler', 'değerleri_birleştir', Ad)"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Adlar": "Ayşe, Mehmet, Zeynep, Ece"
+   },
+   "issues": []
+  },
+  {
+   "name": "say_benzersiz",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say_benzersiz', Durum)"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Sayı": "2"
+   },
+   "issues": []
+  },
+  {
+   "name": "başka ilişki: bölümlerin alanı",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Bölümler', 'topla', Alan)"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Toplam": "215.75"
+   },
+   "issues": []
+  },
+  {
+   "name": "ilişki kimliğiyle",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('bina-malik', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Sayı": "4"
+   },
+   "issues": []
+  },
+  {
+   "name": "ilişkinin adı harf ve büyüklük farkıyla",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('MALİKLER', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Sayı": "4"
+   },
+   "issues": []
+  },
+  {
+   "name": "İngilizce adıyla",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "relation_aggregate('Malikler', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık",
+    "Sayı": "4"
+   },
+   "issues": []
+  },
+  {
+   "name": "başka bina: çoktan çoğa bağ ikisine de sayılır",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b2"
+   },
+   "attrs": {
+    "Kod": "B-2"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-2",
+    "Sayı": "2"
+   },
+   "issues": []
+  },
+  {
+   "name": "alt kaydı olmayan kayıt: say 0",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b3"
+   },
+   "attrs": {
+    "Kod": "B-3"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-3",
+    "Sayı": "0"
+   },
+   "issues": []
+  },
+  {
+   "name": "alt kaydı olmayan kayıt: toplam boş",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam",
+      "calculate": "ilişkili_toplam('Malikler', 'topla', Hisse)"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b3"
+   },
+   "attrs": {
+    "Kod": "B-3",
+    "Toplam": "5"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-3"
+   },
+   "issues": []
+  },
+  {
+   "name": "yeni kayıt: kimliği yok, alt kaydı yok",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {},
+   "attrs": {
+    "Kod": "B-9"
+   },
+   "new": true,
+   "preflight": [],
+   "out": {
+    "Kod": "B-9",
+    "Sayı": "0"
+   },
+   "issues": []
+  },
+  {
+   "name": "projede olmayan ilişki: uyarı, değer boş",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Kiracılar', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [
+    {
+     "code": "form_relation_unknown",
+     "severity": "warning"
+    }
+   ],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "issues": []
+  },
+  {
+   "name": "ilişki dünyada yokken: uyarı",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {},
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [
+    {
+     "code": "form_relation_unknown",
+     "severity": "warning"
+    }
+   ],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "issues": []
+  },
+  {
+   "name": "denetim: etkin hisseler 1 değil",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod",
+      "checks": [
+       {
+        "rule": "ilişkili_toplam('Malikler', 'topla', Hisse, Durum = 'Etkin') = 1",
+        "message": "Malik hisselerinin toplamı 1 olmalı."
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "issues": [
+    {
+     "code": "form_check_failed",
+     "severity": "error",
+     "item": "kod",
+     "field": "Kod",
+     "rule": "checks/0"
+    }
+   ]
+  },
+  {
+   "name": "denetim: bütün hisseler 1",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod",
+      "checks": [
+       {
+        "rule": "ilişkili_toplam('Malikler', 'topla', Hisse) = 1",
+        "message": "Malik hisselerinin toplamı 1 olmalı."
+       }
+      ]
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "issues": []
+  },
+  {
+   "name": "zorunluluk: iki bölümlü binada not zorunlu",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not",
+      "requiredWhen": "ilişkili_toplam('Bölümler', 'say') >= 2"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "issues": [
+    {
+     "code": "form_required",
+     "severity": "error",
+     "item": "not",
+     "field": "Not"
+    }
+   ]
+  },
+  {
+   "name": "zorunluluk: bölümsüz binada değil",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not",
+      "requiredWhen": "ilişkili_toplam('Bölümler', 'say') >= 2"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b2"
+   },
+   "attrs": {
+    "Kod": "B-2"
+   },
+   "new": false,
+   "preflight": [],
+   "out": {
+    "Kod": "B-2"
+   },
+   "issues": []
+  },
+  {
+   "name": "bilinmeyen toplama derlenmez",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'çarp', Hisse)"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [
+    {
+     "code": "form_rule_invalid",
+     "severity": "error",
+     "item": "sayi",
+     "field": "Sayı",
+     "rule": "calculate"
+    }
+   ]
+  },
+  {
+   "name": "ifadesiz yalnız say olur",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'topla')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [
+    {
+     "code": "form_rule_invalid",
+     "severity": "error",
+     "item": "sayi",
+     "field": "Sayı",
+     "rule": "calculate"
+    }
+   ]
+  },
+  {
+   "name": "ilişkinin adı sabit metin olmalı",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam(Kod, 'say')"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [
+    {
+     "code": "form_rule_invalid",
+     "severity": "error",
+     "item": "sayi",
+     "field": "Sayı",
+     "rule": "calculate"
+    }
+   ]
+  },
+  {
+   "name": "iç ifadede ilişkili_toplam olmaz",
+   "fields": [
+    {
+     "name": "Kod",
+     "kind": "text"
+    },
+    {
+     "name": "Durum",
+     "kind": "text"
+    },
+    {
+     "name": "Sayı",
+     "kind": "integer"
+    },
+    {
+     "name": "Toplam",
+     "kind": "decimal"
+    },
+    {
+     "name": "Adlar",
+     "kind": "text"
+    },
+    {
+     "name": "Not",
+     "kind": "text"
+    }
+   ],
+   "body": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "kod",
+      "field": "Kod"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     },
+     {
+      "type": "field",
+      "id": "sayi",
+      "field": "Sayı",
+      "calculate": "ilişkili_toplam('Malikler', 'say', ilişkili_toplam('Bölümler', 'say'))"
+     },
+     {
+      "type": "field",
+      "id": "toplam",
+      "field": "Toplam"
+     },
+     {
+      "type": "field",
+      "id": "adlar",
+      "field": "Adlar"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "world": {
+    "malik": {
+     "name": "Malik",
+     "fields": [
+      {
+       "name": "Ad",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Hisse",
+       "kind": "decimal"
+      },
+      {
+       "name": "Durum",
+       "kind": "text"
+      }
+     ],
+     "rows": [
+      [
+       "m1",
+       {
+        "Ad": "Ayşe",
+        "Bina": "b1",
+        "Hisse": "0.5",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m2",
+       {
+        "Ad": "Mehmet",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m3",
+       {
+        "Ad": "Zeynep",
+        "Bina": "b1",
+        "Hisse": "0.25",
+        "Durum": "Pasif"
+       }
+      ],
+      [
+       "m4",
+       {
+        "Ad": "Ali",
+        "Bina": "b2",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m5",
+       {
+        "Ad": "Can",
+        "Bina": "",
+        "Hisse": "1",
+        "Durum": "Etkin"
+       }
+      ],
+      [
+       "m6",
+       {
+        "Ad": "Ece",
+        "Bina": "b1; b2",
+        "Hisse": "bilinmiyor",
+        "Durum": "Etkin"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-malik",
+       "name": "Malikler",
+       "field": "bina"
+      }
+     ]
+    },
+    "bolum": {
+     "name": "Bağımsız bölüm",
+     "fields": [
+      {
+       "name": "No",
+       "kind": "text"
+      },
+      {
+       "id": "bina",
+       "name": "Bina",
+       "kind": "text"
+      },
+      {
+       "name": "Alan",
+       "kind": "decimal"
+      }
+     ],
+     "rows": [
+      [
+       "d1",
+       {
+        "No": "1",
+        "Bina": "b1",
+        "Alan": "120.5"
+       }
+      ],
+      [
+       "d2",
+       {
+        "No": "2",
+        "Bina": "b1",
+        "Alan": "95.25"
+       }
+      ]
+     ],
+     "relations": [
+      {
+       "id": "bina-bolum",
+       "name": "Bölümler",
+       "field": "bina"
+      }
+     ]
+    }
+   },
+   "object": {
+    "uid": "b1"
+   },
+   "attrs": {
+    "Kod": "B-1",
+    "Durum": "Yıkık"
+   },
+   "new": false,
+   "preflight": [
+    {
+     "code": "form_rule_invalid",
+     "severity": "error",
+     "item": "sayi",
+     "field": "Sayı",
+     "rule": "calculate"
+    }
+   ]
+  }
  ]
 }
