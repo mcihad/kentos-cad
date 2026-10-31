@@ -3,4 +3,4 @@
 /**
  * What one column of a schedule reads.
  */
-export type ScheduleField = "number" | "type" | "form" | "width" | "height" | "sill" | "head" | "wall" | "level" | "phase" | "count" | "area" | "perimeter" | "volume" | "name" | "usage" | "tag" | "place" | "length" | "thickness" | "attr" | "floorFinish" | "baseFinish" | "wallFinish" | "ceilingFinish" | "baseboard" | "category" | "space";
+export type ScheduleField = "number" | "type" | "form" | "width" | "height" | "sill" | "head" | "wall" | "level" | "phase" | "count" | "area" | "perimeter" | "volume" | "name" | "usage" | "tag" | "place" | "length" | "thickness" | "attr" | "floorFinish" | "baseFinish" | "wallFinish" | "ceilingFinish" | "baseboard" | "category" | "space" | "roughWidth" | "unitWidth" | "leafWidth" | "clearWidth";

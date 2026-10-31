@@ -4066,6 +4066,67 @@ pub fn catalog() -> CommandCatalog {
         // Yeniden bağla (docs/adr/0249 §3), held together by
         // fixtures/commands/v1/cad.dimensions.reassociate.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
+        // Kapı ve pencere tipleri (docs/adr/0772), held together by fixtures/commands/v1/cad.openingtypes.edit.json and
+        // cad.openings.query.json (scripts/fixtures/opening_types_cases.py).
+        CommandDescriptor {
+            id: crate::CAD_OPENING_TYPES_EDIT.into(),
+            version: crate::CAD_OPENING_TYPES_EDIT_VERSION,
+            title: "Kapı ve pencere tipleri".into(),
+            summary: "Projenin kapı ve pencere tiplerini (ofisin K01'i) yönetir (docs/adr/0772); tek geri alma adımı “Açıklık tipi”, tipi izleyen açıklıklar aynı adımda. operation: define (name, id isteğe bağlı, copyOf: projenin ya da KentOS'un tipi, form, change; sürüm 1), update (type: kimlik ya da ad, change; sürüm bir artar, tipi izleyen açıklıklar yeni değerleri alır), rename (type, name; kimlik değişmez), remove (type; izleyen açıklık varsa opening_type_in_use, detach: true açıklıkları değerleriyle tipten ayırır), import (library: kentos.opening-types 1 dosyasının içeriği, tiplerin kaynağı kitaplığın adı; onConflict: refuse, skip, replace — yalnız aynı kimlik ve kaynak, yeni sürüm —, rename), export (library adı, types; dosyanın içeriği library çıktısında, çizim değişmez). change: width (kaba boşluk) ya da nominal (by: rough kaba boşluk, unit kasa dış eni, leaf kanat eni; value: kaba boşluk bundan, montaj boşluğu ve kasadan hesaplanır), leaves, operation, swing, showSwing, frame, sill, head, depth, build (sizeBy, fit montaj boşluğu, leafThickness, split eşit olmayan kanatlarda birinci kanadın payı, frameDepth, frameOffset, threshold eşik, casing pervaz, sillBoard denizlik çıkıntısı, mullions, transoms, useZone kullanım alanı), unset (yapının alanlarını kaldırır). Tipi izleyen açıklığın istisnası (overrides) olan alan korunur (report.kept, opening_type_kept); kilitli katmandaki açıklık eski sürümde kalır (report.skipped, opening_type_skipped); yeni değerle duvarına sığmayan açıklık bütün değişikliği reddeder (opening_type_refused) ya da onRefused: skip ile eski sürümde kalır (report.refused). Plan yazmadan tabloyu ve her açıklığın sonucunu gösterir (etkilenenlerin önizlemesi)."
+                .into(),
+            aliases: vec!["KAPITIPI".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OpeningTypesEdit>(),
+            output: schema::<crate::OpeningTypesEdited>(),
+            plan: Some(schema::<crate::OpeningTypesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "90 cm kanatlı K01 kapı tipi".into(),
+                    input: json!({
+                        "operation": {"kind": "define", "name": "K01", "copyOf": "kentos-kapi-90",
+                            "change": {"nominal": {"by": "leaf", "value": 0.9}, "frame": 0.05,
+                                "build": {"fit": 0.01, "leafThickness": 0.04}}}
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "K01'in kasasını 6 cm yap; izleyen kapılar alır".into(),
+                    input: json!({"operation": {"kind": "update", "type": "K01", "change": {"frame": 0.06}}}),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_OPENINGS_QUERY.into(),
+            version: crate::CAD_OPENINGS_QUERY_VERSION,
+            title: "Açıklıkları oku".into(),
+            summary: "Çizimin kapı, pencere ve öbür açıklıklarını tipleri ve genişlikleriyle okur (docs/adr/0772); çizimi değiştirmez. Süzgeçler: uids (seçim kapsamı), type (projenin ya da KentOS'un tipi, kimlik ya da ad: Aynı tiptekileri seç), level (duvarın katı; null katsız), form. Her satır: uid, form, number, type ve typeName, typeVersion (izlediği tipin aldığı sürümü), stale (tipinden eski), overrides (örnek istisnaları), level, host ve sizes: rough kaba boşluk (açıklığın width'i), unit kasa dış eni (kaba boşluk eksi iki yanda montaj boşluğu), leaf kanat eni (kasanın içi), leaves (kanatlar), clear net geçiş (kapı açıkken açık kanadın yüzünden karşı kasaya; açıda kanadın izdüşümü ve kalınlığı düşülür, kalınlık verilmezse 0.04 m), clearFirst (iki kanatlıda yalnız birinci kanat açıkken), sizeBy ve nominal (tipin ölçüsünün adladığı genişlik). types: projenin tipleri, bütün çizimde izleyen, eski sürümde kalan ve istisnalı açıklık sayılarıyla."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OpeningsQuery>(),
+            output: schema::<crate::OpeningsQueried>(),
+            plan: Some(schema::<crate::OpeningsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Zemin kattaki K01 kapıları".into(),
+                input: json!({"type": "K01", "level": "zemin"}),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_OPENINGS_DISTANCES.into(),
             version: crate::CAD_OPENINGS_DISTANCES_VERSION,
@@ -11446,6 +11507,12 @@ mod tests {
                         serde_json::from_value::<crate::OpeningsDistancesInput>(e.input.clone())
                             .map(|_| ())
                     }
+                    crate::CAD_OPENING_TYPES_EDIT => {
+                        serde_json::from_value::<crate::OpeningTypesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_OPENINGS_QUERY => {
+                        serde_json::from_value::<crate::OpeningsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ARCH_AUDIT => {
                         serde_json::from_value::<crate::ArchAudit>(e.input.clone()).map(|_| ())
                     }
@@ -12548,6 +12615,12 @@ mod tests {
                         crate::CAD_OPENINGS_DISTANCES => {
                             serde_json::from_value::<crate::OpeningsDistances>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_OPENING_TYPES_EDIT => {
+                            serde_json::from_value::<crate::OpeningTypesEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_OPENINGS_QUERY => {
+                            serde_json::from_value::<crate::OpeningsQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ARCH_AUDIT => {
                             serde_json::from_value::<crate::ArchAudited>(output.clone()).map(|_| ())

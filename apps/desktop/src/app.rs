@@ -276,6 +276,8 @@ pub enum Dialog {
     WallStyles,
     /// Birleşimleri denetle (wall_joins.rs, docs/adr/0340 §6); the window is `App::wall_joins`.
     WallJoins,
+    /// Kapı ve pencere tipleri (opening_types_window.rs, docs/adr/0772); the window is `App::opening_types`.
+    OpeningTypes,
     /// Çizelge ayarları and Çizelgeyi dosyaya yaz (schedule_window.rs, docs/adr/0733 §5, §7); the window is
     /// `App::schedule`.
     Schedule,
@@ -600,6 +602,7 @@ pub enum Message {
     AnnotationStyles(crate::annotation_styles::Event),
     WallStyles(crate::wall_styles::Event),
     WallJoins(crate::wall_joins::Event),
+    OpeningTypes(crate::opening_types_window::Event),
     TagsCheck(crate::tags_check::Event),
     Schedule(crate::schedule_window::Event),
     ViewRefs(crate::viewmark_refs::Event),
@@ -1133,6 +1136,8 @@ pub struct App {
     pub(crate) wall_styles: Option<crate::wall_styles::Window>,
     /// Birleşimleri denetle's window (wall_joins.rs, docs/adr/0340 §6).
     pub(crate) wall_joins: Option<crate::wall_joins::Window>,
+    /// Kapı ve pencere tipleri's window (opening_types_window.rs, docs/adr/0772).
+    pub(crate) opening_types: Option<crate::opening_types_window::Window>,
     /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
     pub(crate) tags_check: Option<crate::tags_check::Window>,
     /// Çizelge ayarları's and Dosyaya yaz's window (schedule_window.rs, docs/adr/0733 §5).
@@ -1523,6 +1528,7 @@ impl App {
             annotation_styles: None,
             wall_styles: None,
             wall_joins: None,
+            opening_types: None,
             tags_check: None,
             schedule: None,
             view_refs: None,
@@ -2176,6 +2182,7 @@ impl App {
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
             Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::WallJoins(event) => return self.wall_joins_event(event),
+            Message::OpeningTypes(event) => return self.opening_types_event(event),
             Message::TagsCheck(event) => return self.tags_check_event(event),
             Message::Schedule(event) => return self.schedule_event(event),
             Message::ViewRefs(event) => return self.view_refs_event(event),
@@ -2880,6 +2887,16 @@ impl App {
             // Duvar stilleri (docs/adr/0339 §6).
             "arch.wallStyles" => self.open_wall_styles(),
             "arch.wallJoinCheck" => self.open_wall_joins(),
+            // Kapı ve pencere tipleri (docs/adr/0772).
+            "arch.openingTypes" => self.open_opening_types(),
+            "arch.openingSameType" => self.select_same_opening_type(),
+            "arch.openingDetach" => self.opening_type_action(kentos_commands::OpeningsOperation::Detach),
+            "arch.openingPush" => {
+                self.opening_type_action(kentos_commands::OpeningsOperation::Push { fields: Vec::new() });
+            }
+            "arch.openingReset" => {
+                self.opening_type_action(kentos_commands::OpeningsOperation::Reset { fields: Vec::new() });
+            }
             "arch.tagsCheck" => self.open_tags_check(),
             "arch.viewRefs" => self.open_view_refs(),
             "arch.sheetSet" => self.open_sheet_set(),

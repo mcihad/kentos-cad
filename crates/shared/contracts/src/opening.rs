@@ -307,6 +307,21 @@ pub struct OpeningFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub number: Option<String>,
+    /// The version of the project type `style` names it last took (docs/adr/0772 §1): it follows that type. Absent: it
+    /// follows none (a KentOS type's values copied once, or none).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 1), extend("x-unit" = "version")))]
+    pub type_version: Option<u32>,
+    /// The fields of its type it keeps its own value of (örnek istisnası), in the order the fields are listed.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+    pub overrides: Vec<crate::OpeningTypeField>,
+    /// Its construction (docs/adr/0772 §2, §3): sizes, leaves, frame, threshold, casing, sill board, panes, use zone.
+    /// Absent: drawn and measured as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub build: Option<crate::OpeningBuild>,
     /// Its jambs: the start jamb's points on its wall's left and right face, then the end jamb's; written from its
     /// wall by the document.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -362,6 +377,21 @@ fn is_start(h: &OpeningHand) -> bool {
 
 fn is_left(s: &OpeningSide) -> bool {
     *s == OpeningSide::Left
+}
+
+/// Whether `e` says what only schema 137 can (docs/adr/0772): an opening following a project type, keeping
+/// exceptions or with a construction, or a schedule reading the new widths.
+pub fn needs_opening_types(e: &crate::Entity) -> bool {
+    match e {
+        crate::Entity::Opening(o) => {
+            let f = &o.opening;
+            f.type_version.is_some() || !f.overrides.is_empty() || f.build.is_some()
+        }
+        crate::Entity::Table(t) => matches!(&t.source,
+            Some(crate::TableSource::Schedule { columns, .. })
+                if columns.iter().any(|c| c.field.is_sized())),
+        _ => false,
+    }
 }
 
 /// Whether `e` says what only schema 119 can (docs/adr/0719): a niche or flue, a depth or inset, the break
@@ -551,6 +581,34 @@ impl OpeningFields {
         }
         if let Some(why) = self.recess_problem() {
             return Some(why);
+        }
+        if self.build.as_ref().is_some_and(crate::OpeningBuild::is_empty) {
+            return Some(("build".into(), "Boş yapı yazılmaz; yapının en az bir alanı olur.".into()));
+        }
+        if let Some(why) = self
+            .build
+            .as_ref()
+            .and_then(|b| b.problem(self.width, self.frame.unwrap_or(0.0)))
+        {
+            return Some(why);
+        }
+        if self.type_version == Some(0) || (self.type_version.is_some() && self.style.is_none()) {
+            return Some((
+                "typeVersion".into(),
+                "Tipin sürümü 1 ya da daha büyük olmalı ve tipin kimliği (style) verilmeli.".into(),
+            ));
+        }
+        if !self.overrides.is_empty() && self.type_version.is_none() {
+            return Some((
+                "overrides".into(),
+                "Örnek istisnası yalnız bir tipi izleyen açıklığındır.".into(),
+            ));
+        }
+        if self.overrides.windows(2).any(|w| w[0] >= w[1]) {
+            return Some((
+                "overrides".into(),
+                "Örnek istisnaları alanların sırasıyla ve birer kez yazılır.".into(),
+            ));
         }
         if self.number.as_deref().is_some_and(|n| n.trim().is_empty()) {
             return Some((

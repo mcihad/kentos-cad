@@ -88,6 +88,9 @@ pub struct OpeningTool {
     next: Option<String>,
     /// The type's id; none: the form's first.
     kind: Option<String>,
+    /// The project's door and window types (docs/adr/0772), as the drawing had them when last seen: listed first,
+    /// before KentOS's own.
+    project: Vec<kentos_commands::OpeningTypeDef>,
     width: Option<f64>,
     side: Option<OpeningSide>,
     hand: OpeningHand,
@@ -114,6 +117,7 @@ impl OpeningTool {
             numbering: Numbering::Auto,
             next: None,
             kind: None,
+            project: Vec::new(),
             width: None,
             side: None,
             hand: OpeningHand::Start,
@@ -169,9 +173,16 @@ impl OpeningTool {
         }
     }
 
+    /// The types offered: the project's (docs/adr/0772), then KentOS's own.
+    fn all_types(&self) -> Vec<kentos_commands::OpeningTypeDef> {
+        let mut all = self.project.clone();
+        all.extend(builtin_opening_types());
+        all
+    }
+
     /// The type chosen, or the form's first.
     fn kind_def(&self) -> Option<kentos_commands::OpeningTypeDef> {
-        let all = builtin_opening_types();
+        let all = self.all_types();
         self.kind
             .as_deref()
             .and_then(|k| all.iter().find(|t| t.id == k))
@@ -245,7 +256,7 @@ impl OpeningTool {
 
     /// The type chosen, or the form's first.
     fn type_name(&self) -> String {
-        let all = builtin_opening_types();
+        let all = self.all_types();
         self.kind
             .as_deref()
             .and_then(|k| all.iter().find(|t| t.id == k))
@@ -305,6 +316,24 @@ impl OpeningTool {
 
     /// The plan at the hover, drawn.
     fn see(&mut self, cx: &Context<'_>) {
+        self.project = cx
+            .doc
+            .opening_types()
+            .iter()
+            .map(|t| kentos_commands::OpeningTypeDef {
+                id: t.id.clone(),
+                name: t.name.clone(),
+                form: t.form,
+                width: t.width,
+                leaves: t.leaves,
+                operation: t.operation,
+                swing: t.swing,
+                frame: t.frame,
+                sill: t.sill,
+                head: t.head,
+                depth: t.depth,
+            })
+            .collect();
         self.next = self.next_number(cx.doc);
         self.drawn = Preview::default();
         self.why = None;
@@ -643,7 +672,8 @@ impl Tool for OpeningTool {
             }
             if ask == Ask::Type {
                 let folded = js_trim(text).to_lowercase();
-                match builtin_opening_types()
+                match self
+                    .all_types()
                     .into_iter()
                     .filter(|t| t.form == self.form)
                     .find(|t| t.id == js_trim(text) || t.name.to_lowercase() == folded)
@@ -746,7 +776,7 @@ impl Tool for OpeningTool {
         match key {
             "T" => {
                 let current = self.type_name();
-                builtin_opening_types()
+                self.all_types()
                     .into_iter()
                     .filter(|t| t.form == self.form)
                     .map(|t| {
@@ -781,7 +811,8 @@ impl Tool for OpeningTool {
         }
         match key {
             "T" => {
-                if builtin_opening_types()
+                if self
+                    .all_types()
                     .iter()
                     .any(|t| t.id == typed && t.form == self.form)
                 {

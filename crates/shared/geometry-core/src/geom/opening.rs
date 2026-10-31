@@ -79,6 +79,83 @@ pub struct Spec {
     pub depth: Option<f64>,
     /// A flue's distance from its face; none: centred.
     pub inset: Option<f64>,
+    /// Its construction (docs/adr/0772 §3); the default draws it as before.
+    pub build: Build,
+}
+
+/// A door's or window's construction as plan draws it (docs/adr/0772 §3; the contract's `OpeningBuild`): each field's
+/// absence draws nothing of it.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Build {
+    /// The fitting gap between the rough opening and the frame, each side.
+    pub fit: f64,
+    /// A leaf's thickness: a leaf is drawn as a band, else a line.
+    pub leaf_thickness: Option<f64>,
+    /// Two unequal leaves: the hinge-start leaf's share of the light.
+    pub split: Option<f64>,
+    /// The frame's depth across the wall; none: the wall's thickness.
+    pub frame_depth: Option<f64>,
+    /// With a depth: its distance from the face it opens to; none: centred.
+    pub frame_offset: Option<f64>,
+    pub threshold: Option<f64>,
+    pub casing: Option<f64>,
+    pub sill_board: Option<f64>,
+    pub mullions: u8,
+    pub use_zone: Option<f64>,
+}
+
+/// How far a casing stands off its wall's face, metres (docs/adr/0772 §3).
+pub const CASING_PROJECTION: f64 = 0.015;
+
+impl Build {
+    fn read(v: &Json) -> Result<Build, String> {
+        if !matches!(v, Json::Obj(_)) {
+            return Ok(Build::default());
+        }
+        let n = |k: &str| Option::<f64>::from_json(v.get(k));
+        Ok(Build {
+            fit: n("fit")?.unwrap_or(0.0),
+            leaf_thickness: n("leafThickness")?,
+            split: n("split")?,
+            frame_depth: n("frameDepth")?,
+            frame_offset: n("frameOffset")?,
+            threshold: n("threshold")?,
+            casing: n("casing")?,
+            sill_board: n("sillBoard")?,
+            mullions: n("mullions")?.unwrap_or(0.0).clamp(0.0, 255.0) as u8,
+            use_zone: n("useZone")?,
+        })
+    }
+}
+
+impl ToJson for Build {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        let mut first = true;
+        if self.fit != 0.0 {
+            field(out, &mut first, "fit", &self.fit);
+        }
+        for (name, v) in [
+            ("leafThickness", self.leaf_thickness),
+            ("split", self.split),
+            ("frameDepth", self.frame_depth),
+            ("frameOffset", self.frame_offset),
+            ("threshold", self.threshold),
+            ("casing", self.casing),
+            ("sillBoard", self.sill_board),
+        ] {
+            if let Some(v) = v {
+                field(out, &mut first, name, &v);
+            }
+        }
+        if self.mullions != 0 {
+            field(out, &mut first, "mullions", &f64::from(self.mullions));
+        }
+        if let Some(v) = self.use_zone {
+            field(out, &mut first, "useZone", &v);
+        }
+        out.push('}');
+    }
 }
 
 impl Default for Spec {
@@ -97,6 +174,7 @@ impl Default for Spec {
             head: None,
             depth: None,
             inset: None,
+            build: Build::default(),
         }
     }
 }
@@ -123,6 +201,7 @@ impl crate::api::json::Flat for Spec {
         "head",
         "depth",
         "inset",
+        "build",
     ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
@@ -161,6 +240,7 @@ impl crate::api::json::Flat for Spec {
             head: Option::<f64>::from_json(v.get("head"))?,
             depth: Option::<f64>::from_json(v.get("depth"))?,
             inset: Option::<f64>::from_json(v.get("inset"))?,
+            build: Build::read(v.get("build"))?,
         })
     }
 
@@ -205,6 +285,9 @@ impl crate::api::json::Flat for Spec {
             if let Some(v) = v {
                 field(out, first, name, &v);
             }
+        }
+        if self.build != Build::default() {
+            field(out, first, "build", &self.build);
         }
     }
 }
@@ -466,10 +549,15 @@ fn across_jambs(place: &[Vec2], right: bool, near: f64, far: f64, thickness: f64
 /// sides and back, a flue its cavity and a cross); a cut bare opening or niche nothing (its wall shows it).
 pub fn pieces(place: &[Vec2], spec: &Spec) -> Vec<Mark> {
     if matches!(spec.form, Form::Door | Form::Window) {
-        return symbol(place, spec)
+        let mut out: Vec<Mark> = symbol(place, spec)
             .into_iter()
             .map(|shape| Mark { shape, dashed: false })
             .collect();
+        // Its use zone, dashed (docs/adr/0772 §5).
+        if let Some(ring) = use_zone(place, spec) {
+            out.push(Mark { shape: closed_ring(ring), dashed: true });
+        }
+        return out;
     }
     let Some(f) = frame_of(place) else {
         return Vec::new();
@@ -518,102 +606,300 @@ pub fn pieces(place: &[Vec2], spec: &Spec) -> Vec<Mark> {
     }
 }
 
-/// A door's or window's own pieces from its jambs (docs/adr/0341 §2): its frame, its leaves and their swing, a window's
-/// lines; the other forms' pieces are [`pieces`]'.
+/// Where a door's or window's parts stand in the frame its jambs make (docs/adr/0341 §2, 0772 §3): along the wall from
+/// either jamb, across it from the left face.
+struct Parts<'a> {
+    place: &'a [Vec2],
+    f: Frame,
+    /// The fitting gap and the frame's width, along the wall.
+    fit: f64,
+    fr: f64,
+    /// The light between the frame's sides.
+    clear: f64,
+    /// The frame's band across the wall, from the left face.
+    dl: f64,
+    dr: f64,
+}
+
+impl Parts<'_> {
+    fn new<'a>(place: &'a [Vec2], spec: &Spec) -> Option<Parts<'a>> {
+        let f = frame_of(place)?;
+        let half = f.length / 2.0 * 0.999;
+        let fit = spec.build.fit.clamp(0.0, half);
+        let fr = spec.frame.clamp(0.0, js_max(half - fit, 0.0));
+        let clear = f.length - 2.0 * fr - 2.0 * fit;
+        let t = f.thickness;
+        let (dl, dr) = match spec.build.frame_depth {
+            Some(depth) if depth > 0.0 && depth < t => {
+                let near = spec.build.frame_offset.unwrap_or((t - depth) / 2.0).clamp(0.0, t - depth);
+                if spec.side_right {
+                    (t - near - depth, t - near)
+                } else {
+                    (near, near + depth)
+                }
+            }
+            _ => (0.0, t),
+        };
+        Some(Parts {
+            place,
+            f,
+            fit,
+            fr,
+            clear,
+            dl,
+            dr,
+        })
+    }
+
+    /// The point `s` along the wall from the start jamb, `d` across it from the left face.
+    fn along_start(&self, s: f64, d: f64) -> Vec2 {
+        add(self.across(self.place[0], self.place[1], d), mul(self.f.along, s))
+    }
+
+    /// The point `s` along the wall back from the end jamb, `d` across it from the left face.
+    fn along_end(&self, s: f64, d: f64) -> Vec2 {
+        sub(self.across(self.place[2], self.place[3], d), mul(self.f.along, s))
+    }
+
+    /// The point `d` from a jamb's left face point `l` toward its right one `r` (its faces and middle exactly).
+    fn across(&self, l: Vec2, r: Vec2, d: f64) -> Vec2 {
+        let t = self.f.thickness;
+        if d == 0.0 {
+            l
+        } else if d == t {
+            r
+        } else if d == t / 2.0 {
+            mid(l, r)
+        } else {
+            add(l, mul(sub(r, l), if t > 0.0 { d / t } else { 0.0 }))
+        }
+    }
+
+    /// The band's middle across the wall.
+    fn middle(&self) -> f64 {
+        (self.dl + self.dr) / 2.0
+    }
+
+    /// The light's start on the band's middle line.
+    fn light_start(&self) -> Vec2 {
+        self.along_start(self.fit + self.fr, self.middle())
+    }
+
+    /// The band's face on the side it opens to, from the left face.
+    fn face(&self, spec: &Spec) -> f64 {
+        if spec.side_right { self.dr } else { self.dl }
+    }
+
+    /// The unit out of the wall on its left face's side (`left`) or its right face's.
+    fn out(&self, left: bool) -> Vec2 {
+        if left { self.f.left } else { mul(self.f.left, -1.0) }
+    }
+}
+
+/// A leaf's sweep: its hinge, where it shuts (a unit along the light), its length; the side it opens to.
+struct Leaf {
+    hinge: Vec2,
+    closed: Vec2,
+    len: f64,
+}
+
+/// Its leaves as they hinge (a swinging door): one from the start (or the end), or two, split as given.
+fn swing_leaves(p: &Parts, spec: &Spec) -> Vec<Leaf> {
+    let face = p.face(spec);
+    let u = p.f.along;
+    let at0 = p.along_start(p.fit + p.fr, face);
+    let at1 = p.along_end(p.fit + p.fr, face);
+    if spec.leaves == 2 {
+        let share = spec.build.split.filter(|s| *s > 0.0 && *s < 1.0).unwrap_or(0.5);
+        vec![
+            Leaf { hinge: at0, closed: u, len: p.clear * share },
+            Leaf { hinge: at1, closed: mul(u, -1.0), len: p.clear * (1.0 - share) },
+        ]
+    } else if spec.hand_end {
+        vec![Leaf { hinge: at1, closed: mul(u, -1.0), len: p.clear }]
+    } else {
+        vec![Leaf { hinge: at0, closed: u, len: p.clear }]
+    }
+}
+
+/// The turn, degrees, a leaf shut along `closed` makes toward the side it opens to.
+fn turn_of(p: &Parts, spec: &Spec, closed: Vec2) -> f64 {
+    let outward = if spec.side_right { mul(p.f.left, -1.0) } else { p.f.left };
+    if closed.x * outward.y - closed.y * outward.x >= 0.0 {
+        spec.swing
+    } else {
+        -spec.swing
+    }
+}
+
+/// A door's or window's own pieces from its jambs (docs/adr/0341 §2, 0772 §3): its frame (with its fitting gap, depth and
+/// place in the wall), its leaves (unequal, thick) and their swing, a window's lines and mullions, a threshold, casings
+/// and a sill board; the other forms' pieces are [`pieces`]'.
 pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
     if !matches!(spec.form, Form::Door | Form::Window) {
         return pieces(place, spec).into_iter().map(|m| m.shape).collect();
     }
-    let Some(f) = frame_of(place) else {
+    let Some(p) = Parts::new(place, spec) else {
         return Vec::new();
     };
+    let b = &spec.build;
     let mut out = Vec::new();
-    let fr = spec.frame.clamp(0.0, f.length / 2.0 * 0.999);
-    let (l0, r0, l1, r1) = (place[0], place[1], place[2], place[3]);
-    let u = f.along;
+    let (fit, fr, clear) = (p.fit, p.fr, p.clear);
+    let (dl, dr) = (p.dl, p.dr);
+    let u = p.f.along;
     if fr > 0.0 {
-        out.push(closed_ring(vec![l0, add(l0, mul(u, fr)), add(r0, mul(u, fr)), r0]));
-        out.push(closed_ring(vec![l1, sub(l1, mul(u, fr)), sub(r1, mul(u, fr)), r1]));
+        out.push(closed_ring(vec![
+            p.along_start(fit, dl),
+            p.along_start(fit + fr, dl),
+            p.along_start(fit + fr, dr),
+            p.along_start(fit, dr),
+        ]));
+        out.push(closed_ring(vec![
+            p.along_end(fit, dl),
+            p.along_end(fit + fr, dl),
+            p.along_end(fit + fr, dr),
+            p.along_end(fit, dr),
+        ]));
     }
-    let clear = f.length - 2.0 * fr;
-    let m0 = add(f.origin, mul(u, fr));
+    let m0 = p.light_start();
+    let depth = dr - dl;
     match spec.form {
-        Form::Opening | Form::Niche | Form::Flue => {}
         Form::Window => {
-            out.push(line(add(l0, mul(u, fr)), sub(l1, mul(u, fr))));
-            out.push(line(add(r0, mul(u, fr)), sub(r1, mul(u, fr))));
+            out.push(line(p.along_start(fit + fr, dl), p.along_end(fit + fr, dl)));
+            out.push(line(p.along_start(fit + fr, dr), p.along_end(fit + fr, dr)));
             if spec.operation == Operation::Slide {
-                let k = f.thickness / 12.0;
+                let k = depth / 12.0;
                 let lap = clear * 0.05;
                 let half = clear / 2.0;
-                out.push(line(add(m0, mul(f.left, k)), add(m0, add(mul(u, half + lap), mul(f.left, k)))));
+                out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
                 out.push(line(
-                    add(m0, add(mul(u, half - lap), mul(f.left, -k))),
-                    add(m0, add(mul(u, clear), mul(f.left, -k))),
+                    add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
+                    add(m0, add(mul(u, clear), mul(p.f.left, -k))),
                 ));
             } else {
                 out.push(line(m0, add(m0, mul(u, clear))));
             }
+            let n = f64::from(b.mullions);
+            for i in 1..=b.mullions {
+                let s = fit + fr + clear * f64::from(i) / (n + 1.0);
+                out.push(line(p.along_start(s, dl), p.along_start(s, dr)));
+            }
+            if let Some(board) = b.sill_board.filter(|v| *v > 0.0) {
+                // The sill board on the face away from the side it opens to.
+                let left = spec.side_right;
+                let d = if left { 0.0 } else { p.f.thickness };
+                let o = p.out(left);
+                let (a, c) = (p.along_start(0.0, d), p.along_end(0.0, d));
+                out.push(closed_ring(vec![a, c, add(c, mul(o, board)), add(a, mul(o, board))]));
+            }
         }
-        Form::Door => match spec.operation {
-            Operation::Slide => {
-                let k = f.thickness / 8.0;
-                if spec.leaves == 1 {
-                    out.push(line(add(m0, mul(f.left, k)), add(m0, add(mul(u, clear), mul(f.left, k)))));
-                } else {
-                    let lap = clear * 0.05;
-                    let half = clear / 2.0;
-                    out.push(line(add(m0, mul(f.left, k)), add(m0, add(mul(u, half + lap), mul(f.left, k)))));
-                    out.push(line(
-                        add(m0, add(mul(u, half - lap), mul(f.left, -k))),
-                        add(m0, add(mul(u, clear), mul(f.left, -k))),
-                    ));
-                }
-            }
-            Operation::Fixed => {
-                out.push(line(m0, add(m0, mul(u, clear))));
-            }
-            Operation::Swing => {
-                let (face0, face1) = if spec.side_right { (r0, r1) } else { (l0, l1) };
-                let outward = if spec.side_right { mul(f.left, -1.0) } else { f.left };
-                let leaf = |hinge: Vec2, closed: Vec2, len: f64, out: &mut Vec<Shape>| {
-                    // The leaf turns from where it shuts toward the side it opens to.
-                    let turn = if closed.x * outward.y - closed.y * outward.x >= 0.0 {
-                        spec.swing
+        Form::Door => {
+            match spec.operation {
+                Operation::Slide => {
+                    let k = depth / 8.0;
+                    if spec.leaves == 1 {
+                        out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, clear), mul(p.f.left, k)))));
                     } else {
-                        -spec.swing
-                    };
-                    let open = rotated(closed, turn);
-                    out.push(line(hinge, add(hinge, mul(open, len))));
-                    if spec.show_swing {
-                        let a_closed = atan2(closed.y, closed.x);
-                        let a_open = atan2(open.y, open.x);
-                        let (a0, a1) = if turn > 0.0 {
-                            (a_closed, a_open)
-                        } else {
-                            (a_open, a_closed)
-                        };
-                        out.push(Shape::Arc {
-                            c: hinge,
-                            r: len,
-                            a0,
-                            a1,
-                        });
+                        let lap = clear * 0.05;
+                        let half = clear / 2.0;
+                        out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
+                        out.push(line(
+                            add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
+                            add(m0, add(mul(u, clear), mul(p.f.left, -k))),
+                        ));
                     }
-                };
-                if spec.leaves == 2 {
-                    let len = clear / 2.0;
-                    leaf(add(face0, mul(u, fr)), u, len, &mut out);
-                    leaf(sub(face1, mul(u, fr)), mul(u, -1.0), len, &mut out);
-                } else if spec.hand_end {
-                    leaf(sub(face1, mul(u, fr)), mul(u, -1.0), clear, &mut out);
-                } else {
-                    leaf(add(face0, mul(u, fr)), u, clear, &mut out);
+                }
+                Operation::Fixed => {
+                    out.push(line(m0, add(m0, mul(u, clear))));
+                }
+                Operation::Swing => {
+                    for l in swing_leaves(&p, spec) {
+                        let turn = turn_of(&p, spec, l.closed);
+                        let open = rotated(l.closed, turn);
+                        let tip = add(l.hinge, mul(open, l.len));
+                        match b.leaf_thickness.filter(|t| *t > 0.0) {
+                            // A thick leaf: a band on the side it swung from.
+                            Some(t) => {
+                                let back = rotated(open, if turn < 0.0 { 90.0 } else { -90.0 });
+                                out.push(closed_ring(vec![l.hinge, tip, add(tip, mul(back, t)), add(l.hinge, mul(back, t))]));
+                            }
+                            None => out.push(line(l.hinge, tip)),
+                        }
+                        if spec.show_swing {
+                            let a_closed = atan2(l.closed.y, l.closed.x);
+                            let a_open = atan2(open.y, open.x);
+                            let (a0, a1) = if turn > 0.0 { (a_closed, a_open) } else { (a_open, a_closed) };
+                            out.push(Shape::Arc { c: l.hinge, r: l.len, a0, a1 });
+                        }
+                    }
                 }
             }
-        },
+            if let Some(th) = b.threshold.filter(|v| *v > 0.0) {
+                let c = p.middle();
+                let (a, z) = (js_max(c - th / 2.0, 0.0), js_min(c + th / 2.0, p.f.thickness));
+                out.push(closed_ring(vec![
+                    p.along_start(fit + fr, a),
+                    p.along_end(fit + fr, a),
+                    p.along_end(fit + fr, z),
+                    p.along_start(fit + fr, z),
+                ]));
+            }
+        }
+        Form::Opening | Form::Niche | Form::Flue => {}
+    }
+    if let Some(w) = b.casing.filter(|v| *v > 0.0) {
+        let (s0, s1) = (fit + fr - w, fit + fr);
+        for left in [true, false] {
+            let d = if left { 0.0 } else { p.f.thickness };
+            let o = mul(p.out(left), CASING_PROJECTION);
+            for along_end in [false, true] {
+                let at = |s: f64| if along_end { p.along_end(s, d) } else { p.along_start(s, d) };
+                let (a, c) = (at(s0), at(s1));
+                out.push(closed_ring(vec![a, c, add(c, o), add(a, o)]));
+            }
+        }
     }
     out
+}
+
+/// The sweep of each of a swinging door's leaves (docs/adr/0772 §5): its hinge and its arc's points, a closed ring; none
+/// for a door that does not swing, or a window.
+pub fn swing_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
+    if spec.form != Form::Door || spec.operation != Operation::Swing {
+        return Vec::new();
+    }
+    let Some(p) = Parts::new(place, spec) else {
+        return Vec::new();
+    };
+    swing_leaves(&p, spec)
+        .into_iter()
+        .filter(|l| l.len > 0.0)
+        .map(|l| {
+            let turn = turn_of(&p, spec, l.closed);
+            let steps = 16;
+            let mut ring = vec![l.hinge];
+            for k in 0..=steps {
+                let dir = rotated(l.closed, turn * f64::from(k) / f64::from(steps));
+                ring.push(add(l.hinge, mul(dir, l.len)));
+            }
+            ring
+        })
+        .collect()
+}
+
+/// A door's or window's use zone (docs/adr/0772 §5): the light's width, `useZone` deep, out of its wall on the side it
+/// opens to; none when it has none.
+pub fn use_zone(place: &[Vec2], spec: &Spec) -> Option<Vec<Vec2>> {
+    let depth = spec.build.use_zone.filter(|v| *v > 0.0)?;
+    if !matches!(spec.form, Form::Door | Form::Window) {
+        return None;
+    }
+    let p = Parts::new(place, spec)?;
+    let left = !spec.side_right;
+    let d = if left { 0.0 } else { p.f.thickness };
+    let o = mul(p.out(left), depth);
+    let (a, c) = (p.along_start(p.fit + p.fr, d), p.along_end(p.fit + p.fr, d));
+    Some(vec![a, c, add(c, o), add(a, o)])
 }
 
 /// The point the opening's jambs are centred on (their four points' mean).

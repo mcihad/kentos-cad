@@ -14,7 +14,7 @@ use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
 use kentos_ui::widget::{Elided, Tip, horizontal_divider, tip};
 
 use super::{
-    ALL, AREAS, AuditScope, BUTTONS, CHECK, CHECK_HINT, CLEAN, COLUMNS, EXCEPT, EXCEPT_HINT, Event,
+    ALL, AREAS, AuditScope, CLEARS, BUTTONS, CHECK, CHECK_HINT, CLEAN, COLUMNS, EXCEPT, EXCEPT_HINT, Event,
     FIX, GAPS, Ink, LENGTHS, LEVELS, Line, NONE_SHOWN, NOT_CHECKED, NOTE_FIELD, RAMP_PROFILES,
     SCOPES, STAIR_PROFILES, STALE, START, TEXT_ADVANCE, UNEXCEPT, VIEWS, WIDTHS, bar_button, cell,
     group_icon, msg,
@@ -463,6 +463,7 @@ impl App {
         let a = &self.arch_audit;
         let length = |v: f64| format.length(v);
         let area = |v: f64| format!("{v:.2} m²");
+        let clear = |v: f64| if v > 0.0 { format.length(v) } else { "Yok".to_owned() };
         let values =
             |list: &[f64], now: f64, show: &dyn Fn(f64) -> String, pick: fn(usize) -> Event| {
                 list.iter()
@@ -504,6 +505,11 @@ impl App {
                 "Dar mahal <",
                 length(a.min_width),
                 values(&WIDTHS, a.min_width, &length, Event::Width),
+            ),
+            (
+                "Net geçiş <",
+                clear(a.min_clear),
+                values(&CLEARS, a.min_clear, &clear, Event::Clear),
             ),
         ];
         let kinds: Vec<Limit> = vec![

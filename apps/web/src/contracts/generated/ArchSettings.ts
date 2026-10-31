@@ -2,6 +2,7 @@
 import type { ArchAuditException } from "./ArchAuditException";
 import type { ArchLevel } from "./ArchLevel";
 import type { LevelView } from "./LevelView";
+import type { OpeningType } from "./OpeningType";
 import type { PhaseView } from "./PhaseView";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { WallDetail } from "./WallDetail";
@@ -43,4 +44,8 @@ levelView?: LevelView,
 /**
  * Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
  */
-auditExceptions?: Array<ArchAuditException>, };
+auditExceptions?: Array<ArchAuditException>, 
+/**
+ * The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
+ */
+openingTypes?: Array<OpeningType>, };

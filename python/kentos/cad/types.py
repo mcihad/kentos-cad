@@ -258,6 +258,7 @@ class ArchAuditCheck(_StrEnum):
     - ``stairs``: Stairs measured against a stair profile (docs/adr/0724 §2), and their own checks (docs/adr/0732 §4).
     - ``ramps``: The ramps' own checks: no sloped run, a given slope its rise and run do not make (docs/adr/0732 §4).
     - ``casework``: Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).
+    - ``doors``: Doors (docs/adr/0772 §5): a leaf's sweep clashing (physical), a use zone taken (passage), a net clear width
     """
     WALLS = "walls"
     OPENINGS = "openings"
@@ -273,9 +274,10 @@ class ArchAuditCheck(_StrEnum):
     STAIRS = "stairs"
     RAMPS = "ramps"
     CASEWORK = "casework"
+    DOORS = "doors"
 
 
-ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels", "accessibility", "stairs", "ramps", "casework"]
+ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels", "accessibility", "stairs", "ramps", "casework", "doors"]
 """The names of :class:`ArchAuditCheck`, for a plain string."""
 
 
@@ -293,6 +295,22 @@ class ArchAuditExceptionView(_StrEnum):
 
 ArchAuditExceptionViewName = Literal["hide", "show", "only"]
 """The names of :class:`ArchAuditExceptionView`, for a plain string."""
+
+
+class ArchAuditNature(_StrEnum):
+    """What kind of problem a door finding is (docs/adr/0772 §5): kept apart, never one for another.
+
+    - ``physical``: Fiziksel çarpışma: two things in one place.
+    - ``passage``: Net geçiş: the room a door's use needs.
+    - ``rule``: Proje kuralı: a measure under the rule the audit was given.
+    """
+    PHYSICAL = "physical"
+    PASSAGE = "passage"
+    RULE = "rule"
+
+
+ArchAuditNatureName = Literal["physical", "passage", "rule"]
+"""The names of :class:`ArchAuditNature`, for a plain string."""
 
 
 class ArchDiscipline(_StrEnum):
@@ -3542,6 +3560,26 @@ OpeningHandName = Literal["end", "start"]
 """The names of :class:`OpeningHand`, for a plain string."""
 
 
+class OpeningLeftWhy(_StrEnum):
+    """Why an opening following a type did not take its change.
+
+    - ``locked``: On a locked layer.
+    - ``hostGone``: Its wall is gone.
+    - ``offWall``: It would run off its wall.
+    - ``overlap``: It would run into another opening.
+    - ``invalid``: Its fields would make none.
+    """
+    LOCKED = "locked"
+    HOST_GONE = "hostGone"
+    OFF_WALL = "offWall"
+    OVERLAP = "overlap"
+    INVALID = "invalid"
+
+
+OpeningLeftWhyName = Literal["locked", "hostGone", "offWall", "overlap", "invalid"]
+"""The names of :class:`OpeningLeftWhy`, for a plain string."""
+
+
 class OpeningOperation(_StrEnum):
     """How its leaves move.
 
@@ -3566,6 +3604,85 @@ class OpeningSide(_StrEnum):
 
 OpeningSideName = Literal["left", "right"]
 """The names of :class:`OpeningSide`, for a plain string."""
+
+
+class OpeningSizeBy(_StrEnum):
+    """Which of an opening's widths its nominal size names (docs/adr/0772 §2).
+
+    - ``rough``: Kaba boşluk: the hole in the wall, jamb to jamb (an opening's `width`).
+    - ``unit``: Kasa dış eni: the product's outer width, the rough opening less the fitting gap each side.
+    - ``leaf``: Kanat eni: the light inside the frame, the leaves' width.
+    """
+    ROUGH = "rough"
+    UNIT = "unit"
+    LEAF = "leaf"
+
+
+OpeningSizeByName = Literal["rough", "unit", "leaf"]
+"""The names of :class:`OpeningSizeBy`, for a plain string."""
+
+
+class OpeningTypeConflict(_StrEnum):
+    """What a type taken from an office library does when the project has one of its id or name.
+
+    - ``refuse``: Refused (`opening_type_exists`).
+    - ``skip``: The project's stays; the library's is not taken.
+    - ``replace``: One of the same id and source becomes the library's (a new version; its openings follow); another source's is
+    - ``rename``: Taken beside it under a new id and name (“ (2)”).
+    """
+    REFUSE = "refuse"
+    SKIP = "skip"
+    REPLACE = "replace"
+    RENAME = "rename"
+
+
+OpeningTypeConflictName = Literal["refuse", "skip", "replace", "rename"]
+"""The names of :class:`OpeningTypeConflict`, for a plain string."""
+
+
+class OpeningTypeField(_StrEnum):
+    """A field a type governs: an opening following the type takes it, unless the opening keeps its own (docs/adr/0772 §1).
+    The form is the type's own and never an exception; an opening's place, wall, hand, side and number are its own.
+    """
+    WIDTH = "width"
+    LEAVES = "leaves"
+    OPERATION = "operation"
+    SWING = "swing"
+    SHOW_SWING = "showSwing"
+    FRAME = "frame"
+    SILL = "sill"
+    HEAD = "head"
+    DEPTH = "depth"
+    SIZE_BY = "sizeBy"
+    FIT = "fit"
+    LEAF_THICKNESS = "leafThickness"
+    SPLIT = "split"
+    FRAME_DEPTH = "frameDepth"
+    FRAME_OFFSET = "frameOffset"
+    THRESHOLD = "threshold"
+    CASING = "casing"
+    SILL_BOARD = "sillBoard"
+    MULLIONS = "mullions"
+    TRANSOMS = "transoms"
+    USE_ZONE = "useZone"
+
+
+OpeningTypeFieldName = Literal["width", "leaves", "operation", "swing", "showSwing", "frame", "sill", "head", "depth", "sizeBy", "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard", "mullions", "transoms", "useZone"]
+"""The names of :class:`OpeningTypeField`, for a plain string."""
+
+
+class OpeningTypeRefused(_StrEnum):
+    """When a type's change does not fit an opening following it (its wall gone, off its wall, into another).
+
+    - ``stop``: Nothing is written (`opening_type_refused`).
+    - ``skip``: The others take it; those it does not fit stay at the older version and are reported.
+    """
+    STOP = "stop"
+    SKIP = "skip"
+
+
+OpeningTypeRefusedName = Literal["stop", "skip"]
+"""The names of :class:`OpeningTypeRefused`, for a plain string."""
 
 
 class OrderTo(_StrEnum):
@@ -4919,11 +5036,15 @@ class ScheduleField(_StrEnum):
     - ``baseFinish``
     - ``wallFinish``
     - ``ceilingFinish``
+    - ``unitWidth``
+    - ``leafWidth``
+    - ``clearWidth``
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
     - ``baseboard``: A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
     - ``category``: A fixture's block's category path (docs/adr/0317 §4).
     - ``space``: The space a fixture stands in, on its level: its number and name.
+    - ``roughWidth``: An opening's widths (docs/adr/0772 §2): the rough opening (its `width`, under its own name), the frame's outer
     """
     NUMBER = "number"
     TYPE = "type"
@@ -4948,14 +5069,18 @@ class ScheduleField(_StrEnum):
     BASE_FINISH = "baseFinish"
     WALL_FINISH = "wallFinish"
     CEILING_FINISH = "ceilingFinish"
+    UNIT_WIDTH = "unitWidth"
+    LEAF_WIDTH = "leafWidth"
+    CLEAR_WIDTH = "clearWidth"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
     BASEBOARD = "baseboard"
     CATEGORY = "category"
     SPACE = "space"
+    ROUGH_WIDTH = "roughWidth"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "attr", "floorFinish", "baseboard", "category", "space"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -7824,6 +7949,31 @@ class OpeningReference(_Union):
         return _variant(_OPENING_REFERENCE, "OpeningReference", "kind", data).from_json(data)
 
 
+class OpeningTypesOperation(_Union):
+    """What `cad.openingtypes.edit` does.
+
+    One of:
+
+    - :class:`DefineOpeningTypesOperation` (``kind: define``)
+    - :class:`UpdateOpeningTypesOperation` (``kind: update``)
+    - :class:`RenameOpeningTypesOperation` (``kind: rename``)
+    - :class:`RemoveOpeningTypesOperation` (``kind: remove``)
+    - :class:`ImportOpeningTypesOperation` (``kind: import``)
+    - :class:`ExportOpeningTypesOperation` (``kind: export``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypesOperation:
+        return _variant(_OPENING_TYPES_OPERATION, "OpeningTypesOperation", "kind", data).from_json(data)
+
+
 class OpeningsOperation(_Union):
     """What `cad.openings.edit` does to the openings (docs/adr/0341 §4).
 
@@ -7834,6 +7984,10 @@ class OpeningsOperation(_Union):
     - :class:`FlipOpeningsOperation` (``kind: flip``)
     - :class:`RehostOpeningsOperation` (``kind: rehost``)
     - :class:`ReplaceTypeOpeningsOperation` (``kind: replaceType``)
+    - :class:`DetachOpeningsOperation` (``kind: detach``)
+    - :class:`PushOpeningsOperation` (``kind: push``)
+    - :class:`RefreshOpeningsOperation` (``kind: refresh``)
+    - :class:`ResetOpeningsOperation` (``kind: reset``)
     - :class:`RenumberOpeningsOperation` (``kind: renumber``)
     - :class:`ArrayOpeningsOperation` (``kind: array``)
     - :class:`CopyOpeningsOperation` (``kind: copy``)
@@ -10985,6 +11139,8 @@ class ArchAudit(_Model):
             absent: the project's ground level (the one at elevation 0, else its first).
         max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
         min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
+        min_clear_width: A door's net clear width under this is said (docs/adr/0772 §5: the project's rule); metres, at least 0; absent:
+            not measured. Unit: length.
         min_length: An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4). Unit: length.
         min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
         profiles: The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
@@ -10996,6 +11152,7 @@ class ArchAudit(_Model):
     level: str | None | Unset = UNSET
     max_gap: float | None | Unset = UNSET
     min_area: float | None | Unset = UNSET
+    min_clear_width: float | None | Unset = UNSET
     min_length: float | None | Unset = UNSET
     min_width: float | None | Unset = UNSET
     profiles: list[str] | Unset = UNSET
@@ -11013,6 +11170,8 @@ class ArchAudit(_Model):
             out["maxGap"] = None if self.max_gap is None else float(self.max_gap)
         if self.min_area is not UNSET:
             out["minArea"] = None if self.min_area is None else float(self.min_area)
+        if self.min_clear_width is not UNSET:
+            out["minClearWidth"] = None if self.min_clear_width is None else float(self.min_clear_width)
         if self.min_length is not UNSET:
             out["minLength"] = None if self.min_length is None else float(self.min_length)
         if self.min_width is not UNSET:
@@ -11031,6 +11190,7 @@ class ArchAudit(_Model):
             level=data.get("level", UNSET),
             max_gap=UNSET if "maxGap" not in data else None if data["maxGap"] is None else float(data["maxGap"]),
             min_area=UNSET if "minArea" not in data else None if data["minArea"] is None else float(data["minArea"]),
+            min_clear_width=UNSET if "minClearWidth" not in data else None if data["minClearWidth"] is None else float(data["minClearWidth"]),
             min_length=UNSET if "minLength" not in data else None if data["minLength"] is None else float(data["minLength"]),
             min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
             profiles=list(data["profiles"]) if "profiles" in data else UNSET,
@@ -11093,6 +11253,7 @@ class ArchAuditFinding(_Model):
         exception: Marked as left on purpose, and the finding is as it was then (docs/adr/0732 §3).
         fix: The call that resolves it, when one plainly does and the object it writes is on an unlocked layer.
         lapsed: Marked as left on purpose, but the finding changed since: open again.
+        nature: A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
         note: The exception's note.
     """
     key: str
@@ -11105,6 +11266,7 @@ class ArchAuditFinding(_Model):
     exception: bool | Unset = UNSET
     fix: ArchAuditFix | None | Unset = UNSET
     lapsed: bool | Unset = UNSET
+    nature: ArchAuditNature | ArchAuditNatureName | None | Unset = UNSET
     note: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -11122,6 +11284,8 @@ class ArchAuditFinding(_Model):
             out["fix"] = None if self.fix is None else self.fix.to_json()
         if self.lapsed is not UNSET:
             out["lapsed"] = self.lapsed
+        if self.nature is not UNSET:
+            out["nature"] = None if self.nature is None else _enum_out(self.nature)
         if self.note is not UNSET:
             out["note"] = self.note
         return out
@@ -11139,6 +11303,7 @@ class ArchAuditFinding(_Model):
             exception=data.get("exception", UNSET),
             fix=UNSET if "fix" not in data else None if data["fix"] is None else ArchAuditFix.from_json(data["fix"]),
             lapsed=data.get("lapsed", UNSET),
+            nature=UNSET if "nature" not in data else None if data["nature"] is None else _enum_in(ArchAuditNature, data["nature"]),
             note=data.get("note", UNSET),
         )
 
@@ -11427,6 +11592,7 @@ class ArchSettings(_Model):
             level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
         audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
+        opening_types: The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
         space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
@@ -11438,6 +11604,7 @@ class ArchSettings(_Model):
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
+    opening_types: list[OpeningType] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
     space_names: list[str] | Unset = UNSET
@@ -11456,6 +11623,8 @@ class ArchSettings(_Model):
             out["levelView"] = None if self.level_view is None else _enum_out(self.level_view)
         if self.levels is not UNSET:
             out["levels"] = [e0.to_json() for e0 in self.levels]
+        if self.opening_types is not UNSET:
+            out["openingTypes"] = [e0.to_json() for e0 in self.opening_types]
         if self.phase_view is not UNSET:
             out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
         if self.space_method is not UNSET:
@@ -11476,6 +11645,7 @@ class ArchSettings(_Model):
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
+            opening_types=[OpeningType.from_json(e0) for e0 in data["openingTypes"]] if "openingTypes" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
             space_names=list(data["spaceNames"]) if "spaceNames" in data else UNSET,
@@ -39087,6 +39257,8 @@ class NewOpening(_Model):
     Attributes:
         host: The wall's persistent id.
         at: Its centre's distance along the wall's base line from its start. Absent: from `point`. Unit: length.
+        build: Over the type's: its construction's fields given (docs/adr/0772 §3). On a project type's opening, each value
+            given over the type's is its own (örnek istisnası).
         depth: Over the type's: a niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719). Unit: length.
         distance: With `point`: its near jamb this far from the wall's end `from` (köşeden mesafe). Unit: length.
         distance_reference: With `distance`: near jamb (default), centre, or the hinge jamb.
@@ -39104,12 +39276,14 @@ class NewOpening(_Model):
             Both must fit on one edge. Cannot be combined with at/distance/middle/width.
             `point` may still choose the opening side. Lengths are metres on the wire. Unit: length.
         swing: Unit: deg.
-        type: An opening type by its id or name (KentOS's own). Absent: the form's first.
+        type: An opening type by its id or name: the project's (docs/adr/0772), which the opening then follows, else KentOS's
+            own, whose values it copies. Absent: the form's first KentOS type.
         width: Over the type's: the rough opening, metres. Unit: length.
     """
     host: str
     at: float | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
+    build: OpeningBuild | None | Unset = UNSET
     depth: float | None | Unset = UNSET
     distance: float | None | Unset = UNSET
     distance_reference: OpeningDistanceReference | OpeningDistanceReferenceName | None | Unset = UNSET
@@ -39137,6 +39311,8 @@ class NewOpening(_Model):
             out["at"] = None if self.at is None else float(self.at)
         if self.attrs is not UNSET:
             out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.build is not UNSET:
+            out["build"] = None if self.build is None else self.build.to_json()
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
         if self.distance is not UNSET:
@@ -39183,6 +39359,7 @@ class NewOpening(_Model):
             host=data["host"],
             at=UNSET if "at" not in data else None if data["at"] is None else float(data["at"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            build=UNSET if "build" not in data else None if data["build"] is None else OpeningBuild.from_json(data["build"]),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             distance=UNSET if "distance" not in data else None if data["distance"] is None else float(data["distance"]),
             distance_reference=UNSET if "distanceReference" not in data else None if data["distanceReference"] is None else _enum_in(OpeningDistanceReference, data["distanceReference"]),
@@ -40448,6 +40625,82 @@ class OpeningArrayNumbering(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OpeningBuild(_Model):
+    """A door's or window's construction (docs/adr/0772 §3), each field optional; none given draws it as before.
+    Attributes:
+        casing: Its casing (pervaz, söve) on both wall faces beside each jamb, its width, metres; absent: none. Unit: length.
+        fit: The fitting gap between the rough opening and the frame, each side, metres; absent: none. Unit: length.
+        frame_depth: The frame's depth across the wall, metres; absent: the wall's thickness. Unit: length.
+        frame_offset: With `frameDepth`: the frame's distance from the wall face it opens to (`side`), metres; absent: centred. Unit: length.
+        leaf_thickness: A leaf's thickness, metres; absent: drawn as a line, the net clear width reads 0.04 m. Unit: length.
+        mullions: A window's mullions (dikey kayıt): its panes are one more; absent: none. Unit: count.
+        sill_board: A window's sill board (denizlik), how far it reaches past the face opposite the side it opens to, metres. Unit: length.
+        size_by: Which width its nominal size names; absent: the rough opening.
+        split: Two unequal leaves: the hinge-start leaf's share of the light, above 0, below 1; absent: halves. Unit: value.
+        threshold: A door's threshold (eşik), its depth across the wall, metres; absent: none. Unit: length.
+        transoms: A window's transoms (yatay kayıt); plan does not show them, schedules and tags do. Unit: count.
+        use_zone: The use zone in front of it on the side it opens to (kullanım alanı), its depth, metres; absent: none. Unit: length.
+    """
+    casing: float | None | Unset = UNSET
+    fit: float | None | Unset = UNSET
+    frame_depth: float | None | Unset = UNSET
+    frame_offset: float | None | Unset = UNSET
+    leaf_thickness: float | None | Unset = UNSET
+    mullions: int | None | Unset = UNSET
+    sill_board: float | None | Unset = UNSET
+    size_by: OpeningSizeBy | OpeningSizeByName | None | Unset = UNSET
+    split: float | None | Unset = UNSET
+    threshold: float | None | Unset = UNSET
+    transoms: int | None | Unset = UNSET
+    use_zone: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.casing is not UNSET:
+            out["casing"] = None if self.casing is None else float(self.casing)
+        if self.fit is not UNSET:
+            out["fit"] = None if self.fit is None else float(self.fit)
+        if self.frame_depth is not UNSET:
+            out["frameDepth"] = None if self.frame_depth is None else float(self.frame_depth)
+        if self.frame_offset is not UNSET:
+            out["frameOffset"] = None if self.frame_offset is None else float(self.frame_offset)
+        if self.leaf_thickness is not UNSET:
+            out["leafThickness"] = None if self.leaf_thickness is None else float(self.leaf_thickness)
+        if self.mullions is not UNSET:
+            out["mullions"] = self.mullions
+        if self.sill_board is not UNSET:
+            out["sillBoard"] = None if self.sill_board is None else float(self.sill_board)
+        if self.size_by is not UNSET:
+            out["sizeBy"] = None if self.size_by is None else _enum_out(self.size_by)
+        if self.split is not UNSET:
+            out["split"] = None if self.split is None else float(self.split)
+        if self.threshold is not UNSET:
+            out["threshold"] = None if self.threshold is None else float(self.threshold)
+        if self.transoms is not UNSET:
+            out["transoms"] = self.transoms
+        if self.use_zone is not UNSET:
+            out["useZone"] = None if self.use_zone is None else float(self.use_zone)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningBuild:
+        return cls(
+            casing=UNSET if "casing" not in data else None if data["casing"] is None else float(data["casing"]),
+            fit=UNSET if "fit" not in data else None if data["fit"] is None else float(data["fit"]),
+            frame_depth=UNSET if "frameDepth" not in data else None if data["frameDepth"] is None else float(data["frameDepth"]),
+            frame_offset=UNSET if "frameOffset" not in data else None if data["frameOffset"] is None else float(data["frameOffset"]),
+            leaf_thickness=UNSET if "leafThickness" not in data else None if data["leafThickness"] is None else float(data["leafThickness"]),
+            mullions=data.get("mullions", UNSET),
+            sill_board=UNSET if "sillBoard" not in data else None if data["sillBoard"] is None else float(data["sillBoard"]),
+            size_by=UNSET if "sizeBy" not in data else None if data["sizeBy"] is None else _enum_in(OpeningSizeBy, data["sizeBy"]),
+            split=UNSET if "split" not in data else None if data["split"] is None else float(data["split"]),
+            threshold=UNSET if "threshold" not in data else None if data["threshold"] is None else float(data["threshold"]),
+            transoms=data.get("transoms", UNSET),
+            use_zone=UNSET if "useZone" not in data else None if data["useZone"] is None else float(data["useZone"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OpeningDistance(_Model):
     """One side's distance: net along the face, from the opening's jamb to the reference's point on the face.
     Attributes:
@@ -40535,6 +40788,8 @@ class OpeningEntity(Entity):
         attachments: The photos and documents it carries, in their order (docs/adr/0225
             §1); none on a block's objects.
         broken: Why it is not where its wall says; absent: it is.
+        build: Its construction (docs/adr/0772 §2, §3): sizes, leaves, frame, threshold, casing, sill board, panes, use zone.
+            Absent: drawn and measured as before.
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
@@ -40559,6 +40814,7 @@ class OpeningEntity(Entity):
         number: Its mark (K1, P3).
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        overrides: The fields of its type it keeps its own value of (örnek istisnası), in the order the fields are listed.
         show_swing: The swing's arc is drawn. Absent: it is.
         side: The side it opens to. Absent: the path's left.
         sill: Its sill's height above the floor, metres. Unit: elevation.
@@ -40566,6 +40822,8 @@ class OpeningEntity(Entity):
         swing: How far a leaf swings open, degrees, above 0, at most 180. Absent: 90. Unit: deg.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        type_version: The version of the project type `style` names it last took (docs/adr/0772 §1): it follows that type. Absent: it
+            follows none (a KentOS type's values copied once, or none). Unit: version.
         wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
             what is drawn before it; only an area has it.
     """
@@ -40580,6 +40838,7 @@ class OpeningEntity(Entity):
     anchor: OpeningAnchor | OpeningAnchorName | Unset = UNSET
     attachments: list[Attachment] | Unset = UNSET
     broken: OpeningBreak | OpeningBreakName | None | Unset = UNSET
+    build: OpeningBuild | None | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
     color: str | None | Unset = UNSET
     depth: float | None | Unset = UNSET
@@ -40598,6 +40857,7 @@ class OpeningEntity(Entity):
     number: str | None | Unset = UNSET
     operation: OpeningOperation | OpeningOperationName | Unset = UNSET
     order: int | None | Unset = UNSET
+    overrides: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
     show_swing: bool | Unset = UNSET
     side: OpeningSide | OpeningSideName | Unset = UNSET
     sill: float | None | Unset = UNSET
@@ -40605,6 +40865,7 @@ class OpeningEntity(Entity):
     swing: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
+    type_version: int | None | Unset = UNSET
     wipeout: Wipeout | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -40622,6 +40883,8 @@ class OpeningEntity(Entity):
             out["attachments"] = [e0.to_json() for e0 in self.attachments]
         if self.broken is not UNSET:
             out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.build is not UNSET:
+            out["build"] = None if self.build is None else self.build.to_json()
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
         if self.color is not UNSET:
@@ -40657,6 +40920,8 @@ class OpeningEntity(Entity):
             out["operation"] = _enum_out(self.operation)
         if self.order is not UNSET:
             out["order"] = self.order
+        if self.overrides is not UNSET:
+            out["overrides"] = [_enum_out(e0) for e0 in self.overrides]
         if self.show_swing is not UNSET:
             out["showSwing"] = self.show_swing
         if self.side is not UNSET:
@@ -40671,6 +40936,8 @@ class OpeningEntity(Entity):
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
             out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.type_version is not UNSET:
+            out["typeVersion"] = self.type_version
         if self.wipeout is not UNSET:
             out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
         return out
@@ -40688,6 +40955,7 @@ class OpeningEntity(Entity):
             anchor=_enum_in(OpeningAnchor, data["anchor"]) if "anchor" in data else UNSET,
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(OpeningBreak, data["broken"]),
+            build=UNSET if "build" not in data else None if data["build"] is None else OpeningBuild.from_json(data["build"]),
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
             color=data.get("color", UNSET),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
@@ -40706,6 +40974,7 @@ class OpeningEntity(Entity):
             number=data.get("number", UNSET),
             operation=_enum_in(OpeningOperation, data["operation"]) if "operation" in data else UNSET,
             order=data.get("order", UNSET),
+            overrides=[_enum_in(OpeningTypeField, e0) for e0 in data["overrides"]] if "overrides" in data else UNSET,
             show_swing=data.get("showSwing", UNSET),
             side=_enum_in(OpeningSide, data["side"]) if "side" in data else UNSET,
             sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
@@ -40713,7 +40982,137 @@ class OpeningEntity(Entity):
             swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            type_version=data.get("typeVersion", UNSET),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningKept(_Model):
+    """An opening a type's change kept its own value for.
+    Attributes:
+        fields: The changed fields it keeps its own value of.
+    """
+    uid: str
+    fields: list[OpeningTypeField | OpeningTypeFieldName]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["fields"] = [_enum_out(e0) for e0 in self.fields]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningKept:
+        return cls(
+            uid=data["uid"],
+            fields=[_enum_in(OpeningTypeField, e0) for e0 in data["fields"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningLeft(_Model):
+    """An opening that did not take a type's change: it stays at the older version."""
+    uid: str
+    why: OpeningLeftWhy | OpeningLeftWhyName
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["why"] = _enum_out(self.why)
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningLeft:
+        return cls(
+            uid=data["uid"],
+            why=_enum_in(OpeningLeftWhy, data["why"]),
+            message=data["message"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningNominal(_Model):
+    """A type's nominal size: the width it names and that width's value; the rough opening follows from it.
+    Attributes:
+        value: Unit: length.
+    """
+    by: OpeningSizeBy | OpeningSizeByName
+    value: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["by"] = _enum_out(self.by)
+        out["value"] = float(self.value)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningNominal:
+        return cls(
+            by=_enum_in(OpeningSizeBy, data["by"]),
+            value=float(data["value"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningQueryRow(_Model):
+    """One opening as `cad.openings.query` reads it.
+    Attributes:
+        level: Its wall's level; absent: none.
+        stale: It took an older version than its type's.
+        type: Its type's id (its `style`) and name.
+        type_version: The version it took (it follows the type); absent: it follows none. Unit: version.
+    """
+    uid: str
+    form: OpeningForm | OpeningFormName
+    host: str
+    sizes: OpeningSizes
+    level: str | None | Unset = UNSET
+    number: str | None | Unset = UNSET
+    overrides: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
+    stale: bool | Unset = UNSET
+    type: str | None | Unset = UNSET
+    type_name: str | None | Unset = UNSET
+    type_version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["form"] = _enum_out(self.form)
+        out["host"] = self.host
+        out["sizes"] = self.sizes.to_json()
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.number is not UNSET:
+            out["number"] = self.number
+        if self.overrides is not UNSET:
+            out["overrides"] = [_enum_out(e0) for e0 in self.overrides]
+        if self.stale is not UNSET:
+            out["stale"] = self.stale
+        if self.type is not UNSET:
+            out["type"] = self.type
+        if self.type_name is not UNSET:
+            out["typeName"] = self.type_name
+        if self.type_version is not UNSET:
+            out["typeVersion"] = self.type_version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningQueryRow:
+        return cls(
+            uid=data["uid"],
+            form=_enum_in(OpeningForm, data["form"]),
+            host=data["host"],
+            sizes=OpeningSizes.from_json(data["sizes"]),
+            level=data.get("level", UNSET),
+            number=data.get("number", UNSET),
+            overrides=[_enum_in(OpeningTypeField, e0) for e0 in data["overrides"]] if "overrides" in data else UNSET,
+            stale=data.get("stale", UNSET),
+            type=data.get("type", UNSET),
+            type_name=data.get("typeName", UNSET),
+            type_version=data.get("typeVersion", UNSET),
         )
 
 
@@ -40768,6 +41167,371 @@ class OpeningRow(_Model):
             number=data.get("number", UNSET),
             style=data.get("style", UNSET),
             wall=data.get("wall", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningSizes(_Model):
+    """An opening's widths (docs/adr/0772 §2), metres.
+    Attributes:
+        rough: Kaba boşluk: the hole in the wall (its `width`). Unit: length.
+        unit: Kasa dış eni: the rough opening less the fitting gap each side. Unit: length.
+        leaf: Kanat eni: the light inside the frame. Unit: length.
+        leaves: Each leaf's width, from its start; none for one with no leaves. Unit: length.
+        size_by: Which width its nominal size names.
+        nominal: That width. Unit: length.
+        clear: Net geçiş: what a door leaves free with all its leaves open, from the open leaf's face to the opposite stop; a
+            bare opening its light; none for a window, a niche or a flue. Unit: length.
+        clear_first: A two-leaf door's net clear width with only its first leaf open. Unit: length.
+    """
+    rough: float
+    unit: float
+    leaf: float
+    leaves: list[float]
+    size_by: OpeningSizeBy | OpeningSizeByName
+    nominal: float
+    clear: float | None | Unset = UNSET
+    clear_first: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rough"] = float(self.rough)
+        out["unit"] = float(self.unit)
+        out["leaf"] = float(self.leaf)
+        out["leaves"] = [float(e0) for e0 in self.leaves]
+        out["sizeBy"] = _enum_out(self.size_by)
+        out["nominal"] = float(self.nominal)
+        if self.clear is not UNSET:
+            out["clear"] = None if self.clear is None else float(self.clear)
+        if self.clear_first is not UNSET:
+            out["clearFirst"] = None if self.clear_first is None else float(self.clear_first)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningSizes:
+        return cls(
+            rough=float(data["rough"]),
+            unit=float(data["unit"]),
+            leaf=float(data["leaf"]),
+            leaves=[float(e0) for e0 in data["leaves"]],
+            size_by=_enum_in(OpeningSizeBy, data["sizeBy"]),
+            nominal=float(data["nominal"]),
+            clear=UNSET if "clear" not in data else None if data["clear"] is None else float(data["clear"]),
+            clear_first=UNSET if "clearFirst" not in data else None if data["clearFirst"] is None else float(data["clearFirst"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningType(_Model):
+    """An office's or a project's door or window type (docs/adr/0772 §1).
+    Attributes:
+        id: Its lasting key: lower-case letters, digits and `-`, at most 64, not starting with `kentos-` (KentOS's own).
+        name: What it is called (K01): unique in the project, case aside.
+        version: Each change gives it the next; an opening that took an older one is behind (eski sürüm). Unit: count.
+        width: The rough opening, metres (an opening's `width`). Unit: length.
+        depth: Unit: length.
+        frame: Unit: length.
+        head: Unit: elevation.
+        leaves: Unit: count.
+        sill: Unit: elevation.
+        source: Where it came from: the office library's name it was taken from; absent: made in this project.
+        swing: Unit: deg.
+    """
+    id: str
+    name: str
+    version: int
+    form: OpeningForm | OpeningFormName
+    width: float
+    build: OpeningBuild | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
+    frame: float | None | Unset = UNSET
+    head: float | None | Unset = UNSET
+    leaves: int | Unset = UNSET
+    operation: OpeningOperation | OpeningOperationName | Unset = UNSET
+    show_swing: bool | Unset = UNSET
+    sill: float | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+    swing: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["version"] = self.version
+        out["form"] = _enum_out(self.form)
+        out["width"] = float(self.width)
+        if self.build is not UNSET:
+            out["build"] = None if self.build is None else self.build.to_json()
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.frame is not UNSET:
+            out["frame"] = None if self.frame is None else float(self.frame)
+        if self.head is not UNSET:
+            out["head"] = None if self.head is None else float(self.head)
+        if self.leaves is not UNSET:
+            out["leaves"] = self.leaves
+        if self.operation is not UNSET:
+            out["operation"] = _enum_out(self.operation)
+        if self.show_swing is not UNSET:
+            out["showSwing"] = self.show_swing
+        if self.sill is not UNSET:
+            out["sill"] = None if self.sill is None else float(self.sill)
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.swing is not UNSET:
+            out["swing"] = None if self.swing is None else float(self.swing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningType:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            version=data["version"],
+            form=_enum_in(OpeningForm, data["form"]),
+            width=float(data["width"]),
+            build=UNSET if "build" not in data else None if data["build"] is None else OpeningBuild.from_json(data["build"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
+            head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
+            leaves=data.get("leaves", UNSET),
+            operation=_enum_in(OpeningOperation, data["operation"]) if "operation" in data else UNSET,
+            show_swing=data.get("showSwing", UNSET),
+            sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
+            source=data.get("source", UNSET),
+            swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningTypeChange(_Model):
+    """A type's fields to change; absent ones stay. A nullable field's null takes it away.
+    Attributes:
+        build: The construction's fields given (each set; the others stay).
+        depth: Unit: length.
+        frame: The frame's width at each jamb, metres; null: none. Unit: length.
+        head: Unit: elevation.
+        leaves: Unit: count.
+        nominal: Its nominal size instead of the rough opening: the rough opening follows from it, its fitting gap and frame
+            (after them, when they change too), and `build.sizeBy` becomes the width it names.
+        sill: Unit: elevation.
+        swing: Degrees; null: 90. Unit: deg.
+        unset: The construction's fields taken away.
+        width: The rough opening, metres. Unit: length.
+    """
+    build: OpeningBuild | None | Unset = UNSET
+    depth: float | None | Unset = UNSET
+    frame: float | None | Unset = UNSET
+    head: float | None | Unset = UNSET
+    leaves: int | None | Unset = UNSET
+    nominal: OpeningNominal | None | Unset = UNSET
+    operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
+    show_swing: bool | None | Unset = UNSET
+    sill: float | None | Unset = UNSET
+    swing: float | None | Unset = UNSET
+    unset: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.build is not UNSET:
+            out["build"] = None if self.build is None else self.build.to_json()
+        if self.depth is not UNSET:
+            out["depth"] = None if self.depth is None else float(self.depth)
+        if self.frame is not UNSET:
+            out["frame"] = None if self.frame is None else float(self.frame)
+        if self.head is not UNSET:
+            out["head"] = None if self.head is None else float(self.head)
+        if self.leaves is not UNSET:
+            out["leaves"] = self.leaves
+        if self.nominal is not UNSET:
+            out["nominal"] = None if self.nominal is None else self.nominal.to_json()
+        if self.operation is not UNSET:
+            out["operation"] = None if self.operation is None else _enum_out(self.operation)
+        if self.show_swing is not UNSET:
+            out["showSwing"] = self.show_swing
+        if self.sill is not UNSET:
+            out["sill"] = None if self.sill is None else float(self.sill)
+        if self.swing is not UNSET:
+            out["swing"] = None if self.swing is None else float(self.swing)
+        if self.unset is not UNSET:
+            out["unset"] = [_enum_out(e0) for e0 in self.unset]
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypeChange:
+        return cls(
+            build=UNSET if "build" not in data else None if data["build"] is None else OpeningBuild.from_json(data["build"]),
+            depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
+            frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
+            head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
+            leaves=data.get("leaves", UNSET),
+            nominal=UNSET if "nominal" not in data else None if data["nominal"] is None else OpeningNominal.from_json(data["nominal"]),
+            operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
+            show_swing=data.get("showSwing", UNSET),
+            sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
+            swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+            unset=[_enum_in(OpeningTypeField, e0) for e0 in data["unset"]] if "unset" in data else UNSET,
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningTypeReport(_Model):
+    """Every opening's fate in a type's change: those that took it, those that kept a changed field of their own, those
+    left at the older version (`skipped`: a locked layer; `refused`: it did not fit).
+    Attributes:
+        fields: The fields the change changed.
+    """
+    applied: list[str]
+    kept: list[OpeningKept]
+    skipped: list[OpeningLeft]
+    refused: list[OpeningLeft]
+    fields: list[OpeningTypeField | OpeningTypeFieldName]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["applied"] = list(self.applied)
+        out["kept"] = [e0.to_json() for e0 in self.kept]
+        out["skipped"] = [e0.to_json() for e0 in self.skipped]
+        out["refused"] = [e0.to_json() for e0 in self.refused]
+        out["fields"] = [_enum_out(e0) for e0 in self.fields]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypeReport:
+        return cls(
+            applied=list(data["applied"]),
+            kept=[OpeningKept.from_json(e0) for e0 in data["kept"]],
+            skipped=[OpeningLeft.from_json(e0) for e0 in data["skipped"]],
+            refused=[OpeningLeft.from_json(e0) for e0 in data["refused"]],
+            fields=[_enum_in(OpeningTypeField, e0) for e0 in data["fields"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningTypeUse(_Model):
+    """A project type and how many openings follow it.
+    Attributes:
+        count: Unit: count.
+        stale: Of them, those behind its version. Unit: count.
+        exceptions: Of them, those keeping a field of their own. Unit: count.
+    """
+    type: OpeningType
+    count: int
+    stale: int
+    exceptions: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["type"] = self.type.to_json()
+        out["count"] = self.count
+        out["stale"] = self.stale
+        out["exceptions"] = self.exceptions
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypeUse:
+        return cls(
+            type=OpeningType.from_json(data["type"]),
+            count=data["count"],
+            stale=data["stale"],
+            exceptions=data["exceptions"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningTypesEdit(_Model):
+    """Input of `cad.openingtypes.edit` v1: the project's door and window types changed as one undo step “Açıklık tipi”,
+    with the openings following them. Its plan is the preview: the types and every opening's fate, nothing written.
+
+    Refusals: `invalid_opening_type`, `opening_type_not_found`, `opening_type_exists`, `opening_type_in_use`,
+    `nothing_to_set`, `not_finite`, `opening_type_refused`, `import_unreadable`, `invalid_revision`,
+    `revision_conflict`. Warnings: `opening_type_kept`, `opening_type_skipped`.
+    Attributes:
+        on_refused: When the change does not fit an opening following the type; absent: stop.
+    """
+    operation: OpeningTypesOperation
+    expected_revision: str | None | Unset = UNSET
+    on_refused: OpeningTypeRefused | OpeningTypeRefusedName = OpeningTypeRefused.STOP
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["onRefused"] = _enum_out(self.on_refused)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypesEdit:
+        return cls(
+            operation=OpeningTypesOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            on_refused=_enum_in(OpeningTypeRefused, data["onRefused"]) if "onRefused" in data else OpeningTypeRefused.STOP,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningTypesEdited(_Model):
+    """Output of `cad.openingtypes.edit` v1 (its plan's too: the preview, nothing written).
+    Attributes:
+        types: The project's types after it.
+        library: The office library (Export): the file's content.
+    """
+    types: list[OpeningType]
+    report: OpeningTypeReport
+    revision: str
+    library: OpeningTypesFile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["types"] = [e0.to_json() for e0 in self.types]
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        if self.library is not UNSET:
+            out["library"] = None if self.library is None else self.library.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypesEdited:
+        return cls(
+            types=[OpeningType.from_json(e0) for e0 in data["types"]],
+            report=OpeningTypeReport.from_json(data["report"]),
+            revision=data["revision"],
+            library=UNSET if "library" not in data else None if data["library"] is None else OpeningTypesFile.from_json(data["library"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningTypesFile(_Model):
+    """An office's types as a file carries them (`kentos.opening-types` 1): their library's name and the types.
+    Attributes:
+        version: Unit: count.
+        library: The library's name: the source its types take in a project.
+    """
+    format: str
+    version: int
+    library: str
+    types: list[OpeningType]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["library"] = self.library
+        out["types"] = [e0.to_json() for e0 in self.types]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningTypesFile:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            library=data["library"],
+            types=[OpeningType.from_json(e0) for e0 in data["types"]],
         )
 
 
@@ -40900,8 +41664,10 @@ class OpeningsEdit(_Model):
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
     `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
-    `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also
-    `slots_exhausted`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
+    `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since
+    docs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,
+    `level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a
+    following opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
     one changed to a form that goes through drops its depth and inset (docs/adr/0719).
     """
     operation: OpeningsOperation
@@ -40933,11 +41699,13 @@ class OpeningsEdited(_Model):
         openings: The openings as written, in their order.
         added: The new openings (Kopyala).
         followers: Derived source-following preview changes; absent when none. New identities are provisional.
+        report: Tipe uygula's type change: every other opening's fate (docs/adr/0772 §4).
     """
     openings: list[Entity]
     revision: str
     added: list[Entity] | Unset = UNSET
     followers: DerivedEntitiesPlan | Unset = UNSET
+    report: OpeningTypeReport | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -40947,6 +41715,8 @@ class OpeningsEdited(_Model):
             out["added"] = [e0.to_json() for e0 in self.added]
         if self.followers is not UNSET:
             out["followers"] = self.followers.to_json()
+        if self.report is not UNSET:
+            out["report"] = None if self.report is None else self.report.to_json()
         return out
 
     @classmethod
@@ -40956,6 +41726,7 @@ class OpeningsEdited(_Model):
             revision=data["revision"],
             added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
             followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
+            report=UNSET if "report" not in data else None if data["report"] is None else OpeningTypeReport.from_json(data["report"]),
         )
 
 
@@ -40984,6 +41755,71 @@ class OpeningsPlan(_Model):
             openings=[Entity.from_json(e0) for e0 in data["openings"]],
             revision=data["revision"],
             followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsQueried(_Model):
+    """Output of `cad.openings.query` v1.
+    Attributes:
+        types: The project's types, each with its openings counted over the whole drawing.
+    """
+    openings: list[OpeningQueryRow]
+    types: list[OpeningTypeUse]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["openings"] = [e0.to_json() for e0 in self.openings]
+        out["types"] = [e0.to_json() for e0 in self.types]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsQueried:
+        return cls(
+            openings=[OpeningQueryRow.from_json(e0) for e0 in data["openings"]],
+            types=[OpeningTypeUse.from_json(e0) for e0 in data["types"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OpeningsQuery(_Model):
+    """Input of `cad.openings.query` v1 (read-only): the drawing's doors, windows and other openings with their types and
+    widths, filtered: the openings named (a selection), of a type (its id or name), on a level (its id; null: on none),
+    of a form. “Aynı tiptekileri seç” asks with the type and a scope; the net clear widths come with every row.
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_an_opening`, `opening_type_not_found`, `level_not_found`.
+    Attributes:
+        level: Only those on this level (their wall's); null: on none.
+        type: Only those following, or made with, this type (its id or name).
+        uids: Only these (a selection's scope); absent: every opening.
+    """
+    form: OpeningForm | OpeningFormName | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.form is not UNSET:
+            out["form"] = None if self.form is None else _enum_out(self.form)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.type is not UNSET:
+            out["type"] = self.type
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningsQuery:
+        return cls(
+            form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
+            level=data.get("level", UNSET),
+            type=data.get("type", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -74731,9 +75567,160 @@ class GridOpeningReference(OpeningReference):
 
 
 @dataclass(kw_only=True, slots=True)
+class DefineOpeningTypesOperation(OpeningTypesOperation):
+    """Yeni tip: a new type `name` (its id: `id`, else from its name), its values those of `copyOf` (a project type's,
+    else KentOS's, by id or name; absent: the form's first KentOS type) changed by `change`; version 1.
+    """
+    TAG_VALUE: ClassVar[str] = "define"
+    name: str
+    change: OpeningTypeChange = field(default_factory=(lambda: OpeningTypeChange.from_json({})))
+    copy_of: str | None | Unset = UNSET
+    form: OpeningForm | OpeningFormName | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "define"}
+        out["name"] = self.name
+        out["change"] = self.change.to_json()
+        if self.copy_of is not UNSET:
+            out["copyOf"] = self.copy_of
+        if self.form is not UNSET:
+            out["form"] = None if self.form is None else _enum_out(self.form)
+        if self.id is not UNSET:
+            out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DefineOpeningTypesOperation:
+        return cls(
+            name=data["name"],
+            change=OpeningTypeChange.from_json(data["change"]) if "change" in data else (lambda: OpeningTypeChange.from_json({}))(),
+            copy_of=data.get("copyOf", UNSET),
+            form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
+            id=data.get("id", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateOpeningTypesOperation(OpeningTypesOperation):
+    """Tipi değiştir: the type `type` (its id or name) changed by `change`; its version goes up by one and its openings
+    follow.
+    """
+    TAG_VALUE: ClassVar[str] = "update"
+    type: str
+    change: OpeningTypeChange
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["type"] = self.type
+        out["change"] = self.change.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateOpeningTypesOperation:
+        return cls(
+            type=data["type"],
+            change=OpeningTypeChange.from_json(data["change"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RenameOpeningTypesOperation(OpeningTypesOperation):
+    """Yeniden adlandır: the type's name; its id and its openings stay."""
+    TAG_VALUE: ClassVar[str] = "rename"
+    type: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rename"}
+        out["type"] = self.type
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RenameOpeningTypesOperation:
+        return cls(
+            type=data["type"],
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveOpeningTypesOperation(OpeningTypesOperation):
+    """Sil: the type; its openings refuse it (`opening_type_in_use`) unless `detach`, which leaves them with their
+    values, following nothing.
+    """
+    TAG_VALUE: ClassVar[str] = "remove"
+    type: str
+    detach: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["type"] = self.type
+        if self.detach is not UNSET:
+            out["detach"] = self.detach
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveOpeningTypesOperation:
+        return cls(
+            type=data["type"],
+            detach=data.get("detach", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportOpeningTypesOperation(OpeningTypesOperation):
+    """Kitaplıktan al: an office library's types (`kentos.opening-types` 1, a file's text as its host read it), their
+    source the library's name; `onConflict` for a type the project has.
+    """
+    TAG_VALUE: ClassVar[str] = "import"
+    library: OpeningTypesFile
+    on_conflict: OpeningTypeConflict | OpeningTypeConflictName = OpeningTypeConflict.REFUSE
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "import"}
+        out["library"] = self.library.to_json()
+        out["onConflict"] = _enum_out(self.on_conflict)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportOpeningTypesOperation:
+        return cls(
+            library=OpeningTypesFile.from_json(data["library"]),
+            on_conflict=_enum_in(OpeningTypeConflict, data["onConflict"]) if "onConflict" in data else OpeningTypeConflict.REFUSE,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportOpeningTypesOperation(OpeningTypesOperation):
+    """Kitaplığa yaz: the types named (none: all) as an office library `library`, given back as the file's content
+    (its host writes it). The drawing does not change.
+    """
+    TAG_VALUE: ClassVar[str] = "export"
+    library: str
+    types: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "export"}
+        out["library"] = self.library
+        if self.types is not UNSET:
+            out["types"] = list(self.types)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportOpeningTypesOperation:
+        return cls(
+            library=data["library"],
+            types=list(data["types"]) if "types" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetOpeningsOperation(OpeningsOperation):
     """Değiştir: the fields given, on every opening named.
     Attributes:
+        build: Its construction's fields given (docs/adr/0772 §3); each set, the others stay.
         depth: A niche's or flue's depth, metres (docs/adr/0719); null: none (a form that goes through). Unit: length.
         frame: Metres; null: no frame. Unit: length.
         head: Unit: elevation.
@@ -74742,9 +75729,11 @@ class SetOpeningsOperation(OpeningsOperation):
         number: Its mark; null: none.
         sill: Unit: elevation.
         swing: Degrees; null: 90. Unit: deg.
+        unset: Its construction's fields taken away.
         width: The rough opening, metres; it grows about its anchor. Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "set"
+    build: OpeningBuild | None | Unset = UNSET
     depth: float | None | Unset = UNSET
     form: OpeningForm | OpeningFormName | None | Unset = UNSET
     frame: float | None | Unset = UNSET
@@ -74758,10 +75747,13 @@ class SetOpeningsOperation(OpeningsOperation):
     side: OpeningSide | OpeningSideName | None | Unset = UNSET
     sill: float | None | Unset = UNSET
     swing: float | None | Unset = UNSET
+    unset: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
     width: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "set"}
+        if self.build is not UNSET:
+            out["build"] = None if self.build is None else self.build.to_json()
         if self.depth is not UNSET:
             out["depth"] = None if self.depth is None else float(self.depth)
         if self.form is not UNSET:
@@ -74788,6 +75780,8 @@ class SetOpeningsOperation(OpeningsOperation):
             out["sill"] = None if self.sill is None else float(self.sill)
         if self.swing is not UNSET:
             out["swing"] = None if self.swing is None else float(self.swing)
+        if self.unset is not UNSET:
+            out["unset"] = [_enum_out(e0) for e0 in self.unset]
         if self.width is not UNSET:
             out["width"] = None if self.width is None else float(self.width)
         return out
@@ -74795,6 +75789,7 @@ class SetOpeningsOperation(OpeningsOperation):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SetOpeningsOperation:
         return cls(
+            build=UNSET if "build" not in data else None if data["build"] is None else OpeningBuild.from_json(data["build"]),
             depth=UNSET if "depth" not in data else None if data["depth"] is None else float(data["depth"]),
             form=UNSET if "form" not in data else None if data["form"] is None else _enum_in(OpeningForm, data["form"]),
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
@@ -74808,6 +75803,7 @@ class SetOpeningsOperation(OpeningsOperation):
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
             sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
             swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+            unset=[_enum_in(OpeningTypeField, e0) for e0 in data["unset"]] if "unset" in data else UNSET,
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
         )
 
@@ -74886,17 +75882,21 @@ class RehostOpeningsOperation(OpeningsOperation):
 @dataclass(kw_only=True, slots=True)
 class ReplaceTypeOpeningsOperation(OpeningsOperation):
     """Türü değiştir: the type `to` (its id or name) for the openings named, or with no ids every opening of type
-    `from`.
+    `from` (Aynı tiptekileri değiştir), with `level` only those on that level (null: on none). A project type's
+    openings follow it (docs/adr/0772): they take all its values, their exceptions gone.
     """
     TAG_VALUE: ClassVar[str] = "replaceType"
     to: str
     from_: str | None | Unset = UNSET
+    level: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "replaceType"}
         out["to"] = self.to
         if self.from_ is not UNSET:
             out["from"] = self.from_
+        if self.level is not UNSET:
+            out["level"] = self.level
         return out
 
     @classmethod
@@ -74904,6 +75904,79 @@ class ReplaceTypeOpeningsOperation(OpeningsOperation):
         return cls(
             to=data["to"],
             from_=data.get("from", UNSET),
+            level=data.get("level", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DetachOpeningsOperation(OpeningsOperation):
+    """Tipten ayır (docs/adr/0772 §1): the openings keep their values and follow no type."""
+    TAG_VALUE: ClassVar[str] = "detach"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "detach"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetachOpeningsOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class PushOpeningsOperation(OpeningsOperation):
+    """Tipe uygula: the one opening's values of `fields` (none: the fields it keeps as its own) become its type's; its
+    type's version goes up and every other opening following it takes them, as `cad.openingtypes.edit`'s Update.
+    """
+    TAG_VALUE: ClassVar[str] = "push"
+    fields: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "push"}
+        if self.fields is not UNSET:
+            out["fields"] = [_enum_out(e0) for e0 in self.fields]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PushOpeningsOperation:
+        return cls(
+            fields=[_enum_in(OpeningTypeField, e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RefreshOpeningsOperation(OpeningsOperation):
+    """Tipi yeniden uygula: the openings take their type's latest version again, their exceptions kept (one left at an
+    older version on a locked layer, docs/adr/0772 §4).
+    """
+    TAG_VALUE: ClassVar[str] = "refresh"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "refresh"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshOpeningsOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ResetOpeningsOperation(OpeningsOperation):
+    """Tipe döndür: the openings give up their own values of `fields` (none: all) and take their type's again, its
+    latest version.
+    """
+    TAG_VALUE: ClassVar[str] = "reset"
+    fields: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reset"}
+        if self.fields is not UNSET:
+            out["fields"] = [_enum_out(e0) for e0 in self.fields]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ResetOpeningsOperation:
+        return cls(
+            fields=[_enum_in(OpeningTypeField, e0) for e0 in data["fields"]] if "fields" in data else UNSET,
         )
 
 
@@ -82850,7 +83923,10 @@ _OPENING_ARRAY_LAYOUT: dict[str, type[OpeningArrayLayout]] = {"spacing": Spacing
 _OPENING_REFERENCE: dict[str, type[OpeningReference]] = {"end": EndOpeningReference, "opening": OpeningOpeningReference, "wall": WallOpeningReference, "grid": GridOpeningReference}
 
 
-_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
+_OPENING_TYPES_OPERATION: dict[str, type[OpeningTypesOperation]] = {"define": DefineOpeningTypesOperation, "update": UpdateOpeningTypesOperation, "rename": RenameOpeningTypesOperation, "remove": RemoveOpeningTypesOperation, "import": ImportOpeningTypesOperation, "export": ExportOpeningTypesOperation}
+
+
+_OPENINGS_OPERATION: dict[str, type[OpeningsOperation]] = {"set": SetOpeningsOperation, "move": MoveOpeningsOperation, "flip": FlipOpeningsOperation, "rehost": RehostOpeningsOperation, "replaceType": ReplaceTypeOpeningsOperation, "detach": DetachOpeningsOperation, "push": PushOpeningsOperation, "refresh": RefreshOpeningsOperation, "reset": ResetOpeningsOperation, "renumber": RenumberOpeningsOperation, "array": ArrayOpeningsOperation, "copy": CopyOpeningsOperation, "distance": DistanceOpeningsOperation}
 
 
 _PAPER_ANNOTATION_SCALE: dict[str, type[PaperAnnotationScale]] = {"auto": AutoPaperAnnotationScale, "fixed": FixedPaperAnnotationScale}
@@ -83154,6 +84230,8 @@ __all__ = [
     "ArchAuditExceptionViewName",
     "ArchAuditFinding",
     "ArchAuditFix",
+    "ArchAuditNature",
+    "ArchAuditNatureName",
     "ArchAuditWithin",
     "ArchAudited",
     "ArchDiscipline",
@@ -83555,6 +84633,7 @@ __all__ = [
     "DeclaredCrs",
     "DeclaredVertical",
     "DecurveCurveEdit",
+    "DefineOpeningTypesOperation",
     "DeleteBlockChange",
     "DeleteColumnsTableEdit",
     "DeleteDimensionSetEdit",
@@ -83575,6 +84654,7 @@ __all__ = [
     "DetachArchOperation",
     "DetachDimensionSetEdit",
     "DetachMasterPaperOp",
+    "DetachOpeningsOperation",
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
     "DetachedTable",
@@ -83807,6 +84887,7 @@ __all__ = [
     "ExportGml",
     "ExportGpkg",
     "ExportMaplibre",
+    "ExportOpeningTypesOperation",
     "ExportParquet",
     "ExportPdf",
     "ExportQml",
@@ -84082,6 +85163,7 @@ __all__ = [
     "ImportKml",
     "ImportMaplibre",
     "ImportMerge",
+    "ImportOpeningTypesOperation",
     "ImportParquet",
     "ImportPdf",
     "ImportQml",
@@ -84534,6 +85616,7 @@ __all__ = [
     "OpeningArraySpacingName",
     "OpeningBreak",
     "OpeningBreakName",
+    "OpeningBuild",
     "OpeningDistance",
     "OpeningDistanceReference",
     "OpeningDistanceReferenceName",
@@ -84547,13 +85630,36 @@ __all__ = [
     "OpeningFromName",
     "OpeningHand",
     "OpeningHandName",
+    "OpeningKept",
+    "OpeningLeft",
+    "OpeningLeftWhy",
+    "OpeningLeftWhyName",
+    "OpeningNominal",
     "OpeningOpeningReference",
     "OpeningOperation",
     "OpeningOperationName",
+    "OpeningQueryRow",
     "OpeningReference",
     "OpeningRow",
     "OpeningSide",
     "OpeningSideName",
+    "OpeningSizeBy",
+    "OpeningSizeByName",
+    "OpeningSizes",
+    "OpeningType",
+    "OpeningTypeChange",
+    "OpeningTypeConflict",
+    "OpeningTypeConflictName",
+    "OpeningTypeField",
+    "OpeningTypeFieldName",
+    "OpeningTypeRefused",
+    "OpeningTypeRefusedName",
+    "OpeningTypeReport",
+    "OpeningTypeUse",
+    "OpeningTypesEdit",
+    "OpeningTypesEdited",
+    "OpeningTypesFile",
+    "OpeningTypesOperation",
     "OpeningsCreate",
     "OpeningsCreated",
     "OpeningsDistances",
@@ -84562,6 +85668,8 @@ __all__ = [
     "OpeningsEdited",
     "OpeningsOperation",
     "OpeningsPlan",
+    "OpeningsQueried",
+    "OpeningsQuery",
     "OperationStep",
     "OptionsDimensionEdit",
     "OrderTo",
@@ -84968,6 +86076,7 @@ __all__ = [
     "PropertiesOperationName",
     "PublishFormsOp",
     "PublishSheets",
+    "PushOpeningsOperation",
     "QmlExported",
     "QmlImported",
     "QuantityTotals",
@@ -85061,6 +86170,7 @@ __all__ = [
     "RectangleImageClipBy",
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
+    "RefreshOpeningsOperation",
     "RefreshTablesOperation",
     "RegisteredArea",
     "RegistryDatum",
@@ -85108,6 +86218,7 @@ __all__ = [
     "RemoveItemsPaperOp",
     "RemoveJoinsOp",
     "RemoveMasterPaperOp",
+    "RemoveOpeningTypesOperation",
     "RemoveParameterEdit",
     "RemoveRelationsOp",
     "RemoveSheetPaperOp",
@@ -85117,6 +86228,7 @@ __all__ = [
     "RenameFormsOp",
     "RenameItemPaperOp",
     "RenameLayerMigrationStep",
+    "RenameOpeningTypesOperation",
     "RenameParameterEdit",
     "RenameSheetPaperOp",
     "RenameViewsOp",
@@ -85143,6 +86255,7 @@ __all__ = [
     "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResetJoinsWallsOperation",
+    "ResetOpeningsOperation",
     "ResetRowsDimensionSetEdit",
     "ResetTextDimensionSetEdit",
     "ReshapeShapeWork",
@@ -85695,6 +86808,7 @@ __all__ = [
     "UpdateFieldEdit",
     "UpdateFormsOp",
     "UpdateJoinsOp",
+    "UpdateOpeningTypesOperation",
     "UpdateRelationsOp",
     "ValueMap",
     "ValueProblem",

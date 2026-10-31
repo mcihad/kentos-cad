@@ -1118,6 +1118,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditException>>", optional))]
     pub audit_exceptions: Vec<ArchAuditException>,
+    /// The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningType>>", optional))]
+    pub opening_types: Vec<crate::OpeningType>,
 }
 
 impl ArchSettings {
@@ -1133,6 +1137,20 @@ impl ArchSettings {
     /// Whether it keeps Mimari denetim's exceptions (KCAD 130, docs/adr/0732 §3).
     pub fn has_audit_exceptions(&self) -> bool {
         !self.audit_exceptions.is_empty()
+    }
+
+    /// Whether it keeps door and window types (KCAD 137, docs/adr/0772).
+    pub fn has_opening_types(&self) -> bool {
+        !self.opening_types.is_empty()
+    }
+
+    /// The project's type of this id, or else of this name (case aside).
+    pub fn opening_type(&self, key: &str) -> Option<&crate::OpeningType> {
+        let folded = key.trim().to_lowercase();
+        self.opening_types
+            .iter()
+            .find(|t| t.id == key)
+            .or_else(|| self.opening_types.iter().find(|t| t.name.to_lowercase() == folded))
     }
 
     /// The detail walls are drawn at in a drawing at 1:`scale`.
@@ -1157,6 +1175,9 @@ impl ArchSettings {
     /// What is wrong with it; none when it holds.
     pub fn problem(&self) -> Option<(String, String)> {
         if let Some(problem) = audit_exceptions_problem(&self.audit_exceptions) {
+            return Some(problem);
+        }
+        if let Some(problem) = crate::opening_types_problem(&self.opening_types) {
             return Some(problem);
         }
         if let Some(why) = crate::annotation::names_problem(

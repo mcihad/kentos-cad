@@ -1728,6 +1728,27 @@ codes! {
     OPENING_HOST_GONE = "opening_host_gone", Failed, false, "Açıklığın duvarı yok; duvar boyunca taşınamaz. Önce bir duvara taşıyın (Başka duvara).";
     /// A niche or flue that does not stay inside its wall's thickness (docs/adr/0719 §3).
     RECESS_TOO_DEEP = "recess_too_deep", Failed, false, "Niş ya da baca duvarın kalınlığına sığmıyor: niş öbür yüze, baca iki yüze varmamalı. Derinliği azaltın ya da duvarı geçen boşluk için Boşluk kullanın.";
+    // ── Kapı ve pencere tipleri (docs/adr/0772) ─────────────────────────
+    /// No project or KentOS opening type of the id or name given.
+    OPENING_TYPE_NOT_FOUND = "opening_type_not_found", Failed, false, "Projede bu kimlikte ya da adda kapı ve pencere tipi yok.";
+    /// A type whose fields make none, or a table that would break its rules.
+    INVALID_OPENING_TYPE = "invalid_opening_type", Failed, false, "Tipin alanları bir kapı ya da pencere tanımlamıyor, ya da tip tablosunun kuralını bozuyor.";
+    /// A type's id or name another type of the project has.
+    OPENING_TYPE_EXISTS = "opening_type_exists", Failed, false, "Projede bu kimlikte ya da adda bir tip zaten var; başka bir ad verin ya da çakışmada ne olacağını seçin.";
+    /// A type removed while openings follow it, without detaching them.
+    OPENING_TYPE_IN_USE = "opening_type_in_use", Failed, false, "Tipi izleyen açıklıklar var; önce onları tipten ayırın ya da silmede ayırmayı seçin.";
+    /// An opening that follows no project type, asked to leave it, push to it or take it back.
+    OPENING_NOT_TYPED = "opening_not_typed", Failed, false, "Açıklık bir proje tipini izlemiyor.";
+    /// A type's form changed on one opening, or an opening's form changed while it follows a type.
+    OPENING_TYPE_FORM = "opening_type_form", Failed, false, "Biçim tipindir; açıklığın biçimini değiştirmek için önce tipten ayırın ya da başka tip verin.";
+    /// A type change an opening following it cannot take (its wall, its fit): nothing written.
+    OPENING_TYPE_REFUSED = "opening_type_refused", Failed, false, "Tipi izleyen bir açıklık yeni değerlerle duvarına sığmıyor ya da duvarı yok; hiçbir şey yazılmadı.";
+    /// A field of its type an opening now keeps its own value of.
+    OPENING_TYPE_OVERRIDE = "opening_type_override", Warning, false, "Açıklık tipinin bu alanında kendi değerini tutuyor (örnek istisnası).";
+    /// Openings of a type left at its older version: on a locked layer, or refused and skipped.
+    OPENING_TYPE_SKIPPED = "opening_type_skipped", Warning, false, "Tipi izleyen bazı açıklıklar güncellenmedi (kilitli katman ya da sığmayan); eski sürümde kaldı.";
+    /// Openings of a type that kept their own value of a field the type changed.
+    OPENING_TYPE_KEPT = "opening_type_kept", Warning, false, "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu.";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
     INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";
@@ -1870,6 +1891,14 @@ codes! {
     ARCH_SEPARATOR_OVERLAP = "arch_separator_overlap", Warning, false, "İki mahal ayırıcı aynı doğruda üst üste çizilmiş.";
     /// A kitchen run whose wall is gone or that can no longer be laid (docs/adr/0727 §5, 0732 §4).
     ARCH_CASEWORK_BROKEN = "arch_casework_broken", Warning, false, "Mutfak dizisinin duvarı yok ya da dizi kurulamıyor; nesneleri son yerlerinde.";
+    /// An opening that took an older version of its type than the project's (docs/adr/0772 §4).
+    ARCH_OPENING_TYPE_STALE = "arch_opening_type_stale", Warning, false, "Açıklık tipinin eski bir sürümünü taşıyor (kilitli katmanda kaldı ya da güncelleme atlandı); tipi yeniden uygulayın.";
+    /// A door's leaf sweeping into a wall, a column, a fixture or another door's leaf (docs/adr/0772 §5): physical.
+    ARCH_DOOR_SWING_CLASH = "arch_door_swing_clash", Warning, false, "Kapının kanadı açılırken bir duvara, kolona, donatıya ya da başka bir kapının kanadına çarpıyor (fiziksel çarpışma).";
+    /// A door's use zone taken by a wall, a column or a fixture (docs/adr/0772 §5): passage.
+    ARCH_DOOR_FRONT_BLOCKED = "arch_door_front_blocked", Warning, false, "Kapının önündeki kullanım alanına bir duvar, kolon ya da donatı giriyor (net geçiş).";
+    /// A door narrower in clear than the project rule the audit was given (docs/adr/0772 §5): a rule.
+    ARCH_DOOR_CLEAR_NARROW = "arch_door_clear_narrow", Warning, false, "Kapının net geçişi verilen proje kuralının en az net geçişinden dar (proje kuralı).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).
     RAMP_SLOPE_OVER_PROFILE = "ramp_slope_over_profile", Warning, false, "Rampanın eğimi kot farkı için erişilebilirlik profilinin sınırını aşıyor.";
     /// A sloped run longer than the profile's long run and steeper than it allows there.

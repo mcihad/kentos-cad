@@ -20,6 +20,7 @@ use super::{Event, Field, Spot};
 mod arch;
 pub(crate) mod attachments;
 pub(crate) mod casework;
+mod opening_types;
 pub(crate) mod cloud;
 mod dimension;
 mod dimension_set;
@@ -1756,26 +1757,45 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 })
                 .collect();
             geo.push(Row::text("Biçim", x.form.label()).editor(select(x.form.label().to_owned(), forms)));
-            let types = kentos_commands::builtin_opening_types();
+            // The project's types first (docs/adr/0772 §1), then KentOS's own, copied in.
+            let project: Vec<(String, String)> = doc
+                .settings()
+                .arch
+                .as_ref()
+                .map(|a| a.opening_types.iter().filter(|t| t.form == x.form).map(|t| (t.id.clone(), t.name.clone())).collect())
+                .unwrap_or_default();
+            let builtin: Vec<(String, String)> =
+                kentos_commands::builtin_opening_types().into_iter().map(|t| (t.id, t.name)).collect();
             let type_name = x
                 .style
                 .as_deref()
-                .and_then(|id| types.iter().find(|t| t.id == id))
-                .map_or_else(|| "Yok".to_owned(), |t| t.name.clone());
-            let type_items = types
+                .and_then(|id| project.iter().chain(builtin.iter()).find(|t| t.0 == id))
+                .map_or_else(|| "Yok".to_owned(), |t| t.1.clone());
+            let project_count = project.len();
+            let mut type_items: Vec<Choice> = project
                 .iter()
+                .chain(builtin.iter())
                 .map(|t| {
                     pick(
-                        t.name.clone(),
-                        x.style.as_deref() == Some(t.id.as_str()),
+                        t.1.clone(),
+                        x.style.as_deref() == Some(t.0.as_str()),
                         Message::Properties(Event::Opening(
                             slot,
-                            OpeningsOperation::ReplaceType { from: None, to: t.id.clone() },
+                            OpeningsOperation::ReplaceType { from: None, to: t.0.clone(), level: None },
                         )),
                         None,
                     )
                 })
                 .collect();
+            if project_count > 0 {
+                type_items.insert(project_count, Choice::Separator);
+            }
+            type_items.push(Choice::Separator);
+            type_items.push(Choice::Command {
+                label: "Kapı ve pencere tipleri…",
+                icon: crate::icons::from_web(Some("openingTypes")),
+                id: "arch.openingTypes",
+            });
             geo.push(Row::text("Tür", type_name.clone()).editor(select(type_name, type_items)));
             geo.push(metres("Genişlik", x.width).editor(number(Field::OpeningWidth(slot))));
             geo.push(metres("Konum", x.at).editor(number(Field::OpeningAt(slot))));
@@ -2358,6 +2378,10 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     let in_run = casework::section(doc, slot, locked);
     let run_member = in_run.is_some();
     sections.extend(in_run);
+    // An opening's type and its four widths (docs/adr/0772 §1, §2).
+    if let Entity::Opening(o) = e {
+        sections.extend(opening_types::section(doc, slot, &o.opening, &f, locked));
+    }
     // An insert's block attributes (docs/adr/0144 §7): the definition's tags in
     // its order, with what the insert shows (its value, else the default).
     let tags: Vec<(String, String)> = match e {

@@ -421,6 +421,9 @@ mod tests {
                 inset: None,
                 style: None,
                 number: None,
+                type_version: None,
+                overrides: Vec::new(),
+                build: None,
                 place: Vec::new(),
                 broken: None,
             };

@@ -775,6 +775,12 @@ impl App {
             .arch
             .as_ref()
             .map_or_else(Vec::new, |a| a.audit_exceptions.clone());
+        // So are the door and window types (docs/adr/0772 §1).
+        arch.opening_types = s
+            .initial
+            .arch
+            .as_ref()
+            .map_or_else(Vec::new, |a| a.opening_types.clone());
         // So are the level and view the drawing opens with (docs/adr/0720 §1), but not a level taken away here.
         if !arch.levels.is_empty() {
             let kept = |id: &String| arch.levels.iter().any(|l| l.id == *id);

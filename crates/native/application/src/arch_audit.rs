@@ -36,7 +36,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 14] = [
+const CODES: [(ArchAuditCheck, &[&str]); 15] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -51,7 +51,10 @@ const CODES: [(ArchAuditCheck, &[&str]); 14] = [
             codes::ARCH_SEPARATOR_OVERLAP,
         ],
     ),
-    (ArchAuditCheck::Openings, &[codes::ARCH_OPENING_BROKEN, codes::TAG_MISSING_TYPE]),
+    (
+        ArchAuditCheck::Openings,
+        &[codes::ARCH_OPENING_BROKEN, codes::TAG_MISSING_TYPE, codes::ARCH_OPENING_TYPE_STALE],
+    ),
     (
         ArchAuditCheck::Spaces,
         &[codes::ARCH_SPACE_BROKEN, codes::ARCH_SPACE_SMALL, codes::ARCH_SPACE_NARROW],
@@ -87,6 +90,10 @@ const CODES: [(ArchAuditCheck, &[&str]); 14] = [
     ),
     (ArchAuditCheck::Ramps, &[codes::RAMP_NO_RUN, codes::RAMP_SLOPE_MISMATCH]),
     (ArchAuditCheck::Casework, &[codes::ARCH_CASEWORK_BROKEN]),
+    (
+        ArchAuditCheck::Doors,
+        &[codes::ARCH_DOOR_SWING_CLASH, codes::ARCH_DOOR_FRONT_BLOCKED, codes::ARCH_DOOR_CLEAR_NARROW],
+    ),
 ];
 
 /// The codes only a profile finds (docs/adr/0723 §4, 0724 §2): an exception of one is not stale while its profile is not
@@ -121,6 +128,7 @@ fn limits(input: &ArchAudit) -> Result<Limits, Stop> {
         (input.min_area, "minArea", "Küçük mahal eşiği", "m²"),
         (input.min_width, "minWidth", "Dar mahal eşiği", "m"),
         (input.min_length, "minLength", "Kısa duvar eşiği", "m"),
+        (input.min_clear_width, "minClearWidth", "En az net geçiş", "m"),
     ];
     for (v, path, what, _) in given {
         if let Some(v) = v {
@@ -194,6 +202,7 @@ fn finding(
         exception: false,
         lapsed: false,
         note: None,
+        nature: None,
     }
 }
 
@@ -837,6 +846,34 @@ impl Audit<'_> {
                     vec![self.uid_of(e)],
                     at,
                     None,
+                ));
+            }
+            // Behind its type's version (docs/adr/0772 §4).
+            if o.follows_type()
+                && let Some(t) = o.style.as_deref().and_then(|s| self.doc.opening_types().iter().find(|t| t.id == s))
+                && o.type_version.unwrap_or(0) < t.version
+            {
+                let n = n.map_or_else(|| "Numarasız açıklık".to_owned(), |n| format!("“{n}” açıklığı"));
+                let fix = (!self.locked(e)).then(|| {
+                    fix(
+                        "Tipi yeniden uygula",
+                        "cad.openings.edit",
+                        json!({"uids": [self.uid_of(e)], "operation": {"kind": "refresh"}}),
+                    )
+                });
+                out.push(finding(
+                    ArchAuditCheck::Openings,
+                    codes::ARCH_OPENING_TYPE_STALE,
+                    format!(
+                        "{n} “{}” tipinin {}. sürümünü taşıyor; tipin son sürümü {}.",
+                        t.name,
+                        o.type_version.unwrap_or(0),
+                        t.version
+                    ),
+                    "Kilidi açıp tipi yeniden uygulayın (Tipe döndür) ya da açıklığı tipten ayırın.",
+                    vec![self.uid_of(e)],
+                    at,
+                    fix,
                 ));
             }
             if o.style.as_deref().is_none_or(str::is_empty) {
@@ -1785,7 +1822,10 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
     let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
     let audit = Audit { doc };
-    let asked = |c: ArchAuditCheck| input.checks.is_empty() || input.checks.contains(&c);
+    // The doors (docs/adr/0772 §5) only when asked by name: an older call's findings stay as they were.
+    let asked = |c: ArchAuditCheck| {
+        input.checks.contains(&c) || (input.checks.is_empty() && c != ArchAuditCheck::Doors)
+    };
     let mut findings = Vec::new();
     let mut run: HashSet<&'static str> = HashSet::new();
     for (check, codes) in CODES {
@@ -1815,6 +1855,23 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
             ArchAuditCheck::Stairs => audit.stairs(stair_rules.as_ref()),
             ArchAuditCheck::Ramps => audit.ramps(),
             ArchAuditCheck::Casework => audit.casework(),
+            ArchAuditCheck::Doors => crate::door_audit::findings(
+                doc,
+                input.min_clear_width,
+                |code, message, repair, slots, at, nature| {
+                    let mut f = finding(
+                        ArchAuditCheck::Doors,
+                        code,
+                        message,
+                        repair,
+                        slots.iter().map(|s| audit.uid(*s)).collect(),
+                        at,
+                        None,
+                    );
+                    f.nature = Some(nature);
+                    f
+                },
+            ),
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.

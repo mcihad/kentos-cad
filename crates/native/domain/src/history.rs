@@ -295,6 +295,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::ArchAuditException>,
         after: Vec<kentos_contracts::ArchAuditException>,
     },
+    /// The project's door and window types (docs/adr/0772), before and after: a setting, written in the step with the
+    /// openings that followed them, so undo gives both back.
+    OpeningTypes {
+        before: Vec<kentos_contracts::OpeningType>,
+        after: Vec<kentos_contracts::OpeningType>,
+    },
     /// A binding to a source table and its reconciling base (docs/adr/0636 §5), before and after: written in the step
     /// that changed its key or its area, so undo gives the binding back with the objects (none: no binding).
     Source {
@@ -577,6 +583,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::AuditExceptions { before, after } => Op::AuditExceptions {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::OpeningTypes { before, after } => Op::OpeningTypes {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1203,6 +1213,7 @@ impl Document {
                 | Op::Units { .. }
                 | Op::Domains { .. }
                 | Op::AuditExceptions { .. }
+                | Op::OpeningTypes { .. }
                 | Op::Source { .. }
                 | Op::Lineage { .. }
                 | Op::Constraints { .. } => false,
@@ -1475,6 +1486,12 @@ impl Document {
             }
             Op::Domains { after, .. } => {
                 self.settings.domains = after.clone();
+                return;
+            }
+            Op::OpeningTypes { after, .. } => {
+                let mut arch = self.settings.arch.take().unwrap_or_default();
+                arch.opening_types = after.clone();
+                self.settings.arch = (!arch.is_empty()).then_some(arch);
                 return;
             }
             Op::AuditExceptions { after, .. } => {

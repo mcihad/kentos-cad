@@ -121,10 +121,16 @@ pub enum ScheduleField {
     Category,
     /// The space a fixture stands in, on its level: its number and name.
     Space,
+    /// An opening's widths (docs/adr/0772 §2): the rough opening (its `width`, under its own name), the frame's outer
+    /// width, the leaf width and the net clear width.
+    RoughWidth,
+    UnitWidth,
+    LeafWidth,
+    ClearWidth,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 28] = [
+    pub const ALL: [ScheduleField; 32] = [
         ScheduleField::Number,
         ScheduleField::Type,
         ScheduleField::Form,
@@ -153,6 +159,10 @@ impl ScheduleField {
         ScheduleField::Baseboard,
         ScheduleField::Category,
         ScheduleField::Space,
+        ScheduleField::RoughWidth,
+        ScheduleField::UnitWidth,
+        ScheduleField::LeafWidth,
+        ScheduleField::ClearWidth,
     ];
 
     /// Its heading when the column gives none.
@@ -186,6 +196,10 @@ impl ScheduleField {
             ScheduleField::Baseboard => "Süpürgelik boyu",
             ScheduleField::Category => "Kategori",
             ScheduleField::Space => "Mahal",
+            ScheduleField::RoughWidth => "Kaba boşluk",
+            ScheduleField::UnitWidth => "Kasa dış eni",
+            ScheduleField::LeafWidth => "Kanat eni",
+            ScheduleField::ClearWidth => "Net geçiş",
         }
     }
 
@@ -219,6 +233,10 @@ impl ScheduleField {
             ScheduleField::Baseboard => "baseboard",
             ScheduleField::Category => "category",
             ScheduleField::Space => "space",
+            ScheduleField::RoughWidth => "roughWidth",
+            ScheduleField::UnitWidth => "unitWidth",
+            ScheduleField::LeafWidth => "leafWidth",
+            ScheduleField::ClearWidth => "clearWidth",
         }
     }
 
@@ -250,6 +268,7 @@ impl ScheduleField {
             Tag | Place => of == ScheduleOf::Columns,
             Length | Thickness => of == ScheduleOf::Walls,
             Category | Space => of == ScheduleOf::Fixtures,
+            RoughWidth | UnitWidth | LeafWidth | ClearWidth => of == ScheduleOf::Openings,
         }
     }
 
@@ -292,8 +311,15 @@ impl ScheduleField {
         use ScheduleField::*;
         matches!(
             self,
-            Width | Height | Sill | Head | Perimeter | Length | Thickness | Baseboard
+            Width | Height | Sill | Head | Perimeter | Length | Thickness | Baseboard | RoughWidth | UnitWidth
+                | LeafWidth | ClearWidth
         )
+    }
+
+    /// Whether it is one of an opening's widths docs/adr/0772 added (`.kcad` schema 137).
+    pub fn is_sized(self) -> bool {
+        use ScheduleField::*;
+        matches!(self, RoughWidth | UnitWidth | LeafWidth | ClearWidth)
     }
 
     /// Whether it is one of the fields docs/adr/0733 added (`.kcad` schema 131).

@@ -99,7 +99,8 @@ pub struct NewOpening {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub middle: bool,
-    /// An opening type by its id or name (KentOS's own). Absent: the form's first.
+    /// An opening type by its id or name: the project's (docs/adr/0772), which the opening then follows, else KentOS's
+    /// own, whose values it copies. Absent: the form's first KentOS type.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[serde(rename = "type")]
@@ -157,6 +158,11 @@ pub struct NewOpening {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
+    /// Over the type's: its construction's fields given (docs/adr/0772 §3). On a project type's opening, each value
+    /// given over the type's is its own (örnek istisnası).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub build: Option<crate::OpeningBuild>,
 }
 
 /// Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one
@@ -331,6 +337,15 @@ pub struct OpeningChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub number: Option<Option<String>>,
+    /// Its construction's fields given (docs/adr/0772 §3); each set, the others stay. Boxed: the operations' enum
+    /// stays small.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::OpeningBuild>", optional))]
+    pub build: Option<Box<crate::OpeningBuild>>,
+    /// Its construction's fields taken away.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+    pub unset: Vec<crate::OpeningTypeField>,
 }
 
 /// What `cad.openings.flip` turns.
@@ -449,12 +464,36 @@ pub enum OpeningsOperation {
         point: Option<Vec2>,
     },
     /// Türü değiştir: the type `to` (its id or name) for the openings named, or with no ids every opening of type
-    /// `from`.
+    /// `from` (Aynı tiptekileri değiştir), with `level` only those on that level (null: on none). A project type's
+    /// openings follow it (docs/adr/0772): they take all its values, their exceptions gone.
     ReplaceType {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         from: Option<String>,
         to: String,
+        #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+        level: Option<Option<String>>,
+    },
+    /// Tipten ayır (docs/adr/0772 §1): the openings keep their values and follow no type.
+    Detach,
+    /// Tipe uygula: the one opening's values of `fields` (none: the fields it keeps as its own) become its type's; its
+    /// type's version goes up and every other opening following it takes them, as `cad.openingtypes.edit`'s Update.
+    Push {
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+        fields: Vec<crate::OpeningTypeField>,
+    },
+    /// Tipi yeniden uygula: the openings take their type's latest version again, their exceptions kept (one left at an
+    /// older version on a locked layer, docs/adr/0772 §4).
+    Refresh,
+    /// Tipe döndür: the openings give up their own values of `fields` (none: all) and take their type's again, its
+    /// latest version.
+    Reset {
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+        fields: Vec<crate::OpeningTypeField>,
     },
     /// Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every
     /// opening of the form `form` (all forms: absent).
@@ -506,8 +545,10 @@ fn first_number() -> u32 {
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
 /// `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
-/// `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also
-/// `slots_exhausted`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
+/// `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since
+/// docs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,
+/// `level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a
+/// following opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
 /// one changed to a form that goes through drops its depth and inset (docs/adr/0719).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -547,6 +588,10 @@ pub struct OpeningsEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Entity>>", optional))]
     pub added: Vec<Entity>,
+    /// Tipe uygula's type change: every other opening's fate (docs/adr/0772 §4).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub report: Option<crate::OpeningTypeReport>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

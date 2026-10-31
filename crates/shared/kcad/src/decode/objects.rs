@@ -323,6 +323,7 @@ pub(super) struct Features {
     pub(super) cad_work: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
+    pub(super) opening_types: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -524,6 +525,7 @@ impl Features {
             table_constraints: schema >= crate::SCHEMA_WITH_TABLE_CONSTRAINTS,
             cad_work: schema >= crate::SCHEMA_WITH_CAD_WORK,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
+            opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,
@@ -2179,6 +2181,13 @@ pub(super) fn object(
     // Schema 117 (docs/adr/0709): a curved stair's arc.
     if matches!(&entity, Entity::Stair(s) if s.stair.bulges.is_some()) && !has.stair_arcs {
         return Err(r.fail(Code::BadValue, "döner merdivenin bükümü (bulges) şema 117 ister"));
+    }
+    // Schema 137 (docs/adr/0772): an opening following a type or built, a schedule of an opening's widths.
+    if kentos_contracts::needs_opening_types(&entity) && !has.opening_types {
+        return Err(r.fail(
+            Code::UnknownField,
+            "açıklığın tipi (typeVersion, overrides), yapısı (build) ve çizelgenin genişlik sütunları şema 137 ister",
+        ));
     }
     // Schema 119 (docs/adr/0719): a niche, a flue, a depth, an inset, an opening too deep.
     if kentos_contracts::needs_recesses(&entity) && !has.recesses {

@@ -5,10 +5,12 @@ import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { OpeningAnchor } from "./OpeningAnchor";
 import type { OpeningBreak } from "./OpeningBreak";
+import type { OpeningBuild } from "./OpeningBuild";
 import type { OpeningForm } from "./OpeningForm";
 import type { OpeningHand } from "./OpeningHand";
 import type { OpeningOperation } from "./OpeningOperation";
 import type { OpeningSide } from "./OpeningSide";
+import type { OpeningTypeField } from "./OpeningTypeField";
 import type { Vec2 } from "./Vec2";
 import type { Wipeout } from "./Wipeout";
 
@@ -139,6 +141,20 @@ style?: string,
  * Its mark (K1, P3).
  */
 number?: string, 
+/**
+ * The version of the project type `style` names it last took (docs/adr/0772 §1): it follows that type. Absent: it
+ * follows none (a KentOS type's values copied once, or none).
+ */
+typeVersion?: number, 
+/**
+ * The fields of its type it keeps its own value of (örnek istisnası), in the order the fields are listed.
+ */
+overrides?: Array<OpeningTypeField>, 
+/**
+ * Its construction (docs/adr/0772 §2, §3): sizes, leaves, frame, threshold, casing, sill board, panes, use zone.
+ * Absent: drawn and measured as before.
+ */
+build?: OpeningBuild, 
 /**
  * Its jambs: the start jamb's points on its wall's left and right face, then the end jamb's; written from its
  * wall by the document.

@@ -16,7 +16,7 @@
 //! label place, a column's centre, an insert's point, another's middle edge's middle (edge ⌊(n − 1)/2⌋ of its path,
 //! an arc by its arc). `scripts/fixtures/tag_command_cases.py` writes the same without KentOS's code.
 
-use kentos_contracts::{ArchInfo, AreaUnit, Entity, SpacePart, Vec2};
+use kentos_contracts::{ArchInfo, AreaUnit, Entity, OpeningForm, SpacePart, Vec2};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
@@ -129,9 +129,18 @@ impl Document {
             .map(|l| l.elevation)
     }
 
-    /// An opening type's name: KentOS's type of that id or name, else the words themselves.
+    /// An opening type's name: the project's type of that id (docs/adr/0772), else KentOS's type of that id or name,
+    /// else the words themselves.
     pub fn opening_type_name(&self, style: Option<&str>) -> String {
         let s = style.unwrap_or_default();
+        if let Some(t) = self
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.opening_types.iter().find(|t| t.id == s))
+        {
+            return t.name.clone();
+        }
         kentos_contracts::opening_type(s).map_or_else(|| s.to_owned(), |t| t.name)
     }
 
@@ -210,6 +219,14 @@ impl Document {
                     }
                     "form" => Some(Text(x.form.label().to_owned())),
                     "width" => Some(Length(x.width)),
+                    // Its widths (docs/adr/0772 §2): never the one for the other.
+                    "roughWidth" => Some(Length(x.width)),
+                    "unitWidth" => matches!(x.form, OpeningForm::Door | OpeningForm::Window)
+                        .then(|| Length(x.sizes().unit)),
+                    "leafWidth" => matches!(x.form, OpeningForm::Door | OpeningForm::Window)
+                        .then(|| Length(x.sizes().leaf)),
+                    "clearWidth" => x.sizes().clear.map(Length),
+                    "typeVersion" => x.type_version.map(|v| Text(format!("s{v}"))),
                     "height" => height.map(Length),
                     "sill" => Some(Length(x.sill.unwrap_or(0.0))),
                     "head" => x.head.map(Length),
@@ -365,6 +382,48 @@ impl Document {
             },
             _ => None,
         }
+    }
+
+    /// The box a fixture's block draws as the insert places it (docs/adr/0772 §5): its four corners; none when its
+    /// block draws nothing.
+    pub fn fixture_footprint(&self, i: &kentos_contracts::InsertEntity) -> Option<[kentos_contracts::Vec2; 4]> {
+        use kentos_geometry_core::api::json::{FromJson, Json};
+        use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
+        let b = self.blocks().iter().find(|b| b.id == i.block)?;
+        let mut seen: Option<[f64; 4]> = None;
+        for e in &b.entities {
+            let Some(core) = serde_json::to_string(e)
+                .ok()
+                .and_then(|t| Json::parse(&t).ok())
+                .and_then(|j| CoreEntity::from_json(&j).ok())
+            else {
+                continue;
+            };
+            let r = entity_bounds(&core.shape);
+            if ![r.min_x, r.min_y, r.max_x, r.max_y].iter().all(|v| v.is_finite()) {
+                continue;
+            }
+            seen = Some(match seen {
+                None => [r.min_x, r.min_y, r.max_x, r.max_y],
+                Some(o) => [o[0].min(r.min_x), o[1].min(r.min_y), o[2].max(r.max_x), o[3].max(r.max_y)],
+            });
+        }
+        let [x0, y0, x1, y1] = seen?;
+        let m = kentos_geometry_core::block::placement_xy(
+            kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
+            i.scale,
+            i.y_scale.unwrap_or(i.scale),
+            i.rotation,
+            i.mirror,
+        );
+        let at = |x: f64, y: f64| {
+            let (x, y) = (x - b.base.x, y - b.base.y);
+            kentos_contracts::Vec2 {
+                x: m[0] * x + m[2] * y + m[4],
+                y: m[1] * x + m[3] * y + m[5],
+            }
+        };
+        Some([at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)])
     }
 
     /// Where a fixture stands (docs/adr/0733 §2): the middle of its block's drawing as the insert places it, so that a

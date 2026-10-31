@@ -271,6 +271,11 @@ pub mod openings_create;
 pub mod opening_placement;
 pub mod openings_edit;
 pub mod opening_distances;
+// Kapı ve pencere tipleri (docs/adr/0772).
+pub(crate) mod opening_types;
+pub(crate) mod door_audit;
+pub mod opening_types_edit;
+pub mod openings_query;
 pub mod wall_distances;
 // Kolonun geçici ölçüleri (docs/adr/0712).
 pub mod column_distances;
@@ -838,6 +843,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_OPENINGS_EDIT,
         kentos_commands::CAD_OPENINGS_EDIT_VERSION,
+    ),
+    // Kapı ve pencere tipleri ([`opening_types_edit`], [`openings_query`], docs/adr/0772).
+    (
+        kentos_commands::CAD_OPENING_TYPES_EDIT,
+        kentos_commands::CAD_OPENING_TYPES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_OPENINGS_QUERY,
+        kentos_commands::CAD_OPENINGS_QUERY_VERSION,
     ),
     // Açıklığın geçici ölçüleri ([`opening_distances`], docs/adr/0701).
     (

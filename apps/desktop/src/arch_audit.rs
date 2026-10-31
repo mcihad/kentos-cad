@@ -63,6 +63,9 @@ const GAPS: [f64; 5] = [0.02, 0.05, ARCH_AUDIT_MAX_GAP, 0.20, 0.50];
 const AREAS: [f64; 5] = [0.05, ARCH_AUDIT_MIN_AREA, 0.25, 0.50, 1.00];
 const WIDTHS: [f64; 4] = [0.10, ARCH_AUDIT_MIN_WIDTH, 0.20, 0.30];
 const LENGTHS: [f64; 4] = [0.02, ARCH_AUDIT_MIN_LENGTH, 0.10, 0.20];
+/// Net geçiş <'s choices (docs/adr/0772 §6): none (0), or the clear width a door must leave. A project rule, not
+/// the regulation's: the office picks it.
+const CLEARS: [f64; 4] = [0.0, 0.80, 0.85, 0.90];
 /// The ramp profiles a bar offers (docs/adr/0723 §4): none, or one of the catalog's, by its words.
 const RAMP_PROFILES: [(Option<&str>, &str); 2] = [
     (None, "Yok"),
@@ -131,6 +134,8 @@ pub(crate) struct ArchAuditPanel {
     /// The profile the stairs are measured against (docs/adr/0724 §2); none: not measured.
     pub stair_profile: Option<&'static str>,
     pub min_length: f64,
+    /// Net geçiş < (docs/adr/0772 §6); 0: not asked.
+    pub min_clear: f64,
     pub scope: AuditScope,
     pub view: ArchAuditExceptionView,
     /// The rows chosen with Ctrl/⌘ and Shift, by their places in the findings; the one pressed last is `selected`.
@@ -153,6 +158,7 @@ impl Default for ArchAuditPanel {
             ramp_profile: RAMP_PROFILES[1].0,
             stair_profile: STAIR_PROFILES[1].0,
             min_length: ARCH_AUDIT_MIN_LENGTH,
+            min_clear: 0.0,
             scope: AuditScope::All,
             view: ArchAuditExceptionView::Hide,
             chosen: BTreeSet::new(),
@@ -185,6 +191,8 @@ pub enum Event {
     StairProfile(usize),
     /// Kısa <'s choice, by its place in [`LENGTHS`].
     Length(usize),
+    /// Net geçiş <'s choice, by its place in [`CLEARS`].
+    Clear(usize),
     /// Kapsam's choice, by its place in [`SCOPES`].
     Scope(usize),
     /// İstisnalar' choice, by its place in [`VIEWS`].
@@ -225,6 +233,7 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Stairs => "stair",
         ArchAuditCheck::Ramps => "ramp",
         ArchAuditCheck::Casework => "casework",
+        ArchAuditCheck::Doors => "door",
     }
 }
 
@@ -318,7 +327,9 @@ impl App {
     /// The bar's thresholds and profiles as the command's input: the findings `cad.arch.exceptions` names.
     fn arch_audit_finding_input(&self) -> ArchAudit {
         ArchAudit {
-            checks: Vec::new(),
+            // Every group, Kapılar too (docs/adr/0772 §6): it is asked only by name.
+            checks: ArchAuditCheck::ALL.to_vec(),
+            min_clear_width: (self.arch_audit.min_clear > 0.0).then_some(self.arch_audit.min_clear),
             max_gap: Some(self.arch_audit.max_gap),
             min_area: Some(self.arch_audit.min_area),
             min_width: Some(self.arch_audit.min_width),
@@ -507,6 +518,10 @@ impl App {
             Event::Fix => self.arch_audit_fix(),
             Event::Length(i) => {
                 self.arch_audit.min_length = LENGTHS[i.min(LENGTHS.len() - 1)];
+                self.arch_audit_check();
+            }
+            Event::Clear(i) => {
+                self.arch_audit.min_clear = CLEARS[i.min(CLEARS.len() - 1)];
                 self.arch_audit_check();
             }
             Event::Scope(i) => {

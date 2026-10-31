@@ -357,7 +357,8 @@ CAD = [
           overflow=["tool.tagAll", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs"]),
         P("Proje", "archSettings", [S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
-          overflow=["arch.sheetSet"]),
+          # Kapı ve pencere tipleri (docs/adr/0772) under ▾: the tab keeps its words at 1440 px.
+          overflow=["arch.sheetSet", "arch.openingTypes"]),
     ], works=ARCHITECTURE),
     view_tab(True),
     T("manage", "Yönet", [
@@ -685,6 +686,9 @@ CONTEXTUAL = [
         P("Düzenle", "move", [S("tool.copy"), S("tool.erase")]),
         P("Açıklık", "door", [L("view.properties"), S("tool.openingMove"), S("tool.openingFlip"), S("tool.openingNumber"), S("tool.openingArray"), S("tool.tag"),
             S("tool.scheduleOpenings")]),
+        # Its type (docs/adr/0772 §1, §4): the types' window, the same type selected, the type left, given, taken back.
+        P("Tip", "openingTypes", [L("arch.openingTypes"), S("arch.openingSameType"), S("arch.openingDetach"),
+            S("arch.openingPush"), S("arch.openingReset")]),
     ]},
     {"id": "ctx.space", "label": "Mahal", "kinds": ["space"], "modes": ["cad"], "panels": [
         SEL,

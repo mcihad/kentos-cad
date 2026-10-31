@@ -1,0 +1,2585 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.arch.audit",
+  "commandVersion": 1,
+  "title": "Mimari denetim: kapılar; fiziksel çarpışma, net geçiş ve proje kuralı ayrı",
+  "note": "ADR 0772 §5. Beklenenler scripts/fixtures/opening_types_cases.py'den: kanadın süpürdüğü alan menteşe ve 17 yay noktası, engellerle dışbükey ayırma ekseni sınaması (1 mm'den derin), KentOS kodu olmadan.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kapıların denetimi",
+    "uids": [
+      "0192f5a1-7721-7000-8000-000000000001",
+      "0192f5a1-7721-7000-8000-000000000002",
+      "0192f5a1-7721-7000-8000-000000000003",
+      "0192f5a1-7721-7000-8000-000000000004",
+      "0192f5a1-7721-7000-8000-000000000005",
+      "0192f5a1-7721-7000-8000-000000000006",
+      "0192f5a1-7721-7000-8000-000000000007",
+      "0192f5a1-7721-7000-8000-000000000008",
+      "0192f5a1-7721-7000-8000-000000000009",
+      "0192f5a1-7721-7000-8000-00000000000a",
+      "0192f5a1-7721-7000-8000-00000000000b",
+      "0192f5a1-7721-7000-8000-00000000000c"
+    ],
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mimari",
+        "name": "Mimari",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "bos",
+        "name": "Boş",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "kapi",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "0192f5a1-7721-7000-8000-0000000000b1",
+        "name": "Dolap",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.6,
+              "y": 0.6
+            }
+          }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 2.5,
+            "y": 0.1
+          },
+          {
+            "x": 2.5,
+            "y": 4.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -1.8
+          },
+          {
+            "x": 8.0,
+            "y": -1.8
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "line",
+        "id": 4,
+        "layerId": "bos",
+        "attrs": {},
+        "a": {
+          "x": -1.0,
+          "y": -1.0
+        },
+        "b": {
+          "x": -0.9,
+          "y": -1.0
+        }
+      },
+      {
+        "kind": "opening",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7721-7000-8000-000000000001",
+        "at": 2.0,
+        "width": 1.0,
+        "form": "door",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K1",
+        "place": [
+          {
+            "x": 1.5,
+            "y": 0.1
+          },
+          {
+            "x": 1.5,
+            "y": -0.1
+          },
+          {
+            "x": 2.5,
+            "y": 0.1
+          },
+          {
+            "x": 2.5,
+            "y": -0.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7721-7000-8000-000000000001",
+        "at": 5.0,
+        "width": 1.0,
+        "form": "door",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K2",
+        "build": {
+          "useZone": 1.2
+        },
+        "place": [
+          {
+            "x": 4.5,
+            "y": 0.1
+          },
+          {
+            "x": 4.5,
+            "y": -0.1
+          },
+          {
+            "x": 5.5,
+            "y": 0.1
+          },
+          {
+            "x": 5.5,
+            "y": -0.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 7,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7721-7000-8000-000000000001",
+        "at": 6.5,
+        "width": 1.0,
+        "form": "door",
+        "hand": "end",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K3",
+        "place": [
+          {
+            "x": 6.0,
+            "y": 0.1
+          },
+          {
+            "x": 6.0,
+            "y": -0.1
+          },
+          {
+            "x": 7.0,
+            "y": 0.1
+          },
+          {
+            "x": 7.0,
+            "y": -0.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7721-7000-8000-000000000001",
+        "at": 3.5,
+        "width": 1.0,
+        "form": "door",
+        "side": "right",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K4",
+        "place": [
+          {
+            "x": 3.0,
+            "y": 0.1
+          },
+          {
+            "x": 3.0,
+            "y": -0.1
+          },
+          {
+            "x": 4.0,
+            "y": 0.1
+          },
+          {
+            "x": 4.0,
+            "y": -0.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7721-7000-8000-000000000003",
+        "at": 3.6,
+        "width": 1.0,
+        "form": "door",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K5",
+        "place": [
+          {
+            "x": 3.1,
+            "y": -1.7
+          },
+          {
+            "x": 3.1,
+            "y": -1.9000000000000001
+          },
+          {
+            "x": 4.1,
+            "y": -1.7
+          },
+          {
+            "x": 4.1,
+            "y": -1.9000000000000001
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 10,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7721-7000-8000-000000000003",
+        "at": 6.0,
+        "width": 0.8,
+        "form": "door",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "number": "K6",
+        "place": [
+          {
+            "x": 5.6,
+            "y": -1.7
+          },
+          {
+            "x": 5.6,
+            "y": -1.9000000000000001
+          },
+          {
+            "x": 6.4,
+            "y": -1.7
+          },
+          {
+            "x": 6.4,
+            "y": -1.9000000000000001
+          }
+        ]
+      },
+      {
+        "kind": "column",
+        "id": 11,
+        "layerId": "mimari",
+        "attrs": {},
+        "at": {
+          "x": 7.0,
+          "y": 1.0
+        },
+        "width": 0.4,
+        "depth": 0.4,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 12,
+        "layerId": "mimari",
+        "attrs": {},
+        "block": "0192f5a1-7721-7000-8000-0000000000b1",
+        "p": {
+          "x": 4.8,
+          "y": 0.8
+        },
+        "scale": 1.0,
+        "rotation": 0.0,
+        "arch": {
+          "level": "zemin"
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Kapılar: çarpışma, kapı önü ve iki kanadın çarpışması ayrı bulgular",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapılar yalnız adıyla istenince: bütün gruplar onları saymaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "openings"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proje kuralı: 80 cm net geçişten dar kapı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.8
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:10",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K6 kapısının net geçişi 0.660 m; proje kuralının en az 0.800 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proje kuralı: 90 cm'den bütün kapılar dar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.9
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:5",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K1 kapısının net geçişi 0.860 m; proje kuralının en az 0.900 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:5"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:8",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K4 kapısının net geçişi 0.860 m; proje kuralının en az 0.900 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:8"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K5 kapısının net geçişi 0.860 m; proje kuralının en az 0.900 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.5999999999999996,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:6",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K2 kapısının net geçişi 0.860 m; proje kuralının en az 0.900 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:6"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:10",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K6 kapısının net geçişi 0.660 m; proje kuralının en az 0.900 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:7",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K3 kapısının net geçişi 0.860 m; proje kuralının en az 0.900 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:7"
+                  ],
+                  "at": {
+                    "x": 6.5,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: eksi net geçiş kuralı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": -1.0
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch_audit",
+              "message": "En az net geçiş -1 m; sıfır ya da daha büyük olmalı.",
+              "path": "minClearWidth"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Açılışı çevrilen kapı duvara çarpmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": {
+              "kind": "flip",
+              "what": "side"
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Karşılıklı kanatlar ayrılınca çarpışma kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "flip",
+              "what": "side"
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kullanım alanı verilen kapının önünde kolon",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "$uidOf:7"
+            ],
+            "operation": {
+              "kind": "set",
+              "build": {
+                "useZone": 1.2
+              }
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K3 kapısının önündeki kullanım alanına bir kolon giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.5,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolon silinince kapının çarpışması kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uidOf:11"
+            ]
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kullanım alanı kaldırılınca yalnız fiziksel çarpışma kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "operation": {
+              "kind": "set",
+              "unset": [
+                "useZone"
+              ]
+            }
+          },
+          "result": "$any"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapılar ve açıklıklar birlikte, kural verilmeden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "openings",
+              "doors"
+            ]
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız K1 kapısının bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.8,
+            "within": {
+              "uids": [
+                "$uidOf:5"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                }
+              ],
+              "outside": 5,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız K2 kapısının bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.8,
+            "within": {
+              "uids": [
+                "$uidOf:6"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 4,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız K3 kapısının bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.8,
+            "within": {
+              "uids": [
+                "$uidOf:7"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                }
+              ],
+              "outside": 5,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız K4 kapısının bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.8,
+            "within": {
+              "uids": [
+                "$uidOf:8"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                }
+              ],
+              "outside": 5,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız K5 kapısının bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.8,
+            "within": {
+              "uids": [
+                "$uidOf:9"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                }
+              ],
+              "outside": 5,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız K6 kapısının bulguları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.8,
+            "within": {
+              "uids": [
+                "$uidOf:10"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:10",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K6 kapısının net geçişi 0.660 m; proje kuralının en az 0.800 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                }
+              ],
+              "outside": 5,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proje kuralı 0.50 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.5
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proje kuralı 0.70 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.7
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:10",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K6 kapısının net geçişi 0.660 m; proje kuralının en az 0.700 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proje kuralı 0.85 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 0.85
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:10",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K6 kapısının net geçişi 0.660 m; proje kuralının en az 0.850 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Proje kuralı 1.00 m",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "minClearWidth": 1.0
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:5",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K1 kapısının net geçişi 0.860 m; proje kuralının en az 1.000 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:5"
+                  ],
+                  "at": {
+                    "x": 2.0,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:8",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K4 kapısının net geçişi 0.860 m; proje kuralının en az 1.000 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:8"
+                  ],
+                  "at": {
+                    "x": 3.5,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K5 kapısının net geçişi 0.860 m; proje kuralının en az 1.000 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.5999999999999996,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:6",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K2 kapısının net geçişi 0.860 m; proje kuralının en az 1.000 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:6"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:10",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K6 kapısının net geçişi 0.660 m; proje kuralının en az 1.000 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:10"
+                  ],
+                  "at": {
+                    "x": 6.0,
+                    "y": -1.8
+                  },
+                  "nature": "rule"
+                },
+                {
+                  "key": "arch_door_clear_narrow:$uidOf:7",
+                  "check": "doors",
+                  "code": "arch_door_clear_narrow",
+                  "message": "K3 kapısının net geçişi 0.860 m; proje kuralının en az 1.000 m'sinden dar (proje kuralı).",
+                  "repair": "Kapıyı genişletin, kasayı inceltin ya da kanadın açılma açısını büyütün.",
+                  "uids": [
+                    "$uidOf:7"
+                  ],
+                  "at": {
+                    "x": 6.5,
+                    "y": 0.0
+                  },
+                  "nature": "rule"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zemin kattaki kapılar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "checks": [
+              "doors"
+            ],
+            "within": {
+              "levels": [
+                "zemin"
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "findings": [
+                {
+                  "key": "arch_door_swing_clash:$uidOf:5,$uidOf:2",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K1 kapısının kanadı açılırken bir duvara çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:5",
+                    "$uidOf:2"
+                  ],
+                  "at": {
+                    "x": 2.08388669062468,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:8,$uidOf:9",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K4 ve K5 kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.",
+                  "uids": [
+                    "$uidOf:8",
+                    "$uidOf:9"
+                  ],
+                  "at": {
+                    "x": 3.58388669062468,
+                    "y": -0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K2 kapısının kanadı açılırken bir donatıya çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.083886690624679,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_swing_clash:$uidOf:7,$uidOf:11",
+                  "check": "doors",
+                  "code": "arch_door_swing_clash",
+                  "message": "K3 kapısının kanadı açılırken bir kolona çarpıyor (fiziksel çarpışma).",
+                  "repair": "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.",
+                  "uids": [
+                    "$uidOf:7",
+                    "$uidOf:11"
+                  ],
+                  "at": {
+                    "x": 6.416113309375321,
+                    "y": 0.6338866906246797
+                  },
+                  "nature": "physical"
+                },
+                {
+                  "key": "arch_door_front_blocked:$uidOf:6,$uidOf:12",
+                  "check": "doors",
+                  "code": "arch_door_front_blocked",
+                  "message": "K2 kapısının önündeki kullanım alanına bir donatı giriyor (net geçiş).",
+                  "repair": "Engeli kullanım alanının dışına alın ya da kapıyı başka yere taşıyın.",
+                  "uids": [
+                    "$uidOf:6",
+                    "$uidOf:12"
+                  ],
+                  "at": {
+                    "x": 5.0,
+                    "y": 0.7000000000000001
+                  },
+                  "nature": "passage"
+                }
+              ],
+              "outside": 0,
+              "excepted": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

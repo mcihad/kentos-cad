@@ -1075,6 +1075,7 @@ impl App {
             }
             Some(Dialog::WallStyles) => self.wall_styles = None,
             Some(Dialog::WallJoins) => self.wall_joins = None,
+            Some(Dialog::OpeningTypes) => self.opening_types = None,
             Some(Dialog::TagsCheck) => self.tags_check = None,
             Some(Dialog::ViewRefs) => self.view_refs = None,
             Some(Dialog::SheetSet) => self.sheet_set = None,

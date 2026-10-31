@@ -20501,7 +20501,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.openings.edit` v1: openings named by their persistent ids changed as one undo step “Açıklığı\ndüzenle”, all or none. An opening that would run off its wall or into another: nothing is written.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,\n`invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,\n`recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also\n`slots_exhausted`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and\none changed to a form that goes through drops its depth and inset (docs/adr/0719).",
+        "description": "Input of `cad.openings.edit` v1: openings named by their persistent ids changed as one undo step “Açıklığı\ndüzenle”, all or none. An opening that would run off its wall or into another: nothing is written.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,\n`invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,\n`recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since\ndocs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,\n`level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a\nfollowing opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and\none changed to a form that goes through drops its depth and inset (docs/adr/0719).",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -20549,6 +20549,17 @@
             },
             "type": "array"
           },
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OpeningTypeReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tipe uygula's type change: every other opening's fate (docs/adr/0772 §4)."
+          },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
@@ -20582,6 +20593,17 @@
               "$ref": "#/$defs/Entity"
             },
             "type": "array"
+          },
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OpeningTypeReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Tipe uygula's type change: every other opening's fate (docs/adr/0772 §4)."
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -20620,8 +20642,17 @@
           "opening_off_wall",
           "recess_too_deep",
           "openings_overlap",
+          "opening_type_not_found",
+          "opening_not_typed",
+          "opening_type_form",
+          "opening_type_refused",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "opening_type_override",
+          "opening_type_kept",
+          "opening_type_skipped"
         ]
       },
       "examples": [
@@ -20669,6 +20700,329 @@
               "prefix": "K",
               "start": 1
             }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.openingtypes.edit",
+      "version": 1,
+      "title": "Kapı ve pencere tipleri",
+      "summary": "Projenin kapı ve pencere tiplerini (ofisin K01'i) yönetir (docs/adr/0772); tek geri alma adımı “Açıklık tipi”, tipi izleyen açıklıklar aynı adımda. operation: define (name, id isteğe bağlı, copyOf: projenin ya da KentOS'un tipi, form, change; sürüm 1), update (type: kimlik ya da ad, change; sürüm bir artar, tipi izleyen açıklıklar yeni değerleri alır), rename (type, name; kimlik değişmez), remove (type; izleyen açıklık varsa opening_type_in_use, detach: true açıklıkları değerleriyle tipten ayırır), import (library: kentos.opening-types 1 dosyasının içeriği, tiplerin kaynağı kitaplığın adı; onConflict: refuse, skip, replace — yalnız aynı kimlik ve kaynak, yeni sürüm —, rename), export (library adı, types; dosyanın içeriği library çıktısında, çizim değişmez). change: width (kaba boşluk) ya da nominal (by: rough kaba boşluk, unit kasa dış eni, leaf kanat eni; value: kaba boşluk bundan, montaj boşluğu ve kasadan hesaplanır), leaves, operation, swing, showSwing, frame, sill, head, depth, build (sizeBy, fit montaj boşluğu, leafThickness, split eşit olmayan kanatlarda birinci kanadın payı, frameDepth, frameOffset, threshold eşik, casing pervaz, sillBoard denizlik çıkıntısı, mullions, transoms, useZone kullanım alanı), unset (yapının alanlarını kaldırır). Tipi izleyen açıklığın istisnası (overrides) olan alan korunur (report.kept, opening_type_kept); kilitli katmandaki açıklık eski sürümde kalır (report.skipped, opening_type_skipped); yeni değerle duvarına sığmayan açıklık bütün değişikliği reddeder (opening_type_refused) ya da onRefused: skip ile eski sürümde kalır (report.refused). Plan yazmadan tabloyu ve her açıklığın sonucunu gösterir (etkilenenlerin önizlemesi).",
+      "aliases": [
+        "KAPITIPI"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.openingtypes.edit` v1: the project's door and window types changed as one undo step “Açıklık tipi”,\nwith the openings following them. Its plan is the preview: the types and every opening's fate, nothing written.\n\nRefusals: `invalid_opening_type`, `opening_type_not_found`, `opening_type_exists`, `opening_type_in_use`,\n`nothing_to_set`, `not_finite`, `opening_type_refused`, `import_unreadable`, `invalid_revision`,\n`revision_conflict`. Warnings: `opening_type_kept`, `opening_type_skipped`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "onRefused": {
+            "$ref": "#/$defs/OpeningTypeRefused",
+            "default": "stop",
+            "description": "When the change does not fit an opening following the type; absent: stop."
+          },
+          "operation": {
+            "$ref": "#/$defs/OpeningTypesOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "OpeningTypesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.openingtypes.edit` v1 (its plan's too: the preview, nothing written).",
+        "properties": {
+          "library": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OpeningTypesFile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The office library (Export): the file's content."
+          },
+          "report": {
+            "$ref": "#/$defs/OpeningTypeReport"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "types": {
+            "description": "The project's types after it.",
+            "items": {
+              "$ref": "#/$defs/OpeningType"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "types",
+          "report",
+          "revision"
+        ],
+        "title": "OpeningTypesEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.openingtypes.edit` v1 (its plan's too: the preview, nothing written).",
+        "properties": {
+          "library": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OpeningTypesFile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The office library (Export): the file's content."
+          },
+          "report": {
+            "$ref": "#/$defs/OpeningTypeReport"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "types": {
+            "description": "The project's types after it.",
+            "items": {
+              "$ref": "#/$defs/OpeningType"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "types",
+          "report",
+          "revision"
+        ],
+        "title": "OpeningTypesEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_opening_type",
+          "opening_type_not_found",
+          "opening_type_exists",
+          "opening_type_in_use",
+          "opening_type_form",
+          "nothing_to_set",
+          "not_finite",
+          "opening_type_refused",
+          "import_unreadable",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "opening_type_kept",
+          "opening_type_skipped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "90 cm kanatlı K01 kapı tipi",
+          "input": {
+            "operation": {
+              "change": {
+                "build": {
+                  "fit": 0.01,
+                  "leafThickness": 0.04
+                },
+                "frame": 0.05,
+                "nominal": {
+                  "by": "leaf",
+                  "value": 0.9
+                }
+              },
+              "copyOf": "kentos-kapi-90",
+              "kind": "define",
+              "name": "K01"
+            }
+          }
+        },
+        {
+          "title": "K01'in kasasını 6 cm yap; izleyen kapılar alır",
+          "input": {
+            "operation": {
+              "change": {
+                "frame": 0.06
+              },
+              "kind": "update",
+              "type": "K01"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.openings.query",
+      "version": 1,
+      "title": "Açıklıkları oku",
+      "summary": "Çizimin kapı, pencere ve öbür açıklıklarını tipleri ve genişlikleriyle okur (docs/adr/0772); çizimi değiştirmez. Süzgeçler: uids (seçim kapsamı), type (projenin ya da KentOS'un tipi, kimlik ya da ad: Aynı tiptekileri seç), level (duvarın katı; null katsız), form. Her satır: uid, form, number, type ve typeName, typeVersion (izlediği tipin aldığı sürümü), stale (tipinden eski), overrides (örnek istisnaları), level, host ve sizes: rough kaba boşluk (açıklığın width'i), unit kasa dış eni (kaba boşluk eksi iki yanda montaj boşluğu), leaf kanat eni (kasanın içi), leaves (kanatlar), clear net geçiş (kapı açıkken açık kanadın yüzünden karşı kasaya; açıda kanadın izdüşümü ve kalınlığı düşülür, kalınlık verilmezse 0.04 m), clearFirst (iki kanatlıda yalnız birinci kanat açıkken), sizeBy ve nominal (tipin ölçüsünün adladığı genişlik). types: projenin tipleri, bütün çizimde izleyen, eski sürümde kalan ve istisnalı açıklık sayılarıyla.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.openings.query` v1 (read-only): the drawing's doors, windows and other openings with their types and\nwidths, filtered: the openings named (a selection), of a type (its id or name), on a level (its id; null: on none),\nof a form. “Aynı tiptekileri seç” asks with the type and a scope; the net clear widths come with every row.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_an_opening`, `opening_type_not_found`, `level_not_found`.",
+        "properties": {
+          "form": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OpeningForm"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "level": {
+            "description": "Only those on this level (their wall's); null: on none.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "type": {
+            "description": "Only those following, or made with, this type (its id or name).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "Only these (a selection's scope); absent: every opening.",
+            "items": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "title": "OpeningsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.openings.query` v1.",
+        "properties": {
+          "openings": {
+            "items": {
+              "$ref": "#/$defs/OpeningQueryRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "types": {
+            "description": "The project's types, each with its openings counted over the whole drawing.",
+            "items": {
+              "$ref": "#/$defs/OpeningTypeUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "openings",
+          "types",
+          "revision"
+        ],
+        "title": "OpeningsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.openings.query` v1.",
+        "properties": {
+          "openings": {
+            "items": {
+              "$ref": "#/$defs/OpeningQueryRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "types": {
+            "description": "The project's types, each with its openings counted over the whole drawing.",
+            "items": {
+              "$ref": "#/$defs/OpeningTypeUse"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "openings",
+          "types",
+          "revision"
+        ],
+        "title": "OpeningsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "opening"
+            ],
+            "refusedWith": "not_an_opening"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_an_opening",
+          "opening_type_not_found",
+          "level_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Zemin kattaki K01 kapıları",
+          "input": {
+            "level": "zemin",
+            "type": "K01"
           }
         }
       ]
@@ -20888,6 +21242,15 @@
               "null"
             ],
             "x-unit": "area"
+          },
+          "minClearWidth": {
+            "description": "A door's net clear width under this is said (docs/adr/0772 §5: the project's rule); metres, at least 0; absent:\nnot measured.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
           },
           "minLength": {
             "description": "An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4).",
@@ -68319,6 +68682,66 @@
       "meaning": "Niş ya da baca duvarın kalınlığına sığmıyor: niş öbür yüze, baca iki yüze varmamalı. Derinliği azaltın ya da duvarı geçen boşluk için Boşluk kullanın."
     },
     {
+      "code": "opening_type_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda kapı ve pencere tipi yok."
+    },
+    {
+      "code": "invalid_opening_type",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tipin alanları bir kapı ya da pencere tanımlamıyor, ya da tip tablosunun kuralını bozuyor."
+    },
+    {
+      "code": "opening_type_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda bir tip zaten var; başka bir ad verin ya da çakışmada ne olacağını seçin."
+    },
+    {
+      "code": "opening_type_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tipi izleyen açıklıklar var; önce onları tipten ayırın ya da silmede ayırmayı seçin."
+    },
+    {
+      "code": "opening_not_typed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Açıklık bir proje tipini izlemiyor."
+    },
+    {
+      "code": "opening_type_form",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Biçim tipindir; açıklığın biçimini değiştirmek için önce tipten ayırın ya da başka tip verin."
+    },
+    {
+      "code": "opening_type_refused",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tipi izleyen bir açıklık yeni değerlerle duvarına sığmıyor ya da duvarı yok; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "opening_type_override",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Açıklık tipinin bu alanında kendi değerini tutuyor (örnek istisnası)."
+    },
+    {
+      "code": "opening_type_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tipi izleyen bazı açıklıklar güncellenmedi (kilitli katman ya da sığmayan); eski sürümde kaldı."
+    },
+    {
+      "code": "opening_type_kept",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu."
+    },
+    {
       "code": "not_a_space",
       "kind": "failed",
       "retryable": false,
@@ -68743,6 +69166,30 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Mutfak dizisinin duvarı yok ya da dizi kurulamıyor; nesneleri son yerlerinde."
+    },
+    {
+      "code": "arch_opening_type_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Açıklık tipinin eski bir sürümünü taşıyor (kilitli katmanda kaldı ya da güncelleme atlandı); tipi yeniden uygulayın."
+    },
+    {
+      "code": "arch_door_swing_clash",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapının kanadı açılırken bir duvara, kolona, donatıya ya da başka bir kapının kanadına çarpıyor (fiziksel çarpışma)."
+    },
+    {
+      "code": "arch_door_front_blocked",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapının önündeki kullanım alanına bir duvar, kolon ya da donatı giriyor (net geçiş)."
+    },
+    {
+      "code": "arch_door_clear_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapının net geçişi verilen proje kuralının en az net geçişinden dar (proje kuralı)."
     },
     {
       "code": "ramp_slope_over_profile",
@@ -71543,6 +71990,15 @@
           ],
           "x-unit": "area"
         },
+        "minClearWidth": {
+          "description": "A door's net clear width under this is said (docs/adr/0772 §5: the project's rule); metres, at least 0; absent:\nnot measured.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "minLength": {
           "description": "An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4).",
           "format": "double",
@@ -71654,6 +72110,11 @@
           "const": "casework",
           "description": "Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).",
           "type": "string"
+        },
+        {
+          "const": "doors",
+          "description": "Doors (docs/adr/0772 §5): a leaf's sweep clashing (physical), a use zone taken (passage), a net clear width\nunder the rule given (`minClearWidth`); checked only when asked by name.",
+          "type": "string"
         }
       ]
     },
@@ -71753,6 +72214,17 @@
           "description": "What is wrong.",
           "type": "string"
         },
+        "nature": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchAuditNature"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule."
+        },
         "note": {
           "description": "The exception's note.",
           "type": [
@@ -71800,6 +72272,26 @@
         "step"
       ],
       "type": "object"
+    },
+    "ArchAuditNature": {
+      "description": "What kind of problem a door finding is (docs/adr/0772 §5): kept apart, never one for another.",
+      "oneOf": [
+        {
+          "const": "physical",
+          "description": "Fiziksel çarpışma: two things in one place.",
+          "type": "string"
+        },
+        {
+          "const": "passage",
+          "description": "Net geçiş: the room a door's use needs.",
+          "type": "string"
+        },
+        {
+          "const": "rule",
+          "description": "Proje kuralı: a measure under the rule the audit was given.",
+          "type": "string"
+        }
+      ]
     },
     "ArchAuditWithin": {
       "additionalProperties": false,
@@ -72347,6 +72839,13 @@
         "levels": {
           "items": {
             "$ref": "#/$defs/ArchLevel"
+          },
+          "type": "array"
+        },
+        "openingTypes": {
+          "description": "The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.",
+          "items": {
+            "$ref": "#/$defs/OpeningType"
           },
           "type": "array"
         },
@@ -101783,6 +102282,17 @@
             "null"
           ]
         },
+        "build": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpeningBuild"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Over the type's: its construction's fields given (docs/adr/0772 §3). On a project type's opening, each value\ngiven over the type's is its own (örnek istisnası)."
+        },
         "depth": {
           "description": "Over the type's: a niche's depth from its face, a flue's size across its wall, metres (docs/adr/0719).",
           "format": "double",
@@ -101950,7 +102460,7 @@
           "x-unit": "deg"
         },
         "type": {
-          "description": "An opening type by its id or name (KentOS's own). Absent: the form's first.",
+          "description": "An opening type by its id or name: the project's (docs/adr/0772), which the opening then follows, else KentOS's\nown, whose values it copies. Absent: the form's first KentOS type.",
           "type": [
             "string",
             "null"
@@ -103634,6 +104144,127 @@
         }
       ]
     },
+    "OpeningBuild": {
+      "additionalProperties": false,
+      "description": "A door's or window's construction (docs/adr/0772 §3), each field optional; none given draws it as before.",
+      "properties": {
+        "casing": {
+          "description": "Its casing (pervaz, söve) on both wall faces beside each jamb, its width, metres; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "fit": {
+          "description": "The fitting gap between the rough opening and the frame, each side, metres; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "frameDepth": {
+          "description": "The frame's depth across the wall, metres; absent: the wall's thickness.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "frameOffset": {
+          "description": "With `frameDepth`: the frame's distance from the wall face it opens to (`side`), metres; absent: centred.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "leafThickness": {
+          "description": "A leaf's thickness, metres; absent: drawn as a line, the net clear width reads 0.04 m.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "mullions": {
+          "description": "A window's mullions (dikey kayıt): its panes are one more; absent: none.",
+          "format": "uint8",
+          "maximum": 20,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "sillBoard": {
+          "description": "A window's sill board (denizlik), how far it reaches past the face opposite the side it opens to, metres.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "sizeBy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpeningSizeBy"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Which width its nominal size names; absent: the rough opening."
+        },
+        "split": {
+          "description": "Two unequal leaves: the hinge-start leaf's share of the light, above 0, below 1; absent: halves.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "value"
+        },
+        "threshold": {
+          "description": "A door's threshold (eşik), its depth across the wall, metres; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "transoms": {
+          "description": "A window's transoms (yatay kayıt); plan does not show them, schedules and tags do.",
+          "format": "uint8",
+          "maximum": 20,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "useZone": {
+          "description": "The use zone in front of it on the side it opens to (kullanım alanı), its depth, metres; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "type": "object"
+    },
     "OpeningDistance": {
       "description": "One side's distance: net along the face, from the opening's jamb to the reference's point on the face.",
       "properties": {
@@ -103779,6 +104410,17 @@
             }
           ],
           "description": "Why it is not where its wall says; absent: it is."
+        },
+        "build": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpeningBuild"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its construction (docs/adr/0772 §2, §3): sizes, leaves, frame, threshold, casing, sill board, panes, use zone.\nAbsent: drawn and measured as before."
         },
         "byLayer": {
           "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
@@ -103929,6 +104571,13 @@
           ],
           "x-unit": "count"
         },
+        "overrides": {
+          "description": "The fields of its type it keeps its own value of (örnek istisnası), in the order the fields are listed.",
+          "items": {
+            "$ref": "#/$defs/OpeningTypeField"
+          },
+          "type": "array"
+        },
         "place": {
           "description": "Its jambs: the start jamb's points on its wall's left and right face, then the end jamb's; written from its\nwall by the document.",
           "items": {
@@ -103987,6 +104636,16 @@
             "null"
           ],
           "x-unit": "1"
+        },
+        "typeVersion": {
+          "description": "The version of the project type `style` names it last took (docs/adr/0772 §1): it follows that type. Absent: it\nfollows none (a KentOS type's values copied once, or none).",
+          "format": "uint32",
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "version"
         },
         "width": {
           "description": "The rough opening in the wall, jamb to jamb, metres.",
@@ -104101,6 +104760,97 @@
         }
       ]
     },
+    "OpeningKept": {
+      "description": "An opening a type's change kept its own value for.",
+      "properties": {
+        "fields": {
+          "description": "The changed fields it keeps its own value of.",
+          "items": {
+            "$ref": "#/$defs/OpeningTypeField"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "fields"
+      ],
+      "type": "object"
+    },
+    "OpeningLeft": {
+      "description": "An opening that did not take a type's change: it stays at the older version.",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        },
+        "why": {
+          "$ref": "#/$defs/OpeningLeftWhy"
+        }
+      },
+      "required": [
+        "uid",
+        "why",
+        "message"
+      ],
+      "type": "object"
+    },
+    "OpeningLeftWhy": {
+      "description": "Why an opening following a type did not take its change.",
+      "oneOf": [
+        {
+          "const": "locked",
+          "description": "On a locked layer.",
+          "type": "string"
+        },
+        {
+          "const": "hostGone",
+          "description": "Its wall is gone.",
+          "type": "string"
+        },
+        {
+          "const": "offWall",
+          "description": "It would run off its wall.",
+          "type": "string"
+        },
+        {
+          "const": "overlap",
+          "description": "It would run into another opening.",
+          "type": "string"
+        },
+        {
+          "const": "invalid",
+          "description": "Its fields would make none.",
+          "type": "string"
+        }
+      ]
+    },
+    "OpeningNominal": {
+      "additionalProperties": false,
+      "description": "A type's nominal size: the width it names and that width's value; the rough opening follows from it.",
+      "properties": {
+        "by": {
+          "$ref": "#/$defs/OpeningSizeBy"
+        },
+        "value": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "by",
+        "value"
+      ],
+      "type": "object"
+    },
     "OpeningOperation": {
       "description": "How its leaves move.",
       "oneOf": [
@@ -104120,6 +104870,77 @@
           "type": "string"
         }
       ]
+    },
+    "OpeningQueryRow": {
+      "description": "One opening as `cad.openings.query` reads it.",
+      "properties": {
+        "form": {
+          "$ref": "#/$defs/OpeningForm"
+        },
+        "host": {
+          "type": "string"
+        },
+        "level": {
+          "description": "Its wall's level; absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "overrides": {
+          "items": {
+            "$ref": "#/$defs/OpeningTypeField"
+          },
+          "type": "array"
+        },
+        "sizes": {
+          "$ref": "#/$defs/OpeningSizes"
+        },
+        "stale": {
+          "description": "It took an older version than its type's.",
+          "type": "boolean"
+        },
+        "type": {
+          "description": "Its type's id (its `style`) and name.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "typeName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "typeVersion": {
+          "description": "The version it took (it follows the type); absent: it follows none.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "version"
+        },
+        "uid": {
+          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "form",
+        "host",
+        "sizes"
+      ],
+      "type": "object"
     },
     "OpeningReference": {
       "description": "What a distance is measured to: the face's corner or end, another opening's jamb, another wall's face.",
@@ -104261,6 +105082,649 @@
       ],
       "type": "string"
     },
+    "OpeningSizeBy": {
+      "description": "Which of an opening's widths its nominal size names (docs/adr/0772 §2).",
+      "oneOf": [
+        {
+          "const": "rough",
+          "description": "Kaba boşluk: the hole in the wall, jamb to jamb (an opening's `width`).",
+          "type": "string"
+        },
+        {
+          "const": "unit",
+          "description": "Kasa dış eni: the product's outer width, the rough opening less the fitting gap each side.",
+          "type": "string"
+        },
+        {
+          "const": "leaf",
+          "description": "Kanat eni: the light inside the frame, the leaves' width.",
+          "type": "string"
+        }
+      ]
+    },
+    "OpeningSizes": {
+      "description": "An opening's widths (docs/adr/0772 §2), metres.",
+      "properties": {
+        "clear": {
+          "description": "Net geçiş: what a door leaves free with all its leaves open, from the open leaf's face to the opposite stop; a\nbare opening its light; none for a window, a niche or a flue.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "clearFirst": {
+          "description": "A two-leaf door's net clear width with only its first leaf open.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "leaf": {
+          "description": "Kanat eni: the light inside the frame.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "leaves": {
+          "description": "Each leaf's width, from its start; none for one with no leaves.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "nominal": {
+          "description": "That width.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "rough": {
+          "description": "Kaba boşluk: the hole in the wall (its `width`).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "sizeBy": {
+          "$ref": "#/$defs/OpeningSizeBy",
+          "description": "Which width its nominal size names."
+        },
+        "unit": {
+          "description": "Kasa dış eni: the rough opening less the fitting gap each side.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "rough",
+        "unit",
+        "leaf",
+        "leaves",
+        "sizeBy",
+        "nominal"
+      ],
+      "type": "object"
+    },
+    "OpeningType": {
+      "additionalProperties": false,
+      "description": "An office's or a project's door or window type (docs/adr/0772 §1).",
+      "properties": {
+        "build": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpeningBuild"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "depth": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "form": {
+          "$ref": "#/$defs/OpeningForm"
+        },
+        "frame": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "head": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "id": {
+          "description": "Its lasting key: lower-case letters, digits and `-`, at most 64, not starting with `kentos-` (KentOS's own).",
+          "type": "string"
+        },
+        "leaves": {
+          "format": "uint8",
+          "maximum": 2,
+          "minimum": 1,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "name": {
+          "description": "What it is called (K01): unique in the project, case aside.",
+          "type": "string"
+        },
+        "operation": {
+          "$ref": "#/$defs/OpeningOperation"
+        },
+        "showSwing": {
+          "type": "boolean"
+        },
+        "sill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "source": {
+          "description": "Where it came from: the office library's name it was taken from; absent: made in this project.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "swing": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "deg"
+        },
+        "version": {
+          "description": "Each change gives it the next; an opening that took an older one is behind (eski sürüm).",
+          "format": "uint32",
+          "minimum": 1,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "width": {
+          "description": "The rough opening, metres (an opening's `width`).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "version",
+        "form",
+        "width"
+      ],
+      "type": "object"
+    },
+    "OpeningTypeChange": {
+      "additionalProperties": false,
+      "description": "A type's fields to change; absent ones stay. A nullable field's null takes it away.",
+      "properties": {
+        "build": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpeningBuild"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The construction's fields given (each set; the others stay)."
+        },
+        "depth": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "frame": {
+          "description": "The frame's width at each jamb, metres; null: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "head": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "leaves": {
+          "format": "uint8",
+          "maximum": 2,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "nominal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpeningNominal"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its nominal size instead of the rough opening: the rough opening follows from it, its fitting gap and frame\n(after them, when they change too), and `build.sizeBy` becomes the width it names."
+        },
+        "operation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OpeningOperation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "showSwing": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "sill": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "swing": {
+          "description": "Degrees; null: 90.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "deg"
+        },
+        "unset": {
+          "description": "The construction's fields taken away.",
+          "items": {
+            "$ref": "#/$defs/OpeningTypeField"
+          },
+          "type": "array"
+        },
+        "width": {
+          "description": "The rough opening, metres.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "type": "object"
+    },
+    "OpeningTypeConflict": {
+      "description": "What a type taken from an office library does when the project has one of its id or name.",
+      "oneOf": [
+        {
+          "const": "refuse",
+          "description": "Refused (`opening_type_exists`).",
+          "type": "string"
+        },
+        {
+          "const": "skip",
+          "description": "The project's stays; the library's is not taken.",
+          "type": "string"
+        },
+        {
+          "const": "replace",
+          "description": "One of the same id and source becomes the library's (a new version; its openings follow); another source's is\nstill refused.",
+          "type": "string"
+        },
+        {
+          "const": "rename",
+          "description": "Taken beside it under a new id and name (“ (2)”).",
+          "type": "string"
+        }
+      ]
+    },
+    "OpeningTypeField": {
+      "description": "A field a type governs: an opening following the type takes it, unless the opening keeps its own (docs/adr/0772 §1).\nThe form is the type's own and never an exception; an opening's place, wall, hand, side and number are its own.",
+      "enum": [
+        "width",
+        "leaves",
+        "operation",
+        "swing",
+        "showSwing",
+        "frame",
+        "sill",
+        "head",
+        "depth",
+        "sizeBy",
+        "fit",
+        "leafThickness",
+        "split",
+        "frameDepth",
+        "frameOffset",
+        "threshold",
+        "casing",
+        "sillBoard",
+        "mullions",
+        "transoms",
+        "useZone"
+      ],
+      "type": "string"
+    },
+    "OpeningTypeRefused": {
+      "description": "When a type's change does not fit an opening following it (its wall gone, off its wall, into another).",
+      "oneOf": [
+        {
+          "const": "stop",
+          "description": "Nothing is written (`opening_type_refused`).",
+          "type": "string"
+        },
+        {
+          "const": "skip",
+          "description": "The others take it; those it does not fit stay at the older version and are reported.",
+          "type": "string"
+        }
+      ]
+    },
+    "OpeningTypeReport": {
+      "description": "Every opening's fate in a type's change: those that took it, those that kept a changed field of their own, those\nleft at the older version (`skipped`: a locked layer; `refused`: it did not fit).",
+      "properties": {
+        "applied": {
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "fields": {
+          "description": "The fields the change changed.",
+          "items": {
+            "$ref": "#/$defs/OpeningTypeField"
+          },
+          "type": "array"
+        },
+        "kept": {
+          "items": {
+            "$ref": "#/$defs/OpeningKept"
+          },
+          "type": "array"
+        },
+        "refused": {
+          "items": {
+            "$ref": "#/$defs/OpeningLeft"
+          },
+          "type": "array"
+        },
+        "skipped": {
+          "items": {
+            "$ref": "#/$defs/OpeningLeft"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "applied",
+        "kept",
+        "skipped",
+        "refused",
+        "fields"
+      ],
+      "type": "object"
+    },
+    "OpeningTypeUse": {
+      "description": "A project type and how many openings follow it.",
+      "properties": {
+        "count": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "exceptions": {
+          "description": "Of them, those keeping a field of their own.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "stale": {
+          "description": "Of them, those behind its version.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "type": {
+          "$ref": "#/$defs/OpeningType"
+        }
+      },
+      "required": [
+        "type",
+        "count",
+        "stale",
+        "exceptions"
+      ],
+      "type": "object"
+    },
+    "OpeningTypesFile": {
+      "additionalProperties": false,
+      "description": "An office's types as a file carries them (`kentos.opening-types` 1): their library's name and the types.",
+      "properties": {
+        "format": {
+          "type": "string"
+        },
+        "library": {
+          "description": "The library's name: the source its types take in a project.",
+          "type": "string"
+        },
+        "types": {
+          "items": {
+            "$ref": "#/$defs/OpeningType"
+          },
+          "type": "array"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "library",
+        "types"
+      ],
+      "type": "object"
+    },
+    "OpeningTypesOperation": {
+      "description": "What `cad.openingtypes.edit` does.",
+      "oneOf": [
+        {
+          "description": "Yeni tip: a new type `name` (its id: `id`, else from its name), its values those of `copyOf` (a project type's,\nelse KentOS's, by id or name; absent: the form's first KentOS type) changed by `change`; version 1.",
+          "properties": {
+            "change": {
+              "$ref": "#/$defs/OpeningTypeChange",
+              "default": {}
+            },
+            "copyOf": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "form": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OpeningForm"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "define",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipi değiştir: the type `type` (its id or name) changed by `change`; its version goes up by one and its openings\nfollow.",
+          "properties": {
+            "change": {
+              "$ref": "#/$defs/OpeningTypeChange"
+            },
+            "kind": {
+              "const": "update",
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "type",
+            "change"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yeniden adlandır: the type's name; its id and its openings stay.",
+          "properties": {
+            "kind": {
+              "const": "rename",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "type",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Sil: the type; its openings refuse it (`opening_type_in_use`) unless `detach`, which leaves them with their\nvalues, following nothing.",
+          "properties": {
+            "detach": {
+              "type": "boolean"
+            },
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            },
+            "type": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kitaplıktan al: an office library's types (`kentos.opening-types` 1, a file's text as its host read it), their\nsource the library's name; `onConflict` for a type the project has.",
+          "properties": {
+            "kind": {
+              "const": "import",
+              "type": "string"
+            },
+            "library": {
+              "$ref": "#/$defs/OpeningTypesFile"
+            },
+            "onConflict": {
+              "$ref": "#/$defs/OpeningTypeConflict",
+              "default": "refuse"
+            }
+          },
+          "required": [
+            "kind",
+            "library"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kitaplığa yaz: the types named (none: all) as an office library `library`, given back as the file's content\n(its host writes it). The drawing does not change.",
+          "properties": {
+            "kind": {
+              "const": "export",
+              "type": "string"
+            },
+            "library": {
+              "type": "string"
+            },
+            "types": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "library"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "OpeningsOperation": {
       "description": "What `cad.openings.edit` does to the openings (docs/adr/0341 §4).",
       "oneOf": [
@@ -104268,6 +105732,17 @@
           "additionalProperties": false,
           "description": "Değiştir: the fields given, on every opening named.",
           "properties": {
+            "build": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/OpeningBuild"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Its construction's fields given (docs/adr/0772 §3); each set, the others stay. Boxed: the operations' enum\nstays small."
+            },
             "depth": {
               "description": "A niche's or flue's depth, metres (docs/adr/0719); null: none (a form that goes through).",
               "format": "double",
@@ -104387,6 +105862,13 @@
               ],
               "x-unit": "deg"
             },
+            "unset": {
+              "description": "Its construction's fields taken away.",
+              "items": {
+                "$ref": "#/$defs/OpeningTypeField"
+              },
+              "type": "array"
+            },
             "width": {
               "description": "The rough opening, metres; it grows about its anchor.",
               "format": "double",
@@ -104478,7 +105960,7 @@
           "type": "object"
         },
         {
-          "description": "Türü değiştir: the type `to` (its id or name) for the openings named, or with no ids every opening of type\n`from`.",
+          "description": "Türü değiştir: the type `to` (its id or name) for the openings named, or with no ids every opening of type\n`from` (Aynı tiptekileri değiştir), with `level` only those on that level (null: on none). A project type's\nopenings follow it (docs/adr/0772): they take all its values, their exceptions gone.",
           "properties": {
             "from": {
               "type": [
@@ -104490,6 +105972,12 @@
               "const": "replaceType",
               "type": "string"
             },
+            "level": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "to": {
               "type": "string"
             }
@@ -104497,6 +105985,70 @@
           "required": [
             "kind",
             "to"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipten ayır (docs/adr/0772 §1): the openings keep their values and follow no type.",
+          "properties": {
+            "kind": {
+              "const": "detach",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipe uygula: the one opening's values of `fields` (none: the fields it keeps as its own) become its type's; its\ntype's version goes up and every other opening following it takes them, as `cad.openingtypes.edit`'s Update.",
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/OpeningTypeField"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "push",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipi yeniden uygula: the openings take their type's latest version again, their exceptions kept (one left at an\nolder version on a locked layer, docs/adr/0772 §4).",
+          "properties": {
+            "kind": {
+              "const": "refresh",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Tipe döndür: the openings give up their own values of `fields` (none: all) and take their type's again, its\nlatest version.",
+          "properties": {
+            "fields": {
+              "items": {
+                "$ref": "#/$defs/OpeningTypeField"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "reset",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
           ],
           "type": "object"
         },
@@ -119480,7 +121032,10 @@
             "thickness",
             "baseFinish",
             "wallFinish",
-            "ceilingFinish"
+            "ceilingFinish",
+            "unitWidth",
+            "leafWidth",
+            "clearWidth"
           ],
           "type": "string"
         },
@@ -119507,6 +121062,11 @@
         {
           "const": "space",
           "description": "The space a fixture stands in, on its level: its number and name.",
+          "type": "string"
+        },
+        {
+          "const": "roughWidth",
+          "description": "An opening's widths (docs/adr/0772 §2): the rough opening (its `width`, under its own name), the frame's outer\nwidth, the leaf width and the net clear width.",
           "type": "string"
         }
       ]

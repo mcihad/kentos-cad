@@ -2077,6 +2077,18 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 137 (docs/adr/0772): door and window types, an opening following one or built, a schedule of widths.
+    let opening_typed = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_opening_types);
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_opening_types)
+        || opening_typed(objs)
+        || doc.blocks.iter().any(|b| opening_typed(Objs::Plain(&b.entities)))
+    {
+        return crate::SCHEMA_WITH_OPENING_TYPES;
+    }
     // Schema 136 (docs/adr/0758): a layer's indexes.
     fn indexed(nodes: &[LayerNode]) -> bool {
         nodes
