@@ -257,6 +257,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Bütçe: 200 duvar/50 bağ önizleme 2,4 ms, ret 0,5 ms; 400/100 6,9 ms ve 2,0 ms (`arch_bond_timing`). Şema değişmez.
   22 + 22 ortak durum (`arch_bond_conflict_cases.py`). Gerçek pencerede elle denenmedi.
 
+- **Öznitelikler'den yazılan değerin bağ kartı (31 Ekim 2026; [ADR 0797](docs/adr/0797-properties-bond-card.md), ADV-01 [~]).**
+  Öznitelikler panelinden yazılan değer bağlarca reddedilince ADR 0790'ın kartı açılır (“Bağı kaldır”, “Bu iki bağı
+  kaldır”): `kentos_interaction::properties::take_bonds_refused`; geçen yazma kartı kapatır.
+
 - **Sürüklerken yoldaki bağlar ve birlikte kaldırılınca geçen bağlar (31 Ekim 2026; [ADR 0790](docs/adr/0790-bonds-while-dragging-and-together.md), ADV-01 [~]).**
   `cad.entities.edit` ve `cad.openings.edit`'in planı, bağın andığı nesneyi değiştirdiğinde komutu okuma kopyasında yürütür
   ve bağların reddini execute gibi verir (`constraint_follow::bonds_refusal`). Tutamaçla sürüklemede, yeni Duvarı kaydır

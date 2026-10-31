@@ -1024,6 +1024,10 @@ impl App {
             }
             Event::Commit(field, text) => commit(model, &field, &text),
         };
+        // A value the bonds refused leaves their card with the way through, as a drag does (docs/adr/0797).
+        if let Some(refused) = kentos_interaction::properties::take_bonds_refused() {
+            self.bonds_refused = refused;
+        }
         for text in said {
             self.warn(text);
         }

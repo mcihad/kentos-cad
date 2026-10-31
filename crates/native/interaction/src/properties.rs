@@ -754,13 +754,32 @@ pub fn override_names(overrides: &[String]) -> Vec<&'static str> {
 pub(crate) fn said<T>(result: CommandResult<T>) -> Vec<String> {
     match result {
         CommandResult::Completed { warnings, .. } => {
+            REFUSED.with(|r| *r.borrow_mut() = Some(None));
             warnings.into_iter().map(|w| w.message).collect()
         }
         CommandResult::Failed { error }
         | CommandResult::Conflict { error }
-        | CommandResult::NeedsInput { error } => vec![error.message],
+        | CommandResult::NeedsInput { error } => {
+            // The bonds in the way stay for the host's card (docs/adr/0797): as a drag's refusal does (ADR 0790 §2).
+            if !error.bonds.is_empty() {
+                REFUSED.with(|r| *r.borrow_mut() = Some(Some(error.clone())));
+            }
+            vec![error.message]
+        }
         CommandResult::Queued { .. } | CommandResult::Cancelled => Vec::new(),
     }
+}
+
+thread_local! {
+    /// The last Öznitelikler write the architectural bonds refused, with its bonds; taken by the host after the write.
+    static REFUSED: std::cell::RefCell<Option<Option<kentos_commands::CommandError>>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+/// The bonds' refusal of the last Öznitelikler write (docs/adr/0797), taken once: the host opens its card (ADR 0790
+/// §2's “Bağı kaldır”). `Some(None)` when the last write went through, so an open card closes; none when no write ran.
+pub fn take_bonds_refused() -> Option<Option<kentos_commands::CommandError>> {
+    REFUSED.with(|r| r.borrow_mut().take())
 }
 
 /// İlişki ▾'s Serbest bırak (docs/adr/0249 §3): the dimensions in `slots` let every point go through

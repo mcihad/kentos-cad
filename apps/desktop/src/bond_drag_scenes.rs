@@ -150,4 +150,29 @@ mod tests {
         let back = app.document.as_ref().expect("a drawing").model.constraints().constraints.len();
         assert_eq!(back, before);
     }
+
+    /// docs/adr/0797: a value written in Öznitelikler that the bonds refuse (the inner wall, fixed too, made thicker:
+    /// its face moves, d1 cannot follow) leaves the same card with the way through; the next write that goes through
+    /// takes it away.
+    #[test]
+    fn a_value_written_in_the_properties_leaves_the_card() {
+        let mut app = app();
+        together(&mut app);
+        let _ = app.update(Message::Run("tool.select"));
+        app.selection.set([Slot(2)]);
+        let _ = app.update(Message::Properties(crate::properties::Event::Commit(
+            crate::properties::Field::WallWidth(Slot(2)),
+            "0.40".into(),
+        )));
+        let error = app.bonds_refused.clone().expect("the refusal's card");
+        assert_eq!(error.code, "constraint_conflict");
+        assert!(kentos_interaction::bond_refusal::way_through(&error.bonds).is_some());
+        let _ = app.update(Message::BondNotice(crate::bond_notice::Event::Remove));
+        assert!(app.bonds_refused.is_none());
+        let _ = app.update(Message::Properties(crate::properties::Event::Commit(
+            crate::properties::Field::WallWidth(Slot(2)),
+            "0.40".into(),
+        )));
+        assert!(app.bonds_refused.is_none(), "it goes through now");
+    }
 }
