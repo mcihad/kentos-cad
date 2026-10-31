@@ -508,7 +508,11 @@ pub fn effective_fixed_view(
         return Err(SheetError::new("bad_value", "Kaynak görünüm geçersiz."));
     }
     let frame = crate::display::map_content_rect(item, map);
-    let denominator = crate::projection::fitting_denominator(view.width, view.height, &frame, 0);
+    // A recipe's scale (docs/adr/0774 §3) is the map's: the view's middle kept, its box no longer fitted.
+    let denominator = match view.recipe.as_ref().and_then(|r| r.scale) {
+        Some(n) => f64::from(n),
+        None => crate::projection::fitting_denominator(view.width, view.height, &frame, 0),
+    };
     if crate::projection::Scale::new(denominator).is_none() {
         return Err(SheetError::new(
             "bad_scale",
@@ -527,6 +531,18 @@ pub fn effective_fixed_view(
         model: denominator,
     });
     Ok(result)
+}
+
+/// The recipe of the named view a map is linked to (docs/adr/0774 §3): the current view's, found by its stable key;
+/// none for a map of its own camera, a snapshot, or a link whose view is gone (that one is refused elsewhere).
+pub fn linked_recipe<'a>(map: &crate::kinds::MapItem, views: &'a [NamedModelView]) -> Option<&'a kentos_contracts::ViewRecipe> {
+    let Source::ViewLink { view: link } = &map.source else {
+        return None;
+    };
+    views
+        .iter()
+        .find(|v| view_key(v) == view_key(link))
+        .and_then(|v| v.recipe.as_ref())
 }
 
 /// Detaching a live source retains its current effective camera when the registry is available.

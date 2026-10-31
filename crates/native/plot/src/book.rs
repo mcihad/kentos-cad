@@ -254,6 +254,8 @@ impl<'a> MapDrawer<'a> {
                 own = MapSource {
                     map: self.map,
                     level: m.level.as_ref(),
+                    phase: m.phase,
+                    hidden: &m.hidden,
                     doc: copy,
                     store: spatial.store(),
                     library: self.library,
@@ -264,6 +266,8 @@ impl<'a> MapDrawer<'a> {
             _ => &MapSource {
                 map: self.map,
                 level: m.level.as_ref(),
+                phase: m.phase,
+                hidden: &m.hidden,
                 doc,
                 store: self.spatial.store(),
                 library: self.library,
@@ -284,6 +288,7 @@ impl<'a> MapDrawer<'a> {
                 &m.layers,
                 &m.layer_overrides,
                 m.level.as_ref(),
+                (m.phase, &m.hidden),
                 crate::maps::project_box(Some(map), extent),
             )
             .into_iter()

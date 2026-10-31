@@ -132,6 +132,7 @@ pub fn map_labels(doc: &Document, spatial: &Spatial, m: &MapPrim) -> Vec<MapLabe
         &m.layers,
         &m.layer_overrides,
         m.level.as_ref(),
+        (m.phase, &m.hidden),
         m.extent,
     )
 }
@@ -171,6 +172,7 @@ pub fn moved(mut l: MapLabel, map: &kentos_geometry_core::crs::map::MapProjectio
 }
 
 /// Text collector shared by the desktop PDF and headless map export.
+#[allow(clippy::too_many_arguments)]
 pub fn labels_in_view(
     doc: &Document,
     spatial: &Spatial,
@@ -178,10 +180,17 @@ pub fn labels_in_view(
     layers: &kentos_sheet::kinds::MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
     level: Option<&kentos_sheet::kinds::MapLevel>,
+    recipe: (Option<kentos_contracts::PhaseView>, &[kentos_contracts::ViewCategory]),
     extent: Option<[f64; 4]>,
 ) -> Vec<MapLabel> {
     let Some(bounds) = extent else {
         return Vec::new();
+    };
+    // A linked view's recipe (docs/adr/0774 §3): the words of the objects its phase or categories leave out, out too.
+    let recipe_out: std::collections::HashSet<u32> = if recipe.0.is_some() || !recipe.1.is_empty() {
+        crate::layers::map_phasing_of(doc, recipe.0, recipe.1).hidden().collect()
+    } else {
+        Default::default()
     };
     // A level's plan (docs/adr/0716): the other levels' words out, the one under it faint.
     let (left_out, faint) = level
@@ -222,7 +231,7 @@ pub fn labels_in_view(
             fade(&mut out[from..]);
         }
         let id = slot(&spot);
-        if left_out.contains(&id.0) {
+        if left_out.contains(&id.0) || recipe_out.contains(&id.0) {
             continue;
         }
         if faint.contains(&id.0) {

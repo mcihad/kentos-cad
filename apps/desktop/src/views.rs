@@ -54,8 +54,10 @@ pub fn next_view_name(views: &[NamedView]) -> String {
 /// The window: the chosen view and the name field.
 #[derive(Debug, Clone)]
 pub struct Window {
-    chosen: Option<String>,
+    pub(crate) chosen: Option<String>,
     name: String,
+    /// The chosen view's recipe as drafted (docs/adr/0774 §2): written by Tarifi uygula.
+    pub(crate) recipe: kentos_commands::ViewRecipe,
 }
 
 #[derive(Debug, Clone)]
@@ -70,6 +72,16 @@ pub enum Event {
     Rename,
     Name(String),
     Close,
+    /// The recipe's draft (docs/adr/0774 §2, `views_recipe.rs`).
+    RecipePreset(usize),
+    RecipeLevel(Option<usize>),
+    RecipeBelow(bool),
+    RecipePhase(usize),
+    RecipeState(Option<usize>),
+    RecipeScale(usize),
+    RecipeHide(kentos_commands::ViewCategory, bool),
+    RecipeApply,
+    RecipeClear,
 }
 
 fn msg(event: Event) -> Message {
@@ -192,6 +204,7 @@ impl App {
         self.views_window = Some(Window {
             chosen: None,
             name: next_view_name(self.named_views()),
+            recipe: Default::default(),
         });
         self.dialog = Some(Dialog::Views);
     }
@@ -208,9 +221,11 @@ impl App {
                 if chosen.as_deref() == Some(id.as_str()) {
                     self.show_named_view(&id);
                 }
+                let recipe = self.recipe_draft(&id);
                 if let Some(w) = self.views_window.as_mut() {
                     w.name = id.clone();
                     w.chosen = Some(id);
+                    w.recipe = recipe;
                 }
             }
             Event::Show(id) => self.show_named_view(&id),
@@ -271,6 +286,7 @@ impl App {
                 self.views_window = None;
                 self.dialog = None;
             }
+            recipe => self.recipe_event(recipe),
         }
         // A view the window had chosen and that is gone (removed elsewhere) is chosen no more.
         let gone = self
@@ -304,7 +320,12 @@ impl App {
                 .size(typography::body())
                 .font(typography::ui())
                 .width(Fill);
-            let caption = label::caption(view_caption(self, v)).style(|theme: &iced::Theme| {
+            // A view with a recipe says what it draws (docs/adr/0774 §2).
+            let words = match &v.recipe {
+                Some(r) => format!("{} · {}", view_caption(self, v), crate::views_recipe::recipe_caption(self, r)),
+                None => view_caption(self, v),
+            };
+            let caption = label::caption(words).style(|theme: &iced::Theme| {
                 iced::widget::text::Style {
                     color: Some(Tokens::of(theme).muted),
                 }
@@ -361,10 +382,16 @@ impl App {
             .push(actions)
             .push(words::field(NAME, name, None))
             .push(saving);
+        // The chosen view's recipe (docs/adr/0774 §2).
+        let body = if chosen.is_some() {
+            body.push(iced::widget::rule::horizontal(1)).push(self.recipe_view(editable))
+        } else {
+            body
+        };
         Frame::new(VIEWS_TITLE)
             .push(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-            .width(520.0)
+            .width(620.0)
             .modal(msg(Event::Close))
     }
 

@@ -1520,6 +1520,8 @@ mod tests {
         let map = Prim::Map(MapPrim {
             clip_shape: Default::default(),
             layer_overrides: Vec::new(),
+            phase: None,
+            hidden: Vec::new(),
             item: "m".into(),
             clip: RectUm::new(0, 0, 100, 100),
             rotation: 0,

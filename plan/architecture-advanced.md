@@ -252,7 +252,12 @@ Kaynak enini değiştir; üç bağlı örnek güncellensin, ayrılmış örnek d
 Host/mahal/ölçü kimlikleri karışmasın; tek Undo, KCAD yeniden açma ve dışa
 aktarmadaki kayıp raporu doğrulansın.
 
-### ADV-06 — Mimari görünüşler, proje gezgini ve koordineli yayın [ ]
+### ADV-06 — Mimari görünüşler, proje gezgini ve koordineli yayın [~]
+
+_Durum (31 Ekim 2026, [ADR 0774](../docs/adr/0774-architectural-view-recipes.md)):_ adlı görünüm üstünde sürümlü görünüş tarifi
+(kat, alt kat, evre, katman durumu, gizlenen türler, ölçek), bağlı paftanın tarifle çizmesi ve pafta setinin tarife göre etkisi
+yapıldı. Açık: proje gezgini, kalem seti ve duvar ayrıntısı, kırpma, görünüş şablonu, türetilmiş çizim, yayın/revizyon
+birlikteliği, 1:20 PDF incelemesi, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Uygulama planı, mobilya planı ve tadilat planı aynı
 modelden tekrar kurulabilsin; pafta için her defasında görünürlük ayarlamak

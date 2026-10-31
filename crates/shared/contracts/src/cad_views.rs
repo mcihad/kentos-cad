@@ -55,6 +55,180 @@ pub struct NamedView {
     /// The screen's x axis from east, counter-clockwise; 0 shows the north up.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub twist: f64,
+    /// Its architectural recipe (docs/adr/0774 §1): the level, phase, layer state, categories and scale a sheet's map
+    /// linked to it draws with; none: the map's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub recipe: Option<ViewRecipe>,
+}
+
+/// The longest layer state name a recipe names, in characters.
+pub const MOST_RECIPE_STATE: usize = 64;
+/// The largest scale denominator a recipe sets (1:100 000).
+pub const MOST_RECIPE_SCALE: u32 = 100_000;
+
+/// What kind of objects a view leaves out (docs/adr/0774 §1): its own category hide, the model untouched.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ViewCategory {
+    /// Dimensions and dimension sets' members.
+    Dimensions,
+    /// Tags.
+    Tags,
+    /// Texts, paragraphs and leaders.
+    Texts,
+    /// Hatches.
+    Hatches,
+    /// Block inserts: furniture, fixtures, symbols.
+    Blocks,
+    /// Spaces (their outline and label).
+    Spaces,
+    /// Grids and their bubbles.
+    Grids,
+    /// View marks (section, elevation, detail).
+    Viewmarks,
+}
+
+impl ViewCategory {
+    pub const ALL: [ViewCategory; 8] = [
+        ViewCategory::Dimensions,
+        ViewCategory::Tags,
+        ViewCategory::Texts,
+        ViewCategory::Hatches,
+        ViewCategory::Blocks,
+        ViewCategory::Spaces,
+        ViewCategory::Grids,
+        ViewCategory::Viewmarks,
+    ];
+
+    /// Its name in the interface.
+    pub fn label(self) -> &'static str {
+        match self {
+            ViewCategory::Dimensions => "Ölçüler",
+            ViewCategory::Tags => "Etiketler",
+            ViewCategory::Texts => "Yazılar",
+            ViewCategory::Hatches => "Taramalar",
+            ViewCategory::Blocks => "Bloklar ve donatı",
+            ViewCategory::Spaces => "Mahaller",
+            ViewCategory::Grids => "Akslar",
+            ViewCategory::Viewmarks => "Görünüm işaretleri",
+        }
+    }
+
+    /// The category an object of `kind` (its JSON `kind`) is in, if any.
+    pub fn of_kind(kind: &str) -> Option<ViewCategory> {
+        Some(match kind {
+            "dimension" => ViewCategory::Dimensions,
+            "tag" => ViewCategory::Tags,
+            "text" | "leader" => ViewCategory::Texts,
+            "hatch" => ViewCategory::Hatches,
+            "insert" => ViewCategory::Blocks,
+            "space" => ViewCategory::Spaces,
+            "grid" => ViewCategory::Grids,
+            "viewmark" => ViewCategory::Viewmarks,
+            _ => return None,
+        })
+    }
+}
+
+/// The level a recipe draws (docs/adr/0716's map level): its id, the level under it faint with `below`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecipeLevel {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub below: bool,
+}
+
+/// A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a
+/// sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
+/// screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ViewRecipe {
+    /// 1 for a new recipe, one more at each change; given in an input, it is ignored.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: u32,
+    /// The level the map draws; none: the map's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<RecipeLevel>,
+    /// The phases it shows (docs/adr/0346 §2); none: the project's phase view.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phase: Option<crate::arch::PhaseView>,
+    /// A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layer_state: Option<String>,
+    /// The categories left out, in their order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ViewCategory>>", optional))]
+    pub hidden: Vec<ViewCategory>,
+    /// The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub scale: Option<u32>,
+}
+
+fn is_zero(v: &u32) -> bool {
+    *v == 0
+}
+
+impl ViewRecipe {
+    /// Whether it changes nothing a map draws (its version aside).
+    pub fn is_empty(&self) -> bool {
+        self.level.is_none()
+            && self.phase.is_none()
+            && self.layer_state.is_none()
+            && self.hidden.is_empty()
+            && self.scale.is_none()
+    }
+}
+
+/// What is wrong with a recipe on its own (no project): a version, a level id, a state name, the categories once, a
+/// scale; none when it holds.
+pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
+    if r.version == 0 {
+        return Some("Görünüş tarifinin sürümü en az 1 olur.".into());
+    }
+    if r.is_empty() {
+        return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür ya da ölçekten birini verin.".into());
+    }
+    if let Some(l) = &r.level
+        && (l.id.trim().is_empty() || l.id.chars().count() > MOST_VIEW_NAME || l.id.chars().any(char::is_control))
+    {
+        return Some("Görünüş tarifinin katı bir kat kimliği olmalı.".into());
+    }
+    if let Some(s) = &r.layer_state
+        && (s.trim().is_empty() || s.chars().count() > MOST_RECIPE_STATE || s.chars().any(char::is_control))
+    {
+        return Some("Görünüş tarifinin katman durumu bir durumun adı olmalı.".into());
+    }
+    for (i, c) in r.hidden.iter().enumerate() {
+        if r.hidden[..i].contains(c) {
+            return Some(format!("“{}” gizlenenlerde iki kez var.", c.label()));
+        }
+    }
+    if let Some(s) = r.scale
+        && !(1..=MOST_RECIPE_SCALE).contains(&s)
+    {
+        return Some("Görünüş tarifinin ölçeği 1:1 ile 1:100 000 arasında olur.".into());
+    }
+    None
 }
 
 /// The id a view's name gives: `v-` and the name's FNV-1a (32 bits) in eight lowercase hexadecimal digits.
@@ -122,6 +296,11 @@ pub fn views_problem(views: &[NamedView]) -> Option<String> {
         if views[..i].iter().any(|w| view_key(w) == view_key(v)) {
             return Some(format!("“{}” görünümünün kimliği başka bir görünümünkiyle aynı.", v.name));
         }
+        if let Some(r) = &v.recipe
+            && let Some(why) = recipe_problem(r)
+        {
+            return Some(format!("“{}” görünümünün tarifi tutmuyor: {why}", v.name));
+        }
         if !view_holds(v) {
             return Some(format!(
                 "“{}” görünümünün ortası 10 000 km içinde, eni ve boyu 0'dan büyük ve en çok 20 000 km, dönüşü [0, 2π) aralığında olmalı.",
@@ -180,14 +359,23 @@ pub enum ViewsOp {
     Rename { name: String, to: String },
     /// Sil: a named view removed.
     Delete { name: String },
+    /// Görünüş tarifi (docs/adr/0774 §2): the view's recipe set (its version one more) or, none, taken away; the maps
+    /// linked to the view draw with it from then on.
+    Recipe {
+        name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        recipe: Option<ViewRecipe>,
+    },
 }
 
 /// Input of `cad.views.edit` v1.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `not_finite`,
-/// `far_point`, `invalid_view_size`, `invalid_view_name`;
+/// `far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
-/// `unknown_view`, `view_exists`, `too_many_views`. Warning: `view_replaced`.
+/// `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
+/// state the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

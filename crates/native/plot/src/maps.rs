@@ -111,6 +111,9 @@ pub struct MapSource<'a> {
     /// The level the map draws (docs/adr/0716): the other levels' objects left out, the one under it faint with
     /// `below`. None: every level.
     pub level: Option<&'a kentos_sheet::kinds::MapLevel>,
+    /// A linked view's recipe (docs/adr/0774 §3): its phase view (none: the project's) and the categories left out.
+    pub phase: Option<kentos_contracts::PhaseView>,
+    pub hidden: &'a [kentos_contracts::ViewCategory],
 }
 
 /// A box of the paper's system as a box of the project's (docs/adr/0638 §1): the store is searched in the project's.
@@ -162,7 +165,7 @@ pub(crate) fn built_layers_profile(
         .level
         .map(|l| crate::layers::level_looks(doc, l))
         .unwrap_or_default();
-    let mut phasing = crate::layers::plot_phasing_of(doc);
+    let mut phasing = crate::layers::map_phasing_of(doc, src.phase, src.hidden);
     for &id in &faint {
         phasing.fade(id);
     }

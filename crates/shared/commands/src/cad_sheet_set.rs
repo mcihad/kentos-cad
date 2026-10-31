@@ -123,6 +123,23 @@ pub struct SetFrame {
     pub bounds: Option<[f64; 4]>,
     /// The view marks that point at it, by persistent id, in the drawing's order.
     pub marks: Vec<String>,
+    /// The named view it is linked to, by its stable id (docs/adr/0599); none: its own camera or a snapshot.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub view: Option<String>,
+    /// Its linked view is gone (`missing_named_view`): it draws nothing until linked again or detached.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub missing: bool,
+    /// The level it draws (its view's recipe's, else its own; docs/adr/0716, 0774 §3), by id; none: every level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    /// Its view's recipe's version (docs/adr/0774 §1); none without a recipe.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub recipe: Option<u32>,
 }
 
 /// A sheet of the set.
@@ -146,7 +163,8 @@ pub struct SetSheet {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum AffectReason {
-    /// An object's box meets the frame's ground box.
+    /// An object's box meets the frame's ground box, and the frame draws it: on its level (or on none), its category
+    /// and phase not left out by its view's recipe (docs/adr/0774 §4).
     Shows,
     /// One of the objects is a view mark pointing at the frame.
     Marked,

@@ -5,9 +5,10 @@ import type { ViewsOp } from "./ViewsOp";
  * Input of `cad.views.edit` v1.
  *
  * Refusals (`CommandError.code`), checked in this order: `not_finite`,
- * `far_point`, `invalid_view_size`, `invalid_view_name`;
+ * `far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;
  * `invalid_revision`, `revision_conflict` (status `conflict`);
- * `unknown_view`, `view_exists`, `too_many_views`. Warning: `view_replaced`.
+ * `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
+ * state the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.
  */
 export type ViewsEdit = { edit: ViewsOp, 
 /**

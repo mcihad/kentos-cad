@@ -46,6 +46,8 @@ fn twenty_native_plot_cases_combine_representations_freeze_and_cad_overrides_wit
         let src = MapSource {
             map: None,
             level: m.level.as_ref(),
+            phase: None,
+            hidden: &[],
             doc: source,
             store: spatial.store(),
             library: &library,

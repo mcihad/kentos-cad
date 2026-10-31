@@ -39,6 +39,7 @@ fn view(name: &str) -> NamedView {
         width: 30.0,
         height: 20.0,
         twist: 0.5,
+        recipe: None,
     }
 }
 
@@ -73,6 +74,7 @@ fn the_views_come_back_through_the_codec_and_the_columns() {
             width: size,
             height: size,
             twist,
+            recipe: None,
         };
         let bytes = kentos_kcad::encode_verified(&doc).expect("writes");
         let back = kentos_kcad::decode(&bytes).expect("reads");
@@ -170,7 +172,7 @@ fn the_readers_errors_name_their_places() {
             Code::MissingField,
             "twist",
         ),
-        ("broken/schema-version-141.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-142.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

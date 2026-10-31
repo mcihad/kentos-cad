@@ -179,7 +179,7 @@ AddressesDefineOperationName = Literal["set", "remove"]
 class AffectReason(_StrEnum):
     """Why a frame is affected.
 
-    - ``shows``: An object's box meets the frame's ground box.
+    - ``shows``: An object's box meets the frame's ground box, and the frame draws it: on its level (or on none), its category
     - ``marked``: One of the objects is a view mark pointing at the frame.
     - ``unknown``: The frame's ground is not known (no fixed view): it may show them.
     """
@@ -6177,6 +6177,32 @@ VertexActionName = Literal["remove", "insert", "straighten", "arc", "width"]
 """The names of :class:`VertexAction`, for a plain string."""
 
 
+class ViewCategory(_StrEnum):
+    """What kind of objects a view leaves out (docs/adr/0774 §1): its own category hide, the model untouched.
+
+    - ``dimensions``: Dimensions and dimension sets' members.
+    - ``tags``: Tags.
+    - ``texts``: Texts, paragraphs and leaders.
+    - ``hatches``: Hatches.
+    - ``blocks``: Block inserts: furniture, fixtures, symbols.
+    - ``spaces``: Spaces (their outline and label).
+    - ``grids``: Grids and their bubbles.
+    - ``viewmarks``: View marks (section, elevation, detail).
+    """
+    DIMENSIONS = "dimensions"
+    TAGS = "tags"
+    TEXTS = "texts"
+    HATCHES = "hatches"
+    BLOCKS = "blocks"
+    SPACES = "spaces"
+    GRIDS = "grids"
+    VIEWMARKS = "viewmarks"
+
+
+ViewCategoryName = Literal["dimensions", "tags", "texts", "hatches", "blocks", "spaces", "grids", "viewmarks"]
+"""The names of :class:`ViewCategory`, for a plain string."""
+
+
 class ViewMarkBreak(_StrEnum):
     """Why a mark's words are no longer its target's.
 
@@ -9481,6 +9507,7 @@ class ViewsOp(_Union):
     - :class:`SaveViewsOp` (``kind: save``)
     - :class:`RenameViewsOp` (``kind: rename``)
     - :class:`DeleteViewsOp` (``kind: delete``)
+    - :class:`RecipeViewsOp` (``kind: recipe``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -38745,6 +38772,8 @@ class NamedView(_Model):
         height: The world height the area shows, along the screen's y. Unit: length.
         twist: The screen's x axis from east, counter-clockwise; 0 shows the north up. Unit: rad.
         id: Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).
+        recipe: Its architectural recipe (docs/adr/0774 §1): the level, phase, layer state, categories and scale a sheet's map
+            linked to it draws with; none: the map's own.
     """
     name: str
     center: Vec2
@@ -38752,6 +38781,7 @@ class NamedView(_Model):
     height: float
     twist: float
     id: str | Unset = UNSET
+    recipe: ViewRecipe | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -38762,6 +38792,8 @@ class NamedView(_Model):
         out["twist"] = float(self.twist)
         if self.id is not UNSET:
             out["id"] = self.id
+        if self.recipe is not UNSET:
+            out["recipe"] = None if self.recipe is None else self.recipe.to_json()
         return out
 
     @classmethod
@@ -38773,6 +38805,7 @@ class NamedView(_Model):
             height=float(data["height"]),
             twist=float(data["twist"]),
             id=data.get("id", UNSET),
+            recipe=UNSET if "recipe" not in data else None if data["recipe"] is None else ViewRecipe.from_json(data["recipe"]),
         )
 
 
@@ -52272,6 +52305,27 @@ class RastersReprojected(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecipeLevel(_Model):
+    """The level a recipe draws (docs/adr/0716's map level): its id, the level under it faint with `below`."""
+    id: str
+    below: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        if self.below is not UNSET:
+            out["below"] = self.below
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecipeLevel:
+        return cls(
+            id=data["id"],
+            below=data.get("below", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReconcileConflict(_Model):
     """One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.
     Attributes:
@@ -55389,14 +55443,22 @@ class SetFrame(_Model):
         bounds: The corners' box: west, south, east, north (metres); none with no corners. Unit: length.
         corners: The ground its content shows, its four corners clockwise from the content's top left (east, north, metres); empty
             for a map without a fixed view and centre (`unknown`). Unit: length.
+        level: The level it draws (its view's recipe's, else its own; docs/adr/0716, 0774 §3), by id; none: every level.
+        missing: Its linked view is gone (`missing_named_view`): it draws nothing until linked again or detached.
+        recipe: Its view's recipe's version (docs/adr/0774 §1); none without a recipe. Unit: version.
         scale: Its scale (1:N); none for a map that follows something else (an atlas). Unit: scale.
+        view: The named view it is linked to, by its stable id (docs/adr/0599); none: its own camera or a snapshot.
     """
     item: str
     name: str
     marks: list[str]
     bounds: list[float] | None | Unset = UNSET
     corners: list[Vec2] | Unset = UNSET
+    level: str | None | Unset = UNSET
+    missing: bool | Unset = UNSET
+    recipe: int | None | Unset = UNSET
     scale: float | None | Unset = UNSET
+    view: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -55407,8 +55469,16 @@ class SetFrame(_Model):
             out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
         if self.corners is not UNSET:
             out["corners"] = [_vec2_out(e0) for e0 in self.corners]
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.missing is not UNSET:
+            out["missing"] = self.missing
+        if self.recipe is not UNSET:
+            out["recipe"] = self.recipe
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
+        if self.view is not UNSET:
+            out["view"] = self.view
         return out
 
     @classmethod
@@ -55419,7 +55489,11 @@ class SetFrame(_Model):
             marks=list(data["marks"]),
             bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
             corners=[Vec2.from_json(e0) for e0 in data["corners"]] if "corners" in data else UNSET,
+            level=data.get("level", UNSET),
+            missing=data.get("missing", UNSET),
+            recipe=data.get("recipe", UNSET),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            view=data.get("view", UNSET),
         )
 
 
@@ -66215,6 +66289,54 @@ class ViewMarksReferences(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ViewRecipe(_Model):
+    """A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a
+    sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
+    screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
+    Attributes:
+        hidden: The categories left out, in their order.
+        layer_state: A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.
+        level: The level the map draws; none: the map's own.
+        phase: The phases it shows (docs/adr/0346 §2); none: the project's phase view.
+        scale: The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted. Unit: scale.
+        version: 1 for a new recipe, one more at each change; given in an input, it is ignored. Unit: version.
+    """
+    hidden: list[ViewCategory | ViewCategoryName] | Unset = UNSET
+    layer_state: str | None | Unset = UNSET
+    level: RecipeLevel | None | Unset = UNSET
+    phase: PhaseView | PhaseViewName | None | Unset = UNSET
+    scale: int | None | Unset = UNSET
+    version: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.hidden is not UNSET:
+            out["hidden"] = [_enum_out(e0) for e0 in self.hidden]
+        if self.layer_state is not UNSET:
+            out["layerState"] = self.layer_state
+        if self.level is not UNSET:
+            out["level"] = None if self.level is None else self.level.to_json()
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.scale is not UNSET:
+            out["scale"] = self.scale
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewRecipe:
+        return cls(
+            hidden=[_enum_in(ViewCategory, e0) for e0 in data["hidden"]] if "hidden" in data else UNSET,
+            layer_state=data.get("layerState", UNSET),
+            level=UNSET if "level" not in data else None if data["level"] is None else RecipeLevel.from_json(data["level"]),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(PhaseView, data["phase"]),
+            scale=data.get("scale", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ViewTarget(_Model):
     """What a mark points at: a named view (`view`, its id), or a map frame on a sheet (`sheet` and `item`, their ids)."""
     item: str | None | Unset = UNSET
@@ -66245,9 +66367,10 @@ class ViewsEdit(_Model):
     """Input of `cad.views.edit` v1.
 
     Refusals (`CommandError.code`), checked in this order: `not_finite`,
-    `far_point`, `invalid_view_size`, `invalid_view_name`;
+    `far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;
     `invalid_revision`, `revision_conflict` (status `conflict`);
-    `unknown_view`, `view_exists`, `too_many_views`. Warning: `view_replaced`.
+    `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
+    state the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.
     Attributes:
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
@@ -84494,6 +84617,30 @@ class DeleteViewsOp(ViewsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecipeViewsOp(ViewsOp):
+    """Görünüş tarifi (docs/adr/0774 §2): the view's recipe set (its version one more) or, none, taken away; the maps
+    linked to the view draw with it from then on.
+    """
+    TAG_VALUE: ClassVar[str] = "recipe"
+    name: str
+    recipe: ViewRecipe | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "recipe"}
+        out["name"] = self.name
+        if self.recipe is not UNSET:
+            out["recipe"] = None if self.recipe is None else self.recipe.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecipeViewsOp:
+        return cls(
+            name=data["name"],
+            recipe=UNSET if "recipe" not in data else None if data["recipe"] is None else ViewRecipe.from_json(data["recipe"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetWallsOperation(WallsOperation):
     """Değiştir: the fields given, on every wall named.
     Attributes:
@@ -85414,7 +85561,7 @@ _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "or
 _VIEW_MARKS_OPERATION: dict[str, type[ViewMarksOperation]] = {"set": SetViewMarksOperation, "retarget": RetargetViewMarksOperation, "detach": DetachViewMarksOperation}
 
 
-_VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp}
+_VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp, "recipe": RecipeViewsOp}
 
 
 _WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation, "shift": ShiftWallsOperation, "distance": DistanceWallsOperation, "length": LengthWallsOperation}
@@ -87473,6 +87620,8 @@ __all__ = [
     "ReadableShapeWork",
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",
+    "RecipeLevel",
+    "RecipeViewsOp",
     "ReconcileConflict",
     "ReconcileCounts",
     "ReconcileGroup",
@@ -88179,6 +88328,8 @@ __all__ = [
     "VertexPointsDeriveWork",
     "VertexSubPlace",
     "VerticalConstraintRule",
+    "ViewCategory",
+    "ViewCategoryName",
     "ViewLinkPaperViewportSource",
     "ViewMarkBreak",
     "ViewMarkBreakName",
@@ -88194,6 +88345,7 @@ __all__ = [
     "ViewMarksPlan",
     "ViewMarksReferenced",
     "ViewMarksReferences",
+    "ViewRecipe",
     "ViewSnapshotPaperViewportSource",
     "ViewTarget",
     "ViewmarkEntity",

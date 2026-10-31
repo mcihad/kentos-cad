@@ -33,6 +33,62 @@ fn meets(a: &Bounds, b: &[f64; 4]) -> bool {
     a.min_x <= b[2] && b[0] <= a.max_x && a.min_y <= b[3] && b[1] <= a.max_y
 }
 
+/// Whether the map `item` of sheet `sheet` draws the object of persistent id `uid` (docs/adr/0774 §4): on the map's
+/// level or on none (an opening on its wall's, a tag on its object's: Kat görünümü's rule), its category and phase not
+/// left out by its linked view's recipe. The box test is the caller's.
+fn drawn_by<'a>(
+    doc: &'a Document,
+    sheet: &str,
+    item: &str,
+    book: Option<&'a kentos_sheet::model::SheetBook>,
+) -> impl Fn(&String) -> bool + 'a {
+    let map = book
+        .and_then(|b| b.sheets.iter().find(|s| s.id == sheet))
+        .and_then(|s| s.items.iter().find(|i| i.id == item))
+        .and_then(|i| match &i.kind {
+            ItemKind::Map(m) => Some(m.clone()),
+            _ => None,
+        });
+    let views = &doc.settings().named_views;
+    let recipe = map
+        .as_ref()
+        .and_then(|m| kentos_sheet::viewport::linked_recipe(m, views))
+        .cloned();
+    let level = recipe
+        .as_ref()
+        .and_then(|r| r.level.as_ref().map(|l| l.id.clone()))
+        .or_else(|| map.as_ref().and_then(|m| m.level.as_ref().map(|l| l.id.clone())));
+    let known = |id: &str| {
+        doc.settings()
+            .arch
+            .as_ref()
+            .is_some_and(|a| a.levels.iter().any(|l| l.id == id))
+    };
+    let phase = recipe.as_ref().and_then(|r| r.phase);
+    let hidden = recipe.map(|r| r.hidden).unwrap_or_default();
+    move |uid: &String| {
+        let Some(slot) = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
+            return true;
+        };
+        let Some(e) = doc.get(slot) else { return true };
+        let by_uid = |u: &str| {
+            kentos_domain::Uuid::parse_str(u)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+        };
+        // Kat görünümü's rule (docs/adr/0715): an object of another known level is not this map's.
+        let on_level = match (&level, e.level(by_uid)) {
+            (Some(map), Some(own)) => own == map.as_str() || !known(own),
+            _ => true,
+        };
+        let phased = phase.is_none_or(|v| v.look(e.phase(by_uid)) != kentos_commands::PhaseLook::Hidden);
+        on_level
+            && phased
+            && !kentos_commands::ViewCategory::of_kind(e.kind()).is_some_and(|c| hidden.contains(&c))
+    }
+}
+
 /// The set, and the frames `uids`' objects affect.
 pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResult, Stop> {
     let named = match &input.uids {
@@ -92,7 +148,23 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     })
                     .unwrap_or_default();
                 let target = ViewTarget::sheet(&s.id, &item.id);
+                let views = &doc.settings().named_views;
+                let linked = match &m.source {
+                    kentos_sheet::viewport::Source::ViewLink { view } => Some(kentos_commands::view_key(view)),
+                    _ => None,
+                };
+                let current = linked
+                    .as_ref()
+                    .and_then(|k| views.iter().find(|v| kentos_commands::view_key(v) == *k));
+                let recipe = current.and_then(|v| v.recipe.as_ref());
+                let level = recipe
+                    .and_then(|r| r.level.as_ref().map(|l| l.id.clone()))
+                    .or_else(|| m.level.as_ref().map(|l| l.id.clone()));
                 Some(SetFrame {
+                    missing: linked.is_some() && current.is_none(),
+                    view: linked,
+                    level,
+                    recipe: recipe.map(|r| r.version),
                     item: item.id.clone(),
                     name: item.name.clone(),
                     scale: match &m.view {
@@ -162,9 +234,10 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     }
                 };
                 if let Some(b) = &f.bounds {
+                    let draws = drawn_by(doc, s.id.as_str(), &f.item, book.as_ref());
                     let showing: Vec<&String> = boxes
                         .iter()
-                        .filter(|(_, x)| meets(x, b))
+                        .filter(|(u, x)| meets(x, b) && draws(u))
                         .map(|(u, _)| *u)
                         .collect();
                     if !showing.is_empty() {

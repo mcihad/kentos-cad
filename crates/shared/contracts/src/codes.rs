@@ -271,6 +271,8 @@ codes! {
     UCS_REPLACED = "ucs_replaced", Warning, false, "Aynı adlı UCS'in yerine geçerli UCS kaydedildi.";
     /// A view's width or height not above 0 or above 20 000 km (docs/adr/0285 §1).
     INVALID_VIEW_SIZE = "invalid_view_size", Failed, false, "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı.";
+    /// A view recipe empty, with a category twice, a blank level or state, or a scale out of 1:1–1:100 000 (docs/adr/0774 §1).
+    INVALID_RECIPE = "invalid_recipe", Failed, false, "Görünüş tarifi tutmuyor: boş, iki kez gizlenen tür ya da ölçek dışında.";
     /// A view name blank, longer than 64 characters or with a control character (docs/adr/0285 §1).
     INVALID_VIEW_NAME = "invalid_view_name", Failed, false, "Görünüm adı boş, 64 karakterden uzun ya da denetim karakterli.";
     /// A named view the project has not (docs/adr/0285 §1).

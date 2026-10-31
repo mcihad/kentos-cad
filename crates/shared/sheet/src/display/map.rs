@@ -468,6 +468,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
             )
         }
     };
+    let recipe = crate::viewport::linked_recipe(m, &ctx.inputs.named_views);
     pen.prims.push(Prim::Map(MapPrim {
         item: it.id.clone(),
         clip_shape,
@@ -479,9 +480,20 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
             scale: mf.scale,
             rotation: mf.view_rot,
         },
-        layers: m.layers.clone(),
+        // A linked view's recipe draws over the map's own level and layers (docs/adr/0774 §3).
+        layers: recipe
+            .and_then(|r| r.layer_state.as_ref())
+            .map_or_else(|| m.layers.clone(), |name| MapLayers::Theme(crate::kinds::ThemeRef { name: name.clone() })),
         layer_overrides: m.layer_overrides.clone(),
-        level: m.level.clone(),
+        level: match recipe.and_then(|r| r.level.as_ref()) {
+            Some(l) => Some(crate::kinds::MapLevel {
+                id: l.id.clone(),
+                below: l.below,
+            }),
+            None => m.level.clone(),
+        },
+        phase: recipe.and_then(|r| r.phase),
+        hidden: recipe.map(|r| r.hidden.clone()).unwrap_or_default(),
         crs: m.crs.clone(),
         extent: mf.extent(),
         clip_feature,

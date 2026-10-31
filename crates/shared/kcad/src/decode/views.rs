@@ -3,19 +3,21 @@
 //! the contract's rule (`views_problem`), as the writers check them; an
 //! empty list is refused (a writer leaves it out).
 
-use kentos_contracts::{NamedView, views_problem};
+use kentos_contracts::{NamedView, ViewRecipe, views_problem};
 
 use super::{list, map, point, required, text, unknown};
 use crate::cbor::Reader;
 use crate::error::{Code, KcadError};
 
 /// The named views: not empty, then checked whole.
-/// Schema 81 (docs/adr/0345 §2) adds a view's `id`.
-pub(super) fn named_views(r: &mut Reader<'_>, ids: bool) -> Result<Vec<NamedView>, KcadError> {
+/// Schema 81 (docs/adr/0345 §2) adds a view's `id`; schema 141 (docs/adr/0774 §1) its `recipe`, read whole as the
+/// contract's JSON and written as the writer writes it (no field at its default).
+pub(super) fn named_views(r: &mut Reader<'_>, ids: bool, recipes: bool) -> Result<Vec<NamedView>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
         let (mut id, mut name, mut center, mut width, mut height, mut twist) =
             (None, None, None, None, None, None);
+        let mut recipe = None;
         map(r, |r, key| {
             match key {
                 "id" if ids => {
@@ -31,6 +33,27 @@ pub(super) fn named_views(r: &mut Reader<'_>, ids: bool) -> Result<Vec<NamedView
                 "width" => width = Some(r.float()?),
                 "height" => height = Some(r.float()?),
                 "twist" => twist = Some(r.float()?),
+                "recipe" if recipes => {
+                    let at = r.position();
+                    let value = r.opaque()?;
+                    let read: ViewRecipe = serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") || words.contains("unknown variant") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("görünüş tarifi okunamadı: {words}"))
+                    })?;
+                    if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            at,
+                            "görünüş tarifi yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                        ));
+                    }
+                    recipe = Some(read);
+                }
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -43,6 +66,7 @@ pub(super) fn named_views(r: &mut Reader<'_>, ids: bool) -> Result<Vec<NamedView
             width: required(r, width, "width")?,
             height: required(r, height, "height")?,
             twist: required(r, twist, "twist")?,
+            recipe,
         })
     })?;
     if all.is_empty() {

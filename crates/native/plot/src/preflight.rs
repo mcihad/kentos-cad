@@ -389,6 +389,8 @@ mod tests {
             let src = crate::maps::MapSource {
                 map: None,
                 level: map.level.as_ref(),
+                phase: map.phase,
+                hidden: &map.hidden,
                 doc: &doc,
                 store: spatial.store(),
                 library: &library,

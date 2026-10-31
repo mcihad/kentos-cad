@@ -2077,6 +2077,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 141 (docs/adr/0774): a named view's recipe.
+    if doc.settings.named_views.iter().any(|v| v.recipe.is_some()) {
+        return crate::SCHEMA_WITH_VIEW_RECIPES;
+    }
     // Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program field.
     if doc.settings.arch.as_ref().is_some_and(|a| !a.program.is_empty())
         || objs.iter().any(building_program)

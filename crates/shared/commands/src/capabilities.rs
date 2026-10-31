@@ -4113,6 +4113,8 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
             &["unknown_view", "view_exists", "too_many_views"],
+            // A view's recipe (docs/adr/0774 §1).
+            &["invalid_recipe", "level_not_found", "state_not_found"],
         ],
         warnings: &["view_replaced"],
         targets: none,

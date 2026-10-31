@@ -47,6 +47,12 @@ pub struct Look {
 /// too. The sheet's maps and the headless PDF draw with it; the drawing area with [`phasing_of`].
 pub fn plot_phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::phases::Phasing {
     let mut out = phasing_of(doc);
+    hide_unplotted(doc, &mut out);
+    out
+}
+
+/// The inserts of a PDF underlay set not to plot, hidden in `out`.
+fn hide_unplotted(doc: &kentos_domain::Document, out: &mut kentos_native_style::phases::Phasing) {
     let unplotted: std::collections::HashSet<kentos_contracts::BlockId> = doc
         .blocks()
         .iter()
@@ -58,6 +64,35 @@ pub fn plot_phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::ph
             if let Entity::Insert(i) = e
                 && unplotted.contains(&i.block)
             {
+                out.hide(e.base().id);
+            }
+        }
+    }
+}
+
+/// [`plot_phasing_of`] for a map drawn by a view's recipe (docs/adr/0774 §3): its own phase view instead of the
+/// project's, and the categories it leaves out hidden; the model untouched.
+pub fn map_phasing_of(
+    doc: &kentos_domain::Document,
+    phase: Option<kentos_contracts::PhaseView>,
+    hidden: &[kentos_contracts::ViewCategory],
+) -> kentos_native_style::phases::Phasing {
+    let mut out = match phase {
+        None => plot_phasing_of(doc),
+        Some(view) => {
+            let mut own = kentos_native_style::phases::Phasing::of(doc.entities(), view, |u| {
+                kentos_domain::Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s))
+            });
+            hide_unplotted(doc, &mut own);
+            own
+        }
+    };
+    if !hidden.is_empty() {
+        for e in doc.entities() {
+            if kentos_contracts::ViewCategory::of_kind(e.kind()).is_some_and(|c| hidden.contains(&c)) {
                 out.hide(e.base().id);
             }
         }

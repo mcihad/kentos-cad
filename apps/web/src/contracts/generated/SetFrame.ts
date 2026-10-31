@@ -25,4 +25,20 @@ bounds?: [number, number, number, number],
 /**
  * The view marks that point at it, by persistent id, in the drawing's order.
  */
-marks: Array<string>, };
+marks: Array<string>, 
+/**
+ * The named view it is linked to, by its stable id (docs/adr/0599); none: its own camera or a snapshot.
+ */
+view?: string, 
+/**
+ * Its linked view is gone (`missing_named_view`): it draws nothing until linked again or detached.
+ */
+missing?: boolean, 
+/**
+ * The level it draws (its view's recipe's, else its own; docs/adr/0716, 0774 §3), by id; none: every level.
+ */
+level?: string, 
+/**
+ * Its view's recipe's version (docs/adr/0774 §1); none without a recipe.
+ */
+recipe?: number, };

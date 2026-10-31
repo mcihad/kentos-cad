@@ -498,6 +498,7 @@ mod view_commands;
 mod view_scenes;
 mod viewport;
 mod views;
+mod views_recipe;
 mod forms;
 #[cfg(test)]
 mod form_scenes;
@@ -540,6 +541,8 @@ mod slab_scenes;
 mod building_parts_scenes;
 #[cfg(test)]
 mod program_scenes;
+#[cfg(test)]
+mod view_recipe_scenes;
 #[cfg(test)]
 mod space_scenes;
 #[cfg(test)]

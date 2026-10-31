@@ -223,6 +223,7 @@ impl SheetMaps {
     /// The shown layers through the style engine at `scale` on the paper's palette, from the
     /// ones kept when nothing they depend on changed. Construction lines are cut to the
     /// drawing's box and a margin (the maps cut them again to their frames).
+    #[allow(clippy::too_many_arguments)]
     fn styled_at(
         &self,
         doc: &Document,
@@ -231,12 +232,23 @@ impl SheetMaps {
         view: &kentos_sheet::display::MapViewPrim,
         own: (&MapLayers, &[kentos_sheet::kinds::LayerOverride]),
         level: Option<&kentos_sheet::kinds::MapLevel>,
+        recipe: (Option<kentos_commands::PhaseView>, &[kentos_commands::ViewCategory]),
     ) -> Rc<StyledAt> {
         let scale = view.scale;
         let origin = view
             .center
             .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
         let own_key = match (own, level) {
+            _ if recipe.0.is_some() || !recipe.1.is_empty() => {
+                use std::hash::{Hash, Hasher};
+                let mut h = std::collections::hash_map::DefaultHasher::new();
+                serde_json::to_string(&own.0).unwrap_or_default().hash(&mut h);
+                serde_json::to_string(own.1).unwrap_or_default().hash(&mut h);
+                level.map(|l| (l.id.as_str(), l.below)).hash(&mut h);
+                // A linked view's recipe (docs/adr/0774 §3).
+                serde_json::to_string(&recipe).unwrap_or_default().hash(&mut h);
+                h.finish() | 1
+            }
             ((MapLayers::Theme(_), _), _) | ((_, [_, ..]), _) | (_, Some(_)) => {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
@@ -282,8 +294,9 @@ impl SheetMaps {
             view_colors: Default::default(),
             reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
             phasing: std::sync::Arc::new({
-                // A level's plan (docs/adr/0716): the level under it faint.
-                let mut p = kentos_plot::layers::plot_phasing_of(&doc.model);
+                // A level's plan (docs/adr/0716): the level under it faint; a linked view's phase and categories
+                // (docs/adr/0774 §3).
+                let mut p = kentos_plot::layers::map_phasing_of(&doc.model, recipe.0, recipe.1);
                 for &id in &faint {
                     p.fade(id);
                 }
@@ -551,6 +564,8 @@ impl MapPainter for SheetPainter<'_> {
             let src = kentos_plot::maps::MapSource {
                 map: None,
                 level: primitive.level.as_ref(),
+                phase: primitive.phase,
+                hidden: &primitive.hidden,
                 doc,
                 store: spatial.store(),
                 library: self.library,
@@ -646,11 +661,17 @@ impl MapPainter for SheetPainter<'_> {
             r.layers,
             r.overrides,
             level,
+            (
+                r.primitive.and_then(|p| p.phase),
+                r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
+            ),
             r.extent,
         );
         let src = kentos_plot::maps::MapSource {
             map: None,
             level,
+            phase: r.primitive.and_then(|p| p.phase),
+            hidden: r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
             doc: &drawing.model,
             store: spatial.store(),
             library: self.library,
@@ -757,6 +778,10 @@ impl SheetPainter<'_> {
             r.view,
             (r.layers, r.overrides),
             r.primitive.and_then(|p| p.level.as_ref()),
+            (
+                r.primitive.and_then(|p| p.phase),
+                r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
+            ),
         );
         let s = scale;
         let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
@@ -868,6 +893,10 @@ impl SheetPainter<'_> {
             r.view,
             (r.layers, r.overrides),
             r.primitive.and_then(|p| p.level.as_ref()),
+            (
+                r.primitive.and_then(|p| p.phase),
+                r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
+            ),
         );
         let s = scale;
         let pad = kentos_sheet::projection::Scale::for_rendering(s).model_metres_from_mm(20.);
@@ -981,9 +1010,19 @@ impl SheetPainter<'_> {
             .and_then(|p| p.level.as_ref())
             .map(|l| kentos_plot::layers::level_looks(doc, l))
             .unwrap_or_default();
+        // A linked view's recipe (docs/adr/0774 §3): the words of what its phase or categories leave out.
+        let recipe_out: std::collections::HashSet<u32> = match r.primitive {
+            Some(p) if p.phase.is_some() || !p.hidden.is_empty() => {
+                kentos_plot::layers::map_phasing_of(doc, p.phase, &p.hidden).hidden().collect()
+            }
+            _ => Default::default(),
+        };
         let spots: Vec<_> = spots
             .into_iter()
-            .filter(|s| !left_out.contains(&kentos_plot::labels::spot_slot(s).0))
+            .filter(|s| {
+                let id = kentos_plot::labels::spot_slot(s).0;
+                !left_out.contains(&id) && !recipe_out.contains(&id)
+            })
             .collect();
         if spots.is_empty() {
             return;

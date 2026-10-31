@@ -330,6 +330,8 @@ pub(super) struct Features {
     pub(super) opening_types: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
+    /// Schema 141 (docs/adr/0774): a named view's recipe.
+    pub(super) view_recipes: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -535,6 +537,7 @@ impl Features {
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
+            view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,

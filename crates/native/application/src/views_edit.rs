@@ -5,7 +5,7 @@
 
 use kentos_commands::{
     CommandResult, CommandWarning, MOST_NAMED_VIEWS, MOST_VIEW_SIZE, NamedView, ProjectSettings,
-    VIEW_REACH, ViewsEdit, ViewsEdited, ViewsOp, normal_angle, view_name_ok,
+    VIEW_REACH, ViewRecipe, ViewsEdit, ViewsEdited, ViewsOp, normal_angle, view_name_ok,
 };
 use kentos_domain::Document;
 
@@ -58,8 +58,20 @@ fn check_input(input: &ViewsEdit) -> Result<(), Stop> {
             }
         }
     }
+    if let ViewsOp::Recipe {
+        recipe: Some(r), ..
+    } = &input.edit
+    {
+        // The version is the command's to write: the input's is ignored.
+        let r = ViewRecipe { version: 1, ..r.clone() };
+        if let Some(why) = kentos_commands::recipe_problem(&r) {
+            return Err(fail(codes::INVALID_RECIPE, format!("{why} Tarifi düzeltip yeniden verin."), "edit.recipe"));
+        }
+    }
     let names: Vec<(&str, &str)> = match &input.edit {
-        ViewsOp::Save { name, .. } | ViewsOp::Delete { name } => vec![("edit.name", name)],
+        ViewsOp::Save { name, .. } | ViewsOp::Delete { name } | ViewsOp::Recipe { name, .. } => {
+            vec![("edit.name", name)]
+        }
         ViewsOp::Rename { name, to } => vec![("edit.name", name), ("edit.to", to)],
     };
     for (path, name) in names {
@@ -121,6 +133,12 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             } else {
                 id
             };
+            // Saved over one, the view keeps its recipe (docs/adr/0774 §2): the camera changes, not what it draws.
+            let recipe = s
+                .named_views
+                .iter()
+                .find(|v| v.name == name)
+                .and_then(|v| v.recipe.clone());
             let entry = NamedView {
                 id,
                 name: name.to_owned(),
@@ -128,6 +146,7 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
                 width: *width,
                 height: *height,
                 twist: normal_angle(twist.unwrap_or(0.0)),
+                recipe,
             };
             match s.named_views.iter_mut().find(|v| v.name == name) {
                 Some(v) => {
@@ -181,8 +200,60 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             }
             None
         }
+        ViewsOp::Recipe { name, recipe } => {
+            let name = name.trim();
+            let Some(at) = s.named_views.iter().position(|v| v.name == name) else {
+                return Err(unknown(name));
+            };
+            if let Some(r) = recipe {
+                recipe_known(&s, r)?;
+            }
+            let was = s.named_views[at].recipe.as_ref().map_or(0, |r| r.version);
+            let next = recipe.clone().map(|r| ViewRecipe { version: was + 1, ..r });
+            // The same recipe again is no change: its version stays.
+            let same = match (&s.named_views[at].recipe, &next) {
+                (Some(a), Some(b)) => ViewRecipe { version: 0, ..a.clone() } == ViewRecipe { version: 0, ..b.clone() },
+                (None, None) => true,
+                _ => false,
+            };
+            if !same {
+                // The id the name gives stays the view's: the maps linked to it keep their link.
+                if s.named_views[at].id.is_empty() {
+                    s.named_views[at].id = kentos_commands::view_key(&s.named_views[at]);
+                }
+                s.named_views[at].recipe = next;
+            }
+            Some(s.named_views[at].clone())
+        }
     };
     Ok((s, view, warnings))
+}
+
+/// A recipe's level and layer state are the project's (docs/adr/0774 §2).
+fn recipe_known(s: &ProjectSettings, r: &ViewRecipe) -> Result<(), Stop> {
+    if let Some(l) = &r.level {
+        let levels = s.arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+        if !levels.iter().any(|k| k.id == l.id) {
+            return Err(fail(
+                codes::LEVEL_NOT_FOUND,
+                format!(
+                    "Projede “{}” kimlikte kat yok. Proje ayarları › Mimari'deki katlardan birinin kimliğini verin.",
+                    l.id
+                ),
+                "edit.recipe.level.id",
+            ));
+        }
+    }
+    if let Some(name) = &r.layer_state
+        && !s.layer_states.iter().any(|st| st.name.trim() == name.trim())
+    {
+        return Err(fail(
+            codes::STATE_NOT_FOUND,
+            format!("Projede “{name}” adlı katman durumu yok. Katmanlar › Katman durumları'ndan birinin adını verin."),
+            "edit.recipe.layerState",
+        ));
+    }
+    Ok(())
 }
 
 fn check(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {

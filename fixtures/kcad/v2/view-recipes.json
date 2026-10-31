@@ -1,0 +1,224 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Görünüş tarifleri",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "namedViews": [
+      {
+        "id": "v-uygulama",
+        "name": "Zemin uygulama",
+        "center": {
+          "x": 4.0,
+          "y": 1.5
+        },
+        "width": 12.0,
+        "height": 6.0,
+        "twist": 0.0,
+        "recipe": {
+          "version": 1,
+          "level": {
+            "id": "zemin"
+          },
+          "scale": 50
+        }
+      },
+      {
+        "id": "v-mobilya",
+        "name": "Zemin mobilya",
+        "center": {
+          "x": 4.0,
+          "y": 1.5
+        },
+        "width": 12.0,
+        "height": 6.0,
+        "twist": 0.0,
+        "recipe": {
+          "version": 3,
+          "level": {
+            "id": "zemin",
+            "below": true
+          },
+          "phase": "proposed",
+          "layerState": "Mobilya",
+          "hidden": [
+            "dimensions",
+            "tags",
+            "grids"
+          ],
+          "scale": 100
+        }
+      },
+      {
+        "name": "Detay 1",
+        "center": {
+          "x": 6.0,
+          "y": 1.0
+        },
+        "width": 3.0,
+        "height": 2.0,
+        "twist": 0.0
+      }
+    ]
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "isaret",
+      "name": "İşaret",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "isaret",
+  "uids": [
+    "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4f01",
+    "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4f02",
+    "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4f03",
+    "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4f04"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "viewmark",
+      "id": 1,
+      "layerId": "isaret",
+      "attrs": {},
+      "form": "section",
+      "points": [
+        {
+          "x": -1.0,
+          "y": 1.5
+        },
+        {
+          "x": 4.0,
+          "y": 1.5
+        },
+        {
+          "x": 4.0,
+          "y": 3.0
+        },
+        {
+          "x": 9.0,
+          "y": 3.0
+        }
+      ],
+      "mark": "A",
+      "target": {
+        "view": "v-kesit"
+      },
+      "words": {
+        "top": "A",
+        "bottom": "Kesit A-A"
+      }
+    },
+    {
+      "kind": "viewmark",
+      "id": 2,
+      "layerId": "isaret",
+      "attrs": {},
+      "form": "elevation",
+      "points": [
+        {
+          "x": 2.0,
+          "y": -2.0
+        }
+      ],
+      "angle": 0.0,
+      "mark": "1",
+      "words": {
+        "top": "1",
+        "bottom": "—"
+      }
+    },
+    {
+      "kind": "viewmark",
+      "id": 3,
+      "layerId": "isaret",
+      "attrs": {},
+      "form": "detail",
+      "points": [
+        {
+          "x": 6.0,
+          "y": 1.0
+        }
+      ],
+      "radius": 0.8,
+      "at": {
+        "x": 8.0,
+        "y": 3.0
+      },
+      "size": 3.5,
+      "target": {
+        "sheet": "pafta-1",
+        "item": "harita-2"
+      },
+      "words": {
+        "top": "2",
+        "bottom": "A-101"
+      },
+      "broken": "targetGone"
+    },
+    {
+      "kind": "viewmark",
+      "id": 4,
+      "layerId": "isaret",
+      "attrs": {},
+      "color": "#ff0000",
+      "lineWeight": 0.35,
+      "form": "section",
+      "points": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 1.0,
+          "y": 0.0
+        }
+      ],
+      "target": {
+        "view": "v-74fc4b63"
+      },
+      "words": {
+        "top": "",
+        "bottom": "Detay 1"
+      },
+      "flip": true
+    }
+  ]
+}

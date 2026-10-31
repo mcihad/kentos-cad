@@ -115,6 +115,7 @@ fn notice(app: &mut App) {
             width: 14.0,
             height: 10.0,
             twist: 0.0,
+            recipe: None,
         });
         doc.model.set_settings(settings);
     }

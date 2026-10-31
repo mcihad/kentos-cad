@@ -1229,6 +1229,34 @@ def named_ucs(list_):
 VIEW_SIZE = 2.0e7
 
 
+# A view recipe (schema 141, docs/adr/0774 §1): a version of at least 1, then at least one of a level (an id; `below`
+# written only true), a phase view, a layer state's name (1 to 64 characters), the categories left out (each once, in
+# their order) and a scale's denominator from 1 to 100 000; no field at its default.
+RECIPE_CATEGORIES = ("dimensions", "tags", "texts", "hatches", "blocks", "spaces", "grids", "viewmarks")
+RECIPE_PHASES = ("all", "existing", "demolition", "proposed")
+
+
+def view_recipe(r):
+    assert type(r["version"]) is int and r["version"] >= 1, r
+    assert set(r) - {"version"}, "boş görünüş tarifi yazılmaz"
+    if "level" in r:
+        lv = r["level"]
+        assert lv["id"].strip() and len(lv["id"]) <= 64 and lv.get("below", True) is True, lv
+    if "phase" in r:
+        assert r["phase"] in RECIPE_PHASES, r
+    if "layerState" in r:
+        assert r["layerState"].strip() and len(r["layerState"]) <= 64, r
+    if "hidden" in r:
+        assert r["hidden"] and len(set(r["hidden"])) == len(r["hidden"]), r
+        assert all(c in RECIPE_CATEGORIES for c in r["hidden"]), r
+    if "scale" in r:
+        assert type(r["scale"]) is int and 1 <= r["scale"] <= 100_000, r
+    level = lambda lv: cmap(fields(lv, {"id": (text, True), "below": (lambda b: b"\xf5", False)}, "recipe.level"))  # noqa: E731
+    return cmap(fields(r, {"version": (uint, True), "level": (level, False), "phase": (text, False),
+                           "layerState": (text, False), "hidden": (lambda xs: array([text(x) for x in xs]), False),
+                           "scale": (uint, False)}, "recipe"))
+
+
 def named_views(list_):
     names = [v["name"] for v in list_]
     assert len(names) <= 100 and len(set(names)) == len(names), names
@@ -1243,7 +1271,9 @@ def named_views(list_):
     def one(v):
         # Schema 81 (docs/adr/0345 §2): a view's id when it has its own, never empty.
         assert v.get("id", "?"), "boş görünüm kimliği yazılmaz"
-        return cmap(fields(v, {"id": (text, False), "name": (text, True), "center": (point, True), "width": (f64, True), "height": (f64, True), "twist": (f64, True)}, "namedViews"))
+        return cmap(fields(v, {"id": (text, False), "name": (text, True), "center": (point, True), "width": (f64, True), "height": (f64, True), "twist": (f64, True),
+                               # Schema 141 (docs/adr/0774 §1): the view's recipe.
+                               "recipe": (view_recipe, False)}, "namedViews"))
 
     return nonempty(one)(list_)
 
@@ -2331,6 +2361,9 @@ def document(d):
             or any(programmed(e) for b in d.get("blocks", []) for e in b.get("entities", []))):
         # The building program, a space's group, a schedule's program field (docs/adr/0773).
         schema = max(schema, 140)
+    if any("recipe" in v for v in d["settings"].get("namedViews", [])):
+        # A named view's recipe (docs/adr/0774).
+        schema = max(schema, 141)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3044,7 +3077,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-141.kcad"] = container(root(cmap(parts), version=uint(141)))
+    files["schema-version-142.kcad"] = container(root(cmap(parts), version=uint(142)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5411,6 +5444,35 @@ def build():
     program_bad("wing-elsewhere", lambda d: d["settings"]["arch"]["program"]["units"][0].update(wing="yok"))
     program_bad("empty", lambda d: d["settings"]["arch"].update(program={}))
     program_bad("outdoor-false", lambda d: d["settings"]["arch"]["program"]["briefs"][1].update(outdoor=False))
+    # Schema 141 (docs/adr/0774): named views with recipes (a level, a level with the one below, a phase, a layer
+    # state, categories left out, a scale) beside one without; schema 140 refuses them, and an empty recipe, a version
+    # 0, a category twice, an unknown category, a scale above 1:100 000, `below` written false are refused too.
+    vr_doc = load("view-recipes.json")
+    vr = document(vr_doc)
+    assert vr.count(b"\x67version\x18\x8d") == 1, "the view recipes are schema 141"
+    out["view-recipes.kcad"] = container(vr)
+    out["broken/view-recipes-in-schema-140.kcad"] = container(vr.replace(b"\x67version\x18\x8d", b"\x67version\x18\x8c"))
+
+    def recipe_bad(name, change):
+        d = copy.deepcopy(vr_doc)
+        change(d["settings"]["namedViews"][1]["recipe"])
+        body = d["settings"]["namedViews"][1]["recipe"]
+        enc = cmap({k: (uint(v) if type(v) is int else text(v) if isinstance(v, str)
+                        else array([text(x) for x in v]) if isinstance(v, list)
+                        else cmap({kk: (text(vv) if isinstance(vv, str) else (b"\xf5" if vv else b"\xf4")) for kk, vv in v.items()}))
+                    for k, v in body.items()})
+        d["settings"]["namedViews"][1]["recipe"] = {"version": 7, "scale": 77}
+        payload = document(d)
+        good = cmap({"version": uint(7), "scale": uint(77)})
+        assert payload.count(good) == 1
+        out["broken/view-recipe-" + name + ".kcad"] = container(payload.replace(good, enc))
+    recipe_bad("empty", lambda r: [r.pop(k) for k in list(r) if k != "version"])
+    recipe_bad("version-zero", lambda r: r.update(version=0))
+    recipe_bad("category-twice", lambda r: r.update(hidden=["tags", "tags"]))
+    recipe_bad("unknown-category", lambda r: r.update(hidden=["furniture"]))
+    recipe_bad("scale-too-large", lambda r: r.update(scale=100_001))
+    recipe_bad("below-false", lambda r: r.update(level={"id": "zemin", "below": False}))
+    recipe_bad("unknown-field", lambda r: r.update(note="x"))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

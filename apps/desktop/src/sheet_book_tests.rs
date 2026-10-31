@@ -759,6 +759,7 @@ fn sheet09_viewport_screens() {
         width: 5.5,
         height: 3.3,
         twist: std::f64::consts::PI / 12.,
+        recipe: None,
     };
     snapshot.settings.named_views = vec![named.clone()];
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
@@ -1018,6 +1019,7 @@ fn sheet11_exact_scale_screens() {
         width: 5.5,
         height: 3.3,
         twist: std::f64::consts::PI / 12.,
+        recipe: None,
     };
     snapshot.settings.named_views = vec![named.clone()];
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
@@ -1523,6 +1525,7 @@ fn sheet14_named_view_screens() {
         width: 14.,
         height: 6.,
         twist: 0.,
+        recipe: None,
     };
     let current = kentos_commands::NamedView {
         name: "Plan güncel".into(),
@@ -1944,7 +1947,7 @@ fn an_active_viewport_index_cannot_hide_source_objects_in_another_map_or_export(
 #[test]
 fn a_lost_active_source_returns_to_paper_instead_of_using_an_unscoped_model_camera() {
     let mut app=identity_scope_app(12,"light",13);let camera=app.viewport.camera;
-    let view=kentos_commands::NamedView{id:"lost-view".into(),name:"Plan".into(),center:kentos_commands::Vec2{x:0.,y:0.},width:19.5,height:11.5,twist:0.};
+    let view=kentos_commands::NamedView{id:"lost-view".into(),name:"Plan".into(),center:kentos_commands::Vec2{x:0.,y:0.},width:19.5,height:11.5,twist:0.,recipe:None};
     let mut ctx=app.sheets.context().clone();ctx.named_views=vec![view.clone()];app.sheets.set_context(ctx.clone());let mut book=app.sheets.book().clone();if let kentos_sheet::ItemKind::Map(m)=&mut book.sheets[0].items[0].kind {m.source=kentos_sheet::viewport::Source::ViewLink{view};}
     app.sheets.load(book);app.sheets.update(Sheet::Tab(1));app.sheets.update(Sheet::EnterModel("viewport".into()));app.sync_sheet_model_camera();assert!(app.spatial.has_sheet_view());
     ctx.named_views.clear();app.sheets.set_context(ctx);app.sync_sheet_model_camera();assert!(app.sheets.model_scope().is_none());assert!(!app.spatial.has_sheet_view());assert_eq!(app.viewport.camera,camera);

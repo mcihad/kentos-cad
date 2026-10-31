@@ -40285,7 +40285,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.views.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`,\n`far_point`, `invalid_view_size`, `invalid_view_name`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_view`, `view_exists`, `too_many_views`. Warning: `view_replaced`.",
+        "description": "Input of `cad.views.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`,\n`far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer\nstate the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.",
         "properties": {
           "edit": {
             "$ref": "#/$defs/ViewsOp"
@@ -40395,7 +40395,10 @@
           "revision_conflict",
           "unknown_view",
           "view_exists",
-          "too_many_views"
+          "too_many_views",
+          "invalid_recipe",
+          "level_not_found",
+          "state_not_found"
         ],
         "warnings": [
           "view_replaced"
@@ -64947,6 +64950,12 @@
       "meaning": "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı."
     },
     {
+      "code": "invalid_recipe",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Görünüş tarifi tutmuyor: boş, iki kez gizlenen tür ya da ölçek dışında."
+    },
+    {
       "code": "invalid_view_name",
       "kind": "failed",
       "retryable": false,
@@ -71823,7 +71832,7 @@
       "oneOf": [
         {
           "const": "shows",
-          "description": "An object's box meets the frame's ground box.",
+          "description": "An object's box meets the frame's ground box, and the frame draws it: on its level (or on none), its category\nand phase not left out by its view's recipe (docs/adr/0774 §4).",
           "type": "string"
         },
         {
@@ -102047,6 +102056,17 @@
           "description": "Trimmed, 1–64 characters, no control characters; unique.",
           "type": "string"
         },
+        "recipe": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ViewRecipe"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its architectural recipe (docs/adr/0774 §1): the level, phase, layer state, categories and scale a sheet's map\nlinked to it draws with; none: the map's own."
+        },
         "twist": {
           "description": "The screen's x axis from east, counter-clockwise; 0 shows the north up.",
           "format": "double",
@@ -120304,6 +120324,22 @@
       ],
       "type": "object"
     },
+    "RecipeLevel": {
+      "additionalProperties": false,
+      "description": "The level a recipe draws (docs/adr/0716's map level): its id, the level under it faint with `below`.",
+      "properties": {
+        "below": {
+          "type": "boolean"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
     "ReconcileConflict": {
       "description": "One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.",
       "properties": {
@@ -123336,6 +123372,13 @@
           "description": "The item's id.",
           "type": "string"
         },
+        "level": {
+          "description": "The level it draws (its view's recipe's, else its own; docs/adr/0716, 0774 §3), by id; none: every level.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "marks": {
           "description": "The view marks that point at it, by persistent id, in the drawing's order.",
           "items": {
@@ -123343,8 +123386,22 @@
           },
           "type": "array"
         },
+        "missing": {
+          "description": "Its linked view is gone (`missing_named_view`): it draws nothing until linked again or detached.",
+          "type": "boolean"
+        },
         "name": {
           "type": "string"
+        },
+        "recipe": {
+          "description": "Its view's recipe's version (docs/adr/0774 §1); none without a recipe.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "version"
         },
         "scale": {
           "description": "Its scale (1:N); none for a map that follows something else (an atlas).",
@@ -123354,6 +123411,13 @@
             "null"
           ],
           "x-unit": "scale"
+        },
+        "view": {
+          "description": "The named view it is linked to, by its stable id (docs/adr/0599); none: its own camera or a snapshot.",
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -134833,6 +134897,51 @@
         }
       ]
     },
+    "ViewCategory": {
+      "description": "What kind of objects a view leaves out (docs/adr/0774 §1): its own category hide, the model untouched.",
+      "oneOf": [
+        {
+          "const": "dimensions",
+          "description": "Dimensions and dimension sets' members.",
+          "type": "string"
+        },
+        {
+          "const": "tags",
+          "description": "Tags.",
+          "type": "string"
+        },
+        {
+          "const": "texts",
+          "description": "Texts, paragraphs and leaders.",
+          "type": "string"
+        },
+        {
+          "const": "hatches",
+          "description": "Hatches.",
+          "type": "string"
+        },
+        {
+          "const": "blocks",
+          "description": "Block inserts: furniture, fixtures, symbols.",
+          "type": "string"
+        },
+        {
+          "const": "spaces",
+          "description": "Spaces (their outline and label).",
+          "type": "string"
+        },
+        {
+          "const": "grids",
+          "description": "Grids and their bubbles.",
+          "type": "string"
+        },
+        {
+          "const": "viewmarks",
+          "description": "View marks (section, elevation, detail).",
+          "type": "string"
+        }
+      ]
+    },
     "ViewMarkBreak": {
       "description": "Why a mark's words are no longer its target's.",
       "oneOf": [
@@ -135187,6 +135296,66 @@
         }
       ]
     },
+    "ViewRecipe": {
+      "additionalProperties": false,
+      "description": "A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a\nsheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the\nscreen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.",
+      "properties": {
+        "hidden": {
+          "description": "The categories left out, in their order.",
+          "items": {
+            "$ref": "#/$defs/ViewCategory"
+          },
+          "type": "array"
+        },
+        "layerState": {
+          "description": "A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "level": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RecipeLevel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The level the map draws; none: the map's own."
+        },
+        "phase": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhaseView"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The phases it shows (docs/adr/0346 §2); none: the project's phase view."
+        },
+        "scale": {
+          "description": "The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "scale"
+        },
+        "version": {
+          "description": "1 for a new recipe, one more at each change; given in an input, it is ignored.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "version"
+        }
+      },
+      "type": "object"
+    },
     "ViewTarget": {
       "additionalProperties": false,
       "description": "What a mark points at: a named view (`view`, its id), or a map frame on a sheet (`sheet` and `item`, their ids).",
@@ -135288,6 +135457,33 @@
             },
             "name": {
               "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Görünüş tarifi (docs/adr/0774 §2): the view's recipe set (its version one more) or, none, taken away; the maps\nlinked to the view draw with it from then on.",
+          "properties": {
+            "kind": {
+              "const": "recipe",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "recipe": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ViewRecipe"
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": [

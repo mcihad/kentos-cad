@@ -27,7 +27,7 @@ use crate::wall_scenes::opened;
 /// Where the upper floor is drawn: beside the ground floor.
 const UP: f64 = 16.0;
 
-fn command(app: &mut App, name: &str, input: Value) -> Value {
+pub(crate) fn command(app: &mut App, name: &str, input: Value) -> Value {
     let doc = app.document.as_mut().expect("a drawing");
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -54,7 +54,7 @@ fn slot(app: &App, uid: &str) -> Slot {
 }
 
 /// The plan's ids: its walls (by name), its spaces (by number).
-struct Plan {
+pub(crate) struct Plan {
     walls: Vec<String>,
     spaces: Vec<(String, String)>,
 }
@@ -176,7 +176,7 @@ fn fit(app: &mut App, x0: f64, y0: f64, x1: f64, y1: f64) {
     hover(app, [x1 + 5.0, y0 - 5.0]);
 }
 
-fn house(app: &mut App) -> Plan {
+pub(crate) fn house(app: &mut App) -> Plan {
     opened(app, Objects::new(), 50.0);
     build(app)
 }

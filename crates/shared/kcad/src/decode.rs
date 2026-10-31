@@ -1192,7 +1192,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 xref_paths = paths;
             }
-            "namedViews" if has.views => named_views = views::named_views(r, has.viewmarks)?,
+            "namedViews" if has.views => named_views = views::named_views(r, has.viewmarks, has.view_recipes)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
             "wallStyles" if has.walls => {

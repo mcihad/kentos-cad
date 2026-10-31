@@ -1206,6 +1206,7 @@ impl Viewport {
             width,
             height,
             twist: self.camera.twist,
+            recipe: None,
         }
     }
 

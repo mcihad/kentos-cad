@@ -17,7 +17,7 @@ impl<'d> Encoder<'d> {
         self.open(list.len(), false)?;
         for (i, v) in list.iter().enumerate() {
             self.at(Seg::Index(i), |e| {
-                e.open(5 + usize::from(!v.id.is_empty()), true)?;
+                e.open(5 + usize::from(!v.id.is_empty()) + usize::from(v.recipe.is_some()), true)?;
                 // Schema 81 (docs/adr/0345 §2): a view's own id, first as RFC 8949 sorts the keys.
                 if !v.id.is_empty() {
                     e.key("id");
@@ -33,6 +33,14 @@ impl<'d> Encoder<'d> {
                 e.at(Seg::Name("center"), |e| e.point(&v.center))?;
                 e.key("height");
                 e.at(Seg::Name("height"), |e| e.float(v.height))?;
+                // Schema 141 (docs/adr/0774 §1): the view's recipe, the contract's JSON; "recipe" sorts after "height".
+                if let Some(recipe) = &v.recipe {
+                    e.key("recipe");
+                    e.at(Seg::Name("recipe"), |e| {
+                        let value = serde_json::to_value(recipe).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                        e.plain(&value)
+                    })?;
+                }
                 e.close();
                 Ok(())
             })?;

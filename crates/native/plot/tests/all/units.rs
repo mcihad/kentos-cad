@@ -73,6 +73,8 @@ fn map_fills(doc: &Document) -> Vec<String> {
     let src = MapSource {
         map: None,
         level: None,
+        phase: None,
+        hidden: &[],
         doc,
         store: spatial.store(),
         library: &library,

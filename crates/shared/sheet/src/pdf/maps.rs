@@ -350,6 +350,8 @@ mod tests {
         MapPrim {
             clip_shape: Default::default(),
             layer_overrides: Vec::new(),
+            phase: None,
+            hidden: Vec::new(),
             item: "m".into(),
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),
             rotation,
