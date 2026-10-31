@@ -203,6 +203,8 @@ pub fn read(
         program: Default::default(),
         // So are the room modules (docs/adr/0775).
         modules: choices.map_or_else(Vec::new, |a| a.modules.clone()),
+        // So are the building materials (docs/adr/0785).
+        materials: choices.map_or_else(Vec::new, |a| a.materials.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

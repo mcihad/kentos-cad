@@ -2517,6 +2517,212 @@
             "y": 4700.0
           }
         ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 3"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 90,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4800.0
+          },
+          {
+            "x": 6.0,
+            "y": 4800.0
+          }
+        ],
+        "width": 0.3,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "thickness": 0.05,
+            "priority": 4,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 2"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 3"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 4"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 91,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4900.0
+          },
+          {
+            "x": 6.0,
+            "y": 4900.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.05,
+            "priority": 4,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "name": "Katman 3"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 92,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5000.0
+          },
+          {
+            "x": 6.0,
+            "y": 5000.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 3"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 93,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5100.0
+          },
+          {
+            "x": 8.0,
+            "y": 5100.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "components": [
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 1"
+          },
+          {
+            "priority": 1,
+            "detail": "standard",
+            "name": "Katman 2"
+          },
+          {
+            "thickness": 0.02,
+            "priority": 5,
+            "detail": "standard",
+            "wrap": true,
+            "name": "Katman 3"
+          }
+        ],
+        "caps": "open"
+      },
+      {
+        "kind": "wall",
+        "id": 94,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5200.0
+          },
+          {
+            "x": 6.0,
+            "y": 5200.0
+          }
+        ],
         "width": 0.2,
         "justify": "center",
         "components": [
@@ -2541,17 +2747,17 @@
       },
       {
         "kind": "wall",
-        "id": 90,
+        "id": 95,
         "layerId": "duvar",
         "attrs": {},
         "pts": [
           {
             "x": 3.0,
-            "y": 4704.0
+            "y": 5204.0
           },
           {
             "x": 3.0,
-            "y": 4700.0
+            "y": 5200.0
           }
         ],
         "width": 0.15,
@@ -2564,7 +2770,7 @@
       },
       {
         "kind": "line",
-        "id": 91,
+        "id": 96,
         "layerId": "cizim",
         "attrs": {},
         "a": {
@@ -2714,7 +2920,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2839,7 +3050,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -2984,7 +3200,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3130,7 +3351,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3276,7 +3502,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3422,7 +3653,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3568,7 +3804,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3716,7 +3957,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -3864,7 +4110,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4012,7 +4263,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4160,7 +4416,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4306,7 +4567,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4472,7 +4738,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4642,7 +4913,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4811,7 +5087,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -4959,7 +5240,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5107,7 +5393,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5255,7 +5546,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5403,7 +5699,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5551,7 +5852,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5697,7 +6003,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,
@@ -5715,8 +6026,8 @@
           "command": "cad.walls.joins",
           "input": {
             "uids": [
-              "$uidOf:89",
-              "$uidOf:90"
+              "$uidOf:94",
+              "$uidOf:95"
             ],
             "nodes": true
           },
@@ -5728,11 +6039,11 @@
                   "kind": "tee",
                   "at": {
                     "x": 3.0,
-                    "y": 4700.0
+                    "y": 5200.0
                   },
                   "walls": [
                     {
-                      "uid": "$uidOf:90",
+                      "uid": "$uidOf:95",
                       "end": "end",
                       "decided": "user",
                       "passes": [
@@ -5740,7 +6051,7 @@
                       ]
                     },
                     {
-                      "uid": "$uidOf:89"
+                      "uid": "$uidOf:94"
                     }
                   ]
                 }
@@ -5843,7 +6154,12 @@
               88,
               89,
               90,
-              91
+              91,
+              92,
+              93,
+              94,
+              95,
+              96
             ],
             "canUndo": false,
             "canRedo": false,

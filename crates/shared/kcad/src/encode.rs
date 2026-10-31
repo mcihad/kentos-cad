@@ -2089,6 +2089,14 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 148 (docs/adr/0785): the project's materials, a component or a slab bound to one.
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_materials)
+        || objs.iter().any(materials)
+        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(materials))
+        || doc.settings.wall_styles.iter().any(|s| s.components.iter().any(|c| c.material_id.is_some()))
+    {
+        return crate::SCHEMA_WITH_MATERIALS;
+    }
     // Schema 147 (docs/adr/0784): the program's shares, a building's or a wing's levels, a schedule's share fields.
     if doc.settings.arch.as_ref().is_some_and(|a| a.program.has_shares())
         || objs.iter().any(program_shares)
@@ -3415,6 +3423,15 @@ pub(crate) fn program_shares(e: &Entity) -> bool {
             Some(kentos_contracts::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_share())
         )
     )
+}
+
+/// Whether an object needs schema 148 (docs/adr/0785): a wall component or a slab bound to a project material.
+pub(crate) fn materials(e: &Entity) -> bool {
+    match e {
+        Entity::Wall(w) => w.wall.components.iter().any(|c| c.material_id.is_some()),
+        Entity::Slab(s) => s.slab.material_id.is_some(),
+        _ => false,
+    }
 }
 
 /// Whether an object needs schema 140 (docs/adr/0773): a space in a group, a schedule with a program field.

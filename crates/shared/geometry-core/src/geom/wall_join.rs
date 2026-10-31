@@ -613,6 +613,9 @@ struct Cut {
     /// At `s0` (then `s1`), a pocket's cavity it opens into (docs/adr/0777 §2), across the wall as distances to the path's
     /// left: no line across the cavity there.
     open: [Option<(f64, f64)>; 2],
+    /// A door's or a window's frame across the wall, its faces as distances to the path's left (top, bottom;
+    /// docs/adr/0785 §5).
+    frame: Option<(f64, f64)>,
 }
 
 /// A tee made: what its gaps need.
@@ -1352,6 +1355,10 @@ impl<'a> Solver<'a> {
                     None => (right, left),
                     Some(r) => across(r),
                 };
+                let frame = h
+                    .frame
+                    .and_then(|f| f.across(spec.width))
+                    .map(|(near, far)| (left - near, left - far));
                 Some(Cut {
                     jambs,
                     spans,
@@ -1360,6 +1367,7 @@ impl<'a> Solver<'a> {
                     lo,
                     hi,
                     open: [h.open[0].map(across), h.open[1].map(across)],
+                    frame,
                 })
             })
             .collect()

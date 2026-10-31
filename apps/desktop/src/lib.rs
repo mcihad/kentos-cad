@@ -42,6 +42,7 @@ mod annotative;
 mod annotation_styles;
 mod wall_joins;
 mod opening_types_window;
+mod materials_window;
 mod room_modules_window;
 mod tags_check;
 mod schedule_window;
@@ -527,6 +528,8 @@ mod quality_scenes;
 mod opening_scenes;
 #[cfg(test)]
 mod opening_type_scenes;
+#[cfg(test)]
+mod material_scenes;
 #[cfg(test)]
 mod module_scenes;
 #[cfg(test)]

@@ -327,6 +327,8 @@ pub(super) struct Features {
     pub(super) arch_bonds: bool,
     /// Schema 138 (docs/adr/0771): turning wall components, node decisions, bound slabs.
     pub(super) building_parts: bool,
+    /// Schema 148 (docs/adr/0785): the project's materials, a component's or a slab's binding.
+    pub(super) materials: bool,
     pub(super) opening_types: bool,
     pub(super) special_doors: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
@@ -545,6 +547,7 @@ impl Features {
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
+            materials: schema >= crate::SCHEMA_WITH_MATERIALS,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             special_doors: schema >= crate::SCHEMA_WITH_SPECIAL_DOORS,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
@@ -2218,7 +2221,11 @@ pub(super) fn object(
     }
     // Schema 147 (docs/adr/0784): a schedule's share field.
     if !has.program_shares && crate::encode::program_shares(&entity) {
-        return Err(r.fail(Code::UnknownField, "çizelgenin pay ya da brüt alanı şema 146 ister"));
+        return Err(r.fail(Code::UnknownField, "çizelgenin pay ya da brüt alanı şema 147 ister"));
+    }
+    // Schema 148 (docs/adr/0785): a component or a slab bound to a project material.
+    if !has.materials && crate::encode::materials(&entity) {
+        return Err(r.fail(Code::UnknownField, "malzemeye bağlı bileşen ya da döşeme şema 148 ister"));
     }
     // Schema 140 (docs/adr/0773): a space's group, a schedule's program field.
     if !has.building_program && crate::encode::building_program(&entity) {

@@ -47,6 +47,8 @@ pub enum Tab {
     Ramps,
     /// The stairs (docs/adr/0724 §5).
     Stairs,
+    /// The materials (docs/adr/0785 §4), when the project keeps materials.
+    Materials,
 }
 
 impl std::fmt::Display for Tab {
@@ -59,6 +61,7 @@ impl std::fmt::Display for Tab {
             Tab::Transitions => "Geçişler",
             Tab::Ramps => "Rampalar",
             Tab::Stairs => "Merdivenler",
+            Tab::Materials => "Malzemeler",
         })
     }
 }
@@ -262,7 +265,7 @@ impl App {
     }
 
     /// The three tables of the answer, in the project's units.
-    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 7] {
+    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 8] {
         let f = self
             .document
             .as_ref()
@@ -786,7 +789,50 @@ impl App {
                 })
                 .collect(),
         };
-        [spaces, walls, openings, slabs, transitions, ramps, stairs]
+        // By material (docs/adr/0785 §4): its walls and slabs, area, volume and the amount by its way of counting.
+        let materials = Table {
+            name: "Malzemeler",
+            heading: vec!["Malzeme", "Kategori", "Metraj", "Duvar", "Döşeme", "Alan", "Hacim", "Miktar"],
+            numbers: vec![false, false, false, true, true, true, true, true],
+            widths: vec![140.0, 80.0, 88.0, 56.0, 64.0, 72.0, 72.0, 80.0],
+            shown: q
+                .materials
+                .iter()
+                .map(|m| {
+                    vec![
+                        m.name.clone(),
+                        kentos_native_application::material_quantities::category_label(m.category).to_owned(),
+                        m.quantity.label().to_owned(),
+                        m.walls.to_string(),
+                        m.slabs.to_string(),
+                        area(m.area),
+                        fixed(m.volume, 3),
+                        match m.quantity {
+                            kentos_commands::MaterialQuantity::Area => format!("{} m²", fixed(m.amount, 2)),
+                            kentos_commands::MaterialQuantity::Volume => format!("{} m³", fixed(m.amount, 3)),
+                        },
+                    ]
+                })
+                .collect(),
+            cells: q
+                .materials
+                .iter()
+                .map(|m| {
+                    let n = |v: f64| format!("{v}");
+                    vec![
+                        m.name.clone(),
+                        kentos_native_application::material_quantities::category_label(m.category).to_owned(),
+                        m.quantity.label().to_owned(),
+                        m.walls.to_string(),
+                        m.slabs.to_string(),
+                        n(m.area),
+                        n(m.volume),
+                        n(m.amount),
+                    ]
+                })
+                .collect(),
+        };
+        [spaces, walls, openings, slabs, transitions, ramps, stairs, materials]
     }
 
     /// CSV has one table: the one shown. Workbooks keep all seven sheets,
@@ -804,6 +850,8 @@ impl App {
             .into_iter()
             .enumerate()
             .filter(|(i, _)| format != WorkbookFormat::Csv || *i == tab as usize)
+            // Malzemeler only when the project keeps materials (docs/adr/0785 §4).
+            .filter(|(i, _)| *i != Tab::Materials as usize || !q.materials.is_empty() || tab == Tab::Materials)
             .map(|(_, t)| {
                 let rows = t
                     .cells
@@ -929,16 +977,20 @@ impl App {
             })
             .searchable(false)
             .into();
+        let mut shown_tabs = vec![
+            Tab::Spaces,
+            Tab::Walls,
+            Tab::Openings,
+            Tab::Slabs,
+            Tab::Transitions,
+            Tab::Ramps,
+            Tab::Stairs,
+        ];
+        if w.answer.as_ref().is_ok_and(|q| !q.materials.is_empty()) {
+            shown_tabs.push(Tab::Materials);
+        }
         let tabs = Segmented::new(
-            [
-                Tab::Spaces,
-                Tab::Walls,
-                Tab::Openings,
-                Tab::Slabs,
-                Tab::Transitions,
-                Tab::Ramps,
-                Tab::Stairs,
-            ],
+            shown_tabs,
             w.tab,
             |t| msg(Event::Tab(t)),
         );
@@ -1144,7 +1196,11 @@ impl App {
             .push(summary)
             .push(table)
             .push(words::text_line(Kind::Info,
-                "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki yedi tablo ayrı sayfalarda."))
+                if q.materials.is_empty() {
+                    "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki yedi tablo ayrı sayfalarda."
+                } else {
+                    "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki sekiz tablo (Malzemeler de) ayrı sayfalarda."
+                }))
             .push(row![export].width(Fill));
         Frame::new(TITLE)
             .scroll(body)
@@ -1181,6 +1237,7 @@ impl App {
                 || "Alan: orta çizgi boyunca dönüşlerde gönyeli şeridin plan alanı; eğimli uzunluk: orta çizgi eksi sahanlıklar.".to_owned(),
                 |r| format!("Kural: {}.", r.rule.trim_end_matches('.')),
             ),
+            Tab::Materials => "Kural: duvar bileşeninin alanı duvarın net yüzeyi (uzunluk × yükseklik, açıklıklar düşülür), hacmi o alan × bileşenin kalınlığı; döşemenin net alanı ve hacmi; bağlı bileşenler malzemenin kimliğiyle, bağsızlar metniyle gruplanır.".to_owned(),
             Tab::Stairs => q.stairs.first().map_or_else(
                 || "Alan: yürüme çizgisi boyunca dönüşlerde gönyeli şeridin plan alanı; döner merdivende iki yayın arası; yükseklik: rıht sayısı × rıht yüksekliği.".to_owned(),
                 |s| format!("Kural: {}; yükseklik: rıht sayısı × rıht yüksekliği.", s.rule.trim_end_matches('.')),
@@ -1206,6 +1263,7 @@ impl App {
             Control::Press("Geçişler") => Some(msg(Event::Tab(Tab::Transitions))),
             Control::Press("Rampalar") => Some(msg(Event::Tab(Tab::Ramps))),
             Control::Press("Merdivenler") => Some(msg(Event::Tab(Tab::Stairs))),
+            Control::Press("Malzemeler") => Some(msg(Event::Tab(Tab::Materials))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -1287,6 +1345,7 @@ mod tests {
             transitions: vec![],
             ramps: vec![],
             stairs: vec![],
+            materials: vec![],
             totals: Default::default(),
         };
         let [table, ..] = app.quantities_tables(&q);

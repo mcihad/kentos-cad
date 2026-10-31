@@ -189,6 +189,22 @@
    "tests": 0
   },
   {
+   "id": "arch.materials",
+   "kind": "command",
+   "title": "Malzemeler",
+   "level": "semantic",
+   "via": [
+    "cad.materials.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.materials.edit",
+   "mcp": "cad.materials.edit",
+   "note": "Malzemeler penceresinin yeni, değiştir, sil, bağla ve metinlerden al'ı; önizleme komutun planından (ADR 0785).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.moduleAddMembers",
    "kind": "command",
    "title": "Örneğe ekle",

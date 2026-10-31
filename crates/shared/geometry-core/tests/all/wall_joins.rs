@@ -67,10 +67,19 @@ fn walls_join_as_the_reference_says() {
                             .unwrap()
                             .iter()
                             .map(|x| {
-                                kentos_geometry_core::geom::opening::Hole::through(
+                                let h = kentos_geometry_core::geom::opening::Hole::through(
                                     x[0].as_f64().unwrap(),
                                     x[1].as_f64().unwrap(),
-                                )
+                                );
+                                // ADR 0785 §5: a frame across the wall, its depth, offset and side.
+                                match x.get(2) {
+                                    Some(f) if f.is_object() => h.framed(kentos_geometry_core::geom::opening::HoleFrame {
+                                        depth: f["depth"].as_f64().unwrap(),
+                                        offset: f["offset"].as_f64(),
+                                        right: f["right"].as_bool().unwrap_or(false),
+                                    }),
+                                    _ => h,
+                                }
                             })
                             .collect()
                     })

@@ -473,6 +473,11 @@ MOST_VIEW_TEMPLATES = 50
 SCHEMA_WITH_PROGRAM_SHARES = 147
 SCHEDULE_SHARE_FIELDS = ("share", "gross")
 SHARE_RULES = ("equal", "net", "weight")
+# Schema 148 (docs/adr/0785): the project's building materials (`arch.materials`) and a wall component's or a
+# slab's binding to one (`materialId`).
+SCHEMA_WITH_MATERIALS = 148
+MATERIAL_ID = re.compile(r"[a-z0-9-]{1,64}")
+MATERIAL_CATEGORIES = ("structure", "insulation", "finish", "membrane", "other")
 MODULE_KINDS = ("wall", "opening", "space", "insert", "dimension", "tag", "text")
 RECIPE_CATEGORIES = ("dimensions", "tags", "texts", "hatches", "blocks", "spaces", "grids", "viewmarks")
 RECIPE_PHASES = ("all", "existing", "demolition", "proposed")
@@ -787,7 +792,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3415,6 +3420,7 @@ class _Schema:
         self.module_units = version >= SCHEMA_WITH_MODULE_UNITS
         self.view_templates = version >= SCHEMA_WITH_VIEW_TEMPLATES
         self.program_shares = version >= SCHEMA_WITH_PROGRAM_SHARES
+        self.materials = version >= SCHEMA_WITH_MATERIALS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -8021,7 +8027,9 @@ class _Schema:
                          "material": (self.text, False), "edge": (edge, False),
                          "excluded": (not_default(self.bool, False, "false yazılmaz; varsayılandır"), False),
                          # Schema 138 (docs/adr/0771 §4): an outline bound to its walls or its space.
-                         **({"bound": (self.slab_bound, False)} if self.building_parts else {})})(v)
+                         **({"bound": (self.slab_bound, False)} if self.building_parts else {}),
+                         # Schema 148 (docs/adr/0785): the project material it binds to.
+                         **({"materialId": (self.material_ref, False)} if self.materials else {})})(v)
         bad = lambda words: self.fail("bad_value", words)  # noqa: E731
         if not f["parts"]:
             bad("Döşemenin sınırı yok: en az bir halka verin.")
@@ -8535,7 +8543,47 @@ class _Schema:
                             "edge": (edge, False), "hatch": (hatch, False), "detail": (self.enum(WALL_DETAILS), True),
                             **({"priority": (priority, False)} if self.wall_joins else {}),
                             # Schema 138 (docs/adr/0771 §3): a layer that turns at the wall's ends and jambs.
-                            **({"wrap": (wrap, False)} if self.building_parts else {})})(v)
+                            **({"wrap": (wrap, False)} if self.building_parts else {}),
+                            # Schema 148 (docs/adr/0785): the project material it binds to.
+                            **({"materialId": (self.material_ref, False)} if self.materials else {})})(v)
+
+    def material_ref(self, v):
+        """A project material's id (docs/adr/0785): lower-case letters, digits and “-”, 1 to 64."""
+        t = self.text(v)
+        if not MATERIAL_ID.fullmatch(t):
+            self.fail("bad_value", f"“{t}” malzeme kimliği olamaz")
+        return t
+
+    def material_(self, v):
+        """A project material (docs/adr/0785): id, name, category and counting (each only when not its default), its
+        cut's hatch and pen."""
+        def not_default(read, default):
+            def check(x):
+                x = read(x)
+                if x == default:
+                    self.fail("bad_value", "varsayılan değer yazılmaz")
+                return x
+            return check
+        def weight(v):
+            w = self.float(v)
+            if not 0.0 <= w <= MAX_LINE_WEIGHT:
+                self.fail("bad_value", f"malzemenin kesit kalemi {w:g}; 0 ile 100 mm arasında olmalı")
+            return w
+        cut = self.fields({"color": (self.wall_colour("malzemenin kalem rengi"), False), "lineWeight": (weight, False),
+                           "lineType": (self.enum(("continuous", "dashed", "dashdot", "dotted")), False)})
+        hatch = self.fields({"pattern": (self.text, True), "scale": (self.float, True), "angle": (self.float, True),
+                             "color": (self.wall_colour("malzemenin tarama rengi"), False)})
+        m = self.fields({"id": (self.material_ref, True), "name": (self.text, True),
+                         "category": (not_default(self.enum(MATERIAL_CATEGORIES), "other"), False),
+                         "quantity": (not_default(self.enum(("area", "volume")), "volume"), False),
+                         "hatch": (hatch, False), "cut": (cut, False)})(v)
+        name = m["name"]
+        if not name.strip() or name.strip() != name or len(name) > 128 or any(unicodedata.category(c) == "Cc" for c in name):
+            self.fail("bad_value", f"“{name}” malzeme adı olamaz")
+        h = m.get("hatch")
+        if h is not None and (not h["pattern"].strip() or not (math.isfinite(h["scale"]) and h["scale"] > 0) or not math.isfinite(h["angle"])):
+            self.fail("bad_value", f"“{name}” malzemesinin taraması geçersiz")
+        return m
 
     def wall_components_rules(self, comps, width, owner):
         """A wall's (or a style's, `width` None) components: names, thicknesses above 0, at most one without (it takes
@@ -9186,7 +9234,9 @@ class _Schema:
                              "uids": (self.array(self.uid_text), True), "digest": (self.text, True),
                              "note": (self.text, False)})), False)} if self.audit_exceptions else {}),
                          # Schema 140 (docs/adr/0773): the building program.
-                         **({"program": (self.program_, False)} if self.building_program else {})})(v)
+                         **({"program": (self.program_, False)} if self.building_program else {}),
+                         # Schema 148 (docs/adr/0785): the project's building materials.
+                         **({"materials": (self.array(self.material_), False)} if self.materials else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
         ids, names = set(), set()
@@ -9227,6 +9277,16 @@ class _Schema:
                     self.fail("bad_value", "geçersiz mahal numara öneki")
         if "auditExceptions" in a:
             self.audit_exceptions_(a["auditExceptions"])
+        if "materials" in a:
+            mats = a["materials"]
+            if not 1 <= len(mats) <= 256:
+                self.fail("bad_value", "malzemeler 1–256 olmalı; boş liste yazılmaz")
+            mids, mnames = set(), set()
+            for m in mats:
+                if m["id"] in mids or m["name"].lower() in mnames:
+                    self.fail("bad_value", f"“{m['name']}” malzemesinin kimliği ya da adı iki kez var")
+                mids.add(m["id"])
+                mnames.add(m["name"].lower())
         if "modules" in a:
             self.arch_modules(a["modules"])
         if "openingTypes" in a:

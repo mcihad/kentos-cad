@@ -2018,6 +2018,29 @@ const ENTRIES: &[Entry] = &[
         warnings: &["opening_type_kept", "opening_type_skipped"],
         targets: none,
     },
+    // Malzemeler (docs/adr/0785).
+    Entry {
+        id: "cad.materials.edit",
+        refusals: &[
+            &[
+                "invalid_material",
+                "material_not_found",
+                "material_exists",
+                "material_in_use",
+                "nothing_to_set",
+                "style_not_found",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_wall",
+                "not_a_slab",
+                "component_not_found",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["material_locked", "material_adopt_left"],
+        targets: none,
+    },
     // Oda modülleri (docs/adr/0775).
     Entry {
         id: "cad.modules.edit",

@@ -751,6 +751,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::Domains { .. }
             | Op::AuditExceptions { .. }
             | Op::OpeningTypes { .. }
+            | Op::Materials { .. }
             | Op::BuildingProgram { .. }
             | Op::ArchModules { .. }
             | Op::Source { .. }

@@ -93,8 +93,12 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         transitions: Vec::new(),
         ramps: Vec::new(),
         stairs: Vec::new(),
+        materials: Vec::new(),
         totals: QuantityTotals::default(),
     };
+    // What Metraj by material reads (docs/adr/0785 §4).
+    let mut wall_parts: Vec<crate::material_quantities::WallPart<'_>> = Vec::new();
+    let mut slab_parts: Vec<crate::material_quantities::SlabPart<'_>> = Vec::new();
     // The doors and gaps to the floor (docs/adr/0722 §5), and the voids a slab's area loses, by level.
     let passages = crate::slab_quantities::passages(doc);
     let voids: Vec<(Option<String>, Vec<kentos_commands::SpacePart>)> = doc
@@ -217,7 +221,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             }
             Entity::Slab(sl) if input.usages.is_none() => {
                 if takes(e, &sl.slab.arch) {
-                    out.slabs.push(crate::slab_quantities::slab_row(doc, uid(e), &sl.slab, &voids));
+                    let r = crate::slab_quantities::slab_row(doc, uid(e), &sl.slab, &voids);
+                    slab_parts.push((&sl.slab, r.net_area, r.volume, !r.excluded));
+                    out.slabs.push(r);
                 }
             }
             Entity::Ramp(r) if input.usages.is_none() => {
@@ -251,6 +257,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                 } else {
                     "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
                 };
+                wall_parts.push((x, net));
                 out.walls.push(WallRow {
                     uid: id,
                     style: x.style.clone(),
@@ -270,6 +277,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         }
     }
     out.transitions = crate::slab_quantities::transitions(&rooms, &passages);
+    out.materials = crate::material_quantities::rows(doc.materials(), &wall_parts, &slab_parts);
     let summed = || out.slabs.iter().filter(|s| !s.excluded);
     let edged = |k: kentos_commands::SlabEdgeKind| summed().filter(|s| s.edge == Some(k)).map(|s| s.edge_length).sum::<f64>() + 0.0;
     let (slab_area, slab_volume) = (summed().map(|s| s.net_area).sum::<f64>() + 0.0, summed().map(|s| s.volume).sum::<f64>() + 0.0);

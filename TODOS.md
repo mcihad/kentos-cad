@@ -86,6 +86,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ağırlığı, Ortak alan payı seçimi, Durum'da Paylar tablosu; etiketin `{share}`/`{gross}`'u ve “Bölüm payı” hazır
   içeriği, çizelgenin Pay/Brüt sütunları; web'in KCAD okuyucusunda şema 147'nın alanları. Hesap ortak çekirdekte
   (`kentos_contracts::program_share`), web'e bağlayıcı gerekmez: `cad.program.check`'in çıktısı yeter.
+- ADR 0785 (malzeme kimliği, doğramaya kadar dönüş): web'in `cad.materials.edit` işleyicisi ve Malzemeler penceresi;
+  `settings.arch.materials` ve `materialId` için web'in KCAD yolu (şema 148); Öznitelikler'in
+  Malzemeler bölümü; Metraj'ın Malzemeler sekmesi; WebGL2/WebGPU'da kasaya kadar dönen sıva (çekirdekten gelir, çizim aynı).
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

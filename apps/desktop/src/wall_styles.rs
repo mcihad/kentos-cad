@@ -487,6 +487,7 @@ impl App {
                     s.components.push(WallComponent {
                         name: format!("Katman {n}"),
                         material: None,
+                        material_id: None,
                         thickness: Some(0.02),
                         edge: None,
                         hatch: None,

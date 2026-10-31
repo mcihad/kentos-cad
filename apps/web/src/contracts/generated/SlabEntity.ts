@@ -91,7 +91,12 @@ offset?: number, arch?: ArchInfo,
 /**
  * What it is made of (Betonarme); absent: not said.
  */
-material?: string, edge?: SlabEdge, 
+material?: string, 
+/**
+ * The project material it binds to (docs/adr/0785), by its id: its `material` is the material's name and follows
+ * it. Absent: its own text material.
+ */
+materialId?: string, edge?: SlabEdge, 
 /**
  * Left out of the quantities' totals: listed, not summed.
  */

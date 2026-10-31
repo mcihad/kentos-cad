@@ -313,6 +313,11 @@ pub struct SlabFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub material: Option<String>,
+    /// The project material it binds to (docs/adr/0785), by its id: its `material` is the material's name and follows
+    /// it. Absent: its own text material.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub edge: Option<SlabEdge>,
@@ -394,6 +399,9 @@ impl SlabFields {
         }
         if let Some(words) = self.material.as_deref().and_then(material_problem) {
             return Some(("material".into(), words));
+        }
+        if let Some(words) = crate::material_ref_problem(&self.material_id) {
+            return Some(("materialId".into(), words));
         }
         if let Some(problem) = self.bound.as_ref().and_then(SlabBound::problem) {
             return Some(problem);

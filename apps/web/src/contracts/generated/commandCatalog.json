@@ -10670,6 +10670,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.spaces.quantities` v1 (its plan's too).",
         "properties": {
+          "materials": {
+            "description": "The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's\norder, then the text ones in the drawing's.",
+            "items": {
+              "$ref": "#/$defs/MaterialRow"
+            },
+            "type": "array"
+          },
           "openings": {
             "items": {
               "$ref": "#/$defs/OpeningRow"
@@ -10733,6 +10740,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.spaces.quantities` v1 (its plan's too).",
         "properties": {
+          "materials": {
+            "description": "The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's\norder, then the text ones in the drawing's.",
+            "items": {
+              "$ref": "#/$defs/MaterialRow"
+            },
+            "type": "array"
+          },
           "openings": {
             "items": {
               "$ref": "#/$defs/OpeningRow"
@@ -21204,6 +21218,173 @@
               },
               "kind": "update",
               "type": "K01"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.materials.edit",
+      "version": 1,
+      "title": "Malzemeler",
+      "summary": "Projenin yapı malzemelerini (kalıcı kimlik, ad, kategori, metrajda alan ya da hacim, kesitin taraması ve kalemi) yönetir ve duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar (docs/adr/0785); tek geri alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation: define (name, id isteğe bağlı: adından; change: category structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern, scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin material metni, taraması ve kalemi, döşemelerin material metni yeni değerleri alır), remove (material; bağlı bir şey varsa material_in_use ve bağlı duvar ve döşemelerin kimlikleri), assign (material: kimlik ya da ad, yoksa bağdan ayırır; targets: wallStyle {style, component}, wall {uid, component}, slab {uid}; bileşen sırası soldan 0'dan), adopt (bağsız her metin malzemeden bir proje malzemesi açar ve bağlar; aynı metnin taraması ya da kalemi farklı bileşenler bağlanmaz, görünüş değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked. Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir. Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar.",
+      "aliases": [
+        "MALZEME"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.materials.edit` v1: the project's materials changed as one undo step “Malzeme”, with the wall styles,\nwalls and slabs bound to them. Its plan is the preview: the table and what follows, nothing written.\n\nRefusals: `invalid_material`, `material_not_found`, `material_exists`, `material_in_use`, `nothing_to_set`,\n`style_not_found`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `not_a_slab`, `component_not_found`,\n`layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`, `material_adopt_left`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/MaterialsOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "MaterialsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.materials.edit` v1 (its plan's too: the preview, nothing written).",
+        "properties": {
+          "material": {
+            "description": "The material made, changed, removed or bound (its id); absent for Adopt and for leaving.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "materials": {
+            "description": "The project's materials after it.",
+            "items": {
+              "$ref": "#/$defs/ArchMaterial"
+            },
+            "type": "array"
+          },
+          "report": {
+            "$ref": "#/$defs/MaterialReport"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "materials",
+          "report",
+          "revision"
+        ],
+        "title": "MaterialsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.materials.edit` v1 (its plan's too: the preview, nothing written).",
+        "properties": {
+          "material": {
+            "description": "The material made, changed, removed or bound (its id); absent for Adopt and for leaving.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "materials": {
+            "description": "The project's materials after it.",
+            "items": {
+              "$ref": "#/$defs/ArchMaterial"
+            },
+            "type": "array"
+          },
+          "report": {
+            "$ref": "#/$defs/MaterialReport"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "materials",
+          "report",
+          "revision"
+        ],
+        "title": "MaterialsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_material",
+          "material_not_found",
+          "material_exists",
+          "material_in_use",
+          "nothing_to_set",
+          "style_not_found",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_wall",
+          "not_a_slab",
+          "component_not_found",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "material_locked",
+          "material_adopt_left"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Tuğla malzemesi, taşıyıcı ve hacimle",
+          "input": {
+            "operation": {
+              "change": {
+                "category": "structure",
+                "hatch": {
+                  "angle": 0.0,
+                  "pattern": "ANSI31",
+                  "scale": 1.0
+                }
+              },
+              "kind": "define",
+              "name": "Tuğla"
+            }
+          }
+        },
+        {
+          "title": "Dış duvar stilinin çekirdeğini tuğlaya bağla",
+          "input": {
+            "operation": {
+              "kind": "assign",
+              "material": "tugla",
+              "targets": [
+                {
+                  "component": 1,
+                  "kind": "wallStyle",
+                  "style": "Dış duvar 25"
+                }
+              ]
             }
           }
         }
@@ -69884,6 +70065,48 @@
       "meaning": "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu."
     },
     {
+      "code": "material_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda malzeme yok."
+    },
+    {
+      "code": "invalid_material",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Malzemenin alanları geçersiz ya da malzeme tablosunun kuralını bozuyor."
+    },
+    {
+      "code": "material_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda bir malzeme zaten var; başka bir ad verin."
+    },
+    {
+      "code": "material_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Malzemeye bağlı duvar stilleri, duvarlar ya da döşemeler var; önce onları başka malzemeye bağlayın ya da bağdan ayırın."
+    },
+    {
+      "code": "component_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Duvarın ya da duvar stilinin bu sırada bileşeni yok."
+    },
+    {
+      "code": "material_locked",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Malzemeye bağlı bazı nesneler kilitli katmanda; eski değerleriyle kaldı."
+    },
+    {
+      "code": "material_adopt_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Aynı adlı bazı bileşenlerin taraması ya da kalemi farklı; görünüşü değişmesin diye bağlanmadı."
+    },
+    {
       "code": "module_exists",
       "kind": "failed",
       "retryable": false,
@@ -73808,6 +74031,52 @@
       ],
       "type": "object"
     },
+    "ArchMaterial": {
+      "additionalProperties": false,
+      "description": "A project material (Malzeme): its stable id, the name it is shown and written with, its category, how it is counted,\nits cut's hatch and its cut pen (the lines along a bound component's sides).",
+      "properties": {
+        "category": {
+          "$ref": "#/$defs/MaterialCategory"
+        },
+        "cut": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComponentEdge"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its cut pen; absent: the wall's."
+        },
+        "hatch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComponentHatch"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its cut's hatch; absent: drawn without one."
+        },
+        "id": {
+          "description": "Lower-case letters, digits and “-”, at most 64; it never changes.",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "quantity": {
+          "$ref": "#/$defs/MaterialQuantity"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
     "ArchModule": {
       "additionalProperties": false,
       "description": "A room module: its id and name, its definition's version and members, and its instances. A removed module keeps\nits instances, broken, and no members.",
@@ -74253,6 +74522,13 @@
         "levels": {
           "items": {
             "$ref": "#/$defs/ArchLevel"
+          },
+          "type": "array"
+        },
+        "materials": {
+          "description": "The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.",
+          "items": {
+            "$ref": "#/$defs/ArchMaterial"
           },
           "type": "array"
         },
@@ -100219,6 +100495,13 @@
     "LegendMaterial": {
       "description": "One row of a material legend.",
       "properties": {
+        "material": {
+          "description": "The project material it is (docs/adr/0785), by its id; absent: a text material.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "name": {
           "description": "Its name: the component's material, else its own name.",
           "type": "string"
@@ -101426,6 +101709,397 @@
           "const": "leader",
           "description": "A leader's arrowhead, its size, the note's height and background, to leaders.",
           "type": "string"
+        }
+      ]
+    },
+    "MaterialCategory": {
+      "description": "What a material is for (Revit's material class, the role ADR 0771 §7 named).",
+      "oneOf": [
+        {
+          "const": "structure",
+          "description": "Taşıyıcı: concrete, masonry, timber that carries.",
+          "type": "string"
+        },
+        {
+          "const": "insulation",
+          "description": "Yalıtım: thermal or acoustic insulation.",
+          "type": "string"
+        },
+        {
+          "const": "finish",
+          "description": "Kaplama: plaster, tiles, screed, cladding.",
+          "type": "string"
+        },
+        {
+          "const": "membrane",
+          "description": "Membran: a membrane or a vapour barrier.",
+          "type": "string"
+        },
+        {
+          "const": "other",
+          "description": "Diğer.",
+          "type": "string"
+        }
+      ]
+    },
+    "MaterialChange": {
+      "additionalProperties": false,
+      "description": "A material's fields to change; absent ones stay. A nullable field's null takes it away.",
+      "properties": {
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MaterialCategory"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cut": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComponentEdge"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its cut pen; null: the wall's."
+        },
+        "hatch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ComponentHatch"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its cut's hatch; null: none."
+        },
+        "name": {
+          "description": "Its new name (Yeniden adlandır); its id stays.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "quantity": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MaterialQuantity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "MaterialQuantity": {
+      "description": "How Metraj counts a material: by its face area (m²: plaster, membrane, paint) or its volume (m³: concrete, masonry).",
+      "enum": [
+        "area",
+        "volume"
+      ],
+      "type": "string"
+    },
+    "MaterialReport": {
+      "description": "What a material's write takes with it: the wall styles (ids) and the walls and slabs (ids) rewritten, those left on\nlocked layers, the texts not taken in.",
+      "properties": {
+        "left": {
+          "description": "Adopt: the texts some of whose components were left unbound (their look differs from the first's).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "locked": {
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "slabs": {
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "styles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "walls": {
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "styles",
+        "walls",
+        "slabs",
+        "locked",
+        "left"
+      ],
+      "type": "object"
+    },
+    "MaterialRow": {
+      "description": "A material measured (docs/adr/0785 §4): every wall component and slab of it, a project material by its id or a text\nmaterial by its text. A component's area is its wall's net face area (length × height less its openings), its volume\nthat area times the component's thickness; a slab's its net area and its volume. Walls without a height count, but add\nno area; slabs left out of the quantities (`excluded`) are not summed.",
+      "properties": {
+        "amount": {
+          "description": "Its quantity by the way it is counted: the area or the volume.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MaterialCategory"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "description": "The project material's id; absent: a text material (not bound).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "quantity": {
+          "$ref": "#/$defs/MaterialQuantity",
+          "description": "How it is counted (a text material: by volume)."
+        },
+        "slabs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "volume": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "walls": {
+          "description": "The walls with a component of it, and the slabs of it.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "name",
+        "quantity",
+        "walls",
+        "slabs",
+        "area",
+        "volume",
+        "amount"
+      ],
+      "type": "object"
+    },
+    "MaterialTarget": {
+      "description": "What a material is bound to: a wall style's component, a wall's component, a slab.",
+      "oneOf": [
+        {
+          "description": "A project wall style's component (from its left face, 0 first); the walls of the style follow it.",
+          "properties": {
+            "component": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "kind": {
+              "const": "wallStyle",
+              "type": "string"
+            },
+            "style": {
+              "description": "The style's id or name.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "style",
+            "component"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A wall's own component (from its left face, 0 first).",
+          "properties": {
+            "component": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "kind": {
+              "const": "wall",
+              "type": "string"
+            },
+            "uid": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "uid",
+            "component"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "slab",
+              "type": "string"
+            },
+            "uid": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "uid"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "MaterialsOperation": {
+      "description": "What `cad.materials.edit` does.",
+      "oneOf": [
+        {
+          "description": "Yeni malzeme: a material `name` (its id `id`, else from its name), its other fields from `change` (`name`\nthere is refused: the name is `name`); category Diğer and volume when not given.",
+          "properties": {
+            "change": {
+              "$ref": "#/$defs/MaterialChange",
+              "default": {}
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "define",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Malzemeyi değiştir: the material (its id or name) changed by `change`; everything bound to it follows.",
+          "properties": {
+            "change": {
+              "$ref": "#/$defs/MaterialChange"
+            },
+            "kind": {
+              "const": "update",
+              "type": "string"
+            },
+            "material": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "material",
+            "change"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Sil: the material; refused while anything is bound to it (`material_in_use`, with the walls' and slabs' ids).",
+          "properties": {
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            },
+            "material": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "material"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Bağla: the targets bound to the material (its id or name; absent or null: left, each keeping its text and look).",
+          "properties": {
+            "kind": {
+              "const": "assign",
+              "type": "string"
+            },
+            "material": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "targets": {
+              "items": {
+                "$ref": "#/$defs/MaterialTarget"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "targets"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Metinlerden al: every text material of the wall styles, the walls and the slabs not bound to one becomes a\nproject material (its id from its text) and they are bound to it; a text whose components' hatch or pen\ndiffer is bound where they are the first's and left elsewhere (`material_adopt_left`), so no look changes.",
+          "properties": {
+            "kind": {
+              "const": "adopt",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
         }
       ]
     },
@@ -126981,6 +127655,13 @@
             "null"
           ]
         },
+        "materialId": {
+          "description": "The project material it binds to (docs/adr/0785), by its id: its `material` is the material's name and follows\nit. Absent: its own text material.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "offset": {
           "description": "Its top above its level's elevation, metres (negative: below it); at most 100 either way. Absent: 0.",
           "format": "double",
@@ -138015,6 +138696,13 @@
           ]
         },
         "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "materialId": {
+          "description": "The project material it binds to (docs/adr/0785, `settings.arch.materials`), by its id: its `material`, `hatch`\nand `edge` are the material's and follow it. Absent: its own text material, as before.",
           "type": [
             "string",
             "null"

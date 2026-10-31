@@ -3193,6 +3193,36 @@ MatchPropertyName = Literal["layer", "color", "lineType", "lineTypeScale", "line
 """The names of :class:`MatchProperty`, for a plain string."""
 
 
+class MaterialCategory(_StrEnum):
+    """What a material is for (Revit's material class, the role ADR 0771 §7 named).
+
+    - ``structure``: Taşıyıcı: concrete, masonry, timber that carries.
+    - ``insulation``: Yalıtım: thermal or acoustic insulation.
+    - ``finish``: Kaplama: plaster, tiles, screed, cladding.
+    - ``membrane``: Membran: a membrane or a vapour barrier.
+    - ``other``: Diğer.
+    """
+    STRUCTURE = "structure"
+    INSULATION = "insulation"
+    FINISH = "finish"
+    MEMBRANE = "membrane"
+    OTHER = "other"
+
+
+MaterialCategoryName = Literal["structure", "insulation", "finish", "membrane", "other"]
+"""The names of :class:`MaterialCategory`, for a plain string."""
+
+
+class MaterialQuantity(_StrEnum):
+    """How Metraj counts a material: by its face area (m²: plaster, membrane, paint) or its volume (m³: concrete, masonry)."""
+    AREA = "area"
+    VOLUME = "volume"
+
+
+MaterialQuantityName = Literal["area", "volume"]
+"""The names of :class:`MaterialQuantity`, for a plain string."""
+
+
 class MergeDuplicates(_StrEnum):
     """What a key the source gives more than one row does (docs/adr/0439 §4's words).
 
@@ -8026,6 +8056,52 @@ class LengthenChange(_Union):
         return _variant(_LENGTHEN_CHANGE, "LengthenChange", "kind", data).from_json(data)
 
 
+class MaterialTarget(_Union):
+    """What a material is bound to: a wall style's component, a wall's component, a slab.
+
+    One of:
+
+    - :class:`WallStyleMaterialTarget` (``kind: wallStyle``)
+    - :class:`WallMaterialTarget` (``kind: wall``)
+    - :class:`SlabMaterialTarget` (``kind: slab``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialTarget:
+        return _variant(_MATERIAL_TARGET, "MaterialTarget", "kind", data).from_json(data)
+
+
+class MaterialsOperation(_Union):
+    """What `cad.materials.edit` does.
+
+    One of:
+
+    - :class:`DefineMaterialsOperation` (``kind: define``)
+    - :class:`UpdateMaterialsOperation` (``kind: update``)
+    - :class:`RemoveMaterialsOperation` (``kind: remove``)
+    - :class:`AssignMaterialsOperation` (``kind: assign``)
+    - :class:`AdoptMaterialsOperation` (``kind: adopt``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialsOperation:
+        return _variant(_MATERIALS_OPERATION, "MaterialsOperation", "kind", data).from_json(data)
+
+
 class MeasuredPoint(_Union):
     """A measured point: coordinates, or a place on an object.
 
@@ -11908,6 +11984,48 @@ class ArchLevel(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ArchMaterial(_Model):
+    """A project material (Malzeme): its stable id, the name it is shown and written with, its category, how it is counted,
+    its cut's hatch and its cut pen (the lines along a bound component's sides).
+    Attributes:
+        id: Lower-case letters, digits and “-”, at most 64; it never changes.
+        cut: Its cut pen; absent: the wall's.
+        hatch: Its cut's hatch; absent: drawn without one.
+    """
+    id: str
+    name: str
+    category: MaterialCategory | MaterialCategoryName | Unset = UNSET
+    cut: ComponentEdge | None | Unset = UNSET
+    hatch: ComponentHatch | None | Unset = UNSET
+    quantity: MaterialQuantity | MaterialQuantityName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.category is not UNSET:
+            out["category"] = _enum_out(self.category)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else self.cut.to_json()
+        if self.hatch is not UNSET:
+            out["hatch"] = None if self.hatch is None else self.hatch.to_json()
+        if self.quantity is not UNSET:
+            out["quantity"] = _enum_out(self.quantity)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchMaterial:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            category=_enum_in(MaterialCategory, data["category"]) if "category" in data else UNSET,
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else ComponentEdge.from_json(data["cut"]),
+            hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
+            quantity=_enum_in(MaterialQuantity, data["quantity"]) if "quantity" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ArchModule(_Model):
     """A room module: its id and name, its definition's version and members, and its instances. A removed module keeps
     its instances, broken, and no members.
@@ -11955,6 +12073,7 @@ class ArchSettings(_Model):
             level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
         audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
+        materials: The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
         modules: The project's room modules and their instances (docs/adr/0775, KCAD 142).
         opening_types: The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
@@ -11969,6 +12088,7 @@ class ArchSettings(_Model):
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
+    materials: list[ArchMaterial] | Unset = UNSET
     modules: list[ArchModule] | Unset = UNSET
     opening_types: list[OpeningType] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
@@ -11990,6 +12110,8 @@ class ArchSettings(_Model):
             out["levelView"] = None if self.level_view is None else _enum_out(self.level_view)
         if self.levels is not UNSET:
             out["levels"] = [e0.to_json() for e0 in self.levels]
+        if self.materials is not UNSET:
+            out["materials"] = [e0.to_json() for e0 in self.materials]
         if self.modules is not UNSET:
             out["modules"] = [e0.to_json() for e0 in self.modules]
         if self.opening_types is not UNSET:
@@ -12016,6 +12138,7 @@ class ArchSettings(_Model):
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
+            materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
             modules=[ArchModule.from_json(e0) for e0 in data["modules"]] if "modules" in data else UNSET,
             opening_types=[OpeningType.from_json(e0) for e0 in data["openingTypes"]] if "openingTypes" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
@@ -36512,16 +36635,20 @@ class LegendMaterial(_Model):
     Attributes:
         name: Its name: the component's material, else its own name.
         walls: How many walls have it. Unit: 1.
+        material: The project material it is (docs/adr/0785), by its id; absent: a text material.
         pattern: Its hatch pattern's name (absent: none, an empty swatch).
     """
     name: str
     walls: int
+    material: str | None | Unset = UNSET
     pattern: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
         out["walls"] = self.walls
+        if self.material is not UNSET:
+            out["material"] = self.material
         if self.pattern is not UNSET:
             out["pattern"] = self.pattern
         return out
@@ -36531,6 +36658,7 @@ class LegendMaterial(_Model):
         return cls(
             name=data["name"],
             walls=data["walls"],
+            material=data.get("material", UNSET),
             pattern=data.get("pattern", UNSET),
         )
 
@@ -37889,6 +38017,191 @@ class MarkReference(_Model):
             at=Vec2.from_json(data["at"]),
             mark=data.get("mark", UNSET),
             target=UNSET if "target" not in data else None if data["target"] is None else ViewTarget.from_json(data["target"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaterialChange(_Model):
+    """A material's fields to change; absent ones stay. A nullable field's null takes it away.
+    Attributes:
+        cut: Its cut pen; null: the wall's.
+        hatch: Its cut's hatch; null: none.
+        name: Its new name (Yeniden adlandır); its id stays.
+    """
+    category: MaterialCategory | MaterialCategoryName | None | Unset = UNSET
+    cut: ComponentEdge | None | Unset = UNSET
+    hatch: ComponentHatch | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    quantity: MaterialQuantity | MaterialQuantityName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.category is not UNSET:
+            out["category"] = None if self.category is None else _enum_out(self.category)
+        if self.cut is not UNSET:
+            out["cut"] = None if self.cut is None else self.cut.to_json()
+        if self.hatch is not UNSET:
+            out["hatch"] = None if self.hatch is None else self.hatch.to_json()
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.quantity is not UNSET:
+            out["quantity"] = None if self.quantity is None else _enum_out(self.quantity)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialChange:
+        return cls(
+            category=UNSET if "category" not in data else None if data["category"] is None else _enum_in(MaterialCategory, data["category"]),
+            cut=UNSET if "cut" not in data else None if data["cut"] is None else ComponentEdge.from_json(data["cut"]),
+            hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
+            name=data.get("name", UNSET),
+            quantity=UNSET if "quantity" not in data else None if data["quantity"] is None else _enum_in(MaterialQuantity, data["quantity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaterialReport(_Model):
+    """What a material's write takes with it: the wall styles (ids) and the walls and slabs (ids) rewritten, those left on
+    locked layers, the texts not taken in.
+    Attributes:
+        left: Adopt: the texts some of whose components were left unbound (their look differs from the first's).
+    """
+    styles: list[str]
+    walls: list[str]
+    slabs: list[str]
+    locked: list[str]
+    left: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["styles"] = list(self.styles)
+        out["walls"] = list(self.walls)
+        out["slabs"] = list(self.slabs)
+        out["locked"] = list(self.locked)
+        out["left"] = list(self.left)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialReport:
+        return cls(
+            styles=list(data["styles"]),
+            walls=list(data["walls"]),
+            slabs=list(data["slabs"]),
+            locked=list(data["locked"]),
+            left=list(data["left"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaterialRow(_Model):
+    """A material measured (docs/adr/0785 §4): every wall component and slab of it, a project material by its id or a text
+    material by its text. A component's area is its wall's net face area (length × height less its openings), its volume
+    that area times the component's thickness; a slab's its net area and its volume. Walls without a height count, but add
+    no area; slabs left out of the quantities (`excluded`) are not summed.
+    Attributes:
+        quantity: How it is counted (a text material: by volume).
+        walls: The walls with a component of it, and the slabs of it. Unit: count.
+        slabs: Unit: count.
+        area: Unit: area.
+        volume: Unit: volume.
+        amount: Its quantity by the way it is counted: the area or the volume. Unit: 1.
+        id: The project material's id; absent: a text material (not bound).
+    """
+    name: str
+    quantity: MaterialQuantity | MaterialQuantityName
+    walls: int
+    slabs: int
+    area: float
+    volume: float
+    amount: float
+    category: MaterialCategory | MaterialCategoryName | None | Unset = UNSET
+    id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["quantity"] = _enum_out(self.quantity)
+        out["walls"] = self.walls
+        out["slabs"] = self.slabs
+        out["area"] = float(self.area)
+        out["volume"] = float(self.volume)
+        out["amount"] = float(self.amount)
+        if self.category is not UNSET:
+            out["category"] = None if self.category is None else _enum_out(self.category)
+        if self.id is not UNSET:
+            out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialRow:
+        return cls(
+            name=data["name"],
+            quantity=_enum_in(MaterialQuantity, data["quantity"]),
+            walls=data["walls"],
+            slabs=data["slabs"],
+            area=float(data["area"]),
+            volume=float(data["volume"]),
+            amount=float(data["amount"]),
+            category=UNSET if "category" not in data else None if data["category"] is None else _enum_in(MaterialCategory, data["category"]),
+            id=data.get("id", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaterialsEdit(_Model):
+    """Input of `cad.materials.edit` v1: the project's materials changed as one undo step “Malzeme”, with the wall styles,
+    walls and slabs bound to them. Its plan is the preview: the table and what follows, nothing written.
+
+    Refusals: `invalid_material`, `material_not_found`, `material_exists`, `material_in_use`, `nothing_to_set`,
+    `style_not_found`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `not_a_slab`, `component_not_found`,
+    `layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`, `material_adopt_left`.
+    """
+    operation: MaterialsOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialsEdit:
+        return cls(
+            operation=MaterialsOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaterialsEdited(_Model):
+    """Output of `cad.materials.edit` v1 (its plan's too: the preview, nothing written).
+    Attributes:
+        materials: The project's materials after it.
+        material: The material made, changed, removed or bound (its id); absent for Adopt and for leaving.
+    """
+    materials: list[ArchMaterial]
+    report: MaterialReport
+    revision: str
+    material: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["materials"] = [e0.to_json() for e0 in self.materials]
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        if self.material is not UNSET:
+            out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialsEdited:
+        return cls(
+            materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]],
+            report=MaterialReport.from_json(data["report"]),
+            revision=data["revision"],
+            material=data.get("material", UNSET),
         )
 
 
@@ -58274,6 +58587,8 @@ class SlabEntity(Entity):
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
         material: What it is made of (Betonarme); absent: not said.
+        material_id: The project material it binds to (docs/adr/0785), by its id: its `material` is the material's name and follows
+            it. Absent: its own text material.
         offset: Its top above its level's elevation, metres (negative: below it); at most 100 either way. Absent: 0. Unit: elevation.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
@@ -58302,6 +58617,7 @@ class SlabEntity(Entity):
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    material_id: str | None | Unset = UNSET
     offset: float | Unset = UNSET
     order: int | None | Unset = UNSET
     role: SlabRole | SlabRoleName | Unset = UNSET
@@ -58344,6 +58660,8 @@ class SlabEntity(Entity):
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.material_id is not UNSET:
+            out["materialId"] = self.material_id
         if self.offset is not UNSET:
             out["offset"] = float(self.offset)
         if self.order is not UNSET:
@@ -58380,6 +58698,7 @@ class SlabEntity(Entity):
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             material=data.get("material", UNSET),
+            material_id=data.get("materialId", UNSET),
             offset=float(data["offset"]) if "offset" in data else UNSET,
             order=data.get("order", UNSET),
             role=_enum_in(SlabRole, data["role"]) if "role" in data else UNSET,
@@ -60863,6 +61182,8 @@ class SpacesPlan(_Model):
 class SpacesQuantified(_Model):
     """Output of `cad.spaces.quantities` v1 (its plan's too).
     Attributes:
+        materials: The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's
+            order, then the text ones in the drawing's.
         ramps: The ramps (docs/adr/0723 §3).
         slabs: The slabs (docs/adr/0722 §5).
         stairs: The stairs (docs/adr/0724 §5).
@@ -60872,6 +61193,7 @@ class SpacesQuantified(_Model):
     walls: list[WallRow]
     openings: list[OpeningRow]
     totals: QuantityTotals
+    materials: list[MaterialRow] | Unset = UNSET
     ramps: list[RampRow] | Unset = UNSET
     slabs: list[SlabRow] | Unset = UNSET
     stairs: list[StairRow] | Unset = UNSET
@@ -60883,6 +61205,8 @@ class SpacesQuantified(_Model):
         out["walls"] = [e0.to_json() for e0 in self.walls]
         out["openings"] = [e0.to_json() for e0 in self.openings]
         out["totals"] = self.totals.to_json()
+        if self.materials is not UNSET:
+            out["materials"] = [e0.to_json() for e0 in self.materials]
         if self.ramps is not UNSET:
             out["ramps"] = [e0.to_json() for e0 in self.ramps]
         if self.slabs is not UNSET:
@@ -60900,6 +61224,7 @@ class SpacesQuantified(_Model):
             walls=[WallRow.from_json(e0) for e0 in data["walls"]],
             openings=[OpeningRow.from_json(e0) for e0 in data["openings"]],
             totals=QuantityTotals.from_json(data["totals"]),
+            materials=[MaterialRow.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
             ramps=[RampRow.from_json(e0) for e0 in data["ramps"]] if "ramps" in data else UNSET,
             slabs=[SlabRow.from_json(e0) for e0 in data["slabs"]] if "slabs" in data else UNSET,
             stairs=[StairRow.from_json(e0) for e0 in data["stairs"]] if "stairs" in data else UNSET,
@@ -67875,6 +68200,8 @@ class WallComponent(_Model):
     Attributes:
         detail: The least detail it is drawn at as its own (its lines and hatch); below, it is part of the body.
         edge: The lines along its sides; absent: the wall's.
+        material_id: The project material it binds to (docs/adr/0785, `settings.arch.materials`), by its id: its `material`, `hatch`
+            and `edge` are the material's and follow it. Absent: its own text material, as before.
         priority: Its strength where walls meet (docs/adr/0340 §1), 1 to 9, the smaller the stronger: a joining wall's component
             passes the host's weaker ones and stops at the first as strong. Absent: 3 (between a core's 1 and a finish's 5). Unit: 1.
         thickness: Its thickness, metres; absent: what the wall's width leaves of the others (one component at most). Unit: length.
@@ -67887,6 +68214,7 @@ class WallComponent(_Model):
     edge: ComponentEdge | None | Unset = UNSET
     hatch: ComponentHatch | None | Unset = UNSET
     material: str | None | Unset = UNSET
+    material_id: str | None | Unset = UNSET
     priority: int | None | Unset = UNSET
     thickness: float | None | Unset = UNSET
     wrap: bool | Unset = UNSET
@@ -67901,6 +68229,8 @@ class WallComponent(_Model):
             out["hatch"] = None if self.hatch is None else self.hatch.to_json()
         if self.material is not UNSET:
             out["material"] = self.material
+        if self.material_id is not UNSET:
+            out["materialId"] = self.material_id
         if self.priority is not UNSET:
             out["priority"] = self.priority
         if self.thickness is not UNSET:
@@ -67917,6 +68247,7 @@ class WallComponent(_Model):
             edge=UNSET if "edge" not in data else None if data["edge"] is None else ComponentEdge.from_json(data["edge"]),
             hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
             material=data.get("material", UNSET),
+            material_id=data.get("materialId", UNSET),
             priority=data.get("priority", UNSET),
             thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
             wrap=data.get("wrap", UNSET),
@@ -77659,6 +77990,176 @@ class DynamicLengthenChange(LengthenChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallStyleMaterialTarget(MaterialTarget):
+    """A project wall style's component (from its left face, 0 first); the walls of the style follow it.
+    Attributes:
+        style: The style's id or name.
+        component: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "wallStyle"
+    style: str
+    component: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "wallStyle"}
+        out["style"] = self.style
+        out["component"] = self.component
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallStyleMaterialTarget:
+        return cls(
+            style=data["style"],
+            component=data["component"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallMaterialTarget(MaterialTarget):
+    """A wall's own component (from its left face, 0 first).
+    Attributes:
+        component: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "wall"
+    uid: str
+    component: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "wall"}
+        out["uid"] = self.uid
+        out["component"] = self.component
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallMaterialTarget:
+        return cls(
+            uid=data["uid"],
+            component=data["component"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabMaterialTarget(MaterialTarget):
+    TAG_VALUE: ClassVar[str] = "slab"
+    uid: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "slab"}
+        out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabMaterialTarget:
+        return cls(
+            uid=data["uid"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DefineMaterialsOperation(MaterialsOperation):
+    """Yeni malzeme: a material `name` (its id `id`, else from its name), its other fields from `change` (`name`
+    there is refused: the name is `name`); category Diğer and volume when not given.
+    """
+    TAG_VALUE: ClassVar[str] = "define"
+    name: str
+    change: MaterialChange = field(default_factory=(lambda: MaterialChange.from_json({})))
+    id: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "define"}
+        out["name"] = self.name
+        out["change"] = self.change.to_json()
+        if self.id is not UNSET:
+            out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DefineMaterialsOperation:
+        return cls(
+            name=data["name"],
+            change=MaterialChange.from_json(data["change"]) if "change" in data else (lambda: MaterialChange.from_json({}))(),
+            id=data.get("id", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateMaterialsOperation(MaterialsOperation):
+    """Malzemeyi değiştir: the material (its id or name) changed by `change`; everything bound to it follows."""
+    TAG_VALUE: ClassVar[str] = "update"
+    material: str
+    change: MaterialChange
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["material"] = self.material
+        out["change"] = self.change.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateMaterialsOperation:
+        return cls(
+            material=data["material"],
+            change=MaterialChange.from_json(data["change"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveMaterialsOperation(MaterialsOperation):
+    """Sil: the material; refused while anything is bound to it (`material_in_use`, with the walls' and slabs' ids)."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    material: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveMaterialsOperation:
+        return cls(
+            material=data["material"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AssignMaterialsOperation(MaterialsOperation):
+    """Bağla: the targets bound to the material (its id or name; absent or null: left, each keeping its text and look)."""
+    TAG_VALUE: ClassVar[str] = "assign"
+    targets: list[MaterialTarget]
+    material: str | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "assign"}
+        out["targets"] = [e0.to_json() for e0 in self.targets]
+        out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AssignMaterialsOperation:
+        return cls(
+            targets=[MaterialTarget.from_json(e0) for e0 in data["targets"]],
+            material=data["material"] if "material" in data else None,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AdoptMaterialsOperation(MaterialsOperation):
+    """Metinlerden al: every text material of the wall styles, the walls and the slabs not bound to one becomes a
+    project material (its id from its text) and they are bound to it; a text whose components' hatch or pen
+    differ is bound where they are the first's and left elsewhere (`material_adopt_left`), so no look changes.
+    """
+    TAG_VALUE: ClassVar[str] = "adopt"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "adopt"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AdoptMaterialsOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class AtMeasuredPoint(MeasuredPoint):
     """Coordinates: the point follows nothing.
     Attributes:
@@ -87122,6 +87623,12 @@ _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "remove
 _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChange, "percent": PercentLengthenChange, "total": TotalLengthenChange, "dynamic": DynamicLengthenChange}
 
 
+_MATERIAL_TARGET: dict[str, type[MaterialTarget]] = {"wallStyle": WallStyleMaterialTarget, "wall": WallMaterialTarget, "slab": SlabMaterialTarget}
+
+
+_MATERIALS_OPERATION: dict[str, type[MaterialsOperation]] = {"define": DefineMaterialsOperation, "update": UpdateMaterialsOperation, "remove": RemoveMaterialsOperation, "assign": AssignMaterialsOperation, "adopt": AdoptMaterialsOperation}
+
+
 _MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place": PlaceMeasuredPoint}
 
 
@@ -87393,6 +87900,7 @@ __all__ = [
     "AdjustKnownPoint",
     "AdjustObservation",
     "AdjustWork",
+    "AdoptMaterialsOperation",
     "AffectReason",
     "AffectReasonName",
     "AffectedFrame",
@@ -87474,6 +87982,7 @@ __all__ = [
     "ArchExceptionsEdited",
     "ArchInfo",
     "ArchLevel",
+    "ArchMaterial",
     "ArchModule",
     "ArchOperation",
     "ArchPhase",
@@ -87516,6 +88025,7 @@ __all__ = [
     "AssetViaName",
     "AssetsCheck",
     "AssetsChecked",
+    "AssignMaterialsOperation",
     "AssocArray",
     "AtKnownPoint",
     "AtMeasuredPoint",
@@ -87866,6 +88376,7 @@ __all__ = [
     "DeclaredCrs",
     "DeclaredVertical",
     "DecurveCurveEdit",
+    "DefineMaterialsOperation",
     "DefineModulesOperation",
     "DefineOpeningTypesOperation",
     "DeleteBlockChange",
@@ -88702,6 +89213,17 @@ __all__ = [
     "MatchProperty",
     "MatchPropertyName",
     "MatchSizePaperOp",
+    "MaterialCategory",
+    "MaterialCategoryName",
+    "MaterialChange",
+    "MaterialQuantity",
+    "MaterialQuantityName",
+    "MaterialReport",
+    "MaterialRow",
+    "MaterialTarget",
+    "MaterialsEdit",
+    "MaterialsEdited",
+    "MaterialsOperation",
     "MeasuredPoint",
     "MedianRoadWork",
     "Meeting",
@@ -89516,6 +90038,7 @@ __all__ = [
     "RemoveItemsPaperOp",
     "RemoveJoinsOp",
     "RemoveMasterPaperOp",
+    "RemoveMaterialsOperation",
     "RemoveMembersModulesOperation",
     "RemoveModulesOperation",
     "RemoveOpeningTypesOperation",
@@ -89751,6 +90274,7 @@ __all__ = [
     "SlabEntity",
     "SlabFace",
     "SlabFaceName",
+    "SlabMaterialTarget",
     "SlabRole",
     "SlabRoleName",
     "SlabRow",
@@ -90130,6 +90654,7 @@ __all__ = [
     "UpdateFieldEdit",
     "UpdateFormsOp",
     "UpdateJoinsOp",
+    "UpdateMaterialsOperation",
     "UpdateModulesOperation",
     "UpdateOpeningTypesOperation",
     "UpdateRelationsOp",
@@ -90206,6 +90731,7 @@ __all__ = [
     "WallLength",
     "WallLine",
     "WallLineName",
+    "WallMaterialTarget",
     "WallNodeDecision",
     "WallNodeDecisionName",
     "WallOpeningReference",
@@ -90216,6 +90742,7 @@ __all__ = [
     "WallReferenceName",
     "WallRow",
     "WallStyleDef",
+    "WallStyleMaterialTarget",
     "WallsCreate",
     "WallsCreated",
     "WallsDistances",

@@ -301,6 +301,12 @@ pub(crate) enum Op {
         before: Vec<kentos_contracts::OpeningType>,
         after: Vec<kentos_contracts::OpeningType>,
     },
+    /// The project's building materials (docs/adr/0785), before and after: a setting, written in the step with the
+    /// styles, walls and slabs bound to them, so undo gives both back.
+    Materials {
+        before: Vec<kentos_contracts::ArchMaterial>,
+        after: Vec<kentos_contracts::ArchMaterial>,
+    },
     /// The building program (docs/adr/0773), before and after: a setting, written in the step with the spaces' groups
     /// it gives, so undo gives both back.
     BuildingProgram {
@@ -599,6 +605,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::OpeningTypes { before, after } => Op::OpeningTypes {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::Materials { before, after } => Op::Materials {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1237,6 +1247,7 @@ impl Document {
                 | Op::Domains { .. }
                 | Op::AuditExceptions { .. }
                 | Op::OpeningTypes { .. }
+                | Op::Materials { .. }
                 | Op::BuildingProgram { .. }
                 | Op::ArchModules { .. }
                 | Op::Source { .. }
@@ -1516,6 +1527,12 @@ impl Document {
             Op::OpeningTypes { after, .. } => {
                 let mut arch = self.settings.arch.take().unwrap_or_default();
                 arch.opening_types = after.clone();
+                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                return;
+            }
+            Op::Materials { after, .. } => {
+                let mut arch = self.settings.arch.take().unwrap_or_default();
+                arch.materials = after.clone();
                 self.settings.arch = (!arch.is_empty()).then_some(arch);
                 return;
             }

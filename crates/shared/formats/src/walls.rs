@@ -72,6 +72,7 @@ fn component(c: &WallComponent) -> Component {
     Component {
         name: Some(c.name.clone()),
         material: c.material.clone(),
+        material_id: c.material_id.clone(),
         thickness: c.thickness,
         edge: c.edge.as_ref().map(|e| wall::ComponentEdge {
             color: e.color.clone(),
@@ -94,6 +95,7 @@ fn component_back(c: &Component) -> WallComponent {
     WallComponent {
         name: c.name.clone().unwrap_or_default(),
         material: c.material.clone(),
+        material_id: c.material_id.clone(),
         thickness: c.thickness,
         edge: c.edge.as_ref().map(|e| ComponentEdge {
             color: e.color.clone(),

@@ -1761,6 +1761,21 @@ codes! {
     OPENING_TYPE_SKIPPED = "opening_type_skipped", Warning, false, "Tipi izleyen bazı açıklıklar güncellenmedi (kilitli katman ya da sığmayan); eski sürümde kaldı.";
     /// Openings of a type that kept their own value of a field the type changed.
     OPENING_TYPE_KEPT = "opening_type_kept", Warning, false, "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu.";
+    // ── Malzemeler (docs/adr/0785) ───────────────────────────────────────
+    /// No project material of the id or name given.
+    MATERIAL_NOT_FOUND = "material_not_found", Failed, false, "Projede bu kimlikte ya da adda malzeme yok.";
+    /// A material whose fields make none, or a table that would break its rules.
+    INVALID_MATERIAL = "invalid_material", Failed, false, "Malzemenin alanları geçersiz ya da malzeme tablosunun kuralını bozuyor.";
+    /// A material's id or name another material of the project has.
+    MATERIAL_EXISTS = "material_exists", Failed, false, "Projede bu kimlikte ya da adda bir malzeme zaten var; başka bir ad verin.";
+    /// A material removed while wall styles, walls or slabs are bound to it.
+    MATERIAL_IN_USE = "material_in_use", Failed, false, "Malzemeye bağlı duvar stilleri, duvarlar ya da döşemeler var; önce onları başka malzemeye bağlayın ya da bağdan ayırın.";
+    /// A wall's or a style's component index the wall or the style has not.
+    COMPONENT_NOT_FOUND = "component_not_found", Failed, false, "Duvarın ya da duvar stilinin bu sırada bileşeni yok.";
+    /// Objects bound to a changed material left at the old values: on a locked layer.
+    MATERIAL_LOCKED = "material_locked", Warning, false, "Malzemeye bağlı bazı nesneler kilitli katmanda; eski değerleriyle kaldı.";
+    /// Text materials not taken into the table: their components' looks differ for the same text.
+    MATERIAL_ADOPT_LEFT = "material_adopt_left", Warning, false, "Aynı adlı bazı bileşenlerin taraması ya da kalemi farklı; görünüşü değişmesin diye bağlanmadı.";
     // Oda modülleri (docs/adr/0775).
     /// A module's id or name another module of the project has.
     MODULE_EXISTS = "module_exists", Failed, false, "Projede bu kimlikte ya da adda bir oda modülü zaten var; başka bir ad verin.";

@@ -139,6 +139,8 @@ pub const DEFAULT_PRIORITY: u8 = 3;
 pub struct Component {
     pub name: Option<String>,
     pub material: Option<String>,
+    /// The project material it binds to (docs/adr/0785), by its id; carried, not drawn by.
+    pub material_id: Option<String>,
     pub thickness: Option<f64>,
     pub edge: Option<ComponentEdge>,
     pub hatch: Option<ComponentFill>,
@@ -196,6 +198,9 @@ impl ToJson for Component {
         let mut first = true;
         field(out, &mut first, "name", &self.name);
         field(out, &mut first, "material", &self.material);
+        if self.material_id.is_some() {
+            field(out, &mut first, "materialId", &self.material_id);
+        }
         field(out, &mut first, "thickness", &self.thickness);
         field(out, &mut first, "edge", &self.edge);
         field(out, &mut first, "hatch", &self.hatch);
@@ -217,6 +222,7 @@ impl FromJson for Component {
         Ok(Component {
             name: Option::from_json(v.get("name"))?,
             material: Option::from_json(v.get("material"))?,
+            material_id: Option::from_json(v.get("materialId"))?,
             thickness: Option::from_json(v.get("thickness"))?,
             edge: Option::from_json(v.get("edge"))?,
             hatch: Option::from_json(v.get("hatch"))?,

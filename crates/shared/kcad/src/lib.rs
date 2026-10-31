@@ -713,11 +713,15 @@ pub const SCHEMA_WITH_VIEW_TEMPLATES: u32 = 146;
 /// (`arch.program.shareRule`, a unit's `shareWeight`), a building's and a wing's `levels`, and a schedule's share
 /// fields (`share`, `gross`); written only when the program or a schedule has one.
 pub const SCHEMA_WITH_PROGRAM_SHARES: u32 = 147;
+/// Schema 148 (docs/adr/0785): the project's building materials (the architectural
+/// settings' `materials`) and a wall component's or a slab's binding to one (`materialId`); written only when the project
+/// has one or something is bound.
+pub const SCHEMA_WITH_MATERIALS: u32 = 148;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 146] = [
+pub const SCHEMAS: [u32; 147] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -864,6 +868,7 @@ pub const SCHEMAS: [u32; 146] = [
     SCHEMA_WITH_MODULE_UNITS,
     SCHEMA_WITH_VIEW_TEMPLATES,
     SCHEMA_WITH_PROGRAM_SHARES,
+    SCHEMA_WITH_MATERIALS,
 ];
 
 /// The file a drawing is saved as.

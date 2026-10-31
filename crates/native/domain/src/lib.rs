@@ -91,6 +91,7 @@ pub mod text_fields;
 mod units;
 mod domains;
 mod opening_types;
+mod materials;
 mod arch_modules;
 mod source_steps;
 mod lineage;
