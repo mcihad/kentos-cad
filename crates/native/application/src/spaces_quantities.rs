@@ -7,7 +7,8 @@
 //!   from the walls its area by each method too.
 //! - A wall: its base line's length; its height its own, else its level's; its gross face length × height; its
 //!   openings' area (width × (head − sill), sill absent 0, those with a head and going through; docs/adr/0719 §4: a
-//!   niche or flue does not); its net face the gross less the openings; its volume the net face × width.
+//!   niche or flue does not); its net face the gross less the openings; its volume the net face × width less its pocket
+//!   doors' cavities (docs/adr/0787 §3: each pocket's length × width along the wall's middle × its door's height).
 //! - An opening: its width, its height head − sill, its area; a niche's or flue's depth. The totals' opening area is
 //!   the through openings'.
 //! - A room's baseboard, a slab, the floor finishes' changes at the passages: `slab_quantities` (docs/adr/0722 §5).
@@ -113,10 +114,15 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     let mut on_wall: BTreeMap<String, Vec<(String, f64)>> = BTreeMap::new();
     // The walls with a niche or flue: their rule says those stay (docs/adr/0719 §4).
     let mut recessed: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+    // Each wall's pocket doors' cavities, m³ (docs/adr/0787 §3).
+    let mut pocketed: BTreeMap<String, f64> = BTreeMap::new();
     for e in doc.entities() {
         let Entity::Opening(o) = e else { continue };
         let x = &o.opening;
         let wall = doc.wall_line_of(&x.host).is_some().then(|| x.host.clone());
+        if let (Some(w), Some(v)) = (&wall, pockets_volume(doc, x)) {
+            *pocketed.entry(w.clone()).or_insert(0.0) += v;
+        }
         let height = x.head.map(|h| h - x.sill.unwrap_or(0.0));
         let area = height.map(|h| x.width * h);
         // A niche or flue does not go through: its wall's net face keeps it (docs/adr/0719 §4).
@@ -252,11 +258,16 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                 let openings_area = total(openings.iter().map(|(_, a)| *a));
                 let gross = height.map(|h| length * h);
                 let net = gross.map(|g| g - openings_area);
-                let rule = if recessed.contains(&id) {
+                let pockets = pocketed.get(&id).copied();
+                let mut rule = if recessed.contains(&id) {
                     "yüzey: taban çizgisinin uzunluğu × yükseklik, duvarı geçen açıklıkların alanı düşülür (niş ve baca düşülmez); hacim: net yüzey × kalınlık"
                 } else {
                     "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
-                };
+                }
+                .to_owned();
+                if pockets.is_some() {
+                    rule.push_str(", cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)");
+                }
                 wall_parts.push((x, net));
                 out.walls.push(WallRow {
                     uid: id,
@@ -268,9 +279,10 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     gross_area: gross,
                     openings_area,
                     net_area: net,
-                    volume: net.map(|n| n * x.width),
+                    volume: net.map(|n| n * x.width - pockets.unwrap_or(0.0)),
+                    pockets_volume: pockets,
                     openings: openings.into_iter().map(|(u, _)| u).collect(),
-                    rule: rule.into(),
+                    rule,
                 });
             }
             _ => {}
@@ -411,4 +423,26 @@ pub fn execute(
     input: SpacesQuantities,
 ) -> CommandResult<SpacesQuantified> {
     plan_in(cx.doc, &input)
+}
+
+/// A pocket door's cavities in its wall, m³ (docs/adr/0787 §3): each pocket's length (along the wall's base line, as
+/// the door's width) × its width × the door's height (head − sill), scaled on an arc wall to the wall's middle, where
+/// the cavity runs (its length there over its length on the base line); none for another opening, one off its wall or
+/// without a head.
+fn pockets_volume(doc: &Document, x: &kentos_commands::OpeningFields) -> Option<f64> {
+    use kentos_geometry_core::geom::{intersect::Edge, opening, wall};
+    if !kentos_domain::opening_follow::is_pocket(x) || x.broken.is_some() {
+        return None;
+    }
+    let height = x.head? - x.sill.unwrap_or(0.0);
+    let line = doc.wall_line_of(&x.host)?;
+    let (r0, r1) = kentos_domain::opening_follow::reach(x);
+    let edge = opening::edge_of(&line.path, r0, r1)?;
+    let middle = wall::left_face(&line.spec) - line.spec.width / 2.0;
+    let scale = match line.path.edges[edge] {
+        Edge::Arc { r, sweep, .. } if r > 0.0 => (r - middle * sweep.signum()) / r,
+        _ => 1.0,
+    };
+    let area: f64 = kentos_commands::opening_sizes(x).pockets.iter().map(|p| p.length * p.width).sum();
+    (area > 0.0 && height > 0.0).then_some(area * scale * height)
 }

@@ -118,7 +118,7 @@ fn special_doors_go_to_dxf_as_their_plan_symbols_and_come_back() {
 }
 
 /// Pixels per millimetre of the crops (600 dpi).
-const PX: f64 = 600.0 / 25.4;
+pub(crate) const PX: f64 = 600.0 / 25.4;
 /// The map's centre on the page (A3 landscape, 20 mm left and 10 mm top margins) and in the drawing, mm and m.
 const PAGE: [f64; 2] = [20.0 + 390.0 / 2.0, 10.0 + 277.0 / 2.0];
 const AT: [f64; 2] = [6.0, 0.0];
@@ -129,7 +129,7 @@ fn on_page(x: f64, y: f64) -> [f64; 2] {
 }
 
 /// The page's grey pixels on `[x, y, w, h]` mm, as poppler's `pdftoppm` draws them: width, height, rows.
-fn crop(pdf: &std::path::Path, r: [f64; 4]) -> (usize, usize, Vec<u8>) {
+pub(crate) fn crop(pdf: &std::path::Path, r: [f64; 4]) -> (usize, usize, Vec<u8>) {
     let [x, y, w, h] = r.map(|v| (v * PX).round() as usize);
     let prefix = pdf.with_extension(format!("{x}-{y}"));
     let ran = std::process::Command::new("pdftoppm")

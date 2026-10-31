@@ -425,10 +425,12 @@ impl App {
                 "Brüt yüzey",
                 "Açıklıklar",
                 "Net yüzey",
+                // The pocket doors' cavities taken off the volume (docs/adr/0787 §3).
+                "Cep hacmi",
                 "Hacim",
             ],
-            numbers: vec![false, false, true, true, true, true, true, true, true],
-            widths: vec![120.0, 90.0, 80.0, 80.0, 80.0, 88.0, 88.0, 88.0, 80.0],
+            numbers: vec![false, false, true, true, true, true, true, true, true, true],
+            widths: vec![120.0, 90.0, 80.0, 80.0, 80.0, 88.0, 88.0, 88.0, 80.0, 80.0],
             shown: q
                 .walls
                 .iter()
@@ -442,6 +444,7 @@ impl App {
                         opt(r.gross_area, 2),
                         fixed(r.openings_area, 2),
                         opt(r.net_area, 2),
+                        opt(r.pockets_volume, 3),
                         opt(r.volume, 3),
                     ]
                 })
@@ -460,6 +463,7 @@ impl App {
                         o(r.gross_area),
                         format!("{}", r.openings_area),
                         o(r.net_area),
+                        o(r.pockets_volume),
                         o(r.volume),
                     ]
                 })

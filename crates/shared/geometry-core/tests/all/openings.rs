@@ -268,3 +268,118 @@ fn a_niche_on_a_curved_wall_has_its_back_round_the_walls_centre() {
 fn js_hypot_of(p: Vec2) -> f64 {
     kentos_geometry_core::jsmath::js_hypot(p.x, p.y)
 }
+
+/// Pocket doors in arc walls (docs/adr/0787 §2; scripts/fixtures/arc_pocket_cases.py): the jambs radial, the leaves
+/// curved bands about the wall's centre, the wall's faces broken over the door, the cavity's caps and its sides arcs.
+const ARC_POCKETS: &str = include_str!("../../../../../fixtures/walls/v1/arc-pockets.json");
+
+#[test]
+fn pocket_doors_in_arc_walls_cut_their_walls_as_the_reference_says() {
+    let cases: Value = serde_json::from_str(ARC_POCKETS).unwrap();
+    let same_line = |name: &str, what: &str, got: &kentos_geometry_core::geom::wall::Line, want: &Value| {
+        let wp: Vec<Vec2> = want["pts"].as_array().unwrap().iter().map(pt).collect();
+        let wb: Vec<f64> = want["bulges"].as_array().unwrap().iter().map(|b| b.as_f64().unwrap()).collect();
+        assert_eq!(got.pts.len(), wp.len(), "{name}: {what} köşeleri {got:?}, başvuru {want}");
+        for (a, b) in got.pts.iter().zip(&wp) {
+            assert!(close8(*a, *b), "{name}: {what} köşesi {a:?}, başvuru {b:?}");
+        }
+        for (a, b) in got.bulges.iter().zip(&wb) {
+            assert!(near8(*a, *b), "{name}: {what} bükümü {a}, başvuru {b}");
+        }
+    };
+    for c in cases["cases"].as_array().unwrap() {
+        let name = c["name"].as_str().unwrap();
+        let w = &c["wall"];
+        let pts: Vec<Vec2> = w["pts"].as_array().unwrap().iter().map(pt).collect();
+        let bulges: Vec<f64> = w["bulges"].as_array().unwrap().iter().map(|b| b.as_f64().unwrap()).collect();
+        let wall = Spec::read_flat(&Json::parse(&w.to_string()).unwrap()).unwrap();
+        let o = &c["opening"];
+        let spec = OpeningSpec::read_flat(&Json::parse(&o.to_string()).unwrap()).unwrap();
+        let (at, width) = (o["at"].as_f64().unwrap(), o["width"].as_f64().unwrap());
+        let (s0, s1) = opening::span(at, spec.anchor, width);
+        let path = opening::wall_path(&pts, Some(&bulges), false).unwrap();
+        let j = opening::jambs(&path, &wall, s0, s1).unwrap_or_else(|| panic!("{name}: pervaz yok"));
+        let wj: Vec<Vec2> = c["jambs"].as_array().unwrap().iter().map(pt).collect();
+        for (a, b) in j.iter().zip(&wj) {
+            assert!(close8(*a, *b), "{name}: pervaz {a:?}, başvuru {b:?}");
+        }
+        let symbol = opening::pieces(&j, &spec);
+        let ws = c["symbol"].as_array().unwrap();
+        assert_eq!(symbol.len(), ws.len(), "{name}: simgenin parçaları {symbol:?}");
+        for (g, want) in symbol.iter().zip(ws) {
+            same_piece_in(name, g, want);
+            if let (Some(wb), Shape::Polyline { bulges, .. }) = (want.get("bulges"), &g.shape) {
+                let got = bulges.clone().unwrap_or_default();
+                let wb: Vec<f64> = wb.as_array().unwrap().iter().map(|b| b.as_f64().unwrap()).collect();
+                assert_eq!(got.len(), wb.len(), "{name}: kanadın bükümleri {got:?}");
+                for (a, b) in got.iter().zip(&wb) {
+                    assert!(near8(*a, *b), "{name}: kanadın bükümü {a}, başvuru {b}");
+                }
+            }
+        }
+        let holes = vec![opening::holes(at, width, &spec)];
+        let ins = [WallIn {
+            pts: &pts,
+            bulges: Some(&bulges),
+            spec: &wall,
+        }];
+        let d = solve_with(&ins, &holes, None).drawn[0].clone().unwrap();
+        let lines = c["lines"].as_array().unwrap();
+        assert_eq!(d.lines.len(), lines.len(), "{name}: çizgiler");
+        for (li, (g, want)) in d.lines.iter().zip(lines).enumerate() {
+            let want = want.as_array().unwrap();
+            assert_eq!(g.len(), want.len(), "{name}: {li}. çizginin parçaları {g:?}");
+            for (st, ws) in g.iter().zip(want) {
+                same_line(name, &format!("{li}. çizgi"), &st.line, ws);
+            }
+        }
+        let caps = c["caps"].as_array().unwrap();
+        assert_eq!(d.caps.len(), caps.len(), "{name}: uç çizgileri {:?}", d.caps);
+        for (g, want) in d.caps.iter().zip(caps) {
+            assert!(
+                close8(g.0, pt(&want[0])) && close8(g.1, pt(&want[1])),
+                "{name}: uç çizgisi {g:?}, başvuru {want}"
+            );
+        }
+        let rec = c["recesses"].as_array().unwrap();
+        assert_eq!(d.recesses.len(), rec.len(), "{name}: cebin iç çizgileri {:?}", d.recesses);
+        for (g, want) in d.recesses.iter().zip(rec) {
+            same_line(name, "cebin iç çizgisi", &g.line, want);
+        }
+        // The body between the faces, its pieces' outlines: their arcs are drawn as points, each chord losing
+        // r²(θ − sin θ)/2 of the exact area, so the reference's exact area is met within half a percent.
+        let body: f64 = d
+            .fill
+            .iter()
+            .map(|(ring, holes)| ring_area(ring) - holes.iter().flatten().map(|h| ring_area(h)).sum::<f64>())
+            .sum();
+        let want = c["body"].as_f64().unwrap();
+        assert!((body - want).abs() <= 5e-3 * want, "{name}: gövdenin alanı {body}, başvuru {want}");
+    }
+}
+
+/// The arc cases' tolerance: 10 nm, as a point 4 400 km from its origin has its last bits there.
+const TOL8: f64 = 1e-8;
+
+fn close8(a: Vec2, b: Vec2) -> bool {
+    (a.x - b.x).abs() <= TOL8 && (a.y - b.y).abs() <= TOL8
+}
+
+fn near8(a: f64, b: f64) -> bool {
+    (a - b).abs() <= TOL8
+}
+
+/// [`same_piece`] within [`TOL8`]: a ring's points (its bulges are compared by the caller).
+fn same_piece_in(name: &str, got: &opening::Mark, want: &Value) {
+    match (want["kind"].as_str().unwrap(), &got.shape) {
+        ("ring", Shape::Polyline { pts, closed, .. }) => {
+            let wp: Vec<Vec2> = want["pts"].as_array().unwrap().iter().map(pt).collect();
+            assert!(*closed, "{name}: halka kapalı olmalı");
+            assert_eq!(pts.len(), wp.len(), "{name}: halkanın köşeleri");
+            for (a, b) in pts.iter().zip(&wp) {
+                assert!(close8(*a, *b), "{name}: halka köşesi {a:?}, başvuru {b:?}");
+            }
+        }
+        (kind, got) => panic!("{name}: başvuru {kind}, çekirdek {got:?}"),
+    }
+}

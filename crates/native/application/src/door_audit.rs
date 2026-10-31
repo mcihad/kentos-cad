@@ -1,6 +1,8 @@
 //! Mimari denetim's door group (docs/adr/0772 §5): three kinds of finding, kept apart. A physical clash
-//! (`arch_door_swing_clash`): a swinging door's leaf sweep runs into another wall, a column, a fixture or another
-//! door's sweep. Passage (`arch_door_front_blocked`): its use zone (`build.useZone`) is taken by one of those. A project
+//! (`arch_door_swing_clash`): a door's zone as it opens (a swinging leaf's sweep, a revolving door's drum, a folding
+//! door's gathered panels, a one-leaf sliding door's travel on its track; docs/adr/0787 §1) runs into another wall, a
+//! column, a fixture or another door's zone; its fix turns the door to the other face or hinge side when that one
+//! clears everything (`cad.openings.edit`'s Çevir). Passage (`arch_door_front_blocked`): its use zone (`build.useZone`) is taken by one of those. A project
 //! rule (`arch_door_clear_narrow`): its net clear width is under the minimum the audit is given. Walls and arcs are
 //! sampled at their vertices and every [`ARC_STEP`] radians; a touch along an edge is no clash (each zone shrunk by
 //! [`SLACK`] about its middle).
@@ -187,14 +189,98 @@ fn middle(ring: &[V]) -> V {
     )
 }
 
-/// A door's zones: its leaves' sweeps and its use zone, with its slot, its host's slot, its mark.
+/// A door's zones: its zones as it opens and its use zone, with its slot, its host's slot, its mark, how it opens, and
+/// what it is drawn from (its jambs and spec), so its zones turned can be tried.
 struct Door {
     slot: Slot,
     level: Option<String>,
     host: Option<Slot>,
     mark: String,
+    operation: OpeningOperation,
+    place: Vec<V>,
+    spec: opening::Spec,
     sweeps: Vec<Vec<V>>,
     zone: Option<Vec<V>>,
+}
+
+/// How a door can be turned (`cad.openings.edit`'s `flip`), in the order a fix tries them: its words, its `what`.
+pub const TURNS: [(&str, &str); 3] = [
+    ("Açılışı öbür yüze çevir", "side"),
+    ("Menteşe yanını çevir", "hand"),
+    ("Açılışı ve menteşe yanını çevir", "both"),
+];
+
+/// A door's clash words by how it opens (docs/adr/0787 §1): what of it strikes, and what to do.
+fn clash_words(d: &Door, what: &str) -> (String, String) {
+    match d.operation {
+        OpeningOperation::Revolving => (
+            format!("{} döner kapısının tamburu bir {} çarpıyor (fiziksel çarpışma).", d.mark, dative(what)),
+            "Döner kapıyı kaydırın, tamburunu küçültün ya da engeli taşıyın.".into(),
+        ),
+        OpeningOperation::Folding => (
+            format!("{} katlanır kapısının panelleri toplanırken bir {} çarpıyor (fiziksel çarpışma).", d.mark, dative(what)),
+            "Kapının açılış yönünü ya da toplandığı yanı çevirin, panel sayısını artırın ya da engeli taşıyın.".into(),
+        ),
+        OpeningOperation::Slide => (
+            format!("{} sürme kapısının kanadı kayarken bir {} çarpıyor (fiziksel çarpışma).", d.mark, dative(what)),
+            "Kapının kaydığı yüzü ya da yönü çevirin ya da engeli taşıyın.".into(),
+        ),
+        _ => (
+            format!("{} kapısının kanadı açılırken bir {} çarpıyor (fiziksel çarpışma).", d.mark, dative(what)),
+            "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.".into(),
+        ),
+    }
+}
+
+/// The door's zones turned as `what` says.
+fn turned(d: &Door, what: &str) -> Vec<Vec<V>> {
+    let mut spec = d.spec.clone();
+    if what != "hand" {
+        spec.side_right = !spec.side_right;
+    }
+    if what != "side" {
+        spec.hand_end = !spec.hand_end;
+    }
+    opening::door_zones(&d.place, &spec)
+}
+
+/// Whether `zones` clear every obstacle off the door's host and on its level, and every other door's zones.
+fn clear_of(d: &Door, zones: &[Vec<V>], obstacles: &[Obstacle], doors: &[Door]) -> bool {
+    zones.iter().all(|z| {
+        let shrunk_z = shrunk(z);
+        obstacles
+            .iter()
+            .filter(|o| Some(o.slot) != d.host && o.level == d.level)
+            .all(|o| !overlaps(&shrunk_z, o))
+            && doors
+                .iter()
+                .filter(|o| o.slot != d.slot && o.level == d.level)
+                .all(|o| o.sweeps.iter().all(|s| !zones_meet(z, s)))
+    })
+}
+
+/// Whether two zones overlap by more than a touch.
+fn zones_meet(a: &[V], b: &[V]) -> bool {
+    if !boxes_meet(a, b) {
+        return false;
+    }
+    let o = Obstacle {
+        slot: Slot(0),
+        level: None,
+        what: "",
+        outer: shrunk(b),
+        holes: Vec::new(),
+    };
+    overlaps(&shrunk(a), &o)
+}
+
+/// The first turn that leaves the door clear of everything, as its `what`; none when none does or its zones do not
+/// change (a revolving door's drum).
+fn fix_of(d: &Door, obstacles: &[Obstacle], doors: &[Door]) -> Option<(&'static str, &'static str)> {
+    TURNS.into_iter().find(|(_, what)| {
+        let zones = turned(d, what);
+        zones != d.sweeps && clear_of(d, &zones, obstacles, doors)
+    })
 }
 
 fn doors(doc: &Document) -> Vec<Door> {
@@ -219,12 +305,11 @@ fn doors(doc: &Document) -> Vec<Door> {
                 .clone()
                 .filter(|n| !n.is_empty())
                 .unwrap_or_else(|| "numarasız".into()),
-            sweeps: if f.operation == OpeningOperation::Swing {
-                opening::swing_zones(&place, &spec)
-            } else {
-                Vec::new()
-            },
+            operation: f.operation,
+            sweeps: opening::door_zones(&place, &spec),
             zone: opening::use_zone(&place, &spec),
+            place,
+            spec,
         });
     }
     out
@@ -281,57 +366,62 @@ fn obstacles(doc: &Document) -> Vec<Obstacle> {
 }
 
 /// The door group's findings: clashes, blocked fronts and, given `min_clear`, doors narrower in clear.
+/// A clash's fix comes as its words and its `flip`'s `what` (the caller makes the call, none on a locked layer).
+pub(crate) type Turn = Option<(&'static str, &'static str)>;
+
 pub(crate) fn findings(
     doc: &Document,
     min_clear: Option<f64>,
-    mut finding: impl FnMut(&str, String, String, Vec<Slot>, V, ArchAuditNature) -> ArchAuditFinding,
+    mut finding: impl FnMut(&str, String, String, Vec<Slot>, V, ArchAuditNature, Turn) -> ArchAuditFinding,
 ) -> Vec<ArchAuditFinding> {
     let doors = doors(doc);
     let obstacles = obstacles(doc);
     let mut out = Vec::new();
     for (i, d) in doors.iter().enumerate() {
+        // Its fix, tried once and only when it clashes.
+        let mut fix: Option<Turn> = None;
+        let mut fix_for = |d: &Door| *fix.get_or_insert_with(|| fix_of(d, &obstacles, &doors));
         for sweep in &d.sweeps {
             let z = shrunk(sweep);
             for o in &obstacles {
                 if Some(o.slot) == d.host || o.level != d.level || !overlaps(&z, o) {
                     continue;
                 }
+                let (message, repair) = clash_words(d, o.what);
                 out.push(finding(
                     crate::codes::ARCH_DOOR_SWING_CLASH,
-                    format!("{} kapısının kanadı açılırken bir {} çarpıyor (fiziksel çarpışma).", d.mark, dative(o.what)),
-                    "Kapının açılış yönünü ya da menteşesini çevirin, kanadı daraltın ya da engeli taşıyın.".into(),
+                    message,
+                    repair,
                     vec![d.slot, o.slot],
                     middle(sweep),
                     ArchAuditNature::Physical,
+                    fix_for(d),
                 ));
             }
             for (j, other) in doors.iter().enumerate() {
                 if j <= i || other.level != d.level {
                     continue;
                 }
-                if other.sweeps.iter().any(|s| {
-                    if !boxes_meet(sweep, s) {
-                        return false;
-                    }
-                    let o = Obstacle {
-                        slot: other.slot,
-                        level: None,
-                        what: "",
-                        outer: shrunk(s),
-                        holes: Vec::new(),
-                    };
-                    overlaps(&z, &o)
-                }) {
-                    out.push(finding(
-                        crate::codes::ARCH_DOOR_SWING_CLASH,
+                if other.sweeps.iter().any(|s| zones_meet(sweep, s)) {
+                    let message = if d.operation == OpeningOperation::Swing && other.operation == OpeningOperation::Swing {
                         format!(
                             "{} ve {} kapılarının kanatları açılırken birbirine çarpıyor (fiziksel çarpışma).",
                             d.mark, other.mark
-                        ),
+                        )
+                    } else {
+                        format!(
+                            "{} ve {} kapıları açılırken birbirinin alanına giriyor (fiziksel çarpışma).",
+                            d.mark, other.mark
+                        )
+                    };
+                    out.push(finding(
+                        crate::codes::ARCH_DOOR_SWING_CLASH,
+                        message,
                         "Kapılardan birinin açılış yönünü ya da menteşesini çevirin ya da kapıyı kaydırın.".into(),
                         vec![d.slot, other.slot],
                         middle(sweep),
                         ArchAuditNature::Physical,
+                        fix_for(d),
                     ));
                 }
             }
@@ -352,6 +442,7 @@ pub(crate) fn findings(
                     vec![d.slot, o.slot],
                     middle(zone),
                     ArchAuditNature::Passage,
+                    None,
                 ));
             }
         }
@@ -372,6 +463,7 @@ pub(crate) fn findings(
                 vec![d.slot],
                 middle(&o.opening.place.iter().map(|p| V::new(p.x, p.y)).collect::<Vec<_>>()),
                 ArchAuditNature::Rule,
+                None,
             ));
         }
     }

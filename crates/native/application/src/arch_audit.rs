@@ -1885,7 +1885,18 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
             ArchAuditCheck::Doors => crate::door_audit::findings(
                 doc,
                 input.min_clear_width,
-                |code, message, repair, slots, at, nature| {
+                |code, message, repair, slots, at, nature, turn| {
+                    // Its fix: the door turned (docs/adr/0787 §1), not on a locked layer.
+                    let fix = turn.zip(slots.first()).and_then(|((label, what), door)| {
+                        let e = doc.get(*door)?;
+                        (!audit.locked(e)).then(|| {
+                            fix(
+                                label,
+                                "cad.openings.edit",
+                                json!({"uids": [audit.uid(*door)], "operation": {"kind": "flip", "what": what}}),
+                            )
+                        })
+                    });
                     let mut f = finding(
                         ArchAuditCheck::Doors,
                         code,
@@ -1893,7 +1904,7 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
                         repair,
                         slots.iter().map(|s| audit.uid(*s)).collect(),
                         at,
-                        None,
+                        fix,
                     );
                     f.nature = Some(nature);
                     f

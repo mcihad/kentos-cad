@@ -167,8 +167,9 @@ elle verilen düğüm kararını ve kaynak bağlarını geri getirsin.
 
 _Durum (31 Ekim 2026, [ADR 0772](../docs/adr/0772-door-window-types-instances-clear-width.md)):_ tipler, örnek istisnası,
 dört en, yapı, takip raporu ve Kapılar denetimi yapıldı. Döner, cebe giren ve katlanır kapı, kayar kapının rayı ve bindirmesi
-([ADR 0777](../docs/adr/0777-revolving-pocket-folding-doors.md)). Açık: bağımsız bölüm kapsamı (ADV-04), döner/katlanır kapının
-çarpışma denetimi, yaylı duvarda cep, cebin metrajdan düşülmesi, üç-dört kanatlı sürme, PDF metninin okunması, gerçek pencerede elle kabul.
+([ADR 0777](../docs/adr/0777-revolving-pocket-folding-doors.md)). Döner/katlanır/raylı sürme kapının çarpışma denetimi düzeltmesiyle,
+yaylı duvarda cep ve cebin metrajdan düşülmesi ([ADR 0787](../docs/adr/0787-special-door-clashes-arc-pockets-pocket-quantities.md)).
+Açık: bağımsız bölüm kapsamı (ADV-04), üç-dört kanatlı sürme, PDF metninin okunması, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Ofisin K01 kapısı tek yerde tanımlansın; kullanıcı hangi
 özelliğin tipe, hangisinin bu kapıya ait olduğunu bilsin. Dayanak A3.

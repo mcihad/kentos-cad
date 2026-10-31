@@ -1,0 +1,3388 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.spaces.quantities",
+ "commandVersion": 1,
+ "title": "Cebin metrajdan düşülmesi",
+ "note": "ADR 0787. Beklenenler scripts/fixtures/arc_pocket_cases.py'nin ADR'den yazılmış kurallarından (ölçüler ve retler ADR 0777'nin special_doors_command_cases.py'sinden), KentOS kodu olmadan. Kurulumda üç yaylı duvar (R 5 m çeyrek 0,30 m; R 5 m 0,10 m; saat yönünde sola yaslı R 6 m) ve bir düz duvar, yaylı duvarda CG1 cebe giren ve Kapı 90, düz duvarda CG1; yeni nesne 8'den başlar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yaylı duvarda cep",
+  "uids": [
+   "0192f5a1-7870-7000-8000-000000000001",
+   "0192f5a1-7870-7000-8000-000000000002",
+   "0192f5a1-7870-7000-8000-000000000003",
+   "0192f5a1-7870-7000-8000-000000000004",
+   "0192f5a1-7870-7000-8000-000000000005",
+   "0192f5a1-7870-7000-8000-000000000006",
+   "0192f5a1-7870-7000-8000-000000000007"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "arch": {
+    "openingTypes": [
+     {
+      "id": "cg1",
+      "name": "CG1",
+      "version": 1,
+      "form": "door",
+      "width": 0.9,
+      "operation": "pocket",
+      "frame": 0.03,
+      "head": 2.1,
+      "build": {
+       "leafThickness": 0.04,
+       "lip": 0.06
+      }
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "kapi",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 5.0,
+      "y": 0.0
+     },
+     {
+      "x": 3.061616997868383e-16,
+      "y": 5.0
+     }
+    ],
+    "bulges": [
+     0.4142135623730951,
+     0.0
+    ],
+    "width": 0.3,
+    "justify": "center",
+    "height": 3.0
+   },
+   {
+    "kind": "wall",
+    "id": 2,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 25.0,
+      "y": 0.0
+     },
+     {
+      "x": 20.0,
+      "y": 5.0
+     }
+    ],
+    "bulges": [
+     0.4142135623730951,
+     0.0
+    ],
+    "width": 0.1,
+    "justify": "center",
+    "height": 2.8
+   },
+   {
+    "kind": "wall",
+    "id": 3,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 37.50311898071715,
+      "y": 7.45578456095409
+     },
+     {
+      "x": 45.26549537134224,
+      "y": 4.876553231625218
+     }
+    ],
+    "bulges": [
+     -0.39362657592563277,
+     0.0
+    ],
+    "width": 0.3,
+    "justify": "left",
+    "height": 3.0
+   },
+   {
+    "kind": "wall",
+    "id": 4,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": -10.0
+     },
+     {
+      "x": 12.0,
+      "y": -10.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center",
+    "height": 3.0
+   },
+   {
+    "kind": "opening",
+    "id": 5,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7870-7000-8000-000000000001",
+    "at": 5.5,
+    "width": 0.9,
+    "form": "door",
+    "operation": "pocket",
+    "frame": 0.03,
+    "head": 2.1,
+    "style": "cg1",
+    "number": "CG1",
+    "typeVersion": 1,
+    "build": {
+     "leafThickness": 0.04,
+     "lip": 0.06
+    },
+    "place": [
+     {
+      "x": 2.579524498665624,
+      "y": 4.107134446397374
+     },
+     {
+      "x": 2.739082715077931,
+      "y": 4.361183999782779
+     },
+     {
+      "x": 1.802550380463585,
+      "y": 4.502589491158458
+     },
+     {
+      "x": 1.914048342141745,
+      "y": 4.781100181333209
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 6,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7870-7000-8000-000000000001",
+    "at": 1.2,
+    "width": 0.9,
+    "form": "door",
+    "frame": 0.05,
+    "head": 2.1,
+    "style": "kentos-kapi-90",
+    "number": "K1",
+    "place": [
+     {
+      "x": 4.795539727989804,
+      "y": 0.7247749424969562
+     },
+     {
+      "x": 5.0921710513706175,
+      "y": 0.769606382239036
+     },
+     {
+      "x": 4.588305366112676,
+      "y": 1.5716086877151112
+     },
+     {
+      "x": 4.872118069171194,
+      "y": 1.668821596233572
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 7,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7870-7000-8000-000000000004",
+    "at": 6.0,
+    "width": 0.9,
+    "form": "door",
+    "operation": "pocket",
+    "frame": 0.03,
+    "head": 2.1,
+    "style": "cg1",
+    "number": "CG2",
+    "typeVersion": 1,
+    "build": {
+     "leafThickness": 0.04,
+     "lip": 0.06
+    },
+    "place": [
+     {
+      "x": 5.55,
+      "y": -9.85
+     },
+     {
+      "x": 5.55,
+      "y": -10.15
+     },
+     {
+      "x": 6.45,
+      "y": -9.85
+     },
+     {
+      "x": 6.45,
+      "y": -10.15
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Cepler duvarların hacminden düşülür, yüzeyler aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 102.883093477052,
+        "openings": 3,
+        "openingArea": 5.67
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız duvar katmanı: duvarlar cepleriyle, kapı satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layers": [
+       "duvar"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 102.883093477052,
+        "openings": 0,
+        "openingArea": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yaylı duvara ikinci cep (menteşe sonda)",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "type": "CG1",
+        "hand": "end"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "hand": "end",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 4.232810862081894,
+          "y": 2.367659647382101
+         },
+         {
+          "x": 4.494634214375619,
+          "y": 2.514112821446974
+         },
+         {
+          "x": 3.7405431727359666,
+          "y": 3.0872053337765446
+         },
+         {
+          "x": 3.971916977235099,
+          "y": 3.2781664884431354
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 5.67,
+         "netArea": 17.891944901923445,
+         "volume": 5.176063470577033,
+         "pocketsVolume": 0.19152000000000002,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6",
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "cg1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.993093477052,
+        "openings": 4,
+        "openingArea": 7.5600000000000005
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Saat yönündeki sola yaslı yaya cep: ölçek duvarın ortasına",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "type": "CG1"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 40.97049553156693,
+          "y": 7.920991337876506
+         },
+         {
+          "x": 40.921970754988585,
+          "y": 7.624941770982681
+         },
+         {
+          "x": 41.84441980080417,
+          "y": 7.7094759477907875
+         },
+         {
+          "x": 41.752198810763964,
+          "y": 7.424002150401248
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 25.11,
+         "volume": 7.439634,
+         "pocketsVolume": 0.093366,
+         "openings": [
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "cg1",
+         "wall": "$uidOf:3",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.993093477052,
+        "openings": 4,
+        "openingArea": 7.5600000000000005
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki kanatlı cep iki cebiyle düşülür",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 2.95,
+        "width": 1.4,
+        "operation": "pocket",
+        "leaves": 2
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 2.95,
+        "width": 1.4,
+        "form": "door",
+        "leaves": 2,
+        "operation": "pocket",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 4.367168446410482,
+          "y": 2.1095828404394665
+         },
+         {
+          "x": 4.637302577116286,
+          "y": 2.2400725006728357
+         },
+         {
+          "x": 3.6140958513726207,
+          "y": 3.234317729767935
+         },
+         {
+          "x": 3.8376481720760824,
+          "y": 3.434378620269045
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 6.720000000000001,
+         "netArea": 16.841944901923448,
+         "volume": 4.815703470577034,
+         "pocketsVolume": 0.23687999999999998,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6",
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "wall": "$uidOf:1",
+         "width": 1.4,
+         "height": 2.1,
+         "area": 2.94
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 99.943093477052,
+        "openings": 4,
+        "openingArea": 8.61
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eşiği yüksek kapı: yükseklik üst − alt kot",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "operation": "pocket",
+        "sill": 0.3,
+        "head": 2.4
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.05,
+        "sill": 0.3,
+        "head": 2.4,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 40.97049553156693,
+          "y": 7.920991337876506
+         },
+         {
+          "x": 40.921970754988585,
+          "y": 7.624941770982681
+         },
+         {
+          "x": 41.84441980080417,
+          "y": 7.7094759477907875
+         },
+         {
+          "x": 41.752198810763964,
+          "y": 7.424002150401248
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 25.11,
+         "volume": 7.445776499999999,
+         "pocketsVolume": 0.0872235,
+         "openings": [
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "wall": "$uidOf:3",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.993093477052,
+        "openings": 4,
+        "openingArea": 7.5600000000000005
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kalın kanatlı cep daha çok düşer",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:4",
+        "at": 2.0,
+        "operation": "pocket",
+        "build": {
+         "leafThickness": 0.06
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:4",
+        "at": 2.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "build": {
+         "leafThickness": 0.06
+        },
+        "place": [
+         {
+          "x": 1.55,
+          "y": -9.85
+         },
+         {
+          "x": 1.55,
+          "y": -10.15
+         },
+         {
+          "x": 2.45,
+          "y": -9.85
+         },
+         {
+          "x": 2.45,
+          "y": -10.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 32.22,
+         "volume": 9.450959999999998,
+         "pocketsVolume": 0.21504,
+         "openings": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.993093477052,
+        "openings": 4,
+        "openingArea": 7.5600000000000005
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Büyük pay cebi kısaltır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:4",
+        "at": 2.0,
+        "operation": "pocket",
+        "build": {
+         "lip": 0.2
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:4",
+        "at": 2.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "build": {
+         "lip": 0.2
+        },
+        "place": [
+         {
+          "x": 1.55,
+          "y": -9.85
+         },
+         {
+          "x": 1.55,
+          "y": -10.15
+         },
+         {
+          "x": 2.45,
+          "y": -9.85
+         },
+         {
+          "x": 2.45,
+          "y": -10.15
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 32.22,
+         "volume": 9.499679999999998,
+         "pocketsVolume": 0.16632000000000002,
+         "openings": [
+          "$uidOf:7",
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.993093477052,
+        "openings": 4,
+        "openingArea": 7.5600000000000005
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kanatlı kapı cep değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:3",
+        "at": 4.0
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "width": 0.9,
+        "form": "door",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 40.97049553156693,
+          "y": 7.920991337876506
+         },
+         {
+          "x": 40.921970754988585,
+          "y": 7.624941770982681
+         },
+         {
+          "x": 41.84441980080417,
+          "y": 7.7094759477907875
+         },
+         {
+          "x": 41.752198810763964,
+          "y": 7.424002150401248
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 25.11,
+         "volume": 7.5329999999999995,
+         "openings": [
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "wall": "$uidOf:3",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.993093477052,
+        "openings": 4,
+        "openingArea": 7.5600000000000005
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme kapı cep değildir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "operation": "slide"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "slide",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 40.97049553156693,
+          "y": 7.920991337876506
+         },
+         {
+          "x": 40.921970754988585,
+          "y": 7.624941770982681
+         },
+         {
+          "x": 41.84441980080417,
+          "y": 7.7094759477907875
+         },
+         {
+          "x": 41.752198810763964,
+          "y": 7.424002150401248
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 25.11,
+         "volume": 7.5329999999999995,
+         "openings": [
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "wall": "$uidOf:3",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.993093477052,
+        "openings": 4,
+        "openingArea": 7.5600000000000005
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geniş kanatlı cep",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.6,
+        "width": 1.2,
+        "operation": "pocket"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 3.6,
+        "width": 1.2,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 4.00287773231194,
+          "y": 2.7385159959659213
+         },
+         {
+          "x": 4.250478416784843,
+          "y": 2.907908737984432
+         },
+         {
+          "x": 3.2371947053303436,
+          "y": 3.611519131858668
+         },
+         {
+          "x": 3.4374335530827365,
+          "y": 3.834912067849926
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 6.300000000000001,
+         "netArea": 17.261944901923446,
+         "volume": 4.955563470577034,
+         "pocketsVolume": 0.22302,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6",
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "wall": "$uidOf:1",
+         "width": 1.2,
+         "height": 2.1,
+         "area": 2.52
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 100.36309347705199,
+        "openings": 4,
+        "openingArea": 8.190000000000001
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapının yüksekliği değişince cebin hacmi de",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.edit",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ],
+      "operation": {
+       "kind": "set",
+       "head": 2.4
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 4.050000000000001,
+         "netArea": 19.511944901923446,
+         "volume": 5.744143470577034,
+         "pocketsVolume": 0.10944,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.4,
+         "area": 2.16
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 102.61309347705199,
+        "openings": 3,
+        "openingArea": 5.94
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren kapı silinince yaylı duvarın hacmi tam",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 21.671944901923446,
+         "volume": 6.5015834705770335,
+         "openings": [
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 104.773093477052,
+        "openings": 2,
+        "openingArea": 3.7800000000000002
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kanatlıya çevrilen kapının cebi kalmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.edit",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ],
+      "operation": {
+       "kind": "set",
+       "operation": "swing",
+       "unset": [
+        "lip"
+       ]
+      }
+     },
+     "result": "$any",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.232999999999999,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 102.883093477052,
+        "openings": 3,
+        "openingArea": 5.67
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Taşınan cep aynı hacmi düşer",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.edit",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ],
+      "operation": {
+       "kind": "move",
+       "by": -1.0
+      }
+     },
+     "result": "$any"
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 102.883093477052,
+        "openings": 3,
+        "openingArea": 5.67
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geri alınan kapı: cep yeniden düşülür",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": "$any"
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 102.883093477052,
+        "openings": 3,
+        "openingArea": 5.67
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İnce yaylı duvara cep reddedilir: metraj aynı",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:2",
+        "at": 3.0,
+        "type": "CG1"
+       }
+      ]
+     },
+     "result": "$any",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 3.7800000000000002,
+         "netArea": 19.781944901923445,
+         "volume": 5.838823470577033,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 0.0,
+         "netArea": 27.0,
+         "volume": 8.1,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 102.883093477052,
+        "openings": 3,
+        "openingArea": 5.67
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız kapı katmanı: duvar satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layers": [
+       "kapi"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 0.0,
+        "wallNetArea": 0.0,
+        "openings": 3,
+        "openingArea": 5.67
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kullanım süzgeci: yalnız mahaller",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "usages": [
+       "Oturma"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [],
+       "openings": [],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 0.0,
+        "wallNetArea": 0.0,
+        "openings": 0,
+        "openingArea": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki cep iki duvara: her duvar kendi cebini düşer",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "type": "CG1",
+        "hand": "end"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        8
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "hand": "end",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 4.232810862081894,
+          "y": 2.367659647382101
+         },
+         {
+          "x": 4.494634214375619,
+          "y": 2.514112821446974
+         },
+         {
+          "x": 3.7405431727359666,
+          "y": 3.0872053337765446
+         },
+         {
+          "x": 3.971916977235099,
+          "y": 3.2781664884431354
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "type": "CG1"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        9
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": "$any",
+      "entities": {
+       "9": {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:3",
+        "at": 4.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 40.97049553156693,
+          "y": 7.920991337876506
+         },
+         {
+          "x": 40.921970754988585,
+          "y": 7.624941770982681
+         },
+         {
+          "x": 41.84441980080417,
+          "y": 7.7094759477907875
+         },
+         {
+          "x": 41.752198810763964,
+          "y": 7.424002150401248
+         }
+        ]
+       }
+      },
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [],
+       "walls": [
+        {
+         "uid": "$uidOf:1",
+         "length": 7.853981633974483,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 23.561944901923447,
+         "openingsArea": 5.67,
+         "netArea": 17.891944901923445,
+         "volume": 5.176063470577033,
+         "pocketsVolume": 0.19152000000000002,
+         "openings": [
+          "$uidOf:5",
+          "$uidOf:6",
+          "$uidOf:8"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:2",
+         "length": 7.853981633974483,
+         "width": 0.1,
+         "height": 2.8,
+         "grossArea": 21.991148575128552,
+         "openingsArea": 0.0,
+         "netArea": 21.991148575128552,
+         "volume": 2.199114857512855,
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+        },
+        {
+         "uid": "$uidOf:3",
+         "length": 9.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 27.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 25.11,
+         "volume": 7.439634,
+         "pocketsVolume": 0.093366,
+         "openings": [
+          "$uidOf:9"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        },
+        {
+         "uid": "$uidOf:4",
+         "length": 12.0,
+         "width": 0.3,
+         "height": 3.0,
+         "grossArea": 36.0,
+         "openingsArea": 1.8900000000000001,
+         "netArea": 34.11,
+         "volume": 10.137239999999998,
+         "pocketsVolume": 0.09576000000000001,
+         "openings": [
+          "$uidOf:7"
+         ],
+         "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık, cebe giren kapıların cebi düşülür (cebin boyu × eni × kapının yüksekliği; yüzeyler cebi düşmez)"
+        }
+       ],
+       "openings": [
+        {
+         "uid": "$uidOf:5",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "style": "kentos-kapi-90",
+         "number": "K1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "style": "cg1",
+         "number": "CG2",
+         "wall": "$uidOf:4",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "style": "cg1",
+         "wall": "$uidOf:1",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        },
+        {
+         "uid": "$uidOf:9",
+         "form": "door",
+         "style": "cg1",
+         "wall": "$uidOf:3",
+         "width": 0.9,
+         "height": 2.1,
+         "area": 1.8900000000000001
+        }
+       ],
+       "totals": {
+        "spaceArea": 0.0,
+        "wallLength": 36.70796326794897,
+        "wallNetArea": 99.103093477052,
+        "openings": 5,
+        "openingArea": 9.450000000000001
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

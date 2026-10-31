@@ -27,6 +27,8 @@ mod flat_modules;
 
 #[path = "headless/special_doors.rs"]
 mod special_doors;
+#[path = "headless/arc_pockets.rs"]
+mod arc_pockets;
 
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
