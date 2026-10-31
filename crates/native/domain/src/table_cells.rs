@@ -34,6 +34,53 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
     }
 }
 
+/// Whether two tables are the same but for the object they are and where they stand (`base`, `p`, `rotation`): what a
+/// schedule's rows, widths and look are worked out from (docs/adr/0782 §3).
+fn alike_but_placed(a: &TableEntity, b: &TableEntity) -> bool {
+    let TableEntity {
+        base: _,
+        p: _,
+        rotation: _,
+        height,
+        rows,
+        columns,
+        cells,
+        merges,
+        aligns,
+        header,
+        grid,
+        frame,
+        face,
+        source,
+        styles,
+        formulas,
+        fields,
+    } = a;
+    *height == b.height
+        && *header == b.header
+        && *frame == b.frame
+        && *grid == b.grid
+        && *face == b.face
+        && *aligns == b.aligns
+        && *rows == b.rows
+        && *columns == b.columns
+        && *merges == b.merges
+        && *styles == b.styles
+        && *formulas == b.formulas
+        && *fields == b.fields
+        && *source == b.source
+        && *cells == b.cells
+}
+
+/// `worked` (another table's working out, alike but placed) as `t`'s: `t`'s own object and place.
+fn placed_as(worked: &TableEntity, t: &TableEntity) -> TableEntity {
+    let mut next = worked.clone();
+    next.base = t.base.clone();
+    next.p = t.p;
+    next.rotation = t.rotation;
+    next
+}
+
 fn core(e: &Entity) -> Option<CoreEntity> {
     let json = serde_json::to_string(e).ok()?;
     CoreEntity::from_json(&Json::parse(&json).ok()?).ok()
@@ -279,6 +326,8 @@ impl Document {
             }))
             .collect();
         let mut out = Vec::new();
+        // Schedules alike but for where they stand work out alike (docs/adr/0782 §3): each is worked out once a step.
+        let mut alike: Vec<(Arc<Entity>, Option<TableEntity>)> = Vec::new();
         for slot in self.store.computed_table_slots().collect::<Vec<_>>() {
             let Some(current) = self.store.get(slot).cloned() else {
                 continue;
@@ -294,10 +343,27 @@ impl Document {
             if !reads_drawing && !touched.contains(&current.uid) {
                 continue;
             }
-            let next = self.table_worked_out(t);
-            if next == *t || next.problem().is_some() {
-                continue;
-            }
+            let schedule = matches!(t.source, Some(TableSource::Schedule { .. })) && t.fields.is_empty();
+            let seen = schedule
+                .then(|| {
+                    alike.iter().find(|(e, _)| matches!(&**e, Entity::Table(a) if alike_but_placed(a, t)))
+                })
+                .flatten();
+            let next = match seen {
+                Some((_, None)) => continue,
+                Some((_, Some(n))) => placed_as(n, t),
+                None => {
+                    let next = self.table_worked_out(t);
+                    let kept = next == *t || next.problem().is_some();
+                    if schedule {
+                        alike.push((Arc::clone(&current.entity), (!kept).then(|| next.clone())));
+                    }
+                    if kept {
+                        continue;
+                    }
+                    next
+                }
+            };
             let op = Op::Update {
                 after: Stored {
                     uid: current.uid,
