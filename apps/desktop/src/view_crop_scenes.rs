@@ -84,8 +84,24 @@ fn sheet(app: &mut App) {
     crate::files_testing::drive(app, task);
 }
 
+/// Banyo detay at 1:20: its area runs past the map's frame; the sheet's Ön denetim says so (docs/adr/0794).
+fn cut(app: &mut App) {
+    crate::view_detail_scenes::bath(app);
+    let mut r = crate::view_detail_scenes::bath_recipe("detailed", true);
+    r["scale"] = serde_json::json!(20);
+    crate::program_scenes::command(app, "cad.views.edit", serde_json::json!({"edit": {"kind": "recipe", "name": "Banyo detay", "recipe": r}}));
+    app.follow_sheets();
+    let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::message::InspectorTab::Preflight)));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
-    vec![("kirpma-pencere", window), ("kirpma-cerceve", frame), ("kirpma-surukle", drag), ("kirpma-pafta", sheet)]
+    vec![
+        ("kirpma-pencere", window),
+        ("kirpma-cerceve", frame),
+        ("kirpma-surukle", drag),
+        ("kirpma-pafta", sheet),
+        ("kirpma-kesik-denetim", cut),
+    ]
 }
 
 /// Banyo detay's area as the drawing keeps it: middle (east and north of the origin), width, height.

@@ -203,6 +203,17 @@ fn nearest_standard(scale: u32) -> Option<u32> {
 }
 
 /// Every finding of a sheet, errors first.
+/// How much a view's area (`width` × `height` metres, in its own turn, which the linked map follows) is larger than a map
+/// frame's content (`rect`, paper micrometres) shows at 1:`denominator`, across and along; none when it fits within a
+/// millionth of its size.
+pub fn view_overrun(width: f64, height: f64, rect: &crate::units::RectUm, denominator: f64) -> Option<(f64, f64)> {
+    let ground = |um: i64| um as f64 / 1e6 * denominator;
+    let (gw, gh) = (ground(i64::from(rect.width)), ground(i64::from(rect.height)));
+    let tol = 1e-6 * width.max(height).max(1e-3);
+    let (over_w, over_h) = ((width - gw).max(0.0), (height - gh).max(0.0));
+    (over_w > tol || over_h > tol).then_some((over_w, over_h))
+}
+
 pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Result<Vec<Finding>> {
     let scene = Scene::new(book, sheet_id)?;
     let sheet = scene.sheet;
@@ -328,6 +339,32 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
         if let ItemKind::Map(m) = &it.kind {
             let effective=crate::viewport::effective_fixed_view(it,&inputs.named_views);
             if m.source.is_link() && let Err(e)=&effective { out.add(Severity::Error,&e.code,Some(it),e.message.clone(),"Görünümü yeniden bağlayın veya kaynağı Bu çizim yapın.",Vec::new()); }
+            // A linked view whose recipe fixes the scale (docs/adr/0794): its area must fit the frame at that scale, else
+            // the frame cuts it (Revit's crop region larger than the viewport's room on the sheet).
+            if let Ok(f) = &effective
+                && let Some(v) = crate::viewport::linked_view(m, &inputs.named_views)
+                && let Some(scale) = v.recipe.as_ref().and_then(|r| r.scale)
+                && let Some((over_w, over_h)) = view_overrun(v.width, v.height, &it.content_rect(), f.denominator())
+            {
+                out.add(
+                    Severity::Warning,
+                    "map_view_cut",
+                    Some(it),
+                    format!(
+                        "{} “{}” görünümünün alanını 1:{scale} ölçeğinde kesiyor: alan çerçeveden {} büyük.",
+                        named(it),
+                        v.name,
+                        [("enine", over_w), ("boyuna", over_h)]
+                            .iter()
+                            .filter(|(_, d)| *d > 0.0)
+                            .map(|(w, d)| format!("{w} {d:.2} m"))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ),
+                    "Haritanın çerçevesini büyütün, görünümün alanını küçültün (Kırpma çerçevesi) ya da tarifin ölçeğini küçültün.",
+                    Vec::new(),
+                );
+            }
             if let Some(o) = &m.overview_of
                 && !is_map(o)
             {

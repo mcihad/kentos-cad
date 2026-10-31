@@ -279,7 +279,7 @@ görünümler, paftalar, çizelgeler ve seçili nesnenin göründüğü yerler. 
 ([ADR 0781](../docs/adr/0781-view-recipe-wall-detail-and-crop.md)). Görünüş şablonu ve kalem seti, siyah beyaz
 ([ADR 0783](../docs/adr/0783-view-templates-and-pen-sets.md)). Kırpma çerçevesinin ekranda düzenlenmesi ve 1:20 PDF incelemesi
 ([ADR 0789](../docs/adr/0789-crop-frame-on-screen.md)). Açık: türetilmiş çizim, yayın/revizyon birlikteliği (paftanın yayın kaydı
-ister), 1:20'de alanı haritadan büyük görünümün ön denetimi, gerçek pencerede elle kabul.
+ister), gerçek pencerede elle kabul. Alanı haritadan büyük görünümün ön denetimi ([ADR 0794](../docs/adr/0794-map-view-cut-preflight.md)).
 
 **Kullanıcı sonucu:** Uygulama planı, mobilya planı ve tadilat planı aynı
 modelden tekrar kurulabilsin; pafta için her defasında görünürlük ayarlamak

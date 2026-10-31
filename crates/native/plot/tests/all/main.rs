@@ -11,6 +11,7 @@ mod bands;
 mod book;
 mod map_layers;
 mod map_levels;
+mod map_view_cut;
 mod ramp_levels;
 mod stair_levels;
 mod output;
