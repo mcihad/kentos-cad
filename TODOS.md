@@ -102,6 +102,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   haritanın seçimi; Tasarım seçenekleri penceresi, Görünümler'de tarifin Tasarım seçeneği; çizimde ve depoda
   gösterilmeyen seçeneklerin gizlenmesi ve birleşimden çıkarılması; KCAD şema 149'un okunması ve yazılması
   (`options.kcad`).
+- ADR 0791 (malzeme kitaplığı, stil seçicisi, mahale bağlama): web'in `cad.materials.edit` import/export işleyicisi ve
+  `cad.styles.edit`'in malzeme bağı kuralı; Malzemeler › Kitaplık (web'de kitaplık dosyası seçimi); Duvar stilleri'nde
+  Malzeme seçicisi; Öznitelikler'in Sınır satırında mahaller.
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

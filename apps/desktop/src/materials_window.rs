@@ -3,7 +3,9 @@
 //! before Uygula the plan of `cad.materials.edit` says what follows (how many styles, walls and slabs, and how many stay
 //! on a locked layer). Yeni malzeme, Sil (refused while anything is bound) and Metinlerden al (every text material taken
 //! into the table) write through the same command; Stile bağla binds a wall style's component to the chosen material.
-//! Every write is one undo step “Malzeme”.
+//! Every write is one undo step “Malzeme”. Kitaplık (docs/adr/0791, `material_library.rs`) shows the material
+//! libraries outside the drawing: KentOS's and the office's folders; Seçilenleri al takes a library's materials in,
+//! Kitaplığa yaz… writes the project's to a `.kmalzeme` file.
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
@@ -55,6 +57,49 @@ pub struct Window {
     pub target: Option<usize>,
     /// What the change typed would do; its refusal's words when refused.
     pub preview: Option<Result<MaterialsEdited, String>>,
+    /// Kitaplık shown instead of the project's materials (docs/adr/0791).
+    pub tab: Tab,
+    /// The libraries, the one chosen, its materials ticked, and how one the project has is taken.
+    pub entries: Vec<crate::material_library::Entry>,
+    pub entry: usize,
+    pub picked: Vec<bool>,
+    pub conflict: Conflict,
+    /// What Seçilenleri al would do; its refusal's words when refused.
+    pub take_preview: Option<Result<MaterialsEdited, String>>,
+}
+
+/// The window's two views.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Tab {
+    #[default]
+    Project,
+    Library,
+}
+
+impl std::fmt::Display for Tab {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Tab::Project => "Projenin malzemeleri",
+            Tab::Library => "Kitaplık",
+        })
+    }
+}
+
+/// What a library material the project has of the same id does (`onConflict`): kept or replaced.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Conflict {
+    #[default]
+    Keep,
+    Replace,
+}
+
+impl std::fmt::Display for Conflict {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Conflict::Keep => "Projeninkini koru",
+            Conflict::Replace => "Kitaplığınkiyle değiştir",
+        })
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -76,6 +121,17 @@ pub enum Event {
     Adopt,
     Apply,
     Close,
+    Tab(Tab),
+    Entry(usize),
+    Pick(usize),
+    PickAll(bool),
+    Conflict(Conflict),
+    Take,
+    AddFolder,
+    FolderChosen(Option<std::path::PathBuf>),
+    RemoveFolder,
+    Export,
+    Exported(Option<std::path::PathBuf>),
 }
 
 fn msg(e: Event) -> Message {
@@ -84,19 +140,30 @@ fn msg(e: Event) -> Message {
 
 /// What a report line says about `r`.
 pub(crate) fn report_words(r: &MaterialReport) -> String {
-    let mut parts = vec![format!(
-        "{} stil, {} duvar, {} döşeme izler",
-        r.styles.len(),
-        r.walls.len(),
-        r.slabs.len()
-    )];
+    let mut lead = Vec::new();
+    if !r.taken.is_empty() {
+        lead.push(format!("{} malzeme alınır", r.taken.len()));
+    }
+    if !r.replaced.is_empty() {
+        lead.push(format!("{} malzeme değişir", r.replaced.len()));
+    }
+    if !r.kept.is_empty() {
+        lead.push(format!("{} malzemede projeninki korunur", r.kept.len()));
+    }
+    // An import that touches nothing bound says only what it takes.
+    let mut parts = if lead.is_empty() || !(r.styles.is_empty() && r.walls.is_empty() && r.slabs.is_empty()) {
+        vec![format!("{} stil, {} duvar, {} döşeme izler", r.styles.len(), r.walls.len(), r.slabs.len())]
+    } else {
+        Vec::new()
+    };
     if !r.locked.is_empty() {
         parts.push(format!("{} kilitli katmanda eski değerleriyle kalır", r.locked.len()));
     }
     if !r.left.is_empty() {
         parts.push(format!("{} metin farklı görünüşlü bileşenleri yüzünden bağlanmadı", r.left.len()));
     }
-    parts.join(" · ")
+    lead.extend(parts);
+    lead.join(" · ")
 }
 
 fn number(v: f64) -> String {
@@ -238,21 +305,29 @@ impl App {
     }
 
     /// The window read again, the material `keep` (an id) chosen if it is still there.
-    fn materials_read(&mut self, keep: Option<String>) {
+    pub(crate) fn materials_read(&mut self, keep: Option<String>) {
         let list = self.material_uses();
         let chosen = keep
             .and_then(|id| list.iter().position(|(m, _)| m.id == id))
             .unwrap_or(0);
+        let (tab, entry, conflict) = self
+            .materials
+            .as_ref()
+            .map_or((Tab::Project, 0, Conflict::Keep), |w| (w.tab, w.entry, w.conflict));
         let mut w = Window {
             list,
             chosen,
             targets: self.material_targets(),
+            tab,
+            entry,
+            conflict,
             ..Window::default()
         };
         if let Some((m, _)) = w.list.get(chosen).cloned() {
             fill(&mut w, &m);
         }
         self.materials = Some(w);
+        self.material_library_read();
     }
 
     /// Malzemeler (`arch.materials`): the window.
@@ -265,7 +340,7 @@ impl App {
         self.dialog = Some(Dialog::Materials);
     }
 
-    fn materials_chosen(&self) -> Option<ArchMaterial> {
+    pub(crate) fn materials_chosen(&self) -> Option<ArchMaterial> {
         let w = self.materials.as_ref()?;
         w.list.get(w.chosen).map(|(m, _)| m.clone())
     }
@@ -298,7 +373,7 @@ impl App {
     }
 
     /// `cad.materials.edit` over the drawing; its answer, or none with the refusal said.
-    fn materials_command(&mut self, operation: MaterialsOperation) -> Option<MaterialsEdited> {
+    pub(crate) fn materials_command(&mut self, operation: MaterialsOperation) -> Option<MaterialsEdited> {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::materials_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -432,6 +507,17 @@ impl App {
                 self.materials = None;
                 self.dialog = None;
             }
+            Event::Tab(_)
+            | Event::Entry(_)
+            | Event::Pick(_)
+            | Event::PickAll(_)
+            | Event::Conflict(_)
+            | Event::Take
+            | Event::AddFolder
+            | Event::FolderChosen(_)
+            | Event::RemoveFolder
+            | Event::Export
+            | Event::Exported(_) => return self.material_library_event(event),
         }
         Task::none()
     }
@@ -466,6 +552,10 @@ impl App {
                 "Projede malzeme yok. Yeni malzeme bir tane açar; Metinlerden al duvar stillerinin, duvarların ve döşemelerin metin malzemelerinden açar.",
             ));
         }
+        let tabs = kentos_ui::widget::Segmented::new([Tab::Project, Tab::Library], w.tab, |t| msg(Event::Tab(t)));
+        if w.tab == Tab::Library {
+            return self.material_library_view(w, tabs.into());
+        }
         let left = container(iced::widget::scrollable(list).height(Fill)).width(280.0);
         let right: Element<'_, Message> = match w.list.get(w.chosen) {
             None => label::caption("").into(),
@@ -475,6 +565,7 @@ impl App {
         let chosen = !w.list.is_empty();
         let changed = w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some());
         Frame::new(TITLE)
+            .push(tabs)
             .push(body)
             .action(words::secondary(NEW, Some(msg(Event::New))))
             .action(words::secondary(REMOVE, chosen.then(|| msg(Event::Remove))))
@@ -580,6 +671,9 @@ impl App {
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             Control::Press(ADOPT) => Some(msg(Event::Adopt)),
             Control::Press(BIND) => Some(msg(Event::Bind)),
+            Control::Press(crate::material_library::TAKE) => Some(msg(Event::Take)),
+            Control::Press(crate::material_library::EXPORT) => Some(msg(Event::Export)),
+            Control::Press(crate::material_library::ADD_FOLDER) => Some(msg(Event::AddFolder)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

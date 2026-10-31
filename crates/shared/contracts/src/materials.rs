@@ -118,6 +118,48 @@ pub struct ArchMaterial {
     pub cut: Option<ComponentEdge>,
 }
 
+/// An office material library's format (docs/adr/0791): a file outside the drawing, as KentOS's block library (ADR 0318)
+/// and the office's door and window types (ADR 0772) are.
+pub const MATERIALS_FORMAT: &str = "kentos.materials";
+pub const MATERIALS_FORMAT_VERSION: u32 = 1;
+
+/// An office material library (Malzeme kitaplığı, docs/adr/0791): its name and its materials, each as a project keeps
+/// it. KentOS gives one (`kentos-temel`); an office keeps its own in its folders and writes the project's out to one.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MaterialsFile {
+    /// `kentos.materials`.
+    pub format: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub version: u32,
+    /// The library's name.
+    pub library: String,
+    pub materials: Vec<ArchMaterial>,
+}
+
+impl MaterialsFile {
+    /// What is wrong with it: the field and the words; none when it holds. Its materials hold as a project's do
+    /// (`materials_problem`), its name is not blank.
+    pub fn problem(&self) -> Option<(String, String)> {
+        if self.format != MATERIALS_FORMAT || self.version != MATERIALS_FORMAT_VERSION {
+            return Some((
+                "format".into(),
+                format!(
+                    "Malzeme kitaplığı {MATERIALS_FORMAT} {MATERIALS_FORMAT_VERSION} biçiminde olmalı; “{}” {} verildi.",
+                    self.format, self.version
+                ),
+            ));
+        }
+        if self.library.trim().is_empty() {
+            return Some(("library".into(), "Malzeme kitaplığının adı boş olmamalı.".into()));
+        }
+        materials_problem(&self.materials)
+    }
+}
+
 /// Whether a material's id holds: lower-case ASCII letters, digits and “-”, 1 to 64.
 pub fn material_id_ok(id: &str) -> bool {
     !id.is_empty()

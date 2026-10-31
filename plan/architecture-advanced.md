@@ -135,8 +135,11 @@ sınırlıdır; genel otomatik ev tasarımcısı değildir.
 _Durum (31 Ekim 2026, [ADR 0771](../docs/adr/0771-building-parts-and-bound-boundaries.md)):_ düğüm kararı, sabit referans
 ve etkisi, uçta ve sövede dönen katmanlar, kaynağa bağlı döşeme ve kopukluk yapıldı.
 _ADR 0785 (ADV-02b, 31 Ekim 2026):_ malzeme kimliği (proje malzemeleri, bileşen ve döşeme bağı, Metinlerden al ile kayıpsız
-göç, lejant ve Metraj kimlikle) ve kasanın yüzüne kadar dönen katmanlar yapıldı. Açık: Duvar stilleri'nde malzeme seçicisi,
-malzeme kitaplığı ve IFC, mahale bağlamanın Öznitelikler satırı, gerçek pencerede elle kabul.
+göç, lejant ve Metraj kimlikle) ve kasanın yüzüne kadar dönen katmanlar yapıldı.
+_ADR 0791 (ADV-02c, 31 Ekim 2026):_ ofis malzeme kitaplığı (KentOS temel kitaplığı, `.kmalzeme` klasörleri, koru/değiştir ile
+alma, kitaplığa yazma), Duvar stilleri'nde malzeme seçicisi (bağlı bileşenin görünüşü malzemenin, `cad.styles.edit`
+olmayan malzemeyi reddeder) ve döşemenin Öznitelikler'den mahale bağlanması yapıldı. Açık: IFC, kitaplık kaynağının
+izlenmesi, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Duvar tipi veya dış kontur değiştiğinde çekirdek,
 kaplamalar, açıklık çevresi ve bağlı döşeme birbirinden kopmasın. Dayanak A4–A5.

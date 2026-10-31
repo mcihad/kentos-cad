@@ -1,0 +1,7033 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.styles.edit",
+ "commandVersion": 1,
+ "title": "Duvar stilinde malzeme bağı",
+ "note": "ADR 0791. Beklenenler scripts/fixtures/style_materials_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan (bağın kuralı ve kurulum materials_cases.py'nin modeli).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Malzemeler",
+  "uids": [
+   "0192f5a1-7850-7000-8000-000000000001",
+   "0192f5a1-7850-7000-8000-000000000002",
+   "0192f5a1-7850-7000-8000-000000000003",
+   "0192f5a1-7850-7000-8000-000000000004",
+   "0192f5a1-7850-7000-8000-000000000005",
+   "0192f5a1-7850-7000-8000-000000000006",
+   "0192f5a1-7850-7000-8000-000000000007",
+   "0192f5a1-7850-7000-8000-000000000008"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "wallStyles": [
+    {
+     "id": "dis-duvar",
+     "name": "Dış duvar",
+     "components": [
+      {
+       "name": "İç sıva",
+       "material": "İç sıva",
+       "thickness": 0.02,
+       "detail": "detailed"
+      },
+      {
+       "name": "Tuğla",
+       "material": "Tuğla",
+       "materialId": "tugla",
+       "edge": {
+        "lineWeight": 0.5
+       },
+       "hatch": {
+        "pattern": "ANSI31",
+        "scale": 1.0,
+        "angle": 0.0
+       },
+       "detail": "standard"
+      },
+      {
+       "name": "Isı yalıtımı",
+       "material": "Isı yalıtımı",
+       "thickness": 0.05,
+       "hatch": {
+        "pattern": "ANSI37",
+        "scale": 0.5,
+        "angle": 0.0
+       },
+       "detail": "standard"
+      },
+      {
+       "name": "Dış sıva",
+       "material": "Dış sıva",
+       "thickness": 0.03,
+       "detail": "detailed"
+      }
+     ],
+     "width": 0.25
+    }
+   ],
+   "arch": {
+    "levels": [
+     {
+      "id": "zemin",
+      "name": "Zemin kat",
+      "elevation": 0.0
+     }
+    ],
+    "materials": [
+     {
+      "id": "tugla",
+      "name": "Tuğla",
+      "category": "structure",
+      "hatch": {
+       "pattern": "ANSI31",
+       "scale": 1.0,
+       "angle": 0.0
+      },
+      "cut": {
+       "lineWeight": 0.5
+      }
+     },
+     {
+      "id": "betonarme",
+      "name": "Betonarme",
+      "category": "structure",
+      "hatch": {
+       "pattern": "AR-CONC",
+       "scale": 1.0,
+       "angle": 0.0
+      }
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "doseme",
+    "name": "Döşeme",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 6.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.25,
+    "justify": "center",
+    "style": "dis-duvar",
+    "components": [
+     {
+      "name": "İç sıva",
+      "material": "İç sıva",
+      "thickness": 0.02,
+      "detail": "detailed"
+     },
+     {
+      "name": "Tuğla",
+      "material": "Tuğla",
+      "materialId": "tugla",
+      "edge": {
+       "lineWeight": 0.5
+      },
+      "hatch": {
+       "pattern": "ANSI31",
+       "scale": 1.0,
+       "angle": 0.0
+      },
+      "detail": "standard"
+     },
+     {
+      "name": "Isı yalıtımı",
+      "material": "Isı yalıtımı",
+      "thickness": 0.05,
+      "hatch": {
+       "pattern": "ANSI37",
+       "scale": 0.5,
+       "angle": 0.0
+      },
+      "detail": "standard"
+     },
+     {
+      "name": "Dış sıva",
+      "material": "Dış sıva",
+      "thickness": 0.03,
+      "detail": "detailed"
+     }
+    ],
+    "height": 3.0
+   },
+   {
+    "kind": "wall",
+    "id": 2,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 4.0
+     },
+     {
+      "x": 6.0,
+      "y": 4.0
+     }
+    ],
+    "width": 0.25,
+    "justify": "center",
+    "style": "dis-duvar",
+    "components": [
+     {
+      "name": "İç sıva",
+      "material": "İç sıva",
+      "thickness": 0.02,
+      "detail": "detailed"
+     },
+     {
+      "name": "Tuğla",
+      "material": "Tuğla",
+      "materialId": "tugla",
+      "edge": {
+       "lineWeight": 0.5
+      },
+      "hatch": {
+       "pattern": "ANSI31",
+       "scale": 1.0,
+       "angle": 0.0
+      },
+      "detail": "standard"
+     },
+     {
+      "name": "Isı yalıtımı",
+      "material": "Isı yalıtımı",
+      "thickness": 0.05,
+      "hatch": {
+       "pattern": "ANSI37",
+       "scale": 0.5,
+       "angle": 0.0
+      },
+      "detail": "standard"
+     },
+     {
+      "name": "Dış sıva",
+      "material": "Dış sıva",
+      "thickness": 0.03,
+      "detail": "detailed"
+     }
+    ],
+    "height": 3.0
+   },
+   {
+    "kind": "wall",
+    "id": 3,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 10.0,
+      "y": 0.0
+     },
+     {
+      "x": 14.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "components": [
+     {
+      "name": "İç sıva",
+      "material": "İç sıva",
+      "thickness": 0.02,
+      "hatch": {
+       "pattern": "SOLID",
+       "scale": 1.0,
+       "angle": 0.0
+      },
+      "detail": "detailed"
+     },
+     {
+      "name": "Tuğla",
+      "material": "Tuğla",
+      "materialId": "tugla",
+      "edge": {
+       "lineWeight": 0.5
+      },
+      "hatch": {
+       "pattern": "ANSI31",
+       "scale": 1.0,
+       "angle": 0.0
+      },
+      "detail": "standard"
+     },
+     {
+      "name": "Dış sıva",
+      "material": "Dış sıva",
+      "thickness": 0.03,
+      "detail": "detailed"
+     }
+    ],
+    "height": 3.0
+   },
+   {
+    "kind": "wall",
+    "id": 4,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 8.0
+     },
+     {
+      "x": 6.0,
+      "y": 8.0
+     }
+    ],
+    "width": 0.25,
+    "justify": "center",
+    "style": "dis-duvar",
+    "components": [
+     {
+      "name": "İç sıva",
+      "material": "İç sıva",
+      "thickness": 0.02,
+      "detail": "detailed"
+     },
+     {
+      "name": "Tuğla",
+      "material": "Tuğla",
+      "materialId": "tugla",
+      "edge": {
+       "lineWeight": 0.5
+      },
+      "hatch": {
+       "pattern": "ANSI31",
+       "scale": 1.0,
+       "angle": 0.0
+      },
+      "detail": "standard"
+     },
+     {
+      "name": "Isı yalıtımı",
+      "material": "Isı yalıtımı",
+      "thickness": 0.05,
+      "hatch": {
+       "pattern": "ANSI37",
+       "scale": 0.5,
+       "angle": 0.0
+      },
+      "detail": "standard"
+     },
+     {
+      "name": "Dış sıva",
+      "material": "Dış sıva",
+      "thickness": 0.03,
+      "detail": "detailed"
+     }
+    ],
+    "height": 3.0
+   },
+   {
+    "kind": "slab",
+    "id": 5,
+    "layerId": "doseme",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 20.0,
+         "y": 0.0
+        },
+        {
+         "x": 24.0,
+         "y": 0.0
+        },
+        {
+         "x": 24.0,
+         "y": 3.0
+        },
+        {
+         "x": 20.0,
+         "y": 3.0
+        }
+       ]
+      }
+     }
+    ],
+    "thickness": 0.15,
+    "material": "Betonarme",
+    "materialId": "betonarme"
+   },
+   {
+    "kind": "slab",
+    "id": 6,
+    "layerId": "doseme",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 30.0,
+         "y": 0.0
+        },
+        {
+         "x": 34.0,
+         "y": 0.0
+        },
+        {
+         "x": 34.0,
+         "y": 3.0
+        },
+        {
+         "x": 30.0,
+         "y": 3.0
+        }
+       ]
+      }
+     }
+    ],
+    "thickness": 0.15,
+    "material": "Betonarme"
+   },
+   {
+    "kind": "slab",
+    "id": 7,
+    "layerId": "kilitli",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 40.0,
+         "y": 0.0
+        },
+        {
+         "x": 44.0,
+         "y": 0.0
+        },
+        {
+         "x": 44.0,
+         "y": 3.0
+        },
+        {
+         "x": 40.0,
+         "y": 3.0
+        }
+       ]
+      }
+     }
+    ],
+    "thickness": 0.15,
+    "material": "Betonarme",
+    "materialId": "betonarme"
+   },
+   {
+    "kind": "line",
+    "id": 8,
+    "layerId": "duvar",
+    "attrs": {},
+    "a": {
+     "x": 0.0,
+     "y": 20.0
+    },
+    "b": {
+     "x": 5.0,
+     "y": 20.0
+    }
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Oluştur: tuğlaya bağlı bileşen malzemenin metnini, taramasını ve kalemini alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "ic-duvar",
+       "name": "İç duvar",
+       "components": [
+        {
+         "name": "Sıva",
+         "material": "Sıva",
+         "thickness": 0.02,
+         "detail": "standard"
+        },
+        {
+         "name": "Çekirdek",
+         "material": "Kerpiç",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.1
+         },
+         "hatch": {
+          "pattern": "DOTS",
+          "scale": 2.0,
+          "angle": 30.0
+         },
+         "detail": "standard"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "ic-duvar",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "id": "ic-duvar",
+         "name": "İç duvar",
+         "components": [
+          {
+           "name": "Sıva",
+           "material": "Sıva",
+           "thickness": 0.02,
+           "detail": "standard"
+          },
+          {
+           "name": "Çekirdek",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Duvar stili",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Duvar stili",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "id": "ic-duvar",
+         "name": "İç duvar",
+         "components": [
+          {
+           "name": "Sıva",
+           "material": "Sıva",
+           "thickness": 0.02,
+           "detail": "standard"
+          },
+          {
+           "name": "Çekirdek",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oluştur: iki malzemeye bağlı bileşenler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "perde",
+       "name": "Perde",
+       "components": [
+        {
+         "name": "Beton",
+         "materialId": "betonarme",
+         "thickness": 0.2,
+         "detail": "standard"
+        },
+        {
+         "name": "Tuğla",
+         "materialId": "tugla",
+         "thickness": 0.1,
+         "detail": "standard"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "perde",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "id": "perde",
+         "name": "Perde",
+         "components": [
+          {
+           "name": "Beton",
+           "material": "Betonarme",
+           "materialId": "betonarme",
+           "thickness": 0.2,
+           "hatch": {
+            "pattern": "AR-CONC",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "thickness": 0.1,
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          }
+         ]
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oluştur: bağlı bileşen kalınlığını, ayrıntısını ve önceliğini korur, dönen sıva kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "dis-2",
+       "name": "Dış duvar 2",
+       "components": [
+        {
+         "name": "Taşıyıcı",
+         "material": "x",
+         "materialId": "tugla",
+         "thickness": 0.19,
+         "detail": "detailed",
+         "priority": 1
+        },
+        {
+         "name": "Sıva",
+         "material": "Sıva",
+         "thickness": 0.03,
+         "detail": "detailed",
+         "wrap": true
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-2",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "id": "dis-2",
+         "name": "Dış duvar 2",
+         "components": [
+          {
+           "name": "Taşıyıcı",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "thickness": 0.19,
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "detailed",
+           "priority": 1
+          },
+          {
+           "name": "Sıva",
+           "material": "Sıva",
+           "thickness": 0.03,
+           "detail": "detailed",
+           "wrap": true
+          }
+         ]
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oluştur: bağsız bileşenler verildiği gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "bolme",
+       "name": "Bölme",
+       "components": [
+        {
+         "name": "Gazbeton",
+         "material": "Gazbeton",
+         "thickness": 0.1,
+         "hatch": {
+          "pattern": "DOTS",
+          "scale": 2.0,
+          "angle": 30.0
+         },
+         "detail": "standard"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "bolme",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "id": "bolme",
+         "name": "Bölme",
+         "components": [
+          {
+           "name": "Gazbeton",
+           "material": "Gazbeton",
+           "thickness": 0.1,
+           "hatch": {
+            "pattern": "DOTS",
+            "scale": 2.0,
+            "angle": 30.0
+           },
+           "detail": "standard"
+          }
+         ]
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oluştur: projede olmayan malzeme reddedilir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "ic-duvar",
+       "name": "İç duvar",
+       "components": [
+        {
+         "name": "Sıva",
+         "material": "Sıva",
+         "thickness": 0.02,
+         "detail": "standard"
+        },
+        {
+         "name": "Çekirdek",
+         "material": "Kerpiç",
+         "materialId": "kerpic",
+         "detail": "standard"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“İç duvar” duvar stilinin 2. bileşeni (“Çekirdek”) projede olmayan “kerpic” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[1].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "ic-duvar",
+       "name": "İç duvar",
+       "components": [
+        {
+         "name": "Sıva",
+         "material": "Sıva",
+         "thickness": 0.02,
+         "detail": "standard"
+        },
+        {
+         "name": "Çekirdek",
+         "material": "Kerpiç",
+         "materialId": "kerpic",
+         "detail": "standard"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“İç duvar” duvar stilinin 2. bileşeni (“Çekirdek”) projede olmayan “kerpic” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[1].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oluştur: kimliği kurala uymayan malzeme projede yok",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "ic-duvar",
+       "name": "İç duvar",
+       "components": [
+        {
+         "name": "Çekirdek",
+         "material": "Tuğla",
+         "materialId": "Tugla",
+         "detail": "standard"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“İç duvar” duvar stilinin 1. bileşeni (“Çekirdek”) projede olmayan “Tugla” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[0].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "ic-duvar",
+       "name": "İç duvar",
+       "components": [
+        {
+         "name": "Çekirdek",
+         "material": "Tuğla",
+         "materialId": "Tugla",
+         "detail": "standard"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“İç duvar” duvar stilinin 1. bileşeni (“Çekirdek”) projede olmayan “Tugla” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[0].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: yalıtımı betonarmeye bağla, stilin duvarları izler, kilitli kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "materialId": "betonarme",
+         "thickness": 0.05,
+         "hatch": {
+          "pattern": "ANSI37",
+          "scale": 0.5,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-duvar",
+       "changed": true,
+       "followed": 2,
+       "locked": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Betonarme",
+           "materialId": "betonarme",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "AR-CONC",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Duvar stili",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Duvar stili",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Betonarme",
+           "materialId": "betonarme",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "AR-CONC",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: tuğlayı bağdan ayır, metin ve görünüş kalır, duvarlar izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "thickness": 0.05,
+         "hatch": {
+          "pattern": "ANSI37",
+          "scale": 0.5,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-duvar",
+       "changed": true,
+       "followed": 2,
+       "locked": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: bağlı tuğlanın elle değişen taraması malzemeninkine döner, öbür değişiklik kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.025,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "hatch": {
+          "pattern": "DOTS",
+          "scale": 2.0,
+          "angle": 30.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "thickness": 0.05,
+         "hatch": {
+          "pattern": "ANSI37",
+          "scale": 0.5,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-duvar",
+       "changed": true,
+       "followed": 2,
+       "locked": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.025,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.025,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.025,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Oluştur: bağlı bileşenin metni malzemenin adı olur, kalemi verilmemişken malzemeninkini alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "create",
+      "wall": {
+       "id": "harman",
+       "name": "Harman",
+       "components": [
+        {
+         "name": "Tuğla",
+         "material": "Harman tuğlası",
+         "materialId": "tugla",
+         "thickness": 0.19,
+         "detail": "standard"
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "harman",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "id": "harman",
+         "name": "Harman",
+         "components": [
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "thickness": 0.19,
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          }
+         ]
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: bağlı bileşenin adı kendisinin kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Çekirdek",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "thickness": 0.05,
+         "hatch": {
+          "pattern": "ANSI37",
+          "scale": 0.5,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-duvar",
+       "changed": true,
+       "followed": 2,
+       "locked": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Çekirdek",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Çekirdek",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Çekirdek",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: dış sıvayı olmayan malzemeye bağlamak reddedilir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "thickness": 0.05,
+         "hatch": {
+          "pattern": "ANSI37",
+          "scale": 0.5,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "materialId": "dis-siva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“Dış duvar” duvar stilinin 4. bileşeni (“Dış sıva”) projede olmayan “dis-siva” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[3].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "thickness": 0.05,
+         "hatch": {
+          "pattern": "ANSI37",
+          "scale": 0.5,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "materialId": "dis-siva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“Dış duvar” duvar stilinin 4. bileşeni (“Dış sıva”) projede olmayan “dis-siva” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[3].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: yalıtımı olmayan malzemeye bağlamak reddedilir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "EPS",
+         "materialId": "eps",
+         "thickness": 0.05,
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“Dış duvar” duvar stilinin 3. bileşeni (“Isı yalıtımı”) projede olmayan “eps” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[2].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "EPS",
+         "materialId": "eps",
+         "thickness": 0.05,
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“Dış duvar” duvar stilinin 3. bileşeni (“Isı yalıtımı”) projede olmayan “eps” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "wall.components[2].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Değiştir: beklenen sürüm eski",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "materialId": "betonarme",
+         "thickness": 0.05,
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      },
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "update",
+      "wall": {
+       "id": "dis-duvar",
+       "name": "Dış duvar",
+       "components": [
+        {
+         "name": "İç sıva",
+         "material": "İç sıva",
+         "thickness": 0.02,
+         "detail": "detailed"
+        },
+        {
+         "name": "Tuğla",
+         "material": "Tuğla",
+         "materialId": "tugla",
+         "edge": {
+          "lineWeight": 0.5
+         },
+         "hatch": {
+          "pattern": "ANSI31",
+          "scale": 1.0,
+          "angle": 0.0
+         },
+         "detail": "standard"
+        },
+        {
+         "name": "Isı yalıtımı",
+         "material": "Isı yalıtımı",
+         "materialId": "betonarme",
+         "thickness": 0.05,
+         "detail": "standard"
+        },
+        {
+         "name": "Dış sıva",
+         "material": "Dış sıva",
+         "thickness": 0.03,
+         "detail": "detailed"
+        }
+       ],
+       "width": 0.25
+      },
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeniden adlandır: bağlı stil, duvarlar değişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "rename",
+      "style": "dis-duvar",
+      "name": "Dış duvar 25"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-duvar",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar 25",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sil: bağlı stil, duvarlar bağını yitirir, görünüşleri kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "remove",
+      "style": "dis-duvar"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-duvar",
+       "changed": true,
+       "followed": 2,
+       "locked": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": null
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyadan al: yeni stilin bağlı bileşeni projenin malzemesini alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "import",
+      "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"wall\",\"styles\":[{\"components\":[{\"detail\":\"standard\",\"hatch\":{\"angle\":30.0,\"pattern\":\"DOTS\",\"scale\":2.0},\"material\":\"Tuğla\",\"materialId\":\"tugla\",\"name\":\"Çekirdek\",\"thickness\":0.1}],\"id\":\"019a0000-0000-7000-8000-00000000e001\",\"name\":\"İç duvar\"}],\"version\":1}"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "019a0000-0000-7000-8000-00000000e001",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "added": [
+        "019a0000-0000-7000-8000-00000000e001"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "components": [
+          {
+           "name": "Çekirdek",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "thickness": 0.1,
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          }
+         ],
+         "id": "019a0000-0000-7000-8000-00000000e001",
+         "name": "İç duvar"
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyadan al: bağsız bileşenli stil verildiği gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "import",
+      "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"wall\",\"styles\":[{\"components\":[{\"detail\":\"standard\",\"material\":\"Alçı\",\"name\":\"Alçı\",\"thickness\":0.1}],\"id\":\"019a0000-0000-7000-8000-00000000e002\",\"name\":\"Bölme\"}],\"version\":1}"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "019a0000-0000-7000-8000-00000000e002",
+       "changed": true,
+       "followed": 0,
+       "locked": 0,
+       "added": [
+        "019a0000-0000-7000-8000-00000000e002"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        },
+        {
+         "components": [
+          {
+           "detail": "standard",
+           "material": "Alçı",
+           "name": "Alçı",
+           "thickness": 0.1
+          }
+         ],
+         "id": "019a0000-0000-7000-8000-00000000e002",
+         "name": "Bölme"
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyadan al ve değiştir: Dış duvarın yalıtımı betonarmeye bağlı, duvarlar izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "import",
+      "replace": true,
+      "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"wall\",\"styles\":[{\"components\":[{\"detail\":\"detailed\",\"material\":\"İç sıva\",\"name\":\"İç sıva\",\"thickness\":0.02},{\"detail\":\"standard\",\"edge\":{\"lineWeight\":0.5},\"hatch\":{\"angle\":0.0,\"pattern\":\"ANSI31\",\"scale\":1.0},\"material\":\"Tuğla\",\"materialId\":\"tugla\",\"name\":\"Tuğla\"},{\"detail\":\"standard\",\"material\":\"?\",\"materialId\":\"betonarme\",\"name\":\"Isı yalıtımı\",\"thickness\":0.05},{\"detail\":\"detailed\",\"material\":\"Dış sıva\",\"name\":\"Dış sıva\",\"thickness\":0.03}],\"id\":\"dis-duvar\",\"name\":\"Dış duvar\",\"width\":0.25}],\"version\":1}"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "style": "dis-duvar",
+       "changed": true,
+       "followed": 2,
+       "locked": 1,
+       "replaced": [
+        "dis-duvar"
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "components": [
+          {
+           "detail": "detailed",
+           "material": "İç sıva",
+           "name": "İç sıva",
+           "thickness": 0.02
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Betonarme",
+           "materialId": "betonarme",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "AR-CONC",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "detail": "detailed",
+           "material": "Dış sıva",
+           "name": "Dış sıva",
+           "thickness": 0.03
+          }
+         ],
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "detail": "detailed",
+          "material": "İç sıva",
+          "name": "İç sıva",
+          "thickness": 0.02
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "detail": "detailed",
+          "material": "Dış sıva",
+          "name": "Dış sıva",
+          "thickness": 0.03
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "detail": "detailed",
+          "material": "İç sıva",
+          "name": "İç sıva",
+          "thickness": 0.02
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "detail": "detailed",
+          "material": "Dış sıva",
+          "name": "Dış sıva",
+          "thickness": 0.03
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Duvar stili",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "components": [
+          {
+           "name": "İç sıva",
+           "material": "İç sıva",
+           "thickness": 0.02,
+           "detail": "detailed"
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Isı yalıtımı",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "ANSI37",
+            "scale": 0.5,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Dış sıva",
+           "material": "Dış sıva",
+           "thickness": 0.03,
+           "detail": "detailed"
+          }
+         ],
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    },
+    {
+     "op": "redo",
+     "returns": "Duvar stili",
+     "expect": {
+      "revision": "changed",
+      "settings": {
+       "arch": {
+        "levels": [
+         {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0
+         }
+        ],
+        "materials": [
+         {
+          "id": "tugla",
+          "name": "Tuğla",
+          "category": "structure",
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "cut": {
+           "lineWeight": 0.5
+          }
+         },
+         {
+          "id": "betonarme",
+          "name": "Betonarme",
+          "category": "structure",
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          }
+         }
+        ]
+       },
+       "wallStyles": [
+        {
+         "components": [
+          {
+           "detail": "detailed",
+           "material": "İç sıva",
+           "name": "İç sıva",
+           "thickness": 0.02
+          },
+          {
+           "name": "Tuğla",
+           "material": "Tuğla",
+           "materialId": "tugla",
+           "edge": {
+            "lineWeight": 0.5
+           },
+           "hatch": {
+            "pattern": "ANSI31",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "name": "Isı yalıtımı",
+           "material": "Betonarme",
+           "materialId": "betonarme",
+           "thickness": 0.05,
+           "hatch": {
+            "pattern": "AR-CONC",
+            "scale": 1.0,
+            "angle": 0.0
+           },
+           "detail": "standard"
+          },
+          {
+           "detail": "detailed",
+           "material": "Dış sıva",
+           "name": "Dış sıva",
+           "thickness": 0.03
+          }
+         ],
+         "id": "dis-duvar",
+         "name": "Dış duvar",
+         "width": 0.25
+        }
+       ]
+      },
+      "fields": {
+       "1": {
+        "components": [
+         {
+          "detail": "detailed",
+          "material": "İç sıva",
+          "name": "İç sıva",
+          "thickness": 0.02
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "detail": "detailed",
+          "material": "Dış sıva",
+          "name": "Dış sıva",
+          "thickness": 0.03
+         }
+        ]
+       },
+       "2": {
+        "components": [
+         {
+          "detail": "detailed",
+          "material": "İç sıva",
+          "name": "İç sıva",
+          "thickness": 0.02
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Betonarme",
+          "materialId": "betonarme",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "AR-CONC",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "detail": "detailed",
+          "material": "Dış sıva",
+          "name": "Dış sıva",
+          "thickness": 0.03
+         }
+        ]
+       },
+       "3": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "hatch": {
+           "pattern": "SOLID",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "4": {
+        "components": [
+         {
+          "name": "İç sıva",
+          "material": "İç sıva",
+          "thickness": 0.02,
+          "detail": "detailed"
+         },
+         {
+          "name": "Tuğla",
+          "material": "Tuğla",
+          "materialId": "tugla",
+          "edge": {
+           "lineWeight": 0.5
+          },
+          "hatch": {
+           "pattern": "ANSI31",
+           "scale": 1.0,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Isı yalıtımı",
+          "material": "Isı yalıtımı",
+          "thickness": 0.05,
+          "hatch": {
+           "pattern": "ANSI37",
+           "scale": 0.5,
+           "angle": 0.0
+          },
+          "detail": "standard"
+         },
+         {
+          "name": "Dış sıva",
+          "material": "Dış sıva",
+          "thickness": 0.03,
+          "detail": "detailed"
+         }
+        ]
+       },
+       "5": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       },
+       "6": {
+        "material": "Betonarme",
+        "materialId": null
+       },
+       "7": {
+        "material": "Betonarme",
+        "materialId": "betonarme"
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyadan al: projede olmayan malzemeye bağlı stil reddedilir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "kind": "wall",
+      "operation": "import",
+      "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"wall\",\"styles\":[{\"components\":[{\"detail\":\"standard\",\"material\":\"Gazbeton\",\"materialId\":\"gazbeton\",\"name\":\"Çekirdek\",\"thickness\":0.1}],\"id\":\"019a0000-0000-7000-8000-00000000e003\",\"name\":\"İç duvar\"}],\"version\":1}"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“İç duvar” duvar stilinin 1. bileşeni (“Çekirdek”) projede olmayan “gazbeton” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "library.components[0].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "import",
+      "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"wall\",\"styles\":[{\"components\":[{\"detail\":\"standard\",\"material\":\"Gazbeton\",\"materialId\":\"gazbeton\",\"name\":\"Çekirdek\",\"thickness\":0.1}],\"id\":\"019a0000-0000-7000-8000-00000000e003\",\"name\":\"İç duvar\"}],\"version\":1}"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“İç duvar” duvar stilinin 1. bileşeni (“Çekirdek”) projede olmayan “gazbeton” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "library.components[0].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dosyadan al: atlanacak stil de olmayan malzemeye bağlıysa reddedilir",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "kind": "wall",
+      "operation": "import",
+      "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"wall\",\"styles\":[{\"components\":[{\"detail\":\"detailed\",\"material\":\"İç sıva\",\"name\":\"İç sıva\",\"thickness\":0.02},{\"detail\":\"standard\",\"edge\":{\"lineWeight\":0.5},\"hatch\":{\"angle\":0.0,\"pattern\":\"ANSI31\",\"scale\":1.0},\"material\":\"Tuğla\",\"materialId\":\"tugla\",\"name\":\"Tuğla\"},{\"detail\":\"standard\",\"material\":\"EPS\",\"materialId\":\"eps\",\"name\":\"Isı yalıtımı\",\"thickness\":0.05},{\"detail\":\"detailed\",\"material\":\"Dış sıva\",\"name\":\"Dış sıva\",\"thickness\":0.03}],\"id\":\"dis-duvar\",\"name\":\"Dış duvar\",\"width\":0.25}],\"version\":1}"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“Dış duvar” duvar stilinin 3. bileşeni (“Isı yalıtımı”) projede olmayan “eps” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "library.components[2].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "kind": "wall",
+      "operation": "import",
+      "library": "{\"format\":\"kentos.annotation-styles\",\"kind\":\"wall\",\"styles\":[{\"components\":[{\"detail\":\"detailed\",\"material\":\"İç sıva\",\"name\":\"İç sıva\",\"thickness\":0.02},{\"detail\":\"standard\",\"edge\":{\"lineWeight\":0.5},\"hatch\":{\"angle\":0.0,\"pattern\":\"ANSI31\",\"scale\":1.0},\"material\":\"Tuğla\",\"materialId\":\"tugla\",\"name\":\"Tuğla\"},{\"detail\":\"standard\",\"material\":\"EPS\",\"materialId\":\"eps\",\"name\":\"Isı yalıtımı\",\"thickness\":0.05},{\"detail\":\"detailed\",\"material\":\"Dış sıva\",\"name\":\"Dış sıva\",\"thickness\":0.03}],\"id\":\"dis-duvar\",\"name\":\"Dış duvar\",\"width\":0.25}],\"version\":1}"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "material_not_found",
+       "message": "“Dış duvar” duvar stilinin 3. bileşeni (“Isı yalıtımı”) projede olmayan “eps” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+       "path": "library.components[2].materialId"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

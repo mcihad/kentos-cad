@@ -4141,7 +4141,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_MATERIALS_EDIT.into(),
             version: crate::CAD_MATERIALS_EDIT_VERSION,
             title: "Malzemeler".into(),
-            summary: "Projenin yapı malzemelerini (kalıcı kimlik, ad, kategori, metrajda alan ya da hacim, kesitin taraması ve kalemi) yönetir ve duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar (docs/adr/0785); tek geri alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation: define (name, id isteğe bağlı: adından; change: category structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern, scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin material metni, taraması ve kalemi, döşemelerin material metni yeni değerleri alır), remove (material; bağlı bir şey varsa material_in_use ve bağlı duvar ve döşemelerin kimlikleri), assign (material: kimlik ya da ad, yoksa bağdan ayırır; targets: wallStyle {style, component}, wall {uid, component}, slab {uid}; bileşen sırası soldan 0'dan), adopt (bağsız her metin malzemeden bir proje malzemesi açar ve bağlar; aynı metnin taraması ya da kalemi farklı bileşenler bağlanmaz, görünüş değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked. Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir. Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar."
+            summary: "Projenin yapı malzemelerini (kalıcı kimlik, ad, kategori, metrajda alan ya da hacim, kesitin taraması ve kalemi) yönetir ve duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar (docs/adr/0785); tek geri alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation: define (name, id isteğe bağlı: adından; change: category structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern, scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin material metni, taraması ve kalemi, döşemelerin material metni yeni değerleri alır), remove (material; bağlı bir şey varsa material_in_use ve bağlı duvar ve döşemelerin kimlikleri), assign (material: kimlik ya da ad, yoksa bağdan ayırır; targets: wallStyle {style, component}, wall {uid, component}, slab {uid}; bileşen sırası soldan 0'dan), adopt (bağsız her metin malzemeden bir proje malzemesi açar ve bağlar; aynı metnin taraması ya da kalemi farklı bileşenler bağlanmaz, görünüş değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked. Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir. Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar. Ofis malzeme kitaplığı (docs/adr/0791): import (library: kentos.materials 1 dosyası ya da name: KentOS kitaplığı kentos-temel; materials: kimlik ya da ad, yoksa hepsi; onConflict: refuse varsayılan material_exists, keep projeninkini korur material_kept, replace aynı kimlikliyi kitaplığınkiyle değiştirir ve bağlıları izler; başka kimlikli aynı ad keep dışında reddedilir; report.taken, replaced, kept), export (library: adı, materials: yoksa hepsi; çizim değişmez, cevabın library'si dosyanın içeriği). Bozuk ya da bilinmeyen kitaplık invalid_library."
                 .into(),
             aliases: vec!["MALZEME".into()],
             effect: CommandEffect::Document,
@@ -4166,6 +4166,17 @@ pub fn catalog() -> CommandCatalog {
                     title: "Dış duvar stilinin çekirdeğini tuğlaya bağla".into(),
                     input: json!({"operation": {"kind": "assign", "material": "tugla",
                         "targets": [{"kind": "wallStyle", "style": "Dış duvar 25", "component": 1}]}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "KentOS temel malzeme kitaplığından taşyünü ve EPS'i al, aynısı varsa projeninkini koru".into(),
+                    input: json!({"operation": {"kind": "import", "name": "kentos-temel",
+                        "materials": ["tasyunu", "eps"], "onConflict": "keep"}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Projenin malzemelerini ofis kitaplığı olarak ver".into(),
+                    input: json!({"operation": {"kind": "export", "library": "Ofis malzemeleri"}}),
                     output: None,
                 },
             ],
@@ -7819,7 +7830,8 @@ pub fn catalog() -> CommandCatalog {
                       remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; \
                       import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. \
                       Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. \
-                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791)."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,

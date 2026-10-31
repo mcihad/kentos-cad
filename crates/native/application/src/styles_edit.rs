@@ -6,7 +6,9 @@
 //! project setting (an edit, no undo step), the objects that follow are
 //! written in one undo step “Yazı stili” or “Ölçü stili”, those on locked
 //! layers left and counted. The shared cases are in
-//! `fixtures/commands/v1/cad.styles.edit.json`.
+//! `fixtures/commands/v1/cad.styles.edit.json`. A wall style's component bound to a project material takes the
+//! material's look; one bound to a material the project has not is refused (docs/adr/0791;
+//! `cad.styles.edit.materials.json`).
 
 use kentos_commands::{
     ANNOTATION_STYLES_FORMAT, AnnotationStyleKind, CommandResult, DimensionStyleDef, LeaderStyleDef,
@@ -54,6 +56,34 @@ impl Table {
 
 /// The table the input would leave, the style's id and the input's path of
 /// its definition; or why not. A new style without an id is given `fresh`.
+/// A wall style's components bound to the project's materials (docs/adr/0791): each bound one takes its material's
+/// text, hatch and cut pen (`ArchMaterial::bind`); one bound to a material the project has not refuses the write
+/// (`material_not_found`), so a style never names a material that is not there.
+fn bind_materials(doc: &Document, s: &mut WallStyleDef, path: &str) -> Result<(), Stop> {
+    let table = doc.materials();
+    for (i, c) in s.components.iter_mut().enumerate() {
+        let Some(id) = c.material_id.clone() else {
+            continue;
+        };
+        match table.iter().find(|m| m.id == id) {
+            Some(m) => *c = m.bind(c),
+            None => {
+                return Err(fail(
+                    codes::MATERIAL_NOT_FOUND,
+                    format!(
+                        "“{}” duvar stilinin {}. bileşeni (“{}”) projede olmayan “{id}” malzemesine bağlı. Önce malzemeyi projeye alın (Malzemeler › Kitaplık) ya da bileşeni bağdan ayırın.",
+                        s.name,
+                        i + 1,
+                        c.name
+                    ),
+                    &format!("{path}.components[{i}].materialId"),
+                ));
+            }
+        }
+    }
+    Ok(())
+}
+
 fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table, String), Stop> {
     use StyleEditOperation as Op;
     let settings = doc.settings();
@@ -137,11 +167,13 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
         (Table::Wall(t), Op::Create) => {
             if let Some(mut s) = input.wall.clone() {
                 s.id.clone_from(&id);
+                bind_materials(doc, &mut s, "wall")?;
                 t.push(s);
             }
         }
         (Table::Wall(t), Op::Update) => {
-            if let (Some(s), Some(at)) = (input.wall.clone(), t.iter().position(|s| s.id == id)) {
+            if let (Some(mut s), Some(at)) = (input.wall.clone(), t.iter().position(|s| s.id == id)) {
+                bind_materials(doc, &mut s, "wall")?;
                 t[at] = s;
             }
         }
@@ -334,6 +366,39 @@ fn picked<'a>(
         .collect())
 }
 
+/// A style the file brings bound to the project's materials: a wall style's ([`bind_materials`]); others have none.
+trait Incoming {
+    fn bind(&mut self, doc: &Document) -> Result<(), Stop>;
+}
+
+impl Incoming for TextStyleDef {
+    fn bind(&mut self, _: &Document) -> Result<(), Stop> {
+        Ok(())
+    }
+}
+
+impl Incoming for DimensionStyleDef {
+    fn bind(&mut self, _: &Document) -> Result<(), Stop> {
+        Ok(())
+    }
+}
+
+impl Incoming for LeaderStyleDef {
+    fn bind(&mut self, _: &Document) -> Result<(), Stop> {
+        Ok(())
+    }
+}
+
+impl Incoming for WallStyleDef {
+    fn bind(&mut self, doc: &Document) -> Result<(), Stop> {
+        bind_materials(doc, self, "library")
+    }
+}
+
+fn bind_incoming(doc: &Document, s: &mut impl Incoming) -> Result<(), Stop> {
+    s.bind(doc)
+}
+
 /// Import: the file's styles by name into the table (docs/adr/0322 §4).
 fn import(
     doc: &Document,
@@ -389,6 +454,7 @@ fn import(
                 .map_err(|e| invalid_library(format!("stilleri okunmuyor ({e})")))?;
             let mut table = $table.clone();
             for mut s in incoming {
+                bind_incoming(doc, &mut s)?;
                 match table.iter().position(|t| key(&t.name) == key(&s.name)) {
                     Some(at) if replace => {
                         // Its id and name stay the table's: the file gives the values.

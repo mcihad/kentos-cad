@@ -7,6 +7,7 @@ import type { MaterialsOperation } from "./MaterialsOperation";
  *
  * Refusals: `invalid_material`, `material_not_found`, `material_exists`, `material_in_use`, `nothing_to_set`,
  * `style_not_found`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `not_a_slab`, `component_not_found`,
- * `layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`, `material_adopt_left`.
+ * `layer_locked`, `invalid_library`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`,
+ * `material_adopt_left`, `material_kept`.
  */
 export type MaterialsEdit = { operation: MaterialsOperation, expectedRevision?: string, };

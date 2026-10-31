@@ -47,6 +47,9 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
     değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”)
     yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision
     verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini,
+    taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update
+    ve import'ta material_not_found ile reddedilir (docs/adr/0791).
     """
     __slots__ = ()
     id = "cad.styles.edit"
@@ -91,7 +94,10 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında
         (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da
         sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
-        sonuç conflict olur.
+        sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin
+        malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı
+        bileşen create, update ve import'ta material_not_found ile reddedilir
+        (docs/adr/0791).
 
         Args:
             doc: The drawing it works on.

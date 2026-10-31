@@ -3257,6 +3257,22 @@ MaterialCategoryName = Literal["structure", "insulation", "finish", "membrane", 
 """The names of :class:`MaterialCategory`, for a plain string."""
 
 
+class MaterialConflict(_StrEnum):
+    """What a library's material does when the project has one of its id, or another of its name (docs/adr/0791).
+
+    - ``refuse``: Refused (`material_exists`): nothing is taken.
+    - ``keep``: The project's stays; the library's is not taken (`material_kept`).
+    - ``replace``: One of the same id becomes the library's (its name, category, way of counting, hatch and pen); everything bound
+    """
+    REFUSE = "refuse"
+    KEEP = "keep"
+    REPLACE = "replace"
+
+
+MaterialConflictName = Literal["refuse", "keep", "replace"]
+"""The names of :class:`MaterialConflict`, for a plain string."""
+
+
 class MaterialQuantity(_StrEnum):
     """How Metraj counts a material: by its face area (m²: plaster, membrane, paint) or its volume (m³: concrete, masonry)."""
     AREA = "area"
@@ -8157,6 +8173,8 @@ class MaterialsOperation(_Union):
     - :class:`RemoveMaterialsOperation` (``kind: remove``)
     - :class:`AssignMaterialsOperation` (``kind: assign``)
     - :class:`AdoptMaterialsOperation` (``kind: adopt``)
+    - :class:`ImportMaterialsOperation` (``kind: import``)
+    - :class:`ExportMaterialsOperation` (``kind: export``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -38308,12 +38326,18 @@ class MaterialReport(_Model):
     locked layers, the texts not taken in.
     Attributes:
         left: Adopt: the texts some of whose components were left unbound (their look differs from the first's).
+        kept: Import: the library's materials not taken, the project's kept (`keep`; the library's ids).
+        replaced: Import: the project's materials that became the library's (`replace`; their ids).
+        taken: Import: the library's materials taken in as new (their ids).
     """
     styles: list[str]
     walls: list[str]
     slabs: list[str]
     locked: list[str]
     left: list[str]
+    kept: list[str] | Unset = UNSET
+    replaced: list[str] | Unset = UNSET
+    taken: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -38322,6 +38346,12 @@ class MaterialReport(_Model):
         out["slabs"] = list(self.slabs)
         out["locked"] = list(self.locked)
         out["left"] = list(self.left)
+        if self.kept is not UNSET:
+            out["kept"] = list(self.kept)
+        if self.replaced is not UNSET:
+            out["replaced"] = list(self.replaced)
+        if self.taken is not UNSET:
+            out["taken"] = list(self.taken)
         return out
 
     @classmethod
@@ -38332,6 +38362,9 @@ class MaterialReport(_Model):
             slabs=list(data["slabs"]),
             locked=list(data["locked"]),
             left=list(data["left"]),
+            kept=list(data["kept"]) if "kept" in data else UNSET,
+            replaced=list(data["replaced"]) if "replaced" in data else UNSET,
+            taken=list(data["taken"]) if "taken" in data else UNSET,
         )
 
 
@@ -38397,7 +38430,8 @@ class MaterialsEdit(_Model):
 
     Refusals: `invalid_material`, `material_not_found`, `material_exists`, `material_in_use`, `nothing_to_set`,
     `style_not_found`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `not_a_slab`, `component_not_found`,
-    `layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`, `material_adopt_left`.
+    `layer_locked`, `invalid_library`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`,
+    `material_adopt_left`, `material_kept`.
     """
     operation: MaterialsOperation
     expected_revision: str | None | Unset = UNSET
@@ -38422,11 +38456,13 @@ class MaterialsEdited(_Model):
     """Output of `cad.materials.edit` v1 (its plan's too: the preview, nothing written).
     Attributes:
         materials: The project's materials after it.
+        library: The office library (Export): the file's content.
         material: The material made, changed, removed or bound (its id); absent for Adopt and for leaving.
     """
     materials: list[ArchMaterial]
     report: MaterialReport
     revision: str
+    library: MaterialsFile | None | Unset = UNSET
     material: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -38434,6 +38470,8 @@ class MaterialsEdited(_Model):
         out["materials"] = [e0.to_json() for e0 in self.materials]
         out["report"] = self.report.to_json()
         out["revision"] = self.revision
+        if self.library is not UNSET:
+            out["library"] = None if self.library is None else self.library.to_json()
         if self.material is not UNSET:
             out["material"] = self.material
         return out
@@ -38444,7 +38482,40 @@ class MaterialsEdited(_Model):
             materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]],
             report=MaterialReport.from_json(data["report"]),
             revision=data["revision"],
+            library=UNSET if "library" not in data else None if data["library"] is None else MaterialsFile.from_json(data["library"]),
             material=data.get("material", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MaterialsFile(_Model):
+    """An office material library (Malzeme kitaplığı, docs/adr/0791): its name and its materials, each as a project keeps
+    it. KentOS gives one (`kentos-temel`); an office keeps its own in its folders and writes the project's out to one.
+    Attributes:
+        format: `kentos.materials`.
+        version: Unit: count.
+        library: The library's name.
+    """
+    format: str
+    version: int
+    library: str
+    materials: list[ArchMaterial]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["library"] = self.library
+        out["materials"] = [e0.to_json() for e0 in self.materials]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MaterialsFile:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            library=data["library"],
+            materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]],
         )
 
 
@@ -78843,6 +78914,63 @@ class AdoptMaterialsOperation(MaterialsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImportMaterialsOperation(MaterialsOperation):
+    """Kitaplıktan al: an office library's materials (`library`, a `kentos.materials` file as its host read it) or
+    KentOS's library `name` (`kentos-temel`), those named in `materials` (ids or names; none: all), taken into the
+    project; `onConflict` for one the project has.
+    """
+    TAG_VALUE: ClassVar[str] = "import"
+    library: MaterialsFile | None | Unset = UNSET
+    materials: list[str] | Unset = UNSET
+    name: str | None | Unset = UNSET
+    on_conflict: MaterialConflict | MaterialConflictName = MaterialConflict.REFUSE
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "import"}
+        if self.library is not UNSET:
+            out["library"] = None if self.library is None else self.library.to_json()
+        if self.materials is not UNSET:
+            out["materials"] = list(self.materials)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        out["onConflict"] = _enum_out(self.on_conflict)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportMaterialsOperation:
+        return cls(
+            library=UNSET if "library" not in data else None if data["library"] is None else MaterialsFile.from_json(data["library"]),
+            materials=list(data["materials"]) if "materials" in data else UNSET,
+            name=data.get("name", UNSET),
+            on_conflict=_enum_in(MaterialConflict, data["onConflict"]) if "onConflict" in data else MaterialConflict.REFUSE,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportMaterialsOperation(MaterialsOperation):
+    """Kitaplığa yaz: the project's materials named (ids or names; none: all) as an office library `library`, given
+    back as the file's content (its host writes it). The drawing does not change.
+    """
+    TAG_VALUE: ClassVar[str] = "export"
+    library: str
+    materials: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "export"}
+        out["library"] = self.library
+        if self.materials is not UNSET:
+            out["materials"] = list(self.materials)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportMaterialsOperation:
+        return cls(
+            library=data["library"],
+            materials=list(data["materials"]) if "materials" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AtMeasuredPoint(MeasuredPoint):
     """Coordinates: the point follows nothing.
     Attributes:
@@ -88546,7 +88674,7 @@ _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChang
 _MATERIAL_TARGET: dict[str, type[MaterialTarget]] = {"wallStyle": WallStyleMaterialTarget, "wall": WallMaterialTarget, "slab": SlabMaterialTarget}
 
 
-_MATERIALS_OPERATION: dict[str, type[MaterialsOperation]] = {"define": DefineMaterialsOperation, "update": UpdateMaterialsOperation, "remove": RemoveMaterialsOperation, "assign": AssignMaterialsOperation, "adopt": AdoptMaterialsOperation}
+_MATERIALS_OPERATION: dict[str, type[MaterialsOperation]] = {"define": DefineMaterialsOperation, "update": UpdateMaterialsOperation, "remove": RemoveMaterialsOperation, "assign": AssignMaterialsOperation, "adopt": AdoptMaterialsOperation, "import": ImportMaterialsOperation, "export": ExportMaterialsOperation}
 
 
 _MEASURED_POINT: dict[str, type[MeasuredPoint]] = {"at": AtMeasuredPoint, "place": PlaceMeasuredPoint}
@@ -89565,6 +89693,7 @@ __all__ = [
     "ExportGml",
     "ExportGpkg",
     "ExportMaplibre",
+    "ExportMaterialsOperation",
     "ExportOpeningTypesOperation",
     "ExportParquet",
     "ExportPdf",
@@ -89849,6 +89978,7 @@ __all__ = [
     "ImportGpkg",
     "ImportKml",
     "ImportMaplibre",
+    "ImportMaterialsOperation",
     "ImportMerge",
     "ImportOpeningTypesOperation",
     "ImportParquet",
@@ -90153,6 +90283,8 @@ __all__ = [
     "MaterialCategory",
     "MaterialCategoryName",
     "MaterialChange",
+    "MaterialConflict",
+    "MaterialConflictName",
     "MaterialQuantity",
     "MaterialQuantityName",
     "MaterialReport",
@@ -90160,6 +90292,7 @@ __all__ = [
     "MaterialTarget",
     "MaterialsEdit",
     "MaterialsEdited",
+    "MaterialsFile",
     "MaterialsOperation",
     "MeasuredPoint",
     "MedianRoadWork",

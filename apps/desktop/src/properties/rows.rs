@@ -1709,12 +1709,13 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 .map(|&r| pick(r.label().into(), r == x.role, set(SlabChange { role: Some(r), ..Default::default() }), Some("slab")))
                 .collect();
             geo.push(Row::text("Döşeme türü", x.role.label()).editor(select(x.role.label().into(), roles)));
-            // Sınır (docs/adr/0771 §4): an outline of its own, or bound to its walls (Ayır, Kaynağa bağla).
-            let bound_now = super::wall_parts::bound_text(x);
-            let bounds = super::wall_parts::bound_choices(x)
+            // Sınır (docs/adr/0771 §4, 0791): an outline of its own, bound to its walls or to a space of its level.
+            let spaces = super::wall_parts::space_choices(&doc.model, x);
+            let bound_now = super::wall_parts::bound_text(x, &spaces);
+            let bounds = super::wall_parts::bound_choices(x, &spaces)
                 .into_iter()
                 .map(|(label, chosen, op)| Choice::Pick {
-                    label: label.into(),
+                    label,
                     swatch: None,
                     icon: Some("slab"),
                     wide: false,

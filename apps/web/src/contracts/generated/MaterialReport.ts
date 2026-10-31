@@ -8,4 +8,16 @@ export type MaterialReport = { styles: Array<string>, walls: Array<string>, slab
 /**
  * Adopt: the texts some of whose components were left unbound (their look differs from the first's).
  */
-left: Array<string>, };
+left: Array<string>, 
+/**
+ * Import: the library's materials taken in as new (their ids).
+ */
+taken?: Array<string>, 
+/**
+ * Import: the project's materials that became the library's (`replace`; their ids).
+ */
+replaced?: Array<string>, 
+/**
+ * Import: the library's materials not taken, the project's kept (`keep`; the library's ids).
+ */
+kept?: Array<string>, };
