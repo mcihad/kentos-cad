@@ -15,6 +15,7 @@ use crate::geom::leader;
 use crate::geometry::Bounds;
 use crate::jsmath::{PI, cos, js_max, js_min, sin};
 use crate::store::Store;
+use crate::store::label_memo::{Part, TableKept};
 use crate::store::labels::{
     LABEL_CELL, LABEL_PARAGRAPH_MASK, LABEL_PIECE_DIMENSION, LABEL_PIECE_LEADER, LABEL_PIECE_LINE,
     LABEL_PIECE_TEXT, LABEL_STRIDE,
@@ -129,6 +130,31 @@ impl Store {
         shown: Option<&dyn Fn(&str) -> bool>,
         prior: Option<&super::placing::Prior>,
     ) -> (Shown, super::placing::Prior) {
+        self.labels_shown_parts(
+            view, scale, editing, size, options, shown, prior, None, None,
+        )
+        .flat()
+    }
+
+    /// [`Store::labels_shown_after`] in parts (docs/adr/0786 §1): under true sizes and the paper's, where no text
+    /// keeps apart from another, object by object (each its records, as grown, and the boxes its texts hold against
+    /// the labels), taken from `memo` while the object and what it is read with stay; under a rule whose texts keep
+    /// apart, one part of them all. A table's cells start inside `cells` (but its first, §2), when given. The label
+    /// engine places the objects' labels after them, as before. Put together ([`ShownParts::flat`]) the parts are
+    /// the records the whole read gives, to the bit.
+    #[allow(clippy::too_many_arguments)]
+    pub fn labels_shown_parts(
+        &self,
+        view: &Bounds,
+        scale: f64,
+        editing: Option<f64>,
+        size: LabelSize,
+        options: PlaceOptions,
+        shown: Option<&dyn Fn(&str) -> bool>,
+        prior: Option<&super::placing::Prior>,
+        cells: Option<&Bounds>,
+        memo: Option<&mut super::label_memo::LabelMemo>,
+    ) -> ShownParts {
         let mask: Option<Vec<bool>> =
             shown.map(|f| self.layer_names().into_iter().map(f).collect());
         let max_px = match size {
@@ -140,7 +166,200 @@ impl Store {
         } else {
             0.0
         };
-        let records = self.labels_with(view, scale, editing, min_px, max_px, mask.as_deref());
+        let px = (min_px, max_px);
+        let parts: Vec<(f64, Part)> = if matches!(size, LabelSize::True | LabelSize::Print) {
+            // Object by object: a text's group is its object's (`group_key`), and none keeps apart.
+            let items = self.label_items(view, editing, mask.as_deref());
+            let make = |it: &super::Item, old: Option<&TableKept>| {
+                if let (Some(near), Some(t)) = (cells, crate::geom::table::table_geom(&it.shape)) {
+                    return self.table_parts(it, &t, near, (scale, px, size), old);
+                }
+                let mut records = Vec::new();
+                self.item_labels(it, scale, px, cells, &mut records);
+                let groups = self.groups(&records, scale, size);
+                (
+                    blocks(part(&records, &groups, &vec![true; groups.len()])),
+                    None,
+                )
+            };
+            match memo {
+                Some(m) => {
+                    // The rule and, under true sizes, the scale (a table's or a curve's text out of 5…240 px).
+                    let rule = u8::from(size == LabelSize::True);
+                    m.begin(self.font, rule, px, (scale, size == LabelSize::True), cells);
+                    let parts = items
+                        .into_iter()
+                        .flat_map(|it| {
+                            m.parts(it, |old| make(it, old))
+                                .into_iter()
+                                .map(|p| (it.id, p))
+                        })
+                        .collect();
+                    m.end();
+                    parts
+                }
+                None => items
+                    .into_iter()
+                    .flat_map(|it| make(it, None).0.into_iter().map(|p| (it.id, p)))
+                    .collect(),
+            }
+        } else {
+            let records = self.labels_near(view, scale, editing, px, mask.as_deref(), cells);
+            let groups = self.groups(&records, scale, size);
+            let kept = keep_apart(&groups, view, scale);
+            vec![(f64::NAN, part(&records, &groups, &kept))]
+        };
+        // The texts as shown keep the objects' labels off them (docs/adr/0212 §3.5).
+        let fixed: Vec<Vec<Vec2>> = parts
+            .iter()
+            .flat_map(|(_, p)| p.outlines.iter().cloned())
+            .collect();
+        let (placed, prior) =
+            self.place_labels_after_in(view, scale, &fixed, options, prior, mask.as_deref());
+        ShownParts {
+            parts,
+            placed,
+            prior,
+        }
+    }
+
+    /// A table's parts by its blocks of rows (docs/adr/0786 §2), its cells near `near`, with what they were made of:
+    /// a block whose words stay in a table that stays but for its words (`old`) is its part as it was, the other
+    /// blocks are laid out alone, their records as the whole read gives them (each cell's place, its factor and the
+    /// table's first cell as the point it grows about, the table's box held on its first part); else the whole read.
+    fn table_parts(
+        &self,
+        it: &super::Item,
+        t: &crate::geom::table::TableGeom<'_>,
+        near: &Bounds,
+        (scale, px, size): (f64, (f64, f64), LabelSize),
+        old: Option<&TableKept>,
+    ) -> (Vec<Part>, Option<TableKept>) {
+        use std::hash::{Hash, Hasher};
+        let hasher = || std::collections::hash_map::DefaultHasher::new();
+        // What places a cell besides its words: the table's place, sizes, merges, aligns, heading, face and
+        // styles, the typeface, and its first cell (whose start every cell grows about).
+        let mut frame = hasher();
+        (
+            t.p.x.to_bits(),
+            t.p.y.to_bits(),
+            t.rotation.to_bits(),
+            t.height.to_bits(),
+        )
+            .hash(&mut frame);
+        t.rows
+            .iter()
+            .chain(t.columns)
+            .for_each(|x| x.to_bits().hash(&mut frame));
+        (t.rows.len(), t.header, format!("{:?}", self.font)).hash(&mut frame);
+        format!("{:?}{:?}{:?}{:?}", t.merges, t.aligns, t.face, t.styles).hash(&mut frame);
+        let first = t
+            .cells
+            .iter()
+            .enumerate()
+            .find_map(|(i, r)| r.iter().position(|w| !w.is_empty()).map(|j| (i, j, &r[j])));
+        first.hash(&mut frame);
+        let frame = frame.finish();
+        let n = t.cells.len().div_ceil(BLOCK_ROWS);
+        let prints: Vec<u64> = (0..n)
+            .map(|b| {
+                let mut h = hasher();
+                for row in t.cells.iter().skip(b * BLOCK_ROWS).take(BLOCK_ROWS) {
+                    row.hash(&mut h);
+                }
+                h.finish()
+            })
+            .collect();
+        if let Some(old) = old.filter(|o| o.frame == frame && o.prints.len() == n) {
+            let Some((_, head)) = old.parts.first() else {
+                return (
+                    Vec::new(),
+                    Some(TableKept {
+                        frame,
+                        prints,
+                        parts: Vec::new(),
+                    }),
+                );
+            };
+            let grow = [
+                head.records[LABEL_STRIDE],
+                head.records[LABEL_STRIDE + 1],
+                head.records[LABEL_STRIDE + 2],
+            ];
+            let mut made: Vec<(usize, std::sync::Arc<[f64]>)> = Vec::new();
+            for b in 0..n {
+                if prints[b] == old.prints[b] {
+                    if let Some((_, p)) = old.parts.iter().find(|(x, _)| *x == b) {
+                        made.push((b, p.records.clone()));
+                    }
+                    continue;
+                }
+                let mut records = Vec::new();
+                for c in t.cells_near_in(self.font, near, b * BLOCK_ROWS..(b + 1) * BLOCK_ROWS) {
+                    records.extend([
+                        it.id,
+                        LABEL_CELL,
+                        c.at.x,
+                        c.at.y,
+                        t.rotation,
+                        c.row as f64,
+                        c.col as f64,
+                        if c.bold { 1.0 } else { 0.0 },
+                        0.0,
+                    ]);
+                    records.extend(grow);
+                }
+                if !records.is_empty() {
+                    made.push((b, records.into()));
+                }
+            }
+            let parts: Vec<(usize, Part)> = made
+                .into_iter()
+                .enumerate()
+                .map(|(i, (b, records))| {
+                    let outlines = if i == 0 {
+                        head.outlines.clone()
+                    } else {
+                        Vec::new().into()
+                    };
+                    (b, Part { records, outlines })
+                })
+                .collect();
+            let out = parts.iter().map(|(_, p)| p.clone()).collect();
+            return (
+                out,
+                Some(TableKept {
+                    frame,
+                    prints,
+                    parts,
+                }),
+            );
+        }
+        let mut records = Vec::new();
+        self.item_labels(it, scale, px, Some(near), &mut records);
+        let groups = self.groups(&records, scale, size);
+        let parts = blocks(part(&records, &groups, &vec![true; groups.len()]));
+        let by_block = parts
+            .iter()
+            .map(|p| {
+                (
+                    p.records.get(5).map_or(0, |r| *r as usize / BLOCK_ROWS),
+                    p.clone(),
+                )
+            })
+            .collect();
+        (
+            parts,
+            Some(TableKept {
+                frame,
+                prints,
+                parts: by_block,
+            }),
+        )
+    }
+
+    /// The groups of `records` (one text's records each, `group_key`), those the rule shows.
+    fn groups(&self, records: &[f64], scale: f64, size: LabelSize) -> Vec<Group> {
         let n = records.len() / LABEL_STRIDE;
         let rec = |i: usize| &records[i * LABEL_STRIDE..(i + 1) * LABEL_STRIDE];
         let mut groups = Vec::new();
@@ -156,48 +375,7 @@ impl Store {
             }
             i = j;
         }
-        let kept = if matches!(size,LabelSize::True|LabelSize::Print) {
-            vec![true; groups.len()]
-        } else {
-            keep_apart(&groups, view, scale)
-        };
-        let mut out = Vec::with_capacity(records.len() / LABEL_STRIDE * LABEL_SHOWN_STRIDE);
-        // The texts as shown keep the objects' labels off them (docs/adr/0212 §3.5).
-        let mut fixed: Vec<Vec<Vec2>> = Vec::new();
-        for (g, keep) in groups.iter().zip(kept) {
-            if !keep {
-                continue;
-            }
-            for i in g.from..g.to {
-                out.extend_from_slice(rec(i));
-                out.extend([g.k, g.anchor.x, g.anchor.y]);
-            }
-            if !g.outline.is_empty() {
-                fixed.push(
-                    g.outline
-                        .iter()
-                        .map(|p| {
-                            Vec2::new(
-                                g.anchor.x + (p.x - g.anchor.x) * g.k,
-                                g.anchor.y + (p.y - g.anchor.y) * g.k,
-                            )
-                        })
-                        .collect(),
-                );
-            }
-        }
-        let (placed, next) = self.place_labels_after_in(view, scale, &fixed, options, prior, mask.as_deref());
-        for r in placed.records.chunks_exact(LABEL_STRIDE) {
-            out.extend_from_slice(r);
-            out.extend([1.0, r[2], r[3]]);
-        }
-        (
-            Shown {
-                records: out,
-                texts: placed.texts,
-            },
-            next,
-        )
+        groups
     }
 
     /// Which text a record belongs to: its object, and a block's piece (−1
@@ -317,6 +495,121 @@ impl Store {
             apart: true,
         })
     }
+}
+
+/// A view's text in parts (`Store::labels_shown_parts`, docs/adr/0786 §1): the objects' parts in the document's
+/// order (each its object's id; one part of every object, id NaN, under a rule whose texts keep apart), then the
+/// label engine's labels and where they went.
+#[derive(Clone, Debug, Default)]
+pub struct ShownParts {
+    pub parts: Vec<(f64, Part)>,
+    /// The label engine's records (`LABEL_STRIDE` numbers each) and texts.
+    pub placed: Shown,
+    pub prior: super::placing::Prior,
+}
+
+impl ShownParts {
+    /// The parts put together: the records `Store::labels_shown_after` gives (`LABEL_SHOWN_STRIDE` numbers each,
+    /// the label engine's after the objects' as grown 1 about their place), and where the labels went.
+    pub fn flat(self) -> (Shown, super::placing::Prior) {
+        let n: usize = self
+            .parts
+            .iter()
+            .map(|(_, p)| p.records.len())
+            .sum::<usize>()
+            + self.placed.records.len() / LABEL_STRIDE * LABEL_SHOWN_STRIDE;
+        let mut out = Vec::with_capacity(n);
+        for (_, p) in &self.parts {
+            out.extend_from_slice(&p.records);
+        }
+        for r in self.placed.records.chunks_exact(LABEL_STRIDE) {
+            out.extend_from_slice(r);
+            out.extend([1.0, r[2], r[3]]);
+        }
+        (
+            Shown {
+                records: out,
+                texts: self.placed.texts,
+            },
+            self.prior,
+        )
+    }
+}
+
+/// The part of `records` whose `groups` are `kept`: each record followed by its group's factor and anchor, and the
+/// boxes the groups hold against the labels, grown with them.
+fn part(records: &[f64], groups: &[Group], kept: &[bool]) -> Part {
+    let rec = |i: usize| &records[i * LABEL_STRIDE..(i + 1) * LABEL_STRIDE];
+    let n: usize = groups
+        .iter()
+        .zip(kept)
+        .filter(|(_, k)| **k)
+        .map(|(g, _)| (g.to - g.from) * LABEL_SHOWN_STRIDE)
+        .sum();
+    let mut out = Vec::with_capacity(n);
+    let mut outlines = Vec::new();
+    for (g, keep) in groups.iter().zip(kept) {
+        if !keep {
+            continue;
+        }
+        for i in g.from..g.to {
+            out.extend_from_slice(rec(i));
+            out.extend([g.k, g.anchor.x, g.anchor.y]);
+        }
+        if !g.outline.is_empty() {
+            outlines.push(
+                g.outline
+                    .iter()
+                    .map(|p| {
+                        Vec2::new(
+                            g.anchor.x + (p.x - g.anchor.x) * g.k,
+                            g.anchor.y + (p.y - g.anchor.y) * g.k,
+                        )
+                    })
+                    .collect(),
+            );
+        }
+    }
+    Part {
+        records: out.into(),
+        outlines: outlines.into(),
+    }
+}
+
+/// The rows of a table's cells a part holds (docs/adr/0786 §2): a long table's cells come in parts of so many rows,
+/// a change of a few of them making those parts alone again.
+pub const BLOCK_ROWS: usize = 64;
+
+/// An object's part as parts of [`BLOCK_ROWS`] rows of a table's cells (the boxes it holds in the first); the part
+/// itself for any other object's.
+fn blocks(p: Part) -> Vec<Part> {
+    let block = |r: &[f64]| (r[1] == LABEL_CELL).then(|| r[5] as usize / BLOCK_ROWS);
+    let records: Vec<&[f64]> = p.records.chunks_exact(LABEL_SHOWN_STRIDE).collect();
+    let first = records.first().map(|r| block(r));
+    if records.iter().all(|r| block(r) == first.flatten()) {
+        return vec![p];
+    }
+    let mut out: Vec<Part> = Vec::new();
+    let mut from = 0;
+    for i in 1..=records.len() {
+        if i < records.len() && block(records[i]) == block(records[from]) {
+            continue;
+        }
+        let numbers: Vec<f64> = records[from..i]
+            .iter()
+            .flat_map(|r| r.iter().copied())
+            .collect();
+        out.push(Part {
+            records: numbers.into(),
+            outlines: if out.is_empty() {
+                p.outlines.clone()
+            } else {
+                Vec::new().into()
+            },
+        });
+        from = i;
+    }
+    out
 }
 
 fn corners(b: &Bounds) -> Vec<Vec2> {
@@ -440,6 +733,131 @@ mod tests {
     }
 
     const ONE: &str = r#"[{"id":1,"layerId":"a","kind":"text","p":{"x":10,"y":20},"text":"Ada 101","height":2.5,"rotation":0}]"#;
+
+    /// The view's text as it was read before it came in parts (docs/adr/0786 §1): every object's records at once,
+    /// grouped, kept apart under a rule whose texts keep apart, then the label engine's.
+    fn whole(s: &Store, view: &Bounds, scale: f64, size: LabelSize) -> Vec<u64> {
+        let max_px = match size {
+            LabelSize::Screen { .. } | LabelSize::Print => f64::INFINITY,
+            _ => TRUE_MAX_PX,
+        };
+        let min_px = if size == LabelSize::True {
+            TRUE_MIN_PX
+        } else {
+            0.0
+        };
+        let records = s.labels_with(view, scale, None, min_px, max_px, None);
+        let groups = s.groups(&records, scale, size);
+        let kept = if matches!(size, LabelSize::True | LabelSize::Print) {
+            vec![true; groups.len()]
+        } else {
+            keep_apart(&groups, view, scale)
+        };
+        let p = part(&records, &groups, &kept);
+        let fixed: Vec<Vec<Vec2>> = p.outlines.to_vec();
+        let (placed, _) =
+            s.place_labels_after_in(view, scale, &fixed, PlaceOptions::default(), None, None);
+        let mut out: Vec<f64> = p.records.to_vec();
+        for r in placed.records.chunks_exact(LABEL_STRIDE) {
+            out.extend_from_slice(r);
+            out.extend([1.0, r[2], r[3]]);
+        }
+        out.iter().map(|x| x.to_bits()).collect()
+    }
+
+    /// One random-ish object of the view: a text (one line, several, turned), a table or a labelled parcel.
+    fn object(i: i32) -> String {
+        let (x, y) = (
+            f64::from(i % 6) * 30.0 - 90.0,
+            f64::from(i / 6) * 30.0 - 70.0,
+        );
+        let id = i + 1;
+        match i % 5 {
+            0 => format!(
+                r#"{{"id":{id},"layerId":"a","kind":"text","p":{{"x":{x},"y":{y}}},"text":"Oda {i}","height":{},"rotation":{}}}"#,
+                0.2 + f64::from(i) * 0.1,
+                i * 13
+            ),
+            1 => format!(
+                r#"{{"id":{id},"layerId":"a","kind":"text","p":{{"x":{x},"y":{y}}},"text":"Salon\nMutfak {i}","height":1.5,"rotation":0}}"#
+            ),
+            2 => format!(
+                r#"{{"id":{id},"layerId":"c","kind":"table","p":{{"x":{x},"y":{y}}},"rotation":{},"height":0.5,"rows":[1,1,1],"columns":[4,3],"cells":[["No","Alan"],["{i}","12,5"],["",""]],"header":true}}"#,
+                i * 7
+            ),
+            3 => format!(
+                r#"{{"id":{id},"layerId":"p","label":"{i}","kind":"polygon","pts":[{{"x":{x},"y":{y}}},{{"x":{},"y":{y}}},{{"x":{},"y":{}}},{{"x":{x},"y":{}}}]}}"#,
+                x + 20.0,
+                x + 20.0,
+                y + 20.0,
+                y + 20.0
+            ),
+            _ => format!(
+                r#"{{"id":{id},"layerId":"a","kind":"text","p":{{"x":{x},"y":{y}}},"text":"Kat {i}","height":3,"rotation":90}}"#
+            ),
+        }
+    }
+
+    /// Object by object, taken from the memo or read afresh, the parts put together are the whole read's records,
+    /// to the bit, under every rule, at scales that leave some texts out, in two views.
+    #[test]
+    fn the_parts_put_together_are_the_whole_read() {
+        let objects: Vec<String> = (0..30).map(object).collect();
+        let mut s = store(&format!("[{}]", objects.join(",")));
+        s.set_label_layers_json(
+            r#"[{"id":"p","rank":0,"label":{"placement":"center","size":10}}]"#,
+        )
+        .unwrap();
+        for i in (3..30).step_by(5) {
+            s.set_object_labels(
+                f64::from(i + 1),
+                crate::store::placing::ObjectLabels {
+                    texts: vec![(0, format!("{i}"))],
+                    z: f64::NAN,
+                },
+            );
+        }
+        let mut memo = crate::store::label_memo::LabelMemo::default();
+        let small = Bounds {
+            min_x: -40.0,
+            min_y: -30.0,
+            max_x: 20.0,
+            max_y: 15.0,
+        };
+        let sizes = [
+            LabelSize::Print,
+            LabelSize::True,
+            LabelSize::Legible,
+            LabelSize::Screen { plot_scale: 100.0 },
+        ];
+        let mut placed = 0;
+        for size in sizes {
+            for scale in [0.5, 2.0, 4.0, 20.0, 200.0] {
+                for view in [view(), small] {
+                    let want = whole(&s, &view, scale, size);
+                    placed += want.len();
+                    for memo in [None, Some(&mut memo)] {
+                        let (got, _) = s
+                            .labels_shown_parts(
+                                &view,
+                                scale,
+                                None,
+                                size,
+                                PlaceOptions::default(),
+                                None,
+                                None,
+                                None,
+                                memo,
+                            )
+                            .flat();
+                        let got: Vec<u64> = got.records.iter().map(|x| x.to_bits()).collect();
+                        assert_eq!(got, want, "{size:?} at {scale}");
+                    }
+                }
+            }
+        }
+        assert!(placed > 1000, "{placed}");
+    }
 
     #[test]
     fn a_text_too_small_is_grown_to_the_legible_size_about_its_point() {

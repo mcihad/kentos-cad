@@ -17,7 +17,7 @@
 //! words are its top left cell's, in its whole box.
 
 use crate::entity::{CellRange, Shape};
-use crate::jsmath::{PI, cos, sin};
+use crate::jsmath::{PI, cos, js_max, js_min, sin};
 use crate::text::face::Face;
 use crate::text::{Font, width_em_in};
 use crate::vec2::Vec2;
@@ -334,50 +334,12 @@ impl TableGeom<'_> {
     pub fn layout(&self, font: Font) -> TableLayout {
         let (xs, ys) = (edges(self.columns), edges(self.rows));
         let typeface = self.face.font_or(font);
-        let h = self.height;
         let mut cells = Vec::new();
         for (i, row) in self.cells.iter().enumerate() {
-            for (j, words) in row.iter().enumerate() {
-                if words.is_empty() {
-                    continue;
+            for j in 0..row.len() {
+                if let Some(c) = self.cell_place(i, j, &xs, &ys, typeface) {
+                    cells.push(c);
                 }
-                // A merged range's other cells are empty; its top left cell spans its box.
-                let (rows, cols) = match self.merge_at(i, j) {
-                    Some(r) if (r.row, r.col) == (i, j) => (r.rows, r.cols),
-                    Some(_) => continue,
-                    None => (1, 1),
-                };
-                let (Some(&x0), Some(&x1), Some(&y0), Some(&y1)) =
-                    (xs.get(j), xs.get(j + cols), ys.get(i), ys.get(i + rows))
-                else {
-                    continue;
-                };
-                let heading = self.header && i == 0;
-                let style = self.style_at(i, j);
-                let bold = style.bold.unwrap_or(heading || self.face.is_bold());
-                let width = width_em_in(words, typeface, bold) * h;
-                let align = match style.align.as_deref() {
-                    Some(a) => a,
-                    None if heading => "center",
-                    None => self
-                        .aligns
-                        .and_then(|a| a.get(j))
-                        .map_or("left", String::as_str),
-                };
-                let x = match align {
-                    "center" => (x0 + x1) / 2.0 - width / 2.0,
-                    "right" => x1 - PAD * h - width,
-                    _ => x0 + PAD * h,
-                };
-                let y = (y0 + y1) / 2.0 + DROP * h;
-                cells.push(CellPlace {
-                    row: i,
-                    col: j,
-                    at: self.point(x, y),
-                    width,
-                    bold,
-                    color: style.color,
-                });
             }
         }
         TableLayout {
@@ -387,6 +349,139 @@ impl TableGeom<'_> {
             cells,
             fills: self.fills(),
         }
+    }
+
+    /// The cells of [`TableGeom::layout`] whose words start inside `near` (closed), and its first cell wherever it
+    /// is, in the layout's order (docs/adr/0786 §2): a view's text without the cells of a long table far from it.
+    /// Only the rows that can hold such a start are laid out (a start sits in its rows' band, `DROP` heights under
+    /// its middle); each cell is placed as the layout places it, so a cell kept is the layout's to the bit.
+    pub fn cells_near(&self, font: Font, near: &crate::geometry::Bounds) -> Vec<CellPlace> {
+        self.cells_near_in(font, near, 0..usize::MAX)
+    }
+
+    /// [`TableGeom::cells_near`]'s cells in the rows `rows` (docs/adr/0786 §2: a long table's rows in parts), the
+    /// rows outside them not laid out.
+    pub fn cells_near_in(
+        &self,
+        font: Font,
+        near: &crate::geometry::Bounds,
+        rows_in: std::ops::Range<usize>,
+    ) -> Vec<CellPlace> {
+        let (xs, ys) = (edges(self.columns), edges(self.rows));
+        let typeface = self.face.font_or(font);
+        let rows = self.cells.len();
+        // The box's corners down the table's columns (the y of `point`, from the top): `point` turned back.
+        let (_, v) = self.axes();
+        let down = |x: f64, y: f64| -((x - self.p.x) * v.x + (y - self.p.y) * v.y);
+        let ds = [
+            down(near.min_x, near.min_y),
+            down(near.max_x, near.min_y),
+            down(near.max_x, near.max_y),
+            down(near.min_x, near.max_y),
+        ];
+        // A start lies within DROP heights of its band; a millimetre more for the turn back's rounding.
+        let pad = DROP.abs() * self.height.abs() + 1e-3;
+        let lo = ds.iter().copied().fold(f64::INFINITY, js_min) - pad;
+        let hi = ds.iter().copied().fold(f64::NEG_INFINITY, js_max) + pad;
+        let mut picked: Vec<(usize, usize)> = Vec::new();
+        // A row of a negative height, or one not a number, leaves the edges unordered: every row is looked at then.
+        let ordered = self.rows.iter().all(|r| r.is_finite() && *r >= 0.0);
+        if ordered && lo.is_finite() && hi.is_finite() {
+            // The rows whose band meets lo..hi: from the first whose bottom edge reaches lo to the last whose top
+            // edge is within hi (the edges climb; a row past the edges has no cells).
+            let bands = rows.min(ys.len().saturating_sub(1));
+            let first = ys[1..=bands].partition_point(|&b| b < lo);
+            let last = ys[..bands].partition_point(|&t| t <= hi);
+            for i in first.max(rows_in.start)..last.max(first).min(rows_in.end) {
+                picked.extend((0..self.cells[i].len()).map(|j| (i, j)));
+            }
+            // A merged range begun above them that reaches into them.
+            for r in self.merges {
+                let (Some(&top), Some(&bottom)) = (ys.get(r.row), ys.get(r.row + r.rows)) else {
+                    continue;
+                };
+                if r.row < first && bottom >= lo && top <= hi && rows_in.contains(&r.row) {
+                    picked.push((r.row, r.col));
+                }
+            }
+        } else {
+            for (i, row) in self.cells.iter().enumerate() {
+                if rows_in.contains(&i) {
+                    picked.extend((0..row.len()).map(|j| (i, j)));
+                }
+            }
+        }
+        // The layout's first cell holds the table's place among the view's texts: its outline keeps the labels
+        // off, wherever the view is (store/legible.rs).
+        let first = (0..rows).find_map(|i| {
+            (0..self.cells[i].len()).find_map(|j| self.cell_place(i, j, &xs, &ys, typeface))
+        });
+        let first = first.map(|c| (c.row, c.col));
+        picked.extend(first.filter(|(i, _)| rows_in.contains(i)));
+        picked.sort_unstable();
+        picked.dedup();
+        let inside = |p: Vec2| {
+            p.x >= near.min_x && p.x <= near.max_x && p.y >= near.min_y && p.y <= near.max_y
+        };
+        picked
+            .into_iter()
+            .filter_map(|(i, j)| self.cell_place(i, j, &xs, &ys, typeface))
+            .filter(|c| inside(c.at) || Some((c.row, c.col)) == first)
+            .collect()
+    }
+
+    /// The cell at `row`, `col` as the layout places it: none for one without words, one a merged range covers
+    /// (its top left cell's words span it) or one past the table's edges.
+    fn cell_place(
+        &self,
+        i: usize,
+        j: usize,
+        xs: &[f64],
+        ys: &[f64],
+        typeface: Font,
+    ) -> Option<CellPlace> {
+        let words = self.cells.get(i)?.get(j)?;
+        if words.is_empty() {
+            return None;
+        }
+        let h = self.height;
+        // A merged range's other cells are empty; its top left cell spans its box.
+        let (rows, cols) = match self.merge_at(i, j) {
+            Some(r) if (r.row, r.col) == (i, j) => (r.rows, r.cols),
+            Some(_) => return None,
+            None => (1, 1),
+        };
+        let (Some(&x0), Some(&x1), Some(&y0), Some(&y1)) =
+            (xs.get(j), xs.get(j + cols), ys.get(i), ys.get(i + rows))
+        else {
+            return None;
+        };
+        let heading = self.header && i == 0;
+        let style = self.style_at(i, j);
+        let bold = style.bold.unwrap_or(heading || self.face.is_bold());
+        let width = width_em_in(words, typeface, bold) * h;
+        let align = match style.align.as_deref() {
+            Some(a) => a,
+            None if heading => "center",
+            None => self
+                .aligns
+                .and_then(|a| a.get(j))
+                .map_or("left", String::as_str),
+        };
+        let x = match align {
+            "center" => (x0 + x1) / 2.0 - width / 2.0,
+            "right" => x1 - PAD * h - width,
+            _ => x0 + PAD * h,
+        };
+        let y = (y0 + y1) / 2.0 + DROP * h;
+        Some(CellPlace {
+            row: i,
+            col: j,
+            at: self.point(x, y),
+            width,
+            bold,
+            color: style.color,
+        })
     }
 
     /// The style of the cell at `row`, `col`: each field from the last style over it that sets it.

@@ -867,7 +867,7 @@ impl App {
                 accent,
                 Cursor::Pick,
                 Some(crate::viewport::Styling {
-                    labels: spots.as_deref().map(Vec::as_slice),
+                    labels: spots.as_deref(),
                     ..self.styles.styling(spatial, &self.settings)
                 }),
             );

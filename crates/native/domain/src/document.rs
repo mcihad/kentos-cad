@@ -180,6 +180,12 @@ impl Document {
         self.store.get(slot).map(|stored| &*stored.entity)
     }
 
+    /// An object by slot as the document shares it: the same `Arc` while the object stays, another once it
+    /// changes (a holder of a clone sees every change as another; docs/adr/0786 §3).
+    pub fn get_shared(&self, slot: Slot) -> Option<&std::sync::Arc<Entity>> {
+        self.store.get(slot).map(|stored| &stored.entity)
+    }
+
     /// An object's persistent id (docs/adr/0014).
     pub fn uid(&self, slot: Slot) -> Option<Uuid> {
         self.store.get(slot).map(|stored| stored.uid)

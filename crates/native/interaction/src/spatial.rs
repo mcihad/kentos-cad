@@ -30,6 +30,7 @@
 
 use std::collections::HashSet;
 use std::hash::BuildHasherDefault;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use kentos_commands::{
@@ -108,6 +109,11 @@ pub struct Spatial {
     /// Where the main view's labels went last (docs/adr/0533 §3): the next placing of a view that moved a little
     /// puts a label back where it was when that is free. Only the main view keeps one.
     prior: std::cell::RefCell<kentos_geometry_core::store::placing::Prior>,
+    /// The main view's text records by object (docs/adr/0786 §1): an object the drawing's last change left as it
+    /// was gives its records again unread.
+    label_memo: std::cell::RefCell<kentos_geometry_core::store::label_memo::LabelMemo>,
+    /// The main view's objects' parts as typed last, by the store's part they were typed from (docs/adr/0786 §1).
+    label_typed: std::cell::RefCell<Typed>,
     /// The active view's theme (docs/adr/0523 §2): its layer state's visibility and freeze are what is picked
     /// and snapped to; none, the drawing's.
     theme: Option<kentos_commands::LayerState>,
@@ -1478,6 +1484,44 @@ impl Spatial {
         keep: bool,
         tree: Option<&LayerTree>,
     ) -> Vec<(LabelSpot, Grow)> {
+        self.labels_shown_near(min, max, scale, size, options, keep, tree, None)
+    }
+
+    /// [`Spatial::labels_shown_in`] with a table's cells left out when their words start outside `cells` (but its
+    /// first, docs/adr/0786 §2): what a view that draws only near itself asks.
+    #[allow(clippy::too_many_arguments)]
+    pub fn labels_shown_near(
+        &self,
+        min: Vec2,
+        max: Vec2,
+        scale: f64,
+        size: LabelSize,
+        options: PlaceOptions,
+        keep: bool,
+        tree: Option<&LayerTree>,
+        cells: Option<Bounds>,
+    ) -> Vec<(LabelSpot, Grow)> {
+        self.label_parts(min, max, scale, size, options, keep, tree, cells)
+            .iter()
+            .cloned()
+            .collect()
+    }
+
+    /// [`Spatial::labels_shown_near`] in parts (docs/adr/0786 §1): object by object under true sizes and the
+    /// paper's, then the label engine's labels. The main view (`keep`) takes the part of an object its last ask met
+    /// and the drawing has not changed since as it was, typed as it was.
+    #[allow(clippy::too_many_arguments)]
+    pub fn label_parts(
+        &self,
+        min: Vec2,
+        max: Vec2,
+        scale: f64,
+        size: LabelSize,
+        options: PlaceOptions,
+        keep: bool,
+        tree: Option<&LayerTree>,
+        cells: Option<Bounds>,
+    ) -> LabelParts {
         let view = Bounds {
             min_x: min.x,
             min_y: min.y,
@@ -1487,42 +1531,100 @@ impl Spatial {
         // The main view (`keep`) places where its labels last were when that is free: a pan of a few pixels moves
         // the labels with the ground (docs/adr/0533 §3).
         let before = keep.then(|| self.prior.borrow().clone());
-        let (shown, next) = match tree {
-            Some(tree) => {
-                let visible = |id: &str| tree.is_visible(id);
-                self.store.labels_shown_after(
-                    &view,
-                    scale,
-                    None,
-                    size,
-                    options,
-                    Some(&visible),
-                    before.as_ref(),
-                )
-            }
-            None => self
-                .store
-                .labels_shown_after(&view, scale, None, size, options, None, before.as_ref()),
+        let mut memo = keep.then(|| self.label_memo.borrow_mut());
+        let visible = |id: &str| tree.is_none_or(|t| t.is_visible(id));
+        let shown = self.store.labels_shown_parts(
+            &view,
+            scale,
+            None,
+            size,
+            options,
+            tree.map(|_| &visible as &dyn Fn(&str) -> bool),
+            before.as_ref(),
+            cells.as_ref(),
+            memo.as_deref_mut(),
+        );
+        if keep {
+            *self.prior.borrow_mut() = shown.prior;
+        }
+        let typed = |records: &[f64], texts: &[String]| -> Vec<(LabelSpot, Grow)> {
+            records
+                .chunks_exact(LABEL_SHOWN_STRIDE)
+                .filter_map(|r| {
+                    let grow = Grow {
+                        k: r[LABEL_STRIDE],
+                        anchor: Vec2::new(r[LABEL_STRIDE + 1], r[LABEL_STRIDE + 2]),
+                    };
+                    self.spot(&r[..LABEL_STRIDE], texts)
+                        .map(|spot| (spot, grow))
+                })
+                .collect()
         };
-        if keep {
-            *self.prior.borrow_mut() = next;
+        // An object's part typed again only when the store read it again (docs/adr/0786 §1).
+        let mut kept = keep.then(|| self.label_typed.borrow_mut());
+        let mut parts = Vec::with_capacity(shown.parts.len());
+        for (_, part) in &shown.parts {
+            if part.records.is_empty() {
+                continue;
+            }
+            // The store's part by its address: the memo holds it, so the address is never another part's.
+            let at = Arc::as_ptr(&part.records) as *const () as usize;
+            let fresh = || -> SpotPart { typed(&part.records, &[]).into() };
+            let spots = match kept.as_deref_mut() {
+                Some(k) => {
+                    let entry = k.typed.get(&at);
+                    match entry {
+                        Some((records, spots)) if Arc::ptr_eq(records, &part.records) => {
+                            let spots = spots.clone();
+                            k.met.push(at);
+                            spots
+                        }
+                        _ => {
+                            let spots = fresh();
+                            k.typed.insert(at, (part.records.clone(), spots.clone()));
+                            k.met.push(at);
+                            spots
+                        }
+                    }
+                }
+                None => fresh(),
+            };
+            parts.push(spots);
         }
-        let out = shown
-            .records
-            .chunks_exact(LABEL_SHOWN_STRIDE)
-            .filter_map(|r| {
-                let grow = Grow {
-                    k: r[LABEL_STRIDE],
-                    anchor: Vec2::new(r[LABEL_STRIDE + 1], r[LABEL_STRIDE + 2]),
-                };
-                self.spot(&r[..LABEL_STRIDE], &shown.texts)
-                    .map(|spot| (spot, grow))
-            })
-            .collect();
-        if keep {
-            *self.kept.borrow_mut() = (shown.records, LABEL_SHOWN_STRIDE, scale);
+        if let Some(k) = kept.as_deref_mut() {
+            let met: HashSet<usize> = std::mem::take(&mut k.met).into_iter().collect();
+            k.typed.retain(|id, _| met.contains(id));
         }
-        out
+        let mut placed = Vec::with_capacity(shown.placed.records.len() / LABEL_STRIDE);
+        for r in shown.placed.records.chunks_exact(LABEL_STRIDE) {
+            if let Some(spot) = self.spot(r, &shown.placed.texts) {
+                placed.push((
+                    spot,
+                    Grow {
+                        k: 1.0,
+                        anchor: Vec2::new(r[2], r[3]),
+                    },
+                ));
+            }
+        }
+        if keep {
+            *self.kept.borrow_mut() = (shown.placed.records, LABEL_STRIDE, scale);
+        }
+        LabelParts {
+            parts,
+            placed: placed.into(),
+        }
+    }
+
+    /// How many objects the main view's last ask of its labels took as kept and how many it read (docs/adr/0786 §1).
+    pub fn labels_taken(&self) -> (usize, usize) {
+        self.label_memo.borrow().taken()
+    }
+
+    /// Forgets the main view's kept text records: its next ask reads every object (a test's whole answer).
+    pub fn forget_labels(&self) {
+        self.label_memo.borrow_mut().clear();
+        *self.label_typed.borrow_mut() = Typed::default();
     }
 
     /// One label record, typed.
@@ -1736,6 +1838,60 @@ impl Spatial {
 
     pub fn is_empty(&self) -> bool {
         self.store.is_empty()
+    }
+}
+
+/// One object's labels, typed: shared between asks while the object stays (docs/adr/0786 §1).
+pub type SpotPart = Rc<[(LabelSpot, Grow)]>;
+
+/// The objects' parts as last typed, by object, with the store's part each was typed from; the objects the ask
+/// being made met.
+#[derive(Default)]
+struct Typed {
+    typed: std::collections::HashMap<usize, (Arc<[f64]>, SpotPart)>,
+    met: Vec<usize>,
+}
+
+/// A view's labels in parts (docs/adr/0786 §1): the objects' texts object by object (a part shared, unchanged,
+/// between asks while its object stays), then the label engine's labels. In order they are the labels
+/// [`Spatial::labels_shown_in`] gives.
+#[derive(Clone, Debug, Default)]
+pub struct LabelParts {
+    pub parts: Vec<SpotPart>,
+    pub placed: SpotPart,
+}
+
+impl LabelParts {
+    /// Every label, in order.
+    pub fn iter(&self) -> impl Iterator<Item = &(LabelSpot, Grow)> {
+        self.parts
+            .iter()
+            .flat_map(|p| p.iter())
+            .chain(self.placed.iter())
+    }
+
+    /// How many labels.
+    pub fn len(&self) -> usize {
+        self.parts.iter().map(|p| p.len()).sum::<usize>() + self.placed.len()
+    }
+
+    /// Whether there are none.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// The labels `keep` keeps: a part it takes none from stays the same part.
+    pub fn retain(&mut self, keep: impl Fn(&LabelSpot) -> bool) {
+        let cut = |p: &mut SpotPart| {
+            if p.iter().any(|(s, _)| !keep(s)) {
+                *p = p.iter().filter(|(s, _)| keep(s)).cloned().collect();
+            }
+        };
+        for p in &mut self.parts {
+            cut(p);
+        }
+        cut(&mut self.placed);
+        self.parts.retain(|p| !p.is_empty());
     }
 }
 

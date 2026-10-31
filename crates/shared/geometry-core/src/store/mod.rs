@@ -25,6 +25,7 @@ mod wall_joins;
 #[cfg(test)]
 mod walls;
 pub mod label_audit;
+pub mod label_memo;
 pub mod labels;
 pub mod legible;
 pub mod overview;
@@ -105,6 +106,16 @@ pub struct Item {
     pub veiled: Option<Arc<[bool]>>,
     /// Its place in the document's order.
     order: u64,
+    /// Which putting of it this is (docs/adr/0786 §1): every put gets a number no other has had, in any store.
+    stamp: u64,
+}
+
+/// The stamps put objects take (`Item::stamp`).
+static STAMPS: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+
+/// A stamp no object has had.
+fn stamp() -> u64 {
+    STAMPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
 }
 
 impl Item {
@@ -398,6 +409,7 @@ impl Store {
                 expanded,
                 veiled,
                 order: 0,
+                stamp: stamp(),
             });
             self.ghost_times.push(time);
         }
@@ -472,6 +484,7 @@ impl Store {
                     expanded,
                     veiled,
                     order,
+                    stamp: stamp(),
                 });
                 s
             }
@@ -487,6 +500,7 @@ impl Store {
                     expanded,
                     veiled,
                     order,
+                    stamp: stamp(),
                 };
                 if returning.is_none() {
                     self.next_order += 1;

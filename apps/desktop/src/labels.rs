@@ -31,6 +31,7 @@ use kentos_domain::{Document, Slot};
 use kentos_geometry_core::labels::engine::{HIDDEN, MASKED, PINNED, UNPLACED};
 use kentos_geometry_core::text::paragraph::{self, Run, Script, advance};
 use kentos_interaction::spatial::{Grow, LabelSize, default_label};
+use kentos_interaction::spatial::LabelParts;
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
 use kentos_native_application::geometry::core_runs;
 use kentos_render_wgpu::Camera;
@@ -42,6 +43,8 @@ use crate::viewport::Canvas;
 use kentos_native_style::color::ColorMode;
 
 mod layer;
+#[cfg(test)]
+mod parts_tests;
 
 /// The labels a view shows, as last asked of the store, and what they were
 /// asked for: the drawing (`drawing`, its changes), the view and the text
@@ -51,7 +54,7 @@ mod layer;
 /// it is, its labels on their ground, and placed again when the view settles (docs/adr/0597): a large drawing's
 /// overview is not placed every frame.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<Kept>>);
+pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>);
 
 /// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only).
 type Kept = (u64, u64, Shown, Option<Bounds>);
@@ -59,14 +62,19 @@ type Kept = (u64, u64, Shown, Option<Bounds>);
 /// A view's box in the world.
 type Bounds = kentos_geometry_core::geometry::Bounds;
 
-/// The labels shown, each with how much it grows (docs/adr/0205 §5).
-type Shown = Rc<Vec<(LabelSpot, Grow)>>;
+/// The labels shown, each with how much it grows (docs/adr/0205 §5), object by object (docs/adr/0786 §1).
+type Shown = Rc<LabelParts>;
 
 impl Spots {
     /// The labels last placed (this frame's, once the labels' layer was built):
     /// a mask's shapes (docs/adr/0226 §3).
     pub fn last(&self) -> Option<Shown> {
         self.0.borrow().as_ref().map(|(_, _, spots, _)| spots.clone())
+    }
+
+    /// The bands its labels' parts were painted as (docs/adr/0786 §3).
+    fn bands(&self) -> Rc<RefCell<BandMemo>> {
+        self.1.clone()
     }
 
     /// The key the kept labels were asked for (a test's).
@@ -85,7 +93,7 @@ impl Spots {
         content: u64,
         moving: bool,
         (view, wide): (Bounds, Option<Bounds>),
-        ask: impl FnOnce(Bounds) -> Vec<(LabelSpot, Grow)>,
+        ask: impl FnOnce(Bounds) -> LabelParts,
     ) -> Shown {
         let mut kept = self.0.borrow_mut();
         let inside = |asked: &Option<Bounds>| {
@@ -304,7 +312,7 @@ fn build<'a>(
         }
     });
     let spots = kept.get(key.finish(), content, engine.moving, (view, wide), |view| {
-        let mut spots = spatial.labels_shown_in(
+        let mut spots = spatial.label_parts(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
             camera.scale,
@@ -312,10 +320,11 @@ fn build<'a>(
             engine.options,
             engine.keep,
             shows,
+            true_size.then(|| cells_near(&view)),
         );
         // A text or a dimension's value being edited in place (the web's `setEditing`).
         if let Some(hidden) = hidden {
-            spots.retain(|(spot, _)| match spot {
+            spots.retain(|spot| match spot {
                 LabelSpot::Text { slot, .. }
                 | LabelSpot::Dimension { slot, .. }
                 | LabelSpot::Line { slot, .. }
@@ -348,6 +357,21 @@ fn build<'a>(
     format!("{format:?}").hash(&mut look);
     let look = look.finish();
     look.hash(&mut key);
+    // What an object's bands are painted with besides it and its layer's colour (docs/adr/0786 §3): the view, the
+    // colours, the typeface, the number formats and the faint level.
+    let mut band_key = DefaultHasher::new();
+    (
+        camera.center.x.to_bits(),
+        camera.center.y.to_bits(),
+        camera.scale.to_bits(),
+        camera.width.to_bits(),
+        camera.height.to_bits(),
+        camera.twist.to_bits(),
+    )
+        .hash(&mut band_key);
+    (canvas as u8, font as u8, mode as u8, level_version).hash(&mut band_key);
+    format!("{format:?}{palette:?}").hash(&mut band_key);
+    let layered = true_size && turned.is_none();
     let labels = Labels {
         doc,
         map_layer_colors: None,
@@ -368,6 +392,9 @@ fn build<'a>(
         true_size,
         bands: RefCell::new(Vec::new()),
         margin: Cell::new(0.0),
+        band_memo: layered.then(|| kept.bands()),
+        band_key: band_key.finish(),
+        bands_out: layered.then_some(()),
     };
     // True sizes keep their picture while the view moves (docs/adr/0626 §7); a twisted view's turns as a picture.
     if true_size && labels.turned.is_none() {
@@ -379,6 +406,29 @@ fn build<'a>(
         });
     }
     canvas::Canvas::new(labels).width(Fill).height(Fill).into()
+}
+
+/// Labels as one part (a sheet's map's, a measurement's).
+pub(crate) fn parts_of(spots: Vec<(LabelSpot, Grow)>) -> Shown {
+    Rc::new(LabelParts {
+        parts: vec![spots.into()],
+        placed: Rc::new([]),
+    })
+}
+
+/// The box a table's cells are asked in for the labels asked in `asked` (docs/adr/0786 §2): the asked box and
+/// 0.55 of its larger side round it. A placing asked for a box serves every view inside it (`Spots::get`), and a
+/// view draws a cell whose words start within a quarter of its larger side and the quarter of it its picture is
+/// made round (`Labels::near_view`, labels/layer.rs's margin, rounded to a pixel): half the larger side of a view
+/// no larger than the box, and the pixel's rounding (under a twentieth of it for a view over ten pixels).
+pub(crate) fn cells_near(asked: &Bounds) -> Bounds {
+    let side = (asked.max_x - asked.min_x).max(asked.max_y - asked.min_y) * 0.55;
+    Bounds {
+        min_x: asked.min_x - side,
+        min_y: asked.min_y - side,
+        max_x: asked.max_x + side,
+        max_y: asked.max_y + side,
+    }
 }
 
 /// The colours of the drawing's text on a canvas: the web's `--canvas-label`
@@ -511,7 +561,7 @@ struct Labels<'a> {
     doc: &'a Document,
     map_layer_colors: Option<&'a HashMap<String, String>>,
     /// The labels and how each grows (docs/adr/0205 §5).
-    spots: Rc<Vec<(LabelSpot, Grow)>>,
+    spots: Shown,
     /// The view's camera, and the one the label being drawn goes through:
     /// the view's zoomed about a grown label's anchor.
     view: Camera,
@@ -544,6 +594,12 @@ struct Labels<'a> {
     bands: RefCell<Vec<Band>>,
     /// The pixels round the view painted too (labels/layer.rs), for this painting.
     margin: Cell<f32>,
+    /// The bands each object's part was painted as, kept while the look holds (`band_key`; docs/adr/0786 §3): the
+    /// drawing area's labels' only.
+    band_memo: Option<Rc<RefCell<BandMemo>>>,
+    band_key: u64,
+    /// The bands are drawn by the layer as one mesh (labels/layer.rs), not stroked here.
+    bands_out: Option<()>,
 }
 
 /// A sheet's map frame as the labels see it: the camera's picture turned by
@@ -600,7 +656,7 @@ pub fn paint_in_map(
     Labels {
         doc,
         map_layer_colors,
-        spots: Rc::new(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
+        spots: parts_of(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
         view: camera,
         camera: Cell::new(camera),
         colors,
@@ -617,6 +673,9 @@ pub fn paint_in_map(
         true_size: false,
         bands: RefCell::new(Vec::new()),
         margin: Cell::new(0.0),
+        band_memo: None,
+        band_key: 0,
+        bands_out: None,
     }
     .paint(frame);
 }
@@ -646,7 +705,7 @@ pub fn texts_in_map(
     Labels {
         doc,
         map_layer_colors: None,
-        spots: Rc::new(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
+        spots: parts_of(spots.into_iter().map(|s| (s, Grow::NONE)).collect()),
         view: camera,
         camera: Cell::new(camera),
         colors,
@@ -663,6 +722,9 @@ pub fn texts_in_map(
         true_size: false,
         bands: RefCell::new(Vec::new()),
         margin: Cell::new(0.0),
+        band_memo: None,
+        band_key: 0,
+        bands_out: None,
     }
     .paint(&mut list);
     list.labels
@@ -1469,471 +1531,513 @@ impl Labels<'_> {
         let mut current: Option<Placed> = None;
         // The tables whose cells' fills are drawn this frame (docs/adr/0327 §1): under their words, once.
         let mut filled: std::collections::HashSet<Slot> = std::collections::HashSet::new();
-        // True sizes ask for a box round the view (docs/adr/0626 §7): what lies well outside the view and its margin
-        // is passed over before it is laid out.
-        for (spot, grow) in self.spots.iter() {
-            if self.true_size && !self.near_view(spot) {
+        // A part painted as bands alone before, in the same look, of the same object, is its bands again
+        // (docs/adr/0786 §3); what a part draws besides is counted.
+        let mut memo = self.band_memo.as_ref().map(|m| m.borrow_mut());
+        if let Some(m) = memo.as_deref_mut() {
+            m.begin(self.band_key, margin);
+        }
+        let frame = &mut Counted { ink: frame, ops: 0 };
+        // A table's look besides its words, once a painting (`cells_print`).
+        let tables: RefCell<HashMap<usize, u64>> = RefCell::default();
+        let parts = self.spots.parts.iter().map(|p| (p, true));
+        for (part, own) in parts.chain(std::iter::once((&self.spots.placed, false))) {
+            let mut kept = memo.as_deref_mut().filter(|_| own);
+            let of = part.first().map(|(spot, _)| slot_of(spot));
+            let made = (self.bands.borrow().len(), frame.ops);
+            if let (Some(m), Some(slot)) = (kept.as_deref_mut(), of)
+                && let Some(bands) = m.bands_of(
+                    part,
+                    self.doc.get_shared(slot),
+                    self.layer_color_of(slot),
+                    || self.cells_print(slot, part, &tables),
+                )
+            {
+                self.bands.borrow_mut().extend_from_slice(bands);
                 continue;
             }
-            // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
-            self.camera.set(grown(self.view, *grow));
-            let slot = match spot {
-                LabelSpot::Dimension { slot, .. }
-                | LabelSpot::Text { slot, .. }
-                | LabelSpot::Placed { slot, .. }
-                | LabelSpot::PlacedLine { slot, .. }
-                | LabelSpot::PlacedLetter { slot, .. }
-                | LabelSpot::PlacedCallout { slot, .. }
-                | LabelSpot::PieceText { slot, .. }
-                | LabelSpot::PieceDimension { slot, .. }
-                | LabelSpot::Line { slot, .. }
-                | LabelSpot::ParagraphMask { slot, .. }
-                | LabelSpot::Cell { slot, .. } => *slot,
-            };
-            self.current.set(Some(slot));
-            let Some(entity) = self.doc.get(slot) else {
-                continue;
-            };
-            let base = entity.base();
-            let layer = layers.get(&base.layer_id);
-            match (spot, entity) {
-                (
-                    LabelSpot::Dimension {
-                        at,
-                        angle,
-                        value,
-                        unit,
-                        prefix,
-                        mask,
-                        ..
-                    },
-                    Entity::Dimension(d),
-                ) => {
-                    // Its value in its look's writing and typeface (docs/adr/0183 §3).
-                    // A text written over it shows the value where it says `<>` (docs/adr/0321 §3).
-                    let text = self.format.dimension_value(
-                        prefix,
-                        unit,
-                        *value,
-                        &d.look,
-                        d.text.as_deref().filter(|t| !t.is_empty()),
-                    );
-                    // Its value's own colour when its look names one (docs/adr/0205 §6), else the object's.
-                    let color = self.ink_of(
-                        d.look
-                            .text_color
-                            .as_deref()
-                            .or(base.color.as_deref())
-                            .or(self.layer_color(layer)),
-                    );
-                    let size = (d.height * self.camera.get().scale) as f32;
-                    let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
-                    self.draw(
-                        frame,
-                        &Piece {
-                            text: &text,
-                            at: self.screen(*at),
-                            angle: (-angle.to_radians()) as f32,
-                            size,
-                            font,
-                            anchor: Anchor::CenterBaseline,
-                            color,
-                            width_factor: 1.0,
-                            mask: value_mask(*mask, &text, font, size),
-                            underline: 0.0,
-                            lean: 0.0,
-                        },
-                        self.colors.halo,
-                    );
+            // True sizes ask for a box round the view (docs/adr/0626 §7): what lies well outside the view and its margin
+            // is passed over before it is laid out.
+            for (spot, grow) in part.iter() {
+                if self.true_size && !self.near_view(spot) {
+                    continue;
                 }
-                (
-                    LabelSpot::Text {
-                        at,
-                        rotation,
-                        width_factor,
-                        mask,
-                        ..
-                    },
-                    Entity::Text(t),
-                ) => {
-                    // Its face (docs/adr/0183 §2), else the project's typeface, italic.
-                    let (font, lean) = face_font(&t.face, self.font, true, None);
-                    self.draw(
-                        frame,
-                        &Piece {
-                            text: &t.text,
-                            at: self.screen(*at),
-                            angle: (-rotation.to_radians()) as f32,
-                            size: (t.height * self.camera.get().scale) as f32,
-                            font,
-                            anchor: Anchor::LeftBaseline,
-                            color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
-                            width_factor: *width_factor as f32,
-                            mask: (mask * self.camera.get().scale) as f32,
-                            underline: 0.0,
-                            lean,
+                // A grown label goes through the view zoomed about its anchor (docs/adr/0205 §5).
+                self.camera.set(grown(self.view, *grow));
+                let slot = match spot {
+                    LabelSpot::Dimension { slot, .. }
+                    | LabelSpot::Text { slot, .. }
+                    | LabelSpot::Placed { slot, .. }
+                    | LabelSpot::PlacedLine { slot, .. }
+                    | LabelSpot::PlacedLetter { slot, .. }
+                    | LabelSpot::PlacedCallout { slot, .. }
+                    | LabelSpot::PieceText { slot, .. }
+                    | LabelSpot::PieceDimension { slot, .. }
+                    | LabelSpot::Line { slot, .. }
+                    | LabelSpot::ParagraphMask { slot, .. }
+                    | LabelSpot::Cell { slot, .. } => *slot,
+                };
+                self.current.set(Some(slot));
+                let Some(entity) = self.doc.get(slot) else {
+                    continue;
+                };
+                let base = entity.base();
+                let layer = layers.get(&base.layer_id);
+                match (spot, entity) {
+                    (
+                        LabelSpot::Dimension {
+                            at,
+                            angle,
+                            value,
+                            unit,
+                            prefix,
+                            mask,
+                            ..
                         },
-                        self.colors.halo,
-                    );
-                }
-                // A table's cell (docs/adr/0184 §2): its words in the table's face and colour, upright,
-                // a heading row's bold.
-                (
-                    LabelSpot::Cell {
-                        at,
-                        rotation,
-                        row,
-                        col,
-                        bold,
-                        ..
-                    },
-                    Entity::Table(t),
-                ) => {
-                    let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
-                        continue;
-                    };
-                    // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
-                    if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
-                        let shape = kentos_native_application::geometry::shape(entity);
-                        if let Some(g) = kentos_geometry_core::geom::table::table_geom(&shape) {
-                            for f in g.fills() {
-                                let q = f.corners.map(|p| self.screen(p));
-                                let (cx, cy) = (
-                                    q.iter().map(|p| p.x).sum::<f32>() / 4.0,
-                                    q.iter().map(|p| p.y).sum::<f32>() / 4.0,
-                                );
-                                let inset = q.map(|p| {
-                                    let (dx, dy) = (cx - p.x, cy - p.y);
-                                    let l = (dx * dx + dy * dy).sqrt().max(1.0);
-                                    Point::new(p.x + dx / l * 1.0, p.y + dy / l * 1.0)
-                                });
-                                self.fill_cell(frame, inset, &f.fill, Some(slot));
-                            }
-                        }
-                    }
-                    let heading = Run {
-                        start: 0,
-                        end: 0,
-                        bold: *bold,
-                        italic: false,
-                        underline: false,
-                        script: None,
-                        color: None,
-                    };
-                    let (font, lean) = face_font(&t.face, self.font, false, Some(&heading));
-                    // A cell style's colour over the table's (docs/adr/0327 §1).
-                    let own = t.cell_style(*row, *col).color;
-                    let color = self.ink_of(
-                        own.as_deref().or(base
-                            .color
-                            .as_deref()
-                            .or(self.layer_color(layer))),
-                    );
-                    self.draw(
-                        frame,
-                        &Piece {
-                            text: words,
-                            at: self.screen(*at),
-                            angle: (-rotation.to_radians()) as f32,
-                            size: (t.height * self.camera.get().scale) as f32,
-                            font,
-                            anchor: Anchor::LeftBaseline,
-                            color,
-                            width_factor: 1.0,
-                            mask: 0.0,
-                            underline: 0.0,
-                            lean,
-                        },
-                        self.colors.halo,
-                    );
-                }
-                // A leader's note, as a text (docs/adr/0146 §5); grown, its arrowhead with it (docs/adr/0205 §5).
-                (
-                    LabelSpot::Text {
-                        at, rotation, mask, ..
-                    },
-                    Entity::Leader(l),
-                ) => {
-                    if grow.k > 1.0 {
+                        Entity::Dimension(d),
+                    ) => {
+                        // Its value in its look's writing and typeface (docs/adr/0183 §3).
+                        // A text written over it shows the value where it says `<>` (docs/adr/0321 §3).
+                        let text = self.format.dimension_value(
+                            prefix,
+                            unit,
+                            *value,
+                            &d.look,
+                            d.text.as_deref().filter(|t| !t.is_empty()),
+                        );
+                        // Its value's own colour when its look names one (docs/adr/0205 §6), else the object's.
                         let color = self.ink_of(
-                            base.color
+                            d.look
+                                .text_color
                                 .as_deref()
+                                .or(base.color.as_deref())
                                 .or(self.layer_color(layer)),
                         );
-                        self.grown_arrowhead(frame, l, grow.k, color);
+                        let size = (d.height * self.camera.get().scale) as f32;
+                        let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
+                        self.draw(
+                            frame,
+                            &Piece {
+                                text: &text,
+                                at: self.screen(*at),
+                                angle: (-angle.to_radians()) as f32,
+                                size,
+                                font,
+                                anchor: Anchor::CenterBaseline,
+                                color,
+                                width_factor: 1.0,
+                                mask: value_mask(*mask, &text, font, size),
+                                underline: 0.0,
+                                lean: 0.0,
+                            },
+                            self.colors.halo,
+                        );
                     }
-                    let Some(note) = l.text.as_deref() else {
-                        continue;
-                    };
-                    let (font, lean) = face_font(&Default::default(), self.font, true, None);
-                    self.draw(
-                        frame,
-                        &Piece {
-                            text: note,
-                            at: self.screen(*at),
-                            angle: (-rotation.to_radians()) as f32,
-                            size: (l.height * self.camera.get().scale) as f32,
-                            font,
-                            anchor: Anchor::LeftBaseline,
-                            color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
-                            width_factor: 1.0,
-                            mask: (mask * self.camera.get().scale) as f32,
-                            underline: 0.0,
-                            lean,
+                    (
+                        LabelSpot::Text {
+                            at,
+                            rotation,
+                            width_factor,
+                            mask,
+                            ..
                         },
-                        self.colors.halo,
-                    );
-                }
-                // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs;
-                // an attribute's text the insert's value, else its default (§7).
-                (
-                    LabelSpot::PieceText {
-                        at,
-                        rotation,
-                        height,
-                        text,
-                        attribute,
-                        width_factor,
-                        mask,
-                        face,
-                        ..
-                    },
-                    _,
-                ) => {
-                    let shown = kentos_interaction::spatial::shown_text(
-                        text,
-                        attribute.as_deref(),
-                        &base.attrs,
-                    );
-                    if shown.is_empty() {
-                        continue;
+                        Entity::Text(t),
+                    ) => {
+                        // Its face (docs/adr/0183 §2), else the project's typeface, italic.
+                        let (font, lean) = face_font(&t.face, self.font, true, None);
+                        self.draw(
+                            frame,
+                            &Piece {
+                                text: &t.text,
+                                at: self.screen(*at),
+                                angle: (-rotation.to_radians()) as f32,
+                                size: (t.height * self.camera.get().scale) as f32,
+                                font,
+                                anchor: Anchor::LeftBaseline,
+                                color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
+                                width_factor: *width_factor as f32,
+                                mask: (mask * self.camera.get().scale) as f32,
+                                underline: 0.0,
+                                lean,
+                            },
+                            self.colors.halo,
+                        );
                     }
-                    let (font, lean) = face_font(&contract_face(face), self.font, true, None);
-                    self.draw(
-                        frame,
-                        &Piece {
-                            text: shown,
-                            at: self.screen(*at),
-                            angle: (-rotation.to_radians()) as f32,
-                            size: (height * self.camera.get().scale) as f32,
-                            font,
-                            anchor: Anchor::LeftBaseline,
-                            color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
-                            width_factor: *width_factor as f32,
-                            mask: (mask * self.camera.get().scale) as f32,
-                            underline: 0.0,
-                            lean,
+                    // A table's cell (docs/adr/0184 §2): its words in the table's face and colour, upright,
+                    // a heading row's bold.
+                    (
+                        LabelSpot::Cell {
+                            at,
+                            rotation,
+                            row,
+                            col,
+                            bold,
+                            ..
                         },
-                        self.colors.halo,
-                    );
-                }
-                (
-                    LabelSpot::PieceDimension {
-                        at,
-                        angle,
-                        value,
-                        height,
-                        text,
-                        unit,
-                        prefix,
-                        mask,
-                        look,
-                        ..
-                    },
-                    _,
-                ) => {
-                    let look = kentos_native_application::geometry::contract_look(look.clone());
-                    let text = self.format.dimension_value(
-                        prefix,
-                        unit,
-                        *value,
-                        &look,
-                        text.as_deref().filter(|t| !t.is_empty()),
-                    );
-                    let color = self.ink_of(
-                        look.text_color
-                            .as_deref()
-                            .or(base.color.as_deref())
-                            .or(self.layer_color(layer)),
-                    );
-                    let size = (height * self.camera.get().scale) as f32;
-                    let font = drawing_fonts::font(look.font.unwrap_or(self.font), 500, false);
-                    self.draw(
-                        frame,
-                        &Piece {
-                            text: &text,
-                            at: self.screen(*at),
-                            angle: (-angle.to_radians()) as f32,
-                            size,
-                            font,
-                            anchor: Anchor::CenterBaseline,
-                            color,
-                            width_factor: 1.0,
-                            mask: value_mask(*mask, &text, font, size),
-                            underline: 0.0,
-                            lean: 0.0,
-                        },
-                        self.colors.halo,
-                    );
-                }
-                // A multi-line text's mask, then its lines (docs/adr/0182 §3); a leaning one's box
-                // leans from its corner (docs/adr/0183 §2).
-                (
-                    LabelSpot::ParagraphMask {
-                        at,
-                        rotation,
-                        width,
-                        height,
-                        lean,
-                        ..
-                    },
-                    _,
-                ) => {
-                    let r = rotation.to_radians();
-                    let (u, v) = (Vec2::new(r.cos(), r.sin()), Vec2::new(-r.sin(), r.cos()));
-                    let corner = |x: f64, y: f64| {
-                        let x = x + y * lean;
-                        self.screen(Vec2::new(
-                            at.x + u.x * x + v.x * y,
-                            at.y + u.y * x + v.y * y,
-                        ))
-                    };
-                    let quad = [
-                        corner(0.0, 0.0),
-                        corner(*width, 0.0),
-                        corner(*width, *height),
-                        corner(0.0, *height),
-                    ];
-                    if self.fence.as_ref().is_none_or(|f| f.holds(quad[0])) {
-                        frame.fill_quad(quad, self.colors.halo, Some(slot));
-                    }
-                }
-                (
-                    LabelSpot::Line {
-                        at,
-                        rotation,
-                        height,
-                        width_factor,
-                        start,
-                        end,
-                        piece,
-                        face,
-                        ..
-                    },
-                    entity,
-                ) => {
-                    let own;
-                    let (text, runs, face): (&str, &[Run], kentos_commands::TextFace) =
-                        match (piece, entity) {
-                            (Some(p), _) => (
-                                &p.0,
-                                &p.1,
-                                face.as_ref().map(contract_face).unwrap_or_default(),
-                            ),
-                            (None, Entity::Text(t)) => {
-                                own = core_runs(&t.paragraph.runs).unwrap_or_default();
-                                (&t.text, &own, t.face.clone())
+                        Entity::Table(t),
+                    ) => {
+                        let Some(words) = t.cells.get(*row).and_then(|r| r.get(*col)) else {
+                            continue;
+                        };
+                        // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
+                        if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot) {
+                            let shape = kentos_native_application::geometry::shape(entity);
+                            if let Some(g) = kentos_geometry_core::geom::table::table_geom(&shape) {
+                                for f in g.fills() {
+                                    let q = f.corners.map(|p| self.screen(p));
+                                    let (cx, cy) = (
+                                        q.iter().map(|p| p.x).sum::<f32>() / 4.0,
+                                        q.iter().map(|p| p.y).sum::<f32>() / 4.0,
+                                    );
+                                    let inset = q.map(|p| {
+                                        let (dx, dy) = (cx - p.x, cy - p.y);
+                                        let l = (dx * dx + dy * dy).sqrt().max(1.0);
+                                        Point::new(p.x + dx / l * 1.0, p.y + dy / l * 1.0)
+                                    });
+                                    self.fill_cell(frame, inset, &f.fill, Some(slot));
+                                }
                             }
-                            _ => continue,
+                        }
+                        let heading = Run {
+                            start: 0,
+                            end: 0,
+                            bold: *bold,
+                            italic: false,
+                            underline: false,
+                            script: None,
+                            color: None,
                         };
-                    self.line(
-                        frame,
-                        text,
-                        runs,
-                        (*start, *end),
-                        *at,
-                        *rotation,
-                        *height,
-                        *width_factor,
-                        &face,
-                    );
+                        let (font, lean) = face_font(&t.face, self.font, false, Some(&heading));
+                        // A cell style's colour over the table's (docs/adr/0327 §1).
+                        let own = t.cell_style(*row, *col).color;
+                        let color = self.ink_of(
+                            own.as_deref().or(base
+                                .color
+                                .as_deref()
+                                .or(self.layer_color(layer))),
+                        );
+                        self.draw(
+                            frame,
+                            &Piece {
+                                text: words,
+                                at: self.screen(*at),
+                                angle: (-rotation.to_radians()) as f32,
+                                size: (t.height * self.camera.get().scale) as f32,
+                                font,
+                                anchor: Anchor::LeftBaseline,
+                                color,
+                                width_factor: 1.0,
+                                mask: 0.0,
+                                underline: 0.0,
+                                lean,
+                            },
+                            self.colors.halo,
+                        );
+                    }
+                    // A leader's note, as a text (docs/adr/0146 §5); grown, its arrowhead with it (docs/adr/0205 §5).
+                    (
+                        LabelSpot::Text {
+                            at, rotation, mask, ..
+                        },
+                        Entity::Leader(l),
+                    ) => {
+                        if grow.k > 1.0 {
+                            let color = self.ink_of(
+                                base.color
+                                    .as_deref()
+                                    .or(self.layer_color(layer)),
+                            );
+                            self.grown_arrowhead(frame, l, grow.k, color);
+                        }
+                        let Some(note) = l.text.as_deref() else {
+                            continue;
+                        };
+                        let (font, lean) = face_font(&Default::default(), self.font, true, None);
+                        self.draw(
+                            frame,
+                            &Piece {
+                                text: note,
+                                at: self.screen(*at),
+                                angle: (-rotation.to_radians()) as f32,
+                                size: (l.height * self.camera.get().scale) as f32,
+                                font,
+                                anchor: Anchor::LeftBaseline,
+                                color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
+                                width_factor: 1.0,
+                                mask: (mask * self.camera.get().scale) as f32,
+                                underline: 0.0,
+                                lean,
+                            },
+                            self.colors.halo,
+                        );
+                    }
+                    // A block's texts and dimension values (docs/adr/0144), as its own objects draw theirs;
+                    // an attribute's text the insert's value, else its default (§7).
+                    (
+                        LabelSpot::PieceText {
+                            at,
+                            rotation,
+                            height,
+                            text,
+                            attribute,
+                            width_factor,
+                            mask,
+                            face,
+                            ..
+                        },
+                        _,
+                    ) => {
+                        let shown = kentos_interaction::spatial::shown_text(
+                            text,
+                            attribute.as_deref(),
+                            &base.attrs,
+                        );
+                        if shown.is_empty() {
+                            continue;
+                        }
+                        let (font, lean) = face_font(&contract_face(face), self.font, true, None);
+                        self.draw(
+                            frame,
+                            &Piece {
+                                text: shown,
+                                at: self.screen(*at),
+                                angle: (-rotation.to_radians()) as f32,
+                                size: (height * self.camera.get().scale) as f32,
+                                font,
+                                anchor: Anchor::LeftBaseline,
+                                color: if self.map_layer_colors.is_some() { self.ink_of(base.color.as_deref().or(self.layer_color(layer))) } else { self.colors.label },
+                                width_factor: *width_factor as f32,
+                                mask: (mask * self.camera.get().scale) as f32,
+                                underline: 0.0,
+                                lean,
+                            },
+                            self.colors.halo,
+                        );
+                    }
+                    (
+                        LabelSpot::PieceDimension {
+                            at,
+                            angle,
+                            value,
+                            height,
+                            text,
+                            unit,
+                            prefix,
+                            mask,
+                            look,
+                            ..
+                        },
+                        _,
+                    ) => {
+                        let look = kentos_native_application::geometry::contract_look(look.clone());
+                        let text = self.format.dimension_value(
+                            prefix,
+                            unit,
+                            *value,
+                            &look,
+                            text.as_deref().filter(|t| !t.is_empty()),
+                        );
+                        let color = self.ink_of(
+                            look.text_color
+                                .as_deref()
+                                .or(base.color.as_deref())
+                                .or(self.layer_color(layer)),
+                        );
+                        let size = (height * self.camera.get().scale) as f32;
+                        let font = drawing_fonts::font(look.font.unwrap_or(self.font), 500, false);
+                        self.draw(
+                            frame,
+                            &Piece {
+                                text: &text,
+                                at: self.screen(*at),
+                                angle: (-angle.to_radians()) as f32,
+                                size,
+                                font,
+                                anchor: Anchor::CenterBaseline,
+                                color,
+                                width_factor: 1.0,
+                                mask: value_mask(*mask, &text, font, size),
+                                underline: 0.0,
+                                lean: 0.0,
+                            },
+                            self.colors.halo,
+                        );
+                    }
+                    // A multi-line text's mask, then its lines (docs/adr/0182 §3); a leaning one's box
+                    // leans from its corner (docs/adr/0183 §2).
+                    (
+                        LabelSpot::ParagraphMask {
+                            at,
+                            rotation,
+                            width,
+                            height,
+                            lean,
+                            ..
+                        },
+                        _,
+                    ) => {
+                        let r = rotation.to_radians();
+                        let (u, v) = (Vec2::new(r.cos(), r.sin()), Vec2::new(-r.sin(), r.cos()));
+                        let corner = |x: f64, y: f64| {
+                            let x = x + y * lean;
+                            self.screen(Vec2::new(
+                                at.x + u.x * x + v.x * y,
+                                at.y + u.y * x + v.y * y,
+                            ))
+                        };
+                        let quad = [
+                            corner(0.0, 0.0),
+                            corner(*width, 0.0),
+                            corner(*width, *height),
+                            corner(0.0, *height),
+                        ];
+                        if self.fence.as_ref().is_none_or(|f| f.holds(quad[0])) {
+                            frame.fill_quad(quad, self.colors.halo, Some(slot));
+                        }
+                    }
+                    (
+                        LabelSpot::Line {
+                            at,
+                            rotation,
+                            height,
+                            width_factor,
+                            start,
+                            end,
+                            piece,
+                            face,
+                            ..
+                        },
+                        entity,
+                    ) => {
+                        let own;
+                        let (text, runs, face): (&str, &[Run], kentos_commands::TextFace) =
+                            match (piece, entity) {
+                                (Some(p), _) => (
+                                    &p.0,
+                                    &p.1,
+                                    face.as_ref().map(contract_face).unwrap_or_default(),
+                                ),
+                                (None, Entity::Text(t)) => {
+                                    own = core_runs(&t.paragraph.runs).unwrap_or_default();
+                                    (&t.text, &own, t.face.clone())
+                                }
+                                _ => continue,
+                            };
+                        self.line(
+                            frame,
+                            text,
+                            runs,
+                            (*start, *end),
+                            *at,
+                            *rotation,
+                            *height,
+                            *width_factor,
+                            &face,
+                        );
+                    }
+                    (
+                        LabelSpot::Placed {
+                            at,
+                            angle,
+                            width,
+                            height,
+                            class,
+                            state,
+                            ..
+                        },
+                        entity,
+                    ) => {
+                        current = self.placed_frame(entity, layer, *class, *state, slot);
+                        if let Some(c) = &current {
+                            self.placed_backdrop(
+                                frame,
+                                c,
+                                *at,
+                                *angle,
+                                *width as f32,
+                                *height as f32,
+                                false,
+                            );
+                        }
+                    }
+                    (
+                        LabelSpot::PlacedLine {
+                            at,
+                            angle,
+                            size,
+                            text,
+                            ..
+                        },
+                        _,
+                    ) => {
+                        if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
+                            self.placed_text(frame, c, text, *at, *angle, *size as f32);
+                        }
+                    }
+                    (
+                        LabelSpot::PlacedLetter {
+                            at,
+                            angle,
+                            size,
+                            letter,
+                            advance,
+                            ..
+                        },
+                        _,
+                    ) => {
+                        if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
+                            self.placed_backdrop(
+                                frame,
+                                c,
+                                *at,
+                                *angle,
+                                *advance as f32,
+                                *size as f32,
+                                true,
+                            );
+                            let mut buf = [0u8; 4];
+                            self.placed_text(
+                                frame,
+                                c,
+                                letter.encode_utf8(&mut buf),
+                                *at,
+                                *angle,
+                                *size as f32,
+                            );
+                        }
+                    }
+                    (LabelSpot::PlacedCallout { from, to, .. }, _) => {
+                        if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
+                            let (a, b) = (self.screen(*from), self.screen(*to));
+                            let pts = if c.manhattan {
+                                vec![a, Point::new(b.x, a.y), b]
+                            } else {
+                                vec![a, b]
+                            };
+                            frame.stroke_line(&pts, false, c.callout, Some(c.slot));
+                        }
+                    }
+                    (LabelSpot::Dimension { .. } | LabelSpot::Text { .. }, _) => {}
+                    _ => {}
                 }
-                (
-                    LabelSpot::Placed {
-                        at,
-                        angle,
-                        width,
-                        height,
-                        class,
-                        state,
-                        ..
-                    },
+            }
+            // A part that drew nothing but bands keeps them for the next painting in this look.
+            if let (Some(m), Some(slot)) = (kept, of)
+                && frame.ops == made.1
+                && let Some(entity) = self.doc.get_shared(slot)
+            {
+                m.keep(
+                    part,
                     entity,
-                ) => {
-                    current = self.placed_frame(entity, layer, *class, *state, slot);
-                    if let Some(c) = &current {
-                        self.placed_backdrop(
-                            frame,
-                            c,
-                            *at,
-                            *angle,
-                            *width as f32,
-                            *height as f32,
-                            false,
-                        );
-                    }
-                }
-                (
-                    LabelSpot::PlacedLine {
-                        at,
-                        angle,
-                        size,
-                        text,
-                        ..
-                    },
-                    _,
-                ) => {
-                    if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
-                        self.placed_text(frame, c, text, *at, *angle, *size as f32);
-                    }
-                }
-                (
-                    LabelSpot::PlacedLetter {
-                        at,
-                        angle,
-                        size,
-                        letter,
-                        advance,
-                        ..
-                    },
-                    _,
-                ) => {
-                    if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
-                        self.placed_backdrop(
-                            frame,
-                            c,
-                            *at,
-                            *angle,
-                            *advance as f32,
-                            *size as f32,
-                            true,
-                        );
-                        let mut buf = [0u8; 4];
-                        self.placed_text(
-                            frame,
-                            c,
-                            letter.encode_utf8(&mut buf),
-                            *at,
-                            *angle,
-                            *size as f32,
-                        );
-                    }
-                }
-                (LabelSpot::PlacedCallout { from, to, .. }, _) => {
-                    if let Some(c) = current.as_ref().filter(|c| c.slot == slot) {
-                        let (a, b) = (self.screen(*from), self.screen(*to));
-                        let pts = if c.manhattan {
-                            vec![a, Point::new(b.x, a.y), b]
-                        } else {
-                            vec![a, b]
-                        };
-                        frame.stroke_line(&pts, false, c.callout, Some(c.slot));
-                    }
-                }
-                (LabelSpot::Dimension { .. } | LabelSpot::Text { .. }, _) => {}
-                _ => {}
+                    (self.layer_color_of(slot), self.cells_print(slot, part, &tables)),
+                    &self.bands.borrow()[made.0..],
+                );
             }
         }
+        if let Some(m) = memo.as_deref_mut() {
+            m.end();
+        }
+        let frame = &mut *frame.ink;
         // The view's own camera again for what follows.
         self.camera.set(self.view);
         // The multi-line text being written or edited, over the rest (docs/adr/0182 §4).
@@ -1982,22 +2086,64 @@ impl Labels<'_> {
         // The texts too small to read, as faint bands, one stroke a colour and thickness (docs/adr/0626 §6): a
         // stroke's tessellation is linear where a fill's sweeps and sorts, and a butt-ended stroke as thick as the
         // band is its rectangle.
-        let bands = std::mem::take(&mut *self.bands.borrow_mut());
-        if !bands.is_empty() {
-            let mut by_look: Vec<(Color, f32, Vec<[Point; 2]>)> = Vec::new();
-            for band in bands {
-                match by_look
-                    .iter_mut()
-                    .find(|(c, w, _)| *c == band.color && *w == band.thick)
-                {
-                    Some((_, _, segments)) => segments.push(band.line),
-                    None => by_look.push((band.color, band.thick, vec![band.line])),
-                }
-            }
-            for (color, thick, segments) in by_look {
+        if self.bands_out.is_none() {
+            for (color, thick, segments) in self.band_looks() {
                 frame.stroke_segments(&segments, color, thick);
             }
         }
+    }
+
+    /// The bands painted, taken, a colour and thickness together in the order they first came (docs/adr/0626 §6).
+    fn band_looks(&self) -> Vec<(Color, f32, Vec<[Point; 2]>)> {
+        let bands = std::mem::take(&mut *self.bands.borrow_mut());
+        let mut by_look: Vec<(Color, f32, Vec<[Point; 2]>)> = Vec::new();
+        for band in bands {
+            match by_look
+                .iter_mut()
+                .find(|(c, w, _)| *c == band.color && *w == band.thick)
+            {
+                Some((_, _, segments)) => segments.push(band.line),
+                None => by_look.push((band.color, band.thick, vec![band.line])),
+            }
+        }
+        by_look
+    }
+
+    /// What a table's cells in `part` are painted from besides their places (docs/adr/0786 §3): their words, the
+    /// table's face, height, colour, styles and merges, as one number; none for a part of anything else.
+    fn cells_print(
+        &self,
+        slot: Slot,
+        part: &[(LabelSpot, Grow)],
+        tables: &RefCell<HashMap<usize, u64>>,
+    ) -> Option<u64> {
+        let Some(Entity::Table(t)) = self.doc.get(slot) else {
+            return None;
+        };
+        let look = *tables
+            .borrow_mut()
+            .entry(t as *const _ as usize)
+            .or_insert_with(|| {
+                let mut h = Fx::default();
+                format!("{:?}{:?}{:?}{:?}{:?}", t.face, t.base, t.styles, t.merges, t.aligns).hash(&mut h);
+                (t.height.to_bits(), t.header).hash(&mut h);
+                h.finish()
+            });
+        let mut h = Fx(look);
+        for (spot, _) in part {
+            let LabelSpot::Cell { row, col, .. } = spot else {
+                return None;
+            };
+            (row, col, t.cells.get(*row).and_then(|r| r.get(*col))).hash(&mut h);
+        }
+        Some(h.finish())
+    }
+
+    /// The colour an object's layer gives its text: its layer's (none without a layer).
+    fn layer_color_of(&self, slot: Slot) -> Option<String> {
+        let entity = self.doc.get(slot)?;
+        let layer = self.doc.layers().get(&entity.base().layer_id);
+        self.layer_color(layer).map(str::to_owned)
     }
 
     /// The look of the label engine's label whose frame this is (docs/adr/0212
@@ -2245,6 +2391,187 @@ struct Band {
     color: Color,
     thick: f32,
     line: [Point; 2],
+}
+
+/// The bands each object's part of the labels was painted as, while the look they were painted in holds
+/// (docs/adr/0786 §3): a part that drew nothing but bands (a table's cells or a text too small to read, as in an
+/// overview) is its bands again while it is the same part, of the same object, its layer the same colour. The memo
+/// holds what it compares (the part, the object), so an address it keeps is never another's.
+#[derive(Default)]
+pub(crate) struct BandMemo {
+    key: Option<(u64, u32)>,
+    round: u64,
+    kept: HashMap<usize, BandsKept>,
+    /// How many parts the last painting took as kept and how many it painted (a measurement's).
+    taken: (usize, usize),
+}
+
+struct BandsKept {
+    part: Rc<[(LabelSpot, Grow)]>,
+    entity: std::sync::Arc<Entity>,
+    /// A table's cells' words and look (`Labels::cells_print`): the same cells of another table's version paint the
+    /// same.
+    cells: Option<u64>,
+    layer_color: Option<String>,
+    bands: Vec<Band>,
+    round: u64,
+}
+
+impl BandMemo {
+    /// A painting begins in `key`'s look, `margin` pixels round the view; another look forgets every part.
+    fn begin(&mut self, key: u64, margin: f32) {
+        let key = (key, margin.to_bits());
+        if self.key != Some(key) {
+            self.kept.clear();
+            self.key = Some(key);
+        }
+        self.round += 1;
+        self.taken = (0, 0);
+    }
+
+    /// `part`'s bands as kept, when it is the part they were painted for, of `entity` (or of another version of a
+    /// table whose `cells` print is the same), its layer `layer_color`.
+    fn bands_of(
+        &mut self,
+        part: &Rc<[(LabelSpot, Grow)]>,
+        entity: Option<&std::sync::Arc<Entity>>,
+        layer_color: Option<String>,
+        cells: impl FnOnce() -> Option<u64>,
+    ) -> Option<&[Band]> {
+        let Some(k) = self.kept.get_mut(&(Rc::as_ptr(part) as *const () as usize)) else {
+            self.taken.1 += 1;
+            return None;
+        };
+        let Some(entity) = entity else {
+            self.taken.1 += 1;
+            return None;
+        };
+        let same = Rc::ptr_eq(&k.part, part)
+            && k.layer_color == layer_color
+            && (std::sync::Arc::ptr_eq(&k.entity, entity) || k.cells.is_some() && k.cells == cells());
+        if !same {
+            self.taken.1 += 1;
+            return None;
+        }
+        k.entity = entity.clone();
+        k.round = self.round;
+        self.taken.0 += 1;
+        Some(&k.bands)
+    }
+
+    /// `part` painted as `bands` alone.
+    fn keep(
+        &mut self,
+        part: &Rc<[(LabelSpot, Grow)]>,
+        entity: &std::sync::Arc<Entity>,
+        (layer_color, cells): (Option<String>, Option<u64>),
+        bands: &[Band],
+    ) {
+        self.kept.insert(
+            Rc::as_ptr(part) as *const () as usize,
+            BandsKept {
+                part: part.clone(),
+                entity: entity.clone(),
+                cells,
+                layer_color,
+                bands: bands.to_vec(),
+                round: self.round,
+            },
+        );
+    }
+
+    /// The painting ended: the parts it did not meet are forgotten.
+    fn end(&mut self) {
+        let round = self.round;
+        self.kept.retain(|_, k| k.round == round);
+    }
+
+    /// How many parts the last painting took as kept and how many it painted again.
+    /// (Read by the tests: the painting itself needs no count.)
+    #[cfg_attr(not(test), allow(dead_code))]
+    pub(crate) fn taken(&self) -> (usize, usize) {
+        self.taken
+    }
+}
+
+/// A quick hash of a part's words (`Labels::cells_print`): eight bytes a step, folded and multiplied, as rustc's
+/// own `FxHasher`; a print compares a part with itself in another version, nothing is kept by it.
+#[derive(Default)]
+struct Fx(u64);
+
+impl std::hash::Hasher for Fx {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        let mut chunks = bytes.chunks_exact(8);
+        for c in &mut chunks {
+            self.write_u64(u64::from_le_bytes([c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]]));
+        }
+        let mut last = [0u8; 8];
+        let rest = chunks.remainder();
+        last[..rest.len()].copy_from_slice(rest);
+        self.write_u64(u64::from_le_bytes(last) ^ rest.len() as u64);
+    }
+
+    fn write_u64(&mut self, n: u64) {
+        self.0 = (self.0.rotate_left(5) ^ n).wrapping_mul(0x517c_c1b7_2722_0a95);
+    }
+
+    fn write_usize(&mut self, n: usize) {
+        self.write_u64(n as u64);
+    }
+}
+
+/// A picture's ink that counts what is drawn on it (docs/adr/0786 §3): a part whose painting drew nothing on it
+/// drew bands alone.
+struct Counted<'f, I: Ink> {
+    ink: &'f mut I,
+    ops: usize,
+}
+
+impl<I: Ink> Ink for Counted<'_, I> {
+    fn size(&self) -> Size {
+        self.ink.size()
+    }
+
+    fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>) {
+        self.ops += 1;
+        self.ink.piece(piece, halo, of);
+    }
+
+    fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>) {
+        self.ops += 1;
+        self.ink.fill_quad(quad, color, of);
+    }
+
+    fn stroke_segments(&mut self, segments: &[[Point; 2]], color: Color, width: f32) {
+        self.ops += 1;
+        self.ink.stroke_segments(segments, color, width);
+    }
+
+    fn marks(
+        &mut self,
+        camera: &Camera,
+        colors: &Colors,
+        axes: kentos_interaction::Axes,
+        ucs: Option<f64>,
+        lift: f32,
+    ) {
+        self.ops += 1;
+        self.ink.marks(camera, colors, axes, ucs, lift);
+    }
+
+    fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>) {
+        self.ops += 1;
+        self.ink.fill_ring(ring, color, of);
+    }
+
+    fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color, of: Option<Slot>) {
+        self.ops += 1;
+        self.ink.stroke_line(pts, closed, color, of);
+    }
 }
 
 /// The band of a text too small to read: `length` long and 0.6 of its size thick (a pixel at least, in eighths of
@@ -2799,7 +3126,6 @@ fn kept_outlines(key: OutlineKey, make: impl FnOnce() -> Vec<Path>) -> Rc<Vec<Pa
 }
 
 /// The object a spot writes for.
-#[cfg(test)]
 pub fn slot_of(spot: &LabelSpot) -> Slot {
     match spot {
         LabelSpot::Dimension { slot, .. }
@@ -3457,7 +3783,7 @@ fn perf() {
     let labels = Labels {
         doc,
         map_layer_colors: None,
-        spots: Rc::new(
+        spots: parts_of(
             app.spatial
                 .labels(
                     Vec2::new(v.min_x, v.min_y),
@@ -3485,6 +3811,9 @@ fn perf() {
         true_size: false,
         bands: RefCell::new(Vec::new()),
         margin: Cell::new(0.0),
+        band_memo: None,
+        band_key: 0,
+        bands_out: None,
     };
     let started = Instant::now();
     for _ in 0..frames {
@@ -3559,7 +3888,7 @@ fn file_paint() {
     let labels = Labels {
         doc,
         map_layer_colors: None,
-        spots: Rc::new(answered),
+        spots: parts_of(answered),
         view: camera,
         camera: Cell::new(camera),
         colors: colors(Canvas::Slate, &crate::viewport::palette(Canvas::Slate)),
@@ -3576,6 +3905,9 @@ fn file_paint() {
         true_size: true,
         bands: RefCell::new(Vec::new()),
         margin: Cell::new(0.0),
+        band_memo: None,
+        band_key: 0,
+        bands_out: None,
     };
     let started = Instant::now();
     for _ in 0..frames {

@@ -175,220 +175,248 @@ impl Store {
         max_px: f64,
         shown: Option<&[bool]>,
     ) -> Vec<f64> {
+        self.labels_near(view, scale, editing, (min_px, max_px), shown, None)
+    }
+
+    /// [`Store::labels_with`] (`px`: its `min_px`, `max_px`) with a table's cells left out when their words start
+    /// outside `cells` (but its first, `TableGeom::cells_near`, docs/adr/0786 §2).
+    pub(super) fn labels_near(
+        &self,
+        view: &Bounds,
+        scale: f64,
+        editing: Option<f64>,
+        px: (f64, f64),
+        shown: Option<&[bool]>,
+        cells: Option<&Bounds>,
+    ) -> Vec<f64> {
         let mut out = Vec::new();
-        for it in self.candidates(&super::padded(*view, 0.0)) {
-            // A view of its own shows the layers it says (docs/adr/0523 §2); else the table's.
+        for it in self.label_items(view, editing, shown) {
+            self.item_labels(it, scale, px, cells, &mut out);
+        }
+        out
+    }
+
+    /// The objects a view's text is read from, in the document's order: on a layer it shows (`shown`, a view's of
+    /// its own, docs/adr/0523 §2; else the table's), shown by the filters and the time, their box meeting the view;
+    /// the one being edited left out.
+    pub(super) fn label_items(
+        &self,
+        view: &Bounds,
+        editing: Option<f64>,
+        shown: Option<&[bool]>,
+    ) -> Vec<&super::Item> {
+        let mut items = self.candidates(&super::padded(*view, 0.0));
+        items.retain(|it| {
             let visible = match shown {
                 Some(mask) => mask.get(it.layer as usize).copied().unwrap_or(true),
                 None => self.flags(it).visible,
             };
-            if !visible || !self.view_shown(it.id) {
-                continue;
-            }
             let b = &it.bounds;
-            if b.max_x < view.min_x
-                || b.min_x > view.max_x
-                || b.max_y < view.min_y
-                || b.min_y > view.max_y
-            {
-                continue;
-            }
-            if Some(it.id) == editing {
-                continue;
-            }
-            // A block's texts and dimension values, where its pieces are placed (docs/adr/0144).
-            if let Some(x) = &it.expanded {
-                for (i, s) in x.shapes.iter().enumerate() {
-                    // A piece shown only with a layer that is hidden has no label either (docs/adr/0315 §2).
-                    if !it.piece_shown(i) {
-                        continue;
-                    }
-                    match s {
-                        // An attribute's text that shows nothing has no label (docs/adr/0144 §7).
-                        Shape::Text {
-                            text,
-                            height,
-                            rotation,
-                            mask,
-                            ..
-                        } => {
-                            let px = height * scale;
-                            if px < min_px || px > max_px || text.is_empty() {
-                                continue;
-                            }
-                            // A multi-line piece, line by line (docs/adr/0182 §3); one along a
-                            // curve, letter by letter (docs/adr/0196 §2.6).
-                            if let Some(t) = TextPlace::of(s).filter(TextPlace::by_records) {
-                                let piece = Some(i as f64);
-                                self.paragraph_labels(
-                                    it.id,
-                                    &t,
-                                    *mask == Some(true),
-                                    piece,
-                                    &mut out,
-                                );
-                                continue;
-                            }
-                            let (o, factor, mask) = self.text_label(s);
-                            out.extend([
-                                it.id,
-                                LABEL_PIECE_TEXT,
-                                o.x,
-                                o.y,
-                                *rotation,
-                                *height,
-                                i as f64,
-                                factor,
-                                mask,
-                            ]);
-                        }
-                        Shape::Leader {
-                            height, rotation, ..
-                        } => {
-                            let px = height * scale;
-                            let Some((o, mask)) = self.note_label(s) else {
-                                continue;
-                            };
-                            if px < min_px || px > max_px {
-                                continue;
-                            }
-                            out.extend([
-                                it.id,
-                                LABEL_PIECE_LEADER,
-                                o.x,
-                                o.y,
-                                *rotation,
-                                *height,
-                                i as f64,
-                                1.0,
-                                mask,
-                            ]);
-                        }
-                        Shape::Dimension { height, .. } => {
-                            let px = height * scale;
-                            let Some(l) = dimension_geom(s)
-                                .and_then(|g| layout_dimension(&g))
-                                .filter(|l| l.unit != "none")
-                            else {
-                                continue;
-                            };
-                            if px < min_px || px > max_px {
-                                continue;
-                            }
-                            out.extend([
-                                it.id,
-                                LABEL_PIECE_DIMENSION,
-                                l.text_at.x,
-                                l.text_at.y,
-                                l.rotation,
-                                l.value,
-                                i as f64,
-                                *height,
-                                masked(s),
-                            ]);
-                        }
-                        _ => {}
-                    }
-                }
-            }
-            match &it.shape {
-                Shape::Dimension { height, .. } => {
-                    let px = height * scale;
-                    let Some(l) = dimension_geom(&it.shape)
-                        .and_then(|g| layout_dimension(&g))
-                        .filter(|l| l.unit != "none")
-                    else {
-                        continue;
-                    };
-                    if px < min_px || px > max_px {
-                        continue;
-                    }
-                    out.extend([
-                        it.id,
-                        LABEL_DIMENSION,
-                        l.text_at.x,
-                        l.text_at.y,
-                        l.rotation,
-                        l.value,
-                        code(&DIMENSION_UNITS, l.unit),
-                        code(&DIMENSION_PREFIXES, l.prefix),
-                        masked(&it.shape),
-                    ]);
+            visible
+                && self.view_shown(it.id)
+                && !(b.max_x < view.min_x
+                    || b.min_x > view.max_x
+                    || b.max_y < view.min_y
+                    || b.min_y > view.max_y)
+                && Some(it.id) != editing
+        });
+        items
+    }
+
+    /// One object's records of [`Store::labels_near`], added to `out`.
+    pub(super) fn item_labels(
+        &self,
+        it: &super::Item,
+        scale: f64,
+        (min_px, max_px): (f64, f64),
+        cells: Option<&Bounds>,
+        out: &mut Vec<f64>,
+    ) {
+        // A block's texts and dimension values, where its pieces are placed (docs/adr/0144).
+        if let Some(x) = &it.expanded {
+            for (i, s) in x.shapes.iter().enumerate() {
+                // A piece shown only with a layer that is hidden has no label either (docs/adr/0315 §2).
+                if !it.piece_shown(i) {
                     continue;
                 }
-                Shape::Text {
-                    height,
-                    rotation,
-                    mask,
-                    ..
-                } => {
-                    let px = height * scale;
-                    if px < min_px || px > max_px {
-                        continue;
-                    }
-                    // A multi-line text, line by line (docs/adr/0182 §3); one along a curve,
-                    // letter by letter (docs/adr/0196 §2.6).
-                    if let Some(t) = TextPlace::of(&it.shape).filter(TextPlace::by_records) {
-                        self.paragraph_labels(it.id, &t, *mask == Some(true), None, &mut out);
-                        continue;
-                    }
-                    let (o, factor, mask) = self.text_label(&it.shape);
-                    out.extend([
-                        it.id, LABEL_TEXT, o.x, o.y, *rotation, factor, mask, 0.0, 0.0,
-                    ]);
-                    continue;
-                }
-                // Each cell's words where its layout puts them; under 5 px they are not drawn,
-                // its lines are (docs/adr/0184 §2).
-                Shape::Table {
-                    height, rotation, ..
-                } => {
-                    let px = height * scale;
-                    if (min_px..=max_px).contains(&px)
-                        && let Some(t) = crate::geom::table::table_geom(&it.shape)
-                    {
-                        for c in t.layout(self.font).cells {
-                            out.extend([
-                                it.id,
-                                LABEL_CELL,
-                                c.at.x,
-                                c.at.y,
-                                *rotation,
-                                c.row as f64,
-                                c.col as f64,
-                                if c.bold { 1.0 } else { 0.0 },
-                                0.0,
-                            ]);
+                match s {
+                    // An attribute's text that shows nothing has no label (docs/adr/0144 §7).
+                    Shape::Text {
+                        text,
+                        height,
+                        rotation,
+                        mask,
+                        ..
+                    } => {
+                        let px = height * scale;
+                        if px < min_px || px > max_px || text.is_empty() {
+                            continue;
                         }
-                    }
-                    continue;
-                }
-                // Its note, as a text's; under 5 px it is not drawn, its line and arrowhead are (docs/adr/0146 §5).
-                Shape::Leader {
-                    height, rotation, ..
-                } => {
-                    let px = height * scale;
-                    if let Some((o, mask)) = self.note_label(&it.shape)
-                        && (min_px..=max_px).contains(&px)
-                    {
+                        // A multi-line piece, line by line (docs/adr/0182 §3); one along a
+                        // curve, letter by letter (docs/adr/0196 §2.6).
+                        if let Some(t) = TextPlace::of(s).filter(TextPlace::by_records) {
+                            let piece = Some(i as f64);
+                            self.paragraph_labels(it.id, &t, *mask == Some(true), piece, out);
+                            continue;
+                        }
+                        let (o, factor, mask) = self.text_label(s);
                         out.extend([
                             it.id,
-                            LABEL_LEADER,
+                            LABEL_PIECE_TEXT,
                             o.x,
                             o.y,
                             *rotation,
+                            *height,
+                            i as f64,
+                            factor,
+                            mask,
+                        ]);
+                    }
+                    Shape::Leader {
+                        height, rotation, ..
+                    } => {
+                        let px = height * scale;
+                        let Some((o, mask)) = self.note_label(s) else {
+                            continue;
+                        };
+                        if px < min_px || px > max_px {
+                            continue;
+                        }
+                        out.extend([
+                            it.id,
+                            LABEL_PIECE_LEADER,
+                            o.x,
+                            o.y,
+                            *rotation,
+                            *height,
+                            i as f64,
                             1.0,
                             mask,
-                            0.0,
+                        ]);
+                    }
+                    Shape::Dimension { height, .. } => {
+                        let px = height * scale;
+                        let Some(l) = dimension_geom(s)
+                            .and_then(|g| layout_dimension(&g))
+                            .filter(|l| l.unit != "none")
+                        else {
+                            continue;
+                        };
+                        if px < min_px || px > max_px {
+                            continue;
+                        }
+                        out.extend([
+                            it.id,
+                            LABEL_PIECE_DIMENSION,
+                            l.text_at.x,
+                            l.text_at.y,
+                            l.rotation,
+                            l.value,
+                            i as f64,
+                            *height,
+                            masked(s),
+                        ]);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        match &it.shape {
+            Shape::Dimension { height, .. } => {
+                let px = height * scale;
+                let Some(l) = dimension_geom(&it.shape)
+                    .and_then(|g| layout_dimension(&g))
+                    .filter(|l| l.unit != "none")
+                else {
+                    return;
+                };
+                if px < min_px || px > max_px {
+                    return;
+                }
+                out.extend([
+                    it.id,
+                    LABEL_DIMENSION,
+                    l.text_at.x,
+                    l.text_at.y,
+                    l.rotation,
+                    l.value,
+                    code(&DIMENSION_UNITS, l.unit),
+                    code(&DIMENSION_PREFIXES, l.prefix),
+                    masked(&it.shape),
+                ]);
+            }
+            Shape::Text {
+                height,
+                rotation,
+                mask,
+                ..
+            } => {
+                let px = height * scale;
+                if px < min_px || px > max_px {
+                    return;
+                }
+                // A multi-line text, line by line (docs/adr/0182 §3); one along a curve,
+                // letter by letter (docs/adr/0196 §2.6).
+                if let Some(t) = TextPlace::of(&it.shape).filter(TextPlace::by_records) {
+                    self.paragraph_labels(it.id, &t, *mask == Some(true), None, out);
+                    return;
+                }
+                let (o, factor, mask) = self.text_label(&it.shape);
+                out.extend([
+                    it.id, LABEL_TEXT, o.x, o.y, *rotation, factor, mask, 0.0, 0.0,
+                ]);
+            }
+            // Each cell's words where its layout puts them; under 5 px they are not drawn,
+            // its lines are (docs/adr/0184 §2).
+            Shape::Table {
+                height, rotation, ..
+            } => {
+                let px = height * scale;
+                if (min_px..=max_px).contains(&px)
+                    && let Some(t) = crate::geom::table::table_geom(&it.shape)
+                {
+                    let cells = match cells {
+                        Some(near) => t.cells_near(self.font, near),
+                        None => t.layout(self.font).cells,
+                    };
+                    for c in cells {
+                        out.extend([
+                            it.id,
+                            LABEL_CELL,
+                            c.at.x,
+                            c.at.y,
+                            *rotation,
+                            c.row as f64,
+                            c.col as f64,
+                            if c.bold { 1.0 } else { 0.0 },
                             0.0,
                         ]);
                     }
-                    continue;
                 }
-                _ => {}
             }
+            // Its note, as a text's; under 5 px it is not drawn, its line and arrowhead are (docs/adr/0146 §5).
+            Shape::Leader {
+                height, rotation, ..
+            } => {
+                let px = height * scale;
+                if let Some((o, mask)) = self.note_label(&it.shape)
+                    && (min_px..=max_px).contains(&px)
+                {
+                    out.extend([
+                        it.id,
+                        LABEL_LEADER,
+                        o.x,
+                        o.y,
+                        *rotation,
+                        1.0,
+                        mask,
+                        0.0,
+                        0.0,
+                    ]);
+                }
+            }
+            _ => {}
         }
-        out
     }
 
     /// A leader's note (docs/adr/0146 §5): where its baseline starts and its
