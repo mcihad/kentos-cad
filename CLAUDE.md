@@ -119,6 +119,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `.kcad` şema 137 (opt-in), `FORMATS_VERSION` 100. 31 ortak bağ durumu (`arch_bond_cases.py`), 26 benimseme. Gerçek
   pencerede elle denenmedi; çelişen bağın çizimde vurgusu ve 20 ms bütçesi açık.
 
+- **Üst kaydın formu alt kayda izin vermez (31 Ekim 2026; [ADR 0764](docs/adr/0764-child-records-are-judged-apart.md), dal `formlar-surer`).**
+  Veri girişinin yazma kuralı tek yerde: `kentos_forms::entry_write_refusal` (canlı formun gösterdiği alan okunur, yokluğu
+  silinmesidir; göstermediği gizli, yokluğu onu korur, farklı değeri yazmadır; canlı formsuz katman `NoForm`), `Reach::through_live_form`.
+  Sunucu `project.changes`'te gizli alana yazmayı birleştirmeden önce 403 ile reddeder (önceden `merged` onu sessizce eskisine
+  döndürüyordu); masaüstü belgesi `ObjectPolicy::AttributesOnly`'de aynı kuralla adımı geri alır (`entry_write_faults`).
+  İlişkili kayıtlar öğesinin `ChildPermits.child` (`ChildEntry`): Değiştir alt katmanın canlı formunu, Bağla ve Bağı kopar o formun
+  bağ alanını ister. Satır kapsamı sunucuda. 20 + 20 ortak durum (`child_writes_cases.py`), resim `form-alt-kayit-izni`.
+
 - **Formun listelerinin kaynağı: ayrı durum, kod ve çıkış yolu (31 Ekim 2026; [ADR 0763](docs/adr/0763-form-list-sources-states.md), dal `formlar-surer`).**
   Salt okunur `cad.forms.sources` (`form`, `draft`, `waitMs` 100–30 000, yoksa 5 000): formun başka katmandan listelerinin ve
   ilişkili kayıtlarının katmanları öğe sırasıyla, her birinin durumu `local`, `ready`, `offline`, `timeout`, `denied`, `missing`,

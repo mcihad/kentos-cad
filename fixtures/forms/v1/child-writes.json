@@ -1,0 +1,1454 @@
+{
+ "format": "kentos.child-writes",
+ "version": 1,
+ "note": "ADR 0764: Veri girişinin alt kayıtla ve kaydın alanlarıyla yapabildikleri, KentOS kodu olmadan yazılmış başvurudan (scripts/fixtures/child_writes_cases.py). `offers`: ilişkili kayıtlar öğesinin her eylemi ve reddin türü (unsaved, record, childLocked, noWrites, attributes, noForm, fieldHidden; cümleleri çekirdeğindir). `writes`: Veri girişinin bir kaydın özniteliklerini değiştirmesi; formların göstermediği alanın yokluğu onu korur, farklı değeri yazmadır.",
+ "fields": {
+  "bina": [
+   {
+    "name": "Ad",
+    "kind": "text"
+   }
+  ],
+  "sayac": [
+   {
+    "name": "No",
+    "kind": "text"
+   },
+   {
+    "name": "Durum",
+    "kind": "text"
+   },
+   {
+    "id": "bina-bag",
+    "name": "bina",
+    "kind": "text"
+   }
+  ],
+  "abone": [
+   {
+    "name": "Ad",
+    "kind": "text"
+   },
+   {
+    "name": "bina",
+    "kind": "text"
+   },
+   {
+    "name": "Not",
+    "kind": "text"
+   }
+  ],
+  "malik": [
+   {
+    "name": "Ad",
+    "kind": "text"
+   },
+   {
+    "name": "bina",
+    "kind": "text"
+   }
+  ],
+  "eski": [
+   {
+    "name": "Ad",
+    "kind": "text"
+   },
+   {
+    "name": "bina",
+    "kind": "text"
+   }
+  ],
+  "kayit": [
+   {
+    "name": "X",
+    "kind": "text"
+   },
+   {
+    "name": "Y",
+    "kind": "text"
+   },
+   {
+    "name": "Z",
+    "kind": "text"
+   }
+  ]
+ },
+ "forms": [
+  {
+   "id": "bina-formu",
+   "name": "bina-formu",
+   "layer": "bina",
+   "draft": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "related",
+      "id": "sayaclar",
+      "layer": "sayac",
+      "field": "bina-bag"
+     }
+    ]
+   },
+   "releases": [
+    {
+     "version": 1,
+     "digest": "eae0a433fc2077e69fd392698913f72c",
+     "body": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "ad",
+        "field": "Ad"
+       },
+       {
+        "type": "related",
+        "id": "sayaclar",
+        "layer": "sayac",
+        "field": "bina-bag"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "sayac-formu",
+   "name": "sayac-formu",
+   "layer": "sayac",
+   "draft": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "no",
+      "field": "No"
+     },
+     {
+      "type": "field",
+      "id": "durum",
+      "field": "Durum"
+     }
+    ]
+   },
+   "releases": [
+    {
+     "version": 1,
+     "digest": "4e5bf6841c87d80ff78ec86f81ea2f34",
+     "body": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "no",
+        "field": "No"
+       },
+       {
+        "type": "field",
+        "id": "durum",
+        "field": "Durum"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "abone-formu",
+   "name": "abone-formu",
+   "layer": "abone",
+   "draft": {
+    "revision": 2,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "field",
+      "id": "bag",
+      "field": "bina"
+     },
+     {
+      "type": "field",
+      "id": "not",
+      "field": "Not"
+     }
+    ]
+   },
+   "releases": [
+    {
+     "version": 1,
+     "digest": "1b103a8a2064342da6f13faa5639efa6",
+     "body": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "ad",
+        "field": "Ad"
+       },
+       {
+        "type": "field",
+        "id": "bag",
+        "field": "bina"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "malik-formu",
+   "name": "malik-formu",
+   "layer": "malik",
+   "draft": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "field",
+      "id": "bag",
+      "field": "bina"
+     }
+    ]
+   }
+  },
+  {
+   "id": "eski-formu",
+   "name": "eski-formu",
+   "layer": "eski",
+   "draft": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "ad",
+      "field": "Ad"
+     },
+     {
+      "type": "field",
+      "id": "bag",
+      "field": "bina"
+     }
+    ]
+   },
+   "releases": [
+    {
+     "version": 1,
+     "digest": "1b103a8a2064342da6f13faa5639efa6",
+     "body": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "ad",
+        "field": "Ad"
+       },
+       {
+        "type": "field",
+        "id": "bag",
+        "field": "bina"
+       }
+      ]
+     }
+    }
+   ],
+   "withdrawn": true
+  },
+  {
+   "id": "kayit-1",
+   "name": "kayit-1",
+   "layer": "kayit",
+   "draft": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "x",
+      "field": "X"
+     }
+    ]
+   },
+   "releases": [
+    {
+     "version": 1,
+     "digest": "c6ada288d21cdb242056fb9f39a381a3",
+     "body": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "x",
+        "field": "X"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "kayit-2",
+   "name": "kayit-2",
+   "layer": "kayit",
+   "draft": {
+    "revision": 1,
+    "items": [
+     {
+      "type": "field",
+      "id": "y",
+      "field": "Y"
+     }
+    ]
+   },
+   "releases": [
+    {
+     "version": 1,
+     "digest": "712272fcd555d31720002f5b73d4300c",
+     "body": {
+      "revision": 1,
+      "items": [
+       {
+        "type": "field",
+        "id": "y",
+        "field": "Y"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "offers": [
+  {
+   "name": "bir düzenleyici her şeyi yapar",
+   "actions": null,
+   "permits": {
+    "saved": true
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": null
+    },
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "link",
+     "refused": null
+    },
+    {
+     "action": "unlink",
+     "refused": null
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "düzenleyicinin bütün eylemleri",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": null
+    },
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "delete",
+     "refused": null
+    },
+    {
+     "action": "link",
+     "refused": null
+    },
+    {
+     "action": "unlink",
+     "refused": null
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "kaydedilmemiş kayıtta görmek de yok",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": false
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "unsaved"
+    },
+    {
+     "action": "update",
+     "refused": "unsaved"
+    },
+    {
+     "action": "delete",
+     "refused": "unsaved"
+    },
+    {
+     "action": "link",
+     "refused": "unsaved"
+    },
+    {
+     "action": "unlink",
+     "refused": "unsaved"
+    },
+    {
+     "action": "view",
+     "refused": "unsaved"
+    },
+    {
+     "action": "show",
+     "refused": "unsaved"
+    }
+   ]
+  },
+  {
+   "name": "kilitli kayıtta yalnız görmek ve göstermek",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "recordLocked": "Kayıt kilitli."
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "record"
+    },
+    {
+     "action": "update",
+     "refused": "record"
+    },
+    {
+     "action": "delete",
+     "refused": "record"
+    },
+    {
+     "action": "link",
+     "refused": "record"
+    },
+    {
+     "action": "unlink",
+     "refused": "record"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "alt katman kilitli",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "childLocked": "Sayaçlar"
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "childLocked"
+    },
+    {
+     "action": "update",
+     "refused": "childLocked"
+    },
+    {
+     "action": "delete",
+     "refused": "childLocked"
+    },
+    {
+     "action": "link",
+     "refused": "childLocked"
+    },
+    {
+     "action": "unlink",
+     "refused": "childLocked"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "rol nesne yazmaz",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "noWrites": true
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "noWrites"
+    },
+    {
+     "action": "update",
+     "refused": "noWrites"
+    },
+    {
+     "action": "delete",
+     "refused": "noWrites"
+    },
+    {
+     "action": "link",
+     "refused": "noWrites"
+    },
+    {
+     "action": "unlink",
+     "refused": "noWrites"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: alt katmanı bilinmiyor (yerel kural)",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "attributes"
+    },
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "delete",
+     "refused": "attributes"
+    },
+    {
+     "action": "link",
+     "refused": null
+    },
+    {
+     "action": "unlink",
+     "refused": null
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: sayacın formu bağ alanını göstermiyor",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "sayac",
+     "field": "bina",
+     "form": true,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "attributes"
+    },
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "delete",
+     "refused": "attributes"
+    },
+    {
+     "action": "link",
+     "refused": "fieldHidden"
+    },
+    {
+     "action": "unlink",
+     "refused": "fieldHidden"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: abonenin formu bağ alanını gösteriyor",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "abone",
+     "field": "bina",
+     "form": true,
+     "showsField": true
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "attributes"
+    },
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "delete",
+     "refused": "attributes"
+    },
+    {
+     "action": "link",
+     "refused": null
+    },
+    {
+     "action": "unlink",
+     "refused": null
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: malikin yayımlanmış formu yok",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "malik",
+     "field": "bina",
+     "form": false,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "attributes"
+    },
+    {
+     "action": "update",
+     "refused": "noForm"
+    },
+    {
+     "action": "delete",
+     "refused": "attributes"
+    },
+    {
+     "action": "link",
+     "refused": "noForm"
+    },
+    {
+     "action": "unlink",
+     "refused": "noForm"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: eski katmanın formu yayından kalktı",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "eski",
+     "field": "bina",
+     "form": false,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "attributes"
+    },
+    {
+     "action": "update",
+     "refused": "noForm"
+    },
+    {
+     "action": "delete",
+     "refused": "attributes"
+    },
+    {
+     "action": "link",
+     "refused": "noForm"
+    },
+    {
+     "action": "unlink",
+     "refused": "noForm"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: yalnız bağlayan öğe, alan gizli",
+   "actions": [
+    "link",
+    "view"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "sayac",
+     "field": "bina",
+     "form": true,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "link",
+     "refused": "fieldHidden"
+    },
+    {
+     "action": "view",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: yalnız değiştiren öğe, alan gizli ama form var",
+   "actions": [
+    "update"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "sayac",
+     "field": "bina",
+     "form": true,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "update",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: boş eylem listesi",
+   "actions": [],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "malik",
+     "field": "bina",
+     "form": false,
+     "showsField": false
+    }
+   },
+   "expect": []
+  },
+  {
+   "name": "Veri girişi: kilitli alt katman kendi sebebini söyler",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "childLocked": "Malikler",
+    "child": {
+     "layer": "malik",
+     "field": "bina",
+     "form": false,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "childLocked"
+    },
+    {
+     "action": "update",
+     "refused": "childLocked"
+    },
+    {
+     "action": "delete",
+     "refused": "childLocked"
+    },
+    {
+     "action": "link",
+     "refused": "childLocked"
+    },
+    {
+     "action": "unlink",
+     "refused": "childLocked"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: kaydedilmemiş kayıt önce",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": false,
+    "attributesOnly": true,
+    "child": {
+     "layer": "abone",
+     "field": "bina",
+     "form": true,
+     "showsField": true
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "unsaved"
+    },
+    {
+     "action": "update",
+     "refused": "unsaved"
+    },
+    {
+     "action": "delete",
+     "refused": "unsaved"
+    },
+    {
+     "action": "link",
+     "refused": "unsaved"
+    },
+    {
+     "action": "unlink",
+     "refused": "unsaved"
+    },
+    {
+     "action": "view",
+     "refused": "unsaved"
+    },
+    {
+     "action": "show",
+     "refused": "unsaved"
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: iki formlu katmanda gösterilen alan",
+   "actions": [
+    "update",
+    "link",
+    "unlink"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "kayit",
+     "field": "Y",
+     "form": true,
+     "showsField": true
+    }
+   },
+   "expect": [
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "link",
+     "refused": null
+    },
+    {
+     "action": "unlink",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi: iki formlu katmanda gösterilmeyen alan",
+   "actions": [
+    "update",
+    "link",
+    "unlink"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "child": {
+     "layer": "kayit",
+     "field": "Z",
+     "form": true,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "link",
+     "refused": "fieldHidden"
+    },
+    {
+     "action": "unlink",
+     "refused": "fieldHidden"
+    }
+   ]
+  },
+  {
+   "name": "düzenleyiciye alt katmanın formu sorulmaz",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "child": {
+     "layer": "malik",
+     "field": "bina",
+     "form": false,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": null
+    },
+    {
+     "action": "update",
+     "refused": null
+    },
+    {
+     "action": "delete",
+     "refused": null
+    },
+    {
+     "action": "link",
+     "refused": null
+    },
+    {
+     "action": "unlink",
+     "refused": null
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  },
+  {
+   "name": "Veri girişi ve rolü yazmaz: rol önce",
+   "actions": [
+    "create",
+    "update",
+    "delete",
+    "link",
+    "unlink",
+    "view",
+    "show"
+   ],
+   "permits": {
+    "saved": true,
+    "attributesOnly": true,
+    "noWrites": true,
+    "child": {
+     "layer": "malik",
+     "field": "bina",
+     "form": false,
+     "showsField": false
+    }
+   },
+   "expect": [
+    {
+     "action": "create",
+     "refused": "noWrites"
+    },
+    {
+     "action": "update",
+     "refused": "noWrites"
+    },
+    {
+     "action": "delete",
+     "refused": "noWrites"
+    },
+    {
+     "action": "link",
+     "refused": "noWrites"
+    },
+    {
+     "action": "unlink",
+     "refused": "noWrites"
+    },
+    {
+     "action": "view",
+     "refused": null
+    },
+    {
+     "action": "show",
+     "refused": null
+    }
+   ]
+  }
+ ],
+ "writes": [
+  {
+   "name": "sayacın durumu formdan yazılır",
+   "layer": "sayac",
+   "before": {
+    "No": "1",
+    "Durum": "açık"
+   },
+   "after": {
+    "No": "1",
+    "Durum": "kapalı"
+   },
+   "expect": null
+  },
+  {
+   "name": "sayacın gizli bağı yazılamaz",
+   "layer": "sayac",
+   "before": {
+    "No": "1"
+   },
+   "after": {
+    "No": "1",
+    "bina": "B-2"
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "bina"
+   }
+  },
+  {
+   "name": "gizli bağın değişmesi yazılamaz",
+   "layer": "sayac",
+   "before": {
+    "No": "1",
+    "bina": "B-1"
+   },
+   "after": {
+    "No": "1",
+    "bina": "B-2"
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "bina"
+   }
+  },
+  {
+   "name": "gizli alanın yokluğu onu korur",
+   "layer": "sayac",
+   "before": {
+    "No": "1",
+    "bina": "B-1"
+   },
+   "after": {
+    "No": "1"
+   },
+   "expect": null
+  },
+  {
+   "name": "gizli alana aynı değer yazmak değişiklik değil",
+   "layer": "sayac",
+   "before": {
+    "No": "1",
+    "bina": "B-1"
+   },
+   "after": {
+    "No": "2",
+    "bina": "B-1"
+   },
+   "expect": null
+  },
+  {
+   "name": "hiçbir şey değişmedi",
+   "layer": "sayac",
+   "before": {
+    "No": "1"
+   },
+   "after": {
+    "No": "1"
+   },
+   "expect": null
+  },
+  {
+   "name": "okunan alanın yokluğu silinmesidir",
+   "layer": "sayac",
+   "before": {
+    "No": "1",
+    "Durum": "açık"
+   },
+   "after": {
+    "No": "1"
+   },
+   "expect": null
+  },
+  {
+   "name": "abonenin bağı formdan yazılır",
+   "layer": "abone",
+   "before": {
+    "Ad": "Ayşe"
+   },
+   "after": {
+    "Ad": "Ayşe",
+    "bina": "B-1"
+   },
+   "expect": null
+  },
+  {
+   "name": "abonenin taslakta görünen notu yazılamaz",
+   "layer": "abone",
+   "before": {
+    "Ad": "Ayşe"
+   },
+   "after": {
+    "Ad": "Ayşe",
+    "Not": "x"
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "Not"
+   }
+  },
+  {
+   "name": "malikin yayımlanmış formu yok",
+   "layer": "malik",
+   "before": {
+    "Ad": "Ali"
+   },
+   "after": {
+    "Ad": "Veli"
+   },
+   "expect": {
+    "problem": "noForm"
+   }
+  },
+  {
+   "name": "formsuz katmanda değişiklik yoksa sorun yok",
+   "layer": "malik",
+   "before": {
+    "Ad": "Ali"
+   },
+   "after": {
+    "Ad": "Ali"
+   },
+   "expect": null
+  },
+  {
+   "name": "yayından kalkmış formun katmanı yazılamaz",
+   "layer": "eski",
+   "before": {
+    "Ad": "a"
+   },
+   "after": {
+    "Ad": "a",
+    "bina": "B"
+   },
+   "expect": {
+    "problem": "noForm"
+   }
+  },
+  {
+   "name": "yayından kalkmış formun katmanında yokluk değişiklik değil",
+   "layer": "eski",
+   "before": {
+    "Ad": "a"
+   },
+   "after": {},
+   "expect": null
+  },
+  {
+   "name": "iki formun alanları birlikte okunur",
+   "layer": "kayit",
+   "before": {
+    "X": "1",
+    "Y": "1"
+   },
+   "after": {
+    "X": "2",
+    "Y": "2"
+   },
+   "expect": null
+  },
+  {
+   "name": "iki formun göstermediği alan yazılamaz",
+   "layer": "kayit",
+   "before": {
+    "X": "1"
+   },
+   "after": {
+    "X": "1",
+    "Z": "9"
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "Z"
+   }
+  },
+  {
+   "name": "ilk gizli alan ad sırasıyla söylenir",
+   "layer": "kayit",
+   "before": {},
+   "after": {
+    "Z": "1",
+    "W": "2",
+    "X": "3"
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "W"
+   }
+  },
+  {
+   "name": "bilinmeyen gizli alan da yazılamaz",
+   "layer": "sayac",
+   "before": {
+    "No": "1"
+   },
+   "after": {
+    "No": "1",
+    "Başka": "v"
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "Başka"
+   }
+  },
+  {
+   "name": "okunan ve gizli alan birlikte",
+   "layer": "sayac",
+   "before": {
+    "No": "1",
+    "Durum": "a"
+   },
+   "after": {
+    "No": "2",
+    "Durum": "b",
+    "bina": "B"
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "bina"
+   }
+  },
+  {
+   "name": "üst katmanın formu kendi alanını yazar",
+   "layer": "bina",
+   "before": {
+    "Ad": "A"
+   },
+   "after": {
+    "Ad": "B"
+   },
+   "expect": null
+  },
+  {
+   "name": "boş değer de değerdir",
+   "layer": "sayac",
+   "before": {
+    "No": "1"
+   },
+   "after": {
+    "No": "1",
+    "bina": ""
+   },
+   "expect": {
+    "problem": "hidden",
+    "field": "bina"
+   }
+  }
+ ]
+}

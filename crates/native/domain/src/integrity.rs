@@ -65,6 +65,10 @@ impl Document {
                     });
                 }
             }
+            // Through the layer's live form, the fields it shows (docs/adr/0764 §3): the server's rule.
+            if out.is_empty() {
+                out.extend(self.entry_write_faults(report));
+            }
             if !out.is_empty() {
                 return out;
             }
@@ -190,6 +194,51 @@ impl Document {
                     }
                 }
                 _ => {}
+            }
+        }
+        out
+    }
+}
+
+impl Document {
+    /// A Veri girişi's writes its forms do not let (docs/adr/0764 §3): a record of a layer no live form
+    /// writes, a field its layer's live forms do not show.
+    fn entry_write_faults(&self, report: &StepReport) -> Vec<Fault> {
+        let mut reach = None;
+        let mut out = Vec::new();
+        for change in &report.objects {
+            let (Some(before), Some(after)) = (change.before.as_deref(), change.after.as_deref())
+            else {
+                continue;
+            };
+            if before.base().attrs == after.base().attrs {
+                continue;
+            }
+            let reach = reach.get_or_insert_with(|| {
+                kentos_forms::reach::Reach::new(
+                    &self.settings.forms,
+                    |l| self.layers.get(l).map_or(&[][..], |n| n.fields.as_slice()),
+                    &[],
+                    kentos_expression::Unit::per_metre(self.settings.unit().per_metre()),
+                    kentos_forms::reach::Caller::through_forms(),
+                )
+            });
+            let layer = &before.base().layer_id;
+            if let Some(why) = kentos_forms::entry_write_refusal(
+                reach,
+                layer,
+                &before.base().attrs,
+                &after.base().attrs,
+            ) {
+                let name = self
+                    .layers
+                    .get(layer)
+                    .map_or_else(|| layer.clone(), |n| n.name.clone());
+                out.push(Fault {
+                    uid: change.uid,
+                    message: why.message(&name),
+                    code: None,
+                });
             }
         }
         out

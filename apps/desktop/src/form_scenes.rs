@@ -1031,6 +1031,22 @@ pub(crate) fn sources_states(app: &mut App) {
     drop(silent);
 }
 
+/// A Veri girişi's database project (docs/adr/0764 §4): every action offered, the owners' form does not
+/// show their building field: Değiştir open, Bağla and Bağı kopar quiet with the reason, Yeni and Sil too.
+pub(crate) fn actions_entry(app: &mut App) {
+    owner_actions(
+        app,
+        json!([
+            "create", "update", "delete", "link", "unlink", "view", "show"
+        ]),
+        false,
+    );
+    if let Some(doc) = app.document.as_mut() {
+        doc.model
+            .set_object_policy(kentos_domain::ObjectPolicy::AttributesOnly);
+    }
+}
+
 /// Malikler only linked, opened and shown: no Yeni, no Bağı kopar (docs/adr/0762 §1).
 fn actions_link_only(app: &mut App) {
     owner_actions(app, json!(["link", "view", "show"]), false);
@@ -3448,6 +3464,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-eylemler-yalniz-bagla", actions_link_only),
         ("form-eylemler-kilitli", actions_locked),
         ("form-kaynak-durumlari", sources_states),
+        ("form-alt-kayit-izni", actions_entry),
         ("form-eylemler-sil-sor", actions_delete_asked),
         ("form-eylemler-salt-okunur", actions_view_only),
         ("form-iliski-kartlar", meters_cards),

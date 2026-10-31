@@ -152,3 +152,53 @@ fn a_child_opened_to_read_is_read_only() {
     assert!(!e.read_only);
     assert!(app.selection.ids() != [Slot(0)]);
 }
+
+// A Veri girişi writes a child through the child layer's own form (docs/adr/0764 §4): the owners' form
+// does not show their building field, so it neither links nor unlinks; withdrawn, it changes none.
+#[test]
+fn a_data_entry_writes_children_through_their_own_form() {
+    let mut app = crate::files_testing::app_with_drawing();
+    crate::form_scenes::actions_entry(&mut app);
+    assert_eq!(
+        offers(&app),
+        vec![
+            (A::Create, false),
+            (A::Update, true),
+            (A::Delete, false),
+            (A::Link, false),
+            (A::Unlink, false),
+            (A::View, true),
+            (A::Show, true),
+        ]
+    );
+    let e = app.form_entry.as_ref().expect("the form");
+    let link = app
+        .related_offers(e, "malikler")
+        .into_iter()
+        .find(|o| o.action == A::Link)
+        .and_then(|o| o.refused)
+        .unwrap_or_default();
+    assert!(
+        link.contains("“Bina” alanı “Malik” katmanının formunda yok"),
+        "{link}"
+    );
+    // The owners' form withdrawn: no child of theirs is changed.
+    if let Some(doc) = app.document.as_mut() {
+        let answer = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_FORMS_EDIT,
+            kentos_commands::CallOp::Execute,
+            json!({ "edit": { "kind": "withdraw", "id": "malik-formu", "on": true } }),
+        );
+        assert_eq!(
+            answer.as_ref().map(|a| a["status"].clone()).ok(),
+            Some(json!("completed"))
+        );
+    }
+    assert!(
+        offers(&app)
+            .iter()
+            .filter(|(a, _)| matches!(a, A::Update | A::Link | A::Unlink))
+            .all(|(_, ok)| !ok)
+    );
+}

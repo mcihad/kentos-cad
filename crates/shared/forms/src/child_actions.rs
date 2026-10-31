@@ -80,6 +80,35 @@ pub struct ChildPermits {
     pub no_writes: bool,
     /// A Veri girişi of a database project: existing records' attributes only (docs/adr/0411 §5).
     pub attributes_only: bool,
+    /// A Veri girişi's child layer as its own forms write it (docs/adr/0764 §4); none for one who writes
+    /// the project's objects freely.
+    pub child: Option<ChildEntry>,
+}
+
+/// A child layer as a Veri girişi's forms write it (docs/adr/0764 §4): whether a live form writes its
+/// records, and whether that form shows the relation's field (a field item; a related item shows none).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct ChildEntry {
+    /// The child layer's name.
+    pub layer: String,
+    /// The relation's field, by its name.
+    pub field: String,
+    pub form: bool,
+    pub shows_field: bool,
+}
+
+impl ChildEntry {
+    /// The child layer `layer` (named `name`) and its relation field `field` (an attribute's name) as
+    /// `reach`'s Veri girişi writes them.
+    pub fn of(reach: &crate::reach::Reach, layer: &str, name: &str, field: &str) -> ChildEntry {
+        let form = reach.through_live_form(layer);
+        ChildEntry {
+            layer: name.to_owned(),
+            field: field.to_owned(),
+            form,
+            shows_field: form && reach.level(layer, field).readable(),
+        }
+    }
 }
 
 /// An offered action and, when the user may not, why.
@@ -135,6 +164,23 @@ fn refusal(action: RelatedAction, p: &ChildPermits) -> Option<String> {
             "Veri girişi rolü yalnız var olan kayıtların değerlerini değiştirir; alt kayıt oluşturamaz ya da silemez."
                 .to_owned(),
         );
+    }
+    // A Veri girişi writes a child through the child layer's own form (docs/adr/0764 §4).
+    if p.attributes_only
+        && let Some(c) = &p.child
+    {
+        if !c.form {
+            return Some(format!(
+                "“{}” katmanının yayımlanmış formu yok; Veri girişi alt kayıtlarını değiştiremez.",
+                c.layer
+            ));
+        }
+        if matches!(action, A::Link | A::Unlink) && !c.shows_field {
+            return Some(format!(
+                "“{}” alanı “{}” katmanının formunda yok; Veri girişi alt kaydı bağlayamaz ya da bağını koparamaz.",
+                c.field, c.layer
+            ));
+        }
     }
     None
 }

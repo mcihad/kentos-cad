@@ -3683,8 +3683,12 @@ impl App {
 
     /// What the related item `item` offers and, for each, whether the user may (docs/adr/0762 §2).
     pub(crate) fn related_offers(&self, e: &Entry, item: &str) -> Vec<kentos_forms::Offer> {
-        let Some(FormItem::Related { layer, actions, .. }) =
-            crate::forms::designer::find(&e.body.items, item)
+        let Some(FormItem::Related {
+            layer,
+            field,
+            actions,
+            ..
+        }) = crate::forms::designer::find(&e.body.items, item)
         else {
             return Vec::new();
         };
@@ -3705,6 +3709,30 @@ impl App {
         } else {
             None
         };
+        let attributes_only = doc.is_some_and(|d| {
+            d.model.object_policy() == kentos_domain::ObjectPolicy::AttributesOnly
+        });
+        // A Veri girişi writes a child through the child layer's own form (docs/adr/0764 §4).
+        let child = doc.filter(|_| attributes_only).map(|d| {
+            let fields_of = |l: &str| {
+                d.model
+                    .layers()
+                    .get(l)
+                    .map_or(&[][..], |n| n.fields.as_slice())
+            };
+            let reach = kentos_forms::reach::Reach::new(
+                &d.model.settings().forms,
+                fields_of,
+                &[],
+                kentos_expression::Unit::METRE,
+                kentos_forms::reach::Caller::through_forms(),
+            );
+            let name = fields_of(layer)
+                .iter()
+                .find(|f| f.key() == field)
+                .map_or_else(|| field.clone(), |f| f.name.clone());
+            kentos_forms::ChildEntry::of(&reach, layer, &layer_name(layer), &name)
+        });
         let permits = kentos_forms::ChildPermits {
             saved: !e.preview && !e.uid.is_empty(),
             record_locked,
@@ -3714,9 +3742,8 @@ impl App {
             no_writes: doc
                 .and_then(|d| d.cloud_source())
                 .is_some_and(|s| !crate::cloud::access_of(&s.info).0),
-            attributes_only: doc.is_some_and(|d| {
-                d.model.object_policy() == kentos_domain::ObjectPolicy::AttributesOnly
-            }),
+            attributes_only,
+            child,
         };
         kentos_forms::related_offer(actions.as_deref(), &permits)
     }

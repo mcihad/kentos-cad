@@ -1456,6 +1456,23 @@ pub(crate) async fn commit_in(
                 if let FeatureChange::Update { id, entity } = change
                     && let Some(before) = Uuid::parse_str(id).ok().and_then(|u| stored.get(&u))
                 {
+                    // A field it does not read is kept, never taken silently from its write
+                    // (docs/adr/0764 §2): one it gives a value of its own is refused.
+                    let layer = &before.entity.base().layer_id;
+                    if let Some(why @ kentos_forms::EntryRefusal::Hidden(_)) =
+                        kentos_forms::entry_write_refusal(
+                            &reading.reach,
+                            layer,
+                            &before.entity.base().attrs,
+                            &entity.base().attrs,
+                        )
+                    {
+                        let tree: Vec<LayerNode> =
+                            serde_json::from_value(layers.clone()).unwrap_or_default();
+                        return Err(AppError::forbidden(
+                            why.message(&crate::form_guard::layer_name(&tree, layer)),
+                        ));
+                    }
                     *entity =
                         crate::form_guard::merged(entity.clone(), &before.entity, &reading.reach);
                 }

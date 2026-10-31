@@ -226,6 +226,11 @@ pub fn world_of(
     world
 }
 
+/// The name of the layer `id` in `tree`, else the id.
+pub fn layer_name(tree: &[LayerNode], id: &str) -> String {
+    find(tree, id).map_or_else(|| id.to_owned(), |n| n.name.clone())
+}
+
 fn find<'a>(nodes: &'a [LayerNode], id: &str) -> Option<&'a LayerNode> {
     nodes.iter().find_map(|n| {
         if n.id == id {

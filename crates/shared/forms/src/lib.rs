@@ -17,6 +17,7 @@
 //! a rule decides only what the form shows and asks.
 
 mod child_actions;
+mod entry_writes;
 pub mod compare;
 pub mod field_refs;
 mod generate;
@@ -33,7 +34,10 @@ pub mod scope;
 mod session;
 pub mod table_checks;
 
-pub use child_actions::{ChildPermits, Offer, child_actions, related_offer, relation_offer};
+pub use child_actions::{
+    ChildEntry, ChildPermits, Offer, child_actions, related_offer, relation_offer,
+};
+pub use entry_writes::{EntryRefusal, entry_write_refusal};
 pub use generate::{generate, item_id_of, widget_of};
 pub use layer_rules::LayerRules;
 pub use lookup::{OtherLayer, PickMiss, World, WorldRelation, labels_of};

@@ -271,6 +271,11 @@ impl Reach {
         }
     }
 
+    /// Whether a live form writes `layer`'s records (docs/adr/0764 §1): one published and not withdrawn.
+    pub fn through_live_form(&self, layer: &str) -> bool {
+        matches!(self.layers.get(layer), Some(Binding::Live(_)))
+    }
+
     /// `attrs` as the caller reads them: the hidden ones left out.
     pub fn readable(&self, layer: &str, attrs: &Attrs) -> Attrs {
         self.kept(layer, attrs, Level::readable)
