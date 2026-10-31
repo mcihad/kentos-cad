@@ -245,7 +245,8 @@ pub enum SlabsOperation {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         distance: f64,
     },
-    /// Kes: the area drawn (`parts`) or found from the walls round `seed` taken out of each slab: a hole, a notch.
+    /// Kes: the area drawn (`parts`) or found from the walls round `seed` (by `boundary`; absent: the room, to the
+    /// walls' inner faces, docs/adr/0798 §3) taken out of each slab: a hole, a notch, a stairwell.
     Subtract {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]

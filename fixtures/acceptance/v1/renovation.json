@@ -1,0 +1,720 @@
+{
+ "format": "kentos.acceptance",
+ "version": 1,
+ "id": "renovation",
+ "title": "Tadilat: GDAL'ın yazdığı DXF altlığından var olan duvarlar, yıkım, yeni bölme, evrelere göre mahal ve metraj",
+ "source": "plan/architecture-advanced.md ADV-07 (kabul korpusu); docs/adr/0798",
+ "project": {
+  "name": "Tadilat",
+  "workspace": "cad",
+  "coords": "local",
+  "drawingUnit": "m",
+  "plotScale": 100
+ },
+ "files": {
+  "underlay": "fixtures/acceptance/v1/renovation-altlik.dxf"
+ },
+ "tolerance": 1e-09,
+ "undone": 8,
+ "steps": [
+  {
+   "name": "Proje ayarları › Mimari: zemin kat, 2.80 m",
+   "command": "cad.settings.set",
+   "input": {
+    "arch": {
+     "levels": [
+      {
+       "id": "zemin",
+       "name": "Zemin kat",
+       "elevation": 0,
+       "height": 2.8
+      }
+     ]
+    }
+   },
+   "label": null,
+   "expect": {
+    "count": 0
+   }
+  },
+  {
+   "name": "Ret: altlığın yolu göreli",
+   "command": "file.import.dxf",
+   "input": {
+    "path": "fixtures/acceptance/v1/renovation-altlik.dxf",
+    "fileUnit": "m"
+   },
+   "refuse": "invalid_file_path",
+   "expect": {
+    "count": 0
+   }
+  },
+  {
+   "name": "Altlık: GDAL'ın DXF'i metre olarak (başlığı inç diyor)",
+   "command": "file.import.dxf",
+   "input": {
+    "path": "$underlay",
+    "fileUnit": "m"
+   },
+   "label": "DXF: renovation-altlik.dxf",
+   "expect": {
+    "count": 11,
+    "output": {
+     "objects": 11,
+     "layers": [
+      {
+       "id": "import-duvar",
+       "name": "DUVAR"
+      },
+      {
+       "id": "import-kapi",
+       "name": "KAPI"
+      }
+     ],
+     "unit": {
+      "declared": 1,
+      "factor": 1.0,
+      "source": "chosen"
+     }
+    }
+   }
+  },
+  {
+   "name": "Altlığın katmanı kilitlenir",
+   "command": "cad.layers.set",
+   "input": {
+    "operation": "locked",
+    "layer": "import-duvar",
+    "value": true
+   },
+   "label": null,
+   "expect": {
+    "count": 11
+   }
+  },
+  {
+   "name": "Altlığın duvar çizgileri seçilir",
+   "query": "cad.entities.select",
+   "input": {
+    "region": {
+     "kind": "all"
+    },
+    "kinds": [
+     "polyline"
+    ],
+    "layers": [
+     "import-duvar"
+    ]
+   },
+   "as": [
+    "l1",
+    "l2",
+    "l3",
+    "l4",
+    "l5",
+    "l6",
+    "l7",
+    "l8",
+    "l9",
+    "l10"
+   ],
+   "expect": {
+    "output": {
+     "uids": [
+      "$l1",
+      "$l2",
+      "$l3",
+      "$l4",
+      "$l5",
+      "$l6",
+      "$l7",
+      "$l8",
+      "$l9",
+      "$l10"
+     ]
+    }
+   }
+  },
+  {
+   "name": "Ret: kilitli altlığın çizgileri silinerek duvar olmaz",
+   "command": "cad.walls.convert",
+   "input": {
+    "uids": [
+     "$l1",
+     "$l2",
+     "$l3",
+     "$l4",
+     "$l5",
+     "$l6",
+     "$l7",
+     "$l8",
+     "$l9",
+     "$l10"
+    ],
+    "mode": "pairs",
+    "maxWidth": 0.3,
+    "layerId": "$layer",
+    "arch": {
+     "level": "zemin",
+     "phase": "existing"
+    }
+   },
+   "refuse": "layer_locked",
+   "expect": {
+    "count": 11
+   }
+  },
+  {
+   "name": "Var olan duvarlar: Çiftler, Kaynağı koru, kilitli altlıktan",
+   "command": "cad.walls.convert",
+   "input": {
+    "uids": [
+     "$l1",
+     "$l2",
+     "$l3",
+     "$l4",
+     "$l5",
+     "$l6",
+     "$l7",
+     "$l8",
+     "$l9",
+     "$l10"
+    ],
+    "mode": "pairs",
+    "maxWidth": 0.3,
+    "keepSources": true,
+    "layerId": "$layer",
+    "arch": {
+     "level": "zemin",
+     "phase": "existing"
+    }
+   },
+   "as": [
+    "south",
+    "east",
+    "north",
+    "west",
+    "middle"
+   ],
+   "label": "Çizgiden duvar",
+   "expect": {
+    "count": 16,
+    "objects": {
+     "south": {
+      "pts": [
+       [
+        0.0,
+        -0.125
+       ],
+       [
+        9.0,
+        -0.125
+       ]
+      ],
+      "width": 0.25,
+      "arch": {
+       "level": "zemin",
+       "phase": "existing"
+      }
+     },
+     "east": {
+      "pts": [
+       [
+        9.125,
+        0.0
+       ],
+       [
+        9.125,
+        7.0
+       ]
+      ],
+      "width": 0.25,
+      "arch": {
+       "level": "zemin",
+       "phase": "existing"
+      }
+     },
+     "north": {
+      "pts": [
+       [
+        9.0,
+        7.125
+       ],
+       [
+        0.0,
+        7.125
+       ]
+      ],
+      "width": 0.25,
+      "arch": {
+       "level": "zemin",
+       "phase": "existing"
+      }
+     },
+     "west": {
+      "pts": [
+       [
+        -0.125,
+        7.0
+       ],
+       [
+        -0.125,
+        0.0
+       ]
+      ],
+      "width": 0.25,
+      "arch": {
+       "level": "zemin",
+       "phase": "existing"
+      }
+     },
+     "middle": {
+      "pts": [
+       [
+        4.075,
+        7.0
+       ],
+       [
+        4.075,
+        0.0
+       ]
+      ],
+      "width": 0.15000000000000036,
+      "arch": {
+       "level": "zemin",
+       "phase": "existing"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan açıklıklar: orta duvarda kapı, güneyde iki pencere",
+   "command": "cad.openings.create",
+   "input": {
+    "layerId": "$layer",
+    "openings": [
+     {
+      "host": "$middle",
+      "at": 3.55,
+      "form": "door",
+      "width": 0.9
+     },
+     {
+      "host": "$south",
+      "at": 2.0,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     },
+     {
+      "host": "$south",
+      "at": 6.5,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     }
+    ]
+   },
+   "as": [
+    "oldDoor",
+    "w1",
+    "w2"
+   ],
+   "label": "Kapı",
+   "expect": {
+    "count": 19,
+    "objects": {
+     "oldDoor": {
+      "at": 3.55
+     }
+    }
+   }
+  },
+  {
+   "name": "Var olan mahaller: Salon ve Oda",
+   "command": "cad.spaces.create",
+   "input": {
+    "layerId": "$layer",
+    "spaces": [
+     {
+      "seed": {
+       "x": 2.0,
+       "y": 3.0
+      },
+      "number": "M01",
+      "name": "Salon",
+      "arch": {
+       "level": "zemin",
+       "phase": "existing"
+      }
+     },
+     {
+      "seed": {
+       "x": 6.0,
+       "y": 3.0
+      },
+      "number": "M02",
+      "name": "Oda",
+      "arch": {
+       "level": "zemin",
+       "phase": "existing"
+      }
+     }
+    ]
+   },
+   "as": [
+    "salon0",
+    "oda0"
+   ],
+   "label": "Mahal",
+   "expect": {
+    "count": 21,
+    "measures": {
+     "salon0": {
+      "area": 28.0
+     },
+     "oda0": {
+      "area": 33.95
+     }
+    }
+   }
+  },
+  {
+   "name": "Yıkım: orta duvar",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$middle"
+    ],
+    "operation": {
+     "kind": "set",
+     "phase": "demolish"
+    }
+   },
+   "label": "Duvarı düzenle",
+   "expect": {
+    "count": 21,
+    "objects": {
+     "middle": {
+      "arch": {
+       "phase": "demolish"
+      }
+     }
+    },
+    "measures": {
+     "salon0": {
+      "area": 28.0
+     },
+     "oda0": {
+      "area": 33.95
+     }
+    }
+   }
+  },
+  {
+   "name": "Yeni bölme: batı yüzden 3.00 net",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$west",
+     "edge": 0
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 3.0,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "zemin",
+        "phase": "new"
+       }
+      }
+     ]
+    }
+   },
+   "as": "partition",
+   "label": "Duvar",
+   "expect": {
+    "count": 22,
+    "objects": {
+     "partition": {
+      "pts": [
+       [
+        3.075,
+        7.0
+       ],
+       [
+        3.075,
+        0.0
+       ]
+      ],
+      "arch": {
+       "level": "zemin",
+       "phase": "new"
+      }
+     }
+    },
+    "measures": {
+     "salon0": {
+      "area": 28.0
+     },
+     "oda0": {
+      "area": 33.95
+     }
+    }
+   }
+  },
+  {
+   "name": "Yeni kapı: bölmede",
+   "command": "cad.openings.create",
+   "input": {
+    "layerId": "$layer",
+    "openings": [
+     {
+      "host": "$partition",
+      "at": 3.5,
+      "form": "door",
+      "width": 0.9
+     }
+    ]
+   },
+   "as": [
+    "newDoor"
+   ],
+   "label": "Kapı",
+   "expect": {
+    "count": 23
+   }
+  },
+  {
+   "name": "Yeni mahaller: yıkılan duvar sınır değil",
+   "command": "cad.spaces.create",
+   "input": {
+    "layerId": "$layer",
+    "spaces": [
+     {
+      "seed": {
+       "x": 1.5,
+       "y": 3.0
+      },
+      "number": "Y01",
+      "name": "Yatak odası",
+      "arch": {
+       "level": "zemin",
+       "phase": "new"
+      }
+     },
+     {
+      "seed": {
+       "x": 6.0,
+       "y": 3.0
+      },
+      "number": "Y02",
+      "name": "Salon",
+      "arch": {
+       "level": "zemin",
+       "phase": "new"
+      }
+     }
+    ]
+   },
+   "as": [
+    "yatak",
+    "salon"
+   ],
+   "label": "Mahal",
+   "expect": {
+    "count": 25,
+    "measures": {
+     "yatak": {
+      "area": 21.0
+     },
+     "salon": {
+      "area": 40.95
+     },
+     "salon0": {
+      "area": 28.0
+     },
+     "oda0": {
+      "area": 33.95
+     }
+    }
+   }
+  },
+  {
+   "name": "Metraj: var olan durum",
+   "query": "cad.spaces.quantities",
+   "input": {
+    "phases": [
+     "existing"
+    ]
+   },
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 61.95,
+      "wallLength": 32.0
+     }
+    }
+   }
+  },
+  {
+   "name": "Metraj: yıkılacaklar",
+   "query": "cad.spaces.quantities",
+   "input": {
+    "phases": [
+     "demolish"
+    ]
+   },
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 0.0,
+      "wallLength": 7.0
+     }
+    }
+   }
+  },
+  {
+   "name": "Metraj: yeni durum",
+   "query": "cad.spaces.quantities",
+   "input": {
+    "phases": [
+     "new"
+    ]
+   },
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 61.95,
+      "wallLength": 7.0
+     }
+    }
+   }
+  },
+  {
+   "name": "Evre görünümü: Yeni durum",
+   "command": "cad.settings.set",
+   "input": {
+    "arch": {
+     "levels": [
+      {
+       "id": "zemin",
+       "name": "Zemin kat",
+       "elevation": 0,
+       "height": 2.8
+      }
+     ],
+     "phaseView": "proposed"
+    }
+   },
+   "label": null,
+   "expect": {
+    "count": 25
+   }
+  },
+  {
+   "name": "Tasarım değişikliği: yeni bölme 3.00 → 3.30; var olan mahaller yerinde",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$partition"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "right",
+     "distance": 3.3
+    }
+   },
+   "label": "Duvarı düzenle",
+   "expect": {
+    "count": 25,
+    "measures": {
+     "yatak": {
+      "area": 23.1
+     },
+     "salon": {
+      "area": 38.85
+     },
+     "salon0": {
+      "area": 28.0
+     },
+     "oda0": {
+      "area": 33.95
+     }
+    },
+    "objects": {
+     "partition": {
+      "pts": [
+       [
+        3.375,
+        7.0
+       ],
+       [
+        3.375,
+        0.0
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Kaydet ve aç: aynı kimlikler, aynı nesneler",
+   "reopen": true,
+   "expect": {
+    "count": 25,
+    "kinds": {
+     "polyline": 11,
+     "wall": 6,
+     "opening": 4,
+     "space": 4
+    },
+    "measures": {
+     "yatak": {
+      "area": 23.1
+     },
+     "salon": {
+      "area": 38.85
+     },
+     "salon0": {
+      "area": 28.0
+     },
+     "oda0": {
+      "area": 33.95
+     }
+    }
+   }
+  },
+  {
+   "name": "Metraj: değişiklikten sonra yeni durum",
+   "query": "cad.spaces.quantities",
+   "input": {
+    "phases": [
+     "new"
+    ]
+   },
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 61.95
+     }
+    }
+   }
+  }
+ ],
+ "rooms": {
+  "after": {
+   "yatak": 23.1,
+   "salon": 38.85,
+   "salon0": 28.0,
+   "oda0": 33.95
+  }
+ }
+}

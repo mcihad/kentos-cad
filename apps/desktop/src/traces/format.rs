@@ -118,6 +118,9 @@ pub struct Step {
     /// The selected wall's or column's temporary number on this side (`west`, `east`, `south`, `north`;
     /// docs/adr/0710, 0712) clicked where it stands, as the eye finds it on the screen (docs/adr/0776 §1).
     pub(super) click_number: Option<String>,
+    /// The padlock over the temporary number on this side clicked: the side's distance bound or freed
+    /// (docs/adr/0770 §3, 0798).
+    pub(super) click_lock: Option<String>,
     pub(super) right_click: Option<[f64; 2]>,
     pub(super) focus: Option<String>,
     pub(super) save_and_reopen: Option<bool>,

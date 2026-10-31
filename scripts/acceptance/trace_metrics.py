@@ -4,7 +4,7 @@ reads, from the trace file alone (no KentOS code). A section starts at a step wh
 
 - ``route``: how the tool was found: ``şerit`` (a ``run`` step, a ribbon button), ``komut satırı`` (a command's name
   typed), ``—`` (the selection tool, no tool).
-- ``clicks``: presses on the drawing (``click``, ``clickNumber``, ``doubleClick``, ``rightClick``, ``drag``).
+- ``clicks``: presses on the drawing (``click``, ``clickNumber``, ``clickLock``, ``doubleClick``, ``rightClick``, ``drag``).
 - ``hover``: the pointer brought somewhere without a press (``move``, ``rest``) — what decides a side or a number.
 - ``keys``: keys pressed (Enter, Esc, a letter on the drawing, Shift+Space …).
 - ``typed``: values typed on the command line (a tool's option letter not counted).
@@ -24,7 +24,7 @@ import json
 import sys
 from pathlib import Path
 
-CLICKS = ("click", "clickNumber", "doubleClick", "rightClick", "drag")
+CLICKS = ("click", "clickNumber", "clickLock", "doubleClick", "rightClick", "drag")
 
 
 def sections(trace: dict) -> list[dict]:

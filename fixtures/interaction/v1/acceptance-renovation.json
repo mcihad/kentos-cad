@@ -1,0 +1,286 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "acceptance-renovation",
+ "title": "Tadilat fareyle ve klavyeyle: kilitli DXF altlığından Çiftler ile duvar, mahaller, yeni bölme",
+ "source": "plan/architecture-advanced.md ADV-07; docs/adr/0798 (fixtures/acceptance/v1/renovation.json'un fareyle ve klavyeyle yolu)",
+ "covers": [
+  "ADV-07"
+ ],
+ "document": "acceptance-renovation.kcad",
+ "view": {
+  "center": [
+   4.5,
+   3.5
+  ],
+  "metresPerPixel": 0.03
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.01,
+ "steps": [
+  {
+   "note": "§ Çizgiden duvar: Çiftler, Kaynağı koru, kilitli altlık",
+   "drag": [
+    [
+     -5.5,
+     -4.5
+    ],
+    [
+     5.5,
+     4.5
+    ]
+   ],
+   "expect": {
+    "selected": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11
+    ]
+   }
+  },
+  {
+   "run": "tool.wallFromLines"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "M"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "K"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.3"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 16
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 12,
+      "kind": "wall",
+      "points": [
+       [
+        -4.5,
+        -3.625
+       ],
+       [
+        4.5,
+        -3.625
+       ]
+      ]
+     },
+     {
+      "id": 16,
+      "kind": "wall",
+      "points": [
+       [
+        -0.425,
+        3.5
+       ],
+       [
+        -0.425,
+        -3.5
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "shot": "duvarlar"
+  },
+  {
+   "note": "§ Mahaller: Salon ve Oda",
+   "run": "tool.space"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Salon"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -2.5,
+    -0.5
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Oda"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    1.5,
+    -0.5
+   ]
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 18
+   }
+  },
+  {
+   "note": "§ Yeni bölme: batı yüzden 3.00",
+   "run": "tool.wallPartition"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.15"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "3"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -4.6,
+    -1.5
+   ]
+  },
+  {
+   "move": [
+    -3.0,
+    -1.5
+   ]
+  },
+  {
+   "click": [
+    -3.0,
+    -1.5
+   ],
+   "expect": {
+    "entities": 19
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 19,
+      "kind": "wall",
+      "points": [
+       [
+        -1.425,
+        3.5
+       ],
+       [
+        -1.425,
+        -3.5
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "shot": "tadilat"
+  },
+  {
+   "note": "§ Kaydet ve aç",
+   "saveAndReopen": true,
+   "expect": {
+    "entities": 19
+   }
+  }
+ ]
+}

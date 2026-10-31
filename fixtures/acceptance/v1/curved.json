@@ -1,0 +1,708 @@
+{
+ "format": "kentos.acceptance",
+ "version": 1,
+ "id": "curved",
+ "title": "Eğrisel ve şaftlı zor örnek: yarım daire cumba, tesisat şaftı, döner merdiven, yaydaki pencere",
+ "source": "plan/architecture-advanced.md ADV-07 (kabul korpusu); docs/adr/0798",
+ "project": {
+  "name": "Cumba",
+  "workspace": "cad",
+  "coords": "local",
+  "drawingUnit": "m",
+  "plotScale": 100
+ },
+ "tolerance": 1e-09,
+ "undone": 8,
+ "steps": [
+  {
+   "name": "Proje ayarları › Mimari: zemin kat, 3.00 m",
+   "command": "cad.settings.set",
+   "input": {
+    "arch": {
+     "levels": [
+      {
+       "id": "zemin",
+       "name": "Zemin kat",
+       "elevation": 0,
+       "height": 3.0
+      }
+     ]
+    }
+   },
+   "label": null,
+   "expect": {
+    "count": 0
+   }
+  },
+  {
+   "name": "Dış duvar: 10 × 8 m, doğusu yarım daire cumba (büküm 1), ortalı 25 cm",
+   "command": "cad.walls.create",
+   "input": {
+    "layerId": "$layer",
+    "walls": [
+     {
+      "pts": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 0.0
+       },
+       {
+        "x": 10.0,
+        "y": 8.0
+       },
+       {
+        "x": 0.0,
+        "y": 8.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       1.0,
+       0.0,
+       0.0
+      ],
+      "closed": true,
+      "width": 0.25,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": "shell",
+   "label": "Duvar",
+   "expect": {
+    "count": 1,
+    "objects": {
+     "shell": {
+      "bulges": [
+       0.0,
+       1.0,
+       0.0,
+       0.0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Bölme: batı yüzden 4.00 net",
+   "command": "cad.walls.partition",
+   "input": {
+    "source": {
+     "wall": "$shell",
+     "edge": 3
+    },
+    "side": "left",
+    "measure": "clear",
+    "distance": 4.0,
+    "wall": {
+     "layerId": "$layer",
+     "walls": [
+      {
+       "pts": [],
+       "closed": false,
+       "width": 0.15,
+       "arch": {
+        "level": "zemin"
+       }
+      }
+     ]
+    }
+   },
+   "as": "p1",
+   "label": "Duvar",
+   "expect": {
+    "count": 2,
+    "objects": {
+     "p1": {
+      "pts": [
+       [
+        4.2,
+        8.0
+       ],
+       [
+        4.2,
+        0.0
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Şaft: bölme ile kuzey duvarı köşesinde 1 × 1 m net, L duvar",
+   "command": "cad.walls.create",
+   "input": {
+    "layerId": "$layer",
+    "walls": [
+     {
+      "pts": [
+       {
+        "x": 5.35,
+        "y": 8.0
+       },
+       {
+        "x": 5.35,
+        "y": 6.8
+       },
+       {
+        "x": 4.2,
+        "y": 6.8
+       }
+      ],
+      "closed": false,
+      "width": 0.15,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": "shaftWall",
+   "label": "Duvar",
+   "expect": {
+    "count": 3
+   }
+  },
+  {
+   "name": "Açıklıklar: iç kapı, cumbanın ortasında pencere, batı pencere",
+   "command": "cad.openings.create",
+   "input": {
+    "layerId": "$layer",
+    "openings": [
+     {
+      "host": "$p1",
+      "at": 5.0,
+      "form": "door",
+      "width": 0.9
+     },
+     {
+      "host": "$shell",
+      "at": 16.283185307179586,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     },
+     {
+      "host": "$shell",
+      "at": 36.56637061435917,
+      "form": "window",
+      "width": 1.2,
+      "sill": 0.9
+     }
+    ]
+   },
+   "as": [
+    "door",
+    "bay",
+    "west"
+   ],
+   "label": "Kapı",
+   "expect": {
+    "count": 6,
+    "objects": {
+     "bay": {
+      "host": "$shell",
+      "at": 16.283185307179586
+     }
+    }
+   }
+  },
+  {
+   "name": "Mahaller: Yatak, cumbalı Salon, şaft (boşluk)",
+   "command": "cad.spaces.create",
+   "input": {
+    "layerId": "$layer",
+    "spaces": [
+     {
+      "seed": {
+       "x": 2.0,
+       "y": 4.0
+      },
+      "number": "01",
+      "name": "Yatak odası",
+      "usage": "Yatak odası",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "seed": {
+       "x": 8.0,
+       "y": 4.0
+      },
+      "number": "02",
+      "name": "Salon",
+      "usage": "Salon",
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "seed": {
+       "x": 4.775,
+       "y": 7.375
+      },
+      "number": "03",
+      "name": "Tesisat şaftı",
+      "void": true,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": [
+    "yatak",
+    "salon",
+    "shaft"
+   ],
+   "label": "Mahal",
+   "expect": {
+    "count": 9,
+    "measures": {
+     "yatak": {
+      "area": 31.0
+     },
+     "salon": {
+      "area": 66.63273859452961
+     },
+     "shaft": {
+      "area": 0.9999999999999991
+     }
+    }
+   }
+  },
+  {
+   "name": "Döner merdiven: cumbada, kat yüksekliğine bağlı, yürüme çizgisi 1.50",
+   "command": "cad.stairs.create",
+   "input": {
+    "layerId": "$layer",
+    "stairs": [
+     {
+      "pts": [
+       {
+        "x": 11.5,
+        "y": 4.0
+       },
+       {
+        "x": 8.5,
+        "y": 4.0
+       }
+      ],
+      "bulges": [
+       1.0,
+       0.0
+      ],
+      "width": 1.0,
+      "tread": 0.28,
+      "fit": true,
+      "heightFromLevel": true,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": "stair",
+   "label": "Merdiven",
+   "expect": {
+    "count": 10,
+    "objects": {
+     "stair": {
+      "risers": 18,
+      "riserHeight": 0.16666666666666666,
+      "pts": [
+       [
+        11.5,
+        4.0
+       ],
+       [
+        8.500755539627734,
+        3.952396974433601
+       ]
+      ],
+      "bulges": [
+       1.0159976194759095,
+       0.0
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Döşeme: dış yüzlere bağlı, cumbayla",
+   "command": "cad.slabs.create",
+   "input": {
+    "layerId": "$layer",
+    "slabs": [
+     {
+      "seed": {
+       "x": 2.0,
+       "y": 4.0
+      },
+      "bound": true,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ]
+   },
+   "as": "slab",
+   "label": "Döşeme",
+   "expect": {
+    "count": 11,
+    "measures": {
+     "slab": {
+      "area": 110.25933124811941
+     }
+    }
+   }
+  },
+  {
+   "name": "Etiketler: bütün mahaller",
+   "command": "cad.tags.create",
+   "input": {
+    "layerId": "$layer",
+    "all": {
+     "kinds": [
+      "space"
+     ]
+    }
+   },
+   "label": "Etiket",
+   "expect": {
+    "count": 14
+   }
+  },
+  {
+   "name": "Çizelge: mahal",
+   "command": "cad.schedules.create",
+   "input": {
+    "layerId": "$layer",
+    "at": {
+     "x": 17.0,
+     "y": 8.0
+    },
+    "of": "spaces"
+   },
+   "as": "schedule",
+   "label": "Çizelge",
+   "expect": {
+    "count": 15,
+    "output": {
+     "rows": 3
+    }
+   }
+  },
+  {
+   "name": "Metraj: cumbalı alanlar",
+   "query": "cad.spaces.quantities",
+   "input": {},
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 97.63273859452961,
+      "slabArea": 109.25933124811941,
+      "openings": 3
+     }
+    }
+   }
+  },
+  {
+   "name": "Cumbanın penceresi yay boyunca 1.00 geri",
+   "command": "cad.openings.edit",
+   "input": {
+    "uids": [
+     "$bay"
+    ],
+    "operation": {
+     "kind": "move",
+     "by": -1.0
+    }
+   },
+   "label": "Açıklığı düzenle",
+   "expect": {
+    "count": 15,
+    "objects": {
+     "bay": {
+      "at": 15.283185307179586,
+      "host": "$shell"
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: yolun sonunu aşan pencere",
+   "command": "cad.openings.create",
+   "input": {
+    "layerId": "$layer",
+    "openings": [
+     {
+      "host": "$shell",
+      "at": 100.0,
+      "form": "window",
+      "width": 1.2
+     }
+    ]
+   },
+   "refuse": "opening_off_wall",
+   "expect": {
+    "count": 15
+   }
+  },
+  {
+   "name": "Döner merdiven 0.90 genişliğe",
+   "command": "cad.arch.edit",
+   "input": {
+    "uids": [
+     "$stair"
+    ],
+    "operation": {
+     "kind": "set",
+     "width": 0.9
+    }
+   },
+   "label": "Mimari nesneyi düzenle",
+   "expect": {
+    "count": 15,
+    "objects": {
+     "stair": {
+      "risers": 18,
+      "riserHeight": 0.16666666666666666,
+      "pts": [
+       [
+        11.5,
+        4.0
+       ],
+       [
+        8.500755539627734,
+        3.952396974433601
+       ]
+      ],
+      "bulges": [
+       1.0159976194759095,
+       0.0
+      ],
+      "width": 0.9
+     }
+    }
+   }
+  },
+  {
+   "name": "Döner merdivene 0.20 merkez direği",
+   "command": "cad.arch.edit",
+   "input": {
+    "uids": [
+     "$stair"
+    ],
+    "operation": {
+     "kind": "set",
+     "post": 0.2
+    }
+   },
+   "label": "Mimari nesneyi düzenle",
+   "expect": {
+    "count": 15,
+    "objects": {
+     "stair": {
+      "risers": 18,
+      "riserHeight": 0.16666666666666666,
+      "pts": [
+       [
+        11.5,
+        4.0
+       ],
+       [
+        8.500755539627734,
+        3.952396974433601
+       ]
+      ],
+      "bulges": [
+       1.0159976194759095,
+       0.0
+      ],
+      "width": 0.9,
+      "post": 0.2
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: cumbanın yayı Kaydır'la kaydırılmaz",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$shell"
+    ],
+    "operation": {
+     "kind": "shift",
+     "by": 0.5,
+     "edge": 1
+    }
+   },
+   "refuse": "invalid_wall",
+   "expect": {
+    "count": 15,
+    "measures": {
+     "yatak": {
+      "area": 31.0
+     },
+     "salon": {
+      "area": 66.63273859452961
+     },
+     "shaft": {
+      "area": 0.9999999999999991
+     }
+    }
+   }
+  },
+  {
+   "name": "Ret: yaydaki pencereye mesafe verilmez",
+   "command": "cad.openings.edit",
+   "input": {
+    "uids": [
+     "$bay"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "start",
+     "face": "left",
+     "distance": 0.5
+    }
+   },
+   "refuse": "invalid_opening",
+   "expect": {
+    "count": 15,
+    "objects": {
+     "bay": {
+      "at": 15.283185307179586
+     }
+    }
+   }
+  },
+  {
+   "name": "Tasarım değişikliği: bölme batı yüzden 4.00 → 3.60; şaftın duvarı izler",
+   "command": "cad.walls.edit",
+   "input": {
+    "uids": [
+     "$p1"
+    ],
+    "operation": {
+     "kind": "distance",
+     "side": "right",
+     "distance": 3.6
+    }
+   },
+   "label": "Duvarı düzenle",
+   "expect": {
+    "count": 15,
+    "measures": {
+     "yatak": {
+      "area": 27.900000000000002
+     },
+     "salon": {
+      "area": 69.27273859452961
+     },
+     "shaft": {
+      "area": 1.399999999999999
+     }
+    },
+    "objects": {
+     "p1": {
+      "pts": [
+       [
+        3.8,
+        8.0
+       ],
+       [
+        3.8,
+        0.0
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "name": "Metraj: değişiklikten sonra",
+   "query": "cad.spaces.quantities",
+   "input": {},
+   "expect": {
+    "output": {
+     "totals": {
+      "spaceArea": 97.17273859452962,
+      "slabArea": 108.8593312481194
+     }
+    }
+   }
+  },
+  {
+   "name": "Kaydet ve aç: aynı kimlikler, aynı nesneler",
+   "reopen": true,
+   "expect": {
+    "count": 15,
+    "kinds": {
+     "wall": 3,
+     "opening": 3,
+     "space": 3,
+     "stair": 1,
+     "slab": 1,
+     "tag": 3,
+     "table": 1
+    },
+    "measures": {
+     "yatak": {
+      "area": 27.900000000000002
+     },
+     "salon": {
+      "area": 69.27273859452961
+     },
+     "shaft": {
+      "area": 1.399999999999999
+     },
+     "slab": {
+      "area": 110.25933124811941
+     }
+    },
+    "objects": {
+     "stair": {
+      "risers": 18,
+      "riserHeight": 0.16666666666666666,
+      "pts": [
+       [
+        11.5,
+        4.0
+       ],
+       [
+        8.500755539627734,
+        3.952396974433601
+       ]
+      ],
+      "bulges": [
+       1.0159976194759095,
+       0.0
+      ],
+      "width": 0.9,
+      "post": 0.2
+     },
+     "bay": {
+      "at": 15.283185307179586
+     }
+    }
+   }
+  }
+ ],
+ "rooms": {
+  "after": {
+   "yatak": 27.900000000000002,
+   "salon": 69.27273859452961,
+   "shaft": 1.399999999999999
+  }
+ }
+}

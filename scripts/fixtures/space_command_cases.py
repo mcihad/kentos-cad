@@ -124,7 +124,7 @@ class Drawing:
         for i, (ly, s, ex) in list(self.spaces.items()):
             if s.get("seed") is None:
                 continue
-            p = self.found(s["seed"], s.get("method", "net"), s.get("arch", {}).get("level"))
+            p = self.found(s["seed"], s.get("method", "net"), s.get("arch", {}).get("level"), s.get("arch", {}).get("phase"))
             s = copy.deepcopy(s)
             if p is None:
                 s["broken"] = "lostEnclosure"
@@ -132,11 +132,13 @@ class Drawing:
                 s.update(parts=p, exact=False, broken=None)
             self.spaces[i] = (ly, s, ex)
 
-    def found(self, seed, method, level=None):
+    def found(self, seed, method, level=None, phase=None):
         """The exact rings (outer, holes) round the seed by the method, or None."""
-        # Explicit level identity isolates boundaries; absent keeps the legacy lookup.
+        # Explicit level identity isolates boundaries; absent keeps the legacy lookup. A phased room reads the walls
+        # standing in its phase (docs/adr/0798 §3).
         walls = [from_json(w) for _, w in sorted(self.walls.items())
-                 if level is None or w.get("arch", {}).get("level") == level]
+                 if (level is None or w.get("arch", {}).get("level") == level)
+                 and phase_bounds(phase, w.get("arch", {}).get("phase"))]
         segs = sp.faces(walls)
         f = sp.net_face(segs, (F(seed["x"]), F(seed["y"])))
         if f is None:
@@ -290,7 +292,7 @@ def create(d, inp, conflict=False):
             r = level_check(s, f"{at}.arch.level")
             if r:
                 return r, None
-            parts = d.found(n["seed"], s["method"], s.get("arch", {}).get("level"))
+            parts = d.found(n["seed"], s["method"], s.get("arch", {}).get("level"), s.get("arch", {}).get("phase"))
             if parts is None:
                 return refusal("space_not_enclosed", "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da mahalin sınırını çizin.", f"{at}.seed"), None
             s["parts"], s["exact"] = parts, False
@@ -365,6 +367,17 @@ def level_height(arch):
 
 
 # ── A room's baseboard, the passages and the slabs (ADR 0722 §5) ─────────────────────────────────────────────
+
+
+def phase_bounds(space, wall):
+    """A wall stands in a room's phase (docs/adr/0798 §3): before the works (existing, demolish) the existing and
+    the demolished walls, after them (new) the existing and the new; no phase on either side, or a temporary room,
+    every wall."""
+    if space in (None, "temporary") or wall is None:
+        return True
+    if space in ("existing", "demolish"):
+        return wall in ("existing", "demolish")
+    return wall in ("existing", "new")
 
 
 def reads(level, other):
@@ -596,7 +609,7 @@ def quantities(d, inp):
             if s.get("seed") is not None:
                 by = {}
                 for m in ("net", "centerline", "gross"):
-                    p = d.found(s["seed"], m, s.get("arch", {}).get("level"))
+                    p = d.found(s["seed"], m, s.get("arch", {}).get("level"), s.get("arch", {}).get("phase"))
                     if p is not None:
                         by[m] = float(area_of(p))
                 row["byMethod"] = by
@@ -745,7 +758,7 @@ def edit(d, inp, conflict=False):
             if "void" in ch:
                 s["void"] = ch["void"]
             if ("method" in ch or "level" in ch) and s.get("seed") is not None:
-                p = d.found(s["seed"], s["method"], s.get("arch", {}).get("level"))
+                p = d.found(s["seed"], s["method"], s.get("arch", {}).get("level"), s.get("arch", {}).get("phase"))
                 if p is None:
                     s["broken"] = "lostEnclosure"
                 else:
@@ -804,7 +817,7 @@ def edit(d, inp, conflict=False):
             s = copy.deepcopy(d.spaces[i][1])
             # Else its own seed, else its label's point (the pole: the cases' boxes' centres).
             seed = op.get("seed") or s.get("seed") or label_of(s["parts"])
-            p = d.found(seed, s.get("method", "net"), s.get("arch", {}).get("level"))
+            p = d.found(seed, s.get("method", "net"), s.get("arch", {}).get("level"), s.get("arch", {}).get("phase"))
             if p is None:
                 return refusal("space_not_enclosed", "Duvarlar noktanın çevresini kapatmıyor; mahal bulunamadı. Duvarları kapatın ya da mahalin sınırını çizin.", f"uids[{at}]"), None
             s.update(seed=seed, parts=p, exact=False, broken=None)

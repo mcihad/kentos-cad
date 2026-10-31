@@ -1,0 +1,58 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Konut",
+ "settings": {
+  "srid": 0,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 100,
+  "workspace": "cad",
+  "drawingUnit": "m",
+  "drawingFont": "barlow",
+  "arch": {
+   "levels": [
+    {
+     "id": "zemin",
+     "name": "Zemin kat",
+     "elevation": 0,
+     "height": 3.0
+    },
+    {
+     "id": "kat1",
+     "name": "1. kat",
+     "elevation": 3.0,
+     "height": 3.0
+    }
+   ]
+  }
+ },
+ "origin": {
+  "x": 0,
+  "y": 0
+ },
+ "layers": [
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "cizim",
+ "entities": [],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

@@ -395,7 +395,8 @@ pub struct WallsFromLines {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub style: Option<String>,
-    /// Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
+    /// Kaynağı koru: the sources stay. Absent: those a wall covers whole go. Kept, with `layerId`, they are only
+    /// read: sources on a locked layer (an underlay) are converted (docs/adr/0798 §3).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub keep_sources: bool,

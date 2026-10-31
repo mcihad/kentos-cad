@@ -1926,6 +1926,14 @@ impl Session {
         self.select.temporary_squares()
     }
 
+    /// Where the temporary dimensions' padlocks stand, while no tool runs (docs/adr/0770 §3).
+    pub fn temporary_locks(&self) -> Vec<Vec2> {
+        if self.tool.is_some() {
+            return Vec::new();
+        }
+        self.select.temporary_locks()
+    }
+
     /// What to draw over the drawing while a tool runs, or a grip moves.
     pub fn preview(&self, format: &Format) -> Option<Preview> {
         let top = match &self.tool {

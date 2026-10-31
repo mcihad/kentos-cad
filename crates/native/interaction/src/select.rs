@@ -473,6 +473,18 @@ impl Select {
             .collect()
     }
 
+    /// Where the temporary dimensions' padlocks stand, those that write or remove a bond (docs/adr/0770 §3).
+    pub fn temporary_locks(&self) -> Vec<Vec2> {
+        self.temporary
+            .squares
+            .iter()
+            .chain(&self.wall_temporary.squares)
+            .chain(&self.column_temporary.squares)
+            .filter(|(_, s)| matches!(s, crate::temporary_refs::Switch::Bond { .. }))
+            .map(|(at, _)| *at)
+            .collect()
+    }
+
     /// A click on a temporary dimension's square: its reference or fixed end switched for the session, drawn again;
     /// whether one was there (docs/adr/0728 §2).
     pub fn switch_at(&mut self, screen: [f64; 2], cx: &mut Context<'_>) -> bool {

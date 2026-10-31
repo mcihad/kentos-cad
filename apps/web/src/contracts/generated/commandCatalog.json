@@ -8449,7 +8449,7 @@
             "description": "Each mode's justification. Absent: centred."
           },
           "keepSources": {
-            "description": "Kaynağı koru: the sources stay. Absent: those a wall covers whole go.",
+            "description": "Kaynağı koru: the sources stay. Absent: those a wall covers whole go. Kept, with `layerId`, they are only\nread: sources on a locked layer (an underlay) are converted (docs/adr/0798 §3).",
             "type": "boolean"
           },
           "layerId": {
@@ -129608,7 +129608,7 @@
           "type": "object"
         },
         {
-          "description": "Kes: the area drawn (`parts`) or found from the walls round `seed` taken out of each slab: a hole, a notch.",
+          "description": "Kes: the area drawn (`parts`) or found from the walls round `seed` (by `boundary`; absent: the room, to the\nwalls' inner faces, docs/adr/0798 §3) taken out of each slab: a hole, a notch, a stairwell.",
           "properties": {
             "boundary": {
               "anyOf": [

@@ -1,10 +1,11 @@
-//! The 2+1 apartment's acceptance flow through the MCP server (plan/architecture-advanced.md ADV-07,
-//! docs/adr/0776): the shared scenario (fixtures/acceptance/v1/flat.json, worked out by
-//! scripts/fixtures/acceptance_flat.py without KentOS code) replayed as a model would, tool call after tool
-//! call: every write step undone and redone (one step, its name, the drawing back), every refusal's code the
-//! scenario's, every bound object the same by the same id after the drawing is saved and opened. With
-//! `KENTOS_ACCEPTANCE_OUT` the drawing is saved there as `mcp.kcad` for the hosts' comparison
-//! (`acceptance_flat.py --compare`). Python replays the same file.
+//! The acceptance corpus through the MCP server (plan/architecture-advanced.md ADV-07): the 2+1 apartment
+//! (fixtures/acceptance/v1/flat.json, docs/adr/0776) and the corpus's other samples (fixtures/acceptance/v1/<id>.json,
+//! docs/adr/0798), each worked out without KentOS code (scripts/fixtures/acceptance_flat.py, acceptance_corpus.py)
+//! and replayed as a model would, tool call after tool call: every write step undone and redone (one step, its name,
+//! the drawing back), every refusal's code the scenario's, every bound object the same by the same id after the
+//! drawing is saved and opened. With `KENTOS_ACCEPTANCE_OUT` each drawing is saved there (`mcp.kcad`,
+//! `<id>/mcp.kcad`) for the hosts' comparison (`acceptance_flat.py --compare`, `acceptance_corpus.py --compare`).
+//! Python and the desktop's agent link replay the same files.
 
 use std::collections::BTreeMap;
 
@@ -12,6 +13,12 @@ use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
 const SCENARIO: &str = include_str!("../../../../fixtures/acceptance/v1/flat.json");
+const CORPUS: [(&str, &str); 4] = [
+    ("change", include_str!("../../../../fixtures/acceptance/v1/change.json")),
+    ("house", include_str!("../../../../fixtures/acceptance/v1/house.json")),
+    ("curved", include_str!("../../../../fixtures/acceptance/v1/curved.json")),
+    ("renovation", include_str!("../../../../fixtures/acceptance/v1/renovation.json")),
+];
 
 fn tool_result(server: &mut Server, name: &str, arguments: Value) -> Value {
     let request = json!({
@@ -119,7 +126,8 @@ impl Run {
     fn entities(&mut self, names: &BTreeMap<String, String>) -> BTreeMap<String, Value> {
         names
             .iter()
-            .filter(|(k, _)| *k != "layer")
+            // The layer and the scenario's files (absolute paths) are not objects.
+            .filter(|(k, u)| *k != "layer" && !u.contains('/'))
             .map(|(k, u)| (k.clone(), self.on("drawing.entity", json!({ "uid": u }))["entity"].clone()))
             .collect()
     }
@@ -127,15 +135,35 @@ impl Run {
 
 #[test]
 fn the_apartment_is_drawn_changed_scheduled_and_reopened_as_the_scenario_says() {
-    let scenario: Value = serde_json::from_str(SCENARIO).expect("the scenario");
+    replay(SCENARIO, "mcp.kcad");
+}
+
+/// The acceptance corpus's other samples (docs/adr/0798): each its own scenario, saved as `<id>/mcp.kcad`.
+#[test]
+fn every_corpus_sample_is_drawn_changed_and_reopened_as_its_scenario_says() {
+    for (id, text) in CORPUS {
+        replay(text, &format!("{id}/mcp.kcad"));
+    }
+}
+
+/// Replays a `kentos.acceptance` scenario tool call after tool call; with `KENTOS_ACCEPTANCE_OUT` the drawing is
+/// saved there as `out_name`.
+fn replay(text: &str, out_name: &str) {
+    let scenario: Value = serde_json::from_str(text).expect("the scenario");
     let tolerance = scenario["tolerance"].as_f64().expect("a tolerance");
     let mut server = Server::new();
     let made = call(&mut server, "drawing.new", scenario["project"].clone());
     let drawing = made["drawing"].as_str().expect("a handle").to_owned();
     let mut names = BTreeMap::new();
     names.insert("layer".to_owned(), made["summary"]["activeLayer"].as_str().expect("a layer").to_owned());
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    for (k, path) in scenario["files"].as_object().into_iter().flatten() {
+        let file = root.join(path.as_str().expect("a path")).canonicalize().expect("the scenario's file");
+        names.insert(k.clone(), file.to_string_lossy().into_owned());
+    }
     let mut run = Run { server, drawing };
-    let dir = std::env::temp_dir().join(format!("kentos-mcp-daire-{}", std::process::id()));
+    let id = scenario["id"].as_str().unwrap_or("kabul");
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-{id}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("a folder");
     let mut undone = 0;
@@ -171,6 +199,7 @@ fn the_apartment_is_drawn_changed_scheduled_and_reopened_as_the_scenario_says() 
             let answer = run.on(query, bind(&step["input"], &names));
             assert_eq!(answer["status"], "completed", "{name}: {answer}");
             output = answer["output"].clone();
+            bound(&output, &step["as"], &mut names);
         } else if step["reopen"] == true {
             let shown = run.entities(&names);
             let path = dir.join(format!("daire-{n}.kcad"));
@@ -198,15 +227,15 @@ fn the_apartment_is_drawn_changed_scheduled_and_reopened_as_the_scenario_says() 
             differs(&json!(got), want, 0.0, &format!("tür {kind}"), &mut problems);
         }
         if let Some(want) = expect.get("output") {
-            differs(&output, want, 1e-9, "cevap", &mut problems);
+            differs(&output, &bind(want, &names), 1e-9, "cevap", &mut problems);
         }
         assert!(problems.is_empty(), "{name}: {problems:#?}");
     }
-    assert!(undone > 10);
+    assert!(undone > scenario["undone"].as_u64().unwrap_or(10), "{undone} steps undone");
     if let Some(out) = std::env::var_os("KENTOS_ACCEPTANCE_OUT") {
-        let out = std::path::PathBuf::from(out);
-        std::fs::create_dir_all(&out).expect("the output folder");
-        run.on("drawing.save", json!({ "path": out.join("mcp.kcad") }));
+        let file = std::path::PathBuf::from(out).join(out_name);
+        std::fs::create_dir_all(file.parent().expect("a folder")).expect("the output folder");
+        run.on("drawing.save", json!({ "path": file }));
     }
     let _ = std::fs::remove_dir_all(dir);
 }

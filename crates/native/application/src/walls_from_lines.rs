@@ -234,7 +234,11 @@ struct Work {
 fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
     checks::uids(&input.uids, "Duvara çevrilecek çizgi verilmedi.")?;
     let found = checks::named(doc, &input.uids)?;
-    let (found, locked) = if input.mode == WallsFromMode::Contours {
+    // Lines kept and walls written to another layer only read their sources: a locked underlay (a survey, a
+    // DXF taken as the plan's base) is converted as it stands (docs/adr/0798 §3).
+    let (found, locked) = if input.keep_sources && input.layer_id.is_some() {
+        (found, None)
+    } else if input.mode == WallsFromMode::Contours {
         // A partial contour set may leave a room without a boundary.
         for (at, _, e, _) in &found {
             checks::layer_at(doc, &e.base().layer_id, &format!("uids[{at}]"))?;

@@ -1,0 +1,624 @@
+{
+ "format": "kentos.interaction-trace",
+ "version": 1,
+ "id": "acceptance-house",
+ "title": "İki katlı konut fareyle ve klavyeyle: zemin kat, merdiven, Üst kat, merdiven boşluğu",
+ "source": "plan/architecture-advanced.md ADV-07; docs/adr/0798 (fixtures/acceptance/v1/house.json'un fareyle ve klavyeyle yolu)",
+ "covers": [
+  "ADV-07"
+ ],
+ "document": "acceptance-house.kcad",
+ "view": {
+  "center": [
+   5.0,
+   4.0
+  ],
+  "metresPerPixel": 0.03
+ },
+ "draft": {
+  "snap": false,
+  "grid": false,
+  "ortho": false,
+  "polar": false,
+  "tracking": false
+ },
+ "prefs": {
+  "cursorInput": true
+ },
+ "clickTolerance": 0.01,
+ "steps": [
+  {
+   "note": "§ Zemin kat: dış kontur",
+   "run": "tool.wallRectangle"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.25"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0,0"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "10,8"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 1
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select"
+   }
+  },
+  {
+   "note": "§ Zemin kat: bölme",
+   "run": "tool.wallPartition"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.15"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "5"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -5.1,
+    -2.0
+   ]
+  },
+  {
+   "move": [
+    -3.0,
+    -2.0
+   ]
+  },
+  {
+   "click": [
+    -3.0,
+    -2.0
+   ],
+   "expect": {
+    "entities": 2
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 2,
+      "kind": "wall",
+      "points": [
+       [
+        0.075,
+        4.0
+       ],
+       [
+        0.075,
+        -4.0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "note": "§ Zemin kat: merdiven kat yüksekliğine",
+   "run": "tool.stair"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "G"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "1"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "D"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.28"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -4.8,
+    3.4
+   ]
+  },
+  {
+   "move": [
+    0.0,
+    3.4
+   ]
+  },
+  {
+   "click": [
+    0.0,
+    3.4
+   ]
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 3
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select"
+   }
+  },
+  {
+   "shot": "zemin"
+  },
+  {
+   "note": "§ Zemin kat: mahaller",
+   "run": "tool.space"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Salon"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -2.5,
+    -1.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Mutfak"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    2.5,
+    0.0
+   ]
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 5
+   }
+  },
+  {
+   "note": "§ 1. kat: Üst kat (Ctrl+↑), Yalnız etkin kat, dış kontur",
+   "key": "Ctrl+ArrowUp"
+  },
+  {
+   "run": "view.levels.active"
+  },
+  {
+   "run": "tool.wallRectangle"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.25"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "0,0"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "10,8"
+  },
+  {
+   "key": "Enter",
+   "expect": {
+    "entities": 6
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 6,
+      "kind": "wall",
+      "points": [
+       [
+        -5.0,
+        -4.0
+       ],
+       [
+        5.0,
+        -4.0
+       ],
+       [
+        5.0,
+        4.0
+       ],
+       [
+        -5.0,
+        4.0
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "note": "§ 1. kat: bölmeler",
+   "run": "tool.wallPartition"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "E"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "0.15"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "5"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -5.1,
+    -2.0
+   ]
+  },
+  {
+   "move": [
+    -3.0,
+    -2.0
+   ]
+  },
+  {
+   "click": [
+    -3.0,
+    -2.0
+   ],
+   "expect": {
+    "entities": 7
+   }
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "U"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "1.2"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "B"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "between"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -2.5,
+    4.1
+   ]
+  },
+  {
+   "click": [
+    0.075,
+    3.5
+   ]
+  },
+  {
+   "click": [
+    -5.1,
+    3.5
+   ]
+  },
+  {
+   "move": [
+    -2.5,
+    3.0
+   ]
+  },
+  {
+   "click": [
+    -2.5,
+    3.0
+   ],
+   "expect": {
+    "entities": 8
+   }
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "objects": [
+     {
+      "id": 7,
+      "kind": "wall",
+      "points": [
+       [
+        0.075,
+        4.0
+       ],
+       [
+        0.075,
+        -4.0
+       ]
+      ]
+     },
+     {
+      "id": 8,
+      "kind": "wall",
+      "points": [
+       [
+        0.075,
+        2.725
+       ],
+       [
+        -5.125,
+        2.725
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "shot": "ust-kat"
+  },
+  {
+   "note": "§ 1. kat: mahaller, merdiven boşluğu (V)",
+   "run": "tool.space"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Yatak 1"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -2.5,
+    -1.0
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Merdiven boşluğu"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "V"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    -2.5,
+    3.4
+   ]
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "V"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "focus": "commandLine"
+  },
+  {
+   "text": "A"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "text": "Yatak 2"
+  },
+  {
+   "key": "Enter"
+  },
+  {
+   "click": [
+    2.5,
+    0.0
+   ]
+  },
+  {
+   "key": "Esc"
+  },
+  {
+   "key": "Esc",
+   "expect": {
+    "tool": "select",
+    "entities": 11
+   }
+  },
+  {
+   "shot": "mahaller"
+  },
+  {
+   "note": "§ Kaydet ve aç",
+   "saveAndReopen": true,
+   "expect": {
+    "entities": 11
+   }
+  }
+ ]
+}

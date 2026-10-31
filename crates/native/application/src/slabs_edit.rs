@@ -186,8 +186,11 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             if let Some(ps) = parts {
                 slabs::parts_finite(ps, "operation.parts")?;
             }
+            // A cut found round a point is the room there: the outline of the walls' outer faces holds the whole slab
+            // (docs/adr/0798 §3). An addition keeps the outline as Bind does.
+            let boundary = if cut { Some(boundary.unwrap_or(SlabBoundary::Room)) } else { *boundary };
             for (at, slot, s) in &list {
-                let area = area_of(doc, parts.as_ref(), *seed, *boundary, s.slab.arch.level.as_deref())?;
+                let area = area_of(doc, parts.as_ref(), *seed, boundary, s.slab.arch.level.as_deref())?;
                 let mine = slabs::areas(&s.slab.parts);
                 let other = slabs::areas(&area);
                 let before: f64 = mine.iter().map(net_area).sum();

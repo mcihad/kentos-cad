@@ -70078,7 +70078,8 @@ class WallsFromLines(_Model):
         arch: Architectural information of every new wall, including an explicit project level.
             Absent: unassigned (legacy behavior). Source CAD attributes do not imply a level.
         justify: Each mode's justification. Absent: centred.
-        keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
+        keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go. Kept, with `layerId`, they are only
+            read: sources on a locked layer (an underlay) are converted (docs/adr/0798 §3).
         layer_id: The layer the walls go on. Absent: each source's own.
         max_width: Pairs: the widest wall, metres. Absent: 0.6 m. Unit: length.
         style: A wall style by its id or name. Absent: plain walls.
@@ -85336,7 +85337,8 @@ class OffsetSlabsOperation(SlabsOperation):
 
 @dataclass(kw_only=True, slots=True)
 class SubtractSlabsOperation(SlabsOperation):
-    """Kes: the area drawn (`parts`) or found from the walls round `seed` taken out of each slab: a hole, a notch.
+    """Kes: the area drawn (`parts`) or found from the walls round `seed` (by `boundary`; absent: the room, to the
+    walls' inner faces, docs/adr/0798 §3) taken out of each slab: a hole, a notch, a stairwell.
     Attributes:
         seed: Unit: length.
     """

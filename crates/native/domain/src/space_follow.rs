@@ -10,7 +10,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, SpaceBreak, SpaceFields, SpaceMethod, SpacePart, SpaceRing, SpaceScope, Vec2};
+use kentos_contracts::{ArchPhase, Entity, SpaceBreak, SpaceFields, SpaceMethod, SpacePart, SpaceRing, SpaceScope, Vec2};
 use kentos_geometry_core::geom::{arch, region};
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::api::json::{FromJson, Json};
@@ -216,6 +216,32 @@ pub(crate) fn takes_level(e: &Entity, level: Option<&str>) -> bool {
     level.is_none_or(|id| matches!(e, Entity::Wall(w) if w.wall.arch.level.as_deref() == Some(id)))
 }
 
+/// Whether a source of phase `source` stands in a space of phase `space` (docs/adr/0798 §3; Revit's rooms are a
+/// phase's, bounded by what exists in it): the state before the works (an existing room, one to be demolished)
+/// is bounded by the existing walls and those to be demolished; the state after (a new room) by the existing and
+/// the new ones. A space or a source without a phase, or a temporary space, takes every source, as before.
+pub fn phase_bounds(space: Option<ArchPhase>, source: Option<ArchPhase>) -> bool {
+    match (space, source) {
+        (None | Some(ArchPhase::Temporary), _) | (_, None) => true,
+        (Some(ArchPhase::Existing | ArchPhase::Demolish), Some(p)) => matches!(p, ArchPhase::Existing | ArchPhase::Demolish),
+        (Some(ArchPhase::New), Some(p)) => matches!(p, ArchPhase::Existing | ArchPhase::New),
+    }
+}
+
+/// A boundary source's phase: a wall's, a column's, a room separator's.
+fn source_phase(e: &Entity) -> Option<ArchPhase> {
+    match e {
+        Entity::Wall(w) => w.wall.arch.phase,
+        Entity::Column(c) => c.column.arch.phase,
+        _ => separator_path(e).and_then(|p| p.space_separator.as_ref().and_then(|a| a.phase)),
+    }
+}
+
+/// [`takes_level`] and [`phase_bounds`] together: the walls a space of `phase` on `level` reads.
+pub(crate) fn takes_level_in(e: &Entity, level: Option<&str>, phase: Option<ArchPhase>) -> bool {
+    takes_level(e, level) && phase_bounds(phase, source_phase(e))
+}
+
 /// The explicit room scope never treats a missing level as an implicit filter.
 pub fn source_level(scope: SpaceScope, target: Option<&str>, source: Option<&str>) -> bool {
     match scope {
@@ -225,14 +251,25 @@ pub fn source_level(scope: SpaceScope, target: Option<&str>, source: Option<&str
 }
 
 fn eligible_wall(e: &Entity, s: &SpaceFields) -> bool {
-    match e {
+    phase_bounds(s.arch.phase, source_phase(e)) && match e {
         Entity::Wall(w)=>source_level(s.scope,s.arch.level.as_deref(),w.wall.arch.level.as_deref()),
         _=>separator_path(e).is_some_and(|p|source_level(s.scope,s.arch.level.as_deref(),p.space_separator.as_ref().and_then(|a|a.level.as_deref()))),
     }
 }
 
-/// A source view's key: the level, the scope, the sources and the design-option view (docs/adr/0788 §4).
+/// A source view's key: the level, the scope, the sources and the design-option view (docs/adr/0788 §4) with the
+/// space's phase (docs/adr/0798 §3).
 type SourceKey = (Option<String>, SpaceScope, Option<Vec<String>>, String);
+
+/// The view key with the phase class the space's sources are read in.
+fn phase_key(view: &str, s: &SpaceFields) -> String {
+    let class = match s.arch.phase {
+        None | Some(ArchPhase::Temporary) => "",
+        Some(ArchPhase::Existing | ArchPhase::Demolish) => "|önce",
+        Some(ArchPhase::New) => "|sonra",
+    };
+    format!("{view}{class}")
+}
 type SelectedSources = Result<Option<Arc<BTreeSet<Slot>>>, SpaceBreak>;
 
 /// A partial copy cannot keep references into the original drawing. Preserve
@@ -314,7 +351,7 @@ impl<'a> SpaceSearch<'a> {
     /// does not touch this room. Missing/changed sources never mean "all".
     pub fn source_slots(&mut self, s: &SpaceFields) -> SelectedSources {
         if s.sources.is_none() && !self.doc.store.has_space_separators() {return Ok(None);}
-        let key = (s.arch.level.clone(),s.scope,s.sources.clone(),self.view_key.clone());
+        let key = (s.arch.level.clone(),s.scope,s.sources.clone(),phase_key(&self.view_key,s));
         self.selected.entry(key).or_insert_with(|| {
             if s.scope_problem().is_some() { return Err(SpaceBreak::SourceUnavailable); }
             let Some(sources)=&s.sources else {
@@ -382,7 +419,7 @@ impl<'a> SpaceSearch<'a> {
     /// edits. Validate the full explicit set before pruning by a room's box.
     fn boundary_sources(&mut self, s: &SpaceFields) -> Result<BoundarySources, SpaceBreak> {
         let selected = self.source_slots(s)?;
-        let key = (s.arch.level.clone(), s.scope, s.sources.clone(), self.view_key.clone());
+        let key = (s.arch.level.clone(), s.scope, s.sources.clone(), phase_key(&self.view_key, s));
         let out = Arc::clone(&self.out);
         Ok(Arc::clone(self.boundaries.entry(key).or_insert_with(|| Arc::new(
             self.doc.entities()
@@ -414,9 +451,10 @@ impl<'a> SpaceSearch<'a> {
         if !s.columns.applies(s.method) { return Ok(s.parts.clone()); }
         let selected = self.source_slots(s)?;
         let level = s.arch.level.clone();
-        let columns = self.columns.entry((level.clone(),s.scope,s.sources.clone(),self.view_key.clone())).or_insert_with(|| {
+        let columns = self.columns.entry((level.clone(),s.scope,s.sources.clone(),phase_key(&self.view_key,s))).or_insert_with(|| {
             self.doc.entities().filter_map(|e| match e {
                 Entity::Column(c) if source_level(s.scope,level.as_deref(),c.column.arch.level.as_deref())
+                    && phase_bounds(s.arch.phase,c.column.arch.phase)
                     && selected.as_ref().is_none_or(|ids|ids.contains(&Slot(c.base.id))) => Some(&c.column),
                 _ => None,
             }).map(|c| {
@@ -486,10 +524,15 @@ impl Document {
     }
 
     pub(crate) fn space_walls_near(&self, area: Box4, level: Option<&str>) -> Vec<CoreWall> {
+        self.space_walls_near_in(area, level, None)
+    }
+
+    /// [`space_walls_near`](Self::space_walls_near) for a space of `phase` (docs/adr/0798 §3).
+    pub(crate) fn space_walls_near_in(&self, area: Box4, level: Option<&str>, phase: Option<ArchPhase>) -> Vec<CoreWall> {
         let area = grow(area, 1.0);
         let out = self.option_out();
         self.entities()
-            .filter(|e| takes_level(e, level) && !out.contains(&Slot(e.base().id)))
+            .filter(|e| takes_level_in(e, level, phase) && !out.contains(&Slot(e.base().id)))
             .filter(|e| wall_box(e).is_some_and(|b| meets(&b, &area)))
             .filter_map(core_wall)
             .collect()
@@ -508,7 +551,7 @@ impl Document {
         let near = (!s.parts.is_empty())
             .then(|| {
                 found_among(
-                    &self.space_walls_near(grow(space_box(s), 2.0), level),
+                    &self.space_walls_near_in(grow(space_box(s), 2.0), level, s.arch.phase),
                     seed,
                     s.method,
                 )
@@ -518,7 +561,7 @@ impl Document {
             let out = self.option_out();
             let all: Vec<CoreWall> = self
                 .entities()
-                .filter(|e| takes_level(e, level) && !out.contains(&Slot(e.base().id)))
+                .filter(|e| takes_level_in(e, level, s.arch.phase) && !out.contains(&Slot(e.base().id)))
                 .filter_map(core_wall)
                 .collect();
             found_among(&all, seed, s.method)

@@ -141,7 +141,8 @@ class _WallsConvert(LocalCommand[WallsFromLines, WallsFromLinesDone, WallsFromLi
                 Absent: unassigned (legacy behavior). Source CAD attributes do not imply a level.
             expected_revision:
             justify: Each mode's justification. Absent: centred.
-            keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
+            keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go. Kept, with `layerId`, they are only
+                read: sources on a locked layer (an underlay) are converted (docs/adr/0798 §3).
             layer_id: The layer the walls go on. Absent: each source's own.
             max_width: Pairs: the widest wall, metres. Absent: 0.6 m. Unit: length.
             mode:
