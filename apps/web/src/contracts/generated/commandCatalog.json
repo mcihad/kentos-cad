@@ -43558,6 +43558,118 @@
       ]
     },
     {
+      "id": "cad.forms.sources",
+      "version": 1,
+      "title": "Formun kaynakları",
+      "summary": "Formun başka katmandan listelerinin ve ilişkili kayıtlarının katmanlarının kaynağının durumunu verir, hiçbir şey yazmaz: çizimin kendi katmanı local; GeoPackage'a bağlı katman dosyasıyla (yok ya da tablo yok missing, okunamıyor failed, okunduğu baytlar değil changed, yoksa ready); veritabanına bağlı katman en çok waitMs (yoksa 5 000 ms) bekleyen bir bağlantıyla (ulaşılamıyor offline, yanıt yok timeout, giriş ya da tabloyu okuma yetkisi yok denied, veritabanı ya da tablo yok missing). Her durumun ayrı kodu ve çıkış yolu: retry (Yeniden dene), credentials (Bağlantıyı düzenle), relink (Yeniden bağla), read (Kaynaktan oku). Listeler her durumda çizimdeki çalışma kopyasından sunulur.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.forms.sources` v1 (Formun kaynakları, docs/adr/0763): how the sources of the layers a form\nlists from (its fields' lists from other layers, its related items) stand; nothing is written. A layer\nbound to a GeoPackage's table is asked by its file (there, the table, the same bytes as when read); one\nbound to a database's table by a connection that waits `waitMs` at most (the table there, readable by the\naccount). The lists themselves are offered from the drawing's working copy whatever a source's state.\n\nRefusals, in this order: `invalid_input` (`waitMs` out of bounds), `unknown_form`, `form_unpublished`.",
+        "properties": {
+          "draft": {
+            "description": "Its draft instead of its latest release.",
+            "type": "boolean"
+          },
+          "form": {
+            "description": "The form's id.",
+            "type": "string"
+          },
+          "waitMs": {
+            "description": "How long a database is waited for, in milliseconds (100 to 30 000); none: 5 000.",
+            "format": "uint32",
+            "maximum": 30000,
+            "minimum": 100,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "ms"
+          }
+        },
+        "required": [
+          "form"
+        ],
+        "title": "FormsSources",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.sources` v1.",
+        "properties": {
+          "revision": {
+            "description": "The drawing's revision.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sources": {
+            "description": "Each layer the form lists from, in the order its items first name them.",
+            "items": {
+              "$ref": "#/$defs/FormSource"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sources",
+          "revision"
+        ],
+        "title": "FormsSourced",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.forms.sources` v1.",
+        "properties": {
+          "revision": {
+            "description": "The drawing's revision.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sources": {
+            "description": "Each layer the form lists from, in the order its items first name them.",
+            "items": {
+              "$ref": "#/$defs/FormSource"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sources",
+          "revision"
+        ],
+        "title": "FormsSourced",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "unknown_form",
+          "form_unpublished"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bina formunun listelerinin kaynakları",
+          "input": {
+            "form": "bina-denetimi"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.test",
       "version": 1,
       "title": "Form senaryolarını çalıştır",
@@ -92194,6 +92306,149 @@
         "warning"
       ],
       "type": "string"
+    },
+    "FormSource": {
+      "description": "One layer a form lists from, and its source.",
+      "properties": {
+        "code": {
+          "description": "The state's code (`form_source_offline`, `form_source_timeout`, `form_source_denied`,\n`form_source_missing`, `form_source_changed`, `form_source_failed`); none when ready or local.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "items": {
+          "description": "The form's items that list from it, in the form's order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SourceKind"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The source's kind; none: the drawing's own layer."
+        },
+        "layer": {
+          "description": "The layer's id.",
+          "type": "string"
+        },
+        "message": {
+          "description": "What happened and what the list does meanwhile, for people.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "Its name.",
+          "type": "string"
+        },
+        "retry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FormSourceRetry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The way out."
+        },
+        "state": {
+          "$ref": "#/$defs/FormSourceState"
+        },
+        "table": {
+          "description": "The bound table.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "layer",
+        "name",
+        "items",
+        "state"
+      ],
+      "type": "object"
+    },
+    "FormSourceRetry": {
+      "description": "The way out of a source's state (docs/adr/0763 §2).",
+      "oneOf": [
+        {
+          "const": "retry",
+          "description": "Ask again (Yeniden dene).",
+          "type": "string"
+        },
+        {
+          "const": "credentials",
+          "description": "Give the connection's password or user again (Bağlantıyı düzenle).",
+          "type": "string"
+        },
+        {
+          "const": "relink",
+          "description": "Point the layer at the file or table where it now is (Yeniden bağla).",
+          "type": "string"
+        },
+        {
+          "const": "read",
+          "description": "Read the layer again from its source (Kaynaktan oku).",
+          "type": "string"
+        }
+      ]
+    },
+    "FormSourceState": {
+      "description": "How a list's source stands (docs/adr/0763 §1).",
+      "oneOf": [
+        {
+          "const": "local",
+          "description": "The layer is the drawing's own: nothing outside to ask.",
+          "type": "string"
+        },
+        {
+          "const": "ready",
+          "description": "The source is there and is what the working copy was read from (a database: there and readable).",
+          "type": "string"
+        },
+        {
+          "const": "offline",
+          "description": "The database cannot be reached: the server's name does not resolve, nothing listens, the network\ndoes not reach it.",
+          "type": "string"
+        },
+        {
+          "const": "timeout",
+          "description": "The database did not answer in time.",
+          "type": "string"
+        },
+        {
+          "const": "denied",
+          "description": "The database does not let the account in, or the account may not read the table.",
+          "type": "string"
+        },
+        {
+          "const": "missing",
+          "description": "The file, the database or the table is not there.",
+          "type": "string"
+        },
+        {
+          "const": "changed",
+          "description": "The file is not the bytes the working copy was read from.",
+          "type": "string"
+        },
+        {
+          "const": "failed",
+          "description": "Anything else: the file cannot be read, TLS, no database provider on this host.",
+          "type": "string"
+        }
+      ]
     },
     "FormSummary": {
       "description": "A form as the lists show it.",

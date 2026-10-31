@@ -2033,6 +2033,50 @@ FormSeverityName = Literal["error", "warning"]
 """The names of :class:`FormSeverity`, for a plain string."""
 
 
+class FormSourceRetry(_StrEnum):
+    """The way out of a source's state (docs/adr/0763 §2).
+
+    - ``retry``: Ask again (Yeniden dene).
+    - ``credentials``: Give the connection's password or user again (Bağlantıyı düzenle).
+    - ``relink``: Point the layer at the file or table where it now is (Yeniden bağla).
+    - ``read``: Read the layer again from its source (Kaynaktan oku).
+    """
+    RETRY = "retry"
+    CREDENTIALS = "credentials"
+    RELINK = "relink"
+    READ = "read"
+
+
+FormSourceRetryName = Literal["retry", "credentials", "relink", "read"]
+"""The names of :class:`FormSourceRetry`, for a plain string."""
+
+
+class FormSourceState(_StrEnum):
+    """How a list's source stands (docs/adr/0763 §1).
+
+    - ``local``: The layer is the drawing's own: nothing outside to ask.
+    - ``ready``: The source is there and is what the working copy was read from (a database: there and readable).
+    - ``offline``: The database cannot be reached: the server's name does not resolve, nothing listens, the network
+    - ``timeout``: The database did not answer in time.
+    - ``denied``: The database does not let the account in, or the account may not read the table.
+    - ``missing``: The file, the database or the table is not there.
+    - ``changed``: The file is not the bytes the working copy was read from.
+    - ``failed``: Anything else: the file cannot be read, TLS, no database provider on this host.
+    """
+    LOCAL = "local"
+    READY = "ready"
+    OFFLINE = "offline"
+    TIMEOUT = "timeout"
+    DENIED = "denied"
+    MISSING = "missing"
+    CHANGED = "changed"
+    FAILED = "failed"
+
+
+FormSourceStateName = Literal["local", "ready", "offline", "timeout", "denied", "missing", "changed", "failed"]
+"""The names of :class:`FormSourceState`, for a plain string."""
+
+
 class FormWidget(_StrEnum):
     """How a field is edited.
 
@@ -26867,6 +26911,63 @@ class FormRelease(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FormSource(_Model):
+    """One layer a form lists from, and its source.
+    Attributes:
+        layer: The layer's id.
+        name: Its name.
+        items: The form's items that list from it, in the form's order.
+        code: The state's code (`form_source_offline`, `form_source_timeout`, `form_source_denied`,
+            `form_source_missing`, `form_source_changed`, `form_source_failed`); none when ready or local.
+        kind: The source's kind; none: the drawing's own layer.
+        message: What happened and what the list does meanwhile, for people.
+        retry: The way out.
+        table: The bound table.
+    """
+    layer: str
+    name: str
+    items: list[str]
+    state: FormSourceState | FormSourceStateName
+    code: str | None | Unset = UNSET
+    kind: SourceKind | SourceKindName | None | Unset = UNSET
+    message: str | None | Unset = UNSET
+    retry: FormSourceRetry | FormSourceRetryName | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["items"] = list(self.items)
+        out["state"] = _enum_out(self.state)
+        if self.code is not UNSET:
+            out["code"] = self.code
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
+        if self.message is not UNSET:
+            out["message"] = self.message
+        if self.retry is not UNSET:
+            out["retry"] = None if self.retry is None else _enum_out(self.retry)
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormSource:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            items=list(data["items"]),
+            state=_enum_in(FormSourceState, data["state"]),
+            code=data.get("code", UNSET),
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(SourceKind, data["kind"]),
+            message=data.get("message", UNSET),
+            retry=UNSET if "retry" not in data else None if data["retry"] is None else _enum_in(FormSourceRetry, data["retry"]),
+            table=data.get("table", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FormSummary(_Model):
     """A form as the lists show it.
     Attributes:
@@ -27602,6 +27703,66 @@ class FormsRecomputed(_Model):
             revision=data["revision"],
             failed=list(data["failed"]) if "failed" in data else UNSET,
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsSourced(_Model):
+    """Output of `cad.forms.sources` v1.
+    Attributes:
+        sources: Each layer the form lists from, in the order its items first name them.
+        revision: The drawing's revision.
+    """
+    sources: list[FormSource]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sources"] = [e0.to_json() for e0 in self.sources]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsSourced:
+        return cls(
+            sources=[FormSource.from_json(e0) for e0 in data["sources"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FormsSources(_Model):
+    """Input of `cad.forms.sources` v1 (Formun kaynakları, docs/adr/0763): how the sources of the layers a form
+    lists from (its fields' lists from other layers, its related items) stand; nothing is written. A layer
+    bound to a GeoPackage's table is asked by its file (there, the table, the same bytes as when read); one
+    bound to a database's table by a connection that waits `waitMs` at most (the table there, readable by the
+    account). The lists themselves are offered from the drawing's working copy whatever a source's state.
+
+    Refusals, in this order: `invalid_input` (`waitMs` out of bounds), `unknown_form`, `form_unpublished`.
+    Attributes:
+        form: The form's id.
+        draft: Its draft instead of its latest release.
+        wait_ms: How long a database is waited for, in milliseconds (100 to 30 000); none: 5 000. Unit: ms.
+    """
+    form: str
+    draft: bool | Unset = UNSET
+    wait_ms: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = self.form
+        if self.draft is not UNSET:
+            out["draft"] = self.draft
+        if self.wait_ms is not UNSET:
+            out["waitMs"] = self.wait_ms
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FormsSources:
+        return cls(
+            form=data["form"],
+            draft=data.get("draft", UNSET),
+            wait_ms=data.get("waitMs", UNSET),
         )
 
 
@@ -87541,6 +87702,11 @@ __all__ = [
     "FormRelease",
     "FormSeverity",
     "FormSeverityName",
+    "FormSource",
+    "FormSourceRetry",
+    "FormSourceRetryName",
+    "FormSourceState",
+    "FormSourceStateName",
     "FormSummary",
     "FormTest",
     "FormTestExpect",
@@ -87564,6 +87730,8 @@ __all__ = [
     "FormsOp",
     "FormsRecompute",
     "FormsRecomputed",
+    "FormsSourced",
+    "FormsSources",
     "FormsSubmit",
     "FormsSubmitted",
     "FormsTest",

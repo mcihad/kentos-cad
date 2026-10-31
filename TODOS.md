@@ -85,6 +85,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ADR 0770 (ADV-01): web'de Dikdörtgen duvarın Ortak duvar'ı (`adopt`), duvarın geçici ölçüsünde yazarken etki kartı
   (`WallEffects`) ve kilit kareleri (Bu ölçüyü koru, bağı kaldır, bağlı yanın parametresi), kısıt motorunda duvar çizgisi
   ve pervaz parçaları (mimari bağdaştırıcı `ops::arch_bonds`, WASM'a bağlayıcı), `.kcad` şema 137 okuma ve yazma.
+- ADR 0763: formun listelerinin kaynağı (`cad.forms.sources`: yerel, hazır, ulaşılamıyor, zaman aşımı, yetkisiz, yok,
+  değişti, başka; her birinin kodu ve çıkış yolu). Web'in formu bağlı kaynağı sunucudan sormalı (web dosyaya ve veritabanına
+  doğrudan ulaşmaz: bulut bağdaştırıcısıyla, `FORM-SRC-10`), hazır olmayanı başlıkta kendi satırında Yeniden dene ve çıkış
+  yoluyla göstermeli.
 - ADR 0762: ilişkili kayıtlar öğesinin eylemleri (`actions`: oluştur, güncelle, sil, bağla, bağı kopar, aç, git) ve izinleri.
   Web'in formu öğenin sunduklarını göstermeli, sunulup izni olmayanı gerekçesiyle soluk göstermeli (`kentos_forms::related_offer`,
   `ChildPermits`), Sil'i satırda sormalı, yalnız okuyan öğeden açılan alt kaydı salt okunur açmalı; tasarımcıda Eylemler satırı.

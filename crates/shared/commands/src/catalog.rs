@@ -8285,6 +8285,36 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // The sources of a form's lists (docs/adr/0763), held together by fixtures/commands/v1/cad.forms.sources.json.
+        CommandDescriptor {
+            id: crate::CAD_FORMS_SOURCES.into(),
+            version: crate::CAD_FORMS_SOURCES_VERSION,
+            title: "Formun kaynakları".into(),
+            summary: "Formun başka katmandan listelerinin ve ilişkili kayıtlarının katmanlarının kaynağının durumunu verir, hiçbir şey yazmaz: \
+                      çizimin kendi katmanı local; GeoPackage'a bağlı katman dosyasıyla (yok ya da tablo yok missing, okunamıyor failed, okunduğu \
+                      baytlar değil changed, yoksa ready); veritabanına bağlı katman en çok waitMs (yoksa 5 000 ms) bekleyen bir bağlantıyla \
+                      (ulaşılamıyor offline, yanıt yok timeout, giriş ya da tabloyu okuma yetkisi yok denied, veritabanı ya da tablo yok missing). \
+                      Her durumun ayrı kodu ve çıkış yolu: retry (Yeniden dene), credentials (Bağlantıyı düzenle), relink (Yeniden bağla), \
+                      read (Kaynaktan oku). Listeler her durumda çizimdeki çalışma kopyasından sunulur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::FormsSources>(),
+            output: schema::<crate::FormsSourced>(),
+            plan: Some(schema::<crate::FormsSourced>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bina formunun listelerinin kaynakları".into(),
+                input: json!({ "form": "bina-denetimi" }),
+                output: None,
+            }],
+        },
         // A form's scenarios (docs/adr/0420), held together by fixtures/commands/v1/cad.forms.test.json.
         CommandDescriptor {
             id: crate::CAD_FORMS_TEST.into(),
@@ -12046,6 +12076,9 @@ mod tests {
                     crate::CAD_FORMS_COMPARE => {
                         serde_json::from_value::<crate::FormsCompare>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_FORMS_SOURCES => {
+                        serde_json::from_value::<crate::FormsSources>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_FORMS_RECOMPUTE => {
                         serde_json::from_value::<crate::FormsRecompute>(e.input.clone()).map(|_| ())
                     }
@@ -12708,6 +12741,10 @@ mod tests {
                         }
                         crate::CAD_FORMS_COMPARE => {
                             serde_json::from_value::<crate::FormsCompared>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FORMS_SOURCES => {
+                            serde_json::from_value::<crate::FormsSourced>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_FORMS_RECOMPUTE => {

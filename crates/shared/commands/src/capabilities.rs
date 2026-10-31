@@ -4380,6 +4380,12 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.forms.sources",
+        refusals: &[&["invalid_input", "unknown_form", "form_unpublished"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.forms.test",
         refusals: &[&[
             "unknown_form",

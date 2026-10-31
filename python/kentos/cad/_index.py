@@ -102,6 +102,7 @@ COMMANDS: dict[str, Any] = {
     "cad.forms.fill": forms.fill,
     "cad.forms.import": forms.import_,
     "cad.forms.recompute": forms.recompute,
+    "cad.forms.sources": forms.sources,
     "cad.forms.submit": forms.submit,
     "cad.forms.test": forms.test,
     "cad.forms.transition": forms.transition,

@@ -400,6 +400,7 @@ pub mod sources_query;
 pub mod layers_crs;
 pub mod records_duplicate;
 pub mod forms_compare;
+pub mod forms_sources;
 pub mod forms_edit;
 pub mod forms_fill;
 pub mod forms_submit;
@@ -494,6 +495,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_FORMS_COMPARE,
         kentos_commands::CAD_FORMS_COMPARE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_FORMS_SOURCES,
+        kentos_commands::CAD_FORMS_SOURCES_VERSION,
     ),
     (
         kentos_commands::CAD_FORMS_TRANSITION,

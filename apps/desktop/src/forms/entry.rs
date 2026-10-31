@@ -53,6 +53,9 @@ use kentos_ui::widget::{DatePicker, Dialog as Frame, Segmented, Switch, TimePick
 use kentos_ui::{label, style};
 
 use crate::app::{App, Dialog, Message};
+
+#[path = "entry_sources.rs"]
+mod sources;
 use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 
@@ -195,6 +198,10 @@ pub struct Entry {
     pub(crate) read_only: bool,
     /// A related child whose Sil asks first (docs/adr/0762 §4): its item and id.
     removing: Option<(String, String)>,
+    /// How the sources of the form's lists stand (docs/adr/0763), the question asked last and whether it runs.
+    sources: Vec<kentos_commands::FormSource>,
+    sources_asked: u64,
+    sources_busy: bool,
 }
 
 /// A record of the many-record mode.
@@ -240,6 +247,12 @@ impl fmt::Debug for Entry {
 pub enum Event {
     /// The record and the form as they are now, what was typed kept (docs/adr/0438 §7).
     Reload,
+    /// The lists' sources as a question (its number) found them (docs/adr/0763).
+    SourcesAnswered(u64, Vec<kentos_commands::FormSource>),
+    /// Yeniden dene: the sources asked again.
+    SourcesAgain,
+    /// A source's way out, by its layer.
+    SourceWay(String, kentos_commands::FormSourceRetry),
     /// Kaydet over the record as it is now.
     Overwrite,
     Value(String, String),
@@ -842,7 +855,7 @@ impl App {
         );
         self.form_entry = Some(entry);
         self.dialog = Some(Dialog::FormEntry);
-        Task::none()
+        self.ask_entry_sources()
     }
 
     /// The record's form in the attribute table's Form view (docs/adr/0416): the same editor, no
@@ -1025,6 +1038,9 @@ impl App {
             asking_close: false,
             read_only: false,
             removing: None,
+            sources: Vec::new(),
+            sources_asked: 0,
+            sources_busy: false,
             touched: BTreeSet::new(),
             left: kentos_forms::Left::new(),
             after: Attrs::new(),
@@ -1648,6 +1664,18 @@ impl App {
                 }
             }
             Event::OpenRelated(item, uid) => return self.open_related(&item, &uid),
+            Event::SourcesAnswered(asked, found) => {
+                if let Some(e) = self
+                    .form_entry
+                    .as_mut()
+                    .filter(|e| e.sources_asked == asked)
+                {
+                    e.sources = found;
+                    e.sources_busy = false;
+                }
+            }
+            Event::SourcesAgain => return self.ask_entry_sources(),
+            Event::SourceWay(layer, way) => return self.entry_source_way(layer, way),
             Event::DeleteRelated(item, uid) => {
                 if let Some(e) = self.form_entry.as_mut() {
                     e.removing = Some((item, uid));
@@ -2496,6 +2524,8 @@ impl App {
                 "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
             )]));
         }
+        // The lists' sources that are not ready, each with its way out (docs/adr/0763).
+        body = sources::sources_lines(e, body);
         // The record's state locks it (docs/adr/0428 §2): a step takes it out.
         if !locked && e.screen.prepared.locked_by_state(&e.before) {
             let state = e.screen.prepared.state_of(&e.before).unwrap_or_default();

@@ -162,6 +162,19 @@ pub mod codes {
     pub const LOOKUP_DUPLICATE: &str = "form_lookup_duplicate";
     /// The source of a copy changed after the copy (docs/adr/0439 §3; a warning).
     pub const LOOKUP_STALE: &str = "form_lookup_stale";
+    // A list's source (docs/adr/0763): the list is offered from the working copy meanwhile.
+    /// Its database cannot be reached.
+    pub const SOURCE_OFFLINE: &str = "form_source_offline";
+    /// Its database did not answer in time.
+    pub const SOURCE_TIMEOUT: &str = "form_source_timeout";
+    /// Its database does not let the account in, or the account may not read the table.
+    pub const SOURCE_DENIED: &str = "form_source_denied";
+    /// Its file, database or table is not there.
+    pub const SOURCE_MISSING: &str = "form_source_missing";
+    /// Its file is not the bytes the working copy was read from.
+    pub const SOURCE_CHANGED: &str = "form_source_changed";
+    /// Anything else: the file cannot be read, TLS, no database provider on this host.
+    pub const SOURCE_FAILED: &str = "form_source_failed";
     /// A soft check that is not true (a warning).
     pub const CHECK_WARNING: &str = "form_check_warning";
     /// A unique field's value another object of the layer has.

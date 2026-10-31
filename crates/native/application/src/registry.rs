@@ -113,8 +113,9 @@ use crate::{
 };
 use crate::{datasets_describe, datasets_edit, joins_edit, joins_query};
 use crate::{
-    forms_audit, forms_compare, forms_edit, forms_fill, forms_recompute, forms_submit, forms_test,
-    forms_transition, forms_validate, records, records_duplicate, relations_edit,
+    forms_audit, forms_compare, forms_edit, forms_fill, forms_recompute, forms_sources,
+    forms_submit, forms_test, forms_transition, forms_validate, records, records_duplicate,
+    relations_edit,
 };
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
@@ -126,8 +127,8 @@ use kentos_commands::AddressesNormalize;
 use kentos_commands::DrawingCompare;
 use kentos_commands::{DatasetsDescribe, DatasetsEdit, JoinsEdit, JoinsQuery};
 use kentos_commands::{
-    FormsAudit, FormsCompare, FormsEdit, FormsFill, FormsRecompute, FormsSubmit, FormsTest,
-    FormsTransition, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
+    FormsAudit, FormsCompare, FormsEdit, FormsFill, FormsRecompute, FormsSources, FormsSubmit,
+    FormsTest, FormsTransition, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
 };
 use kentos_commands::{
     MeshesDescribe, MeshesProfile, MeshesQuery, MeshesRegion, PointCloudsDescribe,
@@ -362,6 +363,7 @@ macro_rules! by_command {
             kentos_commands::CAD_FORMS_AUDIT => $then!(forms_audit, FormsAudit),
             kentos_commands::CAD_FORMS_TEST => $then!(forms_test, FormsTest),
             kentos_commands::CAD_FORMS_COMPARE => $then!(forms_compare, FormsCompare),
+            kentos_commands::CAD_FORMS_SOURCES => $then!(forms_sources, FormsSources),
             kentos_commands::CAD_FORMS_TRANSITION => $then!(forms_transition, FormsTransition),
             kentos_commands::CAD_DOMAINS_EDIT => $then!(domains_edit, DomainsEdit),
             kentos_commands::CAD_DOMAINS_EXPORT => $then!(domains_export, DomainsExport),

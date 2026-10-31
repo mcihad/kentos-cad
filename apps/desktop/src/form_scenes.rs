@@ -912,6 +912,125 @@ pub(crate) fn owner_actions(app: &mut App, actions: Value, locked: bool) {
     run(app, "data.formEdit");
 }
 
+/// A building's form listing from five layers whose sources stand each a way (docs/adr/0763): a local list, a
+/// GeoPackage read whose file changed since, one whose file moved away, a database nobody listens on and one that
+/// never answers. Formla düzenle says each apart with its way out.
+pub(crate) fn sources_states(app: &mut App) {
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/geopackage/v1");
+    let mut o = Objects::new();
+    let building = o.path(
+        "bina",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 16.0], [0.0, 16.0]],
+        true,
+    );
+    o.data(building, &[("Kod", "B-7")], Some("B-7"));
+    for (layer, rows) in [
+        ("mahalle", &[("01", "Kızılay"), ("02", "Bahçelievler")][..]),
+        (
+            "malik",
+            &[("M-1", "Ayşe Yılmaz"), ("M-2", "Mehmet Kaya")][..],
+        ),
+        ("parsel", &[("101/5", "101 ada 5 parsel")][..]),
+        ("tapu", &[("T-44", "Tapu 44")][..]),
+        ("ruhsat", &[("R-9", "Ruhsat 9")][..]),
+    ] {
+        for (code, name) in rows {
+            let id = o.record(layer);
+            o.data(id, &[("kod", code), ("ad", name)], Some(name));
+        }
+    }
+    let list = |id: &str, field: &str, layer: &str, label: &str| {
+        json!({ "type": "field", "id": id, "field": field, "label": label,
+                "lookup": { "layer": layer, "key": "kod", "label": "ad" } })
+    };
+    let form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([{ "type": "field", "id": "kod", "field": "Kod" },
+               list("mahalle", "Mahalle", "mahalle", "Mahalle"),
+               list("malik", "Malik", "malik", "Malik"),
+               list("parsel", "Parsel", "parsel", "Parsel"),
+               list("tapu", "Tapu", "tapu", "Tapu kaydı"),
+               list("ruhsat", "Ruhsat", "ruhsat", "Yapı ruhsatı")]),
+    );
+    // A port nobody listens on, and one that takes the connection and never answers.
+    let closed = std::net::TcpListener::bind("127.0.0.1:0").expect("port");
+    let refused = closed.local_addr().expect("address").port();
+    drop(closed);
+    let silent = std::net::TcpListener::bind("127.0.0.1:0").expect("port");
+    let quiet = silent.local_addr().expect("address").port();
+    let link = |id: &str, kind: &str, path: String, table: &str, layer: &str, revision: String| {
+        json!({ "id": id, "kind": kind, "path": path, "table": table, "layer": layer, "revision": revision,
+                "digest": "f".repeat(64), "srid": 5256, "writable": true })
+    };
+    let sources = json!([
+        link(
+            "k-1",
+            "geopackage",
+            root.join("iliskili.gpkg").display().to_string(),
+            "malik",
+            "malik",
+            "0".repeat(64)
+        ),
+        link(
+            "k-2",
+            "geopackage",
+            root.join("tasinan-parseller.gpkg").display().to_string(),
+            "parsel",
+            "parsel",
+            "1".repeat(64)
+        ),
+        link(
+            "k-3",
+            "postgis",
+            format!("postgresql://kentos@127.0.0.1:{refused}/tapu"),
+            "public.tapu",
+            "tapu",
+            "2".repeat(64)
+        ),
+        link(
+            "k-4",
+            "postgis",
+            format!("postgresql://kentos@127.0.0.1:{quiet}/belediye"),
+            "imar.ruhsat",
+            "ruhsat",
+            "3".repeat(64)
+        ),
+    ]);
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" }, { "name": "Mahalle", "kind": "text" },
+                                { "name": "Malik", "kind": "text" }, { "name": "Parsel", "kind": "text" },
+                                { "name": "Tapu", "kind": "text" }, { "name": "Ruhsat", "kind": "text" }]);
+        layers.push(bina);
+        for (id, name, colour) in [
+            ("mahalle", "Mahalleler", "#30A46C"),
+            ("malik", "Malikler", "#E5484D"),
+            ("parsel", "Parseller", "#F76B15"),
+            ("tapu", "Tapu kayıtları", "#8E4EC6"),
+            ("ruhsat", "Ruhsatlar", "#0090FF"),
+        ] {
+            let mut l = crate::tools_scenes::layer(id, name, colour, 0.35);
+            l["fields"] =
+                json!([{ "name": "kod", "kind": "text" }, { "name": "ad", "kind": "text" }]);
+            layers.push(l);
+        }
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form]);
+        d["settings"]["sources"] = sources;
+    });
+    app.selection.set([Slot(building)]);
+    run(app, "data.formEdit");
+    // The program registers its database provider at start; a picture does it here.
+    kentos_postgis::register();
+    app.entry_sources_now(std::time::Duration::from_millis(400));
+    drop(silent);
+}
+
 /// Malikler only linked, opened and shown: no Yeni, no Bağı kopar (docs/adr/0762 §1).
 fn actions_link_only(app: &mut App) {
     owner_actions(app, json!(["link", "view", "show"]), false);
@@ -3328,6 +3447,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-iliskili-eklendi", related_sums_linked),
         ("form-eylemler-yalniz-bagla", actions_link_only),
         ("form-eylemler-kilitli", actions_locked),
+        ("form-kaynak-durumlari", sources_states),
         ("form-eylemler-sil-sor", actions_delete_asked),
         ("form-eylemler-salt-okunur", actions_view_only),
         ("form-iliski-kartlar", meters_cards),

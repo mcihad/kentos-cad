@@ -48,6 +48,9 @@ pub const CAD_FORMS_TRANSITION_VERSION: u32 = 1;
 /// Compares two versions of a form (docs/adr/0427).
 pub const CAD_FORMS_COMPARE: &str = "cad.forms.compare";
 pub const CAD_FORMS_COMPARE_VERSION: u32 = 1;
+/// Says how the sources of a form's lists from other layers stand (docs/adr/0763).
+pub const CAD_FORMS_SOURCES: &str = "cad.forms.sources";
+pub const CAD_FORMS_SOURCES_VERSION: u32 = 1;
 /// Runs a form's scenarios (docs/adr/0420).
 pub const CAD_FORMS_TEST: &str = "cad.forms.test";
 pub const CAD_FORMS_TEST_VERSION: u32 = 1;
@@ -823,6 +826,127 @@ pub struct FormsCompared {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub requires_removed: Vec<String>,
+}
+
+/// Input of `cad.forms.sources` v1 (Formun kaynakları, docs/adr/0763): how the sources of the layers a form
+/// lists from (its fields' lists from other layers, its related items) stand; nothing is written. A layer
+/// bound to a GeoPackage's table is asked by its file (there, the table, the same bytes as when read); one
+/// bound to a database's table by a connection that waits `waitMs` at most (the table there, readable by the
+/// account). The lists themselves are offered from the drawing's working copy whatever a source's state.
+///
+/// Refusals, in this order: `invalid_input` (`waitMs` out of bounds), `unknown_form`, `form_unpublished`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsSources {
+    /// The form's id.
+    pub form: String,
+    /// Its draft instead of its latest release.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub draft: bool,
+    /// How long a database is waited for, in milliseconds (100 to 30 000); none: 5 000.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 100, max = 30000)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ms")))]
+    pub wait_ms: Option<u32>,
+}
+
+/// How a list's source stands (docs/adr/0763 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FormSourceState {
+    /// The layer is the drawing's own: nothing outside to ask.
+    Local,
+    /// The source is there and is what the working copy was read from (a database: there and readable).
+    Ready,
+    /// The database cannot be reached: the server's name does not resolve, nothing listens, the network
+    /// does not reach it.
+    Offline,
+    /// The database did not answer in time.
+    Timeout,
+    /// The database does not let the account in, or the account may not read the table.
+    Denied,
+    /// The file, the database or the table is not there.
+    Missing,
+    /// The file is not the bytes the working copy was read from.
+    Changed,
+    /// Anything else: the file cannot be read, TLS, no database provider on this host.
+    Failed,
+}
+
+/// The way out of a source's state (docs/adr/0763 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FormSourceRetry {
+    /// Ask again (Yeniden dene).
+    Retry,
+    /// Give the connection's password or user again (Bağlantıyı düzenle).
+    Credentials,
+    /// Point the layer at the file or table where it now is (Yeniden bağla).
+    Relink,
+    /// Read the layer again from its source (Kaynaktan oku).
+    Read,
+}
+
+/// One layer a form lists from, and its source.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormSource {
+    /// The layer's id.
+    pub layer: String,
+    /// Its name.
+    pub name: String,
+    /// The form's items that list from it, in the form's order.
+    pub items: Vec<String>,
+    /// The source's kind; none: the drawing's own layer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kind: Option<crate::sources::SourceKind>,
+    /// The bound table.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub table: Option<String>,
+    pub state: FormSourceState,
+    /// The state's code (`form_source_offline`, `form_source_timeout`, `form_source_denied`,
+    /// `form_source_missing`, `form_source_changed`, `form_source_failed`); none when ready or local.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub code: Option<String>,
+    /// What happened and what the list does meanwhile, for people.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub message: Option<String>,
+    /// The way out.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub retry: Option<FormSourceRetry>,
+}
+
+/// Output of `cad.forms.sources` v1.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormsSourced {
+    /// Each layer the form lists from, in the order its items first name them.
+    pub sources: Vec<FormSource>,
+    /// The drawing's revision.
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
 }
 
 /// Input of `cad.forms.transition` v1 (İş akışı adımı, docs/adr/0428): a record taken a step of its form's

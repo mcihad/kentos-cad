@@ -31,8 +31,9 @@ use kentos_commands::{
 };
 use kentos_commands::{
     AttachmentsInspect, DomainsEdit, DomainsExport, FieldsMigrate, FormsAudit, FormsCompare,
-    FormsEdit, FormsExport, FormsFill, FormsImport, FormsRecompute, FormsSubmit, FormsTest,
-    FormsTransition, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit, SchemaDescribe,
+    FormsEdit, FormsExport, FormsFill, FormsImport, FormsRecompute, FormsSources, FormsSubmit,
+    FormsTest, FormsTransition, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
+    SchemaDescribe,
 };
 use kentos_commands::{DatasetsDescribe, DatasetsEdit, JoinsEdit, JoinsQuery};
 use kentos_commands::{
@@ -116,8 +117,9 @@ use kentos_native_application::{
 };
 use kentos_native_application::{
     attachments_inspect, domains_edit, domains_export, fields_migrate, forms_audit, forms_compare,
-    forms_edit, forms_export, forms_fill, forms_import, forms_recompute, forms_submit, forms_test,
-    forms_transition, forms_validate, records, records_duplicate, relations_edit, schema_describe,
+    forms_edit, forms_export, forms_fill, forms_import, forms_recompute, forms_sources,
+    forms_submit, forms_test, forms_transition, forms_validate, records, records_duplicate,
+    relations_edit, schema_describe,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -651,6 +653,12 @@ impl Input for FormsImport {
 }
 
 impl Input for FormsCompare {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for FormsSources {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -4576,6 +4584,7 @@ fn run_op(
         kentos_commands::CAD_FORMS_AUDIT => run!(forms_audit, FormsAudit),
         kentos_commands::CAD_FORMS_TEST => run!(forms_test, FormsTest),
         kentos_commands::CAD_FORMS_COMPARE => run!(forms_compare, FormsCompare),
+        kentos_commands::CAD_FORMS_SOURCES => run!(forms_sources, FormsSources),
         kentos_commands::CAD_FORMS_TRANSITION => run!(forms_transition, FormsTransition),
         kentos_commands::CAD_DOMAINS_EDIT => run!(domains_edit, DomainsEdit),
         kentos_commands::CAD_DOMAINS_EXPORT => run!(domains_export, DomainsExport),

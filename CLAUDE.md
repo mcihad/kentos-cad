@@ -119,6 +119,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `.kcad` şema 137 (opt-in), `FORMATS_VERSION` 100. 31 ortak bağ durumu (`arch_bond_cases.py`), 26 benimseme. Gerçek
   pencerede elle denenmedi; çelişen bağın çizimde vurgusu ve 20 ms bütçesi açık.
 
+- **Formun listelerinin kaynağı: ayrı durum, kod ve çıkış yolu (31 Ekim 2026; [ADR 0763](docs/adr/0763-form-list-sources-states.md), dal `formlar-surer`).**
+  Salt okunur `cad.forms.sources` (`form`, `draft`, `waitMs` 100–30 000, yoksa 5 000): formun başka katmandan listelerinin ve
+  ilişkili kayıtlarının katmanları öğe sırasıyla, her birinin durumu `local`, `ready`, `offline`, `timeout`, `denied`, `missing`,
+  `changed`, `failed`; kodları `form_source_*` (`kentos_forms::codes`), çıkış yolu `retry`, `credentials`, `relink`, `read`; liste her
+  durumda çalışma kopyasından. GeoPackage dosyayla (yok, tablo yok, okunamıyor, SHA-256 farklı), veritabanı satır okumadan
+  `TableProvider::reach` ile (PostGIS'te `connect_within` ve `probe::Diagnosis`'in türü, `to_regclass`, `has_table_privilege`,
+  `42501`). Birden çok eşleşme ve değişen kopya zaten `form_lookup_duplicate`, `form_lookup_stale`. Masaüstünde Formla düzenle
+  kaynakları `kentos-form-kaynak` iş parçacığında sorar, hazır olmayanı başlıkta kendi satırında Kaynaktan oku, Yeniden bağla…,
+  Bağlantıyı düzenle… ve Yeniden dene ile söyler. 22 ortak durum (`form_sources_cases.py`), veritabanı durumları kentos-postgis'te
+  ve geçici docker PostGIS'te. Elle gerçek pencerede denenmedi.
+
 - **İlişkili kayıtlar öğesinin eylemleri ve izinleri (31 Ekim 2026; [ADR 0762](docs/adr/0762-related-item-actions.md), dal `formlar-surer`).**
   `FormItem::Related.actions` (`RelatedAction`: create, update, delete, link, unlink, view, show; yazılmazsa silme dışındakiler,
   boş liste salt okunur liste; şema değişmez). Formun sunduğu ile kullanıcının izni ayrı: `kentos_forms::related_offer`

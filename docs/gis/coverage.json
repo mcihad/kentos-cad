@@ -453,13 +453,14 @@
     "mcp": true,
     "server": false
    },
-   "cases": 205,
+   "cases": 208,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.accessibility.json",
     "fixtures/commands/v1/cad.arch.audit.doors.json",
     "fixtures/commands/v1/cad.arch.audit.json",
     "fixtures/commands/v1/cad.arch.audit.stairs.json",
-    "fixtures/commands/v1/cad.arch.exceptions.json"
+    "fixtures/commands/v1/cad.arch.exceptions.json",
+    "fixtures/commands/v1/cad.program.check.json"
    ],
    "options": [
     {
@@ -505,6 +506,11 @@
     {
      "key": "checks",
      "value": "openings",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "program",
      "covered": false
     },
     {
@@ -776,9 +782,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 25,
+   "cases": 26,
    "files": [
-    "fixtures/commands/v1/cad.arch.exceptions.json"
+    "fixtures/commands/v1/cad.arch.exceptions.json",
+    "fixtures/commands/v1/cad.program.check.json"
    ],
    "options": [
     {
@@ -824,6 +831,11 @@
     {
      "key": "checks",
      "value": "openings",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "program",
      "covered": false
     },
     {
@@ -2366,8 +2378,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 127,
+   "cases": 153,
    "files": [
+    "fixtures/commands/v1/cad.constraints.edit.arch.json",
     "fixtures/commands/v1/cad.constraints.edit.follow.json",
     "fixtures/commands/v1/cad.constraints.edit.json",
     "fixtures/commands/v1/cad.constraints.query.json",
@@ -2393,6 +2406,16 @@
      "key": "axis",
      "value": "vertical",
      "covered": false
+    },
+    {
+     "key": "end",
+     "value": "end",
+     "covered": true
+    },
+    {
+     "key": "end",
+     "value": "start",
+     "covered": true
     },
     {
      "key": "inside",
@@ -2476,6 +2499,11 @@
     },
     {
      "key": "kind",
+     "value": "jamb",
+     "covered": true
+    },
+    {
+     "key": "kind",
      "value": "mid",
      "covered": false
     },
@@ -2532,7 +2560,7 @@
     {
      "key": "kind",
      "value": "symmetric",
-     "covered": false
+     "covered": true
     },
     {
      "key": "kind",
@@ -2550,9 +2578,39 @@
      "covered": true
     },
     {
+     "key": "kind",
+     "value": "wall",
+     "covered": true
+    },
+    {
      "key": "left",
      "value": true,
      "covered": false
+    },
+    {
+     "key": "line",
+     "value": "axis",
+     "covered": true
+    },
+    {
+     "key": "line",
+     "value": "leftCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "leftFace",
+     "covered": true
+    },
+    {
+     "key": "line",
+     "value": "rightCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "rightFace",
+     "covered": true
     },
     {
      "key": "reference",
@@ -4796,12 +4854,27 @@
     },
     {
      "key": "field",
+     "value": "target",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "targetDiff",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "thickness",
      "covered": false
     },
     {
      "key": "field",
      "value": "type",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "unit",
      "covered": false
     },
     {
@@ -5743,7 +5816,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 215,
+   "cases": 221,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.doors.json",
     "fixtures/commands/v1/cad.arch.audit.json",
@@ -5768,8 +5841,11 @@
     "fixtures/commands/v1/cad.leaders.edit.json",
     "fixtures/commands/v1/cad.legends.materials.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
+    "fixtures/commands/v1/cad.modules.edit.json",
+    "fixtures/commands/v1/cad.modules.query.json",
     "fixtures/commands/v1/cad.openings.edit.json",
     "fixtures/commands/v1/cad.schedules.create.json",
+    "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.slabs.create.json",
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.reconcile.json",
@@ -6265,12 +6341,27 @@
     },
     {
      "key": "field",
+     "value": "target",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "targetDiff",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "thickness",
      "covered": false
     },
     {
      "key": "field",
      "value": "type",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "unit",
      "covered": false
     },
     {
@@ -9911,7 +10002,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1097,
+   "cases": 1106,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
@@ -9924,6 +10015,7 @@
     "fixtures/commands/v1/cad.entities.set.rules.json",
     "fixtures/commands/v1/cad.entities.set.subtypes.json",
     "fixtures/commands/v1/cad.fields.edit.json",
+    "fixtures/commands/v1/cad.forms.submit.actions.json",
     "fixtures/commands/v1/cad.forms.submit.children.json",
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.forms.submit.related.json",
@@ -10106,7 +10198,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 382,
+   "cases": 388,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.arch.edit.forms.json",
@@ -10136,8 +10228,11 @@
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.leaders.edit.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
+    "fixtures/commands/v1/cad.modules.edit.json",
     "fixtures/commands/v1/cad.openings.edit.json",
+    "fixtures/commands/v1/cad.program.check.json",
     "fixtures/commands/v1/cad.schedules.create.json",
+    "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.sync.json",
     "fixtures/commands/v1/cad.spaces.edit.json",
@@ -10819,6 +10914,41 @@
      "covered": false
     },
     {
+     "key": "actions",
+     "value": "create",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "delete",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "link",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "show",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "unlink",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "update",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "view",
+     "covered": false
+    },
+    {
      "key": "clearHidden",
      "value": true,
      "covered": false
@@ -11264,6 +11394,41 @@
     {
      "key": "across",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "create",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "delete",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "link",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "show",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "unlink",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "update",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "view",
      "covered": false
     },
     {
@@ -11735,6 +11900,30 @@
    "kinds": []
   },
   {
+   "id": "cad.forms.sources",
+   "title": "Formun kaynakları",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 22,
+   "files": [
+    "fixtures/commands/v1/cad.forms.sources.json"
+   ],
+   "options": [
+    {
+     "key": "draft",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.forms.submit",
    "title": "Formla kaydet",
    "effect": "document",
@@ -11745,9 +11934,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 133,
+   "cases": 159,
    "files": [
     "fixtures/commands/v1/cad.forms.edit.withdraw.json",
+    "fixtures/commands/v1/cad.forms.submit.actions.json",
     "fixtures/commands/v1/cad.forms.submit.children.json",
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.forms.submit.json",
@@ -13887,7 +14077,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 78,
+   "cases": 81,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.accessibility.json",
     "fixtures/commands/v1/cad.arch.audit.stairs.json",
@@ -13896,6 +14086,8 @@
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.gis.takeback.json",
     "fixtures/commands/v1/cad.layers.set.json",
+    "fixtures/commands/v1/cad.modules.edit.json",
+    "fixtures/commands/v1/cad.modules.query.json",
     "fixtures/commands/v1/cad.openings.edit.json",
     "fixtures/commands/v1/cad.openings.edit.types.json",
     "fixtures/commands/v1/cad.openings.query.json",
@@ -14965,6 +15157,127 @@
    ]
   },
   {
+   "id": "cad.modules.edit",
+   "title": "Oda modülü",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 123,
+   "files": [
+    "fixtures/commands/v1/cad.modules.edit.json",
+    "fixtures/commands/v1/cad.modules.query.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "define",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "detach",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "except",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "place",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "remove",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "rename",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "restore",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "update",
+     "covered": true
+    },
+    {
+     "key": "mirror",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "phase",
+     "value": "demolish",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "new",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "temporary",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.modules.query",
+   "title": "Oda modüllerini oku",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 22,
+   "files": [
+    "fixtures/commands/v1/cad.modules.query.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
+   "id": "cad.navigator.read",
+   "title": "Proje gezgini",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 25,
+   "files": [
+    "fixtures/commands/v1/cad.navigator.read.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
    "id": "cad.network.define",
    "title": "Ağ tanımı",
    "effect": "document",
@@ -15222,7 +15535,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 521,
+   "cases": 553,
    "files": [
     "fixtures/commands/v1/cad.casework.edit.json",
     "fixtures/commands/v1/cad.casework.run.json",
@@ -15230,12 +15543,14 @@
     "fixtures/commands/v1/cad.openings.create.json",
     "fixtures/commands/v1/cad.openings.edit.json",
     "fixtures/commands/v1/cad.openings.edit.types.json",
+    "fixtures/commands/v1/cad.program.check.json",
     "fixtures/commands/v1/cad.schedules.create.json",
     "fixtures/commands/v1/cad.schedules.edit.json",
     "fixtures/commands/v1/cad.spaces.quantities.json",
     "fixtures/commands/v1/cad.tags.check.json",
     "fixtures/commands/v1/cad.tags.create.json",
-    "fixtures/commands/v1/cad.tags.edit.json"
+    "fixtures/commands/v1/cad.tags.edit.json",
+    "fixtures/commands/v1/cad.walls.edit.parts.json"
    ],
    "options": [
     {
@@ -15396,9 +15711,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 156,
+   "cases": 165,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.doors.json",
+    "fixtures/commands/v1/cad.constraints.edit.arch.json",
+    "fixtures/commands/v1/cad.modules.edit.json",
+    "fixtures/commands/v1/cad.modules.query.json",
     "fixtures/commands/v1/cad.openings.edit.distance.json",
     "fixtures/commands/v1/cad.openings.edit.json",
     "fixtures/commands/v1/cad.openings.edit.types.json"
@@ -16053,8 +16371,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 26,
+   "cases": 27,
    "files": [
+    "fixtures/commands/v1/cad.constraints.edit.arch.json",
     "fixtures/commands/v1/cad.parameters.edit.json"
    ],
    "options": [
@@ -17772,6 +18091,75 @@
    "kinds": []
   },
   {
+   "id": "cad.program.check",
+   "title": "Bina programını denetle",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 27,
+   "files": [
+    "fixtures/commands/v1/cad.program.check.json",
+    "fixtures/commands/v1/cad.program.edit.json"
+   ],
+   "options": [
+    {
+     "key": "findings",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.program.edit",
+   "title": "Bina programı",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 31,
+   "files": [
+    "fixtures/commands/v1/cad.program.edit.json"
+   ],
+   "options": [
+    {
+     "key": "kind",
+     "value": "common",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "outdoor",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "outdoor",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "space",
+     "covered": true
+    }
+   ]
+  },
+  {
    "id": "cad.ramps.create",
    "title": "Rampa",
    "effect": "document",
@@ -18548,8 +18936,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 135,
+   "cases": 156,
    "files": [
+    "fixtures/commands/v1/cad.navigator.read.json",
     "fixtures/commands/v1/cad.schedules.create.extras.json",
     "fixtures/commands/v1/cad.schedules.create.json",
     "fixtures/commands/v1/cad.schedules.edit.extras.json",
@@ -18685,6 +19074,16 @@
     },
     {
      "key": "field",
+     "value": "target",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "targetDiff",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "thickness",
      "covered": false
     },
@@ -18692,6 +19091,11 @@
      "key": "field",
      "value": "type",
      "covered": true
+    },
+    {
+     "key": "field",
+     "value": "unit",
+     "covered": false
     },
     {
      "key": "field",
@@ -18961,12 +19365,27 @@
     },
     {
      "key": "field",
+     "value": "target",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "targetDiff",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "thickness",
      "covered": false
     },
     {
      "key": "field",
      "value": "type",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "unit",
      "covered": false
     },
     {
@@ -19316,6 +19735,11 @@
      "covered": true
     },
     {
+     "key": "broken",
+     "value": "sourceGone",
+     "covered": false
+    },
+    {
      "key": "cadWork",
      "value": "architecture",
      "covered": true
@@ -19427,8 +19851,78 @@
     },
     {
      "key": "kind",
+     "value": "arc",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "circle",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "column",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "common",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "dimension",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ellipse",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "ellipsoidal",
      "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "grid",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "hatch",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "image",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "insert",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "leader",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "nurbs",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "opening",
+     "covered": false
     },
     {
      "key": "kind",
@@ -19437,8 +19931,108 @@
     },
     {
      "key": "kind",
+     "value": "outdoor",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "point",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "pointcloud",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "polygon",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "polyline",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ramp",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "raster",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ray",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "record",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "slab",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "spline",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "stair",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "table",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "tag",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "text",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "unknown",
      "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "viewmark",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "wall",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "xline",
+     "covered": false
     },
     {
      "key": "lengthStyle",
@@ -19476,6 +20070,11 @@
      "covered": true
     },
     {
+     "key": "mirror",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "operation",
      "value": "fixed",
      "covered": false
@@ -19488,6 +20087,31 @@
     {
      "key": "operation",
      "value": "swing",
+     "covered": false
+    },
+    {
+     "key": "outdoor",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolish",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "new",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "temporary",
      "covered": false
     },
     {
@@ -19529,6 +20153,11 @@
      "key": "projectType",
      "value": "plan3d",
      "covered": true
+    },
+    {
+     "key": "removed",
+     "value": true,
+     "covered": false
     },
     {
      "key": "showSwing",
@@ -19940,6 +20569,46 @@
     },
     {
      "key": "hidden",
+     "value": "blocks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "hatches",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "texts",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "viewmarks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
      "value": true,
      "covered": false
     },
@@ -20131,6 +20800,26 @@
     {
      "key": "periodic",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolition",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "proposed",
      "covered": false
     },
     {
@@ -20742,11 +21431,13 @@
     "mcp": true,
     "server": false
    },
-   "cases": 291,
+   "cases": 334,
    "files": [
+    "fixtures/commands/v1/cad.navigator.read.json",
     "fixtures/commands/v1/cad.sheets.edit.json",
     "fixtures/commands/v1/cad.sheets.fit.json",
     "fixtures/commands/v1/cad.sheets.set.json",
+    "fixtures/commands/v1/cad.sheets.set.recipe.json",
     "fixtures/commands/v1/cad.spaces.finish.json",
     "fixtures/commands/v1/cad.templates.apply.json",
     "fixtures/commands/v1/cad.viewmarks.create.json",
@@ -21102,6 +21793,46 @@
     {
      "key": "header",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "blocks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "hatches",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "texts",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "viewmarks",
      "covered": false
     },
     {
@@ -21583,6 +22314,26 @@
      "key": "periodic",
      "value": true,
      "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolition",
+     "covered": true
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "proposed",
+     "covered": true
     },
     {
      "key": "plot",
@@ -22117,7 +22868,7 @@
     {
      "key": "type",
      "value": "viewLink",
-     "covered": false
+     "covered": true
     },
     {
      "key": "type",
@@ -22544,6 +23295,46 @@
     },
     {
      "key": "hidden",
+     "value": "blocks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "hatches",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "texts",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "viewmarks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
      "value": true,
      "covered": false
     },
@@ -22735,6 +23526,26 @@
     {
      "key": "periodic",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolition",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "proposed",
      "covered": false
     },
     {
@@ -23346,9 +24157,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 25,
+   "cases": 47,
    "files": [
-    "fixtures/commands/v1/cad.sheets.set.json"
+    "fixtures/commands/v1/cad.sheets.set.json",
+    "fixtures/commands/v1/cad.sheets.set.recipe.json"
    ],
    "options": [
     {
@@ -23375,12 +24187,18 @@
     "mcp": true,
     "server": false
    },
-   "cases": 85,
+   "cases": 117,
    "files": [
+    "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.slabs.create.json",
     "fixtures/commands/v1/cad.slabs.edit.json"
    ],
    "options": [
+    {
+     "key": "bound",
+     "value": true,
+     "covered": true
+    },
     {
      "key": "boundary",
      "value": "outline",
@@ -23510,8 +24328,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 38,
+   "cases": 51,
    "files": [
+    "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.slabs.edit.json"
    ],
    "options": [
@@ -23533,6 +24352,16 @@
     {
      "key": "kind",
      "value": "add",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "bind",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "detach",
      "covered": true
     },
     {
@@ -23966,8 +24795,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 626,
+   "cases": 648,
    "files": [
+    "fixtures/commands/v1/cad.program.check.json",
+    "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.slabs.create.json",
     "fixtures/commands/v1/cad.spaces.columns.json",
     "fixtures/commands/v1/cad.spaces.create.json",
@@ -23975,7 +24806,8 @@
     "fixtures/commands/v1/cad.spaces.quantities.json",
     "fixtures/commands/v1/cad.spaces.scope.json",
     "fixtures/commands/v1/cad.spaces.separators.json",
-    "fixtures/commands/v1/cad.spaces.sources.json"
+    "fixtures/commands/v1/cad.spaces.sources.json",
+    "fixtures/commands/v1/cad.walls.edit.parts.json"
    ],
    "options": [
     {
@@ -24171,8 +25003,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 37,
+   "cases": 58,
    "files": [
+    "fixtures/commands/v1/cad.spaces.edit.decisions.json",
     "fixtures/commands/v1/cad.spaces.edit.json",
     "fixtures/commands/v1/cad.spaces.quantities.json"
    ],
@@ -24190,6 +25023,11 @@
     {
      "key": "columns",
      "value": "net",
+     "covered": false
+    },
+    {
+     "key": "finishes",
+     "value": true,
      "covered": false
     },
     {
@@ -24266,7 +25104,7 @@
    "kinds": [
     {
      "kind": "space",
-     "covered": false
+     "covered": true
     }
    ]
   },
@@ -24359,8 +25197,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 835,
+   "cases": 854,
    "files": [
+    "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.slabs.create.json",
     "fixtures/commands/v1/cad.slabs.edit.json",
     "fixtures/commands/v1/cad.spaces.columns.json",
@@ -24371,7 +25210,8 @@
     "fixtures/commands/v1/cad.spaces.quantities.stairs.json",
     "fixtures/commands/v1/cad.spaces.scope.json",
     "fixtures/commands/v1/cad.spaces.separators.json",
-    "fixtures/commands/v1/cad.spaces.sources.json"
+    "fixtures/commands/v1/cad.spaces.sources.json",
+    "fixtures/commands/v1/cad.walls.edit.parts.json"
    ],
    "options": [
     {
@@ -25277,6 +26117,11 @@
      "covered": false
     },
     {
+     "key": "wrap",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "zeros",
      "value": "both",
      "covered": false
@@ -25854,10 +26699,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 708,
+   "cases": 710,
    "files": [
+    "fixtures/commands/v1/cad.program.edit.json",
     "fixtures/commands/v1/cad.schedules.create.json",
     "fixtures/commands/v1/cad.schedules.edit.json",
+    "fixtures/commands/v1/cad.spaces.edit.decisions.json",
     "fixtures/commands/v1/cad.tags.check.json",
     "fixtures/commands/v1/cad.tags.create.json",
     "fixtures/commands/v1/cad.tags.edit.json"
@@ -26620,16 +27467,69 @@
     "mcp": true,
     "server": false
    },
-   "cases": 73,
+   "cases": 141,
    "files": [
+    "fixtures/commands/v1/cad.navigator.read.json",
+    "fixtures/commands/v1/cad.sheets.set.recipe.json",
     "fixtures/commands/v1/cad.viewmarks.edit.json",
     "fixtures/commands/v1/cad.viewmarks.references.json",
-    "fixtures/commands/v1/cad.views.edit.json"
+    "fixtures/commands/v1/cad.views.edit.json",
+    "fixtures/commands/v1/cad.views.edit.recipe.json"
    ],
    "options": [
     {
+     "key": "below",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "hidden",
+     "value": "blocks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "hatches",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "texts",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "viewmarks",
+     "covered": false
+    },
+    {
      "key": "kind",
      "value": "delete",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "recipe",
      "covered": true
     },
     {
@@ -26641,6 +27541,26 @@
      "key": "kind",
      "value": "save",
      "covered": true
+    },
+    {
+     "key": "phase",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolition",
+     "covered": true
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": true
+    },
+    {
+     "key": "phase",
+     "value": "proposed",
+     "covered": false
     }
    ],
    "kinds": []
@@ -26973,15 +27893,18 @@
     "mcp": true,
     "server": false
    },
-   "cases": 148,
+   "cases": 198,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.json",
+    "fixtures/commands/v1/cad.constraints.edit.arch.json",
     "fixtures/commands/v1/cad.dimensions.interior.json",
     "fixtures/commands/v1/cad.dimensionsets.create.span.json",
     "fixtures/commands/v1/cad.openings.edit.json",
+    "fixtures/commands/v1/cad.slabs.bound.json",
     "fixtures/commands/v1/cad.spaces.edit.json",
     "fixtures/commands/v1/cad.walls.edit.json",
     "fixtures/commands/v1/cad.walls.edit.length.json",
+    "fixtures/commands/v1/cad.walls.edit.parts.json",
     "fixtures/commands/v1/cad.walls.edit.shift.json"
    ],
    "options": [
@@ -27093,11 +28016,46 @@
     {
      "key": "justify",
      "value": "left",
-     "covered": false
+     "covered": true
     },
     {
      "key": "justify",
      "value": "right",
+     "covered": true
+    },
+    {
+     "key": "keep",
+     "value": "center",
+     "covered": true
+    },
+    {
+     "key": "keep",
+     "value": "coreLeft",
+     "covered": true
+    },
+    {
+     "key": "keep",
+     "value": "coreRight",
+     "covered": true
+    },
+    {
+     "key": "keep",
+     "value": "leftFace",
+     "covered": true
+    },
+    {
+     "key": "keep",
+     "value": "path",
+     "covered": true
+    },
+    {
+     "key": "keep",
+     "value": "rightFace",
+     "covered": true
+    },
+    {
+     "key": "keep",
+     "value": true,
      "covered": true
     },
     {
@@ -27264,11 +28222,18 @@
     "mcp": true,
     "server": false
    },
-   "cases": 35,
+   "cases": 74,
    "files": [
-    "fixtures/commands/v1/cad.walls.joins.json"
+    "fixtures/commands/v1/cad.walls.joins.json",
+    "fixtures/commands/v1/cad.walls.joins.nodes.json"
    ],
-   "options": [],
+   "options": [
+    {
+     "key": "nodes",
+     "value": true,
+     "covered": true
+    }
+   ],
    "kinds": [
     {
      "kind": "wall",
@@ -27482,11 +28447,17 @@
     "mcp": true,
     "server": false
    },
-   "cases": 82,
+   "cases": 108,
    "files": [
+    "fixtures/commands/v1/cad.walls.rectangle.adopt.json",
     "fixtures/commands/v1/cad.walls.rectangle.json"
    ],
    "options": [
+    {
+     "key": "adopt",
+     "value": true,
+     "covered": true
+    },
     {
      "key": "discipline",
      "value": "architecture",
@@ -29503,2624 +30474,37 @@
     },
     {
      "key": "actions",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "baselineCenter",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "baselineRight",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "bottomCenter",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "bottomLeft",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "bottomRight",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "center",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "left",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "middleCenter",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "middleLeft",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "middleRight",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "right",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "topCenter",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "topLeft",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": "topRight",
-     "covered": false
-    },
-    {
-     "key": "align",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "always",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "angleUnit",
-     "value": "deg",
-     "covered": false
-    },
-    {
-     "key": "angleUnit",
-     "value": "grad",
-     "covered": false
-    },
-    {
-     "key": "area",
-     "value": "boundary",
-     "covered": false
-    },
-    {
-     "key": "area",
-     "value": "corner",
-     "covered": false
-    },
-    {
-     "key": "area",
-     "value": "free",
-     "covered": false
-    },
-    {
-     "key": "area",
-     "value": "horizontal",
-     "covered": false
-    },
-    {
-     "key": "area",
-     "value": "parcel",
-     "covered": false
-    },
-    {
-     "key": "area",
-     "value": "perimeter",
-     "covered": false
-    },
-    {
-     "key": "areaUnit",
-     "value": "donum",
-     "covered": false
-    },
-    {
-     "key": "areaUnit",
-     "value": "ha",
-     "covered": false
-    },
-    {
-     "key": "areaUnit",
-     "value": "m2",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "archTick",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "boxBlank",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "boxFilled",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "closed",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "datumFilled",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "dot",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "dotBlank",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "dotSmall",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "none",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "oblique",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "open",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "open30",
-     "covered": false
-    },
-    {
-     "key": "arrow",
-     "value": "open90",
-     "covered": false
-    },
-    {
-     "key": "attachments",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "arcgis",
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "basic",
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "bearer",
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "google",
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "header",
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "none",
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "oauth2",
-     "covered": false
-    },
-    {
-     "key": "auth",
-     "value": "query",
-     "covered": false
-    },
-    {
-     "key": "autoSelect",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "axis",
-     "value": "aligned",
-     "covered": false
-    },
-    {
-     "key": "axis",
-     "value": "horizontal",
-     "covered": false
-    },
-    {
-     "key": "axis",
-     "value": "vertical",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "addition",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "colorBurn",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "colorDodge",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "darken",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "difference",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "exclusion",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "hardLight",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "lighten",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "multiply",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "normal",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "overlay",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "screen",
-     "covered": false
-    },
-    {
-     "key": "blend",
-     "value": "softLight",
-     "covered": false
-    },
-    {
-     "key": "bold",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "bothWays",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "broken",
-     "value": "hostGone",
-     "covered": false
-    },
-    {
-     "key": "broken",
-     "value": "mixedSources",
-     "covered": false
-    },
-    {
-     "key": "broken",
-     "value": "notBuilt",
-     "covered": false
-    },
-    {
-     "key": "broken",
-     "value": "openingUnplaced",
-     "covered": false
-    },
-    {
-     "key": "broken",
-     "value": "unsupportedWall",
-     "covered": false
-    },
-    {
-     "key": "broken",
-     "value": "wallGone",
-     "covered": false
-    },
-    {
-     "key": "cadWork",
-     "value": "architecture",
-     "covered": false
-    },
-    {
-     "key": "cadWork",
-     "value": "map",
-     "covered": false
-    },
-    {
-     "key": "caps",
-     "value": "closed",
-     "covered": false
-    },
-    {
-     "key": "caps",
-     "value": "open",
-     "covered": false
-    },
-    {
-     "key": "clearHidden",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "collapsed",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "connect",
-     "value": "ends",
-     "covered": false
-    },
-    {
-     "key": "connect",
-     "value": "vertices",
-     "covered": false
-    },
-    {
-     "key": "constant",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "convention",
-     "value": "coordinateFrame",
-     "covered": false
-    },
-    {
-     "key": "convention",
-     "value": "positionVector",
-     "covered": false
-    },
-    {
-     "key": "corner",
-     "value": "blind",
-     "covered": false
-    },
-    {
-     "key": "corner",
-     "value": "open",
-     "covered": false
-    },
-    {
-     "key": "cumulative",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "curved",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "descending",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "detail",
-     "value": "detailed",
-     "covered": false
-    },
-    {
-     "key": "detail",
-     "value": "schematic",
-     "covered": false
-    },
-    {
-     "key": "detail",
-     "value": "standard",
-     "covered": false
-    },
-    {
-     "key": "dimLineType",
-     "value": "continuous",
-     "covered": false
-    },
-    {
-     "key": "dimLineType",
-     "value": "dashdot",
-     "covered": false
-    },
-    {
-     "key": "dimLineType",
-     "value": "dashed",
-     "covered": false
-    },
-    {
-     "key": "dimLineType",
-     "value": "dotted",
-     "covered": false
-    },
-    {
-     "key": "drawingFont",
-     "value": "architects-daughter",
-     "covered": false
-    },
-    {
-     "key": "drawingFont",
-     "value": "arimo",
-     "covered": false
-    },
-    {
-     "key": "drawingFont",
-     "value": "barlow",
-     "covered": false
-    },
-    {
-     "key": "drawingFont",
-     "value": "courier-prime",
-     "covered": false
-    },
-    {
-     "key": "drawingFont",
-     "value": "overpass",
-     "covered": false
-    },
-    {
-     "key": "drawingFont",
-     "value": "plex-mono",
-     "covered": false
-    },
-    {
-     "key": "drawingFont",
-     "value": "quicksand",
-     "covered": false
-    },
-    {
-     "key": "drawingUnit",
-     "value": "cm",
-     "covered": false
-    },
-    {
-     "key": "drawingUnit",
-     "value": "ft",
-     "covered": false
-    },
-    {
-     "key": "drawingUnit",
-     "value": "in",
-     "covered": false
-    },
-    {
-     "key": "drawingUnit",
-     "value": "m",
-     "covered": false
-    },
-    {
-     "key": "drawingUnit",
-     "value": "mm",
-     "covered": false
-    },
-    {
-     "key": "duplicates",
-     "value": "first",
-     "covered": false
-    },
-    {
-     "key": "duplicates",
-     "value": "refuse",
-     "covered": false
-    },
-    {
-     "key": "duplicates",
-     "value": "warn",
-     "covered": false
-    },
-    {
-     "key": "dynamic",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "enforce",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "expanded",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "extLineType",
-     "value": "continuous",
-     "covered": false
-    },
-    {
-     "key": "extLineType",
-     "value": "dashdot",
-     "covered": false
-    },
-    {
-     "key": "extLineType",
-     "value": "dashed",
-     "covered": false
-    },
-    {
-     "key": "extLineType",
-     "value": "dotted",
-     "covered": false
-    },
-    {
-     "key": "face",
-     "value": "left",
-     "covered": false
-    },
-    {
-     "key": "face",
-     "value": "right",
-     "covered": false
-    },
-    {
-     "key": "fit",
-     "value": "auto",
-     "covered": false
-    },
-    {
-     "key": "fit",
-     "value": "outside",
-     "covered": false
-    },
-    {
-     "key": "fit",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "fold",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "font",
-     "value": "architects-daughter",
-     "covered": false
-    },
-    {
-     "key": "font",
-     "value": "arimo",
-     "covered": false
-    },
-    {
-     "key": "font",
-     "value": "barlow",
-     "covered": false
-    },
-    {
-     "key": "font",
-     "value": "courier-prime",
-     "covered": false
-    },
-    {
-     "key": "font",
-     "value": "overpass",
-     "covered": false
-    },
-    {
-     "key": "font",
-     "value": "plex-mono",
-     "covered": false
-    },
-    {
-     "key": "font",
-     "value": "quicksand",
-     "covered": false
-    },
-    {
-     "key": "form",
-     "value": "door",
-     "covered": false
-    },
-    {
-     "key": "form",
-     "value": "flue",
-     "covered": false
-    },
-    {
-     "key": "form",
-     "value": "niche",
-     "covered": false
-    },
-    {
-     "key": "form",
-     "value": "opening",
-     "covered": false
-    },
-    {
-     "key": "form",
-     "value": "window",
-     "covered": false
-    },
-    {
-     "key": "fridge",
-     "value": "end",
-     "covered": false
-    },
-    {
-     "key": "fridge",
-     "value": "start",
-     "covered": false
-    },
-    {
-     "key": "from",
-     "value": "ED50",
-     "covered": false
-    },
-    {
-     "key": "from",
-     "value": "TUREF",
-     "covered": false
-    },
-    {
-     "key": "from",
-     "value": "WGS84",
-     "covered": false
-    },
-    {
-     "key": "frozen",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "geometry",
-     "value": "annotation",
-     "covered": false
-    },
-    {
-     "key": "geometry",
-     "value": "area",
-     "covered": false
-    },
-    {
-     "key": "geometry",
-     "value": "line",
-     "covered": false
-    },
-    {
-     "key": "geometry",
-     "value": "point",
-     "covered": false
-    },
-    {
-     "key": "hand",
-     "value": "left",
-     "covered": false
-    },
-    {
-     "key": "hand",
-     "value": "right",
-     "covered": false
-    },
-    {
-     "key": "hidden",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "how",
-     "value": "count",
-     "covered": false
-    },
-    {
-     "key": "how",
-     "value": "max",
-     "covered": false
-    },
-    {
-     "key": "how",
-     "value": "mean",
-     "covered": false
-    },
-    {
-     "key": "how",
-     "value": "min",
-     "covered": false
-    },
-    {
-     "key": "how",
-     "value": "sum",
-     "covered": false
-    },
-    {
-     "key": "ink",
-     "value": "fg",
-     "covered": false
-    },
-    {
-     "key": "ink",
-     "value": "fg-dim",
-     "covered": false
-    },
-    {
-     "key": "ink",
-     "value": "label",
-     "covered": false
-    },
-    {
-     "key": "inside",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "invisible",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "italic",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "keep",
-     "value": "all",
-     "covered": false
-    },
-    {
-     "key": "keep",
-     "value": "matched",
-     "covered": false
-    },
-    {
-     "key": "keepCurrent",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "kept",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "along",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "angle",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "any",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "arc",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "arcgis",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "array",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "attach",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "bigint",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "binary",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "bool",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "boolean",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "both",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "boundary",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "boundaryMustBeCoveredBy",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "center",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "circle",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "code",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "coincident",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "collinear",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "column",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "concentric",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "date",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "datetime",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "decimal",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "deviation",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "diameter",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "digitized",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "dimension",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "distance",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "ellipse",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "ellipsoidal",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "empty",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "end",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "equal",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "field",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "fix",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "flip",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "geographic",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "geojson",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "geopackage",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "google",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "grid",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "hatch",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "horizontal",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "image",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "insert",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "instant",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "integer",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "interior",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "json",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "leader",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "length",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "limits",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "line",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "linear",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "local",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "lookup",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "manhattan",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mapping",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mid",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "move",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustBeCoveredBy",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustBeOnEndOf",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustBeValid",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotHaveDangles",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotHaveDuplicates",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotHaveGaps",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotHaveMissingVertices",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotHaveShortEdges",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotHaveSlivers",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotHaveSmallAngles",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotOverlap",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "mustNotOverlapWith",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "node",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "number",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "nurbs",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "ogcFeatures",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "ogcTiles",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "opening",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "orthometric",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "overlay",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "parallel",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "path",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "perpendicular",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "point",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "pointcloud",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "polar",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "polygon",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "polyline",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "postgis",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "profile",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "radius",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "ramp",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "raster",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "ray",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "recompute",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "record",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "road",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "rotate",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "scale",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "segment",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "show",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "slab",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "space",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "speed",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "spline",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "stair",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "start",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "step",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "straight",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "stretch",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "symmetric",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "table",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "tag",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "tangent",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "text",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "time",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "tm",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "tool",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "unknown",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "utility",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "uuid",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "vector",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "vertex",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "vertical",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "viewmark",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "visibility",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "wall",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "wfs",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "wms",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "wmts",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "xline",
-     "covered": false
-    },
-    {
-     "key": "kind",
-     "value": "xyz",
-     "covered": false
-    },
-    {
-     "key": "labels",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "left",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "lengthStyle",
-     "value": "architectural",
-     "covered": false
-    },
-    {
-     "key": "lengthStyle",
-     "value": "decimal",
-     "covered": false
-    },
-    {
-     "key": "lengthStyle",
-     "value": "engineering",
-     "covered": false
-    },
-    {
-     "key": "lengthStyle",
-     "value": "fractional",
-     "covered": false
-    },
-    {
-     "key": "level",
-     "value": "district",
-     "covered": false
-    },
-    {
-     "key": "level",
-     "value": "neighbourhood",
-     "covered": false
-    },
-    {
-     "key": "level",
-     "value": "province",
-     "covered": false
-    },
-    {
-     "key": "levelView",
-     "value": "active",
-     "covered": false
-    },
-    {
-     "key": "levelView",
-     "value": "all",
-     "covered": false
-    },
-    {
-     "key": "levelView",
-     "value": "below",
-     "covered": false
-    },
-    {
-     "key": "line",
-     "value": "contour",
-     "covered": false
-    },
-    {
-     "key": "line",
-     "value": "curved",
-     "covered": false
-    },
-    {
-     "key": "line",
-     "value": "horizontal",
-     "covered": false
-    },
-    {
-     "key": "line",
-     "value": "parallel",
-     "covered": false
-    },
-    {
-     "key": "lineType",
-     "value": "continuous",
-     "covered": false
-    },
-    {
-     "key": "lineType",
-     "value": "dashdot",
-     "covered": false
-    },
-    {
-     "key": "lineType",
-     "value": "dashed",
-     "covered": false
-    },
-    {
-     "key": "lineType",
-     "value": "dotted",
-     "covered": false
-    },
-    {
-     "key": "locked",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "markers",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "mask",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "maxExclusive",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "merge",
-     "value": "clear",
-     "covered": false
-    },
-    {
-     "key": "merge",
-     "value": "first",
-     "covered": false
-    },
-    {
-     "key": "merge",
-     "value": "max",
-     "covered": false
-    },
-    {
-     "key": "merge",
-     "value": "min",
-     "covered": false
-    },
-    {
-     "key": "merge",
-     "value": "sum",
-     "covered": false
-    },
-    {
-     "key": "mergeLines",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "minExclusive",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "mirror",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "mode",
-     "value": "always",
-     "covered": false
-    },
-    {
-     "key": "mode",
-     "value": "ifNeeded",
-     "covered": false
-    },
-    {
-     "key": "mode",
-     "value": "off",
-     "covered": false
-    },
-    {
-     "key": "mode",
-     "value": "rules",
-     "covered": false
-    },
-    {
-     "key": "mode",
-     "value": "single",
-     "covered": false
-    },
-    {
-     "key": "monochrome",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "movable",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "multiline",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "multiple",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "new",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "nullsEqual",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "off",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "on",
-     "value": "leave",
-     "covered": false
-    },
-    {
-     "key": "on",
-     "value": "save",
-     "covered": false
-    },
-    {
-     "key": "on",
-     "value": "submit",
-     "covered": false
-    },
-    {
-     "key": "onDelete",
-     "value": "cascade",
-     "covered": false
-    },
-    {
-     "key": "onDelete",
-     "value": "keep",
-     "covered": false
-    },
-    {
-     "key": "onDelete",
-     "value": "restrict",
-     "covered": false
-    },
-    {
-     "key": "onDelete",
-     "value": "unlink",
-     "covered": false
-    },
-    {
-     "key": "op",
      "value": "create",
      "covered": false
     },
     {
-     "key": "op",
+     "key": "actions",
      "value": "delete",
      "covered": false
     },
     {
-     "key": "op",
-     "value": "edit",
+     "key": "actions",
+     "value": "link",
      "covered": false
     },
     {
-     "key": "op",
+     "key": "actions",
+     "value": "show",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "unlink",
+     "covered": false
+    },
+    {
+     "key": "actions",
      "value": "update",
      "covered": false
     },
     {
-     "key": "openings",
-     "value": "centers",
-     "covered": false
-    },
-    {
-     "key": "openings",
-     "value": "ends",
-     "covered": false
-    },
-    {
-     "key": "operation",
-     "value": "fixed",
-     "covered": false
-    },
-    {
-     "key": "operation",
-     "value": "merge",
-     "covered": false
-    },
-    {
-     "key": "operation",
-     "value": "slide",
-     "covered": false
-    },
-    {
-     "key": "operation",
-     "value": "split",
-     "covered": false
-    },
-    {
-     "key": "operation",
-     "value": "swing",
-     "covered": false
-    },
-    {
-     "key": "outside",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "oven",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "overlap",
-     "value": "always",
-     "covered": false
-    },
-    {
-     "key": "overlap",
-     "value": "ifNeeded",
-     "covered": false
-    },
-    {
-     "key": "overlap",
-     "value": "never",
-     "covered": false
-    },
-    {
-     "key": "overridable",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "cooktop",
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "corner",
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "counter",
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "filler",
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "fridge",
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "module",
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "sink",
-     "covered": false
-    },
-    {
-     "key": "part",
-     "value": "upper",
-     "covered": false
-    },
-    {
-     "key": "phaseView",
-     "value": "all",
-     "covered": false
-    },
-    {
-     "key": "phaseView",
-     "value": "demolition",
-     "covered": false
-    },
-    {
-     "key": "phaseView",
-     "value": "existing",
-     "covered": false
-    },
-    {
-     "key": "phaseView",
-     "value": "proposed",
-     "covered": false
-    },
-    {
-     "key": "pickInterior",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "placement",
-     "value": "along",
-     "covered": false
-    },
-    {
-     "key": "placement",
-     "value": "beside",
-     "covered": false
-    },
-    {
-     "key": "placement",
-     "value": "center",
-     "covered": false
-    },
-    {
-     "key": "placement",
-     "value": "corner",
-     "covered": false
-    },
-    {
-     "key": "plot",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "point",
-     "value": "around",
-     "covered": false
-    },
-    {
-     "key": "point",
-     "value": "center",
-     "covered": false
-    },
-    {
-     "key": "position",
-     "value": "above",
-     "covered": false
-    },
-    {
-     "key": "position",
-     "value": "below",
-     "covered": false
-    },
-    {
-     "key": "position",
-     "value": "on",
-     "covered": false
-    },
-    {
-     "key": "position",
-     "value": "sides",
-     "covered": false
-    },
-    {
-     "key": "preset",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "reach",
-     "value": "connected",
-     "covered": false
-    },
-    {
-     "key": "reach",
-     "value": "downstream",
-     "covered": false
-    },
-    {
-     "key": "readOnly",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "redact",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "reduceToGrid",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "reference",
-     "value": "core",
-     "covered": false
-    },
-    {
-     "key": "reference",
-     "value": "faces",
-     "covered": false
-    },
-    {
-     "key": "reference",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "relation",
-     "value": "contains",
-     "covered": false
-    },
-    {
-     "key": "relation",
-     "value": "intersects",
-     "covered": false
-    },
-    {
-     "key": "relation",
-     "value": "nearest",
-     "covered": false
-    },
-    {
-     "key": "relation",
-     "value": "within",
-     "covered": false
-    },
-    {
-     "key": "required",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "resolved",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "restrictive",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "retired",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "reuseLast",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "reverseA",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "reverseB",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "role",
-     "value": "junction",
-     "covered": false
-    },
-    {
-     "key": "role",
-     "value": "source",
-     "covered": false
-    },
-    {
-     "key": "role",
-     "value": "valve",
-     "covered": false
-    },
-    {
-     "key": "rotate",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "row",
-     "value": "grids",
-     "covered": false
-    },
-    {
-     "key": "row",
-     "value": "openings",
-     "covered": false
-    },
-    {
-     "key": "row",
-     "value": "overall",
-     "covered": false
-    },
-    {
-     "key": "row",
-     "value": "walls",
-     "covered": false
-    },
-    {
-     "key": "runs",
-     "value": "auto",
-     "covered": false
-    },
-    {
-     "key": "runs",
-     "value": "background",
-     "covered": false
-    },
-    {
-     "key": "runs",
-     "value": "here",
-     "covered": false
-    },
-    {
-     "key": "shape",
-     "value": "ellipse",
-     "covered": false
-    },
-    {
-     "key": "shape",
-     "value": "rect",
-     "covered": false
-    },
-    {
-     "key": "shape",
-     "value": "round",
-     "covered": false
-    },
-    {
-     "key": "showSwing",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "side",
-     "value": "left",
-     "covered": false
-    },
-    {
-     "key": "side",
-     "value": "right",
-     "covered": false
-    },
-    {
-     "key": "sizeBy",
-     "value": "leaf",
-     "covered": false
-    },
-    {
-     "key": "sizeBy",
-     "value": "rough",
-     "covered": false
-    },
-    {
-     "key": "sizeBy",
-     "value": "unit",
-     "covered": false
-    },
-    {
-     "key": "space",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "spaceMethod",
-     "value": "centerline",
-     "covered": false
-    },
-    {
-     "key": "spaceMethod",
-     "value": "gross",
-     "covered": false
-    },
-    {
-     "key": "spaceMethod",
-     "value": "net",
-     "covered": false
-    },
-    {
-     "key": "split",
-     "value": "clear",
-     "covered": false
-    },
-    {
-     "key": "split",
-     "value": "copy",
-     "covered": false
-    },
-    {
-     "key": "split",
-     "value": "default",
-     "covered": false
-    },
-    {
-     "key": "split",
-     "value": "ratio",
-     "covered": false
-    },
-    {
-     "key": "steps",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "suggest",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "symbol",
-     "value": "cross",
-     "covered": false
-    },
-    {
-     "key": "symbol",
-     "value": "ring",
-     "covered": false
-    },
-    {
-     "key": "symbol",
-     "value": "triangle",
-     "covered": false
-    },
-    {
-     "key": "tableOnly",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "textPlace",
-     "value": "centre",
-     "covered": false
-    },
-    {
-     "key": "tight",
-     "value": "keep",
-     "covered": false
-    },
-    {
-     "key": "tight",
-     "value": "shift",
-     "covered": false
-    },
-    {
-     "key": "transparent",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "action",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "attachments",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "divider",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "field",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "group",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "layer",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "location",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "note",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "related",
-     "covered": false
-    },
-    {
-     "key": "type",
-     "value": "tab",
-     "covered": false
-    },
-    {
-     "key": "uTurns",
-     "value": "allowed",
-     "covered": false
-    },
-    {
-     "key": "uTurns",
-     "value": "deadEnds",
-     "covered": false
-    },
-    {
-     "key": "uTurns",
-     "value": "never",
-     "covered": false
-    },
-    {
-     "key": "unique",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "cm",
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "drawing",
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "ft",
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "in",
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "inch",
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "m",
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "mm",
-     "covered": false
-    },
-    {
-     "key": "unit",
-     "value": "paper",
-     "covered": false
-    },
-    {
-     "key": "units",
-     "value": "cm",
-     "covered": false
-    },
-    {
-     "key": "units",
-     "value": "ft",
-     "covered": false
-    },
-    {
-     "key": "units",
-     "value": "in",
-     "covered": false
-    },
-    {
-     "key": "units",
-     "value": "m",
-     "covered": false
-    },
-    {
-     "key": "units",
-     "value": "mm",
-     "covered": false
-    },
-    {
-     "key": "units",
-     "value": "unitless",
-     "covered": false
-    },
-    {
-     "key": "unloaded",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "upper",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "upright",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "valid",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "value",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "values",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "verify",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "view",
-     "value": "cards",
-     "covered": false
-    },
-    {
-     "key": "view",
-     "value": "chart",
-     "covered": false
-    },
-    {
-     "key": "view",
-     "value": "list",
-     "covered": false
-    },
-    {
-     "key": "view",
-     "value": "table",
-     "covered": false
-    },
-    {
-     "key": "visible",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "warning",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "check",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "checkList",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "chips",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "color",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "date",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "list",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "number",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "radio",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "search",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "segmented",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "slider",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "switch",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "text",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "textArea",
-     "covered": false
-    },
-    {
-     "key": "widget",
-     "value": "tree",
-     "covered": false
-    },
-    {
-     "key": "withdrawn",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "withheld",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "workspace",
-     "value": "cad",
-     "covered": false
-    },
-    {
-     "key": "workspace",
-     "value": "disaster",
-     "covered": false
-    },
-    {
-     "key": "workspace",
-     "value": "gis",
-     "covered": false
-    },
-    {
-     "key": "workspace",
-     "value": "plan3d",
-     "covered": false
-    },
-    {
-     "key": "writable",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "yFlip",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "zeros",
-     "value": "both",
-     "covered": false
-    },
-    {
-     "key": "zeros",
-     "value": "leading",
-     "covered": false
-    },
-    {
-     "key": "zeros",
-     "value": "trailing",
-     "covered": false
-    }
-   ],
-   "kinds": []
-  },
-  {
-   "id": "project.changes",
-   "title": "Proje değişiklikleri ve ilişkili ölçüler",
-   "effect": "project",
-   "hosts": {
-    "desktop": false,
-    "headless": true,
-    "python": true,
-    "mcp": false,
-    "server": true
-   },
-   "cases": 0,
-   "files": [],
-   "options": [
-    {
-     "key": "absolute",
-     "value": true,
-     "covered": false
-    },
-    {
-     "key": "accept",
-     "value": "any",
-     "covered": false
-    },
-    {
-     "key": "accept",
-     "value": "document",
-     "covered": false
-    },
-    {
-     "key": "accept",
-     "value": "photo",
-     "covered": false
-    },
-    {
-     "key": "across",
-     "value": true,
+     "key": "actions",
+     "value": "view",
      "covered": false
     },
     {
@@ -32394,6 +30778,11 @@
      "covered": false
     },
     {
+     "key": "below",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "blend",
      "value": "addition",
      "covered": false
@@ -32486,6 +30875,11 @@
     {
      "key": "broken",
      "value": "openingUnplaced",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "sourceGone",
      "covered": false
     },
     {
@@ -32694,6 +31088,16 @@
      "covered": false
     },
     {
+     "key": "end",
+     "value": "end",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "start",
+     "covered": false
+    },
+    {
      "key": "enforce",
      "value": true,
      "covered": false
@@ -32871,6 +31275,46 @@
     {
      "key": "hand",
      "value": "right",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "blocks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "hatches",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "texts",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "viewmarks",
      "covered": false
     },
     {
@@ -33055,6 +31499,11 @@
     },
     {
      "key": "kind",
+     "value": "common",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "concentric",
      "covered": false
     },
@@ -33196,6 +31645,11 @@
     {
      "key": "kind",
      "value": "interior",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "jamb",
      "covered": false
     },
     {
@@ -33351,6 +31805,11 @@
     {
      "key": "kind",
      "value": "orthometric",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "outdoor",
      "covered": false
     },
     {
@@ -33550,6 +32009,11 @@
     },
     {
      "key": "kind",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "unknown",
      "covered": false
     },
@@ -33680,6 +32144,11 @@
     },
     {
      "key": "line",
+     "value": "axis",
+     "covered": false
+    },
+    {
+     "key": "line",
      "value": "contour",
      "covered": false
     },
@@ -33695,7 +32164,27 @@
     },
     {
      "key": "line",
+     "value": "leftCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "leftFace",
+     "covered": false
+    },
+    {
+     "key": "line",
      "value": "parallel",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "rightCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "rightFace",
      "covered": false
     },
     {
@@ -33929,6 +32418,11 @@
      "covered": false
     },
     {
+     "key": "outdoor",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "outside",
      "value": true,
      "covered": false
@@ -33996,6 +32490,41 @@
     {
      "key": "part",
      "value": "upper",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolish",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolition",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "new",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "proposed",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "temporary",
      "covered": false
     },
     {
@@ -34141,6 +32670,11 @@
     {
      "key": "relation",
      "value": "within",
+     "covered": false
+    },
+    {
+     "key": "removed",
+     "value": true,
      "covered": false
     },
     {
@@ -34676,6 +33210,2823 @@
     {
      "key": "workspace",
      "value": "plan3d",
+     "covered": false
+    },
+    {
+     "key": "wrap",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "writable",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "yFlip",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "zeros",
+     "value": "both",
+     "covered": false
+    },
+    {
+     "key": "zeros",
+     "value": "leading",
+     "covered": false
+    },
+    {
+     "key": "zeros",
+     "value": "trailing",
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "project.changes",
+   "title": "Proje değişiklikleri ve ilişkili ölçüler",
+   "effect": "project",
+   "hosts": {
+    "desktop": false,
+    "headless": true,
+    "python": true,
+    "mcp": false,
+    "server": true
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "absolute",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "accept",
+     "value": "any",
+     "covered": false
+    },
+    {
+     "key": "accept",
+     "value": "document",
+     "covered": false
+    },
+    {
+     "key": "accept",
+     "value": "photo",
+     "covered": false
+    },
+    {
+     "key": "across",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "create",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "delete",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "link",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "show",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "unlink",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "update",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "view",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "baselineCenter",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "baselineRight",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "bottomCenter",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "bottomLeft",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "bottomRight",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "left",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "middleCenter",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "middleLeft",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "middleRight",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "topCenter",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "topLeft",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": "topRight",
+     "covered": false
+    },
+    {
+     "key": "align",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "always",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "angleUnit",
+     "value": "deg",
+     "covered": false
+    },
+    {
+     "key": "angleUnit",
+     "value": "grad",
+     "covered": false
+    },
+    {
+     "key": "area",
+     "value": "boundary",
+     "covered": false
+    },
+    {
+     "key": "area",
+     "value": "corner",
+     "covered": false
+    },
+    {
+     "key": "area",
+     "value": "free",
+     "covered": false
+    },
+    {
+     "key": "area",
+     "value": "horizontal",
+     "covered": false
+    },
+    {
+     "key": "area",
+     "value": "parcel",
+     "covered": false
+    },
+    {
+     "key": "area",
+     "value": "perimeter",
+     "covered": false
+    },
+    {
+     "key": "areaUnit",
+     "value": "donum",
+     "covered": false
+    },
+    {
+     "key": "areaUnit",
+     "value": "ha",
+     "covered": false
+    },
+    {
+     "key": "areaUnit",
+     "value": "m2",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "archTick",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "boxBlank",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "boxFilled",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "closed",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "datumFilled",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "dot",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "dotBlank",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "dotSmall",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "oblique",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "open",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "open30",
+     "covered": false
+    },
+    {
+     "key": "arrow",
+     "value": "open90",
+     "covered": false
+    },
+    {
+     "key": "attachments",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "arcgis",
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "basic",
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "bearer",
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "google",
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "header",
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "none",
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "oauth2",
+     "covered": false
+    },
+    {
+     "key": "auth",
+     "value": "query",
+     "covered": false
+    },
+    {
+     "key": "autoSelect",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "axis",
+     "value": "aligned",
+     "covered": false
+    },
+    {
+     "key": "axis",
+     "value": "horizontal",
+     "covered": false
+    },
+    {
+     "key": "axis",
+     "value": "vertical",
+     "covered": false
+    },
+    {
+     "key": "below",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "addition",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "colorBurn",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "colorDodge",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "darken",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "difference",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "exclusion",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "hardLight",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "lighten",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "multiply",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "normal",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "overlay",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "screen",
+     "covered": false
+    },
+    {
+     "key": "blend",
+     "value": "softLight",
+     "covered": false
+    },
+    {
+     "key": "bold",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "bothWays",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "hostGone",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "mixedSources",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "notBuilt",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "openingUnplaced",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "sourceGone",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "unsupportedWall",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "wallGone",
+     "covered": false
+    },
+    {
+     "key": "cadWork",
+     "value": "architecture",
+     "covered": false
+    },
+    {
+     "key": "cadWork",
+     "value": "map",
+     "covered": false
+    },
+    {
+     "key": "caps",
+     "value": "closed",
+     "covered": false
+    },
+    {
+     "key": "caps",
+     "value": "open",
+     "covered": false
+    },
+    {
+     "key": "clearHidden",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "collapsed",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "connect",
+     "value": "ends",
+     "covered": false
+    },
+    {
+     "key": "connect",
+     "value": "vertices",
+     "covered": false
+    },
+    {
+     "key": "constant",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "convention",
+     "value": "coordinateFrame",
+     "covered": false
+    },
+    {
+     "key": "convention",
+     "value": "positionVector",
+     "covered": false
+    },
+    {
+     "key": "corner",
+     "value": "blind",
+     "covered": false
+    },
+    {
+     "key": "corner",
+     "value": "open",
+     "covered": false
+    },
+    {
+     "key": "cumulative",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "curved",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "descending",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "detail",
+     "value": "detailed",
+     "covered": false
+    },
+    {
+     "key": "detail",
+     "value": "schematic",
+     "covered": false
+    },
+    {
+     "key": "detail",
+     "value": "standard",
+     "covered": false
+    },
+    {
+     "key": "dimLineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "dimLineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "dimLineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "dimLineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "architects-daughter",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "arimo",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "barlow",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "courier-prime",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "overpass",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "plex-mono",
+     "covered": false
+    },
+    {
+     "key": "drawingFont",
+     "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "drawingUnit",
+     "value": "cm",
+     "covered": false
+    },
+    {
+     "key": "drawingUnit",
+     "value": "ft",
+     "covered": false
+    },
+    {
+     "key": "drawingUnit",
+     "value": "in",
+     "covered": false
+    },
+    {
+     "key": "drawingUnit",
+     "value": "m",
+     "covered": false
+    },
+    {
+     "key": "drawingUnit",
+     "value": "mm",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "refuse",
+     "covered": false
+    },
+    {
+     "key": "duplicates",
+     "value": "warn",
+     "covered": false
+    },
+    {
+     "key": "dynamic",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "end",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "start",
+     "covered": false
+    },
+    {
+     "key": "enforce",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "expanded",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "extLineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "extLineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "extLineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "extLineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "face",
+     "value": "left",
+     "covered": false
+    },
+    {
+     "key": "face",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "auto",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": "outside",
+     "covered": false
+    },
+    {
+     "key": "fit",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "fold",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "architects-daughter",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "arimo",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "barlow",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "courier-prime",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "overpass",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "plex-mono",
+     "covered": false
+    },
+    {
+     "key": "font",
+     "value": "quicksand",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "door",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "flue",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "niche",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "window",
+     "covered": false
+    },
+    {
+     "key": "fridge",
+     "value": "end",
+     "covered": false
+    },
+    {
+     "key": "fridge",
+     "value": "start",
+     "covered": false
+    },
+    {
+     "key": "from",
+     "value": "ED50",
+     "covered": false
+    },
+    {
+     "key": "from",
+     "value": "TUREF",
+     "covered": false
+    },
+    {
+     "key": "from",
+     "value": "WGS84",
+     "covered": false
+    },
+    {
+     "key": "frozen",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "annotation",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "area",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "geometry",
+     "value": "point",
+     "covered": false
+    },
+    {
+     "key": "hand",
+     "value": "left",
+     "covered": false
+    },
+    {
+     "key": "hand",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "blocks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "hatches",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "texts",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "viewmarks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "count",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "max",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "mean",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "min",
+     "covered": false
+    },
+    {
+     "key": "how",
+     "value": "sum",
+     "covered": false
+    },
+    {
+     "key": "ink",
+     "value": "fg",
+     "covered": false
+    },
+    {
+     "key": "ink",
+     "value": "fg-dim",
+     "covered": false
+    },
+    {
+     "key": "ink",
+     "value": "label",
+     "covered": false
+    },
+    {
+     "key": "inside",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "invisible",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "italic",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "keep",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "keep",
+     "value": "matched",
+     "covered": false
+    },
+    {
+     "key": "keepCurrent",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "kept",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "along",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "angle",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "any",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "arc",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "arcgis",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "array",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "attach",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "bigint",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "binary",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "bool",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "boolean",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "both",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "boundary",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "boundaryMustBeCoveredBy",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "circle",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "code",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "coincident",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "collinear",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "column",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "common",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "concentric",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "date",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "datetime",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "decimal",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "deviation",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "diameter",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "digitized",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "dimension",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "distance",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ellipse",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ellipsoidal",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "empty",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "end",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "equal",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "field",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "fix",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "flip",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "geographic",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "geojson",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "geopackage",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "google",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "grid",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "hatch",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "horizontal",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "image",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "insert",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "instant",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "integer",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "interior",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "jamb",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "json",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "leader",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "length",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "limits",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "line",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "linear",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "local",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "lookup",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "manhattan",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mapping",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mid",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "move",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustBeCoveredBy",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustBeOnEndOf",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustBeValid",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotHaveDangles",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotHaveDuplicates",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotHaveGaps",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotHaveMissingVertices",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotHaveShortEdges",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotHaveSlivers",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotHaveSmallAngles",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotOverlap",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "mustNotOverlapWith",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "node",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "number",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "nurbs",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ogcFeatures",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ogcTiles",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "orthometric",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "outdoor",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "overlay",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "parallel",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "path",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "perpendicular",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "point",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "pointcloud",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "polar",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "polygon",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "polyline",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "postgis",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "profile",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "radius",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ramp",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "raster",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ray",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "recompute",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "record",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "road",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "rotate",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "scale",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "segment",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "show",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "slab",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "speed",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "spline",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "stair",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "start",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "step",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "straight",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "stretch",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "symmetric",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "table",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "tag",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "tangent",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "text",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "time",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "tm",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "tool",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "unknown",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "utility",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "uuid",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "vector",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "vertex",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "vertical",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "viewmark",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "visibility",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "wall",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "wfs",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "wms",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "wmts",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "xline",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "xyz",
+     "covered": false
+    },
+    {
+     "key": "labels",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "left",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "lengthStyle",
+     "value": "architectural",
+     "covered": false
+    },
+    {
+     "key": "lengthStyle",
+     "value": "decimal",
+     "covered": false
+    },
+    {
+     "key": "lengthStyle",
+     "value": "engineering",
+     "covered": false
+    },
+    {
+     "key": "lengthStyle",
+     "value": "fractional",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "district",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "neighbourhood",
+     "covered": false
+    },
+    {
+     "key": "level",
+     "value": "province",
+     "covered": false
+    },
+    {
+     "key": "levelView",
+     "value": "active",
+     "covered": false
+    },
+    {
+     "key": "levelView",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "levelView",
+     "value": "below",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "axis",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "contour",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "curved",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "horizontal",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "leftCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "leftFace",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "parallel",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "rightCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "rightFace",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "continuous",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashdot",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dashed",
+     "covered": false
+    },
+    {
+     "key": "lineType",
+     "value": "dotted",
+     "covered": false
+    },
+    {
+     "key": "locked",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "markers",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "mask",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "maxExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "first",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "max",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "min",
+     "covered": false
+    },
+    {
+     "key": "merge",
+     "value": "sum",
+     "covered": false
+    },
+    {
+     "key": "mergeLines",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "minExclusive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "mirror",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "always",
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "ifNeeded",
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "off",
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "rules",
+     "covered": false
+    },
+    {
+     "key": "mode",
+     "value": "single",
+     "covered": false
+    },
+    {
+     "key": "monochrome",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "movable",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "multiline",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "multiple",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "new",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "nullsEqual",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "off",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "on",
+     "value": "leave",
+     "covered": false
+    },
+    {
+     "key": "on",
+     "value": "save",
+     "covered": false
+    },
+    {
+     "key": "on",
+     "value": "submit",
+     "covered": false
+    },
+    {
+     "key": "onDelete",
+     "value": "cascade",
+     "covered": false
+    },
+    {
+     "key": "onDelete",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "onDelete",
+     "value": "restrict",
+     "covered": false
+    },
+    {
+     "key": "onDelete",
+     "value": "unlink",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "create",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "delete",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "edit",
+     "covered": false
+    },
+    {
+     "key": "op",
+     "value": "update",
+     "covered": false
+    },
+    {
+     "key": "openings",
+     "value": "centers",
+     "covered": false
+    },
+    {
+     "key": "openings",
+     "value": "ends",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "fixed",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "merge",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "slide",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "split",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "swing",
+     "covered": false
+    },
+    {
+     "key": "outdoor",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "outside",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "oven",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "overlap",
+     "value": "always",
+     "covered": false
+    },
+    {
+     "key": "overlap",
+     "value": "ifNeeded",
+     "covered": false
+    },
+    {
+     "key": "overlap",
+     "value": "never",
+     "covered": false
+    },
+    {
+     "key": "overridable",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "cooktop",
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "corner",
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "counter",
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "filler",
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "fridge",
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "module",
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "sink",
+     "covered": false
+    },
+    {
+     "key": "part",
+     "value": "upper",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolish",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolition",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "new",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "proposed",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "temporary",
+     "covered": false
+    },
+    {
+     "key": "phaseView",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phaseView",
+     "value": "demolition",
+     "covered": false
+    },
+    {
+     "key": "phaseView",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phaseView",
+     "value": "proposed",
+     "covered": false
+    },
+    {
+     "key": "pickInterior",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "placement",
+     "value": "along",
+     "covered": false
+    },
+    {
+     "key": "placement",
+     "value": "beside",
+     "covered": false
+    },
+    {
+     "key": "placement",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "placement",
+     "value": "corner",
+     "covered": false
+    },
+    {
+     "key": "plot",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "point",
+     "value": "around",
+     "covered": false
+    },
+    {
+     "key": "point",
+     "value": "center",
+     "covered": false
+    },
+    {
+     "key": "position",
+     "value": "above",
+     "covered": false
+    },
+    {
+     "key": "position",
+     "value": "below",
+     "covered": false
+    },
+    {
+     "key": "position",
+     "value": "on",
+     "covered": false
+    },
+    {
+     "key": "position",
+     "value": "sides",
+     "covered": false
+    },
+    {
+     "key": "preset",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "reach",
+     "value": "connected",
+     "covered": false
+    },
+    {
+     "key": "reach",
+     "value": "downstream",
+     "covered": false
+    },
+    {
+     "key": "readOnly",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "redact",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "reduceToGrid",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "reference",
+     "value": "core",
+     "covered": false
+    },
+    {
+     "key": "reference",
+     "value": "faces",
+     "covered": false
+    },
+    {
+     "key": "reference",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "relation",
+     "value": "contains",
+     "covered": false
+    },
+    {
+     "key": "relation",
+     "value": "intersects",
+     "covered": false
+    },
+    {
+     "key": "relation",
+     "value": "nearest",
+     "covered": false
+    },
+    {
+     "key": "relation",
+     "value": "within",
+     "covered": false
+    },
+    {
+     "key": "removed",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "required",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "resolved",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "restrictive",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "retired",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "reuseLast",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "reverseA",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "reverseB",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "role",
+     "value": "junction",
+     "covered": false
+    },
+    {
+     "key": "role",
+     "value": "source",
+     "covered": false
+    },
+    {
+     "key": "role",
+     "value": "valve",
+     "covered": false
+    },
+    {
+     "key": "rotate",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "row",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "row",
+     "value": "openings",
+     "covered": false
+    },
+    {
+     "key": "row",
+     "value": "overall",
+     "covered": false
+    },
+    {
+     "key": "row",
+     "value": "walls",
+     "covered": false
+    },
+    {
+     "key": "runs",
+     "value": "auto",
+     "covered": false
+    },
+    {
+     "key": "runs",
+     "value": "background",
+     "covered": false
+    },
+    {
+     "key": "runs",
+     "value": "here",
+     "covered": false
+    },
+    {
+     "key": "shape",
+     "value": "ellipse",
+     "covered": false
+    },
+    {
+     "key": "shape",
+     "value": "rect",
+     "covered": false
+    },
+    {
+     "key": "shape",
+     "value": "round",
+     "covered": false
+    },
+    {
+     "key": "showSwing",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "side",
+     "value": "left",
+     "covered": false
+    },
+    {
+     "key": "side",
+     "value": "right",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "space",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "spaceMethod",
+     "value": "centerline",
+     "covered": false
+    },
+    {
+     "key": "spaceMethod",
+     "value": "gross",
+     "covered": false
+    },
+    {
+     "key": "spaceMethod",
+     "value": "net",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "clear",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "copy",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "default",
+     "covered": false
+    },
+    {
+     "key": "split",
+     "value": "ratio",
+     "covered": false
+    },
+    {
+     "key": "steps",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "suggest",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "symbol",
+     "value": "cross",
+     "covered": false
+    },
+    {
+     "key": "symbol",
+     "value": "ring",
+     "covered": false
+    },
+    {
+     "key": "symbol",
+     "value": "triangle",
+     "covered": false
+    },
+    {
+     "key": "tableOnly",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "textPlace",
+     "value": "centre",
+     "covered": false
+    },
+    {
+     "key": "tight",
+     "value": "keep",
+     "covered": false
+    },
+    {
+     "key": "tight",
+     "value": "shift",
+     "covered": false
+    },
+    {
+     "key": "transparent",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "action",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "attachments",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "divider",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "field",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "group",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "layer",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "location",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "note",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "related",
+     "covered": false
+    },
+    {
+     "key": "type",
+     "value": "tab",
+     "covered": false
+    },
+    {
+     "key": "uTurns",
+     "value": "allowed",
+     "covered": false
+    },
+    {
+     "key": "uTurns",
+     "value": "deadEnds",
+     "covered": false
+    },
+    {
+     "key": "uTurns",
+     "value": "never",
+     "covered": false
+    },
+    {
+     "key": "unique",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "cm",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "drawing",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "ft",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "in",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "inch",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "m",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "mm",
+     "covered": false
+    },
+    {
+     "key": "unit",
+     "value": "paper",
+     "covered": false
+    },
+    {
+     "key": "units",
+     "value": "cm",
+     "covered": false
+    },
+    {
+     "key": "units",
+     "value": "ft",
+     "covered": false
+    },
+    {
+     "key": "units",
+     "value": "in",
+     "covered": false
+    },
+    {
+     "key": "units",
+     "value": "m",
+     "covered": false
+    },
+    {
+     "key": "units",
+     "value": "mm",
+     "covered": false
+    },
+    {
+     "key": "units",
+     "value": "unitless",
+     "covered": false
+    },
+    {
+     "key": "unloaded",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "upper",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "upright",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "valid",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "value",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "values",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "verify",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "view",
+     "value": "cards",
+     "covered": false
+    },
+    {
+     "key": "view",
+     "value": "chart",
+     "covered": false
+    },
+    {
+     "key": "view",
+     "value": "list",
+     "covered": false
+    },
+    {
+     "key": "view",
+     "value": "table",
+     "covered": false
+    },
+    {
+     "key": "visible",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "warning",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "check",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "checkList",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "chips",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "color",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "date",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "list",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "number",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "radio",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "search",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "segmented",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "slider",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "switch",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "text",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "textArea",
+     "covered": false
+    },
+    {
+     "key": "widget",
+     "value": "tree",
+     "covered": false
+    },
+    {
+     "key": "withdrawn",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "withheld",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "workspace",
+     "value": "cad",
+     "covered": false
+    },
+    {
+     "key": "workspace",
+     "value": "disaster",
+     "covered": false
+    },
+    {
+     "key": "workspace",
+     "value": "gis",
+     "covered": false
+    },
+    {
+     "key": "workspace",
+     "value": "plan3d",
+     "covered": false
+    },
+    {
+     "key": "wrap",
+     "value": true,
      "covered": false
     },
     {
@@ -34822,6 +36173,41 @@
     },
     {
      "key": "actions",
+     "value": "create",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "delete",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "link",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "show",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "unlink",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "update",
+     "covered": false
+    },
+    {
+     "key": "actions",
+     "value": "view",
+     "covered": false
+    },
+    {
+     "key": "actions",
      "value": true,
      "covered": false
     },
@@ -35036,6 +36422,11 @@
      "covered": false
     },
     {
+     "key": "below",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "blend",
      "value": "addition",
      "covered": false
@@ -35128,6 +36519,11 @@
     {
      "key": "broken",
      "value": "openingUnplaced",
+     "covered": false
+    },
+    {
+     "key": "broken",
+     "value": "sourceGone",
      "covered": false
     },
     {
@@ -35331,6 +36727,16 @@
      "covered": false
     },
     {
+     "key": "end",
+     "value": "end",
+     "covered": false
+    },
+    {
+     "key": "end",
+     "value": "start",
+     "covered": false
+    },
+    {
      "key": "enforce",
      "value": true,
      "covered": false
@@ -35512,6 +36918,46 @@
     },
     {
      "key": "hidden",
+     "value": "blocks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "grids",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "hatches",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "spaces",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "tags",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "texts",
+     "covered": false
+    },
+    {
+     "key": "hidden",
+     "value": "viewmarks",
+     "covered": false
+    },
+    {
+     "key": "hidden",
      "value": true,
      "covered": false
     },
@@ -35602,6 +37048,11 @@
     },
     {
      "key": "kind",
+     "value": "arc",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "arcgis",
      "covered": false
     },
@@ -35667,6 +37118,16 @@
     },
     {
      "key": "kind",
+     "value": "column",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "common",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "concentric",
      "covered": false
     },
@@ -35702,7 +37163,17 @@
     },
     {
      "key": "kind",
+     "value": "dimension",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "distance",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ellipse",
      "covered": false
     },
     {
@@ -35762,7 +37233,22 @@
     },
     {
      "key": "kind",
+     "value": "hatch",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "horizontal",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "image",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "insert",
      "covered": false
     },
     {
@@ -35782,7 +37268,17 @@
     },
     {
      "key": "kind",
+     "value": "jamb",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "json",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "leader",
      "covered": false
     },
     {
@@ -35892,6 +37388,11 @@
     },
     {
      "key": "kind",
+     "value": "nurbs",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "ogcFeatures",
      "covered": false
     },
@@ -35902,7 +37403,17 @@
     },
     {
      "key": "kind",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "orthometric",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "outdoor",
      "covered": false
     },
     {
@@ -35927,7 +37438,22 @@
     },
     {
      "key": "kind",
+     "value": "pointcloud",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "polar",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "polygon",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "polyline",
      "covered": false
     },
     {
@@ -35947,7 +37473,27 @@
     },
     {
      "key": "kind",
+     "value": "ramp",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "raster",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "ray",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "recompute",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "record",
      "covered": false
     },
     {
@@ -35967,7 +37513,27 @@
     },
     {
      "key": "kind",
+     "value": "slab",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "space",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "speed",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "spline",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "stair",
      "covered": false
     },
     {
@@ -35988,6 +37554,16 @@
     {
      "key": "kind",
      "value": "symmetric",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "table",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "tag",
      "covered": false
     },
     {
@@ -36013,6 +37589,11 @@
     {
      "key": "kind",
      "value": "tool",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "unit",
      "covered": false
     },
     {
@@ -36047,6 +37628,16 @@
     },
     {
      "key": "kind",
+     "value": "viewmark",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "wall",
+     "covered": false
+    },
+    {
+     "key": "kind",
      "value": "wfs",
      "covered": false
     },
@@ -36058,6 +37649,11 @@
     {
      "key": "kind",
      "value": "wmts",
+     "covered": false
+    },
+    {
+     "key": "kind",
+     "value": "xline",
      "covered": false
     },
     {
@@ -36127,6 +37723,11 @@
     },
     {
      "key": "line",
+     "value": "axis",
+     "covered": false
+    },
+    {
+     "key": "line",
      "value": "contour",
      "covered": false
     },
@@ -36142,7 +37743,27 @@
     },
     {
      "key": "line",
+     "value": "leftCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "leftFace",
+     "covered": false
+    },
+    {
+     "key": "line",
      "value": "parallel",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "rightCore",
+     "covered": false
+    },
+    {
+     "key": "line",
+     "value": "rightFace",
      "covered": false
     },
     {
@@ -36341,6 +37962,11 @@
      "covered": false
     },
     {
+     "key": "outdoor",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "outside",
      "value": true,
      "covered": false
@@ -36408,6 +38034,41 @@
     {
      "key": "part",
      "value": "upper",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "all",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolish",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "demolition",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "existing",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "new",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "proposed",
+     "covered": false
+    },
+    {
+     "key": "phase",
+     "value": "temporary",
      "covered": false
     },
     {
@@ -36586,6 +38247,11 @@
      "covered": false
     },
     {
+     "key": "removed",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "required",
      "value": true,
      "covered": false
@@ -37083,6 +38749,11 @@
     {
      "key": "workspace",
      "value": "plan3d",
+     "covered": false
+    },
+    {
+     "key": "wrap",
+     "value": true,
      "covered": false
     },
     {
