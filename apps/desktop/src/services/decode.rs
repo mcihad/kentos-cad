@@ -138,6 +138,7 @@ pub fn vector_tile(
             plot_scale: 1.0,
             library: EMPTY.get_or_init(StyleLibrary::default),
             view: look.view,
+            hold_weights: false,
         },
     )
     .unwrap_or_else(|_| StyledLayer::default());

@@ -114,7 +114,10 @@ impl Document {
         // An opening copied with its wall goes on the wall's copy (docs/adr/0730 §4), a space with its sources on theirs.
         let hosted = |e: &Entity| matches!(e, Entity::Opening(o)
             if origins.iter().any(|id| id.to_string() == o.opening.host));
-        if !entities.iter().any(|e| matches!(e,Entity::Space(s) if s.space.sources.is_some()) || hosted(e)) {
+        // A tag, a label, a hatch, a table or a dimension tied to an object copied with it (docs/adr/0793 §2).
+        let originals: crate::copy_links::Copies = origins.iter().map(|u| (*u.as_bytes(), [0; 16])).collect();
+        let linked = |e: &Entity| crate::copy_links::links_to(e, &originals);
+        if !entities.iter().any(|e| matches!(e,Entity::Space(s) if s.space.sources.is_some()) || hosted(e) || linked(e)) {
             return self.add_many(entities,label).map(|slots|(slots,0)).map_err(|e|Refusal(e.to_string()));
         }
         if origins.is_empty() || !entities.len().is_multiple_of(origins.len()) {
@@ -125,8 +128,10 @@ impl Document {
         for group in entities.chunks(origins.len()) {
             let ids:Vec<_>=group.iter().map(|_|new_uid()).collect();
             let map:HashMap<_,_>=origins.iter().map(ToString::to_string).zip(ids.iter().map(ToString::to_string)).collect();
+            let copied:crate::copy_links::Copies=origins.iter().map(|u|*u.as_bytes()).zip(ids.iter().map(|u|*u.as_bytes())).collect();
             for (entity,uid) in group.iter().zip(ids) {
                 let mut entity=entity.clone();
+                crate::copy_links::relink(&mut entity,&copied);
                 if let Entity::Opening(o)=&mut entity && let Some(host)=map.get(&o.opening.host) {
                     // Read back from its moved jambs onto its wall's copy, as a moved opening is (docs/adr/0341):
                     // a mirrored wall's path runs back, so its place along it is another.

@@ -43,6 +43,10 @@ pub struct StrokeStyle {
     pub blur: f64,
     /// Symbol layer order: lower draws first.
     pub level: f64,
+    /// A world width measured on the ground (a symbol's metres), not paper millimetres drawn at the plot scale: the
+    /// model screen never holds it to its paper width (docs/adr/0793 §1). Not in the style's JSON (the page's batches
+    /// read as they always did): its batch is kept apart and listed in [`super::batch::Batches::ground`].
+    pub ground: bool,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -66,6 +70,8 @@ pub enum FillPaint {
         stagger: f64,
         unit: PrimUnit,
         level: f64,
+        /// The width measured on the ground (as [`StrokeStyle::ground`]).
+        ground: bool,
     },
     /// A gradient (docs/adr/0186 §3) from `color` to `color2`: `shape` 0
     /// linear, 1 cylinder, 2 spherical; along `dir` (radians) from `from` to
@@ -548,6 +554,7 @@ impl FillPaint {
                 stagger,
                 unit,
                 level,
+                ground: _,
             } => {
                 o.str("kind", "hatch");
                 o.str("color", color);
@@ -708,6 +715,11 @@ impl FillPaint {
             }
         }
         o.end();
+    }
+
+    /// A hatch whose width is measured on the ground, not paper mm (docs/adr/0793 §1).
+    pub fn ground(&self) -> bool {
+        matches!(self, FillPaint::Hatch { ground: true, width, .. } if *width > 0.0)
     }
 
     pub fn level(&self) -> f64 {

@@ -219,6 +219,7 @@ fn look(doc: &Document) -> Look {
         symbol_scale: 1000.0,
         screen: false,
         hairlines: false,
+        hold_weights: false,
         origin: scene::scene_origin(doc),
         view_build: Default::default(),
         view_colors: Default::default(),
@@ -450,6 +451,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
             plot_scale: look.symbol_scale,
             library: &library,
             view: Default::default(),
+            hold_weights: false,
         },
     )
     .expect("decoded");

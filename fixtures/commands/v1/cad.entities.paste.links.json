@@ -1,0 +1,5272 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.paste",
+ "commandVersion": 1,
+ "title": "Yapıştırmanın bağları: etiket ve ölçü yapıştırılan nesneyi adlar",
+ "note": "ADR 0793 §2. Bağımsız başvuru scripts/fixtures/copy_links_cases.py: kopyalar sırayla sonraki yuvaları alır (dizi öğe öğe); birlikte kopyalanan nesneyi adlayan etiketin (ve yapıştırmada ölçünün) bağı onun kopyasınadır, öbürü kalır; KentOS kodu çalıştırılmaz. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kopyanın bağları",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50.0,
+   "workspace": "cad",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "kolon",
+    "name": "Kolon",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "etiket",
+    "name": "Etiket",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "olcu",
+    "name": "Ölçü",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "styles": {
+   "categories": [],
+   "items": []
+  },
+  "entities": [
+   {
+    "kind": "column",
+    "id": 1,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S1"
+   },
+   {
+    "kind": "column",
+    "id": 2,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S2"
+   },
+   {
+    "kind": "tag",
+    "id": 3,
+    "layerId": "etiket",
+    "attrs": {},
+    "of": "0192f5a1-7930-7000-8000-000000000001",
+    "at": {
+     "x": 0.0,
+     "y": 2.0
+    },
+    "text": ""
+   },
+   {
+    "kind": "tag",
+    "id": 4,
+    "layerId": "etiket",
+    "attrs": {},
+    "of": "0192f5a1-7930-7000-8000-000000000002",
+    "at": {
+     "x": 10.0,
+     "y": 2.0
+    },
+    "text": ""
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 20.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 30.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 6,
+    "layerId": "olcu",
+    "attrs": {},
+    "style": "aligned",
+    "a": {
+     "x": 20.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 30.0,
+     "y": 0.0
+    },
+    "offset": 1.5,
+    "height": 0.25,
+    "refs": {
+     "a": {
+      "uid": "0192f5a1-7930-7000-8000-000000000005",
+      "place": {
+       "kind": "start"
+      }
+     },
+     "b": {
+      "uid": "0192f5a1-7930-7000-8000-000000000005",
+      "place": {
+       "kind": "end"
+      }
+     }
+    }
+   },
+   {
+    "kind": "column",
+    "id": 7,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 40.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S3"
+   }
+  ],
+  "uids": [
+   "0192f5a1-7930-7000-8000-000000000001",
+   "0192f5a1-7930-7000-8000-000000000002",
+   "0192f5a1-7930-7000-8000-000000000003",
+   "0192f5a1-7930-7000-8000-000000000004",
+   "0192f5a1-7930-7000-8000-000000000005",
+   "0192f5a1-7930-7000-8000-000000000006",
+   "0192f5a1-7930-7000-8000-000000000007"
+  ]
+ },
+ "cases": [
+  {
+   "name": "Yapıştır 100, 0: kolon ve etiketi: kopya etiket yapıştırılan kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000003"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 100.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 100.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: kolon ve etiketi: kopya etiket yapıştırılan kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000003"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 0.0,
+         "y": 50.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 0.0,
+         "y": 52.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: kolon ve etiketi: kopya etiket yapıştırılan kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000003"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": -25.5,
+         "y": 12.25
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": -25.5,
+         "y": 14.25
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 100, 0: önce etiket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000001"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 100.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 100.0,
+         "y": 0.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: önce etiket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000001"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 0.0,
+         "y": 52.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 0.0,
+         "y": 50.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: önce etiket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000001"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": -25.5,
+         "y": 14.25
+        }
+       },
+       "9": {
+        "at": {
+         "x": -25.5,
+         "y": 12.25
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 100, 0: iki kolon iki etiket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "column",
+         "id": 2,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 10.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S2"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "tag",
+         "id": 4,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000002",
+         "at": {
+          "x": 10.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000002",
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000004"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 100.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 110.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 100.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 110.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: iki kolon iki etiket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "column",
+         "id": 2,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 10.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S2"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "tag",
+         "id": 4,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000002",
+         "at": {
+          "x": 10.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000002",
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000004"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 0.0,
+         "y": 50.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 10.0,
+         "y": 50.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 0.0,
+         "y": 52.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 10.0,
+         "y": 52.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: iki kolon iki etiket",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "column",
+         "id": 2,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 10.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S2"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "tag",
+         "id": 4,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000002",
+         "at": {
+          "x": 10.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000002",
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000004"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": -25.5,
+         "y": 12.25
+        }
+       },
+       "9": {
+        "at": {
+         "x": -15.5,
+         "y": 12.25
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": -25.5,
+         "y": 14.25
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": -15.5,
+         "y": 14.25
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 100, 0: yalnız etiket: özgün kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000003"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 100.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: yalnız etiket: özgün kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000003"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 0.0,
+         "y": 52.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: yalnız etiket: özgün kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000003"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": -25.5,
+         "y": 14.25
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 100, 0: çizgi ve ölçüsü: ölçünün bağları yapıştırılan çizgiyedir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000005",
+        "0192f5a1-7930-7000-8000-000000000006"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:8",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:8",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: çizgi ve ölçüsü: ölçünün bağları yapıştırılan çizgiyedir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000005",
+        "0192f5a1-7930-7000-8000-000000000006"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:8",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:8",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: çizgi ve ölçüsü: ölçünün bağları yapıştırılan çizgiyedir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000005",
+        "0192f5a1-7930-7000-8000-000000000006"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:8",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:8",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 100, 0: önce ölçü, sonra çizgi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        },
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000006",
+        "0192f5a1-7930-7000-8000-000000000005"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: önce ölçü, sonra çizgi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        },
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000006",
+        "0192f5a1-7930-7000-8000-000000000005"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: önce ölçü, sonra çizgi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        },
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000006",
+        "0192f5a1-7930-7000-8000-000000000005"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:9",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 100, 0: yalnız ölçü: bağları özgün çizgiyi adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000006"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "refs": {
+         "a": {
+          "uid": "0192f5a1-7930-7000-8000-000000000005",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "0192f5a1-7930-7000-8000-000000000005",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: yalnız ölçü: bağları özgün çizgiyi adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000006"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "refs": {
+         "a": {
+          "uid": "0192f5a1-7930-7000-8000-000000000005",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "0192f5a1-7930-7000-8000-000000000005",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: yalnız ölçü: bağları özgün çizgiyi adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000006"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "refs": {
+         "a": {
+          "uid": "0192f5a1-7930-7000-8000-000000000005",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "0192f5a1-7930-7000-8000-000000000005",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 100, 0: hepsi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "column",
+         "id": 2,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 10.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S2"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "tag",
+         "id": 4,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000002",
+         "at": {
+          "x": 10.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        },
+        {
+         "kind": "column",
+         "id": 7,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 40.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S3"
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000002",
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000004",
+        "0192f5a1-7930-7000-8000-000000000005",
+        "0192f5a1-7930-7000-8000-000000000006",
+        "0192f5a1-7930-7000-8000-000000000007"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 100.0,
+       "y": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 100.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 110.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 100.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 110.0,
+         "y": 2.0
+        }
+       },
+       "13": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       },
+       "14": {
+        "at": {
+         "x": 140.0,
+         "y": 0.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır 0, 50: hepsi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "column",
+         "id": 2,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 10.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S2"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "tag",
+         "id": 4,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000002",
+         "at": {
+          "x": 10.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        },
+        {
+         "kind": "column",
+         "id": 7,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 40.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S3"
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000002",
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000004",
+        "0192f5a1-7930-7000-8000-000000000005",
+        "0192f5a1-7930-7000-8000-000000000006",
+        "0192f5a1-7930-7000-8000-000000000007"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": 0.0,
+       "y": 50.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 0.0,
+         "y": 50.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 10.0,
+         "y": 50.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 0.0,
+         "y": 52.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 10.0,
+         "y": 52.0
+        }
+       },
+       "13": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       },
+       "14": {
+        "at": {
+         "x": 40.0,
+         "y": 50.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yapıştır -25.5, 12.25: hepsi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "column",
+         "id": 1,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 0.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S1"
+        },
+        {
+         "kind": "column",
+         "id": 2,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 10.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S2"
+        },
+        {
+         "kind": "tag",
+         "id": 3,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000001",
+         "at": {
+          "x": 0.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "tag",
+         "id": 4,
+         "layerId": "etiket",
+         "attrs": {},
+         "of": "0192f5a1-7930-7000-8000-000000000002",
+         "at": {
+          "x": 10.0,
+          "y": 2.0
+         },
+         "text": ""
+        },
+        {
+         "kind": "line",
+         "id": 5,
+         "layerId": "cizim",
+         "attrs": {},
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         }
+        },
+        {
+         "kind": "dimension",
+         "id": 6,
+         "layerId": "olcu",
+         "attrs": {},
+         "style": "aligned",
+         "a": {
+          "x": 20.0,
+          "y": 0.0
+         },
+         "b": {
+          "x": 30.0,
+          "y": 0.0
+         },
+         "offset": 1.5,
+         "height": 0.25,
+         "refs": {
+          "a": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "start"
+           }
+          },
+          "b": {
+           "uid": "0192f5a1-7930-7000-8000-000000000005",
+           "place": {
+            "kind": "end"
+           }
+          }
+         }
+        },
+        {
+         "kind": "column",
+         "id": 7,
+         "layerId": "kolon",
+         "attrs": {},
+         "at": {
+          "x": 40.0,
+          "y": 0.0
+         },
+         "width": 0.4,
+         "depth": 0.5,
+         "tag": "S3"
+        }
+       ],
+       "uids": [
+        "0192f5a1-7930-7000-8000-000000000001",
+        "0192f5a1-7930-7000-8000-000000000002",
+        "0192f5a1-7930-7000-8000-000000000003",
+        "0192f5a1-7930-7000-8000-000000000004",
+        "0192f5a1-7930-7000-8000-000000000005",
+        "0192f5a1-7930-7000-8000-000000000006",
+        "0192f5a1-7930-7000-8000-000000000007"
+       ],
+       "layers": [
+        {
+         "id": "kolon",
+         "name": "Kolon",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "etiket",
+         "name": "Etiket",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        },
+        {
+         "id": "olcu",
+         "name": "Ölçü",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "base": {
+        "x": 0.0,
+        "y": 0.0
+       }
+      },
+      "at": {
+       "x": -25.5,
+       "y": 12.25
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": -25.5,
+         "y": 12.25
+        }
+       },
+       "9": {
+        "at": {
+         "x": -15.5,
+         "y": 12.25
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": -25.5,
+         "y": 14.25
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": -15.5,
+         "y": 14.25
+        }
+       },
+       "13": {
+        "refs": {
+         "a": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "start"
+          }
+         },
+         "b": {
+          "uid": "$uidOf:12",
+          "place": {
+           "kind": "end"
+          }
+         }
+        }
+       },
+       "14": {
+        "at": {
+         "x": 14.5,
+         "y": 12.25
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

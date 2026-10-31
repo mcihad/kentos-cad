@@ -45,7 +45,7 @@ fn numbered(app: &mut App) {
 }
 
 /// The room numbered and tagged: every opening and space (Hepsini etiketle).
-fn tagged(app: &mut App) {
+pub(crate) fn tagged(app: &mut App) {
     crate::space_scenes::spaces(app);
     numbered(app);
     fit(app, 12.8, 5.2);

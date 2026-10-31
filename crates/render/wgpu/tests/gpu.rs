@@ -26,6 +26,8 @@ mod compose;
 mod compose_timing;
 #[path = "gpu/hatch.rs"]
 mod hatch;
+#[path = "gpu/weights.rs"]
+mod weights;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -387,6 +389,7 @@ fn a_raster_draws_its_tiles(gpu: &mut Gpu) {
             max_scale: None,
             group: 0,
             effect: None,
+            weight_cap: 0.0,
         }],
         ..StyledLayer::default()
     };
@@ -456,6 +459,18 @@ fn on_a_real_gpu() {
     a_kept_picture_is_composed_again_with_the_hover_over_it(&mut gpu);
     compose::layer_composition_and_effects_match_the_reference(&mut gpu);
     hatch::dense_hairlines_do_not_disappear(&mut gpu);
+    weights::paper_widths_are_held(&mut gpu);
+}
+
+/// docs/adr/0793 §1 alone: a paper width held on the model screen, on a real GPU.
+#[test]
+fn paper_widths_on_a_real_gpu() {
+    if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
+        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1 to run the GPU test (a skipped test is not a pass)");
+        return;
+    }
+    let mut gpu = Gpu::open();
+    weights::paper_widths_are_held(&mut gpu);
 }
 
 /// Katman çizimi's cost in a frame (docs/adr/0226 §7, `gpu/compose_timing.rs`): a measurement, run

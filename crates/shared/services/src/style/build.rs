@@ -442,6 +442,7 @@ pub fn build(input: &TileInput<'_>) -> TileOutput {
                         join,
                         blur: num(layer, true, "line-blur", &cx, 0.0).max(0.0),
                         level,
+                        ground: false,
                     };
                     let lines: Vec<Vec<P>> = match &f.geometry {
                         Geometry::Lines(l) => l.clone(),
@@ -534,6 +535,7 @@ fn hairline(c: Rgba, opacity: f64, level: f64) -> StrokeStyle {
         join: "miter".into(),
         blur: 0.0,
         level,
+        ground: false,
     }
 }
 

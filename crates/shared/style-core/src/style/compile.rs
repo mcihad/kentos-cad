@@ -397,6 +397,7 @@ fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Op
         join: layer.join.clone().unwrap_or_else(|| "miter".into()),
         blur: layer.blur.filter(|&x| truthy_num(x)).map_or(0.0, len),
         level,
+        ground: unit == Unit::M && width_unit == PrimUnit::World,
     })
 }
 
@@ -736,6 +737,7 @@ fn emit_fill_layer(
                 stagger: len(h.stagger.unwrap_or(0.0)),
                 unit,
                 level,
+                ground: base.unit == Unit::M && !px,
             };
             sink.fill(&paint, rings);
         }

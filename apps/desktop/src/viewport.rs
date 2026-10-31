@@ -808,6 +808,8 @@ impl Viewport {
             symbol_scale: self.symbol_scale(doc, s.screen_symbols) / self.camera.map_ratio,
             screen: s.screen_symbols,
             hairlines: !s.line_weights,
+            // Paper widths held on the model screen (docs/adr/0793 §1).
+            hold_weights: true,
             origin: self.draw_origin(doc),
             view_build: kentos_native_style::View {
                 map: self.camera.map,

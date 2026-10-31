@@ -103,6 +103,7 @@ fn build(entities: &[Entity], store: &Store, style: &LayerStyle) -> StyledLayer 
             plot_scale: 1000.0,
             library: &library,
             view: Default::default(),
+            hold_weights: false,
         },
     )
     .expect("decodes")

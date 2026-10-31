@@ -960,6 +960,7 @@ fn dimension_stroke(
         join: "miter".into(),
         blur: 0.0,
         level: LEVEL_LINE + 500.0,
+        ground: false,
     }
 }
 
@@ -1018,6 +1019,7 @@ fn draw_image(shape: &Shape, parts: &[Geom], color: i32, program: &Program, sink
                     join: "miter".into(),
                     blur: 0.0,
                     level: LEVEL_LINE,
+                    ground: false,
                 };
                 for (pts, closed) in paths {
                     sink.stroke(&hair, pts, *closed);
@@ -1082,6 +1084,7 @@ fn draw_pointcloud(
                     join: "miter".into(),
                     blur: 0.0,
                     level: LEVEL_LINE,
+                    ground: false,
                 };
                 for (pts, closed) in paths {
                     sink.stroke(&hair, pts, *closed);
@@ -1267,6 +1270,7 @@ fn draw_raster(
                     join: "miter".into(),
                     blur: 0.0,
                     level: LEVEL_LINE,
+                    ground: false,
                 };
                 for (pts, closed) in paths {
                     sink.stroke(&hair, pts, *closed);
@@ -1615,6 +1619,7 @@ fn draw_chart(
             join: "round".into(),
             blur: 0.0,
             level: LEVEL_MARKER + 900.0,
+            ground: chart.unit == super::model::Unit::M && unit == PrimUnit::World,
         };
         for p in &pieces {
             sink.stroke(&style, &p.ring, true);
@@ -2023,6 +2028,7 @@ fn draw_whole(
                         join: "round".into(),
                         blur: 0.0,
                         level: LEVEL_MARKER - 10.0,
+                        ground: false,
                     };
                     for r in rings {
                         sink.stroke(&style, &circle_path(c, cx.px_world(r, env)), true);

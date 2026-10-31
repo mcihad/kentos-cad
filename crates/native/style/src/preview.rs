@@ -234,6 +234,7 @@ pub fn preview(
             plot_scale: 1000.0,
             library,
             view: Default::default(),
+            hold_weights: false,
         },
     )?;
     Ok(Preview {

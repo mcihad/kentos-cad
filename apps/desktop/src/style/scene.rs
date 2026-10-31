@@ -718,6 +718,7 @@ impl StyledCache {
                             plot_scale: look.symbol_scale,
                             library,
                             view: look.view_colors,
+                            hold_weights: look.hold_weights,
                         },
                     )
                     .map(|layer| (layer, call.reads_index))
@@ -998,6 +999,7 @@ impl StyledCache {
                     max_scale: None,
                     group: 0,
                     effect: None,
+                    weight_cap: 0.0,
                 }],
                 ..StyledLayer::default()
             },

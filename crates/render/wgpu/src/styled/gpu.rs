@@ -1018,7 +1018,7 @@ impl StyledGpu {
                         ),
                         None => 0..0,
                     };
-                    let origin = [tile[0] as f32, tile[1] as f32, 0.0, 0.0];
+                    let origin = [tile[0] as f32, tile[1] as f32, g.block.origin[2], g.block.origin[3]];
                     if g.block.origin != origin {
                         g.block.origin = origin;
                         queue.write_buffer(&layer.styles, u64::from(g.offset), &g.block.bytes());

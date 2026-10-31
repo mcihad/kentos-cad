@@ -1,0 +1,3132 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.array",
+ "commandVersion": 1,
+ "title": "Dizinin bağları: her öğenin etiketi kendi öğesindeki nesneyi adlar",
+ "note": "ADR 0793 §2. Bağımsız başvuru scripts/fixtures/copy_links_cases.py: kopyalar sırayla sonraki yuvaları alır (dizi öğe öğe); birlikte kopyalanan nesneyi adlayan etiketin (ve yapıştırmada ölçünün) bağı onun kopyasınadır, öbürü kalır; KentOS kodu çalıştırılmaz. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kopyanın bağları",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50.0,
+   "workspace": "cad",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "kolon",
+    "name": "Kolon",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "etiket",
+    "name": "Etiket",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "olcu",
+    "name": "Ölçü",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "styles": {
+   "categories": [],
+   "items": []
+  },
+  "entities": [
+   {
+    "kind": "column",
+    "id": 1,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S1"
+   },
+   {
+    "kind": "column",
+    "id": 2,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S2"
+   },
+   {
+    "kind": "tag",
+    "id": 3,
+    "layerId": "etiket",
+    "attrs": {},
+    "of": "0192f5a1-7930-7000-8000-000000000001",
+    "at": {
+     "x": 0.0,
+     "y": 2.0
+    },
+    "text": ""
+   },
+   {
+    "kind": "tag",
+    "id": 4,
+    "layerId": "etiket",
+    "attrs": {},
+    "of": "0192f5a1-7930-7000-8000-000000000002",
+    "at": {
+     "x": 10.0,
+     "y": 2.0
+    },
+    "text": ""
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 20.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 30.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 6,
+    "layerId": "olcu",
+    "attrs": {},
+    "style": "aligned",
+    "a": {
+     "x": 20.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 30.0,
+     "y": 0.0
+    },
+    "offset": 1.5,
+    "height": 0.25,
+    "refs": {
+     "a": {
+      "uid": "0192f5a1-7930-7000-8000-000000000005",
+      "place": {
+       "kind": "start"
+      }
+     },
+     "b": {
+      "uid": "0192f5a1-7930-7000-8000-000000000005",
+      "place": {
+       "kind": "end"
+      }
+     }
+    }
+   },
+   {
+    "kind": "column",
+    "id": 7,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 40.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S3"
+   }
+  ],
+  "uids": [
+   "0192f5a1-7930-7000-8000-000000000001",
+   "0192f5a1-7930-7000-8000-000000000002",
+   "0192f5a1-7930-7000-8000-000000000003",
+   "0192f5a1-7930-7000-8000-000000000004",
+   "0192f5a1-7930-7000-8000-000000000005",
+   "0192f5a1-7930-7000-8000-000000000006",
+   "0192f5a1-7930-7000-8000-000000000007"
+  ]
+ },
+ "cases": [
+  {
+   "name": "Dizi (line): etiket nesnesiyle: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 15.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "at": {
+         "x": 30.0,
+         "y": 0.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): etiket nesnesiyle: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 50.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "at": {
+         "x": 0.0,
+         "y": -20.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "12": {
+        "at": {
+         "x": 50.0,
+         "y": -20.0
+        }
+       },
+       "13": {
+        "of": "$uidOf:12",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): etiket nesnesiyle: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 10.0,
+         "y": 10.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (line): önce etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 15.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 30.0,
+         "y": 0.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): önce etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 50.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 0.0,
+         "y": -20.0
+        }
+       },
+       "12": {
+        "of": "$uidOf:13",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       },
+       "13": {
+        "at": {
+         "x": 50.0,
+         "y": -20.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): önce etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:1"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 10.0,
+         "y": 10.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (line): iki kolon iki etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 15.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 25.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 25.0,
+         "y": 2.0
+        }
+       },
+       "12": {
+        "at": {
+         "x": 30.0,
+         "y": 0.0
+        }
+       },
+       "13": {
+        "at": {
+         "x": 40.0,
+         "y": 0.0
+        }
+       },
+       "14": {
+        "of": "$uidOf:12",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       },
+       "15": {
+        "of": "$uidOf:13",
+        "at": {
+         "x": 40.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): iki kolon iki etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17",
+        "$uidOf:18",
+        "$uidOf:19"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 50.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 60.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 60.0,
+         "y": 2.0
+        }
+       },
+       "12": {
+        "at": {
+         "x": 0.0,
+         "y": -20.0
+        }
+       },
+       "13": {
+        "at": {
+         "x": 10.0,
+         "y": -20.0
+        }
+       },
+       "14": {
+        "of": "$uidOf:12",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "15": {
+        "of": "$uidOf:13",
+        "at": {
+         "x": 10.0,
+         "y": -18.0
+        }
+       },
+       "16": {
+        "at": {
+         "x": 50.0,
+         "y": -20.0
+        }
+       },
+       "17": {
+        "at": {
+         "x": 60.0,
+         "y": -20.0
+        }
+       },
+       "18": {
+        "of": "$uidOf:16",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       },
+       "19": {
+        "of": "$uidOf:17",
+        "at": {
+         "x": 60.0,
+         "y": -18.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): iki kolon iki etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 10.0,
+         "y": 10.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 20.0,
+         "y": 10.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 20.0,
+         "y": 12.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (line): yalnız etiket: kopyalar özgün kolonu adlar: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): yalnız etiket: kopyalar özgün kolonu adlar: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "10": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): yalnız etiket: kopyalar özgün kolonu adlar: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (line): bir kolon iki etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 15.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 25.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 30.0,
+         "y": 0.0
+        }
+       },
+       "12": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       },
+       "13": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 40.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): bir kolon iki etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 50.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 60.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 0.0,
+         "y": -20.0
+        }
+       },
+       "12": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "13": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 10.0,
+         "y": -18.0
+        }
+       },
+       "14": {
+        "at": {
+         "x": 50.0,
+         "y": -20.0
+        }
+       },
+       "15": {
+        "of": "$uidOf:14",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       },
+       "16": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 60.0,
+         "y": -18.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): bir kolon iki etiket: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 10.0,
+         "y": 10.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       },
+       "10": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 20.0,
+         "y": 12.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (line): ölçü çizgisiyle: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": null
+       },
+       "10": {
+        "at": {
+         "x": 15.0,
+         "y": 0.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "13": {
+        "refs": null
+       },
+       "14": {
+        "at": {
+         "x": 30.0,
+         "y": 0.0
+        }
+       },
+       "15": {
+        "of": "$uidOf:14",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): ölçü çizgisiyle: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17",
+        "$uidOf:18",
+        "$uidOf:19"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": null
+       },
+       "10": {
+        "at": {
+         "x": 50.0,
+         "y": 0.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "13": {
+        "refs": null
+       },
+       "14": {
+        "at": {
+         "x": 0.0,
+         "y": -20.0
+        }
+       },
+       "15": {
+        "of": "$uidOf:14",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "17": {
+        "refs": null
+       },
+       "18": {
+        "at": {
+         "x": 50.0,
+         "y": -20.0
+        }
+       },
+       "19": {
+        "of": "$uidOf:18",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): ölçü çizgisiyle: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": null
+       },
+       "10": {
+        "at": {
+         "x": 10.0,
+         "y": 10.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (line): etiketsiz kolonla: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 55.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 15.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 70.0,
+         "y": 0.0
+        }
+       },
+       "12": {
+        "at": {
+         "x": 30.0,
+         "y": 0.0
+        }
+       },
+       "13": {
+        "of": "$uidOf:12",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): etiketsiz kolonla: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 90.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 50.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 40.0,
+         "y": -20.0
+        }
+       },
+       "12": {
+        "at": {
+         "x": 0.0,
+         "y": -20.0
+        }
+       },
+       "13": {
+        "of": "$uidOf:12",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "14": {
+        "at": {
+         "x": 90.0,
+         "y": -20.0
+        }
+       },
+       "15": {
+        "at": {
+         "x": 50.0,
+         "y": -20.0
+        }
+       },
+       "16": {
+        "of": "$uidOf:15",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): etiketsiz kolonla: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 50.0,
+         "y": 10.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 10.0,
+         "y": 10.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (line): etiketler önde: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 3,
+       "dx": 15.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 15.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 25.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "at": {
+         "x": 15.0,
+         "y": 0.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 25.0,
+         "y": 0.0
+        }
+       },
+       "12": {
+        "of": "$uidOf:14",
+        "at": {
+         "x": 30.0,
+         "y": 2.0
+        }
+       },
+       "13": {
+        "of": "$uidOf:15",
+        "at": {
+         "x": 40.0,
+         "y": 2.0
+        }
+       },
+       "14": {
+        "at": {
+         "x": 30.0,
+         "y": 0.0
+        }
+       },
+       "15": {
+        "at": {
+         "x": 40.0,
+         "y": 0.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (grid): etiketler önde: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "layout": {
+       "kind": "grid",
+       "rows": 2,
+       "cols": 2,
+       "dx": 50.0,
+       "dy": -20.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11",
+        "$uidOf:12",
+        "$uidOf:13",
+        "$uidOf:14",
+        "$uidOf:15",
+        "$uidOf:16",
+        "$uidOf:17",
+        "$uidOf:18",
+        "$uidOf:19"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15,
+       16,
+       17,
+       18,
+       19
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 50.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 60.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "at": {
+         "x": 50.0,
+         "y": 0.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 60.0,
+         "y": 0.0
+        }
+       },
+       "12": {
+        "of": "$uidOf:14",
+        "at": {
+         "x": 0.0,
+         "y": -18.0
+        }
+       },
+       "13": {
+        "of": "$uidOf:15",
+        "at": {
+         "x": 10.0,
+         "y": -18.0
+        }
+       },
+       "14": {
+        "at": {
+         "x": 0.0,
+         "y": -20.0
+        }
+       },
+       "15": {
+        "at": {
+         "x": 10.0,
+         "y": -20.0
+        }
+       },
+       "16": {
+        "of": "$uidOf:18",
+        "at": {
+         "x": 50.0,
+         "y": -18.0
+        }
+       },
+       "17": {
+        "of": "$uidOf:19",
+        "at": {
+         "x": 60.0,
+         "y": -18.0
+        }
+       },
+       "18": {
+        "at": {
+         "x": 50.0,
+         "y": -20.0
+        }
+       },
+       "19": {
+        "at": {
+         "x": 60.0,
+         "y": -20.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Dizi (eğik): etiketler önde: her öğenin etiketi kendi öğesinin kolonunu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "layout": {
+       "kind": "line",
+       "count": 2,
+       "dx": 10.0,
+       "dy": 10.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 10.0,
+         "y": 12.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 20.0,
+         "y": 12.0
+        }
+       },
+       "10": {
+        "at": {
+         "x": 10.0,
+         "y": 10.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 20.0,
+         "y": 10.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -241,6 +241,7 @@ fn builds_the_web_s_batches() {
                     mode: ColorMode::from_key(view["colorMode"].as_str().unwrap_or("color")),
                     opaque: view["transparency"] == false,
                 },
+                hold_weights: false,
             },
         )
         .expect("decode");
@@ -348,6 +349,7 @@ fn a_layer_built_in_parts_draws_as_the_layer_built_whole() {
                     plot_scale: scale,
                     library: &library,
                     view: Default::default(),
+                    hold_weights: false,
                 },
             )
             .expect("decode")

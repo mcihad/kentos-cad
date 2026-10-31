@@ -9,7 +9,7 @@ struct StrokeOut {
   @location(4) @interpolate(flat) halfW: f32,
 };
 @vertex fn strokeVs(@builtin(vertex_index) vi: u32, @location(0) seg: vec4f, @location(1) mt: vec2f) -> StrokeOut {
-  let halfW = max(st.a.x * unitK(), 1.0) * 0.5;
+  let halfW = max(st.a.x * weightK(), 1.0) * 0.5;
   let blur = max(st.b.x * unitK(), 1.0);
   let A = toPx(seg.xy);
   let B = toPx(seg.zw);

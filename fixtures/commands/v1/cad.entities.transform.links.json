@@ -1,0 +1,2219 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.transform",
+ "commandVersion": 1,
+ "title": "Kopyanın bağları: etiket kopyalanan nesnesinin kopyasını adlar",
+ "note": "ADR 0793 §2. Bağımsız başvuru scripts/fixtures/copy_links_cases.py: kopyalar sırayla sonraki yuvaları alır (dizi öğe öğe); birlikte kopyalanan nesneyi adlayan etiketin (ve yapıştırmada ölçünün) bağı onun kopyasınadır, öbürü kalır; KentOS kodu çalıştırılmaz. $uidOf:N, N yuvasındaki nesnenin kalıcı kimliğidir.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kopyanın bağları",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50.0,
+   "workspace": "cad",
+   "drawingUnit": "m"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "kolon",
+    "name": "Kolon",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "etiket",
+    "name": "Etiket",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "olcu",
+    "name": "Ölçü",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "styles": {
+   "categories": [],
+   "items": []
+  },
+  "entities": [
+   {
+    "kind": "column",
+    "id": 1,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S1"
+   },
+   {
+    "kind": "column",
+    "id": 2,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 10.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S2"
+   },
+   {
+    "kind": "tag",
+    "id": 3,
+    "layerId": "etiket",
+    "attrs": {},
+    "of": "0192f5a1-7930-7000-8000-000000000001",
+    "at": {
+     "x": 0.0,
+     "y": 2.0
+    },
+    "text": ""
+   },
+   {
+    "kind": "tag",
+    "id": 4,
+    "layerId": "etiket",
+    "attrs": {},
+    "of": "0192f5a1-7930-7000-8000-000000000002",
+    "at": {
+     "x": 10.0,
+     "y": 2.0
+    },
+    "text": ""
+   },
+   {
+    "kind": "line",
+    "id": 5,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 20.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 30.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "dimension",
+    "id": 6,
+    "layerId": "olcu",
+    "attrs": {},
+    "style": "aligned",
+    "a": {
+     "x": 20.0,
+     "y": 0.0
+    },
+    "b": {
+     "x": 30.0,
+     "y": 0.0
+    },
+    "offset": 1.5,
+    "height": 0.25,
+    "refs": {
+     "a": {
+      "uid": "0192f5a1-7930-7000-8000-000000000005",
+      "place": {
+       "kind": "start"
+      }
+     },
+     "b": {
+      "uid": "0192f5a1-7930-7000-8000-000000000005",
+      "place": {
+       "kind": "end"
+      }
+     }
+    }
+   },
+   {
+    "kind": "column",
+    "id": 7,
+    "layerId": "kolon",
+    "attrs": {},
+    "at": {
+     "x": 40.0,
+     "y": 0.0
+    },
+    "width": 0.4,
+    "depth": 0.5,
+    "tag": "S3"
+   }
+  ],
+  "uids": [
+   "0192f5a1-7930-7000-8000-000000000001",
+   "0192f5a1-7930-7000-8000-000000000002",
+   "0192f5a1-7930-7000-8000-000000000003",
+   "0192f5a1-7930-7000-8000-000000000004",
+   "0192f5a1-7930-7000-8000-000000000005",
+   "0192f5a1-7930-7000-8000-000000000006",
+   "0192f5a1-7930-7000-8000-000000000007"
+  ]
+ },
+ "cases": [
+  {
+   "name": "Kopyala 12, 0: etiket nesnesiyle birlikte: kopya etiket kopya kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: etiket nesnesiyle birlikte: kopya etiket kopya kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: önce etiket, sonra nesnesi: kopya etiket yine kopya kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:1"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: önce etiket, sonra nesnesi: kopya etiket yine kopya kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:1"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: iki kolon iki etiketiyle: her kopya etiket kendi kolonunun kopyasını adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 22.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 22.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: iki kolon iki etiketiyle: her kopya etiket kendi kolonunun kopyasını adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 10.0,
+         "y": -8.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 10.0,
+         "y": -6.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: etiketler önde, kolonlar arkada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 22.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 22.0,
+         "y": 0.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: etiketler önde, kolonlar arkada",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:4",
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:11",
+        "at": {
+         "x": 10.0,
+         "y": -6.0
+        }
+       },
+       "10": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       },
+       "11": {
+        "at": {
+         "x": 10.0,
+         "y": -8.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: yalnız etiket: kopya etiket özgün kolonu adlamayı sürdürür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: yalnız etiket: kopya etiket özgün kolonu adlamayı sürdürür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "of": "0192f5a1-7930-7000-8000-000000000001",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: yalnız kolon: etiket kopyalanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: yalnız kolon: etiket kopyalanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: bir kolon iki etiket: nesnesi gelen kopyayı, öbürü özgününü adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       },
+       "10": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 22.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: bir kolon iki etiket: nesnesi gelen kopyayı, öbürü özgününü adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3",
+       "$uidOf:4"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       },
+       "9": {
+        "of": "$uidOf:8",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       },
+       "10": {
+        "of": "0192f5a1-7930-7000-8000-000000000002",
+        "at": {
+         "x": 10.0,
+         "y": -6.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: etiketsiz kolonla: etiketler kendi kolonlarının kopyasını adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 52.0,
+         "y": 0.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: etiketsiz kolonla: etiketler kendi kolonlarının kopyasını adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "8": {
+        "at": {
+         "x": 40.0,
+         "y": -8.0
+        }
+       },
+       "9": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       },
+       "10": {
+        "of": "$uidOf:9",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 12, 0: ölçü çizgisiyle: kopyanın noktaları kendinindir (ADR 0249 §3), etiketi kolonunu izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 12.0,
+       "dy": 0.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": null
+       },
+       "10": {
+        "at": {
+         "x": 12.0,
+         "y": 0.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 12.0,
+         "y": 2.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kopyala 0, -8: ölçü çizgisiyle: kopyanın noktaları kendinindir (ADR 0249 §3), etiketi kolonunu izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:6",
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 0.0,
+       "dy": -8.0
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9",
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "refs": null
+       },
+       "10": {
+        "at": {
+         "x": 0.0,
+         "y": -8.0
+        }
+       },
+       "11": {
+        "of": "$uidOf:10",
+        "at": {
+         "x": 0.0,
+         "y": -6.0
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "rotate kopyası: etiket kopya kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "rotate",
+       "center": {
+        "x": 0.0,
+        "y": 0.0
+       },
+       "angle": 1.5707963267948966
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "of": "$uidOf:8"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "mirror kopyası: etiket kopya kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "mirror",
+       "a": {
+        "x": 5.0,
+        "y": -1.0
+       },
+       "b": {
+        "x": 5.0,
+        "y": 1.0
+       }
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "of": "$uidOf:8"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "scale kopyası: etiket kopya kolonu adlar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "transform": {
+       "kind": "scale",
+       "center": {
+        "x": 0.0,
+        "y": 0.0
+       },
+       "factor": 2
+      },
+      "copy": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changed": [],
+       "created": [
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "locked": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       },
+       "9": {
+        "of": "$uidOf:8"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "fields": {
+       "3": {
+        "of": "0192f5a1-7930-7000-8000-000000000001"
+       },
+       "4": {
+        "of": "0192f5a1-7930-7000-8000-000000000002"
+       }
+      },
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}
