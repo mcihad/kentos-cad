@@ -32,7 +32,7 @@ use iced::{Center, Element, Fill, Task};
 use kentos_commands::FormsFill;
 use kentos_commands::{
     FormBody, FormIssue, FormItem, FormItemState, FormSeverity, FormWidget, FormsSubmit,
-    LayerField, LayerFieldKind,
+    LayerField, LayerFieldKind, RelatedAction,
 };
 use kentos_domain::{Document, Slot};
 use kentos_forms::Attrs;
@@ -190,6 +190,11 @@ pub struct Entry {
     issue_at: usize,
     /// Vazgeç (or Esc) with what was typed unsaved asks first (docs/adr/0443 §6).
     asking_close: bool,
+    /// Opened from a related item that offers reading its children, not changing them
+    /// (docs/adr/0762 §1): nothing is written.
+    pub(crate) read_only: bool,
+    /// A related child whose Sil asks first (docs/adr/0762 §4): its item and id.
+    removing: Option<(String, String)>,
 }
 
 /// A record of the many-record mode.
@@ -259,8 +264,13 @@ pub enum Event {
     Tab(usize),
     /// A collapsed group's title: open or close it.
     Group(String),
-    /// A related object's form opens (docs/adr/0404 §4).
-    OpenRelated(String),
+    /// A related object's form opens (docs/adr/0404 §4): the item and the object; read-only when
+    /// the item offers no change (docs/adr/0762 §1).
+    OpenRelated(String, String),
+    /// A related child's Sil (docs/adr/0762 §4): asked in its row, then deleted; Vazgeç forgets it.
+    DeleteRelated(String, String),
+    ConfirmDelete,
+    KeepChild,
     /// Haritadan seç (docs/adr/0759 §1): a list item's value picked on the map, by its item.
     PickOnMap(String),
     /// The focus entered (true) or left (false) a field's item, by its id (docs/adr/0760 §2).
@@ -1013,6 +1023,8 @@ impl App {
             language: None,
             issue_at: 0,
             asking_close: false,
+            read_only: false,
+            removing: None,
             touched: BTreeSet::new(),
             left: kentos_forms::Left::new(),
             after: Attrs::new(),
@@ -1201,6 +1213,15 @@ impl App {
     /// field emptied), through `cad.entities.set` (the object's own form's rules hold); the window's
     /// lists follow, its values stay.
     fn link_related(&mut self, item: &str, uid: &str, link: bool) -> Task<Message> {
+        let action = if link {
+            RelatedAction::Link
+        } else {
+            RelatedAction::Unlink
+        };
+        if let Some(why) = self.related_refusal(item, action) {
+            self.say(Level::Warn, why);
+            return Task::none();
+        }
         let Some(e) = self.form_entry.as_ref() else {
             return Task::none();
         };
@@ -1337,6 +1358,10 @@ impl App {
     /// its field holding the record's id (`cad.point.create`, the child's own form's rules too), then
     /// opened by its layer's form.
     fn new_related(&mut self, item: &str) -> Task<Message> {
+        if let Some(why) = self.related_refusal(item, RelatedAction::Create) {
+            self.say(Level::Warn, why);
+            return Task::none();
+        }
         let Some(e) = self.form_entry.as_ref() else {
             return Task::none();
         };
@@ -1466,7 +1491,15 @@ impl App {
 
     /// A related object's form over the record's (docs/adr/0440 §7): the record's form waits with its
     /// draft and comes back when the child's closes; at most [`MOST_NESTED`] forms deep.
-    fn open_related(&mut self, uid: &str) -> Task<Message> {
+    fn open_related(&mut self, item: &str, uid: &str) -> Task<Message> {
+        // Read-only when the item offers reading its children and not changing them, or the user
+        // may not change them (docs/adr/0762 §1, §2).
+        let read_only = self.form_entry.as_ref().is_some_and(|e| {
+            !self
+                .related_offers(e, item)
+                .iter()
+                .any(|o| o.action == RelatedAction::Update && o.allowed())
+        });
         if self.form_stack.len() + 1 >= MOST_NESTED {
             self.say(
                 Level::Warn,
@@ -1494,7 +1527,11 @@ impl App {
                     self.form_stack.push(parent);
                 }
                 self.selection.set([slot]);
-                self.open_entry(slot, &form)
+                let task = self.open_entry(slot, &form);
+                if let Some(e) = self.form_entry.as_mut() {
+                    e.read_only = read_only;
+                }
+                task
             }
             None => {
                 self.say(
@@ -1610,7 +1647,18 @@ impl App {
                     None => e.tab = i,
                 }
             }
-            Event::OpenRelated(uid) => return self.open_related(&uid),
+            Event::OpenRelated(item, uid) => return self.open_related(&item, &uid),
+            Event::DeleteRelated(item, uid) => {
+                if let Some(e) = self.form_entry.as_mut() {
+                    e.removing = Some((item, uid));
+                }
+            }
+            Event::KeepChild => {
+                if let Some(e) = self.form_entry.as_mut() {
+                    e.removing = None;
+                }
+            }
+            Event::ConfirmDelete => return self.delete_related(),
             Event::PickOnMap(item) => return self.pick_on_map(&item),
             Event::Focus(item, on) => {
                 // Leaving a field asks its checks kept for leaving (docs/adr/0760 §2); entering one says
@@ -2437,7 +2485,12 @@ impl App {
                 "Katmanın alanları bu yayından sonra değişti; tasarımcı formu gözden geçirip yeniden yayınlamalı.",
             )]));
         }
-        if locked {
+        if e.read_only {
+            body = body.push(words::summary(vec![words::text_line(
+                Kind::Info,
+                "İlişkili kayıtlar öğesi bu alt kaydı yalnız okumaya açıyor: kayıt görüntülenir, değiştirilmez.",
+            )]));
+        } else if locked {
             body = body.push(words::summary(vec![words::text_line(
                 Kind::Warn,
                 "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
@@ -2676,7 +2729,8 @@ impl App {
     }
 
     fn entry_locked(&self, e: &Entry) -> bool {
-        self.forms_locked().is_some()
+        e.read_only
+            || self.forms_locked().is_some()
             || self
                 .document
                 .as_ref()
@@ -3447,6 +3501,7 @@ impl App {
         }
         let doc = self.document.as_ref();
         let live = !e.preview && !e.uid.is_empty();
+        let offers = self.related_offers(e, id);
         // The other layer's objects not yet linked to the record, to link one (docs/adr/0405 §4).
         let candidates: Vec<(String, String)> =
             match (doc, crate::forms::designer::find(&e.body.items, id)) {
@@ -3523,9 +3578,20 @@ impl App {
                 .cloned()
                 .collect();
             col = col.push(if *view == kentos_commands::RelatedView::Cards {
-                related_cards(d, layer, field, columns, &shown_uids, e, id, live)
+                related_cards(d, layer, field, columns, &shown_uids, e, id, live, &offers)
             } else {
-                related_table(d, layer, field, columns, &uids, &shown_uids, e, id, live)
+                related_table(
+                    d,
+                    layer,
+                    field,
+                    columns,
+                    &uids,
+                    &shown_uids,
+                    e,
+                    id,
+                    live,
+                    &offers,
+                )
             });
             if uids.len() > RELATED_PAGE {
                 let pages = uids.len().div_ceil(RELATED_PAGE);
@@ -3577,24 +3643,105 @@ impl App {
                     }))
                 })
                 .unwrap_or_else(|| uid.clone());
-            col = col.push(
-                row![
-                    label::body(words).width(Fill),
-                    words::ghost("Git", live.then(|| e.msg(Event::ShowObject(uid.clone())))),
-                    words::ghost(
-                        "Bağı kopar",
-                        live.then(|| e.msg(Event::Unlink(id.to_owned(), uid.clone())))
-                    ),
-                    words::secondary("Aç", live.then(|| e.msg(Event::OpenRelated(uid.clone())))),
-                ]
-                .spacing(6)
-                .align_y(Center),
-            );
+            col = col.push(related_row(e, id, uid, words, live, &offers));
         }
         if uids.len() > 50 {
             col = col.push(label::caption(format!("{} nesne daha.", uids.len() - 50)).style(muted));
         }
         self.related_footer(e, id, col, live, candidates)
+    }
+
+    /// What the related item `item` offers and, for each, whether the user may (docs/adr/0762 §2).
+    pub(crate) fn related_offers(&self, e: &Entry, item: &str) -> Vec<kentos_forms::Offer> {
+        let Some(FormItem::Related { layer, actions, .. }) =
+            crate::forms::designer::find(&e.body.items, item)
+        else {
+            return Vec::new();
+        };
+        let doc = self.document.as_ref();
+        let layer_name = |id: &str| {
+            doc.and_then(|d| d.model.layers().get(id).map(|n| n.name.clone()))
+                .unwrap_or_else(|| id.to_owned())
+        };
+        let record_locked = if e.read_only {
+            Some("Kayıt yalnız okumaya açıldı; alt kayıtları da yazılamaz.".to_owned())
+        } else if let Some(why) = self.forms_locked() {
+            Some(why.to_owned())
+        } else if doc.is_some_and(|d| d.model.layers().is_locked(&e.screen.layer)) {
+            Some(format!(
+                "“{}” katmanı kilitli; kayıt da alt kayıtları da yazılamaz.",
+                layer_name(&e.screen.layer)
+            ))
+        } else {
+            None
+        };
+        let permits = kentos_forms::ChildPermits {
+            saved: !e.preview && !e.uid.is_empty(),
+            record_locked,
+            child_locked: doc
+                .is_some_and(|d| d.model.layers().is_locked(layer))
+                .then(|| layer_name(layer)),
+            no_writes: doc
+                .and_then(|d| d.cloud_source())
+                .is_some_and(|s| !crate::cloud::access_of(&s.info).0),
+            attributes_only: doc.is_some_and(|d| {
+                d.model.object_policy() == kentos_domain::ObjectPolicy::AttributesOnly
+            }),
+        };
+        kentos_forms::related_offer(actions.as_deref(), &permits)
+    }
+
+    /// Why the related item `item` does not let its action be taken now: it does not offer it, or the
+    /// user may not (docs/adr/0762 §2); none when it may.
+    fn related_refusal(&self, item: &str, action: RelatedAction) -> Option<String> {
+        let e = self.form_entry.as_ref()?;
+        match self
+            .related_offers(e, item)
+            .into_iter()
+            .find(|o| o.action == action)
+        {
+            None => Some(format!(
+                "Bu ilişkili kayıtlar öğesi “{}” sunmuyor; formun tasarımında öğenin eylemlerine ekleyin.",
+                action.label()
+            )),
+            Some(o) => o.refused,
+        }
+    }
+
+    /// The child asked to be deleted, deleted (docs/adr/0762 §4): `cad.entities.delete`, its own undo
+    /// step; the project relations' delete rules hold.
+    fn delete_related(&mut self) -> Task<Message> {
+        let Some((item, uid)) = self.form_entry.as_mut().and_then(|e| e.removing.take()) else {
+            return Task::none();
+        };
+        if let Some(why) = self.related_refusal(&item, RelatedAction::Delete) {
+            self.say(Level::Warn, why);
+            return Task::none();
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let answer = kentos_native_application::registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_ENTITIES_DELETE,
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({ "uids": [uid] }),
+        );
+        match answer {
+            Ok(v) if v["status"] == "completed" => {
+                self.say(Level::Success, "Alt kayıt silindi.");
+                self.refresh_entry()
+            }
+            Ok(v) => {
+                let why = v["error"]["message"].as_str().unwrap_or("").to_owned();
+                self.say(Level::Warn, format!("Alt kayıt silinemedi: {why}"));
+                Task::none()
+            }
+            Err(e) => {
+                self.say(Level::Warn, format!("Alt kayıt silinemedi: {e:?}"));
+                Task::none()
+            }
+        }
     }
 
     /// A related item's Yeni and Bağla, and its frame.
@@ -3606,14 +3753,28 @@ impl App {
         live: bool,
         candidates: Vec<(String, String)>,
     ) -> Element<'a, Message> {
+        let offers = self.related_offers(e, id);
         let mut actions = Row::new().spacing(6).align_y(Center);
-        if live {
-            actions = actions.push(words::secondary(
-                "Yeni",
-                Some(e.msg(Event::NewRelated(id.to_owned()))),
-            ));
+        if live
+            && let Some(b) = offered_word(
+                &offers,
+                RelatedAction::Create,
+                e.msg(Event::NewRelated(id.to_owned())),
+                words::secondary,
+            )
+        {
+            actions = actions.push(b);
         }
-        if !candidates.is_empty() {
+        let link = offers.iter().find(|o| o.action == RelatedAction::Link);
+        if let Some(why) = link.and_then(|o| o.refused.clone())
+            && live
+        {
+            actions = actions.push(kentos_ui::widget::tip(
+                words::ghost("Bağla", None),
+                kentos_ui::widget::Tip::new("Bağla").body(why),
+                iced::widget::tooltip::Position::Top,
+            ));
+        } else if link.is_some() && !candidates.is_empty() {
             let item = id.to_owned();
             let picks = candidates.clone();
             actions = actions.push(
@@ -3629,6 +3790,18 @@ impl App {
             );
         }
         col = col.push(actions);
+        // The offered actions the user may not take, each reason once (docs/adr/0762 §2).
+        if live {
+            let mut said: Vec<&str> = Vec::new();
+            for why in offers.iter().filter_map(|o| o.refused.as_deref()) {
+                if !said.contains(&why) {
+                    said.push(why);
+                }
+            }
+            for why in said {
+                col = col.push(label::caption(why.to_owned()).style(style::text::muted));
+            }
+        }
         container(col)
             .padding(10)
             .style(style::container::field_box)
@@ -4535,6 +4708,173 @@ fn muted(theme: &iced::Theme) -> iced::widget::text::Style {
 /// fields when it names none), each object a row with Aç, Git and Bağı kopar; the decimal columns'
 /// totals under them.
 #[allow(clippy::too_many_arguments)]
+/// The related action's button when the item offers it: pressed when the user may, else quiet with
+/// the reason in its tip (docs/adr/0762 §2); none when it is not offered.
+fn offered_word<'a>(
+    offers: &[kentos_forms::Offer],
+    action: RelatedAction,
+    on: Message,
+    look: fn(&'a str, Option<Message>) -> Element<'a, Message>,
+) -> Option<Element<'a, Message>> {
+    let offer = offers.iter().find(|o| o.action == action)?;
+    Some(match &offer.refused {
+        None => look(action.label(), Some(on)),
+        Some(why) => kentos_ui::widget::tip(
+            look(action.label(), None),
+            kentos_ui::widget::Tip::new(action.label()).body(why.clone()),
+            iced::widget::tooltip::Position::Top,
+        ),
+    })
+}
+
+/// Aç: offered when the item offers reading or changing its children.
+fn open_offer(offers: &[kentos_forms::Offer]) -> Option<&kentos_forms::Offer> {
+    offers
+        .iter()
+        .find(|o| o.action == RelatedAction::View)
+        .or_else(|| offers.iter().find(|o| o.action == RelatedAction::Update))
+}
+
+/// A related child in the list: its words and the actions its item offers; Sil asks in the row.
+fn related_row<'a>(
+    e: &'a Entry,
+    id: &str,
+    uid: &str,
+    words_of: String,
+    live: bool,
+    offers: &[kentos_forms::Offer],
+) -> Element<'a, Message> {
+    let mut line = Row::new()
+        .spacing(6)
+        .align_y(Center)
+        .push(label::body(words_of).width(Fill));
+    if e.removing
+        .as_ref()
+        .is_some_and(|(i, u)| i == id && u == uid)
+    {
+        return line
+            .push(label::caption("Silinsin mi?").style(style::text::muted))
+            .push(
+                iced::widget::button(label::body("Sil"))
+                    .on_press(e.msg(Event::ConfirmDelete))
+                    .padding(kentos_ui::theme::metrics::action())
+                    .style(style::button::danger),
+            )
+            .push(words::ghost("Vazgeç", Some(e.msg(Event::KeepChild))))
+            .into();
+    }
+    if !live {
+        return line.into();
+    }
+    let pairs = [
+        (RelatedAction::Show, Event::ShowObject(uid.to_owned())),
+        (
+            RelatedAction::Unlink,
+            Event::Unlink(id.to_owned(), uid.to_owned()),
+        ),
+        (
+            RelatedAction::Delete,
+            Event::DeleteRelated(id.to_owned(), uid.to_owned()),
+        ),
+    ];
+    for (action, event) in pairs {
+        if let Some(b) = offered_word(offers, action, e.msg(event), words::ghost) {
+            line = line.push(b);
+        }
+    }
+    if let Some(open) = open_offer(offers) {
+        let on = e.msg(Event::OpenRelated(id.to_owned(), uid.to_owned()));
+        line = line.push(match &open.refused {
+            None => words::secondary("Aç", Some(on)),
+            Some(why) => kentos_ui::widget::tip(
+                words::secondary("Aç", None),
+                kentos_ui::widget::Tip::new("Aç").body(why.clone()),
+                iced::widget::tooltip::Position::Top,
+            ),
+        });
+    }
+    line.into()
+}
+
+/// A related child's tools in a table row or card: the offered actions as icons, a refused one quiet
+/// with its reason; Sil asks first.
+fn related_tools<'a>(
+    e: &'a Entry,
+    id: &str,
+    uid: &str,
+    live: bool,
+    offers: &[kentos_forms::Offer],
+) -> Row<'a, Message> {
+    let mut tools = Row::new().spacing(2).align_y(Center);
+    if e.removing
+        .as_ref()
+        .is_some_and(|(i, u)| i == id && u == uid)
+    {
+        return tools
+            .push(
+                iced::widget::button(label::caption("Sil"))
+                    .on_press(e.msg(Event::ConfirmDelete))
+                    .padding(kentos_ui::theme::metrics::action_small())
+                    .style(style::button::danger),
+            )
+            .push(
+                iced::widget::button(icon(Icon::Close).size(13.0))
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
+                    .style(style::button::tool(false))
+                    .on_press(e.msg(Event::KeepChild)),
+            );
+    }
+    let tool =
+        |glyph: Icon, tip: &'static str, offer: Option<&kentos_forms::Offer>, on: Message| {
+            let offer = offer?;
+            let allowed = live && offer.allowed();
+            let card = match (&offer.refused, live) {
+                (Some(why), true) => kentos_ui::widget::Tip::new(tip).body(why.clone()),
+                _ => kentos_ui::widget::Tip::new(tip),
+            };
+            Some(kentos_ui::widget::tip(
+                iced::widget::button(icon(glyph).size(13.0))
+                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
+                    .style(style::button::tool(false))
+                    .on_press_maybe(allowed.then_some(on)),
+                card,
+                iced::widget::tooltip::Position::Top,
+            ))
+        };
+    let find = |a: RelatedAction| offers.iter().find(|o| o.action == a);
+    let all = [
+        tool(
+            Icon::Open,
+            "Aç",
+            open_offer(offers),
+            e.msg(Event::OpenRelated(id.to_owned(), uid.to_owned())),
+        ),
+        tool(
+            Icon::Target,
+            "Çizimde göster",
+            find(RelatedAction::Show),
+            e.msg(Event::ShowObject(uid.to_owned())),
+        ),
+        tool(
+            Icon::Close,
+            "Bağı kopar",
+            find(RelatedAction::Unlink),
+            e.msg(Event::Unlink(id.to_owned(), uid.to_owned())),
+        ),
+        tool(
+            Icon::Eraser,
+            "Sil",
+            find(RelatedAction::Delete),
+            e.msg(Event::DeleteRelated(id.to_owned(), uid.to_owned())),
+        ),
+    ];
+    for t in all.into_iter().flatten() {
+        tools = tools.push(t);
+    }
+    tools
+}
+
+#[allow(clippy::too_many_arguments)]
 fn related_table<'a>(
     d: &crate::document::Document,
     layer: &str,
@@ -4545,6 +4885,7 @@ fn related_table<'a>(
     e: &'a Entry,
     id: &str,
     live: bool,
+    offers: &[kentos_forms::Offer],
 ) -> Element<'a, Message> {
     let fields: Vec<kentos_commands::LayerField> = d
         .model
@@ -4590,7 +4931,7 @@ fn related_table<'a>(
             container(words).width(Fill)
         });
     }
-    head = head.push(space::horizontal().width(84));
+    head = head.push(space::horizontal().width(112));
     let mut rows = Column::new().spacing(2).push(head);
     // A decimal is a measure and is totalled (an area, a share); an integer is often a number or a floor.
     let mut totals: Vec<Option<f64>> = shown
@@ -4626,37 +4967,7 @@ fn related_table<'a>(
             let raw = x.base().attrs.get(&f.name).cloned().unwrap_or_default();
             line = line.push(cell(kentos_commands::display_value(f, &raw), Some(f)));
         }
-        let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
-            kentos_ui::widget::tip(
-                iced::widget::button(icon(glyph).size(13.0))
-                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
-                    .style(style::button::tool(false))
-                    .on_press_maybe(on),
-                kentos_ui::widget::Tip::new(tip),
-                iced::widget::tooltip::Position::Top,
-            )
-        };
-        line = line.push(
-            row![
-                tool(
-                    Icon::Open,
-                    "Aç",
-                    live.then(|| e.msg(Event::OpenRelated(uid.clone())))
-                ),
-                tool(
-                    Icon::Target,
-                    "Çizimde göster",
-                    live.then(|| e.msg(Event::ShowObject(uid.clone())))
-                ),
-                tool(
-                    Icon::Close,
-                    "Bağı kopar",
-                    live.then(|| e.msg(Event::Unlink(id.to_owned(), uid.clone())))
-                ),
-            ]
-            .spacing(2)
-            .width(84),
-        );
+        line = line.push(container(related_tools(e, id, uid, live, offers)).width(112));
         rows = rows.push(line);
     }
     if totals.iter().any(Option::is_some) && !uids.is_empty() {
@@ -4675,7 +4986,7 @@ fn related_table<'a>(
                 Some(f).filter(|f| f.kind == LayerFieldKind::Decimal),
             ));
         }
-        foot = foot.push(space::horizontal().width(84));
+        foot = foot.push(space::horizontal().width(112));
         rows = rows.push(container(foot).padding(iced::Padding {
             top: 4.0,
             ..iced::Padding::ZERO
@@ -4771,6 +5082,7 @@ fn related_cards<'a>(
     e: &'a Entry,
     id: &str,
     live: bool,
+    offers: &[kentos_forms::Offer],
 ) -> Element<'a, Message> {
     let fields: Vec<kentos_commands::LayerField> = d
         .model
@@ -4811,33 +5123,7 @@ fn related_cards<'a>(
                 .spacing(8),
             );
         }
-        let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
-            kentos_ui::widget::tip(
-                iced::widget::button(icon(glyph).size(13.0))
-                    .padding(kentos_ui::theme::metrics::icon_small(13.0))
-                    .style(style::button::tool(false))
-                    .on_press_maybe(on),
-                kentos_ui::widget::Tip::new(tip),
-                iced::widget::tooltip::Position::Top,
-            )
-        };
-        let tools = Row::new()
-            .spacing(2)
-            .push(tool(
-                Icon::Open,
-                "Aç",
-                live.then(|| e.msg(Event::OpenRelated(uid.clone()))),
-            ))
-            .push(tool(
-                Icon::Target,
-                "Çizimde göster",
-                live.then(|| e.msg(Event::ShowObject(uid.clone()))),
-            ))
-            .push(tool(
-                Icon::Close,
-                "Bağı kopar",
-                live.then(|| e.msg(Event::Unlink(id.to_owned(), uid.clone()))),
-            ));
+        let tools = related_tools(e, id, uid, live, offers);
         cards = cards.push(
             container(
                 row![container(body).width(Fill), tools]

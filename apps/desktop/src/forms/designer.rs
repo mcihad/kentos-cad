@@ -318,6 +318,8 @@ pub enum Event {
     RelatedView(kentos_commands::RelatedView),
     /// A field of the other layer taken into the table's columns, or out of them.
     RelatedColumn(String),
+    /// A related item's action offered or not (docs/adr/0762 §5).
+    RelatedAction(kentos_commands::RelatedAction),
     Move(i32),
     /// An item dragged onto another in the tree, by their places in the tree's order.
     Drop(usize, usize, kentos_ui::widget::tree_view::Place),
@@ -1253,6 +1255,7 @@ impl App {
                     field: String::new(),
                     visible_when: None,
                     view: kentos_commands::RelatedView::List,
+                    actions: None,
                     columns: Vec::new(),
                 };
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1368,6 +1371,7 @@ impl App {
                         field: r.field.clone(),
                         visible_when: None,
                         view: kentos_commands::RelatedView::List,
+                        actions: None,
                         columns: Vec::new(),
                     };
                     edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1852,6 +1856,26 @@ impl App {
                         if let Some(FormItem::Related { view: v, .. }) = find_mut(&mut b.items, &id)
                         {
                             *v = view;
+                        }
+                    });
+                }
+            }
+            Event::RelatedAction(action) => {
+                if let Some(id) = chosen_item.clone() {
+                    edited(&mut w, &|b| {
+                        if let Some(FormItem::Related { actions, .. }) = find_mut(&mut b.items, &id)
+                        {
+                            let mut now: Vec<_> =
+                                kentos_commands::related_offers(actions.as_deref()).to_vec();
+                            if let Some(i) = now.iter().position(|a| *a == action) {
+                                now.remove(i);
+                            } else {
+                                now.push(action);
+                            }
+                            now.sort();
+                            // Back to the default ones, nothing is written.
+                            *actions =
+                                (now != kentos_commands::RelatedAction::DEFAULT).then_some(now);
                         }
                     });
                 }

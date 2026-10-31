@@ -1306,6 +1306,7 @@ impl App {
                 columns,
                 min,
                 max,
+                actions,
                 ..
             } => {
                 let layers = self.form_layers();
@@ -1401,6 +1402,25 @@ impl App {
                         )
                         .style(muted),
                     );
+                // What the item lets do with the children (docs/adr/0762 §1).
+                let offered = kentos_commands::related_offers(actions.as_deref());
+                let mut chips = Row::new().spacing(4);
+                for a in kentos_commands::RelatedAction::ALL {
+                    chips = chips.push(
+                        button(label::caption(a.label()))
+                            .on_press(msg(Event::RelatedAction(a)))
+                            .padding([2, 8])
+                            .style(style::button::chip(offered.contains(&a))),
+                    );
+                }
+                col = col.push(words::field(
+                    "Eylemler",
+                    chips.wrap(),
+                    Some(
+                        "Seçilenler formda görünür; Sil yalnız seçilince. Kullanıcının izni ayrıca sorulur: kilitli katman ve rol düğmeyi soluk gösterir."
+                            .into(),
+                    ),
+                ));
                 col = col.push(rule_row(
                     "Görünürlük",
                     Rule::Visible(id.clone()),

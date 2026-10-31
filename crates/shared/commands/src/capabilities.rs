@@ -4213,6 +4213,8 @@ const ENTRIES: &[Entry] = &[
                 "unknown_relation",
                 "relation_mismatch",
                 "relation_field_unknown",
+                // docs/adr/0762 §3: what the form's related items offer.
+                "form_related_action",
                 // docs/adr/0754 §3: a field the bound table always makes.
                 "attribute_generated",
             ],

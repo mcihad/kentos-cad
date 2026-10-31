@@ -21,6 +21,8 @@ pub mod layer_rules;
 pub mod library;
 pub mod location;
 pub mod map_pick;
+#[cfg(test)]
+mod related_actions_tests;
 pub mod package;
 pub mod relations;
 pub mod subtypes;

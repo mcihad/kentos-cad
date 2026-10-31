@@ -362,7 +362,7 @@ QGIS ilişkili child form gösterimi ve reference widget desteğine sahiptir. Ar
 ### 6.2 Master–detail runtime
 
 - [x] **FORM-REL-10:** Form relationEditor; table/cards/tree ve child form görünümünü aynı relation üzerinden üretsin. — *Yapıldı (17 Ekim; ADR 0425: Liste ve Tablo, sütunlar, ondalık toplamlar; kart ve ağaç açık).*
-- [ ] **FORM-REL-11:** Child create/update/delete/link/unlink/view/select-on-map action'ları ayrı yetki ve capability ile gösterilsin.
+- [x] **FORM-REL-11:** Child create/update/delete/link/unlink/view/select-on-map action'ları ayrı yetki ve capability ile gösterilsin. — *31 Ekim: öğenin `actions`'ı formun sunduğunu, `related_offer` kullanıcının iznini ayrı söyler; sunulmayan görünmez, izni olmayan gerekçesiyle soluk; `cad.forms.submit` da sunulana uyar (`form_related_action`); Sil satırda sorulur, yalnız okuyan öğeden açılan alt kayıt salt okunur (ADR 0762).*
 - [x] **FORM-REL-12:** İlişkili lookup/relation reference; yetkili parent search, display fields, filter ve nested parent preview sunsun. — *17 Ekim: ilişki başvurusu `$uid` ile; liste aranır (en az harf, sayfa), sütunlarla gösterilir, süzgeç ve mekânsal ilişkiyle daralır, seçilen kaydın sütunları canlı önizlemede (ADR 0404, 0439 §2, §5, §6).*
 - [ ] **FORM-REL-13:** Parent data edit izni child edit izni vermesin; ilgili dataset/row/field/action yetkileri ayrıca denetlensin.
 - [x] **FORM-REL-14:** Parent/child patch'leri tek logical submission ve atomik transaction içinde uygulanabilsin; ayrı commit gerekiyorsa durum/kayıp sınırı açık olsun. — *17 Ekim: `cad.forms.submit`'in `children`'ı kayıt ve alt kayıtlarını tek geri alma adımında, hep ya da hiç yazar; alt kaydın formu da sorulur (ADR 0440 §2).*

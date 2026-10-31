@@ -2209,6 +2209,8 @@ __all__ = [
     "RelateOpName",
     "RelatePredicate",
     "RelatePredicateName",
+    "RelatedAction",
+    "RelatedActionName",
     "RelatedFormItem",
     "RelatedPair",
     "RelatedView",

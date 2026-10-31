@@ -4899,6 +4899,31 @@ RelatePredicateName = Literal["intersects", "disjoint", "contains", "within", "c
 """The names of :class:`RelatePredicate`, for a plain string."""
 
 
+class RelatedAction(_StrEnum):
+    """What a related item lets the record's user do with its children (docs/adr/0762 §1): the form's
+    offer; whether the user may is asked apart (the child layer's lock, the project role).
+
+    - ``create``: Yeni: a child made, linked to the record.
+    - ``update``: A child's values changed: its form opens to edit, `cad.forms.submit`'s child values.
+    - ``delete``: A child deleted (Sil), after it is asked.
+    - ``link``: Bağla: an object of the child layer linked to the record.
+    - ``unlink``: Bağı kopar: a child's link to the record taken off.
+    - ``view``: Aç: a child's form opened to read.
+    - ``show``: Git: a child shown and chosen in the drawing.
+    """
+    CREATE = "create"
+    UPDATE = "update"
+    DELETE = "delete"
+    LINK = "link"
+    UNLINK = "unlink"
+    VIEW = "view"
+    SHOW = "show"
+
+
+RelatedActionName = Literal["create", "update", "delete", "link", "unlink", "view", "show"]
+"""The names of :class:`RelatedAction`, for a plain string."""
+
+
 class RelatedView(_StrEnum):
     """How a related item shows its objects (docs/adr/0425).
 
@@ -75607,6 +75632,8 @@ class RelatedFormItem(FormItem):
     Attributes:
         layer: The other layer's id.
         field: Its field's key that holds this record's id.
+        actions: What it lets do with the children (docs/adr/0762 §1), each once; none: every action but
+            deleting; empty: the children only listed.
         columns: The table's columns: the other layer's fields' keys, at most 8; empty: its first four.
         max: The most (1–1000): 1 one to one. Unit: count.
         min: The fewest related objects (0–1000) the record holds while the item is shown: 1 a child it
@@ -75617,6 +75644,7 @@ class RelatedFormItem(FormItem):
     id: str
     layer: str
     field: str
+    actions: list[RelatedAction | RelatedActionName] | None | Unset = UNSET
     columns: list[str] | Unset = UNSET
     label: str | None | Unset = UNSET
     max: int | None | Unset = UNSET
@@ -75629,6 +75657,8 @@ class RelatedFormItem(FormItem):
         out["id"] = self.id
         out["layer"] = self.layer
         out["field"] = self.field
+        if self.actions is not UNSET:
+            out["actions"] = None if self.actions is None else [_enum_out(e0) for e0 in self.actions]
         if self.columns is not UNSET:
             out["columns"] = list(self.columns)
         if self.label is not UNSET:
@@ -75649,6 +75679,7 @@ class RelatedFormItem(FormItem):
             id=data["id"],
             layer=data["layer"],
             field=data["field"],
+            actions=UNSET if "actions" not in data else None if data["actions"] is None else [_enum_in(RelatedAction, e0) for e0 in data["actions"]],
             columns=list(data["columns"]) if "columns" in data else UNSET,
             label=data.get("label", UNSET),
             max=data.get("max", UNSET),
@@ -88754,6 +88785,8 @@ __all__ = [
     "RelateOpName",
     "RelatePredicate",
     "RelatePredicateName",
+    "RelatedAction",
+    "RelatedActionName",
     "RelatedFormItem",
     "RelatedPair",
     "RelatedView",

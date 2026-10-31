@@ -119,6 +119,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `.kcad` şema 137 (opt-in), `FORMATS_VERSION` 100. 31 ortak bağ durumu (`arch_bond_cases.py`), 26 benimseme. Gerçek
   pencerede elle denenmedi; çelişen bağın çizimde vurgusu ve 20 ms bütçesi açık.
 
+- **İlişkili kayıtlar öğesinin eylemleri ve izinleri (31 Ekim 2026; [ADR 0762](docs/adr/0762-related-item-actions.md), dal `formlar-surer`).**
+  `FormItem::Related.actions` (`RelatedAction`: create, update, delete, link, unlink, view, show; yazılmazsa silme dışındakiler,
+  boş liste salt okunur liste; şema değişmez). Formun sunduğu ile kullanıcının izni ayrı: `kentos_forms::related_offer`
+  (`ChildPermits`: kayıt yazılmamış, kaydın katmanı kilitli ya da salt okunur, alt katman kilitli, rol nesne yazamaz, Veri girişi
+  oluşturamaz ve silemez); sunulmayan görünmez, izni olmayan soluk ve gerekçesi ipucunda ve bölümün altında. `cad.forms.submit`'in
+  `children`'ı formun sunduğuyla sınanır (`child_actions`, `relation_offer`; `form_related_action`, yolu `children[i]`). Sil satırda
+  sorulur, `cad.entities.delete`; yalnız okuyan öğeden açılan alt kayıt salt okunur (`Entry.read_only`). Tasarımcıda Eylemler.
+  26 ortak durum (`related_actions_cases.py`).
+
 - **Formda ilişkili kayıtların toplamı (31 Ekim 2026; [ADR 0761](docs/adr/0761-related-records-aggregate.md), dal `formlar-surer`).**
   `ilişkili_toplam(ilişki, işlem, ifade, koşul)` (İngilizce `relation_aggregate`): projedeki ilişkinin alt kayıtları üstünde
   `katman_toplamı`'nın toplamaları, iç ifade alt kaydın alanlarıyla; yalnız formun kurallarında derlenir (`Schema.relations`,

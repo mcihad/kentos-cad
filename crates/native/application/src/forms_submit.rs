@@ -11,8 +11,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    ChildSubmitted, CommandResult, Entity, EntityBase, FormChild, FormsSubmit, FormsSubmitted,
-    RecordChange, RecordEntity,
+    ChildSubmitted, CommandResult, Entity, EntityBase, FormChild, FormItem, FormsSubmit,
+    FormsSubmitted, RecordChange, RecordEntity,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_forms::Attrs;
@@ -171,6 +171,7 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
     let mut children = Vec::with_capacity(input.children.len());
     for (i, c) in input.children.iter().enumerate() {
         children.push(child(doc, &form.layer, &uid_text, i, c, input, &children)?);
+        offered(doc, body, &uid_text, i, c, &children[i])?;
     }
     let skip = forms::snapshot_skip(doc, &form.layer, body)
         .into_iter()
@@ -414,6 +415,84 @@ fn child(
         before,
         entity,
     })
+}
+
+/// The child's actions against what the form's related items showing its relation offer
+/// (docs/adr/0762 §3): one not offered refuses the submission; a relation no item shows is the
+/// form's silence.
+fn offered(
+    doc: &Document,
+    body: &kentos_commands::FormBody,
+    parent: &str,
+    i: usize,
+    c: &FormChild,
+    written: &Child,
+) -> Result<(), Stop> {
+    let Some(r) = doc.settings().relations.iter().find(|r| r.id == c.relation) else {
+        return Ok(());
+    };
+    let Some(offer) = kentos_forms::relation_offer(body, &r.child, &r.field) else {
+        return Ok(());
+    };
+    // A value it is given that differs from the one it holds, by the child layer's fields.
+    let fields = forms::fields(doc, &r.child);
+    let changes = written.slot.is_some()
+        && c.values.iter().any(|(k, v)| {
+            let name = fields
+                .iter()
+                .find(|f| f.key() == k)
+                .map_or(k.as_str(), |f| f.name.as_str());
+            written.before.get(name).map_or("", String::as_str) != v.as_str()
+        });
+    let asked = kentos_forms::child_actions(
+        written.slot.is_some(),
+        linked_to(doc, r, &c.uid, parent),
+        c.unlink,
+        changes,
+    );
+    let Some(missing) = asked.into_iter().find(|a| !offer.contains(a)) else {
+        return Ok(());
+    };
+    let label = related_label(doc, body, &r.child, &r.field);
+    let mut refusal = checks::error(
+        codes::FORM_RELATED_ACTION,
+        format!(
+            "“{label}” alt kayıtlarında “{}” sunmuyor; formun tasarımında öğenin eylemlerine ekleyin.",
+            missing.label()
+        ),
+        Some(format!("children[{i}]")),
+    );
+    if written.slot.is_some() {
+        refusal.uids = vec![c.uid.clone()];
+    }
+    Err(Stop::failed(refusal))
+}
+
+/// The first related item's words for the child layer's field: its label, else the layer's name.
+fn related_label(
+    doc: &Document,
+    body: &kentos_commands::FormBody,
+    layer: &str,
+    field: &str,
+) -> String {
+    fn find<'a>(items: &'a [FormItem], layer: &str, field: &str) -> Option<&'a FormItem> {
+        items.iter().find_map(|i| match i {
+            FormItem::Related {
+                layer: l, field: f, ..
+            } if l == layer && f == field => Some(i),
+            FormItem::Tab { items, .. } | FormItem::Group { items, .. } => {
+                find(items, layer, field)
+            }
+            _ => None,
+        })
+    }
+    match find(&body.items, layer, field) {
+        Some(FormItem::Related { label: Some(l), .. }) => l.clone(),
+        _ => doc
+            .layers()
+            .get(layer)
+            .map_or_else(|| layer.to_owned(), |n| n.name.clone()),
+    }
 }
 
 /// The fields whose values differ between `a` and `b`, by name in order.

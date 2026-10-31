@@ -271,6 +271,7 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
             related_sums_designer,
             properties_down,
         ),
+        ("form-eylemler-tasarim", actions_designer, properties_down),
     ]
 }
 
@@ -842,6 +843,133 @@ pub(crate) fn related_sums(app: &mut App) {
     link_units(app, building, &units[..4]);
     app.selection.set([Slot(building)]);
     run(app, "data.formEdit");
+}
+
+/// A building's form whose owners item offers `actions` (docs/adr/0762), the owners' layer locked
+/// when `locked`; the owners have a form of their own. Two owners linked, one free to link.
+pub(crate) fn owner_actions(app: &mut App, actions: Value, locked: bool) {
+    let mut o = Objects::new();
+    let building = o.path(
+        "bina",
+        &[[0.0, 0.0], [24.0, 0.0], [24.0, 16.0], [0.0, 16.0]],
+        true,
+    );
+    o.data(building, &[("Kod", "B-1")], Some("B-1"));
+    let mut owners = Vec::new();
+    for (name, share) in [
+        ("Ayşe Yılmaz", "1/2"),
+        ("Mehmet Kaya", "1/2"),
+        ("Zeynep Arslan", ""),
+    ] {
+        let id = o.record("malik");
+        o.data(id, &[("Ad", name), ("Hisse", share)], Some(name));
+        owners.push(id);
+    }
+    let mut related = json!({ "type": "related", "id": "malikler", "label": "Malikler", "layer": "malik",
+                              "field": "Bina" });
+    if !actions.is_null() {
+        related["actions"] = actions;
+    }
+    let form = published(
+        "bina-formu",
+        "Bina",
+        "bina",
+        json!([{ "type": "field", "id": "kod", "field": "Kod" }, related]),
+    );
+    let owner_form = published(
+        "malik-formu",
+        "Malik",
+        "malik",
+        json!([{ "type": "field", "id": "ad", "field": "Ad" },
+               { "type": "field", "id": "hisse", "field": "Hisse" }]),
+    );
+    open_edited(app, o, move |d| {
+        let mut layers = d["layers"].as_array().cloned().unwrap_or_default();
+        let mut bina = crate::tools_scenes::layer("bina", "Bina", "#3E63DD", 0.35);
+        bina["fields"] = json!([{ "name": "Kod", "kind": "text" }]);
+        let mut malik = crate::tools_scenes::layer("malik", "Malik", "#E5484D", 0.35);
+        malik["fields"] = json!([{ "name": "Ad", "kind": "text" }, { "name": "Hisse", "kind": "text" },
+                                 { "name": "Bina", "kind": "text" }]);
+        layers.push(bina);
+        layers.push(malik);
+        d["layers"] = Value::Array(layers);
+        d["activeLayer"] = json!("bina");
+        d["settings"]["forms"] = json!([form, owner_form]);
+        d["settings"]["relations"] = json!([{ "id": "bina-malik", "name": "Malikler",
+                                              "parent": "bina", "child": "malik", "field": "Bina" }]);
+    });
+    link_units(app, building, &owners[..2]);
+    // Locked after the links are written: a locked layer takes no link.
+    if locked && let Some(doc) = app.document.as_mut() {
+        let _ = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_LAYERS_SET,
+            kentos_commands::CallOp::Execute,
+            json!({ "operation": "locked", "layer": "malik", "value": true }),
+        );
+    }
+    app.selection.set([Slot(building)]);
+    run(app, "data.formEdit");
+}
+
+/// Malikler only linked, opened and shown: no Yeni, no Bağı kopar (docs/adr/0762 §1).
+fn actions_link_only(app: &mut App) {
+    owner_actions(app, json!(["link", "view", "show"]), false);
+}
+
+/// Every action offered, the owners' layer locked: the writing ones quiet, the reason under them.
+fn actions_locked(app: &mut App) {
+    owner_actions(
+        app,
+        json!([
+            "create", "update", "delete", "link", "unlink", "view", "show"
+        ]),
+        true,
+    );
+}
+
+/// Sil offered and pressed: the row asks first (docs/adr/0762 §4).
+fn actions_delete_asked(app: &mut App) {
+    owner_actions(
+        app,
+        json!([
+            "create", "update", "delete", "link", "unlink", "view", "show"
+        ]),
+        false,
+    );
+    let first = app
+        .form_entry
+        .as_ref()
+        .expect("the window")
+        .related_of("malikler")[0]
+        .clone();
+    let _ = app.update(Message::FormEntry(entry::Event::DeleteRelated(
+        "malikler".into(),
+        first,
+    )));
+}
+
+/// An owner opened from an item that offers reading, not changing: its form read-only.
+fn actions_view_only(app: &mut App) {
+    owner_actions(app, json!(["view", "show"]), false);
+    let first = app
+        .form_entry
+        .as_ref()
+        .expect("the window")
+        .related_of("malikler")[0]
+        .clone();
+    let _ = app.update(Message::FormEntry(entry::Event::OpenRelated(
+        "malikler".into(),
+        first,
+    )));
+}
+
+/// Formlar on the building form, its owners item chosen: the Eylemler row.
+fn actions_designer(app: &mut App) {
+    owner_actions(app, json!(["link", "view", "show", "delete"]), false);
+    let _ = app.update(Message::FormEntry(entry::Event::Cancel));
+    run(app, "data.forms");
+    designer(app, designer::Event::SelectItem("malikler".into()));
 }
 
 /// `units` linked to `building` by one command (`cad.entities.set`), as Bağla writes them.
@@ -1579,7 +1707,7 @@ fn meters_nested(app: &mut App) {
         .and_then(|d| d.model.uid(Slot(3)))
         .map(|u| u.to_string())
         .unwrap_or_default();
-    entry(app, entry::Event::OpenRelated(child));
+    entry(app, entry::Event::OpenRelated("sayaclar".into(), child));
 }
 
 /// Formlar on the building form, its meters item chosen: İlişki, Görünüm Kartlar, the columns; Başvuru.
@@ -3198,6 +3326,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("form-cikinca-cikti", left_done),
         ("form-iliskili-toplam", related_sums),
         ("form-iliskili-eklendi", related_sums_linked),
+        ("form-eylemler-yalniz-bagla", actions_link_only),
+        ("form-eylemler-kilitli", actions_locked),
+        ("form-eylemler-sil-sor", actions_delete_asked),
+        ("form-eylemler-salt-okunur", actions_view_only),
         ("form-iliski-kartlar", meters_cards),
         ("form-iliski-bekleyen", meters_pending),
         ("form-iliski-yigini", meters_nested),
@@ -4962,7 +5094,10 @@ mod tests {
             .clone();
         entry(&mut app, entry::Event::Cancel);
         run(&mut app, "data.formEdit");
-        entry(&mut app, entry::Event::OpenRelated(meter));
+        entry(
+            &mut app,
+            entry::Event::OpenRelated("sayaclar".into(), meter),
+        );
         assert!(app.form_entry.is_some(), "the meters' layer has no form");
     }
 
