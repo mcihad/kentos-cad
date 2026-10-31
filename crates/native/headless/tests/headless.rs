@@ -22,6 +22,8 @@ mod walls_rectangle;
 mod dimension_set_exports;
 #[path = "headless/room_modules.rs"]
 mod room_modules;
+#[path = "headless/flat_modules.rs"]
+mod flat_modules;
 
 #[path = "headless/special_doors.rs"]
 mod special_doors;

@@ -2924,6 +2924,8 @@ impl App {
             "arch.modules" => self.open_room_modules(),
             "arch.moduleExcept" => self.room_module_selection_action(false),
             "arch.moduleRestore" => self.room_module_selection_action(true),
+            "arch.moduleAddMembers" => self.room_module_add_selection(None),
+            "arch.moduleRemoveMembers" => self.room_module_remove_selection(None),
             "arch.openingSameType" => self.select_same_opening_type(),
             "arch.openingDetach" => self.opening_type_action(kentos_commands::OpeningsOperation::Detach),
             "arch.openingPush" => {

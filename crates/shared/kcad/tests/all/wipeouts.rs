@@ -128,7 +128,7 @@ fn the_readers_errors_name_their_places() {
             Code::UnknownField,
             "fill",
         ),
-        ("broken/schema-version-145.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-146.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

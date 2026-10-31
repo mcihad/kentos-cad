@@ -703,11 +703,14 @@ pub const SCHEMA_WITH_RECIPE_DETAIL: u32 = 143;
 /// type's `operation`, `leaves` up to 6, `build.drum`, `.overlap`, `.track`, `.bothSides`, `.lip`), a schedule's
 /// `operation`, `leaves`, `drum`, `pocket`; written only when one is. 
 pub const SCHEMA_WITH_SPECIAL_DOORS: u32 = 144;
+/// Schema 145 (docs/adr/0779): a room module instance's building-program group (`unit`: a flat placed again is its own
+/// flat); written only when an instance has one.
+pub const SCHEMA_WITH_MODULE_UNITS: u32 = 145;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 143] = [
+pub const SCHEMAS: [u32; 144] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -851,6 +854,7 @@ pub const SCHEMAS: [u32; 143] = [
     SCHEMA_WITH_MODULES,
     SCHEMA_WITH_RECIPE_DETAIL,
     SCHEMA_WITH_SPECIAL_DOORS,
+    SCHEMA_WITH_MODULE_UNITS,
 ];
 
 /// The file a drawing is saved as.

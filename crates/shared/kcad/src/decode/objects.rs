@@ -336,6 +336,8 @@ pub(super) struct Features {
     /// Schema 142 (docs/adr/0775): room modules.
     pub(super) modules: bool,
     pub(super) recipe_detail: bool,
+    /// Schema 145 (docs/adr/0779): a module instance's group.
+    pub(super) module_units: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -545,6 +547,7 @@ impl Features {
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
             recipe_detail: schema >= crate::SCHEMA_WITH_RECIPE_DETAIL,
+            module_units: schema >= crate::SCHEMA_WITH_MODULE_UNITS,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,

@@ -1,7 +1,8 @@
 //! An object's room module (docs/adr/0775 §3): the module and the instance it is in, the instance's version against the
 //! source's, whether the object keeps its own values (a local exception), and the instance's actions (Kaynağı bu
 //! örnekten güncelle, Yerel istisna yap, Kaynağa döndür, Bağımsızlaştır), each through `cad.modules.edit` in one undo
-//! step.
+//! step. Since docs/adr/0779 §3 the section also says whether the object was changed by hand away from the source (not
+//! a local exception: a source update writes it back), with Modülden çıkar beside the exception's actions.
 use kentos_commands::ModulesOperation;
 use kentos_domain::Slot;
 
@@ -30,6 +31,9 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
                 .map(|op| Message::Properties(Event::Module(op))),
         };
     let kept = inst.exceptions.contains(&key);
+    let drifted = !kept
+        && kentos_native_application::modules_edit::drifted_keys(&doc.model, m, inst)
+            .contains(&key);
     let mut rows = vec![Row::text("Örnek", inst.id.clone())];
     let version = if m.removed {
         "Kaynağı silinmiş (bağ kopuk)".to_owned()
@@ -57,6 +61,18 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
     if !where_.is_empty() {
         rows.push(Row::text("Yerleşim", where_.join(" · ")));
     }
+    let state = if m.removed {
+        "Bağ kopuk"
+    } else if kept {
+        "Kendi değerinde (yerel istisna)"
+    } else if inst.version < m.version {
+        "Eski sürümde"
+    } else if drifted {
+        "Elle değişmiş (istisna değil)"
+    } else {
+        "Kaynakla aynı"
+    };
+    rows.push(Row::text("Kaynakla", state));
     let words = if kept {
         "Evet (yerel istisna)"
     } else {
@@ -86,6 +102,14 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
             "Kaynağa döndür",
             "moduleRestore",
             (!m.removed).then(|| ModulesOperation::Restore {
+                module: module.clone(),
+                uids: vec![uid.clone()],
+            }),
+        ),
+        action(
+            "Modülden çıkar",
+            "moduleRemoveMembers",
+            (!m.removed).then(|| ModulesOperation::RemoveMembers {
                 module: module.clone(),
                 uids: vec![uid.clone()],
             }),

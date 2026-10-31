@@ -6,12 +6,17 @@
 //! keeps an object's own values; detaching leaves the objects following nothing; removing the definition leaves the
 //! instances as they last were, their link broken. Every write is one undo step “Oda modülü”. The shared cases are
 //! `fixtures/commands/v1/cad.modules.edit.json` (`scripts/fixtures/module_cases.py`).
+//!
+//! The second slice (docs/adr/0779) adds members to and takes them out of a definition, marks an instance's objects
+//! changed by hand (drifted), gives a flat's instance its own building-program group and repeats a level's instances on
+//! other levels (`modules_more.rs`); `fixtures/commands/v1/cad.modules.edit.flats.json`
+//! (`scripts/fixtures/module_flats_cases.py`).
 
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    ArchModule, CommandResult, CommandWarning, Entity, ModuleBreak, ModuleConflict,
-    ModuleConflictWhy, ModuleInstance, ModuleMember, ModuleNumbering, ModuleObject, ModuleReport,
+    ArchModule, CommandResult, CommandWarning, Entity, ModuleBreak, ModuleConflictWhy,
+    ModuleInstance, ModuleMember, ModuleNumbering, ModuleObject, ModulePlaced, ModuleReport,
     ModuleSkipWhy, ModuleSkipped, ModulesEdit, ModulesEdited, ModulesOperation, Vec2,
     module_kind_ok, opening_type_id_of,
 };
@@ -26,12 +31,19 @@ use crate::openings::fail;
 
 pub const STEP: &str = "Oda modülü";
 
+#[path = "modules_more.rs"]
+mod more;
+pub use more::{drifted_keys, drifted_uids};
+
 /// What a write does: the modules after it, the objects to add (with their new ids) and to change, what to answer.
 #[derive(Default)]
 struct Work {
     modules: Vec<ArchModule>,
     adds: Vec<(Uuid, Entity)>,
     updates: Vec<(Slot, Entity)>,
+    /// The objects deleted with their keys (Modülden çıkar).
+    removes: Vec<Slot>,
+    placed: Vec<ModulePlaced>,
     module: Option<String>,
     instance: Option<String>,
     report: ModuleReport,
@@ -155,6 +167,10 @@ fn instantiate(
         && let Some(Some(n)) = number_mut(&mut e)
     {
         *n = inst.numbering.apply(n);
+    }
+    // A flat's instance is its own group of the building program (docs/adr/0779 §4).
+    if let (Some(u), Entity::Space(sp)) = (&inst.unit, &mut e) {
+        sp.space.unit = Some(u.clone());
     }
     if let Entity::Opening(o) = &mut e {
         let line =
@@ -474,6 +490,19 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 }
             }
             let back = translation(-base.x, -base.y);
+            // A flat (docs/adr/0779 §4): its spaces all in one group make the group the first instance's, the
+            // definition's spaces in none.
+            let units: Vec<Option<&str>> = found
+                .iter()
+                .filter_map(|(_, _, e, _)| match e {
+                    Entity::Space(s) => Some(s.space.unit.as_deref()),
+                    _ => None,
+                })
+                .collect();
+            let unit = match units.first() {
+                Some(Some(u)) if units.iter().all(|x| *x == Some(*u)) => Some((*u).to_owned()),
+                _ => None,
+            };
             let mut members = Vec::new();
             for (_, _, e, uid) in &found {
                 let mut t = crate::transform::by_matrix(e, &back).ok_or_else(|| {
@@ -485,6 +514,11 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 })?;
                 if let Some(a) = arch_mut(&mut t) {
                     a.level = None;
+                }
+                if unit.is_some()
+                    && let Entity::Space(sp) = &mut t
+                {
+                    sp.space.unit = None;
                 }
                 t.base_mut().id = 0;
                 members.push(ModuleMember {
@@ -500,6 +534,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 level: level.flatten(),
                 phase: None,
                 numbering: ModuleNumbering::default(),
+                unit,
                 version: 1,
                 members: found
                     .iter()
@@ -530,6 +565,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
             level,
             phase,
             numbering,
+            unit,
         } => {
             let k = find(&modules, module)?;
             live(&modules[k])?;
@@ -542,6 +578,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 ));
             }
             level_ok(doc, level.as_deref())?;
+            more::unit_known(doc, unit.as_deref(), "operation.unit")?;
             for mem in &modules[k].members {
                 let l = &mem.entity.base().layer_id;
                 if doc.layers().is_locked(l) {
@@ -565,6 +602,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 level: level.clone(),
                 phase: *phase,
                 numbering: numbering.clone().unwrap_or_default(),
+                unit: unit.clone(),
                 version: m.version,
                 members: m
                     .members
@@ -651,20 +689,44 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 if let (Some(n), Some(old)) = (number_mut(&mut t), number_of(&mem.entity)) {
                     *n = old;
                 }
+                // The definition's groups stay its own; a flat's instance names its group (docs/adr/0779 §4).
+                if src.unit.is_some()
+                    && let (Entity::Space(sp), Entity::Space(was)) = (&mut t, &mem.entity)
+                {
+                    sp.space.unit.clone_from(&was.space.unit);
+                }
                 t.base_mut().id = 0;
-                if bare(&t) != bare(&mem.entity) {
+                // Within a matrix's rounding the member stays as it was (docs/adr/0779 §3).
+                if !more::near_entities(&t, &mem.entity) {
                     changed.push(mem.key.clone());
                     mem.entity = t;
                 }
             }
-            if changed.is_empty() {
+            // Instances behind the module's version, or lacking a key, catch up whole (docs/adr/0779 §1).
+            let old_version = modules[k].version;
+            let behind = |i: &ModuleInstance| {
+                i.version < old_version
+                    || modules[k]
+                        .members
+                        .iter()
+                        .any(|mem| i.members.iter().all(|o| o.key != mem.key))
+            };
+            let catching = targets
+                .iter()
+                .any(|&t| t != f && behind(&modules[k].instances[t]));
+            if changed.is_empty() && !catching {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
                     format!("“{from}” örneği kaynakla aynı; güncellenecek bir şey yok."),
                     "operation.from",
                 ));
             }
-            let version = modules[k].version + 1;
+            let old = modules[k].clone();
+            let version = if changed.is_empty() {
+                old_version
+            } else {
+                old_version + 1
+            };
             modules[k].members = members;
             modules[k].version = version;
             modules[k].instances[f].version = version;
@@ -686,59 +748,29 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     });
                     continue;
                 }
-                let map: HashMap<String, String> = inst
-                    .members
-                    .iter()
-                    .map(|o| (o.key.clone(), o.uid.clone()))
-                    .collect();
-                let mut fresh: Vec<(Slot, Entity)> = Vec::new();
-                for key in &changed {
-                    let uid = map.get(key).cloned();
-                    let current = uid.as_deref().and_then(|u| object_of(doc, u));
-                    let Some((slot, old)) = current else {
-                        work.report.conflicts.push(ModuleConflict {
-                            instance: inst.id.clone(),
-                            key: key.clone(),
-                            uid,
-                            why: ModuleConflictWhy::Gone,
-                        });
-                        continue;
-                    };
-                    if inst.exceptions.contains(key) {
-                        work.report.conflicts.push(ModuleConflict {
-                            instance: inst.id.clone(),
-                            key: key.clone(),
-                            uid,
-                            why: ModuleConflictWhy::Exception,
-                        });
-                        continue;
-                    }
-                    let Some(mem) = m.member(key) else { continue };
-                    // The walls already renewed in this instance, for its openings.
-                    let renewed: HashMap<String, Entity> = fresh
-                        .iter()
-                        .filter_map(|(s, e)| Some((doc.uid(*s)?.to_string(), e.clone())))
-                        .collect();
-                    let wall_of = |u: &str| {
-                        renewed
-                            .get(u)
-                            .cloned()
-                            .or_else(|| object_of(doc, u).map(|(_, e)| e.clone()))
-                    };
-                    let mut e = instantiate(mem, &inst, &map, &wall_of)?;
-                    e = keep_placement(e, old);
-                    e.base_mut().id = slot.0;
-                    fresh.push((slot, e));
-                }
-                // Openings after walls: order the instance's updates so walls come first.
-                fresh.sort_by_key(|(_, e)| !matches!(e, Entity::Wall(_)));
-                work.updates.extend(fresh);
+                let synced = more::sync_instance(doc, &old, &m, &inst, &changed, &mut work)?;
+                modules[k].instances[t].members.extend(synced);
                 modules[k].instances[t].version = version;
                 work.report.updated.push(inst.id.clone());
             }
             work.report.changed_keys = changed;
             work.module = Some(modules[k].id.clone());
             work.instance = Some(src.id);
+        }
+        ModulesOperation::AddMembers {
+            module,
+            instance,
+            uids,
+        } => more::add_members(doc, &mut modules, module, instance, uids, &mut work)?,
+        ModulesOperation::RemoveMembers { module, uids } => {
+            more::remove_members(doc, &mut modules, module, uids, &mut work)?;
+        }
+        ModulesOperation::Repeat {
+            from,
+            modules: of,
+            to,
+        } => {
+            more::repeat(doc, &mut modules, from, of, to, &mut work)?;
         }
         ModulesOperation::Except { module, uids } | ModulesOperation::Restore { module, uids } => {
             let restore = matches!(input.operation, ModulesOperation::Restore { .. });
@@ -912,6 +944,8 @@ fn number_of(e: &Entity) -> Option<Option<String>> {
 
 fn warnings(r: &ModuleReport) -> Vec<CommandWarning> {
     let mut out = Vec::new();
+    // Taking members out: an exception's object is released, not passed by.
+    let removing = !r.removed_keys.is_empty();
     if !r.skipped.is_empty() {
         out.push(CommandWarning {
             code: codes::MODULE_INSTANCE_SKIPPED.into(),
@@ -932,7 +966,7 @@ fn warnings(r: &ModuleReport) -> Vec<CommandWarning> {
         .iter()
         .filter(|c| c.why == ModuleConflictWhy::Exception)
         .count();
-    if kept > 0 {
+    if kept > 0 && !removing {
         out.push(CommandWarning {
             code: codes::MODULE_EXCEPTION_KEPT.into(),
             message: format!(
@@ -953,6 +987,39 @@ fn warnings(r: &ModuleReport) -> Vec<CommandWarning> {
             path: Some("operation".into()),
         });
     }
+    let drifted = r
+        .conflicts
+        .iter()
+        .filter(|c| c.why == ModuleConflictWhy::Drifted)
+        .count();
+    if drifted > 0 {
+        out.push(CommandWarning {
+            code: codes::MODULE_DRIFT_OVERWRITTEN.into(),
+            message: format!(
+                "Elle değiştirilmiş {drifted} örnek nesnesi kaynağın değeriyle yazıldı; korumak için önce yerel istisna yapın."
+            ),
+            path: Some("operation".into()),
+        });
+    }
+    let released = r
+        .conflicts
+        .iter()
+        .filter(|c| {
+            matches!(
+                c.why,
+                ModuleConflictWhy::Locked | ModuleConflictWhy::Exception
+            )
+        })
+        .count();
+    if removing && released > 0 {
+        out.push(CommandWarning {
+            code: codes::MODULE_MEMBER_RELEASED.into(),
+            message: format!(
+                "Tanımdan çıkan nesnenin {released} karşılığı silinmedi (yerel istisna ya da kilitli katman); sıradan nesne olarak kaldı."
+            ),
+            path: Some("operation".into()),
+        });
+    }
     out
 }
 
@@ -969,6 +1036,7 @@ fn output(doc: &Document, work: &Work, created: Vec<String>) -> ModulesEdited {
             .iter()
             .filter_map(|(s, _)| doc.uid(*s).map(|u| u.to_string()))
             .collect(),
+        placed: work.placed.clone(),
         report: work.report.clone(),
         revision: doc.revision().to_string(),
     }
@@ -1035,6 +1103,9 @@ fn write_execute(
         }
         if !work.updates.is_empty() {
             d.update_many(work.updates.clone(), STEP);
+        }
+        if !work.removes.is_empty() {
+            d.remove(&work.removes);
         }
         d.set_arch_modules(work.modules.clone(), STEP)?;
         Ok::<(), kentos_domain::Refusal>(())

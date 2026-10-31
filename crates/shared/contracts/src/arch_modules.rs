@@ -4,7 +4,8 @@
 //! level, phase, numbering), which version it took, which of its objects stands for which key, and which keys it
 //! keeps as its own (local exceptions). The objects are ordinary drawing objects: nothing hides in a block.
 //!
-//! The project keeps its modules in `settings.arch.modules` (KCAD 142).
+//! The project keeps its modules in `settings.arch.modules` (KCAD 142); an instance's building-program group (`unit`)
+//! came after its first slice (docs/adr/0779, KCAD 145): a flat placed again takes its own flat.
 
 #[cfg(feature = "ts")]
 use ts_rs::TS;
@@ -110,6 +111,11 @@ pub struct ModuleInstance {
     #[serde(default, skip_serializing_if = "ModuleNumbering::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ModuleNumbering>", optional))]
     pub numbering: ModuleNumbering,
+    /// The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module
+    /// placed again is another flat. None: its spaces keep the definition's group.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub version: u32,
     pub members: Vec<ModuleObject>,
@@ -146,6 +152,13 @@ pub struct ArchModule {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub removed: bool,
+}
+
+/// Whether any instance of `modules` names a building-program group (KCAD 145, docs/adr/0779 §4).
+pub fn modules_have_units(modules: &[ArchModule]) -> bool {
+    modules
+        .iter()
+        .any(|m| m.instances.iter().any(|i| i.unit.is_some()))
 }
 
 impl ArchModule {
@@ -290,6 +303,16 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
                 return Some((
                     format!("{ia}.at"),
                     "Örneğin yeri ve dönüşü sonlu sayılar olur.".into(),
+                ));
+            }
+            if inst
+                .unit
+                .as_deref()
+                .is_some_and(|u| u.trim().is_empty() || u.chars().count() > 64)
+            {
+                return Some((
+                    format!("{ia}.unit"),
+                    "Örneğin bölümü boş olamaz; en çok 64 karakter.".into(),
                 ));
             }
             if inst.version == 0 || inst.version > m.version {

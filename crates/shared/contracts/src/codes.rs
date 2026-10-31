@@ -1783,6 +1783,17 @@ codes! {
     MODULE_EXCEPTION_KEPT = "module_exception_kept", Warning, false, "Bazı örnek nesneleri yerel istisna olduğu için kaynağın değişikliğini almadı.";
     /// Objects of instances gone from the drawing a source update passed by.
     MODULE_MEMBER_GONE = "module_member_gone", Warning, false, "Bazı örneklerin nesneleri silinmiş; kaynağın değişikliği onlara gitmedi.";
+    // Oda modüllerinin ikinci dilimi (docs/adr/0779).
+    /// A member taken out of a definition another member leans on (an opening's wall, a tag's space).
+    MODULE_MEMBER_NEEDED = "module_member_needed", Failed, false, "Modülün kalan bir nesnesi çıkarılan nesneye bağlı; onu da birlikte çıkarın ya da bırakın.";
+    /// A repeat's source level with no linked instance of the modules asked.
+    MODULE_REPEAT_EMPTY = "module_repeat_empty", Failed, false, "Kaynak katta tekrarlanacak bağlı modül örneği yok; kaynak katı ya da modülleri değiştirin.";
+    /// A repeat placing an instance where one of the same module already stands (same level, point, turn, mirror).
+    MODULE_REPEAT_TAKEN = "module_repeat_taken", Failed, false, "Hedef katta aynı modülün aynı yerde bir örneği zaten var; o katı tekrardan çıkarın.";
+    /// Objects of instances changed by hand (not local exceptions) a source update wrote back.
+    MODULE_DRIFT_OVERWRITTEN = "module_drift_overwritten", Warning, false, "Elle değiştirilmiş (yerel istisna yapılmamış) bazı örnek nesneleri kaynağın değeriyle yazıldı; korumak için önce yerel istisna yapın.";
+    /// Objects of a member taken out of the definition that stayed as ordinary objects: local exceptions or locked.
+    MODULE_MEMBER_RELEASED = "module_member_released", Warning, false, "Tanımdan çıkarılan nesnenin bazı örneklerdeki karşılıkları silinmedi (yerel istisna ya da kilitli katman); sıradan nesne olarak kaldılar.";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
     INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";

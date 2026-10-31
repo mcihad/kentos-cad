@@ -21201,7 +21201,7 @@
       "id": "cad.modules.edit",
       "version": 1,
       "title": "Oda modülü",
-      "summary": "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). Plan yazmadan yapılacakları (created, changed, report.updated, skipped, conflicts, changedKeys) gösterir. Tekrar kat, bütün daire ve tasarım alternatifi kapsam dışıdır.",
+      "summary": "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). addMembers (module, instance, uids: örnekte çizilen yeni nesneler tanıma katılır; öbür bağlı örneklere kendi matrisleriyle yerleşir; docs/adr/0779), removeMembers (uids: örneğin nesneleri anahtarlarıyla tanımdan çıkar; kendisi sıradan nesne olarak kalır, öbür örneklerdeki karşılıkları silinir, istisna ya da kilitli olanlar serbest kalır: module_member_released; kalan bir üye ona bağlıysa module_member_needed), repeat (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering, unit ve örneğe özel satırlar instances: module, instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş module_repeat_taken). place ve repeat'in unit'i bina programının bölümü: örneğin mahalleri o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın değeriyle yazılır ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları (created, changed, placed, report.updated, skipped, conflicts, changedKeys, addedKeys, removedKeys, released, deleted) gösterir. Tasarım alternatifi kapsam dışıdır.",
       "aliases": [
         "MODUL"
       ],
@@ -21219,7 +21219,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.modules.edit` v1.\n\nRefusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,\n`module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,\n`module_instance_not_found`, `module_member_missing`, `not_in_module`, `not_finite`, `nothing_to_set`,\n`invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,\n`module_member_gone`.",
+        "description": "Input of `cad.modules.edit` v1.\n\nRefusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,\n`module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,\n`module_instance_not_found`, `module_member_missing`, `module_member_needed`, `module_repeat_empty`,\n`module_repeat_taken`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`, `invalid_revision`,\n`revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`, `module_member_gone`,\n`module_drift_overwritten`, `module_member_released`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -21272,6 +21272,13 @@
             ],
             "description": "The module after; none once removed whole."
           },
+          "placed": {
+            "description": "The instances a repeat made, in order (docs/adr/0779 §5).",
+            "items": {
+              "$ref": "#/$defs/ModulePlaced"
+            },
+            "type": "array"
+          },
           "report": {
             "$ref": "#/$defs/ModuleReport",
             "default": {}
@@ -21321,6 +21328,13 @@
             ],
             "description": "The module after; none once removed whole."
           },
+          "placed": {
+            "description": "The instances a repeat made, in order (docs/adr/0779 §5).",
+            "items": {
+              "$ref": "#/$defs/ModulePlaced"
+            },
+            "type": "array"
+          },
           "report": {
             "$ref": "#/$defs/ModuleReport",
             "default": {}
@@ -21354,6 +21368,10 @@
           "module_member_taken",
           "module_instance_not_found",
           "module_member_missing",
+          "module_member_needed",
+          "module_repeat_empty",
+          "module_repeat_taken",
+          "unit_not_found",
           "not_in_module",
           "nothing_to_set",
           "invalid_revision",
@@ -21362,7 +21380,9 @@
         "warnings": [
           "module_instance_skipped",
           "module_exception_kept",
-          "module_member_gone"
+          "module_member_gone",
+          "module_drift_overwritten",
+          "module_member_released"
         ]
       },
       "examples": [
@@ -21385,6 +21405,29 @@
           }
         },
         {
+          "title": "Zemin kattaki daireleri 1. ve 2. kata tekrarla",
+          "input": {
+            "operation": {
+              "from": "zemin",
+              "kind": "repeat",
+              "to": [
+                {
+                  "level": "kat1",
+                  "numbering": {
+                    "prefix": "1-"
+                  }
+                },
+                {
+                  "level": "kat2",
+                  "numbering": {
+                    "prefix": "2-"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
           "title": "Birinci örnekten kaynağı güncelle",
           "input": {
             "operation": {
@@ -21400,7 +21443,7 @@
       "id": "cad.modules.query",
       "version": 1,
       "title": "Oda modüllerini oku",
-      "summary": "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), broken (sourceGone), katı, aynalı olup olmadığı.",
+      "summary": "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle değişmiş, istisna olmayan nesneler; docs/adr/0779), broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; uid ile drifted o nesnenin elle değişip değişmediği.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -21439,6 +21482,10 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.modules.query`: the modules; with `uid`, the instance it is in.",
         "properties": {
+          "drifted": {
+            "description": "With `uid`: its object was changed by hand away from the source (docs/adr/0779 §3).",
+            "type": "boolean"
+          },
           "instance": {
             "type": [
               "string",
@@ -21473,6 +21520,10 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.modules.query`: the modules; with `uid`, the instance it is in.",
         "properties": {
+          "drifted": {
+            "description": "With `uid`: its object was changed by hand away from the source (docs/adr/0779 §3).",
+            "type": "boolean"
+          },
           "instance": {
             "type": [
               "string",
@@ -69814,6 +69865,36 @@
       "meaning": "Bazı örneklerin nesneleri silinmiş; kaynağın değişikliği onlara gitmedi."
     },
     {
+      "code": "module_member_needed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Modülün kalan bir nesnesi çıkarılan nesneye bağlı; onu da birlikte çıkarın ya da bırakın."
+    },
+    {
+      "code": "module_repeat_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynak katta tekrarlanacak bağlı modül örneği yok; kaynak katı ya da modülleri değiştirin."
+    },
+    {
+      "code": "module_repeat_taken",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Hedef katta aynı modülün aynı yerde bir örneği zaten var; o katı tekrardan çıkarın."
+    },
+    {
+      "code": "module_drift_overwritten",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Elle değiştirilmiş (yerel istisna yapılmamış) bazı örnek nesneleri kaynağın değeriyle yazıldı; korumak için önce yerel istisna yapın."
+    },
+    {
+      "code": "module_member_released",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tanımdan çıkarılan nesnenin bazı örneklerdeki karşılıkları silinmedi (yerel istisna ya da kilitli katman); sıradan nesne olarak kaldılar."
+    },
+    {
       "code": "not_a_space",
       "kind": "failed",
       "retryable": false,
@@ -102544,6 +102625,16 @@
           "const": "gone",
           "description": "Its object was deleted from the drawing.",
           "type": "string"
+        },
+        {
+          "const": "drifted",
+          "description": "Its object was changed by hand, away from the source, without being made a local exception; the source update\nwrites it back (docs/adr/0779 §3).",
+          "type": "string"
+        },
+        {
+          "const": "locked",
+          "description": "Its object is on a locked layer: a member taken out of the definition stays there, released (docs/adr/0779 §2).",
+          "type": "string"
         }
       ]
     },
@@ -102607,6 +102698,13 @@
           "type": "number",
           "x-unit": "rad"
         },
+        "unit": {
+          "description": "The building program's group (docs/adr/0773) this instance's spaces are in (docs/adr/0779 §4): a flat module\nplaced again is another flat. None: its spaces keep the definition's group.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "version": {
           "format": "uint32",
           "minimum": 0,
@@ -102634,6 +102732,13 @@
               "type": "null"
             }
           ]
+        },
+        "drifted": {
+          "description": "The objects changed by hand away from the source, not local exceptions (docs/adr/0779 §3).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "exceptions": {
           "description": "The objects kept as local exceptions.",
@@ -102671,6 +102776,13 @@
           "description": "At an older version than its module's.",
           "type": "boolean"
         },
+        "unit": {
+          "description": "The building program's group of the instance's spaces.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "version": {
           "format": "uint32",
           "minimum": 0,
@@ -102684,6 +102796,41 @@
         "stale",
         "objects",
         "mirror"
+      ],
+      "type": "object"
+    },
+    "ModuleLevelTarget": {
+      "additionalProperties": false,
+      "description": "One level a repeat places the source level's instances on (docs/adr/0779 §5): its numbering and group for them all,\nand lines of their own for some.",
+      "properties": {
+        "instances": {
+          "items": {
+            "$ref": "#/$defs/ModuleRepeatOne"
+          },
+          "type": "array"
+        },
+        "level": {
+          "type": "string"
+        },
+        "numbering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModuleNumbering"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "level"
       ],
       "type": "object"
     },
@@ -102740,9 +102887,71 @@
       ],
       "type": "object"
     },
+    "ModulePlaced": {
+      "description": "An instance a write made: its module and id, its level.",
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "module": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "module",
+        "instance"
+      ],
+      "type": "object"
+    },
+    "ModuleRepeatOne": {
+      "additionalProperties": false,
+      "description": "One source instance's numbering and group on a repeat's target level.",
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        },
+        "numbering": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModuleNumbering"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "module",
+        "instance"
+      ],
+      "type": "object"
+    },
     "ModuleReport": {
       "description": "What a write did, or would do.",
       "properties": {
+        "addedKeys": {
+          "description": "The keys joining the definition (Modüle ekle) or taken by an instance that lacked them (a source update).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "changedKeys": {
           "description": "The definition's members whose values change, by key.",
           "items": {
@@ -102753,6 +102962,27 @@
         "conflicts": {
           "items": {
             "$ref": "#/$defs/ModuleConflict"
+          },
+          "type": "array"
+        },
+        "deleted": {
+          "description": "The objects deleted with their keys (Modülden çıkar).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "released": {
+          "description": "The objects that leave the module and stay as ordinary objects (Modülden çıkar).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "removedKeys": {
+          "description": "The keys leaving the definition (Modülden çıkar).",
+          "items": {
+            "type": "string"
           },
           "type": "array"
         },
@@ -102928,12 +103158,103 @@
                 "null"
               ],
               "x-unit": "rad"
+            },
+            "unit": {
+              "description": "The building program's group the instance's spaces are in (a flat placed again, docs/adr/0779 §4).",
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
             "kind",
             "module",
             "at"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Modüle ekle (docs/adr/0779 §1): the objects `uids`, drawn in the instance `instance` (on its level, in no\nmodule, leaning on nothing outside it and them), join the definition; its version goes one up and the other\nlinked instances get them placed by their own matrices. An instance with an object on a locked layer stays at\nits version and takes them on the next source update.",
+          "properties": {
+            "instance": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "addMembers",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "instance",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Modülden çıkar (docs/adr/0779 §2): the objects `uids` (an instance's) leave the definition with their keys; they\nstay in the drawing as ordinary objects, and the other linked instances' objects of the same keys are deleted\n(a local exception's or a locked layer's object stays, released). A member that leans on one of them refuses it.",
+          "properties": {
+            "kind": {
+              "const": "removeMembers",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Katları tekrarla (docs/adr/0779 §5): every linked instance on the level `from` (of `modules`, none: of every\nmodule) placed again on each level of `to` at the same point, turn and mirror, on that level; its numbering and\ngroup the target's (or the instance's own line in it), else the source instance's.",
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "repeat",
+              "type": "string"
+            },
+            "modules": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "to": {
+              "items": {
+                "$ref": "#/$defs/ModuleLevelTarget"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "from",
+            "to"
           ],
           "type": "object"
         },

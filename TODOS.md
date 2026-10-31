@@ -71,6 +71,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   program alanları, Mahali böl ve Mahalleri birleştir kararları, denetimin `program` grubu.
 - ADV-07 (ADR 0776): web'de seçmenin duvar gövdesi kuralı (`picking.ts`'te duvarın gövdesi alan olarak, gövdede odanın kenarı alanlardan sonra), web'in ölçüsünün mahal/döşeme alanı, Metraj'ın +0 toplamları, Döşeme isteminde Kaynağa bağlı (B); 2+1 dairenin izi (`acceptance-flat.json`, `clickNumber` adımı) web oynatıcısında.
 - ADR 0777 (ADV-03b): web'in `OpeningOperation`'ı döner, cebe giren, katlanır; kapı aracının Açılış/Kanat/Tambur/Cep payı/İki yana/Bindirme/Ray seçenekleri, planda tambur, cep ve zikzak çizimi, `.kcad` şema 144 (`FORMATS_VERSION` 103).
+- ADR 0779: `cad.modules.edit`'in `addMembers`, `removeMembers`, `repeat` işlemleri ve `place`'in `unit`'i,
+  `cad.modules.query`'nin `drifted` ve `unit`'i web'in işleyicilerinde; Oda modülleri penceresinin Seçimi örneğe ekle,
+  Seçimi modülden çıkar ve Katları tekrarla bölümü, Öznitelikler'in Kaynakla satırı, Modül yerleştir'in Bölüm ayarı;
+  KCAD şema 145'ün okunması ve yazılması (`module-units.kcad`).
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

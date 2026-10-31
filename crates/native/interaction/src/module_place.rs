@@ -1,7 +1,8 @@
 //! Modül yerleştir (docs/adr/0775 §2): a room module placed again as a linked instance. Its settings say which module,
 //! its turn, whether it is mirrored, its level (Etkin kat, none, or a level), its phase and its numbering (a prefix
 //! and a suffix on its spaces' and openings' numbers); the instance follows the pointer, its objects drawn from
-//! `cad.modules.edit`'s plan, and a click places it in one undo step (“Oda modülü”).
+//! `cad.modules.edit`'s plan, and a click places it in one undo step (“Oda modülü”). A flat module's instance takes
+//! its own group of the building program (Bölüm, docs/adr/0779 §4).
 
 use kentos_commands::{ArchPhase, ModuleNumbering, ModulesEdit, ModulesOperation};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
@@ -37,10 +38,13 @@ pub struct ModulePlace {
     phase: Option<ArchPhase>,
     prefix: String,
     suffix: String,
+    /// The building program's group the instance's spaces go to; none: the definition's.
+    unit: Option<String>,
     hover: Option<Vec2>,
     /// The project's modules (id, name) and levels (id, name), read when the tool starts and as it draws.
     known: Vec<(String, String)>,
     levels: Vec<(String, String)>,
+    units: Vec<(String, String)>,
     drawn: Preview,
     why: Option<String>,
     count: usize,
@@ -56,9 +60,11 @@ impl Default for ModulePlace {
             phase: None,
             prefix: String::new(),
             suffix: String::new(),
+            unit: None,
             hover: None,
             known: Vec::new(),
             levels: Vec::new(),
+            units: Vec::new(),
             drawn: Preview::default(),
             why: None,
             count: 0,
@@ -109,6 +115,7 @@ impl ModulePlace {
                 level,
                 phase: self.phase,
                 numbering: (!numbering.is_empty()).then_some(numbering),
+                unit: self.unit.clone(),
             },
             expected_revision: None,
         })
@@ -128,6 +135,19 @@ impl ModulePlace {
                     .collect()
             })
             .unwrap_or_default();
+        self.units = cx
+            .doc
+            .program()
+            .units
+            .iter()
+            .map(|u| {
+                let name = u.name.as_deref().unwrap_or("");
+                (
+                    u.id.clone(),
+                    format!("{} {name}", u.number).trim().to_owned(),
+                )
+            })
+            .collect();
     }
 
     fn see(&mut self, cx: &Context<'_>) {
@@ -247,6 +267,17 @@ impl ModulePlace {
             }
             "S" => {
                 self.suffix = js_trim(value).to_owned();
+                true
+            }
+            "B" => {
+                if value == "none" {
+                    self.unit = None;
+                    return true;
+                }
+                if cx.doc.program().unit(value).is_none() {
+                    return false;
+                }
+                self.unit = Some(value.to_owned());
                 true
             }
             _ => false,
@@ -397,6 +428,12 @@ impl Tool for ModulePlace {
                 self.suffix.clone()
             },
         ));
+        if !self.units.is_empty() {
+            let unit = self.unit.clone().unwrap_or_else(|| "none".to_owned());
+            let mut units: Vec<(&str, &str)> = vec![("none", "Tanımdaki gibi")];
+            units.extend(self.units.iter().map(|(a, b)| (a.as_str(), b.as_str())));
+            rows.push(Setting::choice("B", "Bölüm", choices(&units, &unit)));
+        }
         if self.count > 0 {
             rows.push(Setting::hint(
                 "T",
@@ -440,6 +477,7 @@ impl Tool for ModulePlace {
                 }
                 "D" => "Açıyı derece olarak bir sayıyla yazın; örneğin 90.",
                 "L" => "Projede bu kat yok.",
+                "B" => "Bina programında bu bölüm yok.",
                 _ => "Geçerli bir değer seçin.",
             },
         );

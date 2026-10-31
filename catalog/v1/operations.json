@@ -2497,7 +2497,7 @@
         "cad.modules.edit",
         "cad.modules.query"
       ],
-      "note": "Tanımla, Kaynağı güncelle (önizleme planından), Bağımsızlaştır, Kaynağı sil (ADR 0775 §1, §3)."
+      "note": "Tanımla, Kaynağı güncelle (önizleme planından), Bağımsızlaştır, Kaynağı sil (ADR 0775 §1, §3); Seçimi örneğe ekle, Seçimi modülden çıkar, Katları tekrarla (önizleme planından) ve örneklerin elle değişmiş nesneleri (ADR 0779)."
     },
     "arch.moduleExcept": {
       "level": "semantic",
@@ -2513,12 +2513,26 @@
       ],
       "note": "Seçili örnek nesneleri restore işlemiyle (ADR 0775 §3)."
     },
+    "arch.moduleAddMembers": {
+      "level": "semantic",
+      "via": [
+        "cad.modules.edit"
+      ],
+      "note": "Seçimin modülsüz nesneleri seçimdeki örneğe addMembers ile (ADR 0779 §1)."
+    },
+    "arch.moduleRemoveMembers": {
+      "level": "semantic",
+      "via": [
+        "cad.modules.edit"
+      ],
+      "note": "Seçimin modül nesneleri removeMembers ile (ADR 0779 §2)."
+    },
     "tool.modulePlace": {
       "level": "semantic",
       "via": [
         "cad.modules.edit"
       ],
-      "note": "Tıklanan nokta, açı, ayna, kat, evre ve numaralar place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2)."    }
+      "note": "Tıklanan nokta, açı, ayna, kat, evre, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4)."    }
   },
   "tools": {
     "line": {
