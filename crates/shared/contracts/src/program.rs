@@ -73,6 +73,11 @@ fn is_unit(k: &UnitKind) -> bool {
 pub struct ProgramWing {
     pub id: String,
     pub name: String,
+    /// The levels it spans (docs/adr/0784 §1), by their ids, each once; within its building's when the building names
+    /// any. None: not said.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub levels: Vec<String>,
 }
 
 /// A building and its wings.
@@ -87,6 +92,10 @@ pub struct ProgramBuilding {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ProgramWing>>", optional))]
     pub wings: Vec<ProgramWing>,
+    /// The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub levels: Vec<String>,
 }
 
 /// A group of spaces: an independent unit, a common area or an outdoor area.
@@ -117,6 +126,12 @@ pub struct ProgramUnit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub recorded_area: Option<f64>,
+    /// Its weight in the common areas' shares when the program shares them by weight (docs/adr/0784 §2): a decimal
+    /// written as given (“120”, “1.5”), at most 12 digits before the point and 6 after; read exactly, never as a float.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$")))]
+    pub share_weight: Option<String>,
 }
 
 /// The design brief for the spaces of one usage: what the designer aims at, never a legal limit.
@@ -220,6 +235,10 @@ pub struct BuildingProgram {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
+    /// How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub share_rule: Option<crate::ShareRule>,
 }
 
 fn text_problem(v: &str, at: &str, what: &str) -> Option<(String, String)> {
@@ -236,6 +255,21 @@ fn text_problem(v: &str, at: &str, what: &str) -> Option<(String, String)> {
     None
 }
 
+fn levels_problem(levels: &[String], at: &str) -> Option<(String, String)> {
+    if levels.len() > MAX_PROGRAM_ITEMS {
+        return Some((at.into(), format!("En çok {MAX_PROGRAM_ITEMS} kat verilir.")));
+    }
+    for (k, l) in levels.iter().enumerate() {
+        if let Some(p) = text_problem(l, &format!("{at}[{k}]"), "Katın kimliği") {
+            return Some(p);
+        }
+        if levels[..k].contains(l) {
+            return Some((format!("{at}[{k}]"), format!("“{l}” katı iki kez yazıldı.")));
+        }
+    }
+    None
+}
+
 fn positive(v: Option<f64>, at: &str, what: &str, unit: &str) -> Option<(String, String)> {
     let v = v?;
     (!(v.is_finite() && v > 0.0 && v <= 1.0e6))
@@ -245,6 +279,40 @@ fn positive(v: Option<f64>, at: &str, what: &str, unit: &str) -> Option<(String,
 impl BuildingProgram {
     pub fn is_empty(&self) -> bool {
         self == &BuildingProgram::default()
+    }
+
+    /// Whether it says what schema 147 brings (docs/adr/0784): a share rule, a unit's weight, a building's or a wing's
+    /// levels.
+    pub fn has_shares(&self) -> bool {
+        self.share_rule.is_some()
+            || self.units.iter().any(|u| u.share_weight.is_some())
+            || self.buildings.iter().any(|b| !b.levels.is_empty() || b.wings.iter().any(|w| !w.levels.is_empty()))
+    }
+
+    /// The building of the id given.
+    pub fn building(&self, id: &str) -> Option<&ProgramBuilding> {
+        self.buildings.iter().find(|b| b.id == id)
+    }
+
+    /// The groups that name a building or a wing of the id given (its users), in the program's order.
+    pub fn users_of(&self, id: &str) -> Vec<&ProgramUnit> {
+        self.units
+            .iter()
+            .filter(|u| u.building.as_deref() == Some(id) || u.wing.as_deref() == Some(id))
+            .collect()
+    }
+
+    /// The levels a group's spaces should lie on: its wing's when the wing names any, else its building's; empty: any.
+    pub fn levels_of(&self, unit: &ProgramUnit) -> &[String] {
+        let Some(b) = unit.building.as_deref().and_then(|b| self.building(b)) else {
+            return &[];
+        };
+        if let Some(w) = unit.wing.as_deref().and_then(|w| b.wings.iter().find(|x| x.id == w))
+            && !w.levels.is_empty()
+        {
+            return &w.levels;
+        }
+        &b.levels
     }
 
     /// The group of the id given.
@@ -299,6 +367,9 @@ impl BuildingProgram {
                 return Some((format!("buildings[{i}].id"), format!("“{}” kimliği iki kez var; her bina ve kanadın kimliği ayrı olmalı.", b.id)));
             }
             ids.push(&b.id);
+            if let Some(p) = levels_problem(&b.levels, &format!("buildings[{i}].levels")) {
+                return Some(p);
+            }
             for (k, w) in b.wings.iter().enumerate() {
                 let at = format!("buildings[{i}].wings[{k}]");
                 if let Some(p) = text_problem(&w.id, &format!("{at}.id"), "Kanadın kimliği") {
@@ -311,6 +382,17 @@ impl BuildingProgram {
                     return Some((format!("{at}.id"), format!("“{}” kimliği iki kez var; her bina ve kanadın kimliği ayrı olmalı.", w.id)));
                 }
                 ids.push(&w.id);
+                if let Some(p) = levels_problem(&w.levels, &format!("{at}.levels")) {
+                    return Some(p);
+                }
+                if !b.levels.is_empty()
+                    && let Some((k, l)) = w.levels.iter().enumerate().find(|(_, l)| !b.levels.contains(l))
+                {
+                    return Some((
+                        format!("{at}.levels[{k}]"),
+                        format!("“{l}” katı “{}” binasının katlarında yok; kanadın katları binasının katlarından seçilir.", b.name),
+                    ));
+                }
             }
         }
         let mut unit_ids: Vec<&str> = Vec::new();
@@ -358,6 +440,11 @@ impl BuildingProgram {
             }
             if let Some(p) = positive(u.recorded_area, &format!("{at}.recordedArea"), "Kayıtlı alan", "m²") {
                 return Some(p);
+            }
+            if let Some(w) = &u.share_weight
+                && let Err(why) = crate::program_share::weight_units(w)
+            {
+                return Some((format!("{at}.shareWeight"), why));
             }
         }
         let mut usages: Vec<&str> = Vec::new();

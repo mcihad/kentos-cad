@@ -12,7 +12,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_commands::{
-    ArchAuditCheck, ArchAuditFinding, ArchAuditFix, BuildingProgram, ChangesetStep, CommandResult, Entity,
+    ArchAuditCheck, ArchAuditFinding, ArchAuditFix, BuildingProgram, ChangesetStep, CommandResult, CommandWarning, Entity,
     ProgramCheck, ProgramChecked, ProgramLink, ProgramSpaceRow, ProgramTotals, ProgramUnitRow, SpaceEntity, UnitKind,
     Vec2, ADJACENT_GAP, ADJACENT_OVERLAP, OPEN_GAP,
 };
@@ -33,7 +33,7 @@ use crate::codes;
 use crate::spaces::{self, fail};
 
 /// The codes of the program group, in the order its findings come.
-pub const CODES: [&str; 9] = [
+pub const CODES: [&str; 10] = [
     codes::PROGRAM_UNIT_MISSING,
     codes::PROGRAM_AREA_BELOW,
     codes::PROGRAM_AREA_ABOVE,
@@ -43,6 +43,7 @@ pub const CODES: [&str; 9] = [
     codes::PROGRAM_REACH_MISSING,
     codes::PROGRAM_NO_DOOR,
     codes::PROGRAM_FIXTURE_CLEARANCE,
+    codes::PROGRAM_LEVEL_OUTSIDE,
 ];
 
 /// How close the pole of inaccessibility and the passage are measured, metres.
@@ -544,6 +545,12 @@ pub(crate) fn checked(
 
     let mut rows = Vec::with_capacity(n);
     let mut found: Vec<Found> = Vec::new();
+    let level_names: Vec<(String, String)> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect())
+        .unwrap_or_default();
     for (ri, r) in rooms.iter().enumerate() {
         let f = &r.s.space;
         let brief = f.usage.as_deref().and_then(|u| program.brief(u));
@@ -691,6 +698,29 @@ pub(crate) fn checked(
                     None,
                 ));
             }
+            // A space on a level its group's building or wing does not span (docs/adr/0784 §1).
+            if let (Some(u), Some(level)) = (f.unit.as_deref().and_then(|u| program.unit(u)), r.level.as_deref()) {
+                let spans = program.levels_of(u);
+                if !spans.is_empty() && !spans.iter().any(|l| l == level) {
+                    let level_name = level_names.iter().find(|(id, _)| id == level).map_or(level, |(_, n)| n.as_str());
+                    let whose = match (u.building.as_deref().and_then(|b| program.building(b)), u.wing.as_deref()) {
+                        (Some(b), Some(w)) if b.wings.iter().any(|x| x.id == w && !x.levels.is_empty()) => {
+                            let name = b.wings.iter().find(|x| x.id == w).map_or(w, |x| x.name.as_str());
+                            format!("kanadı “{name}”")
+                        }
+                        (Some(b), _) => format!("binası “{}”", b.name),
+                        _ => "binası".into(),
+                    };
+                    found.push(finding(
+                        codes::PROGRAM_LEVEL_OUTSIDE,
+                        vec![r.uid.clone()],
+                        at,
+                        format!("{words}: “{level_name}” katında; “{}” bölümünün {whose} bu katta değil ({rule}).", u.number),
+                        "Katı binanın ya da kanadın katlarına ekleyin ya da mahali başka bölüme verin.".into(),
+                        None,
+                    ));
+                }
+            }
         }
         rows.push(ProgramSpaceRow {
             uid: r.uid.clone(),
@@ -809,6 +839,7 @@ pub(crate) fn checked(
             methods: Vec::new(),
             recorded_area: u.recorded_area,
             recorded_difference: None,
+            share: None,
         })
         .collect();
     let mut totals = ProgramTotals::default();
@@ -857,6 +888,15 @@ pub(crate) fn checked(
         u.levels.sort_by_key(|l| order.iter().position(|o| o == l).unwrap_or(usize::MAX));
         u.recorded_difference = u.recorded_area.map(|a| u.rooms - a);
     }
+    // The shares (docs/adr/0784 §2): the whole program's, whatever this check reads.
+    let shares = doc.program_shares().map(|(report, parts)| {
+        for (id, part) in parts {
+            if let Some(u) = units.iter_mut().find(|u| u.id == id) {
+                u.share = Some(part);
+            }
+        }
+        report
+    });
     if let Some(filter) = &input.units {
         units.retain(|u| filter.contains(&u.id));
     }
@@ -878,7 +918,22 @@ pub(crate) fn checked(
             f.key = format!("{}#{n}", f.key);
         }
     }
-    Ok(ProgramChecked { rule, units, totals, spaces: rows, findings, revision: doc.revision().to_string() })
+    Ok(ProgramChecked { rule, units, totals, spaces: rows, findings, shares, revision: doc.revision().to_string() })
+}
+
+/// A common area not shared out, said as a warning (docs/adr/0784 §2).
+fn warnings_of(out: &ProgramChecked) -> Vec<CommandWarning> {
+    out.shares
+        .iter()
+        .flat_map(|s| &s.pools)
+        .filter_map(|p| {
+            p.unshared.as_ref().map(|why| CommandWarning {
+                code: codes::SHARE_UNSHARED.into(),
+                message: format!("“{}” ortak alanı: {why}", p.number),
+                path: None,
+            })
+        })
+        .collect()
 }
 
 /// The program group's findings, for Mimari denetim.
@@ -910,7 +965,7 @@ fn run(cx: &ExecutionContext<'_>, input: &ProgramCheck) -> CommandResult<Program
         cx.stopped()
     };
     match checked(cx.doc, input, &stopped) {
-        Ok(out) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok(out) => CommandResult::Completed { warnings: warnings_of(&out), output: out },
         Err(stop) => stop.into(),
     }
 }
@@ -922,7 +977,7 @@ pub fn check_watched(
     stopped: &dyn Fn(u64, u64) -> bool,
 ) -> CommandResult<ProgramChecked> {
     match checked(doc, input, stopped) {
-        Ok(out) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok(out) => CommandResult::Completed { warnings: warnings_of(&out), output: out },
         Err(stop) => stop.into(),
     }
 }
@@ -930,7 +985,7 @@ pub fn check_watched(
 /// [`checked`] on a document with nothing watching.
 pub fn check_in(doc: &Document, input: &ProgramCheck) -> CommandResult<ProgramChecked> {
     match checked(doc, input, &|_, _| false) {
-        Ok(out) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok(out) => CommandResult::Completed { warnings: warnings_of(&out), output: out },
         Err(stop) => stop.into(),
     }
 }

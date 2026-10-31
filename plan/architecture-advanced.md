@@ -197,9 +197,12 @@ PDF aynı bilgiyi versin. Kapı önü çakışması çizimde açıklanabilsin.
 
 ### ADV-04 — Mahalleri bina programı ve bağımsız bölüm bağlamında yönet [~]
 
-_Durum (31 Ekim 2026, [ADR 0773](../docs/adr/0773-building-program-units-and-design-brief.md)):_ bölüm/ortak/dış alan
-üyeliği, tasarım hedefi ve gerçek/hedef/fark, net geçiş ve kapı/komşu/donatı denetimleri istisnalarıyla, böl/birleştir kararı
-ve durdurulabilir denetim yapıldı. Açık: bina/kanat penceresi, pay ve resmî alan profili, gerçek pencerede elle kabul.
+_Durum (31 Ekim 2026, [ADR 0773](../docs/adr/0773-building-program-units-and-design-brief.md),
+[ADR 0784](../docs/adr/0784-building-wing-window-and-common-area-shares.md)):_ bölüm/ortak/dış alan üyeliği, tasarım
+hedefi ve gerçek/hedef/fark, net geçiş ve kapı/komşu/donatı denetimleri istisnalarıyla, böl/birleştir kararı ve
+durdurulabilir denetim; bina/kanat penceresi ve katları, ortak alanların bağımsız bölümlere tam payı (`kentos.share/1`:
+eşit, net alana, ağırlığa göre; kanat/bina/program kapsamı, en büyük kalan, paylar havuza tam eşit) yapıldı. Açık:
+resmî alan profili ve arsa payı, bölüm çizelgesi türü, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Tasarımcı yalnız oluşan alanı okumakla kalmasın;
 hangi odanın hangi daireye ait olduğunu ve tasarım hedefini karşılayıp

@@ -300,6 +300,14 @@ impl Document {
                         let b = program.brief(x.usage.as_deref()?)?;
                         b.area_difference(area).map(Area)
                     }
+                    // The shares (docs/adr/0784 §3): the space's unit's share of the common areas and its gross.
+                    "share" | "gross" => {
+                        let unit = x.unit.as_deref()?;
+                        let (_, parts) = self.program_shares()?;
+                        let (_, part) = parts.iter().find(|(u, _)| u == unit)?;
+                        let t = if place == "share" { &part.share } else { &part.gross };
+                        t.parse::<f64>().ok().map(Area)
+                    }
                     "perimeter" => {
                         Some(Length(kentos_geometry_core::geom::space::perimeter(&areas)))
                     }

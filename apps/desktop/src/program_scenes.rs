@@ -270,6 +270,84 @@ fn merge(app: &mut App) {
     run(app, "arch.spaceMerge");
 }
 
+/// The shares' program (docs/adr/0784): A Blok on both levels, its west wing both, its east wing the ground floor; flat 1
+/// west, flat 2 east, the corridor A Blok's common area; `rule` and its weights.
+fn shared(app: &mut App, rule: &str) {
+    let weights = rule == "weight";
+    command(
+        app,
+        "cad.program.edit",
+        json!({"program": {
+            "buildings": [{"id": "a", "name": "A Blok", "levels": ["zemin", "kat-1"], "wings": [
+                {"id": "a-bati", "name": "Batı kanadı", "levels": ["zemin", "kat-1"]},
+                {"id": "a-dogu", "name": "Doğu kanadı", "levels": ["zemin"]}
+            ]}, {"id": "b", "name": "B Blok"}],
+            "units": [
+                {"id": "d1", "number": "1", "name": "Daire 1", "building": "a", "wing": "a-bati", "recordedArea": 60.0,
+                 "shareWeight": if weights { json!("60") } else { Value::Null }},
+                {"id": "d2", "number": "2", "name": "Daire 2", "building": "a", "wing": "a-dogu",
+                 "shareWeight": if weights { json!("40") } else { Value::Null }},
+                {"id": "ortak", "number": "O", "name": "Ortak alan", "kind": "common", "building": "a"}
+            ],
+            "briefs": [
+                {"usage": "Yatak odası", "areaMin": 12.0, "areaMax": 15.0, "minWidth": 2.8, "reach": ["Salon"]},
+                {"usage": "Salon", "areaMin": 18.0, "areaMax": 30.0, "adjacent": ["Mutfak"]},
+                {"usage": "Mutfak", "areaMin": 6.0, "areaMax": 12.0, "reach": ["Salon"]},
+                {"usage": "Koridor", "minWidth": 1.1, "minPassage": 1.2},
+                {"usage": "Banyo", "areaMin": 4.0, "areaMax": 8.0},
+                {"usage": "Balkon", "outdoor": true}
+            ],
+            "version": "Ofis konut hedefleri 2026-1",
+            "shareRule": rule
+        }}),
+    );
+}
+
+/// The program with its shares and the flats' tags saying their share and gross.
+fn share_house(app: &mut App, rule: &str) -> Plan {
+    let plan = house(app);
+    shared(app, rule);
+    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let tags: Vec<Value> = ["102", "203"]
+        .iter()
+        .map(|n| json!({"of": plan.space(n), "content": "{unit}\nPay {share}\nBrüt {gross}"}))
+        .collect();
+    command(app, "cad.tags.create", json!({"layerId": layer, "tags": tags}));
+    app.selection.clear();
+    plan
+}
+
+fn share_buildings(app: &mut App) {
+    share_house(app, "net");
+    fit(app, -0.5, -0.5, UP + 5.5, 10.0);
+    window(app, Tab::Buildings);
+}
+
+fn share_units(app: &mut App) {
+    share_house(app, "weight");
+    fit(app, -0.5, -0.5, UP + 5.5, 10.0);
+    window(app, Tab::Units);
+}
+
+fn share_status(app: &mut App) {
+    share_house(app, "net");
+    fit(app, -0.5, -0.5, UP + 5.5, 10.0);
+    window(app, Tab::Status);
+}
+
+fn share_plan(app: &mut App) {
+    share_house(app, "net");
+    fit(app, -0.5, -0.5, 13.5, 10.0);
+}
+
+/// Sil on A Blok, whose flats name it: refused, the window says which.
+fn share_refused(app: &mut App) {
+    share_house(app, "net");
+    fit(app, -0.5, -0.5, UP + 5.5, 10.0);
+    window(app, Tab::Buildings);
+    let _ = app.update(Message::Program(Event::RemoveBuilding(0)));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("bina-programi-plan", plan),
@@ -281,6 +359,11 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("bina-programi-oznitelik", rows),
         ("bina-programi-bol", split),
         ("bina-programi-birlestir", merge),
+        ("bina-pay-binalar", share_buildings),
+        ("bina-pay-bolumler", share_units),
+        ("bina-pay-durum", share_status),
+        ("bina-pay-plan", share_plan),
+        ("bina-pay-silinmez", share_refused),
     ]
 }
 
@@ -288,6 +371,61 @@ pub(crate) fn scenes() -> Vec<Scene> {
 mod tests {
     use super::*;
     use crate::files_testing::app_with_drawing;
+
+    /// Steps of a decimal “12.35”.
+    fn steps(t: &str) -> i64 {
+        let (w, f) = t.split_once('.').expect("two decimals");
+        w.parse::<i64>().expect("whole") * 100 + f.parse::<i64>().expect("hundredths")
+    }
+
+    /// docs/adr/0784: the common area shared out adds up exactly; the tags say the flats' shares; Binalar refuses to
+    /// remove a building its flats name and writes a new building, wing and levels through the command.
+    #[test]
+    fn the_shares_add_up_and_the_buildings_window_writes_through_the_command() {
+        let mut app = app_with_drawing();
+        let plan = share_house(&mut app, "net");
+        let c = checked(&app);
+        let sh = c.shares.as_ref().expect("shared");
+        let pool = &sh.pools[0];
+        assert_eq!(pool.unit, "ortak");
+        let given: i64 = pool.shares.iter().map(|s| steps(&s.share)).sum();
+        assert_eq!(given, steps(&pool.area), "the shares are the pool, exactly");
+        let gross: i64 = c.units.iter().filter_map(|u| u.share.as_ref()).map(|p| steps(&p.gross)).sum();
+        assert_eq!(gross, steps(&sh.net) + steps(&sh.shared));
+        let d2 = c.units.iter().find(|u| u.id == "d2").and_then(|u| u.share.clone()).expect("flat 2's part");
+        let model = &app.document.as_ref().expect("a drawing").model;
+        // The house has its own room tags; the share tag is the one written with {share}.
+        let tags: Vec<String> = model
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Tag(t) if t.tag.of == plan.space("203") => Some(t.tag.text.clone()),
+                _ => None,
+            })
+            .collect();
+        let want = format!("Pay {} m²", d2.share);
+        assert!(tags.iter().any(|t| t.contains(&want)), "{want} in {tags:?}");
+        // The ground floor is the east wing's only level: flat 2 has no space upstairs, flat 1 is in the west wing.
+        assert!(c.findings.iter().all(|f| f.code != "program_level_outside"), "{:?}", c.findings);
+
+        window(&mut app, Tab::Buildings);
+        let _ = app.update(Message::Program(Event::RemoveBuilding(0)));
+        let w = app.program_window.as_ref().expect("the window");
+        assert_eq!(w.buildings_len(), 2, "A Blok stays: its flats name it");
+        let said = crate::files_testing::last_said(&app);
+        assert!(said.contains("“1”, “2”, “O” bölümü"), "each flat once: {said}");
+        let _ = app.update(Message::Program(Event::RemoveBuilding(1)));
+        let _ = app.update(Message::Program(Event::AddBuilding));
+        let _ = app.update(Message::Program(Event::AddWing(1)));
+        let _ = app.update(Message::Program(Event::BuildingLevel(1, "zemin".into())));
+        let _ = app.update(Message::Program(Event::WingLevel(1, 0, "zemin".into())));
+        let _ = app.update(Message::Program(Event::Save));
+        let program = app.document.as_ref().expect("a drawing").model.program();
+        assert_eq!(program.buildings.len(), 2, "{program:?}");
+        assert_eq!(program.buildings[1].name, "2. bina");
+        assert_eq!(program.buildings[1].levels, vec!["zemin".to_owned()]);
+        assert_eq!(program.buildings[1].wings[0].levels, vec!["zemin".to_owned()]);
+        assert!(program.building("b").is_none(), "B Blok, which nothing named, is gone");
+    }
 
     fn checked(app: &App) -> kentos_commands::ProgramChecked {
         let doc = app.document.as_ref().expect("a drawing");

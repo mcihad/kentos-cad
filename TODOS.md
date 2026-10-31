@@ -82,6 +82,10 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - ADR 0783: web'de görünüş tarifinin `pens`, `mono` ve `template`'i, `settings.viewTemplates`, `cad.views.edit`'in `template` ve
   `templateRename` işlemleri, haritanın kalemle ve siyah beyaz çizilmesi, Görünümler penceresinin Şablon ve kalem alanları;
   KCAD şema 146'nın okunması ve yazılması (`view-templates.kcad`).
+- ADR 0784 (ADV-04b): Bina programı penceresinin Binalar sekmesi (bina, kanat, katları), Bölümler'de Bina/Kanat/Pay
+  ağırlığı, Ortak alan payı seçimi, Durum'da Paylar tablosu; etiketin `{share}`/`{gross}`'u ve “Bölüm payı” hazır
+  içeriği, çizelgenin Pay/Brüt sütunları; web'in KCAD okuyucusunda şema 147'nın alanları. Hesap ortak çekirdekte
+  (`kentos_contracts::program_share`), web'e bağlayıcı gerekmez: `cad.program.check`'in çıktısı yeter.
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

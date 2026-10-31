@@ -6,7 +6,7 @@ use kentos_geometry_core::tools::point_text::parse_number;
 
 // Suggestions only: the chosen text still goes through cad.tags.create's parser.
 // No preset id or display value is stored in the document.
-const CONTENTS: [(&str, &str, &str); 9] = [
+const CONTENTS: [(&str, &str, &str); 10] = [
     ("number", "Numara", "{number}"),
     ("name", "Ad", "{name}"),
     ("net", "Net alan", "{netArea}"),
@@ -18,6 +18,8 @@ const CONTENTS: [(&str, &str, &str); 9] = [
     ),
     // The building program (docs/adr/0773): the space's group, its design target and how far it is out.
     ("program", "Bölüm ve hedef", "{number} · {unit}\n{area}\nHedef: {target}\nFark: {targetDiff}"),
+    // The shares (docs/adr/0784): the space's unit's share of the common areas and its gross.
+    ("share", "Bölüm payı", "{unit}\nPay: {share}\nBrüt: {gross}"),
     ("floor", "Döşeme kotu", "{floorElevation}"),
     ("ceiling", "Tavan kotu", "{ceilingElevation}"),
     (
@@ -120,7 +122,7 @@ impl TagTool {
             Setting::notice(
                 "A",
                 "Şablon alanları",
-                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {unit}: bölüm · {target}: tasarım hedefi · {targetDiff}: hedef farkı · {attr:Alan}: öznitelik. {floorElevation}: kat kotu; {ceilingElevation}: kat kotu + açık mahal yüksekliği. Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
+                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {unit}: bölüm · {target}: tasarım hedefi · {targetDiff}: hedef farkı · {share}: bölümün ortak alan payı · {gross}: bölümün brütü · {attr:Alan}: öznitelik. {floorElevation}: kat kotu; {ceilingElevation}: kat kotu + açık mahal yüksekliği. Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
             ),
         ];
         if let Some(why) = &self.problem {

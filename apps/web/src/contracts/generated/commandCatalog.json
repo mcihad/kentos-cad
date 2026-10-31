@@ -22311,7 +22311,7 @@
       "id": "cad.program.edit",
       "version": 1,
       "title": "Bina programı",
-      "summary": "Bina programını ve bölümlerine verilen mahalleri yazar (docs/adr/0773); tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad), units (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç yazılmaz), briefs (kullanıma göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur: bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use (uids). Retler: nothing_to_set, invalid_program (programın yolu), no_entities, invalid_uid, entity_not_found, not_a_space, unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Bina programını ve bölümlerine verilen mahalleri yazar (docs/adr/0773); tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad, levels: kapladıkları katların kimlikleri, kanadınki binasınınkilerden; docs/adr/0784), units (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç yazılmaz, shareWeight: ağırlığa göre paylaştırmada bölümün pay ağırlığı, ondalık metin), shareRule (ortak alanların bağımsız bölümlere paylaştırılması: equal eşit, net net alana göre, weight ağırlığa göre; kural kentos.share/1), briefs (kullanıma göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur: bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use (uids); kaldırılan bina ya da kanat hâlâ bölümlerde yazılıysa building_in_use (bölümlerin numaraları iletide). Retler: nothing_to_set, building_in_use, invalid_program (programın yolu), level_not_found (binanın ya da kanadın katı projede yok), no_entities, invalid_uid, entity_not_found, not_a_space, unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -22327,7 +22327,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.program.edit` v1 (“Bina programı”): the program as it is to be (absent: as it is) and the spaces\ngiven to its groups, written as one undo step. A group spaces still name is not taken away unless they are given\nelsewhere in the same call.\n\nRefusals, in this order: `nothing_to_set`, `invalid_program` (the program's own problem, at its path), `no_entities`,\n`invalid_uid`, `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`),\n`unit_in_use` (a group taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`,\n`layer_locked`.",
+        "description": "Input of `cad.program.edit` v1 (“Bina programı”): the program as it is to be (absent: as it is) and the spaces\ngiven to its groups, written as one undo step. A group spaces still name is not taken away unless they are given\nelsewhere in the same call.\n\nRefusals, in this order: `nothing_to_set`, `building_in_use` (a building or a wing taken away that groups still\nname: the words list their numbers; docs/adr/0784 §1), `invalid_program` (the program's own problem, at its path),\n`level_not_found` (a building's or a wing's level the project lacks, at its path), `no_entities`, `invalid_uid`,\n`entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`), `unit_in_use` (a group\ntaken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`, `layer_locked`.",
         "properties": {
           "assign": {
             "items": {
@@ -22419,7 +22419,9 @@
         ],
         "refusals": [
           "nothing_to_set",
+          "building_in_use",
           "invalid_program",
+          "level_not_found",
           "no_entities",
           "invalid_uid",
           "entity_not_found",
@@ -22487,7 +22489,7 @@
       "id": "cad.program.check",
       "version": 1,
       "title": "Bina programını denetle",
-      "summary": "Bina programını çizimle karşılaştırır (salt okunur, docs/adr/0773). units: bölümlerin toplamları, her mahal bir kez: rooms (odalar), outdoor (hedefi outdoor olan balkon, teras), voids (şaft), methods (alanın alındığı yöntemler: net iç yüzler, duvar ekseni, brüt dış yüzler; birden çok ise karışık), levels (mahallerinin katları), recordedArea ve recordedDifference (kayıtlı alan yalnız okunur). totals: units, unitOutdoor, common, outdoor, voids, unassigned, all (boşluklar dışı hepsi; ortak alan bölüme girmez). spaces: mahal başına area (kendi yöntemiyle), width (içindeki en büyük dairenin çapı, net en), doors (kapılar ve başka mahale açık geçişler: ayırıcı), passage ve passageAt (hedefi minPassage olan mahalde kapılar arası en geniş geçiş ve en dar yeri), targetMin, targetMax, targetDifference (aralığın altı eksi, üstü artı, içi 0), passageDifference, adjacent ve reach (istenen kullanımlar ve onları karşılayan mahaller). findings: Mimari denetim'in program grubu: program_unit_missing (Düzelt: bölümden çıkar), program_area_below, program_area_above, program_width_narrow, program_passage_narrow, program_adjacent_missing, program_reach_missing, program_no_door, program_fixture_clearance; ileti ölçülen değeri, farkı ve kuralın sürümünü (kentos.program/1 · hedeflerin sürümü) yazar; hedefler yasal sınır değildir. findings false ise yalnız sayılar (geçiş taraması yapılmaz). units ve levels süzer. Uzun iş olarak çalışabilir: ilerlemesini söyler, durdurulunca cancelled. Retler: unit_not_found, level_not_found.",
+      "summary": "Bina programını çizimle karşılaştırır (salt okunur, docs/adr/0773). units: bölümlerin toplamları, her mahal bir kez: rooms (odalar), outdoor (hedefi outdoor olan balkon, teras), voids (şaft), methods (alanın alındığı yöntemler: net iç yüzler, duvar ekseni, brüt dış yüzler; birden çok ise karışık), levels (mahallerinin katları), recordedArea ve recordedDifference (kayıtlı alan yalnız okunur). totals: units, unitOutdoor, common, outdoor, voids, unassigned, all (boşluklar dışı hepsi; ortak alan bölüme girmez). spaces: mahal başına area (kendi yöntemiyle), width (içindeki en büyük dairenin çapı, net en), doors (kapılar ve başka mahale açık geçişler: ayırıcı), passage ve passageAt (hedefi minPassage olan mahalde kapılar arası en geniş geçiş ve en dar yeri), targetMin, targetMax, targetDifference (aralığın altı eksi, üstü artı, içi 0), passageDifference, adjacent ve reach (istenen kullanımlar ve onları karşılayan mahaller). findings: Mimari denetim'in program grubu: program_unit_missing (Düzelt: bölümden çıkar), program_area_below, program_area_above, program_width_narrow, program_passage_narrow, program_adjacent_missing, program_reach_missing, program_no_door, program_fixture_clearance; ileti ölçülen değeri, farkı ve kuralın sürümünü (kentos.program/1 · hedeflerin sürümü) yazar; hedefler yasal sınır değildir. findings false ise yalnız sayılar (geçiş taraması yapılmaz). units ve levels süzer. shares (programın shareRule'u varsa, docs/adr/0784): kentos.share/1 kuralı: her ortak alan kendi havuzudur, kapsamı kanadı, yoksa binası, yoksa bütün program; odaları (şaft ve dış mahal dışı) 0,01 m² adıma, tam ikili değeri yarıda çifte yuvarlanır; kapsamdaki bağımsız bölümlere ağırlıklarıyla (eşit 1, net alan adımda, pay ağırlığı tam ondalık) T·w/W tam payı, tabanı ve kalan adımlar en büyük artıklara (eşitlikte programdaki sıra); paylar havuzun alanına tam eşittir. pools: havuzun alanı, bölüm payları (weight, share, exact: m² kesri), unshared (neden); net, shared, unshared, gross toplamları ondalık metin. Bölüm satırının share'i: net, share, gross (süzgeç ne olursa olsun bütün mahalleriyle). Paylaştırılamayan havuz share_unshared uyarısı. program_level_outside: mahal bölümünün binasının ya da kanadının katlarında değil. Uzun iş olarak çalışabilir: ilerlemesini söyler, durdurulunca cancelled. Retler: unit_not_found, level_not_found.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -22553,6 +22555,17 @@
             "description": "The rule the numbers come from and the brief's version (`kentos.program/1 · …`).",
             "type": "string"
           },
+          "shares": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProgramShares"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The common areas shared out by the program's rule (docs/adr/0784 §2), of the whole program whatever the check\nreads; none when the program shares nothing. A pool not shared is said as a warning too (`share_unshared`)."
+          },
           "spaces": {
             "description": "The spaces read, in the drawing's order.",
             "items": {
@@ -22600,6 +22613,17 @@
             "description": "The rule the numbers come from and the brief's version (`kentos.program/1 · …`).",
             "type": "string"
           },
+          "shares": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ProgramShares"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The common areas shared out by the program's rule (docs/adr/0784 §2), of the whole program whatever the check\nreads; none when the program shares nothing. A pool not shared is said as a warning too (`share_unshared`)."
+          },
           "spaces": {
             "description": "The spaces read, in the drawing's order.",
             "items": {
@@ -22633,6 +22657,9 @@
           "unit_not_found",
           "level_not_found",
           "cancelled"
+        ],
+        "warnings": [
+          "share_unshared"
         ]
       },
       "examples": [
@@ -70139,6 +70166,24 @@
       "meaning": "Donatının önündeki kullanım alanı mahalden taşıyor ya da başka donatıya biniyor (tasarım hedefi)."
     },
     {
+      "code": "building_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaldırılan bina ya da kanat hâlâ bölümlerde yazılı; önce bölümleri başka binaya ya da kanada verin."
+    },
+    {
+      "code": "program_level_outside",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahal, bölümünün binasının ya da kanadının katlarında olmayan bir katta."
+    },
+    {
+      "code": "share_unshared",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ortak alan paylaştırılamadı: kapsamında bağımsız bölüm yok, bir bölümün pay ağırlığı yok ya da ağırlıkların toplamı sıfır."
+    },
+    {
       "code": "invalid_grid",
       "kind": "failed",
       "retryable": false,
@@ -73514,7 +73559,7 @@
           "$ref": "#/$defs/ArchAuditCheck"
         },
         "code": {
-          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5).",
+          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1).",
           "type": "string"
         },
         "exception": {
@@ -77250,6 +77295,17 @@
             "$ref": "#/$defs/FixtureClearance"
           },
           "type": "array"
+        },
+        "shareRule": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ShareRule"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not."
         },
         "units": {
           "items": {
@@ -119151,6 +119207,13 @@
         "id": {
           "type": "string"
         },
+        "levels": {
+          "description": "The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "name": {
           "type": "string"
         },
@@ -119183,6 +119246,121 @@
       },
       "required": [
         "usage"
+      ],
+      "type": "object"
+    },
+    "ProgramPool": {
+      "description": "A common area shared out.",
+      "properties": {
+        "area": {
+          "description": "Its rooms taken to the step, m².",
+          "type": "string"
+        },
+        "building": {
+          "description": "Its scope: its building, its wing; neither: the whole program.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "number": {
+          "type": "string"
+        },
+        "shares": {
+          "description": "The units' shares, in the program's order; empty when it is not shared.",
+          "items": {
+            "$ref": "#/$defs/ProgramPoolShare"
+          },
+          "type": "array"
+        },
+        "unit": {
+          "description": "The common area's id and number.",
+          "type": "string"
+        },
+        "unshared": {
+          "description": "Why it is not shared.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "wing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "unit",
+        "number",
+        "area"
+      ],
+      "type": "object"
+    },
+    "ProgramPoolShare": {
+      "description": "One unit's share of one pool.",
+      "properties": {
+        "exact": {
+          "description": "Its exact share, m², as a fraction in lowest terms (“3083/240”) or a whole number.",
+          "type": "string"
+        },
+        "share": {
+          "description": "Its share rounded to the step, m².",
+          "type": "string"
+        },
+        "unit": {
+          "description": "The unit's id.",
+          "type": "string"
+        },
+        "weight": {
+          "description": "Its weight as read (“1”, “48.73”, “1.5”).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "unit",
+        "weight",
+        "share",
+        "exact"
+      ],
+      "type": "object"
+    },
+    "ProgramShares": {
+      "description": "The common areas shared out (docs/adr/0784 §2).",
+      "properties": {
+        "gross": {
+          "type": "string"
+        },
+        "net": {
+          "description": "The independent units' own rooms, the common areas shared, those not shared and the units' gross, m²; the\ngross is the net and the shared exactly.",
+          "type": "string"
+        },
+        "pools": {
+          "description": "Each common area, in the program's order.",
+          "items": {
+            "$ref": "#/$defs/ProgramPool"
+          },
+          "type": "array"
+        },
+        "rule": {
+          "description": "The rule and its weights (`kentos.share/1 · Net alana göre`).",
+          "type": "string"
+        },
+        "shared": {
+          "type": "string"
+        },
+        "unshared": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule",
+        "pools",
+        "net",
+        "shared",
+        "unshared",
+        "gross"
       ],
       "type": "object"
     },
@@ -119421,6 +119599,14 @@
           ],
           "x-unit": "area"
         },
+        "shareWeight": {
+          "description": "Its weight in the common areas' shares when the program shares them by weight (docs/adr/0784 §2): a decimal\nwritten as given (“120”, “1.5”), at most 12 digits before the point and 6 after; read exactly, never as a float.",
+          "pattern": "^[0-9]{1,12}(\\.[0-9]{1,6})?$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "wing": {
           "type": [
             "string",
@@ -119500,6 +119686,17 @@
           "type": "number",
           "x-unit": "area"
         },
+        "share": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProgramUnitShare"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An independent unit's part of the common areas when the program shares them (docs/adr/0784 §2): its own rooms,\nits share and its gross, m² as decimals, always of all its spaces whatever the check reads."
+        },
         "spaces": {
           "format": "uint32",
           "minimum": 0,
@@ -119530,12 +119727,39 @@
       ],
       "type": "object"
     },
+    "ProgramUnitShare": {
+      "description": "A unit's part of the common areas: its own rooms, its shares and their sum, m² as decimals.",
+      "properties": {
+        "gross": {
+          "type": "string"
+        },
+        "net": {
+          "type": "string"
+        },
+        "share": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "net",
+        "share",
+        "gross"
+      ],
+      "type": "object"
+    },
     "ProgramWing": {
       "additionalProperties": false,
       "description": "A wing of a building.",
       "properties": {
         "id": {
           "type": "string"
+        },
+        "levels": {
+          "description": "The levels it spans (docs/adr/0784 §1), by their ids, each once; within its building's when the building names\nany. None: not said.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "name": {
           "type": "string"
@@ -124381,6 +124605,16 @@
           "const": "operation",
           "description": "An opening's operation (Kanatlı, Sürme, Döner, Cebe giren, Katlanır …), its leaves (a revolving door's wings, a\nfolding door's panels), a revolving door's drum and a pocket door's pockets' length (docs/adr/0777 §5).",
           "type": "string"
+        },
+        {
+          "const": "share",
+          "description": "A space's unit's share of the common areas (docs/adr/0784 §3): the unit's, alike on each of its spaces.",
+          "type": "string"
+        },
+        {
+          "const": "gross",
+          "description": "A space's unit's gross area: its own rooms and its share.",
+          "type": "string"
         }
       ]
     },
@@ -125812,6 +126046,26 @@
             "method"
           ],
           "type": "object"
+        }
+      ]
+    },
+    "ShareRule": {
+      "description": "How the common areas are shared out.",
+      "oneOf": [
+        {
+          "const": "equal",
+          "description": "The same for each unit of the scope.",
+          "type": "string"
+        },
+        {
+          "const": "net",
+          "description": "By each unit's own rooms' area.",
+          "type": "string"
+        },
+        {
+          "const": "weight",
+          "description": "By each unit's `shareWeight`.",
+          "type": "string"
         }
       ]
     },
