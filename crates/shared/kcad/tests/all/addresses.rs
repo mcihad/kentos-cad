@@ -198,7 +198,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "ilçe alanı olmaz",
         ),
-        ("broken/schema-version-142.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-143.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

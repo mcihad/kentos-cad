@@ -1242,6 +1242,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin etkin katı ve kat görünümü şema 120'den beri yazılır",
                     ));
                 }
+                if !has.modules && a.has_modules() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin oda modülleri şema 142'den beri yazılır",
+                    ));
+                }
                 if !has.opening_types && a.has_opening_types() {
                     return Err(r.fail_at(
                         Code::UnknownField,

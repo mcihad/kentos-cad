@@ -201,6 +201,8 @@ pub fn read(
         opening_types: choices.map_or_else(Vec::new, |a| a.opening_types.clone()),
         // So is the building's program (docs/adr/0773).
         program: Default::default(),
+        // So are the room modules (docs/adr/0775).
+        modules: choices.map_or_else(Vec::new, |a| a.modules.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

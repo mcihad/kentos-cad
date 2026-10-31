@@ -307,6 +307,12 @@ pub(crate) enum Op {
         before: kentos_contracts::BuildingProgram,
         after: kentos_contracts::BuildingProgram,
     },
+    /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
+    /// placed or updated, so undo gives both back.
+    ArchModules {
+        before: Vec<kentos_contracts::ArchModule>,
+        after: Vec<kentos_contracts::ArchModule>,
+    },
     /// A binding to a source table and its reconciling base (docs/adr/0636 §5), before and after: written in the step
     /// that changed its key or its area, so undo gives the binding back with the objects (none: no binding).
     Source {
@@ -597,6 +603,10 @@ impl Op {
                 after: before.clone(),
             },
             Op::BuildingProgram { before, after } => Op::BuildingProgram {
+                before: after.clone(),
+                after: before.clone(),
+            },
+            Op::ArchModules { before, after } => Op::ArchModules {
                 before: after.clone(),
                 after: before.clone(),
             },
@@ -1228,6 +1238,7 @@ impl Document {
                 | Op::AuditExceptions { .. }
                 | Op::OpeningTypes { .. }
                 | Op::BuildingProgram { .. }
+                | Op::ArchModules { .. }
                 | Op::Source { .. }
                 | Op::Lineage { .. }
                 | Op::Constraints { .. } => false,
@@ -1505,6 +1516,12 @@ impl Document {
             Op::OpeningTypes { after, .. } => {
                 let mut arch = self.settings.arch.take().unwrap_or_default();
                 arch.opening_types = after.clone();
+                self.settings.arch = (!arch.is_empty()).then_some(arch);
+                return;
+            }
+            Op::ArchModules { after, .. } => {
+                let mut arch = self.settings.arch.take().unwrap_or_default();
+                arch.modules = after.clone();
                 self.settings.arch = (!arch.is_empty()).then_some(arch);
                 return;
             }

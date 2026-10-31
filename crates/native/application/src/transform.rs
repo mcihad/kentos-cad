@@ -1154,3 +1154,12 @@ fn measures_of(entity: &Entity) -> Option<Vec<Vec<Option<f64>>>> {
     let paths = elevation::measure_paths(entity);
     elevation::elevated(&paths).then(|| paths.into_iter().map(|p| p.zs).collect())
 }
+
+/// One object by the matrix `m`, as Taşı, Döndür and Aynala move it (a room module's instance, docs/adr/0775); none
+/// when the core cannot carry its kind.
+pub(crate) fn by_matrix(entity: &Entity, m: &Affine) -> Option<Entity> {
+    let before = shape(entity);
+    let after = transform_shape_with(&before, m, TextPolicy::Readable);
+    let e = with_shape(entity, after).map(|e| carry_scales(entity, e, m))?;
+    crate::geometry::carry_space_separator(entity, e).ok()
+}

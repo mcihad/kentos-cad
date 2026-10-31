@@ -276,6 +276,8 @@ pub(crate) mod opening_types;
 pub(crate) mod door_audit;
 pub mod opening_types_edit;
 pub mod openings_query;
+pub mod modules_edit;
+pub mod modules_query;
 pub mod wall_distances;
 // Kolonun geçici ölçüleri (docs/adr/0712).
 pub mod column_distances;
@@ -866,6 +868,9 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_OPENINGS_QUERY,
         kentos_commands::CAD_OPENINGS_QUERY_VERSION,
     ),
+    // Oda modülleri ([`modules_edit`], [`modules_query`], docs/adr/0775).
+    (kentos_commands::CAD_MODULES_EDIT, kentos_commands::CAD_MODULES_EDIT_VERSION),
+    (kentos_commands::CAD_MODULES_QUERY, kentos_commands::CAD_MODULES_QUERY_VERSION),
     // Açıklığın geçici ölçüleri ([`opening_distances`], docs/adr/0701).
     (
         kentos_commands::CAD_OPENINGS_DISTANCES,

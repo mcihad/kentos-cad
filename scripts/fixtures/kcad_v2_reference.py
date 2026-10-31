@@ -2364,6 +2364,9 @@ def document(d):
     if any("recipe" in v for v in d["settings"].get("namedViews", [])):
         # A named view's recipe (docs/adr/0774).
         schema = max(schema, 141)
+    if (d["settings"].get("arch") or {}).get("modules"):
+        # Room modules and their instances (docs/adr/0775).
+        schema = max(schema, 142)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3077,7 +3080,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-142.kcad"] = container(root(cmap(parts), version=uint(142)))
+    files["schema-version-143.kcad"] = container(root(cmap(parts), version=uint(143)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5365,6 +5368,22 @@ def build():
     type_bad("version-zero", lambda d: d["settings"]["arch"]["openingTypes"][0].update(version=0))
     type_bad("overrides-untyped", lambda d: d["entities"][1].pop("typeVersion"))
     type_bad("build-empty", lambda d: d["entities"][1].update(build={}))
+    # Schema 142 (docs/adr/0775): the bathroom as a module and a removed one; schema 141 refuses them, a module of
+    # version 0, an object in two instances and a removed module keeping its members too.
+    md = document(load("modules.json"))
+    assert md.count(b"\x67version\x18\x8e") == 1, "the modules are schema 142"
+    out["modules.kcad"] = container(md)
+    out["broken/modules-in-schema-141.kcad"] = container(md.replace(b"\x67version\x18\x8e", b"\x67version\x18\x8d"))
+
+    def module_bad(name, change):
+        d = load("modules.json")
+        change(d)
+        out["broken/modules-" + name + ".kcad"] = container(document(d))
+    module_bad("version-zero", lambda d: d["settings"]["arch"]["modules"][0].update(version=0))
+    module_bad("object-twice", lambda d: d["settings"]["arch"]["modules"][1]["instances"][0]["members"][0].update(
+        uid="0192f5a1-7750-7000-8000-000000000001"))
+    module_bad("removed-members", lambda d: d["settings"]["arch"]["modules"][1].update(
+        members=d["settings"]["arch"]["modules"][0]["members"][:1]))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

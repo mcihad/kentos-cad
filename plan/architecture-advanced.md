@@ -225,7 +225,12 @@ karşılamadığını görebilsin. Dayanak A6 ve mevcut mahal/denetim altyapıs�
 mahal birleşiminde kimlik/numara kararı açık olsun. Daire toplamları ortak
 alanları iki kez saymasın; GUI/Python/MCP aynı hesap ve bulguları üretsin.
 
-### ADV-05 — İlişkili oda/daire modülleri ve kontrollü tekrar kullanımı [ ]
+### ADV-05 — İlişkili oda/daire modülleri ve kontrollü tekrar kullanımı [~]
+
+_Durum (31 Ekim 2026, [ADR 0775](../docs/adr/0775-room-modules-and-controlled-reuse.md)):_ tek kat, düz duvarlı oda modülü;
+tanım ve örnek ayrı, yerleştirme (taban, açı, ayna, kat, evre, numara), planlı kaynak güncelleme, yerel istisna,
+bağımsızlaştırma, kaynağı silme; dört banyo kabulü geçti. Açık: tekrarlayan katlar, daire modülleri, tasarım seçenekleri,
+tanımdan sonra üye ekleme ve çıkarma, elle değişen örnek nesnesinin işaretlenmesi, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Bir banyoyu veya daireyi dört kez çizmek yerine bağlı
 örnekleri kullan; kaynak değişimini inceleyerek uygula. Dayanak A7.

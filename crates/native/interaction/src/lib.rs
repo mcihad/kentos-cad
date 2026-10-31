@@ -277,6 +277,7 @@ mod space_sources;
 pub mod arch_tools;
 pub mod casework;
 pub mod grid_system;
+pub mod module_place;
 pub mod tag_tools;
 pub mod viewmark_tools;
 pub mod wall_from_lines;

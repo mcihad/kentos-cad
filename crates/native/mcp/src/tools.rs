@@ -661,6 +661,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.openings.edit"
             // A type's change rewrites the openings following it; remove detaches them (docs/adr/0772).
             | "cad.openingtypes.edit"
+            | "cad.modules.edit"
             // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
             | "cad.spaces.edit"
             | "cad.spaces.separators"

@@ -692,11 +692,15 @@ pub const SCHEMA_WITH_BUILDING_PROGRAM: u32 = 140;
 /// Schema 141 (docs/adr/0774): a named view's recipe (`recipe`: level, phase, layer state, hidden categories, scale,
 /// version); written only when a view has one.
 pub const SCHEMA_WITH_VIEW_RECIPES: u32 = 141;
+/// Schema 142 (docs/adr/0775): the project's room modules (the architectural settings' `modules`: definitions in their
+/// own frame and the instances' points, turns, mirrors, levels, phases, numbering, versions, objects and exceptions);
+/// written only when the project has one.
+pub const SCHEMA_WITH_MODULES: u32 = 142;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 140] = [
+pub const SCHEMAS: [u32; 141] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -837,6 +841,7 @@ pub const SCHEMAS: [u32; 140] = [
     SCHEMA_WITH_OPENING_TYPES,
     SCHEMA_WITH_BUILDING_PROGRAM,
     SCHEMA_WITH_VIEW_RECIPES,
+    SCHEMA_WITH_MODULES,
 ];
 
 /// The file a drawing is saved as.

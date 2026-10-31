@@ -2012,6 +2012,35 @@ const ENTRIES: &[Entry] = &[
         warnings: &["opening_type_kept", "opening_type_skipped"],
         targets: none,
     },
+    // Oda modülleri (docs/adr/0775).
+    Entry {
+        id: "cad.modules.edit",
+        refusals: &[
+            &["invalid_input", "no_entities", "invalid_uid", "entity_not_found", "layer_locked", "level_not_found", "not_finite"],
+            &[
+                "module_exists",
+                "module_not_found",
+                "module_removed",
+                "module_kind",
+                "module_outside",
+                "module_levels",
+                "module_member_taken",
+                "module_instance_not_found",
+                "module_member_missing",
+                "not_in_module",
+                "nothing_to_set",
+            ],
+            REVISION,
+        ],
+        warnings: &["module_instance_skipped", "module_exception_kept", "module_member_gone"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.modules.query",
+        refusals: &[&["module_not_found", "invalid_uid", "entity_not_found", "not_in_module"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.openings.query",
         refusals: &[

@@ -21,6 +21,7 @@ mod arch;
 pub(crate) mod attachments;
 pub(crate) mod casework;
 mod opening_types;
+mod modules;
 pub(crate) mod cloud;
 mod dimension;
 mod dimension_set;
@@ -2467,6 +2468,8 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     if let Entity::Opening(o) = e {
         sections.extend(opening_types::section(doc, slot, &o.opening, &f, locked));
     }
+    // The room module the object is in (docs/adr/0775 §3).
+    sections.extend(modules::section(doc, slot, locked));
     // An insert's block attributes (docs/adr/0144 §7): the definition's tags in
     // its order, with what the insert shows (its value, else the default).
     let tags: Vec<(String, String)> = match e {

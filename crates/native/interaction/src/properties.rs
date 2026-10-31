@@ -194,6 +194,12 @@ pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_commands::
     said(kentos_native_application::openings_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A room module's action from Öznitelikler (docs/adr/0775 §3): `operation` through `cad.modules.edit`; what to say.
+pub fn edit_module(doc: &mut Document, operation: kentos_commands::ModulesOperation) -> Vec<String> {
+    let input = kentos_commands::ModulesEdit { operation, expected_revision: None };
+    said(kentos_native_application::modules_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// A wall's joins from Öznitelikler (docs/adr/0340 §6): `operation` through `cad.walls.edit`; what to say.
 pub fn edit_wall_op(doc: &mut Document, slot: Slot, operation: kentos_commands::WallsOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {

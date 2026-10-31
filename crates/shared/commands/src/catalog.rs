@@ -4103,6 +4103,64 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Oda modülleri (docs/adr/0775), held together by fixtures/commands/v1/cad.modules.edit.json and
+        // cad.modules.query.json (scripts/fixtures/module_cases.py).
+        CommandDescriptor {
+            id: crate::CAD_MODULES_EDIT.into(),
+            version: crate::CAD_MODULES_EDIT_VERSION,
+            title: "Oda modülü".into(),
+            summary: "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). Plan yazmadan yapılacakları (created, changed, report.updated, skipped, conflicts, changedKeys) gösterir. Tekrar kat, bütün daire ve tasarım alternatifi kapsam dışıdır."
+                .into(),
+            aliases: vec!["MODUL".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ModulesEdit>(),
+            output: schema::<crate::ModulesEdited>(),
+            plan: Some(schema::<crate::ModulesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Banyoyu 1. katta aynalı yerleştir".into(),
+                    input: json!({"operation": {"kind": "place", "module": "Banyo", "at": {"x": 12, "y": 0},
+                        "mirror": true, "level": "kat1", "numbering": {"prefix": "D2-"}}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Birinci örnekten kaynağı güncelle".into(),
+                    input: json!({"operation": {"kind": "update", "module": "banyo", "from": "banyo-1"}}),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_MODULES_QUERY.into(),
+            version: crate::CAD_MODULES_QUERY_VERSION,
+            title: "Oda modüllerini oku".into(),
+            summary: "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), broken (sourceGone), katı, aynalı olup olmadığı."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ModulesQuery>(),
+            output: schema::<crate::ModulesQueried>(),
+            plan: Some(schema::<crate::ModulesQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Banyo modülünün örnekleri".into(),
+                input: json!({"module": "Banyo"}),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_OPENINGS_QUERY.into(),
             version: crate::CAD_OPENINGS_QUERY_VERSION,
@@ -11574,6 +11632,12 @@ mod tests {
                     crate::CAD_OPENING_TYPES_EDIT => {
                         serde_json::from_value::<crate::OpeningTypesEdit>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_MODULES_EDIT => {
+                        serde_json::from_value::<crate::ModulesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_MODULES_QUERY => {
+                        serde_json::from_value::<crate::ModulesQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_OPENINGS_QUERY => {
                         serde_json::from_value::<crate::OpeningsQuery>(e.input.clone()).map(|_| ())
                     }
@@ -12688,6 +12752,12 @@ mod tests {
                         }
                         crate::CAD_OPENING_TYPES_EDIT => {
                             serde_json::from_value::<crate::OpeningTypesEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_MODULES_EDIT => {
+                            serde_json::from_value::<crate::ModulesEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_MODULES_QUERY => {
+                            serde_json::from_value::<crate::ModulesQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_QUERY => {
                             serde_json::from_value::<crate::OpeningsQueried>(output.clone()).map(|_| ())
