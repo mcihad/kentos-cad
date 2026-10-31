@@ -517,6 +517,19 @@ def check(walls, spaces, program, doors=(), fixtures=(), units_filter=None, leve
             if grouped and not s["void"] and not pts:
                 found.append(("program_no_door", [uid], at, f"{wd}: kapısı ya da başka mahale açık geçişi yok ({rule}).",
                               "Mahale kapı koyun ya da komşusuna mahal ayırıcıyla açın.", None))
+            # docs/adr/0784 §1: a space on a level its group's building (or its wing, when the wing names levels) does
+            # not span.
+            u = units.get(s["unit"]) if s["unit"] else None
+            b = next((x for x in program.get("buildings", []) if u and x["id"] == u.get("building")), None)
+            if b is not None and s["level"]:
+                w = next((x for x in b.get("wings", []) if x["id"] == u.get("wing")), None)
+                spans, whose = (w["levels"], f"kanadı “{w['name']}”") if w and w.get("levels") else \
+                    (b.get("levels", []), f"binası “{b['name']}”")
+                if spans and s["level"] not in spans:
+                    lname = next((lv["name"] for lv in LEVELS if lv["id"] == s["level"]), s["level"])
+                    found.append(("program_level_outside", [uid], at,
+                                  f"{wd}: “{lname}” katında; “{u['number']}” bölümünün {whose} bu katta değil ({rule}).",
+                                  "Katı binanın ya da kanadın katlarına ekleyin ya da mahali başka bölüme verin.", None))
         row = {"uid": uid}
         for k in ("number", "name", "usage", "unit"):
             if s[k] is not None:
@@ -622,7 +635,7 @@ def check(walls, spaces, program, doors=(), fixtures=(), units_filter=None, leve
         urows = [g for g in urows if g["id"] in units_filter]
     order = ["program_unit_missing", "program_area_below", "program_area_above", "program_width_narrow",
              "program_passage_narrow", "program_adjacent_missing", "program_reach_missing", "program_no_door",
-             "program_fixture_clearance"]
+             "program_fixture_clearance", "program_level_outside"]
     found.sort(key=lambda f: (order.index(f[0]), f[2][0], f[2][1], f[0] + ":" + ",".join(f[1])))
     findings, seen = [], {}
     for code, uids, at, msg, rep, fix in found:

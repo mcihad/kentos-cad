@@ -1529,7 +1529,12 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 ));
                 geo.push(Row::text("Bölüm", shown.clone()).editor(select(shown, items)));
             }
-            for (label, place) in [("Tasarım hedefi", "target"), ("Hedef farkı", "targetDiff")] {
+            for (label, place) in [
+                ("Tasarım hedefi", "target"),
+                ("Hedef farkı", "targetDiff"),
+                ("Bölümün payı", "share"),
+                ("Bölümün brütü", "gross"),
+            ] {
                 if let Some(v) = doc.model.arch_value(e, place, None) {
                     geo.push(Row::text(label, doc.model.arch_value_text(&v, true)));
                 }

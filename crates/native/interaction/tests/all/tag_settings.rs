@@ -588,6 +588,7 @@ fn content_keyboard_cycle_and_visible_choice_end_template_prompt() {
             "Mahal kimliği",
             "Mahal ve kotlar",
             "Bölüm ve hedef",
+            "Bölüm payı",
             "Döşeme kotu",
             "Tavan kotu",
             "Açıklık ve boyut",

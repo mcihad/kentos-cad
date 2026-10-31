@@ -139,10 +139,14 @@ pub enum ScheduleField {
     Leaves,
     Drum,
     Pocket,
+    /// A space's unit's share of the common areas (docs/adr/0784 §3): the unit's, alike on each of its spaces.
+    Share,
+    /// A space's unit's gross area: its own rooms and its share.
+    Gross,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 39] = [
+    pub const ALL: [ScheduleField; 41] = [
         ScheduleField::Number,
         ScheduleField::Type,
         ScheduleField::Form,
@@ -182,6 +186,8 @@ impl ScheduleField {
         ScheduleField::Leaves,
         ScheduleField::Drum,
         ScheduleField::Pocket,
+        ScheduleField::Share,
+        ScheduleField::Gross,
     ];
 
     /// Its heading when the column gives none.
@@ -226,6 +232,8 @@ impl ScheduleField {
             ScheduleField::Leaves => "Kanat",
             ScheduleField::Drum => "Tambur çapı",
             ScheduleField::Pocket => "Cep boyu",
+            ScheduleField::Share => "Pay",
+            ScheduleField::Gross => "Brüt",
         }
     }
 
@@ -270,6 +278,8 @@ impl ScheduleField {
             ScheduleField::Leaves => "leaves",
             ScheduleField::Drum => "drum",
             ScheduleField::Pocket => "pocket",
+            ScheduleField::Share => "share",
+            ScheduleField::Gross => "gross",
         }
     }
 
@@ -296,7 +306,7 @@ impl ScheduleField {
             }
             Form | Sill | Head | Wall => of == ScheduleOf::Openings,
             Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard | Unit
-            | Target | TargetDiff => {
+            | Target | TargetDiff | Share | Gross => {
                 of == ScheduleOf::Spaces
             }
             Tag | Place => of == ScheduleOf::Columns,
@@ -375,7 +385,12 @@ impl ScheduleField {
     /// Whether it is one of the building program's fields (docs/adr/0773, `.kcad` schema 138).
     pub fn is_program(self) -> bool {
         use ScheduleField::*;
-        matches!(self, Unit | Target | TargetDiff)
+        matches!(self, Unit | Target | TargetDiff | Share | Gross)
+    }
+
+    /// Whether it is one of the shares' fields (docs/adr/0784, `.kcad` schema 146).
+    pub fn is_share(self) -> bool {
+        matches!(self, ScheduleField::Share | ScheduleField::Gross)
     }
 }
 

@@ -56,7 +56,11 @@ pub fn numeric(f: ScheduleField) -> bool {
     f.length()
         || matches!(
             f,
-            ScheduleField::Count | ScheduleField::Area | ScheduleField::Volume
+            ScheduleField::Count
+                | ScheduleField::Area
+                | ScheduleField::Volume
+                | ScheduleField::Share
+                | ScheduleField::Gross
         )
 }
 
@@ -140,7 +144,7 @@ impl Document {
             ))
         } else {
             match c.field {
-                ScheduleField::Area => Some(match s.area_unit {
+                ScheduleField::Area | ScheduleField::Share | ScheduleField::Gross => Some(match s.area_unit {
                     kentos_contracts::AreaUnit::M2 => "m²",
                     kentos_contracts::AreaUnit::Donum => "dönüm",
                     kentos_contracts::AreaUnit::Ha => "ha",
@@ -166,13 +170,32 @@ impl Document {
         total: bool,
     ) -> ScheduleRows {
         let mut rows: Vec<Row> = Vec::new();
+        // The shares are the whole program's: worked out once for the schedule (docs/adr/0784 §3).
+        let shares = columns
+            .iter()
+            .any(|c| c.field.is_share())
+            .then(|| self.program_shares().map(|(_, parts)| parts))
+            .flatten();
+        let share_of = |e: &Entity, field: ScheduleField| -> Option<ArchValue> {
+            let Entity::Space(x) = e else { return None };
+            let unit = x.space.unit.as_deref()?;
+            let (_, part) = shares.as_ref()?.iter().find(|(u, _)| u == unit)?;
+            let t = if field == ScheduleField::Share { &part.share } else { &part.gross };
+            t.parse::<f64>().ok().map(ArchValue::Area)
+        };
         for e in self.entities() {
             if e.kind() != of.kind() || !self.fixture(e) || !self.schedule_takes(e, filter) {
                 continue;
             }
             let values: Vec<Option<ArchValue>> = columns
                 .iter()
-                .map(|c| self.arch_value(e, c.field.name(), c.attr.as_deref()))
+                .map(|c| {
+                    if c.field.is_share() {
+                        share_of(e, c.field)
+                    } else {
+                        self.arch_value(e, c.field.name(), c.attr.as_deref())
+                    }
+                })
                 .collect();
             let texts = values
                 .iter()

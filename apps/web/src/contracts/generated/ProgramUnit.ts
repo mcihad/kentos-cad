@@ -13,4 +13,9 @@ number: string, name?: string, kind?: UnitKind, building?: string, wing?: string
  * Its recorded (official) area, m², as the user gave it (a deed's, a permit's): read beside the measured one,
  * never written by a measurement.
  */
-recordedArea?: number, };
+recordedArea?: number, 
+/**
+ * Its weight in the common areas' shares when the program shares them by weight (docs/adr/0784 §2): a decimal
+ * written as given (“120”, “1.5”), at most 12 digits before the point and 6 after; read exactly, never as a float.
+ */
+shareWeight?: string, };

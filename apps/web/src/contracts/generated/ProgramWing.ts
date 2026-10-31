@@ -3,4 +3,9 @@
 /**
  * A wing of a building.
  */
-export type ProgramWing = { id: string, name: string, };
+export type ProgramWing = { id: string, name: string, 
+/**
+ * The levels it spans (docs/adr/0784 §1), by their ids, each once; within its building's when the building names
+ * any. None: not said.
+ */
+levels?: Array<string>, };

@@ -2398,6 +2398,18 @@ def document(d):
     if any("unit" in i for m in (d["settings"].get("arch") or {}).get("modules", []) for i in m.get("instances", [])):
         # A module instance's building-program group (docs/adr/0779).
         schema = max(schema, 145)
+    pg = (d["settings"].get("arch") or {}).get("program") or {}
+
+    def shared(e):
+        src = e.get("source") or e.get("schedule")
+        return e["kind"] == "table" and isinstance(src, dict) and any(
+            isinstance(c, dict) and c.get("field") in ("share", "gross") for c in src.get("columns", []))
+    if ("shareRule" in pg or any("shareWeight" in u for u in pg.get("units", []))
+            or any(b.get("levels") or any(w.get("levels") for w in b.get("wings", [])) for b in pg.get("buildings", []))
+            or any(shared(e) for e in d["entities"]) or any(shared(e) for b in d.get("blocks", []) for e in b.get("entities", []))):
+        # The program's shares, a building's or a wing's levels, a schedule's share field (docs/adr/0784; schema 146 is
+        # provisional, renumbered when merged).
+        schema = max(schema, 146)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3111,7 +3123,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-146.kcad"] = container(root(cmap(parts), version=uint(146)))
+    files["schema-version-147.kcad"] = container(root(cmap(parts), version=uint(147)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5503,6 +5515,22 @@ def build():
     program_bad("wing-elsewhere", lambda d: d["settings"]["arch"]["program"]["units"][0].update(wing="yok"))
     program_bad("empty", lambda d: d["settings"]["arch"].update(program={}))
     program_bad("outdoor-false", lambda d: d["settings"]["arch"]["program"]["briefs"][1].update(outdoor=False))
+    # Schema 146 (docs/adr/0784): the program's shares (a weight rule, two units' weights) and a building's and a
+    # wing's levels; schema 143 refuses them (the field), 145 is not a schema yet (provisional number), and a weight
+    # written with a comma, a wing's level not its building's and a level written twice are refused.
+    ps_doc = load("program-shares.json")
+    ps = document(ps_doc)
+    assert ps.count(b"\x67version\x18\x92") == 1, "the program's shares are schema 146"
+    out["program-shares.kcad"] = container(ps)
+    out["broken/program-shares-in-schema-145.kcad"] = container(ps.replace(b"\x67version\x18\x92", b"\x67version\x18\x91"))
+
+    def shares_bad(name, change):
+        d = copy.deepcopy(ps_doc)
+        change(d["settings"]["arch"]["program"])
+        out["broken/program-shares-" + name + ".kcad"] = container(document(d))
+    shares_bad("weight-comma", lambda p: p["units"][0].update(shareWeight="120,5"))
+    shares_bad("wing-level-elsewhere", lambda p: p["buildings"][0]["wings"][0].update(levels=["cati"]))
+    shares_bad("level-twice", lambda p: p["buildings"][0].update(levels=["zemin", "zemin"]))
     # Schema 141 (docs/adr/0774): named views with recipes (a level, a level with the one below, a phase, a layer
     # state, categories left out, a scale) beside one without; schema 140 refuses them, and an empty recipe, a version
     # 0, a category twice, an unknown category, a scale above 1:100 000, `below` written false are refused too.

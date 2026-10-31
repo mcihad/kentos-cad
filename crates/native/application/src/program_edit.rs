@@ -1,6 +1,8 @@
 //! `cad.program.edit` v1 (docs/adr/0773): the building program written — its buildings, wings, units, common and
 //! outdoor areas, design brief and fixtures' clearances — and spaces given to its groups, as one undo step “Bina
-//! programı”, all or none. A group spaces still name is not taken away unless the same call gives them elsewhere. The
+//! programı”, all or none. A group spaces still name is not taken away unless the same call gives them elsewhere; a
+//! building or a wing groups still name is not taken away either (docs/adr/0784 §1), and a building's or a wing's levels
+//! are the project's. The
 //! shared cases are `fixtures/commands/v1/cad.program.edit.json` (`scripts/fixtures/program_cases.py`).
 
 use kentos_commands::{CommandResult, Entity, ProgramEdit, ProgramEdited};
@@ -27,8 +29,48 @@ fn check(doc: &Document, input: &ProgramEdit) -> Result<Work, Stop> {
         ));
     }
     let program = input.program.clone().unwrap_or_else(|| doc.program());
+    // A building or a wing taken away that groups still name (docs/adr/0784 §1): the groups said by their numbers.
+    let before = doc.program();
+    let kept: Vec<&str> =
+        program.buildings.iter().flat_map(|b| std::iter::once(b.id.as_str()).chain(b.wings.iter().map(|w| w.id.as_str()))).collect();
+    for b in &before.buildings {
+        let gone = std::iter::once((b.id.as_str(), format!("“{}” binası", b.name)))
+            .chain(b.wings.iter().map(|w| (w.id.as_str(), format!("“{}” kanadı", w.name))));
+        for (id, what) in gone {
+            if kept.contains(&id) {
+                continue;
+            }
+            let users: Vec<String> = program.users_of(id).iter().map(|u| format!("“{}”", u.number)).collect();
+            if !users.is_empty() {
+                return Err(fail(
+                    codes::BUILDING_IN_USE,
+                    format!(
+                        "{what} kaldırılamaz: {} bölümü ona bağlı; önce bölümleri başka binaya ya da kanada verin.",
+                        users.join(", ")
+                    ),
+                    "program.buildings",
+                ));
+            }
+        }
+    }
     if let Some((at, why)) = program.problem() {
         return Err(fail(codes::INVALID_PROGRAM, why, &format!("program.{at}")));
+    }
+    // A building's or a wing's levels are the project's (docs/adr/0784 §1).
+    let levels: Vec<String> =
+        doc.settings().arch.as_ref().map(|a| a.levels.iter().map(|l| l.id.clone()).collect()).unwrap_or_default();
+    for (i, b) in program.buildings.iter().enumerate() {
+        let lists = std::iter::once((format!("buildings[{i}]"), &b.levels))
+            .chain(b.wings.iter().enumerate().map(|(k, w)| (format!("buildings[{i}].wings[{k}]"), &w.levels)));
+        for (at, list) in lists {
+            if let Some((k, l)) = list.iter().enumerate().find(|(_, l)| !levels.contains(l)) {
+                return Err(fail(
+                    codes::LEVEL_NOT_FOUND,
+                    format!("“{l}” katı projede yok; önce Proje ayarları › Mimari'de katı ekleyin."),
+                    &format!("program.{at}.levels[{k}]"),
+                ));
+            }
+        }
     }
     let mut units: Vec<(Slot, Option<String>)> = Vec::new();
     for (i, a) in input.assign.iter().enumerate() {
@@ -57,7 +99,6 @@ fn check(doc: &Document, input: &ProgramEdit) -> Result<Work, Stop> {
         }
     }
     // A group taken away that spaces still name, after this call's assignments.
-    let before = doc.program();
     let mut stranded: Vec<String> = Vec::new();
     for e in doc.entities() {
         let Entity::Space(s) = e else { continue };

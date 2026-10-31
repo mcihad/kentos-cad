@@ -109,14 +109,63 @@ impl Document {
         }
         for op in &out { self.apply_op(op); }
         let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. } | Op::BuildingProgram { .. }));
+        // A space's change moves the shares of every unit in its pools (docs/adr/0784 §3).
+        let spaces = ops.iter().any(|op| match op {
+            Op::Add(s) | Op::Remove(s) => matches!(&*s.entity, Entity::Space(_)),
+            Op::Update { before, after } => {
+                matches!(&*before.entity, Entity::Space(_)) || matches!(&*after.entity, Entity::Space(_))
+            }
+            _ => false,
+        });
         let sources = ops.iter().any(|op| match op {
             Op::Add(s) | Op::Remove(s) => crate::space_follow::is_source(&s.entity),
             Op::Update { before, after } => crate::space_follow::is_source(&before.entity) || crate::space_follow::is_source(&after.entity),
             _ => false,
         });
         // A column may change net area while a gross room's stored parts stay identical.
-        if settings || sources { out.extend(self.derived_tag_updates(!settings)); }
+        if settings || sources {
+            out.extend(self.derived_tag_updates(!settings));
+        }
+        if !settings && spaces && self.program().share_rule.is_some() {
+            out.extend(self.share_tag_updates());
+        }
         out
+    }
+
+    /// The tags whose words name a unit's share or gross (docs/adr/0784 §3), their words written anew.
+    fn share_tag_updates(&mut self) -> Vec<Op> {
+        let slots: Vec<_> = self.store.tag_slots().collect();
+        let mut ops = Vec::new();
+        let read = TagRead::new(self);
+        for slot in slots {
+            let Some(current) = self.store.get(slot).cloned() else {
+                continue;
+            };
+            let Entity::Tag(t) = &*current.entity else {
+                continue;
+            };
+            let content = t.tag.content.as_deref().unwrap_or_default();
+            if !(content.contains("{share}") || content.contains("{gross}")) {
+                continue;
+            }
+            let Some(target) = self.tag_target(&t.tag.of) else {
+                continue;
+            };
+            let text = read.text(&target, t.tag.content.as_deref());
+            if t.tag.text == text {
+                continue;
+            }
+            let mut e = t.clone();
+            e.tag.text = text;
+            ops.push(Op::Update {
+                after: Stored { uid: current.uid, entity: Arc::new(Entity::Tag(e)) },
+                before: current,
+            });
+        }
+        for op in &ops {
+            self.apply_op(op);
+        }
+        ops
     }
 
     /// These templates depend on settings or room sources outside the stored room outline.
@@ -133,7 +182,7 @@ impl Document {
                 continue;
             };
             let content = t.tag.content.as_deref().unwrap_or_default();
-            let program = ["{unit}", "{target}", "{targetDiff}"].iter().any(|p| content.contains(p));
+            let program = ["{unit}", "{target}", "{targetDiff}", "{share}", "{gross}"].iter().any(|p| content.contains(p));
             if !(content.contains("{netArea}") || (!net_only && (program || content.contains("{floorElevation}") || content.contains("{ceilingElevation}")))) {
                 continue;
             }

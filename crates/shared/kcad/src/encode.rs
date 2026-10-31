@@ -2077,6 +2077,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 146 (docs/adr/0784): the program's shares, a building's or a wing's levels, a schedule's share fields.
+    if doc.settings.arch.as_ref().is_some_and(|a| a.program.has_shares())
+        || objs.iter().any(program_shares)
+        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(program_shares))
+    {
+        return crate::SCHEMA_WITH_PROGRAM_SHARES;
+    }
     // Schema 145 (docs/adr/0779): a module instance's building-program group.
     if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_units(&a.modules)) {
         return crate::SCHEMA_WITH_MODULE_UNITS;
@@ -3377,6 +3384,17 @@ pub(crate) fn building_parts(e: &Entity) -> bool {
         Entity::Slab(s) => s.slab.bound.is_some(),
         _ => false,
     }
+}
+
+/// Whether an object needs schema 146 (docs/adr/0784): a schedule with a share field.
+pub(crate) fn program_shares(e: &Entity) -> bool {
+    matches!(
+        e,
+        Entity::Table(t) if matches!(
+            &t.source,
+            Some(kentos_contracts::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_share())
+        )
+    )
 }
 
 /// Whether an object needs schema 140 (docs/adr/0773): a space in a group, a schedule with a program field.

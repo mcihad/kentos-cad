@@ -2,6 +2,7 @@
 import type { FixtureClearance } from "./FixtureClearance";
 import type { ProgramBuilding } from "./ProgramBuilding";
 import type { ProgramUnit } from "./ProgramUnit";
+import type { ShareRule } from "./ShareRule";
 import type { SpaceBrief } from "./SpaceBrief";
 
 /**
@@ -11,4 +12,8 @@ export type BuildingProgram = { buildings?: Array<ProgramBuilding>, units?: Arra
 /**
  * The brief's own name and version (“Ofis konut brief'i 2026-1”), said with its findings.
  */
-version?: string, };
+version?: string, 
+/**
+ * How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
+ */
+shareRule?: ShareRule, };

@@ -338,6 +338,8 @@ pub(super) struct Features {
     pub(super) recipe_detail: bool,
     /// Schema 145 (docs/adr/0779): a module instance's group.
     pub(super) module_units: bool,
+    /// Schema 146 (docs/adr/0784): the program's shares, levels of buildings and wings, a schedule's share fields.
+    pub(super) program_shares: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -548,6 +550,7 @@ impl Features {
             modules: schema >= crate::SCHEMA_WITH_MODULES,
             recipe_detail: schema >= crate::SCHEMA_WITH_RECIPE_DETAIL,
             module_units: schema >= crate::SCHEMA_WITH_MODULE_UNITS,
+            program_shares: schema >= crate::SCHEMA_WITH_PROGRAM_SHARES,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,
@@ -2209,6 +2212,10 @@ pub(super) fn object(
     // Schema 138 (docs/adr/0771): a turning component, a node decision, a bound slab.
     if !has.building_parts && crate::encode::building_parts(&entity) {
         return Err(r.fail(Code::UnknownField, "dönen bileşen, düğüm kararı ya da bağlı döşeme şema 138 ister"));
+    }
+    // Schema 146 (docs/adr/0784): a schedule's share field.
+    if !has.program_shares && crate::encode::program_shares(&entity) {
+        return Err(r.fail(Code::UnknownField, "çizelgenin pay ya da brüt alanı şema 146 ister"));
     }
     // Schema 140 (docs/adr/0773): a space's group, a schedule's program field.
     if !has.building_program && crate::encode::building_program(&entity) {

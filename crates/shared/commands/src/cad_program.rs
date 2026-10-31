@@ -12,7 +12,7 @@ use ts_rs::TS;
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::cad_arch_audit::ArchAuditFinding;
 use crate::entity::Vec2;
-use crate::{BuildingProgram, SpaceMethod, UnitKind};
+use crate::{BuildingProgram, ProgramShares, ProgramUnitShare, SpaceMethod, UnitKind};
 
 pub const CAD_PROGRAM_EDIT: &str = "cad.program.edit";
 pub const CAD_PROGRAM_EDIT_VERSION: u32 = 1;
@@ -38,10 +38,11 @@ pub struct ProgramAssign {
 /// given to its groups, written as one undo step. A group spaces still name is not taken away unless they are given
 /// elsewhere in the same call.
 ///
-/// Refusals, in this order: `nothing_to_set`, `invalid_program` (the program's own problem, at its path), `no_entities`,
-/// `invalid_uid`, `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`),
-/// `unit_in_use` (a group taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`,
-/// `layer_locked`.
+/// Refusals, in this order: `nothing_to_set`, `building_in_use` (a building or a wing taken away that groups still
+/// name: the words list their numbers; docs/adr/0784 §1), `invalid_program` (the program's own problem, at its path),
+/// `level_not_found` (a building's or a wing's level the project lacks, at its path), `no_entities`, `invalid_uid`,
+/// `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`), `unit_in_use` (a group
+/// taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`, `layer_locked`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -143,6 +144,11 @@ pub struct ProgramUnitRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub recorded_difference: Option<f64>,
+    /// An independent unit's part of the common areas when the program shares them (docs/adr/0784 §2): its own rooms,
+    /// its share and its gross, m² as decimals, always of all its spaces whatever the check reads.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub share: Option<ProgramUnitShare>,
 }
 
 /// The drawing's totals, each space once: by kind of group, and the spaces in none.
@@ -285,6 +291,11 @@ pub struct ProgramChecked {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditFinding>>", optional))]
     pub findings: Vec<ArchAuditFinding>,
+    /// The common areas shared out by the program's rule (docs/adr/0784 §2), of the whole program whatever the check
+    /// reads; none when the program shares nothing. A pool not shared is said as a warning too (`share_unshared`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shares: Option<ProgramShares>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

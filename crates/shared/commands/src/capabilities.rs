@@ -1862,7 +1862,9 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &[
                 "nothing_to_set",
+                "building_in_use",
                 "invalid_program",
+                "level_not_found",
                 "no_entities",
                 "invalid_uid",
                 "entity_not_found",
@@ -1879,7 +1881,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.program.check",
         refusals: &[&["unit_not_found", "level_not_found", "cancelled"]],
-        warnings: &[],
+        warnings: &["share_unshared"],
         targets: none,
     },
     // The slabs (docs/adr/0722 §4).

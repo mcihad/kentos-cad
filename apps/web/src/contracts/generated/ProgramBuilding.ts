@@ -4,4 +4,8 @@ import type { ProgramWing } from "./ProgramWing";
 /**
  * A building and its wings.
  */
-export type ProgramBuilding = { id: string, name: string, wings?: Array<ProgramWing>, };
+export type ProgramBuilding = { id: string, name: string, wings?: Array<ProgramWing>, 
+/**
+ * The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.
+ */
+levels?: Array<string>, };

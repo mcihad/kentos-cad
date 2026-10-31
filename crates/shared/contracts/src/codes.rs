@@ -1849,6 +1849,12 @@ codes! {
     PROGRAM_NO_DOOR = "program_no_door", Warning, false, "Mahalın kapısı ya da başka mahale açık geçişi yok.";
     /// A fixture whose clearance leaves its space or meets another fixture.
     PROGRAM_FIXTURE_CLEARANCE = "program_fixture_clearance", Warning, false, "Donatının önündeki kullanım alanı mahalden taşıyor ya da başka donatıya biniyor (tasarım hedefi).";
+    /// A building or a wing taken away that groups still name (docs/adr/0784 §1).
+    BUILDING_IN_USE = "building_in_use", Failed, false, "Kaldırılan bina ya da kanat hâlâ bölümlerde yazılı; önce bölümleri başka binaya ya da kanada verin.";
+    /// A space on a level its group's building or wing does not span (docs/adr/0784 §1).
+    PROGRAM_LEVEL_OUTSIDE = "program_level_outside", Warning, false, "Mahal, bölümünün binasının ya da kanadının katlarında olmayan bir katta.";
+    /// A common area the program's rule could not share out (docs/adr/0784 §2).
+    SHARE_UNSHARED = "share_unshared", Warning, false, "Ortak alan paylaştırılamadı: kapsamında bağımsız bölüm yok, bir bölümün pay ağırlığı yok ya da ağırlıkların toplamı sıfır.";
 
     // ── Grids, columns, stairs and ramps (docs/adr/0343) ────────────────
     /// A grid's fields that make none.

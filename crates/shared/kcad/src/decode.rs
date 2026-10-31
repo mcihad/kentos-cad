@@ -1273,6 +1273,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.building_program && !a.program.is_empty() {
                     return Err(r.fail_at(Code::UnknownField, at, "bina programı şema 140 ister"));
                 }
+                if !has.program_shares && a.program.has_shares() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "bina programının payları ve binaların katları şema 146 ister",
+                    ));
+                }
                 if !has.audit_exceptions && a.has_audit_exceptions() {
                     return Err(r.fail_at(
                         Code::UnknownField,

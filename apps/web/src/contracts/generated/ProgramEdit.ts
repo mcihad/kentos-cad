@@ -7,9 +7,10 @@ import type { ProgramAssign } from "./ProgramAssign";
  * given to its groups, written as one undo step. A group spaces still name is not taken away unless they are given
  * elsewhere in the same call.
  *
- * Refusals, in this order: `nothing_to_set`, `invalid_program` (the program's own problem, at its path), `no_entities`,
- * `invalid_uid`, `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`),
- * `unit_in_use` (a group taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`,
- * `layer_locked`.
+ * Refusals, in this order: `nothing_to_set`, `building_in_use` (a building or a wing taken away that groups still
+ * name: the words list their numbers; docs/adr/0784 §1), `invalid_program` (the program's own problem, at its path),
+ * `level_not_found` (a building's or a wing's level the project lacks, at its path), `no_entities`, `invalid_uid`,
+ * `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`), `unit_in_use` (a group
+ * taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`, `layer_locked`.
  */
 export type ProgramEdit = { program?: BuildingProgram, assign?: Array<ProgramAssign>, expectedRevision?: string, };

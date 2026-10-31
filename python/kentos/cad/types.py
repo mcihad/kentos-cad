@@ -5112,6 +5112,8 @@ class ScheduleField(_StrEnum):
     - ``target``: A space's design target: its brief's area range.
     - ``targetDiff``: How far a space's area lies outside its brief's range (below minus, above plus).
     - ``operation``: An opening's operation (Kanatlı, Sürme, Döner, Cebe giren, Katlanır …), its leaves (a revolving door's wings, a
+    - ``share``: A space's unit's share of the common areas (docs/adr/0784 §3): the unit's, alike on each of its spaces.
+    - ``gross``: A space's unit's gross area: its own rooms and its share.
     """
     NUMBER = "number"
     TYPE = "type"
@@ -5152,9 +5154,11 @@ class ScheduleField(_StrEnum):
     TARGET = "target"
     TARGET_DIFF = "targetDiff"
     OPERATION = "operation"
+    SHARE = "share"
+    GROSS = "gross"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -5306,6 +5310,22 @@ class ServiceKind(_StrEnum):
 
 ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", "vector"]
 """The names of :class:`ServiceKind`, for a plain string."""
+
+
+class ShareRule(_StrEnum):
+    """How the common areas are shared out.
+
+    - ``equal``: The same for each unit of the scope.
+    - ``net``: By each unit's own rooms' area.
+    - ``weight``: By each unit's `shareWeight`.
+    """
+    EQUAL = "equal"
+    NET = "net"
+    WEIGHT = "weight"
+
+
+ShareRuleName = Literal["equal", "net", "weight"]
+"""The names of :class:`ShareRule`, for a plain string."""
 
 
 class SheetPublishMode(_StrEnum):
@@ -11509,7 +11529,7 @@ class ArchAuditFinding(_Model):
             `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's
             `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
             `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
-            `program_fixture_clearance` (docs/adr/0773 §5).
+            `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -14472,11 +14492,13 @@ class Bounds(_Model):
 class BuildingProgram(_Model):
     """A building's program (docs/adr/0773, `.kcad` schema 138).
     Attributes:
+        share_rule: How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
         version: The brief's own name and version (“Ofis konut brief'i 2026-1”), said with its findings.
     """
     briefs: list[SpaceBrief] | Unset = UNSET
     buildings: list[ProgramBuilding] | Unset = UNSET
     clearances: list[FixtureClearance] | Unset = UNSET
+    share_rule: ShareRule | ShareRuleName | None | Unset = UNSET
     units: list[ProgramUnit] | Unset = UNSET
     version: str | None | Unset = UNSET
 
@@ -14488,6 +14510,8 @@ class BuildingProgram(_Model):
             out["buildings"] = [e0.to_json() for e0 in self.buildings]
         if self.clearances is not UNSET:
             out["clearances"] = [e0.to_json() for e0 in self.clearances]
+        if self.share_rule is not UNSET:
+            out["shareRule"] = None if self.share_rule is None else _enum_out(self.share_rule)
         if self.units is not UNSET:
             out["units"] = [e0.to_json() for e0 in self.units]
         if self.version is not UNSET:
@@ -14500,6 +14524,7 @@ class BuildingProgram(_Model):
             briefs=[SpaceBrief.from_json(e0) for e0 in data["briefs"]] if "briefs" in data else UNSET,
             buildings=[ProgramBuilding.from_json(e0) for e0 in data["buildings"]] if "buildings" in data else UNSET,
             clearances=[FixtureClearance.from_json(e0) for e0 in data["clearances"]] if "clearances" in data else UNSET,
+            share_rule=UNSET if "shareRule" not in data else None if data["shareRule"] is None else _enum_in(ShareRule, data["shareRule"]),
             units=[ProgramUnit.from_json(e0) for e0 in data["units"]] if "units" in data else UNSET,
             version=data.get("version", UNSET),
         )
@@ -49409,15 +49434,21 @@ class ProgramAssign(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ProgramBuilding(_Model):
-    """A building and its wings."""
+    """A building and its wings.
+    Attributes:
+        levels: The levels it spans (docs/adr/0784 §1), by their ids, each once; a level may be another building's too.
+    """
     id: str
     name: str
+    levels: list[str] | Unset = UNSET
     wings: list[ProgramWing] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["name"] = self.name
+        if self.levels is not UNSET:
+            out["levels"] = list(self.levels)
         if self.wings is not UNSET:
             out["wings"] = [e0.to_json() for e0 in self.wings]
         return out
@@ -49427,6 +49458,7 @@ class ProgramBuilding(_Model):
         return cls(
             id=data["id"],
             name=data["name"],
+            levels=list(data["levels"]) if "levels" in data else UNSET,
             wings=[ProgramWing.from_json(e0) for e0 in data["wings"]] if "wings" in data else UNSET,
         )
 
@@ -49471,6 +49503,8 @@ class ProgramChecked(_Model):
         units: The program's groups, in its order, with their totals.
         spaces: The spaces read, in the drawing's order.
         findings: The findings (the audit's group `program`), by code then along x and y.
+        shares: The common areas shared out by the program's rule (docs/adr/0784 §2), of the whole program whatever the check
+            reads; none when the program shares nothing. A pool not shared is said as a warning too (`share_unshared`).
     """
     rule: str
     units: list[ProgramUnitRow]
@@ -49478,6 +49512,7 @@ class ProgramChecked(_Model):
     spaces: list[ProgramSpaceRow]
     revision: str
     findings: list[ArchAuditFinding] | Unset = UNSET
+    shares: ProgramShares | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -49488,6 +49523,8 @@ class ProgramChecked(_Model):
         out["revision"] = self.revision
         if self.findings is not UNSET:
             out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.shares is not UNSET:
+            out["shares"] = None if self.shares is None else self.shares.to_json()
         return out
 
     @classmethod
@@ -49499,6 +49536,7 @@ class ProgramChecked(_Model):
             spaces=[ProgramSpaceRow.from_json(e0) for e0 in data["spaces"]],
             revision=data["revision"],
             findings=[ArchAuditFinding.from_json(e0) for e0 in data["findings"]] if "findings" in data else UNSET,
+            shares=UNSET if "shares" not in data else None if data["shares"] is None else ProgramShares.from_json(data["shares"]),
         )
 
 
@@ -49508,10 +49546,11 @@ class ProgramEdit(_Model):
     given to its groups, written as one undo step. A group spaces still name is not taken away unless they are given
     elsewhere in the same call.
 
-    Refusals, in this order: `nothing_to_set`, `invalid_program` (the program's own problem, at its path), `no_entities`,
-    `invalid_uid`, `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`),
-    `unit_in_use` (a group taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`,
-    `layer_locked`.
+    Refusals, in this order: `nothing_to_set`, `building_in_use` (a building or a wing taken away that groups still
+    name: the words list their numbers; docs/adr/0784 §1), `invalid_program` (the program's own problem, at its path),
+    `level_not_found` (a building's or a wing's level the project lacks, at its path), `no_entities`, `invalid_uid`,
+    `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`), `unit_in_use` (a group
+    taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`, `layer_locked`.
     """
     assign: list[ProgramAssign] | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -49584,6 +49623,122 @@ class ProgramLink(_Model):
         return cls(
             usage=data["usage"],
             by=list(data["by"]) if "by" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProgramPool(_Model):
+    """A common area shared out.
+    Attributes:
+        unit: The common area's id and number.
+        area: Its rooms taken to the step, m².
+        building: Its scope: its building, its wing; neither: the whole program.
+        shares: The units' shares, in the program's order; empty when it is not shared.
+        unshared: Why it is not shared.
+    """
+    unit: str
+    number: str
+    area: str
+    building: str | None | Unset = UNSET
+    shares: list[ProgramPoolShare] | Unset = UNSET
+    unshared: str | None | Unset = UNSET
+    wing: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["unit"] = self.unit
+        out["number"] = self.number
+        out["area"] = self.area
+        if self.building is not UNSET:
+            out["building"] = self.building
+        if self.shares is not UNSET:
+            out["shares"] = [e0.to_json() for e0 in self.shares]
+        if self.unshared is not UNSET:
+            out["unshared"] = self.unshared
+        if self.wing is not UNSET:
+            out["wing"] = self.wing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProgramPool:
+        return cls(
+            unit=data["unit"],
+            number=data["number"],
+            area=data["area"],
+            building=data.get("building", UNSET),
+            shares=[ProgramPoolShare.from_json(e0) for e0 in data["shares"]] if "shares" in data else UNSET,
+            unshared=data.get("unshared", UNSET),
+            wing=data.get("wing", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProgramPoolShare(_Model):
+    """One unit's share of one pool.
+    Attributes:
+        unit: The unit's id.
+        weight: Its weight as read (“1”, “48.73”, “1.5”).
+        share: Its share rounded to the step, m².
+        exact: Its exact share, m², as a fraction in lowest terms (“3083/240”) or a whole number.
+    """
+    unit: str
+    weight: str
+    share: str
+    exact: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["unit"] = self.unit
+        out["weight"] = self.weight
+        out["share"] = self.share
+        out["exact"] = self.exact
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProgramPoolShare:
+        return cls(
+            unit=data["unit"],
+            weight=data["weight"],
+            share=data["share"],
+            exact=data["exact"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProgramShares(_Model):
+    """The common areas shared out (docs/adr/0784 §2).
+    Attributes:
+        rule: The rule and its weights (`kentos.share/1 · Net alana göre`).
+        pools: Each common area, in the program's order.
+        net: The independent units' own rooms, the common areas shared, those not shared and the units' gross, m²; the
+            gross is the net and the shared exactly.
+    """
+    rule: str
+    pools: list[ProgramPool]
+    net: str
+    shared: str
+    unshared: str
+    gross: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["rule"] = self.rule
+        out["pools"] = [e0.to_json() for e0 in self.pools]
+        out["net"] = self.net
+        out["shared"] = self.shared
+        out["unshared"] = self.unshared
+        out["gross"] = self.gross
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProgramShares:
+        return cls(
+            rule=data["rule"],
+            pools=[ProgramPool.from_json(e0) for e0 in data["pools"]],
+            net=data["net"],
+            shared=data["shared"],
+            unshared=data["unshared"],
+            gross=data["gross"],
         )
 
 
@@ -49742,6 +49897,8 @@ class ProgramUnit(_Model):
         number: Its number, as the project writes it (“D1”, “1”, “Ortak”); one per group.
         recorded_area: Its recorded (official) area, m², as the user gave it (a deed's, a permit's): read beside the measured one,
             never written by a measurement. Unit: area.
+        share_weight: Its weight in the common areas' shares when the program shares them by weight (docs/adr/0784 §2): a decimal
+            written as given (“120”, “1.5”), at most 12 digits before the point and 6 after; read exactly, never as a float.
     """
     id: str
     number: str
@@ -49749,6 +49906,7 @@ class ProgramUnit(_Model):
     kind: UnitKind | UnitKindName | Unset = UNSET
     name: str | None | Unset = UNSET
     recorded_area: float | None | Unset = UNSET
+    share_weight: str | None | Unset = UNSET
     wing: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -49763,6 +49921,8 @@ class ProgramUnit(_Model):
             out["name"] = self.name
         if self.recorded_area is not UNSET:
             out["recordedArea"] = None if self.recorded_area is None else float(self.recorded_area)
+        if self.share_weight is not UNSET:
+            out["shareWeight"] = self.share_weight
         if self.wing is not UNSET:
             out["wing"] = self.wing
         return out
@@ -49776,6 +49936,7 @@ class ProgramUnit(_Model):
             kind=_enum_in(UnitKind, data["kind"]) if "kind" in data else UNSET,
             name=data.get("name", UNSET),
             recorded_area=UNSET if "recordedArea" not in data else None if data["recordedArea"] is None else float(data["recordedArea"]),
+            share_weight=data.get("shareWeight", UNSET),
             wing=data.get("wing", UNSET),
         )
 
@@ -49794,6 +49955,8 @@ class ProgramUnitRow(_Model):
         levels: The levels its spaces lie on, in the project's order (a duplex: two); a space without a level gives none.
         recorded_area: The recorded area the program keeps for it, as given; never written by a measurement. Unit: area.
         recorded_difference: Its rooms less its recorded area. Unit: area.
+        share: An independent unit's part of the common areas when the program shares them (docs/adr/0784 §2): its own rooms,
+            its share and its gross, m² as decimals, always of all its spaces whatever the check reads.
     """
     id: str
     number: str
@@ -49808,6 +49971,7 @@ class ProgramUnitRow(_Model):
     name: str | None | Unset = UNSET
     recorded_area: float | None | Unset = UNSET
     recorded_difference: float | None | Unset = UNSET
+    share: ProgramUnitShare | None | Unset = UNSET
     wing: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -49830,6 +49994,8 @@ class ProgramUnitRow(_Model):
             out["recordedArea"] = None if self.recorded_area is None else float(self.recorded_area)
         if self.recorded_difference is not UNSET:
             out["recordedDifference"] = None if self.recorded_difference is None else float(self.recorded_difference)
+        if self.share is not UNSET:
+            out["share"] = None if self.share is None else self.share.to_json()
         if self.wing is not UNSET:
             out["wing"] = self.wing
         return out
@@ -49850,20 +50016,51 @@ class ProgramUnitRow(_Model):
             name=data.get("name", UNSET),
             recorded_area=UNSET if "recordedArea" not in data else None if data["recordedArea"] is None else float(data["recordedArea"]),
             recorded_difference=UNSET if "recordedDifference" not in data else None if data["recordedDifference"] is None else float(data["recordedDifference"]),
+            share=UNSET if "share" not in data else None if data["share"] is None else ProgramUnitShare.from_json(data["share"]),
             wing=data.get("wing", UNSET),
         )
 
 
 @dataclass(kw_only=True, slots=True)
+class ProgramUnitShare(_Model):
+    """A unit's part of the common areas: its own rooms, its shares and their sum, m² as decimals."""
+    net: str
+    share: str
+    gross: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["net"] = self.net
+        out["share"] = self.share
+        out["gross"] = self.gross
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProgramUnitShare:
+        return cls(
+            net=data["net"],
+            share=data["share"],
+            gross=data["gross"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProgramWing(_Model):
-    """A wing of a building."""
+    """A wing of a building.
+    Attributes:
+        levels: The levels it spans (docs/adr/0784 §1), by their ids, each once; within its building's when the building names
+            any. None: not said.
+    """
     id: str
     name: str
+    levels: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["name"] = self.name
+        if self.levels is not UNSET:
+            out["levels"] = list(self.levels)
         return out
 
     @classmethod
@@ -49871,6 +50068,7 @@ class ProgramWing(_Model):
         return cls(
             id=data["id"],
             name=data["name"],
+            levels=list(data["levels"]) if "levels" in data else UNSET,
         )
 
 
@@ -88938,10 +89136,14 @@ __all__ = [
     "ProgramEdit",
     "ProgramEdited",
     "ProgramLink",
+    "ProgramPool",
+    "ProgramPoolShare",
+    "ProgramShares",
     "ProgramSpaceRow",
     "ProgramTotals",
     "ProgramUnit",
     "ProgramUnitRow",
+    "ProgramUnitShare",
     "ProgramWing",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
@@ -89311,6 +89513,8 @@ __all__ = [
     "ShapeWork",
     "ShapesEdit",
     "ShapesEdited",
+    "ShareRule",
+    "ShareRuleName",
     "SharpRectangleCorners",
     "SheetDeliveryResource",
     "SheetDeliveryResources",
