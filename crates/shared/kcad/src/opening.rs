@@ -41,6 +41,13 @@ pub(crate) struct OpeningRest {
     pub number: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub broken: Option<OpeningBreak>,
+    /// Schema 139 (docs/adr/0772): the version of the project type it follows, its exceptions, its construction.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub type_version: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub overrides: Vec<kentos_contracts::OpeningTypeField>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub build: Option<kentos_contracts::OpeningBuild>,
 }
 
 fn one() -> u8 {
@@ -87,6 +94,9 @@ impl OpeningRest {
             style: f.style.clone(),
             number: f.number.clone(),
             broken: f.broken,
+            type_version: f.type_version,
+            overrides: f.overrides.clone(),
+            build: f.build.clone(),
         }
     }
 
@@ -110,6 +120,9 @@ impl OpeningRest {
             inset: self.inset,
             style: self.style,
             number: self.number,
+            type_version: self.type_version,
+            overrides: self.overrides,
+            build: self.build,
             place,
             broken: self.broken,
         }

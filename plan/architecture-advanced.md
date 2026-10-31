@@ -159,7 +159,11 @@ değişmesin, mevcut serbest kenar korkuluğu izlesin. T birleşimi ve pencere
 sövesini 1:20/1:50/1:100 ekran ve PDF'de incele. Tip değişimi ve tek Undo,
 elle verilen düğüm kararını ve kaynak bağlarını geri getirsin.
 
-### ADV-03 — Gerçek kapı/pencere tipleri, örnek kontrolü ve net kullanım [ ]
+### ADV-03 — Gerçek kapı/pencere tipleri, örnek kontrolü ve net kullanım [~]
+
+_Durum (31 Ekim 2026, [ADR 0772](../docs/adr/0772-door-window-types-instances-clear-width.md)):_ tipler, örnek istisnası,
+dört en, yapı, takip raporu ve Kapılar denetimi yapıldı. Açık: bağımsız bölüm kapsamı (ADV-04), döner, cebe giren ve
+katlanır kapı, yatay kaydın çizimi, PDF metninin okunması, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Ofisin K01 kapısı tek yerde tanımlansın; kullanıcı hangi
 özelliğin tipe, hangisinin bu kapıya ait olduğunu bilsin. Dayanak A3.

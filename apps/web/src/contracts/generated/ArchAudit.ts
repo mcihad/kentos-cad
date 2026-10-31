@@ -45,6 +45,11 @@ profiles?: Array<string>,
  */
 minLength?: number, 
 /**
+ * A door's net clear width under this is said (docs/adr/0772 §5: the project's rule); metres, at least 0; absent:
+ * not measured.
+ */
+minClearWidth?: number, 
+/**
  * The part of the drawing reported on; absent: all of it.
  */
 within?: ArchAuditWithin, 

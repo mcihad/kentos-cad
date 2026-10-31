@@ -2305,6 +2305,21 @@ def document(d):
             or any(c.get("wrap") for st in d["settings"].get("wallStyles", []) for c in st["components"]):
         # A turning wall component, a node decision, a bound slab (docs/adr/0771).
         schema = max(schema, 138)
+
+    def typed(es):
+        for e in es:
+            if e["kind"] == "opening" and any(k in e for k in ("typeVersion", "overrides", "build")):
+                return True
+            src = (e.get("source") or {}) if e["kind"] == "table" else {}
+            if src.get("kind") == "schedule" and any(c["field"] in ("roughWidth", "unitWidth", "leafWidth", "clearWidth")
+                                                     for c in src.get("columns", [])):
+                return True
+        return False
+
+    if ((d["settings"].get("arch") or {}).get("openingTypes") or typed(d["entities"])
+            or any(typed(b["entities"]) for b in d.get("blocks") or [])):
+        # Door and window types, an opening following one or built, a schedule of widths (docs/adr/0772).
+        schema = max(schema, 139)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3018,7 +3033,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-139.kcad"] = container(root(cmap(parts), version=uint(139)))
+    files["schema-version-140.kcad"] = container(root(cmap(parts), version=uint(140)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5290,6 +5305,22 @@ def build():
     index_bad("unknown-field", lambda d: d["layers"][0]["indexes"][1].update(fields=["Renk"]))
     index_bad("nulls-equal-plain", lambda d: d["layers"][0]["indexes"][1].update(nullsEqual=True))
     index_bad("default-written", lambda d: d["layers"][0]["indexes"][1].update(unique=False))
+    # Schema 139 (docs/adr/0772): a door type K01, a door following it with its own frame and a construction; schema 138
+    # refuses them, a type without a version, an exception on an opening following nothing and a KentOS id too.
+    typed = load("opening-types.json")
+    ot = document(typed)
+    assert ot.count(b"\x67version\x18\x8b") == 1, "the types are schema 139"
+    out["opening-types.kcad"] = container(ot)
+    out["broken/opening-types-in-schema-138.kcad"] = container(ot.replace(b"\x67version\x18\x8b", b"\x67version\x18\x8a"))
+
+    def type_bad(name, change):
+        d = load("opening-types.json")
+        change(d)
+        out["broken/opening-types-" + name + ".kcad"] = container(document(d))
+    type_bad("kentos-id", lambda d: d["settings"]["arch"]["openingTypes"][0].update(id="kentos-k01"))
+    type_bad("version-zero", lambda d: d["settings"]["arch"]["openingTypes"][0].update(version=0))
+    type_bad("overrides-untyped", lambda d: d["entities"][1].pop("typeVersion"))
+    type_bad("build-empty", lambda d: d["entities"][1].update(build={}))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

@@ -66,6 +66,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (modül başına galeri ve öntanımlı pafta) web'de de kullanılabilir; web'in pafta kipi bugünkü gibi türe göre çalışır.
   Modül programları (tek `kentos-cad` dosyası, modül adlarıyla; ADR 0802 §1) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
   karşılığı yoktur.
+- ADR 0772 (ADV-03): web'de kapı ve pencere tipleri penceresi, `cad.openingtypes.edit` ve `cad.openings.query` işleyicileri,
+  açıklık yapısının (`build`) çizimi, Kapılar denetimi, Öznitelikler'in Tip bölümü, `.kcad` şema 139.
 - ADR 0771 (ADV-02): web'de duvar bileşeninin `wrap`'ıyla çizim (kapama çizgileri, dönüş gövdeleri), düğüm kararı satırları ve
   `cad.walls.joins` `nodes`, sabit referans (`keep`) ve etkisinin gösterimi, döşemenin `bound`'u (izleme, Sınır satırı, Kaynağa
   bağla/Ayır, kopukluk üçgeni), `.kcad` şema 138 okuma ve yazma.

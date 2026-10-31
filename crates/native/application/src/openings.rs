@@ -269,6 +269,9 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
         inset: None,
         style: None,
         number: None,
+        type_version: None,
+        overrides: Vec::new(),
+        build: None,
         place: Vec::new(),
         broken: None,
     };
@@ -305,7 +308,23 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
         f.swing = Some(v);
     }
     f.number.clone_from(&n.number);
+    set_build(&mut f, n.build.as_ref());
     f
+}
+
+/// The construction's fields given set over `f`'s (docs/adr/0772 §3).
+pub(crate) fn set_build(f: &mut OpeningFields, given: Option<&kentos_commands::OpeningBuild>) {
+    let Some(map) = given
+        .and_then(|b| serde_json::to_value(b).ok())
+        .and_then(|v| v.as_object().cloned())
+    else {
+        return;
+    };
+    for (k, v) in map {
+        if let Some(field) = kentos_commands::OpeningTypeField::ALL.into_iter().find(|x| x.name() == k) {
+            let _ = f.set_value(field, &v);
+        }
+    }
 }
 
 /// An opening's interval along its wall, for one a call gives where the input names it, and its fields.

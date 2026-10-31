@@ -88,7 +88,7 @@ use kentos_native_application::{
     layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
     layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define,
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
-    openings_edit, parcels, point, points_construct, polygon, polygon_regular, polyline,
+    openings_edit, opening_types_edit, openings_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
     settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, slabs_create,
     slabs_edit, snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit,
@@ -1575,6 +1575,29 @@ impl Input for kentos_commands::OpeningsDistancesInput {
     }
 }
 
+impl Input for kentos_commands::OpeningsQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::OpeningTypesEdit {
+    /// A define's or an update's change's numbers (docs/adr/0772).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let c = match &mut self.operation {
+            kentos_commands::OpeningTypesOperation::Define { change, .. } => change,
+            kentos_commands::OpeningTypesOperation::Update { change, .. } => change,
+            _ => return None,
+        };
+        match path.strip_prefix("operation.change.")? {
+            "width" => c.width.as_mut(),
+            "frame" => c.frame.as_mut()?.as_mut(),
+            "head" => c.head.as_mut()?.as_mut(),
+            _ => None,
+        }
+    }
+}
+
 impl Input for kentos_commands::CaseworkRun {
     /// `from.x` and `.y`, `through[i].x` and `.y`, `to.x` and `.y`, `module`, `depth`, `perModule[i].width`,
     /// `lineWeight` (docs/adr/0706, 0727).
@@ -1638,6 +1661,7 @@ impl Input for kentos_commands::ArchAudit {
             "minArea" => self.min_area.as_mut(),
             "minWidth" => self.min_width.as_mut(),
             "minLength" => self.min_length.as_mut(),
+            "minClearWidth" => self.min_clear_width.as_mut(),
             _ => None,
         }
     }
@@ -4225,6 +4249,13 @@ fn run_op(
         }
         kentos_commands::CAD_OPENINGS_DISTANCES => {
             run!(openings_distances, kentos_commands::OpeningsDistancesInput)
+        }
+        // Kapı ve pencere tipleri (docs/adr/0772).
+        kentos_commands::CAD_OPENING_TYPES_EDIT => {
+            run!(opening_types_edit, kentos_commands::OpeningTypesEdit)
+        }
+        kentos_commands::CAD_OPENINGS_QUERY => {
+            run!(openings_query, kentos_commands::OpeningsQuery)
         }
         kentos_commands::CAD_WALLS_DISTANCES => {
             run!(walls_distances, kentos_commands::WallsDistancesInput)

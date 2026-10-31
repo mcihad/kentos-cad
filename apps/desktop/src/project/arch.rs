@@ -197,6 +197,8 @@ pub fn read(
             .collect(),
         // The audit's exceptions are Denetim's, not this form's (docs/adr/0732 §3).
         audit_exceptions: Vec::new(),
+        // The door and window types are their window's (docs/adr/0772 §1).
+        opening_types: choices.map_or_else(Vec::new, |a| a.opening_types.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

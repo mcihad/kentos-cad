@@ -93,6 +93,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
+        min_clear_width: float | None | Unset = UNSET,
         min_length: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
         profiles: Sequence[str] | Unset = UNSET,
@@ -149,6 +150,8 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
                 absent: the project's ground level (the one at elevation 0, else its first).
             max_gap: A free wall end this near another wall's body, or another free end, is said; metres, at least 0. Unit: length.
             min_area: A space smaller than this is said; square metres, at least 0. Unit: area.
+            min_clear_width: A door's net clear width under this is said (docs/adr/0772 §5: the project's rule); metres, at least 0; absent:
+                not measured. Unit: length.
             min_length: An open wall shorter than this is said; metres, at least 0 (docs/adr/0732 §4). Unit: length.
             min_width: A space whose mean width (2 × area / perimeter) is less than this is said; metres, at least 0. Unit: length.
             profiles: The profiles the ramps and the stairs are measured against (docs/adr/0723 §4, 0724 §2), by their ids
@@ -172,6 +175,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             level=level,
             max_gap=max_gap,
             min_area=min_area,
+            min_clear_width=min_clear_width,
             min_length=min_length,
             min_width=min_width,
             profiles=_opt(profiles, lambda x: list(x)),
@@ -188,6 +192,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
+        min_clear_width: float | None | Unset = UNSET,
         min_length: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
         profiles: Sequence[str] | Unset = UNSET,
@@ -202,6 +207,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             level=level,
             max_gap=max_gap,
             min_area=min_area,
+            min_clear_width=min_clear_width,
             min_length=min_length,
             min_width=min_width,
             profiles=_opt(profiles, lambda x: list(x)),
@@ -218,6 +224,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
+        min_clear_width: float | None | Unset = UNSET,
         min_length: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
         profiles: Sequence[str] | Unset = UNSET,
@@ -232,6 +239,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             level=level,
             max_gap=max_gap,
             min_area=min_area,
+            min_clear_width=min_clear_width,
             min_length=min_length,
             min_width=min_width,
             profiles=_opt(profiles, lambda x: list(x)),
@@ -248,6 +256,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         level: str | None | Unset = UNSET,
         max_gap: float | None | Unset = UNSET,
         min_area: float | None | Unset = UNSET,
+        min_clear_width: float | None | Unset = UNSET,
         min_length: float | None | Unset = UNSET,
         min_width: float | None | Unset = UNSET,
         profiles: Sequence[str] | Unset = UNSET,
@@ -267,6 +276,7 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
             level=level,
             max_gap=max_gap,
             min_area=min_area,
+            min_clear_width=min_clear_width,
             min_length=min_length,
             min_width=min_width,
             profiles=_opt(profiles, lambda x: list(x)),

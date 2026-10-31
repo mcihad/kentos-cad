@@ -80,6 +80,7 @@ mod topology_incremental;
 mod topology_rules;
 mod vertex_points;
 mod vertex_table;
+mod opening_builds;
 mod openings;
 mod spaces;
 mod space_index;

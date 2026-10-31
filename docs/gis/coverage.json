@@ -453,9 +453,10 @@
     "mcp": true,
     "server": false
    },
-   "cases": 183,
+   "cases": 205,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.accessibility.json",
+    "fixtures/commands/v1/cad.arch.audit.doors.json",
     "fixtures/commands/v1/cad.arch.audit.json",
     "fixtures/commands/v1/cad.arch.audit.stairs.json",
     "fixtures/commands/v1/cad.arch.exceptions.json"
@@ -479,6 +480,11 @@
     {
      "key": "checks",
      "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "doors",
      "covered": false
     },
     {
@@ -793,6 +799,11 @@
     {
      "key": "checks",
      "value": "dimensions",
+     "covered": false
+    },
+    {
+     "key": "checks",
+     "value": "doors",
      "covered": false
     },
     {
@@ -4695,6 +4706,11 @@
     },
     {
      "key": "field",
+     "value": "clearWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "count",
      "covered": false
     },
@@ -4716,6 +4732,11 @@
     {
      "key": "field",
      "value": "height",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "leafWidth",
      "covered": false
     },
     {
@@ -4755,6 +4776,11 @@
     },
     {
      "key": "field",
+     "value": "roughWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "sill",
      "covered": false
     },
@@ -4776,6 +4802,11 @@
     {
      "key": "field",
      "value": "type",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "unitWidth",
      "covered": false
     },
     {
@@ -5712,8 +5743,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 214,
+   "cases": 215,
    "files": [
+    "fixtures/commands/v1/cad.arch.audit.doors.json",
     "fixtures/commands/v1/cad.arch.audit.json",
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.casework.edit.json",
@@ -6143,6 +6175,11 @@
     },
     {
      "key": "field",
+     "value": "clearWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "count",
      "covered": false
     },
@@ -6164,6 +6201,11 @@
     {
      "key": "field",
      "value": "height",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "leafWidth",
      "covered": false
     },
     {
@@ -6203,6 +6245,11 @@
     },
     {
      "key": "field",
+     "value": "roughWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "sill",
      "covered": false
     },
@@ -6224,6 +6271,11 @@
     {
      "key": "field",
      "value": "type",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "unitWidth",
      "covered": false
     },
     {
@@ -9859,7 +9911,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 1092,
+   "cases": 1097,
    "files": [
     "fixtures/commands/v1/cad.datasets.describe.json",
     "fixtures/commands/v1/cad.drawing.compare.json",
@@ -9880,6 +9932,9 @@
     "fixtures/commands/v1/cad.gis.takeback.json",
     "fixtures/commands/v1/cad.joins.query.json",
     "fixtures/commands/v1/cad.linearref.follow.json",
+    "fixtures/commands/v1/cad.openings.edit.types.json",
+    "fixtures/commands/v1/cad.openings.query.json",
+    "fixtures/commands/v1/cad.openingtypes.edit.json",
     "fixtures/commands/v1/cad.profiles.apply.json",
     "fixtures/commands/v1/cad.profiles.check.json",
     "fixtures/commands/v1/cad.profiles.migrate.json",
@@ -10875,6 +10930,11 @@
     },
     {
      "key": "on",
+     "value": "leave",
+     "covered": false
+    },
+    {
+     "key": "on",
      "value": "save",
      "covered": false
     },
@@ -11374,6 +11434,11 @@
     {
      "key": "new",
      "value": true,
+     "covered": false
+    },
+    {
+     "key": "on",
+     "value": "leave",
      "covered": false
     },
     {
@@ -13822,7 +13887,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 70,
+   "cases": 78,
    "files": [
     "fixtures/commands/v1/cad.arch.audit.accessibility.json",
     "fixtures/commands/v1/cad.arch.audit.stairs.json",
@@ -13832,6 +13897,10 @@
     "fixtures/commands/v1/cad.gis.takeback.json",
     "fixtures/commands/v1/cad.layers.set.json",
     "fixtures/commands/v1/cad.openings.edit.json",
+    "fixtures/commands/v1/cad.openings.edit.types.json",
+    "fixtures/commands/v1/cad.openings.query.json",
+    "fixtures/commands/v1/cad.openingtypes.edit.json",
+    "fixtures/commands/v1/cad.records.duplicate.indexes.json",
     "fixtures/commands/v1/cad.records.duplicate.json",
     "fixtures/commands/v1/cad.slabs.edit.json",
     "fixtures/commands/v1/cad.sources.sync.renamed.json",
@@ -15153,13 +15222,14 @@
     "mcp": true,
     "server": false
    },
-   "cases": 517,
+   "cases": 521,
    "files": [
     "fixtures/commands/v1/cad.casework.edit.json",
     "fixtures/commands/v1/cad.casework.run.json",
     "fixtures/commands/v1/cad.dimensionsets.create.span.json",
     "fixtures/commands/v1/cad.openings.create.json",
     "fixtures/commands/v1/cad.openings.edit.json",
+    "fixtures/commands/v1/cad.openings.edit.types.json",
     "fixtures/commands/v1/cad.schedules.create.json",
     "fixtures/commands/v1/cad.schedules.edit.json",
     "fixtures/commands/v1/cad.spaces.quantities.json",
@@ -15262,6 +15332,21 @@
      "key": "side",
      "value": "right",
      "covered": true
+    },
+    {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
+     "covered": false
     }
    ],
    "kinds": []
@@ -15311,10 +15396,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 126,
+   "cases": 156,
    "files": [
+    "fixtures/commands/v1/cad.arch.audit.doors.json",
     "fixtures/commands/v1/cad.openings.edit.distance.json",
-    "fixtures/commands/v1/cad.openings.edit.json"
+    "fixtures/commands/v1/cad.openings.edit.json",
+    "fixtures/commands/v1/cad.openings.edit.types.json"
    ],
    "options": [
     {
@@ -15384,6 +15471,11 @@
     },
     {
      "key": "kind",
+     "value": "detach",
+     "covered": true
+    },
+    {
+     "key": "kind",
      "value": "distance",
      "covered": true
     },
@@ -15404,6 +15496,16 @@
     },
     {
      "key": "kind",
+     "value": "push",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "refresh",
+     "covered": true
+    },
+    {
+     "key": "kind",
      "value": "rehost",
      "covered": true
     },
@@ -15415,6 +15517,11 @@
     {
      "key": "kind",
      "value": "replaceType",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "reset",
      "covered": true
     },
     {
@@ -15468,6 +15575,21 @@
      "covered": false
     },
     {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
+     "covered": false
+    },
+    {
      "key": "to",
      "value": "face",
      "covered": false
@@ -15476,6 +15598,111 @@
      "key": "to",
      "value": "grid",
      "covered": true
+    },
+    {
+     "key": "unset",
+     "value": "casing",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "depth",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "fit",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "frame",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "frameDepth",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "frameOffset",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "head",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "leafThickness",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "leaves",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "mullions",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "operation",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "showSwing",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "sill",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "sillBoard",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "sizeBy",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "split",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "swing",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "threshold",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "transoms",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "useZone",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "width",
+     "covered": false
     },
     {
      "key": "what",
@@ -15496,9 +15723,324 @@
    "kinds": [
     {
      "kind": "opening",
-     "covered": false
+     "covered": true
     }
    ]
+  },
+  {
+   "id": "cad.openings.query",
+   "title": "Açıklıkları oku",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 46,
+   "files": [
+    "fixtures/commands/v1/cad.openings.query.json"
+   ],
+   "options": [
+    {
+     "key": "form",
+     "value": "door",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "flue",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "niche",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "window",
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "opening",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.openingtypes.edit",
+   "title": "Kapı ve pencere tipleri",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 61,
+   "files": [
+    "fixtures/commands/v1/cad.openings.edit.types.json",
+    "fixtures/commands/v1/cad.openings.query.json",
+    "fixtures/commands/v1/cad.openingtypes.edit.json"
+   ],
+   "options": [
+    {
+     "key": "by",
+     "value": "leaf",
+     "covered": true
+    },
+    {
+     "key": "by",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "by",
+     "value": "unit",
+     "covered": true
+    },
+    {
+     "key": "detach",
+     "value": true,
+     "covered": true
+    },
+    {
+     "key": "form",
+     "value": "door",
+     "covered": true
+    },
+    {
+     "key": "form",
+     "value": "flue",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "niche",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "window",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "define",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "export",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "import",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "remove",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "rename",
+     "covered": true
+    },
+    {
+     "key": "kind",
+     "value": "update",
+     "covered": true
+    },
+    {
+     "key": "onConflict",
+     "value": "refuse",
+     "covered": true
+    },
+    {
+     "key": "onConflict",
+     "value": "rename",
+     "covered": true
+    },
+    {
+     "key": "onConflict",
+     "value": "replace",
+     "covered": true
+    },
+    {
+     "key": "onConflict",
+     "value": "skip",
+     "covered": true
+    },
+    {
+     "key": "onRefused",
+     "value": "skip",
+     "covered": true
+    },
+    {
+     "key": "onRefused",
+     "value": "stop",
+     "covered": true
+    },
+    {
+     "key": "operation",
+     "value": "fixed",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "slide",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "swing",
+     "covered": false
+    },
+    {
+     "key": "showSwing",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "casing",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "depth",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "fit",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "frame",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "frameDepth",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "frameOffset",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "head",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "leafThickness",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "leaves",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "mullions",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "operation",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "showSwing",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "sill",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "sillBoard",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "sizeBy",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "split",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "swing",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "threshold",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "transoms",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "useZone",
+     "covered": false
+    },
+    {
+     "key": "unset",
+     "value": "width",
+     "covered": false
+    }
+   ],
+   "kinds": []
   },
   {
    "id": "cad.parameters.edit",
@@ -17616,8 +18158,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 38,
+   "cases": 71,
    "files": [
+    "fixtures/commands/v1/cad.records.duplicate.indexes.json",
     "fixtures/commands/v1/cad.records.duplicate.json"
    ],
    "options": [
@@ -18052,6 +18595,11 @@
     },
     {
      "key": "field",
+     "value": "clearWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "count",
      "covered": true
     },
@@ -18073,6 +18621,11 @@
     {
      "key": "field",
      "value": "height",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "leafWidth",
      "covered": false
     },
     {
@@ -18112,6 +18665,11 @@
     },
     {
      "key": "field",
+     "value": "roughWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "sill",
      "covered": false
     },
@@ -18134,6 +18692,11 @@
      "key": "field",
      "value": "type",
      "covered": true
+    },
+    {
+     "key": "field",
+     "value": "unitWidth",
+     "covered": false
     },
     {
      "key": "field",
@@ -18308,6 +18871,11 @@
     },
     {
      "key": "field",
+     "value": "clearWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "count",
      "covered": true
     },
@@ -18329,6 +18897,11 @@
     {
      "key": "field",
      "value": "height",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "leafWidth",
      "covered": false
     },
     {
@@ -18368,6 +18941,11 @@
     },
     {
      "key": "field",
+     "value": "roughWidth",
+     "covered": false
+    },
+    {
+     "key": "field",
      "value": "sill",
      "covered": false
     },
@@ -18389,6 +18967,11 @@
     {
      "key": "field",
      "value": "type",
+     "covered": false
+    },
+    {
+     "key": "field",
+     "value": "unitWidth",
      "covered": false
     },
     {
@@ -18818,6 +19401,31 @@
      "covered": true
     },
     {
+     "key": "form",
+     "value": "door",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "flue",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "niche",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "window",
+     "covered": false
+    },
+    {
      "key": "kind",
      "value": "ellipsoidal",
      "covered": true
@@ -18868,6 +19476,21 @@
      "covered": true
     },
     {
+     "key": "operation",
+     "value": "fixed",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "slide",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "swing",
+     "covered": false
+    },
+    {
      "key": "phaseView",
      "value": "all",
      "covered": false
@@ -18906,6 +19529,26 @@
      "key": "projectType",
      "value": "plan3d",
      "covered": true
+    },
+    {
+     "key": "showSwing",
+     "value": true,
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
+     "covered": false
     },
     {
      "key": "spaceMethod",
@@ -29524,6 +30167,31 @@
      "covered": false
     },
     {
+     "key": "form",
+     "value": "door",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "flue",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "niche",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "window",
+     "covered": false
+    },
+    {
      "key": "fridge",
      "value": "end",
      "covered": false
@@ -30550,6 +31218,11 @@
     },
     {
      "key": "on",
+     "value": "leave",
+     "covered": false
+    },
+    {
+     "key": "on",
      "value": "save",
      "covered": false
     },
@@ -30610,12 +31283,27 @@
     },
     {
      "key": "operation",
+     "value": "fixed",
+     "covered": false
+    },
+    {
+     "key": "operation",
      "value": "merge",
      "covered": false
     },
     {
      "key": "operation",
+     "value": "slide",
+     "covered": false
+    },
+    {
+     "key": "operation",
      "value": "split",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "swing",
      "covered": false
     },
     {
@@ -30939,6 +31627,11 @@
      "covered": false
     },
     {
+     "key": "showSwing",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "side",
      "value": "left",
      "covered": false
@@ -30946,6 +31639,21 @@
     {
      "key": "side",
      "value": "right",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
      "covered": false
     },
     {
@@ -32081,6 +32789,31 @@
      "covered": false
     },
     {
+     "key": "form",
+     "value": "door",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "flue",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "niche",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "window",
+     "covered": false
+    },
+    {
      "key": "fridge",
      "value": "end",
      "covered": false
@@ -33107,6 +33840,11 @@
     },
     {
      "key": "on",
+     "value": "leave",
+     "covered": false
+    },
+    {
+     "key": "on",
      "value": "save",
      "covered": false
     },
@@ -33167,12 +33905,27 @@
     },
     {
      "key": "operation",
+     "value": "fixed",
+     "covered": false
+    },
+    {
+     "key": "operation",
      "value": "merge",
      "covered": false
     },
     {
      "key": "operation",
+     "value": "slide",
+     "covered": false
+    },
+    {
+     "key": "operation",
      "value": "split",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "swing",
      "covered": false
     },
     {
@@ -33496,6 +34249,11 @@
      "covered": false
     },
     {
+     "key": "showSwing",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "side",
      "value": "left",
      "covered": false
@@ -33503,6 +34261,21 @@
     {
      "key": "side",
      "value": "right",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
      "covered": false
     },
     {
@@ -34653,6 +35426,31 @@
      "covered": false
     },
     {
+     "key": "form",
+     "value": "door",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "flue",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "niche",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "opening",
+     "covered": false
+    },
+    {
+     "key": "form",
+     "value": "window",
+     "covered": false
+    },
+    {
      "key": "fridge",
      "value": "end",
      "covered": false
@@ -35474,6 +36272,11 @@
     },
     {
      "key": "on",
+     "value": "leave",
+     "covered": false
+    },
+    {
+     "key": "on",
      "value": "save",
      "covered": false
     },
@@ -35514,12 +36317,27 @@
     },
     {
      "key": "operation",
+     "value": "fixed",
+     "covered": false
+    },
+    {
+     "key": "operation",
      "value": "merge",
      "covered": false
     },
     {
      "key": "operation",
+     "value": "slide",
+     "covered": false
+    },
+    {
+     "key": "operation",
      "value": "split",
+     "covered": false
+    },
+    {
+     "key": "operation",
+     "value": "swing",
      "covered": false
     },
     {
@@ -35873,6 +36691,11 @@
      "covered": false
     },
     {
+     "key": "showSwing",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "side",
      "value": "left",
      "covered": false
@@ -35880,6 +36703,21 @@
     {
      "key": "side",
      "value": "right",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "leaf",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "rough",
+     "covered": false
+    },
+    {
+     "key": "sizeBy",
+     "value": "unit",
      "covered": false
     },
     {

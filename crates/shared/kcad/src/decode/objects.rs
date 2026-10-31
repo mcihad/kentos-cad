@@ -327,6 +327,7 @@ pub(super) struct Features {
     pub(super) arch_bonds: bool,
     /// Schema 138 (docs/adr/0771): turning wall components, node decisions, bound slabs.
     pub(super) building_parts: bool,
+    pub(super) opening_types: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -530,6 +531,7 @@ impl Features {
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
+            opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,
@@ -2238,6 +2240,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 139 (docs/adr/0772): an opening following a type or built, a schedule of an opening's widths.
+    if kentos_contracts::needs_opening_types(&entity) && !has.opening_types {
+        return Err(r.fail(
+            Code::UnknownField,
+            "açıklığın tipi (typeVersion, overrides), yapısı (build) ve çizelgenin genişlik sütunları şema 139 ister",
         ));
     }
     // Schema 119 (docs/adr/0719): a niche, a flue, a depth, an inset, an opening too deep.

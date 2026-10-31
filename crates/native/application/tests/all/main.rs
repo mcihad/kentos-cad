@@ -82,6 +82,7 @@ mod viewport_identity;
 mod drawing_set;
 
 mod opening_array;
+mod opening_types_timing;
 
 mod wall_contours;
 

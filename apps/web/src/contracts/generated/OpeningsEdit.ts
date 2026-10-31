@@ -7,8 +7,10 @@ import type { OpeningsOperation } from "./OpeningsOperation";
  *
  * Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
  * `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
- * `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`; on the desktop also
- * `slots_exhausted`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
+ * `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since
+ * docs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,
+ * `level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a
+ * following opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
  * one changed to a form that goes through drops its depth and inset (docs/adr/0719).
  */
 export type OpeningsEdit = { uids?: Array<string>, operation: OpeningsOperation, expectedRevision?: string, };

@@ -2440,6 +2440,41 @@
         "cad.spaces.number"
       ],
       "note": "Açık UUID tıklama sırası veya iki nokta yönü; numara, çakışma ve tek undo aynı native komut planından (ADR 0682)."
+    },
+    "arch.openingTypes": {
+      "level": "semantic",
+      "via": [
+        "cad.openingtypes.edit"
+      ],
+      "note": "Pencerenin tanımı, değişikliği, adı, silmesi ve kitaplığı; önizleme komutun planından (ADR 0772 §1, §4)."
+    },
+    "arch.openingSameType": {
+      "level": "query",
+      "via": [
+        "cad.openings.query"
+      ],
+      "note": "Seçili açıklığın tipiyle ve kapsamla sorulur; seçim oturumun (ADR 0772 §4)."
+    },
+    "arch.openingDetach": {
+      "level": "semantic",
+      "via": [
+        "cad.openings.edit"
+      ],
+      "note": "Seçili açıklıklar detach işlemiyle (ADR 0772 §1)."
+    },
+    "arch.openingPush": {
+      "level": "semantic",
+      "via": [
+        "cad.openings.edit"
+      ],
+      "note": "Seçili açıklık push işlemiyle (ADR 0772 §1)."
+    },
+    "arch.openingReset": {
+      "level": "semantic",
+      "via": [
+        "cad.openings.edit"
+      ],
+      "note": "Seçili açıklıklar reset işlemiyle (ADR 0772 §1)."
     }
   },
   "tools": {

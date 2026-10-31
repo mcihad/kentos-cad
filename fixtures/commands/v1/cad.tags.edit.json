@@ -3624,7 +3624,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_tag",
-              "message": "Şablonda bilinmeyen yer “{foo}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, attr:Ad.",
+              "message": "Şablonda bilinmeyen yer “{foo}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, attr:Ad.",
               "path": "change.content"
             }
           },

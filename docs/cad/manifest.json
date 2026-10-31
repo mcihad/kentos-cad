@@ -189,6 +189,86 @@
    "tests": 0
   },
   {
+   "id": "arch.openingDetach",
+   "kind": "command",
+   "title": "Tipten ayır",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Seçili açıklıklar detach işlemiyle (ADR 0772 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.openingPush",
+   "kind": "command",
+   "title": "Tipe uygula",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Seçili açıklık push işlemiyle (ADR 0772 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.openingReset",
+   "kind": "command",
+   "title": "Tipe döndür",
+   "level": "semantic",
+   "via": [
+    "cad.openings.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.edit",
+   "mcp": "cad.openings.edit",
+   "note": "Seçili açıklıklar reset işlemiyle (ADR 0772 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.openingSameType",
+   "kind": "command",
+   "title": "Aynı tiptekileri seç",
+   "level": "query",
+   "via": [
+    "cad.openings.query"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openings.query",
+   "mcp": "cad.openings.query",
+   "note": "Seçili açıklığın tipiyle ve kapsamla sorulur; seçim oturumun (ADR 0772 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.openingTypes",
+   "kind": "command",
+   "title": "Kapı ve pencere tipleri",
+   "level": "semantic",
+   "via": [
+    "cad.openingtypes.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openingtypes.edit",
+   "mcp": "cad.openingtypes.edit",
+   "note": "Pencerenin tanımı, değişikliği, adı, silmesi ve kitaplığı; önizleme komutun planından (ADR 0772 §1, §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.phase.all",
    "kind": "command",
    "title": "Evre: Tümü",

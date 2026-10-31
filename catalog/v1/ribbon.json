@@ -1751,7 +1751,8 @@
        }
       ],
       "overflow": [
-       "arch.sheetSet"
+       "arch.sheetSet",
+       "arch.openingTypes"
       ]
      }
     ],
@@ -5964,6 +5965,35 @@
       },
       {
        "command": "tool.scheduleOpenings",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Tip",
+     "icon": "openingTypes",
+     "items": [
+      {
+       "command": "arch.openingTypes",
+       "size": "large"
+      },
+      {
+       "command": "arch.openingSameType",
+       "size": "small"
+      },
+      {
+       "command": "arch.openingDetach",
+       "size": "small"
+      },
+      {
+       "command": "arch.openingPush",
+       "size": "small"
+      },
+      {
+       "command": "arch.openingReset",
        "size": "small"
       }
      ],

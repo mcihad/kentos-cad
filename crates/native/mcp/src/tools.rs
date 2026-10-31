@@ -659,6 +659,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.walls.convert"
             // An opening's fields, place and wall changed (docs/adr/0341 §4).
             | "cad.openings.edit"
+            // A type's change rewrites the openings following it; remove detaches them (docs/adr/0772).
+            | "cad.openingtypes.edit"
             // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
             | "cad.spaces.edit"
             | "cad.spaces.separators"

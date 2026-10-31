@@ -67,10 +67,38 @@ pub enum ArchAuditCheck {
     Ramps,
     /// Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).
     Casework,
+    /// Doors (docs/adr/0772 §5): a leaf's sweep clashing (physical), a use zone taken (passage), a net clear width
+    /// under the rule given (`minClearWidth`); checked only when asked by name.
+    Doors,
+}
+
+/// What kind of problem a door finding is (docs/adr/0772 §5): kept apart, never one for another.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ArchAuditNature {
+    /// Fiziksel çarpışma: two things in one place.
+    Physical,
+    /// Net geçiş: the room a door's use needs.
+    Passage,
+    /// Proje kuralı: a measure under the rule the audit was given.
+    Rule,
+}
+
+impl ArchAuditNature {
+    pub fn label(self) -> &'static str {
+        match self {
+            ArchAuditNature::Physical => "Fiziksel çarpışma",
+            ArchAuditNature::Passage => "Net geçiş",
+            ArchAuditNature::Rule => "Proje kuralı",
+        }
+    }
 }
 
 impl ArchAuditCheck {
-    pub const ALL: [ArchAuditCheck; 14] = [
+    pub const ALL: [ArchAuditCheck; 15] = [
         ArchAuditCheck::Walls,
         ArchAuditCheck::Openings,
         ArchAuditCheck::Spaces,
@@ -85,6 +113,7 @@ impl ArchAuditCheck {
         ArchAuditCheck::Stairs,
         ArchAuditCheck::Ramps,
         ArchAuditCheck::Casework,
+        ArchAuditCheck::Doors,
     ];
 
     /// Its name on the wire.
@@ -104,6 +133,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Stairs => "stairs",
             ArchAuditCheck::Ramps => "ramps",
             ArchAuditCheck::Casework => "casework",
+            ArchAuditCheck::Doors => "doors",
         }
     }
 
@@ -124,6 +154,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Stairs => "Merdivenler",
             ArchAuditCheck::Ramps => "Rampalar",
             ArchAuditCheck::Casework => "Mutfak dizileri",
+            ArchAuditCheck::Doors => "Kapılar",
         }
     }
 }
@@ -212,6 +243,12 @@ pub struct ArchAudit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_length: Option<f64>,
+    /// A door's net clear width under this is said (docs/adr/0772 §5: the project's rule); metres, at least 0; absent:
+    /// not measured.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub min_clear_width: Option<f64>,
     /// The part of the drawing reported on; absent: all of it.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -282,6 +319,10 @@ pub struct ArchAuditFinding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub note: Option<String>,
+    /// A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub nature: Option<ArchAuditNature>,
 }
 
 /// Output of `cad.arch.audit` v1 (its plan's too).

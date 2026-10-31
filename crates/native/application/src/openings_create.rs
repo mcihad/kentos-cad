@@ -171,11 +171,48 @@ fn check(doc: &Document, input: &OpeningsCreate) -> Result<Checked, Stop> {
             }
         }
         let (_, _, line) = openings::wall_at(doc, &n.host, &format!("{at}.host"))?;
-        let kind = match &n.kind {
-            Some(key) => openings::find_type(key, &format!("{at}.type"))?,
-            None => openings::first_type(n.form.unwrap_or(OpeningForm::Door)),
+        // A project type's opening follows it (docs/adr/0772 §1): the values given over its own are its exceptions.
+        let project = n.kind.as_deref().and_then(|k| crate::opening_types::project_type(doc, k));
+        let kind = match (&n.kind, &project) {
+            (_, Some(t)) => kentos_commands::OpeningTypeDef {
+                id: t.id.clone(),
+                name: t.name.clone(),
+                form: t.form,
+                width: t.width,
+                leaves: t.leaves,
+                operation: t.operation,
+                swing: t.swing,
+                frame: t.frame,
+                sill: t.sill,
+                head: t.head,
+                depth: t.depth,
+            },
+            (Some(key), None) => openings::find_type(key, &format!("{at}.type"))?,
+            (None, None) => openings::first_type(n.form.unwrap_or(OpeningForm::Door)),
         };
         let mut f = openings::fields_of(n, &kind);
+        if let Some(t) = &project {
+            if n.form.is_some_and(|v| v != t.form) {
+                return Err(fail(
+                    codes::OPENING_TYPE_FORM,
+                    format!(
+                        "“{}” tipi {}; açıklığın biçimi tipindir. Biçimi vermeyin ya da o biçimde bir tip seçin.",
+                        t.name,
+                        t.form.label().to_lowercase()
+                    ),
+                    &format!("{at}.form"),
+                ));
+            }
+            f.show_swing = t.show_swing;
+            let given = f.build.take();
+            f.build = t.build.clone();
+            openings::set_build(&mut f, given.as_ref());
+            f.type_version = Some(t.version);
+            f.overrides = kentos_commands::OpeningTypeField::ALL
+                .into_iter()
+                .filter(|k| f.value(*k) != t.value(*k))
+                .collect();
+        }
         let (centre, side) = if let Some(span) = n.span {
             let (centre, width, side) = crate::opening_placement::span(&line, span, n.point, &at)?;
             f.width = width;

@@ -45,6 +45,26 @@ pub fn spec(o: &OpeningFields) -> Spec {
         head: o.head,
         depth: o.depth,
         inset: o.inset,
+        build: build(o.build.as_ref()),
+    }
+}
+
+/// What plan draws of its construction (docs/adr/0772 §3).
+pub fn build(b: Option<&kentos_contracts::OpeningBuild>) -> opening::Build {
+    let Some(b) = b else {
+        return opening::Build::default();
+    };
+    opening::Build {
+        fit: b.fit.unwrap_or(0.0),
+        leaf_thickness: b.leaf_thickness,
+        split: b.split,
+        frame_depth: b.frame_depth,
+        frame_offset: b.frame_offset,
+        threshold: b.threshold,
+        casing: b.casing,
+        sill_board: b.sill_board,
+        mullions: b.mullions.unwrap_or(0),
+        use_zone: b.use_zone,
     }
 }
 

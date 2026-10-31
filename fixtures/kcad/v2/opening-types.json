@@ -1,0 +1,168 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kapı tipi",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "openingTypes": [
+        {
+          "id": "k01",
+          "name": "K01",
+          "version": 2,
+          "source": "Ofis 2026",
+          "form": "door",
+          "width": 1.02,
+          "frame": 0.05,
+          "head": 2.1,
+          "build": {
+            "sizeBy": "leaf",
+            "fit": 0.01,
+            "leafThickness": 0.04,
+            "useZone": 1.2
+          }
+        },
+        {
+          "id": "p01",
+          "name": "P01",
+          "version": 1,
+          "form": "window",
+          "width": 1.2,
+          "leaves": 2,
+          "frame": 0.06,
+          "sill": 0.9,
+          "head": 2.2,
+          "build": {
+            "mullions": 1,
+            "sillBoard": 0.05
+          }
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#1E88E5",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000071",
+    "0192f5a1-2590-7000-8000-000000000072"
+  ],
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.3,
+      "justify": "center"
+    },
+    {
+      "kind": "opening",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-2590-7000-8000-000000000071",
+      "at": 1.5,
+      "width": 1.02,
+      "form": "door",
+      "frame": 0.07,
+      "head": 2.1,
+      "style": "k01",
+      "number": "K1",
+      "typeVersion": 1,
+      "overrides": [
+        "frame"
+      ],
+      "build": {
+        "sizeBy": "leaf",
+        "fit": 0.01,
+        "leafThickness": 0.04,
+        "useZone": 1.2
+      },
+      "place": [
+        {
+          "x": 0.99,
+          "y": 0.15
+        },
+        {
+          "x": 0.99,
+          "y": -0.15
+        },
+        {
+          "x": 2.01,
+          "y": 0.15
+        },
+        {
+          "x": 2.01,
+          "y": -0.15
+        }
+      ]
+    }
+  ]
+}

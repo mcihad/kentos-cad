@@ -87,6 +87,7 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
+    ("cad.openings.edit", "opening_type_not_found", "Tipe döndür, Tipi yeniden uygula ve Tipe uygula açıklığın izlediği tipi projenin tablosunda arar; tip silinirken izleyenler ondan ayrıldığı (opening_type_in_use, detach) için komutlarla tipsiz izleyen kalmaz. Ret yalnız elle yazılmış bir dosyanın açıklığına karşı savunmadır; aynı arama cad.openingtypes.edit'in update ve cad.openings.query'nin type durumlarında verilir (ADR 0772)."),
     ("cad.addresses.compare", "register_cut", "Uyarı 250 000 satırdan uzun kayıtta verilir; o boyda bir dosya ortak durumlara konmaz, addresses_compare.rs'in a_register_longer_than_is_read_says_so testi sınırdan uzun bir kayıtla sınar (ADR 0736)."),
     ("file.export.block", "dimension_set_owned", "Dosya yazımı ve mevcut dosyanın korunumu headless dimension_set_exports.rs içinde gerçek validate/plan/execute + açık detach sonrası byte doğrulamasıyla sınanır (ADR0695)."),
     ("cad.entities.copy", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),

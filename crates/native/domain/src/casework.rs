@@ -1133,6 +1133,7 @@ impl Document {
             let Some(tie) = tie else { continue };
             legs[j].wall = Some(tie.wall.to_text());
             warnings.extend(self.casework_clashes(tie.wall, &frames[j], j, n));
+            warnings.extend(self.casework_swing_clashes(tie.wall, &frames[j], depth, j, n));
         }
         // Its modules stand on their wall's level (docs/adr/0733 §1): the first wall's.
         let level = ties.iter().flatten().find_map(|t| {
@@ -1227,6 +1228,39 @@ impl Document {
             out.push(CaseworkWarning {
                 code: codes::CASEWORK_CLASH,
                 message,
+                path: if n > 1 { leg_path(j, n) } else { "to".into() },
+            });
+        }
+        out
+    }
+
+    /// The leg `j` of `n` in the sweep of a door of another wall (docs/adr/0772 §5): its leaf, opening, strikes the run.
+    fn casework_swing_clashes(&self, wall: EntityId, f: &Frame, depth: f64, j: usize, n: usize) -> Vec<CaseworkWarning> {
+        use kentos_geometry_core::Vec2 as V;
+        let host = wall.to_text();
+        let at = |a: f64, b: f64| V::new(f.from.x + f.along.x * a + f.into.x * b, f.from.y + f.along.y * a + f.into.y * b);
+        // The run's footprint, a millimetre in from each side: touching is no clash.
+        let s = 0.001;
+        let run = [at(s, s), at(f.length - s, s), at(f.length - s, depth - s), at(s, depth - s)];
+        let mut out = Vec::new();
+        for st in self.store.iter() {
+            let Entity::Opening(o) = &*st.entity else { continue };
+            let o = &o.opening;
+            if o.host == host || o.form != OpeningForm::Door || o.place.len() != 4 || o.broken.is_some() {
+                continue;
+            }
+            let place: Vec<V> = o.place.iter().map(|p| V::new(p.x, p.y)).collect();
+            let spec = kentos_formats::openings::spec(o);
+            let hit = kentos_geometry_core::geom::opening::swing_zones(&place, &spec)
+                .iter()
+                .any(|z| rings_meet(z, &run));
+            if !hit {
+                continue;
+            }
+            let mark = o.number.clone().unwrap_or_else(|| "numarasız".into());
+            out.push(CaseworkWarning {
+                code: codes::CASEWORK_CLASH,
+                message: format!("{}. kol {mark} kapısının kanadının açılma alanına giriyor.", j + 1),
                 path: if n > 1 { leg_path(j, n) } else { "to".into() },
             });
         }
@@ -1716,4 +1750,29 @@ fn followed_path(
     out.extend(corners.into_iter().map(wire));
     out.push(wire(end));
     Some(out)
+}
+
+/// Whether two rings meet: an edge of one crosses one of the other's, or a point of one is inside the other.
+fn rings_meet(a: &[kentos_geometry_core::Vec2], b: &[kentos_geometry_core::Vec2]) -> bool {
+    use kentos_geometry_core::Vec2 as V;
+    let cross = |o: V, p: V, q: V| (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);
+    let crosses = |p: V, q: V, r: V, t: V| {
+        let (d1, d2, d3, d4) = (cross(r, t, p), cross(r, t, q), cross(p, q, r), cross(p, q, t));
+        ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0)) && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
+    };
+    let inside = |ring: &[V], p: V| {
+        let mut odd = false;
+        let n = ring.len();
+        for i in 0..n {
+            let (u, v) = (ring[i], ring[(i + n - 1) % n]);
+            if (u.y > p.y) != (v.y > p.y) && p.x < (v.x - u.x) * (p.y - u.y) / (v.y - u.y) + u.x {
+                odd = !odd;
+            }
+        }
+        odd
+    };
+    let (n, m) = (a.len(), b.len());
+    (0..n).any(|i| (0..m).any(|k| crosses(a[i], a[(i + 1) % n], b[k], b[(k + 1) % m])))
+        || a.iter().any(|p| inside(b, *p))
+        || b.iter().any(|p| inside(a, *p))
 }

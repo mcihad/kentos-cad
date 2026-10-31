@@ -27,11 +27,29 @@ mod array;
 
 pub const STEP: &str = "Açıklığı düzenle";
 
-/// What an edit writes: the openings changed (each its slot and where the input names it) and the new ones.
+/// What an edit writes: the openings changed (each its slot and where the input names it) and the new ones; Tipe
+/// uygula's types and its report (docs/adr/0772), the warnings.
 #[derive(Default)]
 struct Work {
     updates: Vec<(Slot, OpeningEntity, String)>,
     added: Vec<(OpeningEntity, String)>,
+    types: Option<Vec<kentos_commands::OpeningType>>,
+    report: Option<kentos_commands::OpeningTypeReport>,
+    warnings: Vec<kentos_commands::CommandWarning>,
+}
+
+/// Whether the opening is of the type `from` names: its style is the project type's id or KentOS's (by id or name), or
+/// the words themselves.
+fn of_type(doc: &Document, o: &OpeningFields, from: &str) -> bool {
+    match crate::opening_types::project_type(doc, from) {
+        Some(t) => o.style.as_deref() == Some(t.id.as_str()),
+        None => openings::type_matches(o, from),
+    }
+}
+
+/// Whether the opening is on `level` (its wall's; none: on none); any when no level is given.
+fn on_level(doc: &Document, o: &OpeningFields, level: Option<&Option<String>>) -> bool {
+    level.is_none_or(|want| *want == crate::opening_types::level_of(doc, o))
 }
 
 /// `o` with `c`'s fields.
@@ -79,6 +97,21 @@ fn changed(o: &OpeningFields, c: &OpeningChange) -> OpeningFields {
     if let Some(v) = &c.number {
         f.number.clone_from(v);
     }
+    // Its construction (docs/adr/0772 §3): the fields given set, those unset taken away.
+    if let Some(b) = &c.build
+        && let Some(map) = serde_json::to_value(b).ok().and_then(|v| v.as_object().cloned())
+    {
+        for (k, v) in map {
+            if let Some(field) = kentos_commands::OpeningTypeField::ALL.into_iter().find(|x| x.name() == k) {
+                let _ = f.set_value(field, &v);
+            }
+        }
+    }
+    for k in &c.unset {
+        if k.in_build() {
+            let _ = f.set_value(*k, &serde_json::Value::Null);
+        }
+    }
     // A form changed keeps its depth and inset in step (docs/adr/0719 §1).
     if c.form.is_some() {
         openings::recess_follows_form(&mut f, c.depth.is_some(), c.inset.is_some());
@@ -120,10 +153,33 @@ fn named_uids(doc: &Document, input: &OpeningsEdit) -> Result<Vec<String>, Stop>
     }
     let pick: Option<Pick> = match &input.operation {
         OpeningsOperation::ReplaceType {
-            from: Some(from), ..
+            from: Some(from), level, ..
         } => {
+            // A project type's id, KentOS's type by id or name, or the words themselves (docs/adr/0772 §4).
+            let id = crate::opening_types::project_type(doc, from).map(|t| t.id);
             let from = from.clone();
-            Some(Box::new(move |o| openings::type_matches(o, &from)))
+            let levels: Option<std::collections::HashMap<String, Option<String>>> = level.as_ref().map(|_| {
+                doc.entities()
+                    .filter_map(|e| match e {
+                        Entity::Opening(o) => {
+                            Some((o.opening.host.clone(), crate::opening_types::level_of(doc, &o.opening)))
+                        }
+                        _ => None,
+                    })
+                    .collect()
+            });
+            let level = level.clone();
+            Some(Box::new(move |o| {
+                let of = match &id {
+                    Some(id) => o.style.as_deref() == Some(id.as_str()),
+                    None => openings::type_matches(o, &from),
+                };
+                let here = match (&level, &levels) {
+                    (Some(want), Some(map)) => map.get(&o.host).is_some_and(|l| l == want),
+                    _ => true,
+                };
+                of && here
+            }))
         }
         OpeningsOperation::Renumber { form, .. } => {
             let form = *form;
@@ -189,7 +245,34 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             }
             finite_numbers(c)?;
             for (at, slot, o) in &list {
-                next.push((*at, *slot, o, changed(&o.opening, c), false));
+                let mut f = changed(&o.opening, c);
+                // A field of its type set on an opening following it becomes its own (docs/adr/0772 §1).
+                if o.opening.follows_type() {
+                    if c.form.is_some_and(|v| v != o.opening.form) {
+                        return Err(fail(
+                            codes::OPENING_TYPE_FORM,
+                            "Açıklık bir tipi izliyor; biçim tipindir. Biçimi değiştirmek için önce tipten ayırın ya da başka tip verin.".into(),
+                            "operation.form",
+                        ));
+                    }
+                    let own: Vec<_> = kentos_commands::OpeningTypeField::ALL
+                        .into_iter()
+                        .filter(|k| f.value(*k) != o.opening.value(*k) && !f.overrides.contains(k))
+                        .collect();
+                    if !own.is_empty() {
+                        f.overrides.extend(own.iter().copied());
+                        f.overrides.sort();
+                        work.warnings.push(kentos_commands::CommandWarning {
+                            code: codes::OPENING_TYPE_OVERRIDE.into(),
+                            message: format!(
+                                "Açıklık tipinin {} alanında artık kendi değerini tutuyor (örnek istisnası); tipe döndürmek için Tipe döndür.",
+                                own.iter().map(|k| format!("“{}”", k.label())).collect::<Vec<_>>().join(", ")
+                            ),
+                            path: Some(format!("uids[{at}]")),
+                        });
+                    }
+                }
+                next.push((*at, *slot, o, f, false));
             }
         }
         OpeningsOperation::Move { by, at: to } => {
@@ -320,19 +403,33 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 next.push((*at, *slot, o, f, true));
             }
         }
-        OpeningsOperation::ReplaceType { from, to } => {
-            let kind = openings::find_type(to, "operation.to")?;
+        OpeningsOperation::ReplaceType { from, to, level } => {
+            // The project's type, else KentOS's as before (its refusal `style_not_found`).
+            let kind = match crate::opening_types::project_type(doc, to) {
+                Some(t) => crate::opening_types::Found::Project(t),
+                None => crate::opening_types::Found::Builtin(openings::find_type(to, "operation.to")?),
+            };
             let mut any = false;
             for (at, slot, o) in &list {
-                if from
-                    .as_deref()
-                    .is_some_and(|k| !openings::type_matches(&o.opening, k))
+                if from.as_deref().is_some_and(|k| !of_type(doc, &o.opening, k))
+                    || !on_level(doc, &o.opening, level.as_ref())
                 {
                     continue;
                 }
                 any = true;
                 let mut f = o.opening.clone();
-                kind.apply(&mut f);
+                match &kind {
+                    // A project type's openings follow it, all its values theirs (docs/adr/0772 §1).
+                    crate::opening_types::Found::Project(t) => {
+                        f.overrides.clear();
+                        f.take_type(t);
+                    }
+                    crate::opening_types::Found::Builtin(t) => {
+                        t.apply(&mut f);
+                        f.type_version = None;
+                        f.overrides.clear();
+                    }
+                }
                 next.push((*at, *slot, o, f, false));
             }
             if !any {
@@ -345,6 +442,96 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                     "operation.from",
                 ));
             }
+        }
+        OpeningsOperation::Detach => {
+            for (at, slot, o) in &list {
+                typed(&o.opening, *at)?;
+                let mut f = o.opening.clone();
+                crate::opening_types_edit::detach_fields(&mut f);
+                next.push((*at, *slot, o, f, false));
+            }
+        }
+        OpeningsOperation::Refresh => {
+            for (at, slot, o) in &list {
+                typed(&o.opening, *at)?;
+                let id = o.opening.style.clone().unwrap_or_default();
+                let t = crate::opening_types::find_project(doc, &id, &format!("uids[{at}]"))?;
+                let mut f = o.opening.clone();
+                f.take_type(&t);
+                next.push((*at, *slot, o, f, false));
+            }
+        }
+        OpeningsOperation::Reset { fields } => {
+            for (at, slot, o) in &list {
+                typed(&o.opening, *at)?;
+                let id = o.opening.style.clone().unwrap_or_default();
+                let t = crate::opening_types::find_project(doc, &id, &format!("uids[{at}]"))?;
+                let mut f = o.opening.clone();
+                if fields.is_empty() {
+                    f.overrides.clear();
+                } else {
+                    f.overrides.retain(|k| !fields.contains(k));
+                }
+                f.take_type(&t);
+                next.push((*at, *slot, o, f, false));
+            }
+        }
+        OpeningsOperation::Push { fields } => {
+            let [(at, slot, source)] = list.as_slice() else {
+                return Err(fail(
+                    codes::INVALID_OPENING,
+                    "Tipe uygulamak için tek bir açıklık verin; onun değerleri tipin olur.".into(),
+                    "uids",
+                ));
+            };
+            typed(&source.opening, *at)?;
+            let id = source.opening.style.clone().unwrap_or_default();
+            let old = crate::opening_types::find_project(doc, &id, &format!("uids[{at}]"))?;
+            let pushed: Vec<_> = if fields.is_empty() { source.opening.overrides.clone() } else { fields.clone() };
+            if pushed.is_empty() {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    "Açıklığın tipe uygulanacak kendi değeri yok: alanları verin ya da önce bir istisna yapın.".into(),
+                    "operation.fields",
+                ));
+            }
+            let mut new = old.clone();
+            for k in &pushed {
+                new.set_value(*k, &source.opening.value(*k))
+                    .map_err(|w| fail(codes::INVALID_OPENING_TYPE, w, "operation.fields"))?;
+            }
+            if !pushed.contains(&kentos_commands::OpeningTypeField::Width) {
+                let mut f = new.fields();
+                crate::opening_types::keep_nominal(&old, &mut f);
+                new.width = f.width;
+            }
+            if let Some((field, words)) = new.problem() {
+                return Err(fail(codes::INVALID_OPENING_TYPE, words, &format!("operation.{field}")));
+            }
+            let changed_fields = new.differs_from(&old);
+            if changed_fields.is_empty() {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    format!("“{}” tipi zaten açıklığın bu değerlerinde.", old.name),
+                    "operation.fields",
+                ));
+            }
+            new.version = old.version + 1;
+            let mut own = (*source).clone();
+            own.opening.overrides.retain(|k| !pushed.contains(k));
+            let followed =
+                crate::opening_types::follow(doc, &new, &changed_fields, Default::default(), Some((*slot, own)))?;
+            let mut table = doc.opening_types().to_vec();
+            if let Some(t) = table.iter_mut().find(|t| t.id == new.id) {
+                *t = new;
+            }
+            work.warnings.extend(crate::opening_types::warnings(&followed.report));
+            for (s, e) in followed.updates {
+                let path = doc.uid(s).map(|u| u.to_string()).unwrap_or_default();
+                work.updates.push((s, e, path));
+            }
+            work.types = Some(table);
+            work.report = Some(followed.report);
         }
         OpeningsOperation::Renumber {
             prefix,
@@ -486,6 +673,19 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
     Ok(work)
 }
 
+/// `opening_not_typed` for an opening following no project type.
+fn typed(o: &OpeningFields, at: usize) -> Result<(), Stop> {
+    if o.follows_type() {
+        Ok(())
+    } else {
+        Err(fail(
+            codes::OPENING_NOT_TYPED,
+            "Açıklık bir proje tipini izlemiyor; önce bir tip verin (Türü değiştir).".into(),
+            &format!("uids[{at}]"),
+        ))
+    }
+}
+
 /// The base line of the wall `o` is in; `opening_host_gone` when it is gone.
 fn host_line(
     doc: &Document,
@@ -535,9 +735,10 @@ pub fn plan_in(doc: &Document, input: &OpeningsEdit) -> CommandResult<OpeningsEd
                     openings: updates.into_iter().map(|(_, e)| e).collect(),
                     added,
                     followers,
+                    report: work.report,
                     revision: doc.revision().to_string(),
                 },
-                warnings: Vec::new(),
+                warnings: work.warnings,
             }
         }
         Err(stop) => stop.into(),
@@ -567,6 +768,11 @@ fn write_execute(
     };
     let doc = &mut *cx.doc;
     let result = doc.transact(STEP, |d| {
+        if let Some(types) = &work.types
+            && d.set_opening_types(types.clone(), STEP).is_err()
+        {
+            return Err(kentos_domain::SlotsExhausted);
+        }
         d.update_many(
             work.updates
                 .iter()
@@ -605,8 +811,9 @@ fn write_execute(
             followers: Default::default(),
             openings,
             added,
+            report: work.report,
             revision: doc.revision().to_string(),
         },
-        warnings: Vec::new(),
+        warnings: work.warnings,
     }
 }

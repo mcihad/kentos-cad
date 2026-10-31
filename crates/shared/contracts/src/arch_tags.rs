@@ -12,7 +12,7 @@ use ts_rs::TS;
 use crate::entity::{EntityBase, Vec2};
 
 /// The places a template may name, besides `attr:Name`.
-pub const TAG_PLACES: [&str; 22] = [
+pub const TAG_PLACES: [&str; 27] = [
     "number",
     "type",
     "form",
@@ -35,6 +35,11 @@ pub const TAG_PLACES: [&str; 22] = [
     "floorElevation",
     "ceilingElevation",
     "netArea",
+    "roughWidth",
+    "unitWidth",
+    "leafWidth",
+    "clearWidth",
+    "typeVersion",
 ];
 /// The most letters a template or a tag's words hold.
 pub const MAX_TAG_LETTERS: usize = 200;

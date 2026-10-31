@@ -1945,8 +1945,50 @@ const ENTRIES: &[Entry] = &[
                 "opening_off_wall",
                 "recess_too_deep",
                 "openings_overlap",
+                "opening_type_not_found",
+                "opening_not_typed",
+                "opening_type_form",
+                "opening_type_refused",
             ],
             REVISION,
+        ],
+        warnings: &["opening_type_override", "opening_type_kept", "opening_type_skipped"],
+        targets: || {
+            vec![target(
+                None,
+                &["opening"],
+                &[],
+                Some("not_an_opening"),
+                None,
+            )]
+        },
+    },
+    // Kapı ve pencere tipleri (docs/adr/0772).
+    Entry {
+        id: "cad.openingtypes.edit",
+        refusals: &[
+            &[
+                "invalid_opening_type",
+                "opening_type_not_found",
+                "opening_type_exists",
+                "opening_type_in_use",
+                "opening_type_form",
+                "nothing_to_set",
+                "not_finite",
+                "opening_type_refused",
+                "import_unreadable",
+                "layer_locked",
+            ],
+            REVISION,
+        ],
+        warnings: &["opening_type_kept", "opening_type_skipped"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.openings.query",
+        refusals: &[
+            &["invalid_uid", "entity_not_found"],
+            &["not_an_opening", "opening_type_not_found", "level_not_found"],
         ],
         warnings: &[],
         targets: || {
