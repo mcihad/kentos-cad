@@ -7,6 +7,10 @@
 //! After the first slice (docs/adr/0779): members added to and taken out of a definition (`addMembers`,
 //! `removeMembers`), an instance's objects changed by hand marked as drifted from the source, a flat's instance in its
 //! own building-program group (`unit`), and the modules of one level repeated on others in one step (`repeat`).
+//!
+//! The fourth slice (docs/adr/0796): a module spanning several levels (each member on its storey above the instance's
+//! base level, mapped onto the host's levels by their order), and a repeat that copies the level's objects in no module
+//! too (`loose`), as plain copies whose references follow the copies.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -32,9 +36,11 @@ pub const CAD_MODULES_QUERY_VERSION: u32 = 1;
 )]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ModulesOperation {
-    /// Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts on one level) become
-    /// the module `name`'s definition, `base` its base point; they stay where they are as its first instance. An object
-    /// they lean on outside them (an opening's wall, a space's sources, a dimension's points, a tag's object) refuses it.
+    /// Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts) become the module
+    /// `name`'s definition, `base` its base point; they stay where they are as its first instance. An object they lean
+    /// on outside them (an opening's wall, a space's sources, a dimension's points, a tag's object) refuses it. Objects
+    /// on several of the project's levels make a module of as many storeys (docs/adr/0796 §1), its base level the
+    /// lowest; levelled and unlevelled objects together refuse it (`module_levels`).
     Define {
         name: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -47,7 +53,8 @@ pub enum ModulesOperation {
     },
     /// Modül yerleştir: a new instance of `module` (its id or name), its base at `at`, mirrored across its own y axis
     /// when asked, then turned `rotation` radians counter-clockwise; on `level` (absent: none), in `phase`, its
-    /// numbers wrapped by `numbering`.
+    /// numbers wrapped by `numbering`. A module of several storeys takes `level` as its base and the project's levels
+    /// above it, by elevation, for its upper storeys; too few levels above refuse it (`module_storey_missing`).
     Place {
         module: String,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -100,6 +107,9 @@ pub enum ModulesOperation {
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
         modules: Vec<String>,
         to: Vec<ModuleLevelTarget>,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        loose: bool,
     },
     /// Kaynağı güncelle: the instance `from`'s objects (its local exceptions aside) become the definition, its version
     /// one up; the other linked instances (`instances`, none: all) take it, each keeping its exceptions and its
@@ -183,14 +193,56 @@ pub struct ModulePlaced {
     pub level: Option<String>,
 }
 
+/// An object a repeat copied (docs/adr/0796 §2): the level's object in no module, its copy and the copy's level.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ModuleCopied {
+    pub source: String,
+    pub uid: String,
+    pub level: String,
+}
+
+/// Why a repeat left a level's object (docs/adr/0796 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum ModuleLeftWhy {
+    /// On a locked layer.
+    Locked,
+    /// Of a kind a repeat does not copy (a column, a stair, a ramp, a slab, a room's finish, a separator).
+    Kind,
+    /// An object of a module instance the repeat does not place again (broken, of another module, based elsewhere).
+    Module,
+    /// It leans on an object the copies do not hold (another level's, a grid, a left one).
+    Outside,
+    /// An object of a design option (docs/adr/0788): a plain copy would join the main model.
+    Option,
+}
+
+/// A level's object a repeat did not copy, and why.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ModuleLeft {
+    pub uid: String,
+    pub why: ModuleLeftWhy,
+}
+
 /// Input of `cad.modules.edit` v1.
 ///
 /// Refusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,
 /// `module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,
 /// `module_instance_not_found`, `module_member_missing`, `module_member_needed`, `module_repeat_empty`,
-/// `module_repeat_taken`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`, `invalid_revision`,
-/// `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`, `module_member_gone`,
-/// `module_drift_overwritten`, `module_member_released`.
+/// `module_repeat_taken`, `module_storey_missing`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`,
+/// `invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,
+/// `module_member_gone`, `module_drift_overwritten`, `module_member_released`, `module_repeat_left`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -296,6 +348,10 @@ pub struct ModuleReport {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub deleted: Vec<String>,
+    /// The level's objects a repeat with `loose` did not copy, in the drawing's order (docs/adr/0796 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleLeft>>", optional))]
+    pub left: Vec<ModuleLeft>,
 }
 
 /// Output of `cad.modules.edit` (and its plan): the module as it is after, the objects made and changed, the report.
@@ -323,6 +379,10 @@ pub struct ModulesEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModulePlaced>>", optional))]
     pub placed: Vec<ModulePlaced>,
+    /// The objects in no module a repeat with `loose` copied, target by target (docs/adr/0796 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ModuleCopied>>", optional))]
+    pub copied: Vec<ModuleCopied>,
     #[serde(default)]
     pub report: ModuleReport,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -384,6 +444,11 @@ pub struct ModuleInstanceRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub level: Option<String>,
+    /// A module of several storeys: the levels the instance stands on, base first (docs/adr/0796 §1); a storey with no
+    /// level (a level removed since) is left out.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub levels: Vec<String>,
     pub mirror: bool,
 }
 
@@ -400,6 +465,11 @@ pub struct ModuleRow {
     pub version: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub members: u32,
+    /// The storeys a module of several spans (docs/adr/0796 §1); absent: one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub storeys: Option<u32>,
     pub removed: bool,
     pub instances: Vec<ModuleInstanceRow>,
 }

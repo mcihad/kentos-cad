@@ -576,10 +576,12 @@ def add_cases():
         {"kind": "addMembers", "module": "Daire", "instance": "daire-1", "uids": [UID(1)]},
         refusal("module_member_taken", "Bu nesne zaten bir modül örneğinin; önce o örneği bağımsızlaştırın.",
                 "operation.uids[0]"))]))
-    out.append(case("Ret: başka kattaki duvar", [DEFINE(), run(
+    # An upper level's wall is the definition's second storey since docs/adr/0796 §1 (scripts/fixtures/
+    # module_storeys_cases.py); the case once refused it.
+    out.append(case("Modüle ekle: üst kattaki duvar tanımın ikinci katı olur", [DEFINE(), run(
         {"kind": "addMembers", "module": "Daire", "instance": "daire-1", "uids": [UID(19)]},
-        refusal("module_levels", "Eklenen nesne örneğin katında değil; örneğin katındaki nesneleri ekleyin.",
-                "operation.uids[0]"))]))
+        done({"module": "$any", "instance": "daire-1", "report": {"updated": ["daire-1"], "addedKeys": [UID(19)]},
+              "revision": "$current"}))]))
     out.append(case("Ret: çizgi modüle eklenmez", [DEFINE(), run(
         {"kind": "addMembers", "module": "Daire", "instance": "daire-1", "uids": [UID(18)]},
         refusal("module_kind", "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur.",

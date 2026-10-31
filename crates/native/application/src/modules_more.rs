@@ -7,9 +7,9 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    ArchModule, Entity, ModuleConflict, ModuleConflictWhy, ModuleInstance, ModuleLevelTarget,
-    ModuleMember, ModuleNumbering, ModuleObject, ModulePlaced, ModuleSkipWhy, ModuleSkipped,
-    module_kind_ok,
+    ArchModule, Entity, ModuleConflict, ModuleConflictWhy, ModuleCopied, ModuleInstance,
+    ModuleLeft, ModuleLeftWhy, ModuleLevelTarget, ModuleMember, ModuleNumbering, ModuleObject,
+    ModulePlaced, ModuleSkipWhy, ModuleSkipped, module_kind_ok,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use serde_json::Value;
@@ -17,7 +17,7 @@ use serde_json::Value;
 use super::{
     Work, arch_level_holder, arch_mut, find, in_operation, instance_at, instantiate, inverse,
     keep_placement, kind_words, level_ok, live, next_instance_id, number_mut, object_of, place_all,
-    references, remap,
+    references, remap, storey_order, storeys_fit,
 };
 use crate::checks::{self, Stop};
 use crate::codes;
@@ -70,16 +70,8 @@ fn near(a: &Value, b: &Value) -> bool {
     }
 }
 
-/// Whether two objects are the same, their numbers within [`DRIFT_TOLERANCE`].
-pub(super) fn near_entities(a: &Entity, b: &Entity) -> bool {
-    let (Ok(x), Ok(y)) = (serde_json::to_value(a), serde_json::to_value(b)) else {
-        return a == b;
-    };
-    near(&x, &y)
-}
-
 /// Whether `current` is `expected` but for what the document writes itself and the coordinates' rounding.
-fn same_object(expected: &Entity, current: &Entity) -> bool {
+pub(super) fn same_object(expected: &Entity, current: &Entity) -> bool {
     let skip = written_by_the_document(current);
     let clean = |e: &Entity| {
         let mut v = serde_json::to_value(e).unwrap_or(Value::Null);
@@ -108,7 +100,7 @@ fn expected_of(
         .map(|o| (o.key.clone(), o.uid.clone()))
         .collect();
     let wall_of = |u: &str| object_of(doc, u).map(|(_, e)| e.clone());
-    let e = instantiate(mem, inst, &map, &wall_of).ok()?;
+    let e = instantiate(doc, mem, inst, &map, &wall_of).ok()?;
     Some(keep_placement(e, current))
 }
 
@@ -200,7 +192,7 @@ pub(super) fn sync_instance(
                 .or_else(|| object_of(doc, u).map(|(_, e)| e.clone()))
         };
         if let Some(id) = new_ids.get(&mem.key) {
-            let e = instantiate(mem, inst, &map, &wall_of)?;
+            let e = instantiate(doc, mem, inst, &map, &wall_of)?;
             renewed.insert(id.to_string(), e.clone());
             work.adds.push((*id, e));
             if !work.report.added_keys.contains(&mem.key) {
@@ -238,7 +230,7 @@ pub(super) fn sync_instance(
                 why: ModuleConflictWhy::Drifted,
             });
         }
-        let mut e = instantiate(mem, inst, &map, &wall_of)?;
+        let mut e = instantiate(doc, mem, inst, &map, &wall_of)?;
         e = keep_placement(e, current);
         e.base_mut().id = slot.0;
         if let Some(u) = &uid {
@@ -280,7 +272,7 @@ fn place_new(
                 .cloned()
                 .or_else(|| object_of(doc, u).map(|(_, e)| e.clone()))
         };
-        let e = instantiate(mem, inst, &map, &wall_of)?;
+        let e = instantiate(doc, mem, inst, &map, &wall_of)?;
         made.insert(id.to_string(), e.clone());
         adds.push((*id, e));
     }
@@ -303,6 +295,18 @@ fn locked_instance(doc: &Document, inst: &ModuleInstance) -> bool {
     })
 }
 
+/// The storey of an object on `level` in an instance based on `base` (docs/adr/0796 §1): 0 on the base (both none
+/// too), the levels above it by their order; none below the base, on another kind of level or past the most storeys.
+fn storey_of(order: &[String], base: Option<&str>, level: Option<&str>) -> Option<u32> {
+    if base == level {
+        return Some(0);
+    }
+    let b = order.iter().position(|x| Some(x.as_str()) == base)?;
+    let l = order.iter().position(|x| Some(x.as_str()) == level)?;
+    let d = u32::try_from(l.checked_sub(b)?).ok()?;
+    (d < kentos_commands::MAX_MODULE_STOREYS).then_some(d)
+}
+
 /// Modüle ekle (docs/adr/0779 §1).
 pub(super) fn add_members(
     doc: &Document,
@@ -318,6 +322,7 @@ pub(super) fn add_members(
     checks::uids(uids, "Modüle eklenecek nesne verilmedi.").map_err(in_operation)?;
     let found = checks::named(doc, uids).map_err(in_operation)?;
     let inst = modules[k].instances[i].clone();
+    let order = storey_order(doc);
     let taken: HashSet<&str> = modules
         .iter()
         .flat_map(|m| {
@@ -377,10 +382,11 @@ pub(super) fn add_members(
                 ));
             }
         }
-        if arch_level_holder(e) && e.own_level() != inst.level.as_deref() {
+        // On the instance's base level or one above it: an upper storey (docs/adr/0796 §1).
+        if arch_level_holder(e) && storey_of(&order, inst.level.as_deref(), e.own_level()).is_none() {
             return Err(fail(
                 codes::MODULE_LEVELS,
-                "Eklenen nesne örneğin katında değil; örneğin katındaki nesneleri ekleyin.".into(),
+                "Eklenen nesne örneğin katlarında değil; örneğin taban katındaki ya da üstündeki katlardaki nesneleri ekleyin.".into(),
                 &path,
             ));
         }
@@ -396,6 +402,11 @@ pub(super) fn add_members(
     }
     let mut added = Vec::new();
     for (_, _, e, uid) in &found {
+        let storey = if arch_level_holder(e) {
+            storey_of(&order, inst.level.as_deref(), e.own_level()).unwrap_or(0)
+        } else {
+            0
+        };
         let mut t = crate::transform::by_matrix(e, &back).ok_or_else(|| {
             fail(
                 codes::NOT_FINITE,
@@ -422,6 +433,7 @@ pub(super) fn add_members(
         added.push(ModuleMember {
             key: (*uid).clone(),
             entity: t,
+            storey,
         });
     }
     let old_version = modules[k].version;
@@ -449,6 +461,7 @@ pub(super) fn add_members(
             });
             continue;
         }
+        storeys_fit(doc, &modules[k], other.level.as_deref(), "operation.uids")?;
         let entries = place_new(doc, &other, &added, work)?;
         let target = &mut modules[k].instances[j];
         target.members.extend(entries);
@@ -620,13 +633,129 @@ fn found_at(modules: &[ArchModule], key: &str, path: &str) -> Result<usize, Stop
     })
 }
 
-/// Katları tekrarla (docs/adr/0779 §5).
+/// The objects of the level `from` in no module a repeat with `loose` copies (docs/adr/0796 §2), in the drawing's order
+/// with their ids, and those it leaves, with why: an object of an instance not repeated, on a locked layer, of a kind
+/// not copied, or leaning on an object neither copied nor of a repeated instance (again and again: one left leaves
+/// those leaning on it).
+fn loose_plan(
+    doc: &Document,
+    modules: &[ArchModule],
+    from: &str,
+    repeated: &HashSet<String>,
+) -> (Vec<(String, Entity)>, Vec<ModuleLeft>) {
+    let in_modules: HashSet<&str> = modules
+        .iter()
+        .flat_map(|m| m.instances.iter().flat_map(|i| i.members.iter().map(|o| o.uid.as_str())))
+        .collect();
+    let by_uid = |u: &str| {
+        Uuid::parse_str(u)
+            .ok()
+            .and_then(|x| doc.slot_of(x))
+            .and_then(|s| doc.get(s))
+    };
+    // A design option's objects (docs/adr/0788) stay: a plain copy would join the main model.
+    let in_options: HashSet<&str> = doc
+        .arch_options()
+        .iter()
+        .flat_map(|s| s.options.iter().flat_map(|o| o.members.iter().map(String::as_str)))
+        .collect();
+    let mut copy: Vec<(String, Entity)> = Vec::new();
+    let mut left: Vec<(u32, ModuleLeft)> = Vec::new();
+    for e in doc.entities() {
+        if e.level(by_uid) != Some(from) {
+            continue;
+        }
+        let slot = e.base().id;
+        let Some(uid) = doc.uid(Slot(slot)).map(|u| u.to_string()) else {
+            continue;
+        };
+        if repeated.contains(&uid) {
+            continue;
+        }
+        let why = if in_modules.contains(uid.as_str()) {
+            Some(ModuleLeftWhy::Module)
+        } else if in_options.contains(uid.as_str()) {
+            Some(ModuleLeftWhy::Option)
+        } else if doc.layers().is_locked(&e.base().layer_id) {
+            Some(ModuleLeftWhy::Locked)
+        } else if !matches!(
+            e,
+            Entity::Wall(_)
+                | Entity::Opening(_)
+                | Entity::Space(_)
+                | Entity::Insert(_)
+                | Entity::Dimension(_)
+                | Entity::Tag(_)
+        ) {
+            Some(ModuleLeftWhy::Kind)
+        } else {
+            None
+        };
+        match why {
+            Some(why) => left.push((slot, ModuleLeft { uid, why })),
+            None => copy.push((uid, e.clone())),
+        }
+    }
+    // What leans outside the copies and the repeated instances stays, and so in turn what leans on it.
+    loop {
+        let held: HashSet<&str> = copy
+            .iter()
+            .map(|(u, _)| u.as_str())
+            .chain(repeated.iter().map(String::as_str))
+            .collect();
+        let out: Vec<usize> = copy
+            .iter()
+            .enumerate()
+            .filter(|(_, (_, e))| references(doc, e).iter().any(|r| !held.contains(r.as_str())))
+            .map(|(i, _)| i)
+            .collect();
+        if out.is_empty() {
+            break;
+        }
+        for &i in out.iter().rev() {
+            let (uid, e) = copy.remove(i);
+            left.push((
+                e.base().id,
+                ModuleLeft {
+                    uid,
+                    why: ModuleLeftWhy::Outside,
+                },
+            ));
+        }
+    }
+    left.sort_by_key(|(slot, _)| *slot);
+    (copy, left.into_iter().map(|(_, l)| l).collect())
+}
+
+/// A loose space's or opening's number on a repeat's target (docs/adr/0796 §2): the source level's project prefix (a
+/// space's, docs/adr/0690) taken off, then the target's numbering put on; with none, the target level's prefix in place
+/// of the source's; else as it was.
+fn renumbered(
+    n: &str,
+    from_prefix: Option<&str>,
+    to_prefix: Option<&str>,
+    numbering: Option<&ModuleNumbering>,
+) -> String {
+    let stripped = from_prefix
+        .filter(|p| !p.is_empty())
+        .and_then(|p| n.strip_prefix(p));
+    match numbering {
+        Some(nb) if !nb.is_empty() => nb.apply(stripped.unwrap_or(n)),
+        _ => match (stripped, to_prefix.filter(|p| !p.is_empty())) {
+            (Some(rest), Some(tp)) => format!("{tp}{rest}"),
+            _ => n.to_owned(),
+        },
+    }
+}
+
+/// Katları tekrarla (docs/adr/0779 §5; the level's objects in no module too, docs/adr/0796 §2).
 pub(super) fn repeat(
     doc: &Document,
     modules: &mut [ArchModule],
     from: &str,
     of: &[String],
     to: &[ModuleLevelTarget],
+    loose: bool,
     work: &mut Work,
 ) -> Result<(), Stop> {
     level_ok(doc, Some(from)).map_err(|s| {
@@ -700,13 +829,32 @@ pub(super) fn repeat(
                 .map(move |i| (k, i.clone()))
         })
         .collect();
-    if sources.is_empty() {
+    let repeated: HashSet<String> = sources
+        .iter()
+        .flat_map(|(_, s)| s.members.iter().map(|o| o.uid.clone()))
+        .collect();
+    let (copies, left) = if loose {
+        loose_plan(doc, modules, from, &repeated)
+    } else {
+        (Vec::new(), Vec::new())
+    };
+    if sources.is_empty() && copies.is_empty() {
         return Err(fail(
             codes::MODULE_REPEAT_EMPTY,
-            format!("“{from}” katında tekrarlanacak bağlı modül örneği yok."),
+            if loose {
+                format!("“{from}” katında tekrarlanacak bağlı modül örneği ya da modülsüz nesne yok.")
+            } else {
+                format!("“{from}” katında tekrarlanacak bağlı modül örneği yok.")
+            },
             "operation.from",
         ));
     }
+    let prefixes = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.space_number_prefixes.clone())
+        .unwrap_or_default();
     for (j, t) in to.iter().enumerate() {
         for (l, one) in t.instances.iter().enumerate() {
             let at = format!("operation.to[{j}].instances[{l}]");
@@ -743,6 +891,8 @@ pub(super) fn repeat(
     }
     let mut involved: Vec<usize> = Vec::new();
     for (j, t) in to.iter().enumerate() {
+        // The repeated instances' objects on this target, for the loose copies' references.
+        let mut map: HashMap<String, String> = HashMap::new();
         for (k, src) in &sources {
             let k = *k;
             if let Some(there) = modules[k].instances.iter().find(|i| {
@@ -760,6 +910,7 @@ pub(super) fn repeat(
                     &format!("operation.to[{j}].level"),
                 ));
             }
+            storeys_fit(doc, &modules[k], Some(&t.level), &format!("operation.to[{j}].level"))?;
             let line = t
                 .instances
                 .iter()
@@ -798,6 +949,11 @@ pub(super) fn repeat(
             };
             let made = place_all(doc, m, &inst, &ids)?;
             work.adds.extend(ids.iter().copied().zip(made));
+            for o in &src.members {
+                if let Some(n) = inst.members.iter().find(|x| x.key == o.key) {
+                    map.insert(o.uid.clone(), n.uid.clone());
+                }
+            }
             work.placed.push(ModulePlaced {
                 module: m.id.clone(),
                 instance: inst.id.clone(),
@@ -808,7 +964,39 @@ pub(super) fn repeat(
             }
             modules[k].instances.push(inst);
         }
+        // The level's objects in no module, as plain copies on the target (docs/adr/0796 §2).
+        let ids: Vec<Uuid> = copies.iter().map(|_| Uuid::now_v7()).collect();
+        for ((uid, _), id) in copies.iter().zip(&ids) {
+            map.insert(uid.clone(), id.to_string());
+        }
+        for ((uid, e), id) in copies.iter().zip(&ids) {
+            let mut c = remap(e, &map);
+            c.base_mut().id = 0;
+            if let Some(a) = arch_mut(&mut c) {
+                a.level = Some(t.level.clone());
+            }
+            let space = matches!(c, Entity::Space(_));
+            if let Some(Some(n)) = number_mut(&mut c) {
+                *n = if space {
+                    renumbered(
+                        n,
+                        prefixes.get(from).map(String::as_str),
+                        prefixes.get(&t.level).map(String::as_str),
+                        t.numbering.as_ref(),
+                    )
+                } else {
+                    renumbered(n, None, None, t.numbering.as_ref())
+                };
+            }
+            work.adds.push((*id, c));
+            work.copied.push(ModuleCopied {
+                source: uid.clone(),
+                uid: id.to_string(),
+                level: t.level.clone(),
+            });
+        }
     }
+    work.report.left = left;
     if let [k] = involved[..] {
         work.module = Some(modules[k].id.clone());
     }

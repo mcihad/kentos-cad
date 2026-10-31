@@ -5,7 +5,9 @@
 //! keeps as its own (local exceptions). The objects are ordinary drawing objects: nothing hides in a block.
 //!
 //! The project keeps its modules in `settings.arch.modules` (KCAD 142); an instance's building-program group (`unit`)
-//! came after its first slice (docs/adr/0779, KCAD 145): a flat placed again takes its own flat.
+//! came after its first slice (docs/adr/0779, KCAD 145): a flat placed again takes its own flat. A member's storey
+//! (docs/adr/0796, KCAD 152): a module may span several levels (a duplex, a stair core), each member on its storey above
+//! the instance's base level.
 
 #[cfg(feature = "ts")]
 use ts_rs::TS;
@@ -18,6 +20,8 @@ use crate::{ArchPhase, Entity, Vec2};
 pub const MAX_MODULES: usize = 200;
 pub const MAX_MODULE_MEMBERS: usize = 2_000;
 pub const MAX_MODULE_INSTANCES: usize = 1_000;
+/// The most storeys a module spans (docs/adr/0796 §1): a member's storey is below it.
+pub const MAX_MODULE_STOREYS: u32 = 16;
 
 /// One object of a module's definition: its key (the id of the object it was taken from) and the object in the
 /// definition's frame, its level and phase left to the instance.
@@ -29,6 +33,13 @@ pub const MAX_MODULE_INSTANCES: usize = 1_000;
 pub struct ModuleMember {
     pub key: String,
     pub entity: Entity,
+    /// Its storey above the instance's base level (docs/adr/0796 §1): 0 the base level, 1 the project's next level up
+    /// (the levels by elevation). Only a wall's, a space's or a fixture's; an opening, a tag, a dimension or a text
+    /// follows what it is on.
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    pub storey: u32,
 }
 
 /// One object of an instance: the definition's key and the drawing object that stands for it.
@@ -131,6 +142,10 @@ fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 
+fn is_zero_u32(v: &u32) -> bool {
+    *v == 0
+}
+
 /// A room module: its id and name, its definition's version and members, and its instances. A removed module keeps
 /// its instances, broken, and no members.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -154,6 +169,11 @@ pub struct ArchModule {
     pub removed: bool,
 }
 
+/// Whether a member of `modules` stands on a storey above its instance's base level (KCAD 152, docs/adr/0796 §1).
+pub fn modules_have_storeys(modules: &[ArchModule]) -> bool {
+    modules.iter().any(|m| m.members.iter().any(|x| x.storey > 0))
+}
+
 /// Whether any instance of `modules` names a building-program group (KCAD 145, docs/adr/0779 §4).
 pub fn modules_have_units(modules: &[ArchModule]) -> bool {
     modules
@@ -170,6 +190,11 @@ impl ArchModule {
     /// The member of this key.
     pub fn member(&self, key: &str) -> Option<&ModuleMember> {
         self.members.iter().find(|m| m.key == key)
+    }
+
+    /// How many storeys the definition spans: one past its highest member's (docs/adr/0796 §1).
+    pub fn storeys(&self) -> u32 {
+        self.members.iter().map(|m| m.storey).max().unwrap_or(0) + 1
     }
 }
 
@@ -287,6 +312,21 @@ pub fn arch_modules_problem(modules: &[ArchModule]) -> Option<(String, String)> 
                 return Some((
                     format!("{at}.members[{k}].entity"),
                     "Modülde duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur.".into(),
+                ));
+            }
+            if member.storey >= MAX_MODULE_STOREYS
+                || (member.storey > 0
+                    && !matches!(
+                        member.entity,
+                        Entity::Wall(_) | Entity::Space(_) | Entity::Insert(_)
+                    ))
+            {
+                return Some((
+                    format!("{at}.members[{k}].storey"),
+                    format!(
+                        "Modül nesnesinin katı 0 ile {} arasındadır ve yalnız duvar, mahal ve donatının olur.",
+                        MAX_MODULE_STOREYS - 1
+                    ),
                 ));
             }
         }

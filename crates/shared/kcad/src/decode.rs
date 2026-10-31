@@ -1251,6 +1251,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin etkin katı ve kat görünümü şema 120'den beri yazılır",
                     ));
                 }
+                if !has.module_storeys && kentos_contracts::modules_have_storeys(&a.modules) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "oda modülü nesnesinin katı şema 152'den beri yazılır",
+                    ));
+                }
                 if !has.options && a.has_options() {
                     return Err(r.fail_at(
                         Code::UnknownField,

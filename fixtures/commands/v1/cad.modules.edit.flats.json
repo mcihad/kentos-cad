@@ -7304,7 +7304,7 @@
       ]
     },
     {
-      "name": "Ret: başka kattaki duvar",
+      "name": "Modüle ekle: üst kattaki duvar tanımın ikinci katı olur",
       "steps": [
         {
           "op": "execute",
@@ -7352,12 +7352,21 @@
             }
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "module_levels",
-              "message": "Eklenen nesne örneğin katında değil; örneğin katındaki nesneleri ekleyin.",
-              "path": "operation.uids[0]"
-            }
+            "status": "completed",
+            "output": {
+              "module": "$any",
+              "instance": "daire-1",
+              "report": {
+                "updated": [
+                  "daire-1"
+                ],
+                "addedKeys": [
+                  "0192f5a1-7790-7000-8000-000000000013"
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
           }
         }
       ]

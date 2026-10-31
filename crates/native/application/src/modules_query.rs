@@ -1,6 +1,8 @@
 //! `cad.modules.query` v1 (docs/adr/0775): the project's room modules with each instance's state (its version against
 //! the module's, its objects, its local exceptions, the keys whose objects are gone, a broken link), or the module and
-//! instance an object belongs to, and the objects changed by hand away from the source (docs/adr/0779 §3). Read-only. The shared cases are `fixtures/commands/v1/cad.modules.query.json`.
+//! instance an object belongs to, and the objects changed by hand away from the source (docs/adr/0779 §3); a module of
+//! several storeys its storeys and each instance's levels (docs/adr/0796 §1). Read-only. The shared cases are
+//! `fixtures/commands/v1/cad.modules.query.json`.
 
 use kentos_commands::{CommandResult, ModuleInstanceRow, ModuleRow, ModulesQueried, ModulesQuery};
 use kentos_domain::{Document, Uuid};
@@ -86,6 +88,7 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
         instance = Some(iid);
         key = Some(k);
     }
+    let order = crate::modules_edit::storey_order(doc);
     let modules = chosen
         .into_iter()
         .map(|m| ModuleRow {
@@ -93,6 +96,7 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
             name: m.name.clone(),
             version: m.version,
             members: u32::try_from(m.members.len()).unwrap_or(u32::MAX),
+            storeys: (m.storeys() > 1).then(|| m.storeys()),
             removed: m.removed,
             instances: m
                 .instances
@@ -121,6 +125,16 @@ fn answer(doc: &Document, input: &ModulesQuery) -> Result<ModulesQueried, Stop> 
                     broken: i.broken,
                     unit: i.unit.clone(),
                     level: i.level.clone(),
+                    levels: if m.storeys() > 1 {
+                        (0..m.storeys())
+                            .filter_map(|n| {
+                                crate::modules_edit::storey_level(&order, i.level.as_deref(), n)
+                                    .flatten()
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    },
                     mirror: i.mirror,
                 })
                 .collect(),

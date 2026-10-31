@@ -1373,7 +1373,7 @@
       ]
     },
     {
-      "name": "Ret: iki kattaki duvarlar",
+      "name": "İki kattaki duvarlar iki katlı modül olur",
       "steps": [
         {
           "op": "execute",
@@ -1392,12 +1392,9 @@
             }
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "module_levels",
-              "message": "Modülün nesneleri tek katta olur; başka kattakileri seçimden çıkarın.",
-              "path": "operation.uids[1]"
-            }
+            "status": "completed",
+            "output": "$any",
+            "warnings": []
           }
         }
       ]

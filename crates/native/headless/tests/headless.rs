@@ -26,6 +26,8 @@ mod room_modules;
 mod flat_modules;
 #[path = "headless/design_options.rs"]
 mod design_options;
+#[path = "headless/storey_modules.rs"]
+mod storey_modules;
 
 #[path = "headless/special_doors.rs"]
 mod special_doors;

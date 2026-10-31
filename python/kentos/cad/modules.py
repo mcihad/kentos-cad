@@ -47,12 +47,21 @@ class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
     hedef katlar, her birinde numbering, unit ve örneğe özel satırlar instances: module,
     instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş ve aynayla her
     hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş
-    module_repeat_taken). place ve repeat'in unit'i bina programının bölümü: örneğin
-    mahalleri o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek
-    nesnesi güncellemede kaynağın değeriyle yazılır ve söylenir:
-    module_drift_overwritten. Plan yazmadan yapılacakları (created, changed, placed,
-    report.updated, skipped, conflicts, changedKeys, addedKeys, removedKeys, released,
-    deleted) gösterir. Tasarım alternatifi kapsam dışıdır.
+    module_repeat_taken; loose: kattaki modülsüz duvar, açıklık, mahal, donatı, ölçü ve
+    etiketler de düz kopya olarak her hedefe gider, birbirlerine ve tekrarlanan
+    örneklerin nesnelerine bağları kopyalara çevrilir, numaraları hedefin numbering'iyle
+    (yoksa katın mahal öneki değişir); kilitli, başka türden, tekrarlanmayan örneğin ya
+    da dışarıya bağlı olan kalır: report.left, module_repeat_left; cevabın copied'ı;
+    docs/adr/0796). Birden çok kattaki nesneler çok katlı modül olur (taban en alçak
+    kat; duvar, mahal ve donatının storey'i taban katının kaç kat üstünde olduğu; katlar
+    kotlarına göre sıralanır); place ve repeat üst katları hedefin üstündeki katlara
+    koyar, yetmeyen kat module_storey_missing; katlı ile katsız nesne birlikte
+    module_levels. place ve repeat'in unit'i bina programının bölümü: örneğin mahalleri
+    o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi
+    güncellemede kaynağın değeriyle yazılır ve söylenir: module_drift_overwritten. Plan
+    yazmadan yapılacakları (created, changed, placed, report.updated, skipped,
+    conflicts, changedKeys, addedKeys, removedKeys, released, deleted) gösterir. Tasarım
+    alternatifi kapsam dışıdır.
     """
     __slots__ = ()
     id = "cad.modules.edit"
@@ -96,12 +105,22 @@ class _ModulesEdit(LocalCommand[ModulesEdit, ModulesEdited, ModulesEdited]):
         repeat (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering,
         unit ve örneğe özel satırlar instances: module, instance, numbering, unit; kattaki
         bağlı örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat
-        module_repeat_empty, zaten yerleşmiş module_repeat_taken). place ve repeat'in unit'i
-        bina programının bölümü: örneğin mahalleri o bölümde olur (daire modülü). Elle
-        değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın değeriyle yazılır
-        ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları (created,
-        changed, placed, report.updated, skipped, conflicts, changedKeys, addedKeys,
-        removedKeys, released, deleted) gösterir. Tasarım alternatifi kapsam dışıdır.
+        module_repeat_empty, zaten yerleşmiş module_repeat_taken; loose: kattaki modülsüz
+        duvar, açıklık, mahal, donatı, ölçü ve etiketler de düz kopya olarak her hedefe
+        gider, birbirlerine ve tekrarlanan örneklerin nesnelerine bağları kopyalara
+        çevrilir, numaraları hedefin numbering'iyle (yoksa katın mahal öneki değişir);
+        kilitli, başka türden, tekrarlanmayan örneğin ya da dışarıya bağlı olan kalır:
+        report.left, module_repeat_left; cevabın copied'ı; docs/adr/0796). Birden çok
+        kattaki nesneler çok katlı modül olur (taban en alçak kat; duvar, mahal ve donatının
+        storey'i taban katının kaç kat üstünde olduğu; katlar kotlarına göre sıralanır);
+        place ve repeat üst katları hedefin üstündeki katlara koyar, yetmeyen kat
+        module_storey_missing; katlı ile katsız nesne birlikte module_levels. place ve
+        repeat'in unit'i bina programının bölümü: örneğin mahalleri o bölümde olur (daire
+        modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın
+        değeriyle yazılır ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları
+        (created, changed, placed, report.updated, skipped, conflicts, changedKeys,
+        addedKeys, removedKeys, released, deleted) gösterir. Tasarım alternatifi kapsam
+        dışıdır.
 
         Args:
             doc: The drawing it works on.
@@ -188,8 +207,9 @@ class _ModulesQuery(LocalCommand[ModulesQuery, ModulesQueried, ModulesQueried]):
     hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale
     (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş
     anahtarlar), drifted (elle değişmiş, istisna olmayan nesneler; docs/adr/0779),
-    broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; uid
-    ile drifted o nesnenin elle değişip değişmediği.
+    broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; çok
+    katlı modülde storeys (kat sayısı) ve örneğin levels'ı (durduğu katlar, taban önce;
+    docs/adr/0796); uid ile drifted o nesnenin elle değişip değişmediği.
     """
     __slots__ = ()
     id = "cad.modules.query"
@@ -215,8 +235,9 @@ class _ModulesQuery(LocalCommand[ModulesQuery, ModulesQueried, ModulesQueried]):
         örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne
         sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle
         değişmiş, istisna olmayan nesneler; docs/adr/0779), broken (sourceGone), unit (bina
-        programının bölümü), katı, aynalı olup olmadığı; uid ile drifted o nesnenin elle
-        değişip değişmediği.
+        programının bölümü), katı, aynalı olup olmadığı; çok katlı modülde storeys (kat
+        sayısı) ve örneğin levels'ı (durduğu katlar, taban önce; docs/adr/0796); uid ile
+        drifted o nesnenin elle değişip değişmediği.
 
         Args:
             doc: The drawing it works on.

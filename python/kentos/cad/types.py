@@ -3385,6 +3385,26 @@ ModuleConflictWhyName = Literal["exception", "gone", "drifted", "locked"]
 """The names of :class:`ModuleConflictWhy`, for a plain string."""
 
 
+class ModuleLeftWhy(_StrEnum):
+    """Why a repeat left a level's object (docs/adr/0796 §2).
+
+    - ``locked``: On a locked layer.
+    - ``kind``: Of a kind a repeat does not copy (a column, a stair, a ramp, a slab, a room's finish, a separator).
+    - ``module``: An object of a module instance the repeat does not place again (broken, of another module, based elsewhere).
+    - ``outside``: It leans on an object the copies do not hold (another level's, a grid, a left one).
+    - ``option``: An object of a design option (docs/adr/0788): a plain copy would join the main model.
+    """
+    LOCKED = "locked"
+    KIND = "kind"
+    MODULE = "module"
+    OUTSIDE = "outside"
+    OPTION = "option"
+
+
+ModuleLeftWhyName = Literal["locked", "kind", "module", "outside", "option"]
+"""The names of :class:`ModuleLeftWhy`, for a plain string."""
+
+
 class ModuleSkipWhy(_StrEnum):
     """Why an instance did not take a source update.
 
@@ -39563,6 +39583,29 @@ class ModuleConflict(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ModuleCopied(_Model):
+    """An object a repeat copied (docs/adr/0796 §2): the level's object in no module, its copy and the copy's level."""
+    source: str
+    uid: str
+    level: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["uid"] = self.uid
+        out["level"] = self.level
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ModuleCopied:
+        return cls(
+            source=data["source"],
+            uid=data["uid"],
+            level=data["level"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ModuleInstance(_Model):
     """Where a module stands once: its base point, its turn (radians, counter-clockwise), whether it is mirrored (across
     its own y axis, before the turn), its level and phase, its numbering, the definition's version it took, its
@@ -39638,6 +39681,8 @@ class ModuleInstanceRow(_Model):
         objects: Unit: count.
         drifted: The objects changed by hand away from the source, not local exceptions (docs/adr/0779 §3).
         exceptions: The objects kept as local exceptions.
+        levels: A module of several storeys: the levels the instance stands on, base first (docs/adr/0796 §1); a storey with no
+            level (a level removed since) is left out.
         missing: The keys whose objects are gone from the drawing.
         unit: The building program's group of the instance's spaces.
     """
@@ -39650,6 +39695,7 @@ class ModuleInstanceRow(_Model):
     drifted: list[str] | Unset = UNSET
     exceptions: list[str] | Unset = UNSET
     level: str | None | Unset = UNSET
+    levels: list[str] | Unset = UNSET
     missing: list[str] | Unset = UNSET
     unit: str | None | Unset = UNSET
 
@@ -39668,6 +39714,8 @@ class ModuleInstanceRow(_Model):
             out["exceptions"] = list(self.exceptions)
         if self.level is not UNSET:
             out["level"] = self.level
+        if self.levels is not UNSET:
+            out["levels"] = list(self.levels)
         if self.missing is not UNSET:
             out["missing"] = list(self.missing)
         if self.unit is not UNSET:
@@ -39686,8 +39734,29 @@ class ModuleInstanceRow(_Model):
             drifted=list(data["drifted"]) if "drifted" in data else UNSET,
             exceptions=list(data["exceptions"]) if "exceptions" in data else UNSET,
             level=data.get("level", UNSET),
+            levels=list(data["levels"]) if "levels" in data else UNSET,
             missing=list(data["missing"]) if "missing" in data else UNSET,
             unit=data.get("unit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ModuleLeft(_Model):
+    """A level's object a repeat did not copy, and why."""
+    uid: str
+    why: ModuleLeftWhy | ModuleLeftWhyName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["why"] = _enum_out(self.why)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ModuleLeft:
+        return cls(
+            uid=data["uid"],
+            why=_enum_in(ModuleLeftWhy, data["why"]),
         )
 
 
@@ -39726,14 +39795,21 @@ class ModuleLevelTarget(_Model):
 class ModuleMember(_Model):
     """One object of a module's definition: its key (the id of the object it was taken from) and the object in the
     definition's frame, its level and phase left to the instance.
+    Attributes:
+        storey: Its storey above the instance's base level (docs/adr/0796 §1): 0 the base level, 1 the project's next level up
+            (the levels by elevation). Only a wall's, a space's or a fixture's; an opening, a tag, a dimension or a text
+            follows what it is on. Unit: count.
     """
     key: str
     entity: Entity
+    storey: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["key"] = self.key
         out["entity"] = self.entity.to_json()
+        if self.storey is not UNSET:
+            out["storey"] = self.storey
         return out
 
     @classmethod
@@ -39741,6 +39817,7 @@ class ModuleMember(_Model):
         return cls(
             key=data["key"],
             entity=Entity.from_json(data["entity"]),
+            storey=data.get("storey", UNSET),
         )
 
 
@@ -39845,6 +39922,7 @@ class ModuleReport(_Model):
         added_keys: The keys joining the definition (Modüle ekle) or taken by an instance that lacked them (a source update).
         changed_keys: The definition's members whose values change, by key.
         deleted: The objects deleted with their keys (Modülden çıkar).
+        left: The level's objects a repeat with `loose` did not copy, in the drawing's order (docs/adr/0796 §2).
         released: The objects that leave the module and stay as ordinary objects (Modülden çıkar).
         removed_keys: The keys leaving the definition (Modülden çıkar).
         updated: The instances at the new version, in their order.
@@ -39853,6 +39931,7 @@ class ModuleReport(_Model):
     changed_keys: list[str] | Unset = UNSET
     conflicts: list[ModuleConflict] | Unset = UNSET
     deleted: list[str] | Unset = UNSET
+    left: list[ModuleLeft] | Unset = UNSET
     released: list[str] | Unset = UNSET
     removed_keys: list[str] | Unset = UNSET
     skipped: list[ModuleSkipped] | Unset = UNSET
@@ -39868,6 +39947,8 @@ class ModuleReport(_Model):
             out["conflicts"] = [e0.to_json() for e0 in self.conflicts]
         if self.deleted is not UNSET:
             out["deleted"] = list(self.deleted)
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
         if self.released is not UNSET:
             out["released"] = list(self.released)
         if self.removed_keys is not UNSET:
@@ -39885,6 +39966,7 @@ class ModuleReport(_Model):
             changed_keys=list(data["changedKeys"]) if "changedKeys" in data else UNSET,
             conflicts=[ModuleConflict.from_json(e0) for e0 in data["conflicts"]] if "conflicts" in data else UNSET,
             deleted=list(data["deleted"]) if "deleted" in data else UNSET,
+            left=[ModuleLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
             released=list(data["released"]) if "released" in data else UNSET,
             removed_keys=list(data["removedKeys"]) if "removedKeys" in data else UNSET,
             skipped=[ModuleSkipped.from_json(e0) for e0 in data["skipped"]] if "skipped" in data else UNSET,
@@ -39898,6 +39980,7 @@ class ModuleRow(_Model):
     Attributes:
         version: Unit: count.
         members: Unit: count.
+        storeys: The storeys a module of several spans (docs/adr/0796 §1); absent: one. Unit: count.
     """
     id: str
     name: str
@@ -39905,6 +39988,7 @@ class ModuleRow(_Model):
     members: int
     removed: bool
     instances: list[ModuleInstanceRow]
+    storeys: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -39914,6 +39998,8 @@ class ModuleRow(_Model):
         out["members"] = self.members
         out["removed"] = self.removed
         out["instances"] = [e0.to_json() for e0 in self.instances]
+        if self.storeys is not UNSET:
+            out["storeys"] = self.storeys
         return out
 
     @classmethod
@@ -39925,6 +40011,7 @@ class ModuleRow(_Model):
             members=data["members"],
             removed=data["removed"],
             instances=[ModuleInstanceRow.from_json(e0) for e0 in data["instances"]],
+            storeys=data.get("storeys", UNSET),
         )
 
 
@@ -39955,9 +40042,9 @@ class ModulesEdit(_Model):
     Refusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,
     `module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,
     `module_instance_not_found`, `module_member_missing`, `module_member_needed`, `module_repeat_empty`,
-    `module_repeat_taken`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`, `invalid_revision`,
-    `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`, `module_member_gone`,
-    `module_drift_overwritten`, `module_member_released`.
+    `module_repeat_taken`, `module_storey_missing`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`,
+    `invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,
+    `module_member_gone`, `module_drift_overwritten`, `module_member_released`, `module_repeat_left`.
     """
     operation: ModulesOperation
     expected_revision: str | None | Unset = UNSET
@@ -39981,12 +40068,14 @@ class ModulesEdit(_Model):
 class ModulesEdited(_Model):
     """Output of `cad.modules.edit` (and its plan): the module as it is after, the objects made and changed, the report.
     Attributes:
+        copied: The objects in no module a repeat with `loose` copied, target by target (docs/adr/0796 §2).
         instance: The instance made (Yerleştir, Tanımla) or the one the operation named.
         module: The module after; none once removed whole.
         placed: The instances a repeat made, in order (docs/adr/0779 §5).
     """
     revision: str
     changed: list[str] | Unset = UNSET
+    copied: list[ModuleCopied] | Unset = UNSET
     created: list[str] | Unset = UNSET
     instance: str | None | Unset = UNSET
     module: ArchModule | None | Unset = UNSET
@@ -39998,6 +40087,8 @@ class ModulesEdited(_Model):
         out["revision"] = self.revision
         if self.changed is not UNSET:
             out["changed"] = list(self.changed)
+        if self.copied is not UNSET:
+            out["copied"] = [e0.to_json() for e0 in self.copied]
         if self.created is not UNSET:
             out["created"] = list(self.created)
         if self.instance is not UNSET:
@@ -40014,6 +40105,7 @@ class ModulesEdited(_Model):
         return cls(
             revision=data["revision"],
             changed=list(data["changed"]) if "changed" in data else UNSET,
+            copied=[ModuleCopied.from_json(e0) for e0 in data["copied"]] if "copied" in data else UNSET,
             created=list(data["created"]) if "created" in data else UNSET,
             instance=data.get("instance", UNSET),
             module=UNSET if "module" not in data else None if data["module"] is None else ArchModule.from_json(data["module"]),
@@ -79357,9 +79449,11 @@ class RenameDomainMigrationStep(MigrationStep):
 
 @dataclass(kw_only=True, slots=True)
 class DefineModulesOperation(ModulesOperation):
-    """Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts on one level) become
-    the module `name`'s definition, `base` its base point; they stay where they are as its first instance. An object
-    they lean on outside them (an opening's wall, a space's sources, a dimension's points, a tag's object) refuses it.
+    """Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts) become the module
+    `name`'s definition, `base` its base point; they stay where they are as its first instance. An object they lean
+    on outside them (an opening's wall, a space's sources, a dimension's points, a tag's object) refuses it. Objects
+    on several of the project's levels make a module of as many storeys (docs/adr/0796 §1), its base level the
+    lowest; levelled and unlevelled objects together refuse it (`module_levels`).
     Attributes:
         base: Unit: length.
     """
@@ -79392,7 +79486,8 @@ class DefineModulesOperation(ModulesOperation):
 class PlaceModulesOperation(ModulesOperation):
     """Modül yerleştir: a new instance of `module` (its id or name), its base at `at`, mirrored across its own y axis
     when asked, then turned `rotation` radians counter-clockwise; on `level` (absent: none), in `phase`, its
-    numbers wrapped by `numbering`.
+    numbers wrapped by `numbering`. A module of several storeys takes `level` as its base and the project's levels
+    above it, by elevation, for its upper storeys; too few levels above refuse it (`module_storey_missing`).
     Attributes:
         at: Unit: length.
         rotation: Unit: rad.
@@ -79501,12 +79596,15 @@ class RepeatModulesOperation(ModulesOperation):
     TAG_VALUE: ClassVar[str] = "repeat"
     from_: str
     to: list[ModuleLevelTarget]
+    loose: bool | Unset = UNSET
     modules: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "repeat"}
         out["from"] = self.from_
         out["to"] = [e0.to_json() for e0 in self.to]
+        if self.loose is not UNSET:
+            out["loose"] = self.loose
         if self.modules is not UNSET:
             out["modules"] = list(self.modules)
         return out
@@ -79516,6 +79614,7 @@ class RepeatModulesOperation(ModulesOperation):
         return cls(
             from_=data["from"],
             to=[ModuleLevelTarget.from_json(e0) for e0 in data["to"]],
+            loose=data.get("loose", UNSET),
             modules=list(data["modules"]) if "modules" in data else UNSET,
         )
 
@@ -90440,8 +90539,12 @@ __all__ = [
     "ModuleConflict",
     "ModuleConflictWhy",
     "ModuleConflictWhyName",
+    "ModuleCopied",
     "ModuleInstance",
     "ModuleInstanceRow",
+    "ModuleLeft",
+    "ModuleLeftWhy",
+    "ModuleLeftWhyName",
     "ModuleLevelTarget",
     "ModuleMember",
     "ModuleNumbering",

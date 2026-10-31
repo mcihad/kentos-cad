@@ -1840,6 +1840,11 @@ codes! {
     OPTION_SET_FULL = "option_set_full", Failed, false, "Kümede en çok 12 seçenek olur; birini silin ya da kabul edin.";
     /// Objects of an option no longer in the drawing.
     OPTION_MEMBER_GONE = "option_member_gone", Warning, false, "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler.";
+    // Çok katlı oda modülleri ve modülsüz nesnelerin tekrarı (docs/adr/0796).
+    /// A module of several storeys placed where the project has too few levels above the base.
+    MODULE_STOREY_MISSING = "module_storey_missing", Failed, false, "Modülün üst katlarına karşılık gelecek kat yok; daha alçak bir taban katı seçin ya da projeye kat ekleyin.";
+    /// A repeat's level objects in no module left uncopied: a locked layer, another kind, a module instance not repeated, a reference outside.
+    MODULE_REPEAT_LEFT = "module_repeat_left", Warning, false, "Kattaki bazı modülsüz nesneler kopyalanmadı (kilitli katman, tekrarlanmayan tür, tekrarlanmayan örnek, tasarım seçeneği ya da dışarıya bağ); report.left hangilerini ve nedenini söyler.";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
     INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";

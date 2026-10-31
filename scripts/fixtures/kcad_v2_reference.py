@@ -2513,6 +2513,9 @@ def document(d):
                                                             for e in b.get("entities", [])):
         # A schedule of the building program's units (docs/adr/0795; provisional number).
         schema = max(schema, 151)
+    if any("storey" in mem for m in (d["settings"].get("arch") or {}).get("modules", []) for mem in m.get("members", [])):
+        # A module member on a storey above its instance's base level (docs/adr/0796).
+        schema = max(schema, 152)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3226,7 +3229,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-152.kcad"] = container(root(cmap(parts), version=uint(152)))
+    files["schema-version-153.kcad"] = container(root(cmap(parts), version=uint(153)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5552,6 +5555,16 @@ def build():
         out["broken/options-" + name + ".kcad"] = container(document(d))
     option_bad("object-twice", lambda s: s["options"][1].update(members=list(s["options"][0]["members"])))
     option_bad("primary-unknown", lambda s: s.update(primary="z"))
+    # Schema 152 (docs/adr/0796): a duplex, its first floor's walls, room and bed on the storey above the
+    # base; the schema before refuses it, a storey on a door is a bad value.
+    ms = document(load("module-storeys.json"))
+    assert ms.count(b"\x67version\x18\x98") == 1, "the storeys are schema 152"
+    out["module-storeys.kcad"] = container(ms)
+    out["broken/module-storeys-in-schema-151.kcad"] = container(ms.replace(b"\x67version\x18\x98", b"\x67version\x18\x97"))
+    bad_storey = load("module-storeys.json")
+    door = next(m for m in bad_storey["settings"]["arch"]["modules"][0]["members"] if m["entity"]["kind"] == "opening")
+    door["storey"] = 1
+    out["broken/module-storeys-on-a-door.kcad"] = container(document(bad_storey))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

@@ -351,9 +351,11 @@ def edit_cases():
     out.append(case("Ret: eğrisel duvar ilk kapsamda yok", [run(
         {"kind": "define", "name": "Eğri", "uids": [UID(14)], "base": P(0, 0)},
         refusal("module_kind", "Eğrisel duvar ilk modül kapsamında değil; düz duvarlı bir oda seçin.", "operation.uids[0]"))]))
-    out.append(case("Ret: iki kattaki duvarlar", [run(
+    # Objects on two levels make a module of two storeys since docs/adr/0796 §1 (scripts/fixtures/
+    # module_storeys_cases.py); the case once refused them.
+    out.append(case("İki kattaki duvarlar iki katlı modül olur", [run(
         {"kind": "define", "name": "İki kat", "uids": [UID(10), UID(13)], "base": P(0, 0)},
-        refusal("module_levels", "Modülün nesneleri tek katta olur; başka kattakileri seçimden çıkarın.", "operation.uids[1]"))]))
+        {"status": "completed", "output": "$any", "warnings": []})]))
     out.append(case("Ret: boş ad", [run(
         {"kind": "define", "name": " ", "uids": [UID(10)], "base": P(0, 0)},
         refusal("invalid_input", "“ ” modül adı olamaz: boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 harf.",

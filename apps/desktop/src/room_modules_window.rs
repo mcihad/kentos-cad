@@ -10,6 +10,10 @@
 //! source; Seçimi örneğe ekle adds the selection's free objects to the chosen instance's definition (and so to every
 //! linked instance), Seçimi modülden çıkar takes the selection's members out; Katları tekrarla places the source
 //! level's linked instances on the chosen levels, each with its own number prefix, its plan said before it is written.
+//!
+//! A module of several storeys (docs/adr/0796) says its storeys and each instance the levels it stands on; Katları
+//! tekrarla's Modülsüz nesneler de copies the source level's objects in no module too, the plan saying how many are
+//! copied and how many are left.
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
@@ -51,6 +55,8 @@ pub struct Window {
     pub repeat_to: Vec<RepeatTarget>,
     /// What Katları tekrarla would do; its refusal's words when refused.
     pub repeat_preview: Option<Result<ModulesEdited, String>>,
+    /// Katları tekrarla copies the source level's objects in no module too (docs/adr/0796 §2).
+    pub repeat_loose: bool,
 }
 
 /// A level Katları tekrarla may place on: its id and name, whether chosen, its number prefix.
@@ -76,6 +82,7 @@ pub enum Event {
     RepeatFrom(usize),
     RepeatChoose(usize, bool),
     RepeatPrefix(usize, String),
+    RepeatLoose(bool),
     Repeat,
     Close,
 }
@@ -147,10 +154,10 @@ impl App {
             .as_ref()
             .map(|w| w.name.clone())
             .unwrap_or_default();
-        let (repeat_from, repeat_to) = self
+        let (repeat_from, repeat_to, repeat_loose) = self
             .room_modules
             .as_ref()
-            .map(|w| (w.repeat_from.clone(), w.repeat_to.clone()))
+            .map(|w| (w.repeat_from.clone(), w.repeat_to.clone(), w.repeat_loose))
             .unwrap_or_default();
         self.room_modules = Some(Window {
             rows,
@@ -161,6 +168,7 @@ impl App {
             repeat_from,
             repeat_to,
             repeat_preview: None,
+            repeat_loose,
         });
         self.room_modules_levels();
         self.room_modules_preview();
@@ -239,6 +247,7 @@ impl App {
             from,
             modules: Vec::new(),
             to,
+            loose: w.repeat_loose,
         })
     }
 
@@ -627,6 +636,12 @@ impl App {
                 }
                 self.room_modules_repeat_preview();
             }
+            Event::RepeatLoose(on) => {
+                if let Some(w) = self.room_modules.as_mut() {
+                    w.repeat_loose = on;
+                }
+                self.room_modules_repeat_preview();
+            }
             Event::Repeat => {
                 let Some(operation) = self.room_modules_repeat_input() else {
                     self.warn("Tekrarlanacak hedef katı seçin.");
@@ -634,14 +649,18 @@ impl App {
                 };
                 let keep = self.room_modules_chosen().map(|(m, _)| m);
                 if let Some(done) = self.room_modules_command(operation) {
-                    self.say(
-                        Level::Success,
-                        format!(
-                            "Katlar tekrarlandı: {} örnek, {} nesne yerleşti.",
-                            done.placed.len(),
-                            done.created.len()
-                        ),
+                    let mut said = format!(
+                        "Katlar tekrarlandı: {} örnek, {} nesne yerleşti",
+                        done.placed.len(),
+                        done.created.len()
                     );
+                    if !done.copied.is_empty() {
+                        said += &format!("; {} modülsüz nesne kopyalandı", done.copied.len());
+                    }
+                    if !done.report.left.is_empty() {
+                        said += &format!("; {} nesne kopyalanmadı", done.report.left.len());
+                    }
+                    self.say(Level::Success, format!("{said}."));
                     if let Some(w) = self.room_modules.as_mut() {
                         w.repeat_to.iter_mut().for_each(|t| t.chosen = false);
                     }
@@ -665,8 +684,11 @@ impl App {
             let facts = if m.removed {
                 format!("kaynağı silinmiş · {} örnek", m.instances.len())
             } else {
+                let storeys = m
+                    .storeys
+                    .map_or_else(String::new, |n| format!(" · {n} katlı"));
                 format!(
-                    "sürüm {} · {} nesne · {} örnek",
+                    "sürüm {} · {} nesne · {} örnek{storeys}",
                     m.version,
                     m.members,
                     m.instances.len()
@@ -703,14 +725,24 @@ impl App {
                 if inst.stale {
                     facts.push("eski".into());
                 }
-                if let Some(l) = &inst.level {
-                    let name = self
-                        .document
+                let level_name = |l: &String| {
+                    self.document
                         .as_ref()
                         .and_then(|d| d.model.settings().arch.as_ref())
                         .and_then(|a| a.levels.iter().find(|x| &x.id == l))
-                        .map_or_else(|| l.clone(), |x| x.name.clone());
-                    facts.push(name);
+                        .map_or_else(|| l.clone(), |x| x.name.clone())
+                };
+                // A module of several storeys: the levels it stands on, base first (docs/adr/0796 §1).
+                if inst.levels.len() > 1 {
+                    facts.push(
+                        inst.levels
+                            .iter()
+                            .map(level_name)
+                            .collect::<Vec<_>>()
+                            .join("–"),
+                    );
+                } else if let Some(l) = &inst.level {
+                    facts.push(level_name(l));
                 }
                 if inst.mirror {
                     facts.push("aynalı".into());
@@ -770,7 +802,7 @@ impl App {
         }
         let name = kentos_ui::widget::text_field("Yeni modülün adı (Banyo)", &w.name)
             .on_input(|t| msg(Event::Name(t)));
-        let define = words::field("Seçimden yeni modül", name, Some("Tek kattaki düz duvarlar, açıklıklar, mahaller, donatı, ölçü ve etiketler (bir oda ya da bütün bir daire); taban noktası duvarların sol alt köşesi.".into()));
+        let define = words::field("Seçimden yeni modül", name, Some("Bir ya da birkaç kattaki düz duvarlar, açıklıklar, mahaller, donatı, ölçü ve etiketler (bir oda, bir daire, bir dubleks); taban noktası duvarların sol alt köşesi, taban katı en alçak kat.".into()));
         let body = Column::new()
             .spacing(14)
             .push(
@@ -878,14 +910,35 @@ impl App {
             );
         }
         let summary = match &w.repeat_preview {
-            Some(Ok(done)) => words::text_line(
-                Kind::Ok,
-                format!(
+            Some(Ok(done)) => {
+                let mut said = format!(
                     "{} örnek, {} nesne yerleşir; her biri kaynağına bağlıdır.",
                     done.placed.len(),
-                    done.created.len()
-                ),
-            ),
+                    done.created.len() - done.copied.len()
+                );
+                if w.repeat_loose {
+                    said += &format!(
+                        " {} modülsüz nesne düz kopya olur",
+                        done.copied.len()
+                    );
+                    said += &if done.report.left.is_empty() {
+                        ".".to_owned()
+                    } else {
+                        format!(
+                            "; {} nesne kalır (kilitli, başka tür, başka örneğin, tasarım seçeneğinin ya da kat dışına bağlı).",
+                            done.report.left.len()
+                        )
+                    };
+                }
+                words::text_line(
+                    if done.report.left.is_empty() {
+                        Kind::Ok
+                    } else {
+                        Kind::Warn
+                    },
+                    said,
+                )
+            }
             Some(Err(why)) => words::text_line(Kind::Warn, why.clone()),
             None => words::text_line(Kind::Ok, "Hedef katları seçin.".to_owned()),
         };
@@ -894,6 +947,11 @@ impl App {
             .spacing(6)
             .push(words::field("Katları tekrarla: kaynak kat", from, None))
             .push(targets)
+            .push(words::check(
+                w.repeat_loose,
+                "Modülsüz nesneler de (duvar, açıklık, mahal, donatı, ölçü, etiket)",
+                Some(msg(Event::RepeatLoose(!w.repeat_loose))),
+            ))
             .push(words::summary(vec![summary]))
             .push(words::secondary(REPEAT, can.then(|| msg(Event::Repeat))))
             .into()

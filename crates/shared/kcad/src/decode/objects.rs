@@ -342,6 +342,8 @@ pub(super) struct Features {
     pub(super) recipe_detail: bool,
     /// Schema 145 (docs/adr/0779): a module instance's group.
     pub(super) module_units: bool,
+    /// Schema 152 (docs/adr/0796): a module member's storey.
+    pub(super) module_storeys: bool,
     /// Schema 146 (docs/adr/0783): view templates and a recipe's pens, black and white and template.
     pub(super) view_templates: bool,
     /// Schema 147 (docs/adr/0784): the program's shares, levels of buildings and wings, a schedule's share fields.
@@ -562,6 +564,7 @@ impl Features {
             modules: schema >= crate::SCHEMA_WITH_MODULES,
             recipe_detail: schema >= crate::SCHEMA_WITH_RECIPE_DETAIL,
             module_units: schema >= crate::SCHEMA_WITH_MODULE_UNITS,
+            module_storeys: schema >= crate::SCHEMA_WITH_MODULE_STOREYS,
             view_templates: schema >= crate::SCHEMA_WITH_VIEW_TEMPLATES,
             program_shares: schema >= crate::SCHEMA_WITH_PROGRAM_SHARES,
             options: schema >= crate::SCHEMA_WITH_OPTIONS,

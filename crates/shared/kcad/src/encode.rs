@@ -2089,6 +2089,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 152 (docs/adr/0796): a module member on a storey above its instance's base level.
+    if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_storeys(&a.modules)) {
+        return crate::SCHEMA_WITH_MODULE_STOREYS;
+    }
     // Schema 151 (docs/adr/0795): a schedule of the program's units, its fields, filter or rows' units.
     if objs.iter().any(unit_schedules) || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(unit_schedules)) {
         return crate::SCHEMA_WITH_UNIT_SCHEDULES;

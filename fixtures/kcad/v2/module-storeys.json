@@ -1,0 +1,1213 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Çok katlı modüller",
+  "uids": [
+    "0192f5a1-7960-7000-8000-000000000001",
+    "0192f5a1-7960-7000-8000-000000000002",
+    "0192f5a1-7960-7000-8000-000000000003",
+    "0192f5a1-7960-7000-8000-000000000004",
+    "0192f5a1-7960-7000-8000-000000000005",
+    "0192f5a1-7960-7000-8000-000000000006",
+    "0192f5a1-7960-7000-8000-000000000007",
+    "0192f5a1-7960-7000-8000-000000000008",
+    "0192f5a1-7960-7000-8000-000000000009",
+    "0192f5a1-7960-7000-8000-00000000000a",
+    "0192f5a1-7960-7000-8000-00000000000b",
+    "0192f5a1-7960-7000-8000-00000000000c",
+    "0192f5a1-7960-7000-8000-00000000000d",
+    "0192f5a1-7960-7000-8000-00000000000e",
+    "0192f5a1-7960-7000-8000-00000000000f",
+    "0192f5a1-7960-7000-8000-000000000010",
+    "0192f5a1-7960-7000-8000-000000000011",
+    "0192f5a1-7960-7000-8000-000000000012",
+    "0192f5a1-7960-7000-8000-000000000013",
+    "0192f5a1-7960-7000-8000-000000000014",
+    "0192f5a1-7960-7000-8000-000000000015",
+    "0192f5a1-7960-7000-8000-000000000016",
+    "0192f5a1-7960-7000-8000-000000000017",
+    "0192f5a1-7960-7000-8000-000000000018",
+    "0192f5a1-7960-7000-8000-000000000019",
+    "0192f5a1-7960-7000-8000-00000000001a",
+    "0192f5a1-7960-7000-8000-00000000001b"
+  ],
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "kat1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        },
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat2",
+          "name": "2. kat",
+          "elevation": 6.0,
+          "height": 3.0
+        },
+        {
+          "id": "bodrum",
+          "name": "Bodrum",
+          "elevation": -3.0,
+          "height": 3.0
+        }
+      ],
+      "spaceNumberPrefixes": {
+        "zemin": "Z-",
+        "kat1": "1-"
+      },
+      "modules": [
+        {
+          "id": "dubleks",
+          "name": "Dubleks",
+          "version": 1,
+          "members": [
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000001",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000002",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 3.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000003",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "storey": 1
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000004",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 3.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "storey": 1
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000005",
+              "entity": {
+                "kind": "opening",
+                "id": 0,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7960-7000-8000-000000000001",
+                "at": 1.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "number": "K1",
+                "place": [
+                  {
+                    "x": 0.55,
+                    "y": 0.05
+                  },
+                  {
+                    "x": 0.55,
+                    "y": -0.05
+                  },
+                  {
+                    "x": 1.45,
+                    "y": 0.05
+                  },
+                  {
+                    "x": 1.45,
+                    "y": -0.05
+                  }
+                ]
+              }
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000006",
+              "entity": {
+                "kind": "opening",
+                "id": 0,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7960-7000-8000-000000000003",
+                "at": 2.0,
+                "width": 0.8,
+                "form": "door",
+                "frame": 0.05,
+                "number": "K2",
+                "place": [
+                  {
+                    "x": 1.6,
+                    "y": 0.05
+                  },
+                  {
+                    "x": 1.6,
+                    "y": -0.05
+                  },
+                  {
+                    "x": 2.4,
+                    "y": 0.05
+                  },
+                  {
+                    "x": 2.4,
+                    "y": -0.05
+                  }
+                ]
+              }
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000007",
+              "entity": {
+                "kind": "space",
+                "id": 0,
+                "layerId": "mimari",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.05,
+                          "y": 0.05
+                        },
+                        {
+                          "x": 3.95,
+                          "y": 0.05
+                        },
+                        {
+                          "x": 3.95,
+                          "y": 2.95
+                        },
+                        {
+                          "x": 0.05,
+                          "y": 2.95
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "D1",
+                "name": "Salon"
+              }
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000008",
+              "entity": {
+                "kind": "space",
+                "id": 0,
+                "layerId": "mimari",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.05,
+                          "y": 0.05
+                        },
+                        {
+                          "x": 3.95,
+                          "y": 0.05
+                        },
+                        {
+                          "x": 3.95,
+                          "y": 2.95
+                        },
+                        {
+                          "x": 0.05,
+                          "y": 2.95
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "number": "D2",
+                "name": "Oda"
+              },
+              "storey": 1
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-000000000009",
+              "entity": {
+                "kind": "insert",
+                "id": 0,
+                "layerId": "mimari",
+                "attrs": {},
+                "block": "0192f5a1-7960-7000-8000-0000000000b1",
+                "p": {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                "scale": 1.0,
+                "rotation": 0.0
+              },
+              "storey": 1
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-00000000000a",
+              "entity": {
+                "kind": "tag",
+                "id": 0,
+                "layerId": "mimari",
+                "attrs": {},
+                "of": "0192f5a1-7960-7000-8000-000000000008",
+                "at": {
+                  "x": 2.0,
+                  "y": 1.5
+                },
+                "content": "{number}",
+                "text": "D2"
+              }
+            },
+            {
+              "key": "0192f5a1-7960-7000-8000-00000000000b",
+              "entity": {
+                "kind": "dimension",
+                "id": 0,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                "height": 0.125,
+                "offset": -0.5,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-7960-7000-8000-000000000003",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-7960-7000-8000-000000000003",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "instances": [
+            {
+              "id": "dubleks-1",
+              "at": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "level": "zemin",
+              "version": 1,
+              "members": [
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000001",
+                  "uid": "0192f5a1-7960-7000-8000-000000000001"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000002",
+                  "uid": "0192f5a1-7960-7000-8000-000000000002"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000003",
+                  "uid": "0192f5a1-7960-7000-8000-000000000003"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000004",
+                  "uid": "0192f5a1-7960-7000-8000-000000000004"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000005",
+                  "uid": "0192f5a1-7960-7000-8000-000000000005"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000006",
+                  "uid": "0192f5a1-7960-7000-8000-000000000006"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000007",
+                  "uid": "0192f5a1-7960-7000-8000-000000000007"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000008",
+                  "uid": "0192f5a1-7960-7000-8000-000000000008"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-000000000009",
+                  "uid": "0192f5a1-7960-7000-8000-000000000009"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-00000000000a",
+                  "uid": "0192f5a1-7960-7000-8000-00000000000a"
+                },
+                {
+                  "key": "0192f5a1-7960-7000-8000-00000000000b",
+                  "uid": "0192f5a1-7960-7000-8000-00000000000b"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0,
+    "y": 0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "mimari",
+      "name": "Mimari",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "mobilya",
+      "name": "Mobilya",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a1-7960-7000-8000-0000000000b1",
+      "name": "Yatak",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 1.6,
+            "y": 0.0
+          }
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 3.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "kat1"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 4.0,
+          "y": 0.0
+        },
+        {
+          "x": 4.0,
+          "y": 3.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "kat1"
+      }
+    },
+    {
+      "kind": "opening",
+      "id": 5,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-7960-7000-8000-000000000001",
+      "at": 1.0,
+      "width": 0.9,
+      "form": "door",
+      "frame": 0.05,
+      "number": "K1",
+      "place": [
+        {
+          "x": 0.55,
+          "y": 0.05
+        },
+        {
+          "x": 0.55,
+          "y": -0.05
+        },
+        {
+          "x": 1.45,
+          "y": 0.05
+        },
+        {
+          "x": 1.45,
+          "y": -0.05
+        }
+      ]
+    },
+    {
+      "kind": "opening",
+      "id": 6,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-7960-7000-8000-000000000003",
+      "at": 2.0,
+      "width": 0.8,
+      "form": "door",
+      "frame": 0.05,
+      "number": "K2",
+      "place": [
+        {
+          "x": 1.6,
+          "y": 0.05
+        },
+        {
+          "x": 1.6,
+          "y": -0.05
+        },
+        {
+          "x": 2.4,
+          "y": 0.05
+        },
+        {
+          "x": 2.4,
+          "y": -0.05
+        }
+      ]
+    },
+    {
+      "kind": "space",
+      "id": 7,
+      "layerId": "mimari",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.05,
+                "y": 0.05
+              },
+              {
+                "x": 3.95,
+                "y": 0.05
+              },
+              {
+                "x": 3.95,
+                "y": 2.95
+              },
+              {
+                "x": 0.05,
+                "y": 2.95
+              }
+            ]
+          }
+        }
+      ],
+      "number": "D1",
+      "name": "Salon",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "space",
+      "id": 8,
+      "layerId": "mimari",
+      "attrs": {},
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.05,
+                "y": 0.05
+              },
+              {
+                "x": 3.95,
+                "y": 0.05
+              },
+              {
+                "x": 3.95,
+                "y": 2.95
+              },
+              {
+                "x": 0.05,
+                "y": 2.95
+              }
+            ]
+          }
+        }
+      ],
+      "number": "D2",
+      "name": "Oda",
+      "arch": {
+        "level": "kat1"
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 9,
+      "layerId": "mimari",
+      "attrs": {},
+      "block": "0192f5a1-7960-7000-8000-0000000000b1",
+      "p": {
+        "x": 2.0,
+        "y": 2.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+        "level": "kat1"
+      }
+    },
+    {
+      "kind": "tag",
+      "id": 10,
+      "layerId": "mimari",
+      "attrs": {},
+      "of": "0192f5a1-7960-7000-8000-000000000008",
+      "at": {
+        "x": 2.0,
+        "y": 1.5
+      },
+      "content": "{number}",
+      "text": "D2"
+    },
+    {
+      "kind": "dimension",
+      "id": 11,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 4.0,
+        "y": 0.0
+      },
+      "height": 0.125,
+      "offset": -0.5,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "0192f5a1-7960-7000-8000-000000000003",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+          }
+        },
+        "b": {
+          "uid": "0192f5a1-7960-7000-8000-000000000003",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 12,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 10.0,
+          "y": 0.0
+        },
+        {
+          "x": 14.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 13,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 14.0,
+          "y": 0.0
+        },
+        {
+          "x": 14.0,
+          "y": 3.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "opening",
+      "id": 14,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-7960-7000-8000-00000000000c",
+      "at": 1.0,
+      "width": 0.9,
+      "form": "door",
+      "frame": 0.05,
+      "number": "K5",
+      "place": [
+        {
+          "x": 10.55,
+          "y": 0.05
+        },
+        {
+          "x": 10.55,
+          "y": -0.05
+        },
+        {
+          "x": 11.45,
+          "y": 0.05
+        },
+        {
+          "x": 11.45,
+          "y": -0.05
+        }
+      ]
+    },
+    {
+      "kind": "space",
+      "id": 15,
+      "layerId": "mimari",
+      "attrs": {},
+      "sources": [
+        "0192f5a1-7960-7000-8000-00000000000c",
+        "0192f5a1-7960-7000-8000-00000000000d"
+      ],
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 10.05,
+                "y": 0.05
+              },
+              {
+                "x": 13.95,
+                "y": 0.05
+              },
+              {
+                "x": 13.95,
+                "y": 2.95
+              },
+              {
+                "x": 10.05,
+                "y": 2.95
+              }
+            ]
+          }
+        }
+      ],
+      "seed": {
+        "x": 12.0,
+        "y": 1.5
+      },
+      "number": "Z-101",
+      "name": "Hol",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "tag",
+      "id": 16,
+      "layerId": "mimari",
+      "attrs": {},
+      "of": "0192f5a1-7960-7000-8000-00000000000f",
+      "at": {
+        "x": 12.0,
+        "y": 1.5
+      },
+      "content": "{number}",
+      "text": "Z-101"
+    },
+    {
+      "kind": "dimension",
+      "id": 17,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 10.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 14.0,
+        "y": 0.0
+      },
+      "height": 0.125,
+      "offset": -0.5,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "0192f5a1-7960-7000-8000-00000000000c",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+          }
+        },
+        "b": {
+          "uid": "0192f5a1-7960-7000-8000-00000000000c",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 18,
+      "layerId": "mobilya",
+      "attrs": {},
+      "block": "0192f5a1-7960-7000-8000-0000000000b1",
+      "p": {
+        "x": 11.0,
+        "y": 1.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "column",
+      "id": 19,
+      "layerId": "mimari",
+      "attrs": {},
+      "at": {
+        "x": 16.0,
+        "y": 1.0
+      },
+      "width": 0.4,
+      "depth": 0.4,
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "dimension",
+      "id": 20,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 10.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 4.0,
+        "y": 0.0
+      },
+      "height": 0.125,
+      "offset": -0.5,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "0192f5a1-7960-7000-8000-00000000000c",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+          }
+        },
+        "b": {
+          "uid": "0192f5a1-7960-7000-8000-000000000001",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 21,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 20.0,
+          "y": 0.0
+        },
+        {
+          "x": 22.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "kat1"
+      }
+    },
+    {
+      "kind": "space",
+      "id": 22,
+      "layerId": "mimari",
+      "attrs": {},
+      "sources": [
+        "0192f5a1-7960-7000-8000-000000000015"
+      ],
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 20.05,
+                "y": 0.05
+              },
+              {
+                "x": 21.95,
+                "y": 0.05
+              },
+              {
+                "x": 21.95,
+                "y": 1.95
+              },
+              {
+                "x": 20.05,
+                "y": 1.95
+              }
+            ]
+          }
+        }
+      ],
+      "seed": {
+        "x": 21.0,
+        "y": 1.0
+      },
+      "number": "Z-102",
+      "name": "Depo",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "tag",
+      "id": 23,
+      "layerId": "mimari",
+      "attrs": {},
+      "of": "0192f5a1-7960-7000-8000-000000000016",
+      "at": {
+        "x": 21.0,
+        "y": 1.0
+      },
+      "content": "{number}",
+      "text": "Z-102"
+    },
+    {
+      "kind": "wall",
+      "id": 24,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 30.0,
+          "y": 0.0
+        },
+        {
+          "x": 32.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center"
+    },
+    {
+      "kind": "wall",
+      "id": 25,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 40.0,
+          "y": 0.0
+        },
+        {
+          "x": 42.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "yok"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 26,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": -5.0
+        },
+        {
+          "x": 4.0,
+          "y": -5.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "bodrum"
+      }
+    },
+    {
+      "kind": "line",
+      "id": 27,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+        "x": 50.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 51.0,
+        "y": 0.0
+      }
+    }
+  ]
+}

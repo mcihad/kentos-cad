@@ -7,8 +7,8 @@ import type { ModulesOperation } from "./ModulesOperation";
  * Refusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,
  * `module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,
  * `module_instance_not_found`, `module_member_missing`, `module_member_needed`, `module_repeat_empty`,
- * `module_repeat_taken`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`, `invalid_revision`,
- * `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`, `module_member_gone`,
- * `module_drift_overwritten`, `module_member_released`.
+ * `module_repeat_taken`, `module_storey_missing`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`,
+ * `invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,
+ * `module_member_gone`, `module_drift_overwritten`, `module_member_released`, `module_repeat_left`.
  */
 export type ModulesEdit = { operation: ModulesOperation, expectedRevision?: string, };

@@ -11,11 +11,15 @@
 //! changed by hand (drifted), gives a flat's instance its own building-program group and repeats a level's instances on
 //! other levels (`modules_more.rs`); `fixtures/commands/v1/cad.modules.edit.flats.json`
 //! (`scripts/fixtures/module_flats_cases.py`).
+//!
+//! The fourth slice (docs/adr/0796) lets a definition span several levels (each member on its storey above the base
+//! level, the host's levels taken by their order) and a repeat copy the level's objects in no module too
+//! (`modules_more.rs`); `fixtures/commands/v1/cad.modules.edit.storeys.json` (`scripts/fixtures/module_storeys_cases.py`).
 
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    ArchModule, CommandResult, CommandWarning, Entity, ModuleBreak, ModuleConflictWhy,
+    ArchModule, CommandResult, CommandWarning, Entity, ModuleBreak, ModuleConflictWhy, ModuleCopied,
     ModuleInstance, ModuleMember, ModuleNumbering, ModuleObject, ModulePlaced, ModuleReport,
     ModuleSkipWhy, ModuleSkipped, ModulesEdit, ModulesEdited, ModulesOperation, Vec2,
     module_kind_ok, opening_type_id_of,
@@ -44,6 +48,8 @@ struct Work {
     /// The objects deleted with their keys (Modülden çıkar).
     removes: Vec<Slot>,
     placed: Vec<ModulePlaced>,
+    /// The objects in no module a repeat copied (docs/adr/0796 §2).
+    copied: Vec<ModuleCopied>,
     module: Option<String>,
     instance: Option<String>,
     report: ModuleReport,
@@ -75,6 +81,75 @@ pub(crate) fn inverse(at: Vec2, rotation_rad: f64, mirrored: bool) -> Affine {
         &flip,
         &compose(&rotation(-rotation_rad, o), &translation(-at.x, -at.y)),
     )
+}
+
+/// The project's levels in storey order (docs/adr/0796 §1): by elevation, the list's order between equal ones.
+pub(crate) fn storey_order(doc: &Document) -> Vec<String> {
+    let mut levels: Vec<(f64, usize, String)> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| {
+            a.levels
+                .iter()
+                .enumerate()
+                .map(|(i, l)| (l.elevation, i, l.id.clone()))
+                .collect()
+        })
+        .unwrap_or_default();
+    levels.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
+    levels.into_iter().map(|(_, _, id)| id).collect()
+}
+
+/// The level `storey` storeys above `base` in `order`: the base itself for storey 0; none when the project has no
+/// such level (or no base for an upper storey).
+pub(crate) fn storey_level(order: &[String], base: Option<&str>, storey: u32) -> Option<Option<String>> {
+    if storey == 0 {
+        return Some(base.map(str::to_owned));
+    }
+    let i = order.iter().position(|l| Some(l.as_str()) == base)?;
+    order.get(i + storey as usize).map(|l| Some(l.clone()))
+}
+
+/// `module_storey_missing` when the module's upper storeys find no level above `base` (docs/adr/0796 §1).
+pub(crate) fn storeys_fit(
+    doc: &Document,
+    m: &ArchModule,
+    base: Option<&str>,
+    path: &str,
+) -> Result<(), Stop> {
+    let n = m.storeys();
+    if n <= 1 {
+        return Ok(());
+    }
+    let order = storey_order(doc);
+    if storey_level(&order, base, n - 1).is_some() {
+        return Ok(());
+    }
+    let words = match base {
+        None => format!(
+            "“{}” modülü {n} katlı; taban katı verilmeli. Bir kat seçin.",
+            m.name
+        ),
+        Some(b) => {
+            let above = order
+                .iter()
+                .position(|l| l == b)
+                .map_or(0, |i| order.len() - i - 1);
+            let name = doc
+                .settings()
+                .arch
+                .as_ref()
+                .and_then(|a| a.levels.iter().find(|l| l.id == b))
+                .map_or(b, |l| l.name.as_str());
+            format!(
+                "“{}” modülü {n} katlı; “{name}” katının üstünde {} kat gerekir, projede {above} var. Daha alçak bir taban katı seçin ya da projeye kat ekleyin.",
+                m.name,
+                n - 1
+            )
+        }
+    };
+    Err(fail(codes::MODULE_STOREY_MISSING, words, path))
 }
 
 /// `e` with every text naming one of `map`'s keys made its value: the object's references to the others.
@@ -143,6 +218,7 @@ fn number_mut(e: &mut Entity) -> Option<&mut Option<String>> {
 /// A definition's object as an instance writes it: placed by its matrix, its references on the instance's objects, on
 /// its level and in its phase, its number wrapped; an opening read back onto its (new) wall.
 fn instantiate(
+    doc: &Document,
     member: &ModuleMember,
     inst: &ModuleInstance,
     map: &HashMap<String, String>,
@@ -157,8 +233,23 @@ fn instantiate(
         )
     })?;
     e = remap(&e, map);
+    // A member on an upper storey stands on the level that many above the instance's (docs/adr/0796 §1).
+    let level = if member.storey == 0 {
+        inst.level.clone()
+    } else {
+        storey_level(&storey_order(doc), inst.level.as_deref(), member.storey).ok_or_else(|| {
+            fail(
+                codes::MODULE_STOREY_MISSING,
+                format!(
+                    "Modülün {}. katına karşılık gelecek kat yok; projeye kat ekleyin.",
+                    member.storey + 1
+                ),
+                "operation",
+            )
+        })?
+    };
     if let Some(arch) = arch_mut(&mut e) {
-        arch.level.clone_from(&inst.level);
+        arch.level = level;
         if inst.phase.is_some() {
             arch.phase = inst.phase;
         }
@@ -335,7 +426,7 @@ fn place_all(
     let none = |_: &str| None;
     for (mem, id) in m.members.iter().zip(ids) {
         if matches!(mem.entity, Entity::Wall(_)) {
-            walls.insert(id.to_string(), instantiate(mem, inst, &map, &none)?);
+            walls.insert(id.to_string(), instantiate(doc, mem, inst, &map, &none)?);
         }
     }
     let wall_of = |uid: &str| {
@@ -346,7 +437,7 @@ fn place_all(
     };
     m.members
         .iter()
-        .map(|mem| instantiate(mem, inst, &map, &wall_of))
+        .map(|mem| instantiate(doc, mem, inst, &map, &wall_of))
         .collect()
 }
 
@@ -427,7 +518,11 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         .flat_map(|i| i.members.iter().map(|o| o.uid.as_str()))
                 })
                 .collect();
-            let mut level: Option<Option<String>> = None;
+            // The levels the objects stand on (docs/adr/0796 §1): all on the project's levels (one or several) or all
+            // on none.
+            let order = storey_order(doc);
+            let mut levelled: Option<bool> = None;
+            let mut ranks: Vec<usize> = Vec::new();
             for (i, _, e, uid) in &found {
                 let path = format!("operation.uids[{i}]");
                 if doc.layers().is_locked(&e.base().layer_id) {
@@ -475,20 +570,40 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     }
                 }
                 if arch_level_holder(e) {
-                    let own = e.own_level().map(str::to_owned);
-                    match &level {
-                        None => level = Some(own),
-                        Some(l) if *l != own => {
+                    let own = e.own_level();
+                    if *levelled.get_or_insert(own.is_some()) != own.is_some() {
+                        return Err(fail(
+                            codes::MODULE_LEVELS,
+                            "Modülün nesneleri ya hepsi projenin katlarında ya da hepsi katsız olur; katsızlara kat verin ya da onları seçimden çıkarın.".into(),
+                            &path,
+                        ));
+                    }
+                    if let Some(l) = own {
+                        let Some(r) = order.iter().position(|x| x == l) else {
                             return Err(fail(
                                 codes::MODULE_LEVELS,
-                                "Modülün nesneleri tek katta olur; başka kattakileri seçimden çıkarın.".into(),
+                                format!("Nesnenin katı “{l}” projede yok; önce ona projenin bir katını verin."),
                                 &path,
                             ));
-                        }
-                        Some(_) => {}
+                        };
+                        ranks.push(r);
                     }
                 }
             }
+            let low = ranks.iter().copied().min();
+            if let (Some(lo), Some(hi)) = (low, ranks.iter().copied().max())
+                && hi - lo >= kentos_commands::MAX_MODULE_STOREYS as usize
+            {
+                return Err(fail(
+                    codes::MODULE_LEVELS,
+                    format!(
+                        "Bir modül en çok {} kata yayılır; seçimi daraltın.",
+                        kentos_commands::MAX_MODULE_STOREYS
+                    ),
+                    "operation.uids",
+                ));
+            }
+            let level: Option<String> = low.map(|r| order[r].clone());
             let back = translation(-base.x, -base.y);
             // A flat (docs/adr/0779 §4): its spaces all in one group make the group the first instance's, the
             // definition's spaces in none.
@@ -505,6 +620,11 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
             };
             let mut members = Vec::new();
             for (_, _, e, uid) in &found {
+                // Its storey above the base level (docs/adr/0796 §1).
+                let storey = match (low, e.own_level().filter(|_| arch_level_holder(e))) {
+                    (Some(lo), Some(l)) => order.iter().position(|x| x == l).map_or(0, |r| r - lo),
+                    _ => 0,
+                };
                 let mut t = crate::transform::by_matrix(e, &back).ok_or_else(|| {
                     fail(
                         codes::NOT_FINITE,
@@ -524,6 +644,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 members.push(ModuleMember {
                     key: (*uid).clone(),
                     entity: t,
+                    storey: u32::try_from(storey).unwrap_or(0),
                 });
             }
             let inst = ModuleInstance {
@@ -531,7 +652,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 at: *base,
                 rotation: 0.0,
                 mirror: false,
-                level: level.flatten(),
+                level,
                 phase: None,
                 numbering: ModuleNumbering::default(),
                 unit,
@@ -578,6 +699,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 ));
             }
             level_ok(doc, level.as_deref())?;
+            storeys_fit(doc, &modules[k], level.as_deref(), "operation.level")?;
             more::unit_known(doc, unit.as_deref(), "operation.unit")?;
             for mem in &modules[k].members {
                 let l = &mem.entity.base().layer_id;
@@ -645,6 +767,11 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
             };
             let src = modules[k].instances[f].clone();
             let back = inverse(src.at, src.rotation, src.mirror);
+            let order = storey_order(doc);
+            let base_rank = src
+                .level
+                .as_deref()
+                .and_then(|b| order.iter().position(|x| x == b));
             let to_key: HashMap<String, String> = src
                 .members
                 .iter()
@@ -677,6 +804,16 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     )
                 })?;
                 t = remap(&t, &to_key);
+                // The storey the source's object stands on now (docs/adr/0796 §1): a level below the base or none keeps
+                // the definition's.
+                let storey = match (base_rank, e.own_level().filter(|_| arch_level_holder(e))) {
+                    (Some(b), Some(l)) => order
+                        .iter()
+                        .position(|x| x == l)
+                        .filter(|&r| r >= b && r - b < kentos_commands::MAX_MODULE_STOREYS as usize)
+                        .map_or(mem.storey, |r| u32::try_from(r - b).unwrap_or(mem.storey)),
+                    _ => mem.storey,
+                };
                 if let Some(a) = arch_mut(&mut t) {
                     a.level = None;
                     if src.phase.is_some()
@@ -697,9 +834,12 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 }
                 t.base_mut().id = 0;
                 // Within a matrix's rounding the member stays as it was (docs/adr/0779 §3).
-                if !more::near_entities(&t, &mem.entity) {
+                // What the document writes itself (a tag's text with the instance's number, an opening's jambs) is no
+                // change of the source (docs/adr/0796).
+                if !more::same_object(&t, &mem.entity) || storey != mem.storey {
                     changed.push(mem.key.clone());
                     mem.entity = t;
+                    mem.storey = storey;
                 }
             }
             // Instances behind the module's version, or lacking a key, catch up whole (docs/adr/0779 §1).
@@ -769,8 +909,9 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
             from,
             modules: of,
             to,
+            loose,
         } => {
-            more::repeat(doc, &mut modules, from, of, to, &mut work)?;
+            more::repeat(doc, &mut modules, from, of, to, *loose, &mut work)?;
         }
         ModulesOperation::Except { module, uids } | ModulesOperation::Restore { module, uids } => {
             let restore = matches!(input.operation, ModulesOperation::Restore { .. });
@@ -819,7 +960,7 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         continue;
                     };
                     let wall_of = |u: &str| object_of(doc, u).map(|(_, e)| e.clone());
-                    let mut e = instantiate(&mem, &inst, &map, &wall_of)?;
+                    let mut e = instantiate(doc, &mem, &inst, &map, &wall_of)?;
                     e = keep_placement(e, old);
                     e.base_mut().id = slot.0;
                     if bare(&e) != bare(old) || has {
@@ -1011,6 +1152,16 @@ fn warnings(r: &ModuleReport) -> Vec<CommandWarning> {
             )
         })
         .count();
+    if !r.left.is_empty() {
+        out.push(CommandWarning {
+            code: codes::MODULE_REPEAT_LEFT.into(),
+            message: format!(
+                "Kattaki {} modülsüz nesne kopyalanmadı (kilitli katman, tekrarlanmayan tür, tekrarlanmayan örnek, tasarım seçeneği ya da dışarıya bağ); report.left hangilerini ve nedenini söyler.",
+                r.left.len()
+            ),
+            path: Some("operation".into()),
+        });
+    }
     if removing && released > 0 {
         out.push(CommandWarning {
             code: codes::MODULE_MEMBER_RELEASED.into(),
@@ -1037,6 +1188,7 @@ fn output(doc: &Document, work: &Work, created: Vec<String>) -> ModulesEdited {
             .filter_map(|(s, _)| doc.uid(*s).map(|u| u.to_string()))
             .collect(),
         placed: work.placed.clone(),
+        copied: work.copied.clone(),
         report: work.report.clone(),
         revision: doc.revision().to_string(),
     }

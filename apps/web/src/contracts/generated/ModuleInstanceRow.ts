@@ -24,4 +24,9 @@ drifted?: Array<string>, broken?: ModuleBreak,
 /**
  * The building program's group of the instance's spaces.
  */
-unit?: string, level?: string, mirror: boolean, };
+unit?: string, level?: string, 
+/**
+ * A module of several storeys: the levels the instance stands on, base first (docs/adr/0796 §1); a storey with no
+ * level (a level removed since) is left out.
+ */
+levels?: Array<string>, mirror: boolean, };

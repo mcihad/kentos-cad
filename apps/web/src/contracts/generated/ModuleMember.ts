@@ -5,4 +5,10 @@ import type { Entity } from "./Entity";
  * One object of a module's definition: its key (the id of the object it was taken from) and the object in the
  * definition's frame, its level and phase left to the instance.
  */
-export type ModuleMember = { key: string, entity: Entity, };
+export type ModuleMember = { key: string, entity: Entity, 
+/**
+ * Its storey above the instance's base level (docs/adr/0796 §1): 0 the base level, 1 the project's next level up
+ * (the levels by elevation). Only a wall's, a space's or a fixture's; an opening, a tag, a dimension or a text
+ * follows what it is on.
+ */
+storey?: number, };

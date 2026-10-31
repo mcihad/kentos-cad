@@ -4,4 +4,8 @@ import type { ModuleInstanceRow } from "./ModuleInstanceRow";
 /**
  * A module as `cad.modules.query` reads it.
  */
-export type ModuleRow = { id: string, name: string, version: number, members: number, removed: boolean, instances: Array<ModuleInstanceRow>, };
+export type ModuleRow = { id: string, name: string, version: number, members: number, 
+/**
+ * The storeys a module of several spans (docs/adr/0796 §1); absent: one.
+ */
+storeys?: number, removed: boolean, instances: Array<ModuleInstanceRow>, };

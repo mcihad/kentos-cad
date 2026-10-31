@@ -21457,7 +21457,7 @@
       "id": "cad.modules.edit",
       "version": 1,
       "title": "Oda modülü",
-      "summary": "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). addMembers (module, instance, uids: örnekte çizilen yeni nesneler tanıma katılır; öbür bağlı örneklere kendi matrisleriyle yerleşir; docs/adr/0779), removeMembers (uids: örneğin nesneleri anahtarlarıyla tanımdan çıkar; kendisi sıradan nesne olarak kalır, öbür örneklerdeki karşılıkları silinir, istisna ya da kilitli olanlar serbest kalır: module_member_released; kalan bir üye ona bağlıysa module_member_needed), repeat (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering, unit ve örneğe özel satırlar instances: module, instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş module_repeat_taken). place ve repeat'in unit'i bina programının bölümü: örneğin mahalleri o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın değeriyle yazılır ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları (created, changed, placed, report.updated, skipped, conflicts, changedKeys, addedKeys, removedKeys, released, deleted) gösterir. Tasarım alternatifi kapsam dışıdır.",
+      "summary": "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). addMembers (module, instance, uids: örnekte çizilen yeni nesneler tanıma katılır; öbür bağlı örneklere kendi matrisleriyle yerleşir; docs/adr/0779), removeMembers (uids: örneğin nesneleri anahtarlarıyla tanımdan çıkar; kendisi sıradan nesne olarak kalır, öbür örneklerdeki karşılıkları silinir, istisna ya da kilitli olanlar serbest kalır: module_member_released; kalan bir üye ona bağlıysa module_member_needed), repeat (from: kaynak kat, modules: süzgeç, to: hedef katlar, her birinde numbering, unit ve örneğe özel satırlar instances: module, instance, numbering, unit; kattaki bağlı örnekler aynı yer, dönüş ve aynayla her hedef kata yerleşir; boş kat module_repeat_empty, zaten yerleşmiş module_repeat_taken; loose: kattaki modülsüz duvar, açıklık, mahal, donatı, ölçü ve etiketler de düz kopya olarak her hedefe gider, birbirlerine ve tekrarlanan örneklerin nesnelerine bağları kopyalara çevrilir, numaraları hedefin numbering'iyle (yoksa katın mahal öneki değişir); kilitli, başka türden, tekrarlanmayan örneğin ya da dışarıya bağlı olan kalır: report.left, module_repeat_left; cevabın copied'ı; docs/adr/0796). Birden çok kattaki nesneler çok katlı modül olur (taban en alçak kat; duvar, mahal ve donatının storey'i taban katının kaç kat üstünde olduğu; katlar kotlarına göre sıralanır); place ve repeat üst katları hedefin üstündeki katlara koyar, yetmeyen kat module_storey_missing; katlı ile katsız nesne birlikte module_levels. place ve repeat'in unit'i bina programının bölümü: örneğin mahalleri o bölümde olur (daire modülü). Elle değişmiş (istisna yapılmamış) örnek nesnesi güncellemede kaynağın değeriyle yazılır ve söylenir: module_drift_overwritten. Plan yazmadan yapılacakları (created, changed, placed, report.updated, skipped, conflicts, changedKeys, addedKeys, removedKeys, released, deleted) gösterir. Tasarım alternatifi kapsam dışıdır.",
       "aliases": [
         "MODUL"
       ],
@@ -21475,7 +21475,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.modules.edit` v1.\n\nRefusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,\n`module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,\n`module_instance_not_found`, `module_member_missing`, `module_member_needed`, `module_repeat_empty`,\n`module_repeat_taken`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`, `invalid_revision`,\n`revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`, `module_member_gone`,\n`module_drift_overwritten`, `module_member_released`.",
+        "description": "Input of `cad.modules.edit` v1.\n\nRefusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,\n`module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,\n`module_instance_not_found`, `module_member_missing`, `module_member_needed`, `module_repeat_empty`,\n`module_repeat_taken`, `module_storey_missing`, `unit_not_found`, `not_in_module`, `not_finite`, `nothing_to_set`,\n`invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,\n`module_member_gone`, `module_drift_overwritten`, `module_member_released`, `module_repeat_left`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -21501,6 +21501,13 @@
           "changed": {
             "items": {
               "type": "string"
+            },
+            "type": "array"
+          },
+          "copied": {
+            "description": "The objects in no module a repeat with `loose` copied, target by target (docs/adr/0796 §2).",
+            "items": {
+              "$ref": "#/$defs/ModuleCopied"
             },
             "type": "array"
           },
@@ -21557,6 +21564,13 @@
           "changed": {
             "items": {
               "type": "string"
+            },
+            "type": "array"
+          },
+          "copied": {
+            "description": "The objects in no module a repeat with `loose` copied, target by target (docs/adr/0796 §2).",
+            "items": {
+              "$ref": "#/$defs/ModuleCopied"
             },
             "type": "array"
           },
@@ -21627,6 +21641,7 @@
           "module_member_needed",
           "module_repeat_empty",
           "module_repeat_taken",
+          "module_storey_missing",
           "unit_not_found",
           "not_in_module",
           "nothing_to_set",
@@ -21638,7 +21653,8 @@
           "module_exception_kept",
           "module_member_gone",
           "module_drift_overwritten",
-          "module_member_released"
+          "module_member_released",
+          "module_repeat_left"
         ]
       },
       "examples": [
@@ -21677,6 +21693,24 @@
                   "level": "kat2",
                   "numbering": {
                     "prefix": "2-"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "title": "Zemin katı modülsüz nesneleriyle 1. kata tekrarla",
+          "input": {
+            "operation": {
+              "from": "zemin",
+              "kind": "repeat",
+              "loose": true,
+              "to": [
+                {
+                  "level": "kat1",
+                  "numbering": {
+                    "prefix": "1-"
                   }
                 }
               ]
@@ -22066,7 +22100,7 @@
       "id": "cad.modules.query",
       "version": 1,
       "title": "Oda modüllerini oku",
-      "summary": "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle değişmiş, istisna olmayan nesneler; docs/adr/0779), broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; uid ile drifted o nesnenin elle değişip değişmediği.",
+      "summary": "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), drifted (elle değişmiş, istisna olmayan nesneler; docs/adr/0779), broken (sourceGone), unit (bina programının bölümü), katı, aynalı olup olmadığı; çok katlı modülde storeys (kat sayısı) ve örneğin levels'ı (durduğu katlar, taban önce; docs/adr/0796); uid ile drifted o nesnenin elle değişip değişmediği.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -70833,6 +70867,18 @@
       "meaning": "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler."
     },
     {
+      "code": "module_storey_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Modülün üst katlarına karşılık gelecek kat yok; daha alçak bir taban katı seçin ya da projeye kat ekleyin."
+    },
+    {
+      "code": "module_repeat_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kattaki bazı modülsüz nesneler kopyalanmadı (kilitli katman, tekrarlanmayan tür, tekrarlanmayan örnek, tasarım seçeneği ya da dışarıya bağ); report.left hangilerini ve nedenini söyler."
+    },
+    {
       "code": "not_a_space",
       "kind": "failed",
       "retryable": false,
@@ -104390,6 +104436,26 @@
         }
       ]
     },
+    "ModuleCopied": {
+      "description": "An object a repeat copied (docs/adr/0796 §2): the level's object in no module, its copy and the copy's level.",
+      "properties": {
+        "level": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "uid",
+        "level"
+      ],
+      "type": "object"
+    },
     "ModuleInstance": {
       "additionalProperties": false,
       "description": "Where a module stands once: its base point, its turn (radians, counter-clockwise), whether it is mirrored (across\nits own y axis, before the turn), its level and phase, its numbering, the definition's version it took, its\nobjects and the keys it keeps as its own.",
@@ -104508,6 +104574,13 @@
             "null"
           ]
         },
+        "levels": {
+          "description": "A module of several storeys: the levels the instance stands on, base first (docs/adr/0796 §1); a storey with no\nlevel (a level removed since) is left out.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "mirror": {
           "type": "boolean"
         },
@@ -104550,6 +104623,52 @@
         "mirror"
       ],
       "type": "object"
+    },
+    "ModuleLeft": {
+      "description": "A level's object a repeat did not copy, and why.",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "why": {
+          "$ref": "#/$defs/ModuleLeftWhy"
+        }
+      },
+      "required": [
+        "uid",
+        "why"
+      ],
+      "type": "object"
+    },
+    "ModuleLeftWhy": {
+      "description": "Why a repeat left a level's object (docs/adr/0796 §2).",
+      "oneOf": [
+        {
+          "const": "locked",
+          "description": "On a locked layer.",
+          "type": "string"
+        },
+        {
+          "const": "kind",
+          "description": "Of a kind a repeat does not copy (a column, a stair, a ramp, a slab, a room's finish, a separator).",
+          "type": "string"
+        },
+        {
+          "const": "module",
+          "description": "An object of a module instance the repeat does not place again (broken, of another module, based elsewhere).",
+          "type": "string"
+        },
+        {
+          "const": "outside",
+          "description": "It leans on an object the copies do not hold (another level's, a grid, a left one).",
+          "type": "string"
+        },
+        {
+          "const": "option",
+          "description": "An object of a design option (docs/adr/0788): a plain copy would join the main model.",
+          "type": "string"
+        }
+      ]
     },
     "ModuleLevelTarget": {
       "additionalProperties": false,
@@ -104595,6 +104714,13 @@
         },
         "key": {
           "type": "string"
+        },
+        "storey": {
+          "description": "Its storey above the instance's base level (docs/adr/0796 §1): 0 the base level, 1 the project's next level up\n(the levels by elevation). Only a wall's, a space's or a fixture's; an opening, a tag, a dimension or a text\nfollows what it is on.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
         }
       },
       "required": [
@@ -104724,6 +104850,13 @@
           },
           "type": "array"
         },
+        "left": {
+          "description": "The level's objects a repeat with `loose` did not copy, in the drawing's order (docs/adr/0796 §2).",
+          "items": {
+            "$ref": "#/$defs/ModuleLeft"
+          },
+          "type": "array"
+        },
         "released": {
           "description": "The objects that leave the module and stay as ordinary objects (Modülden çıkar).",
           "items": {
@@ -104778,6 +104911,16 @@
         "removed": {
           "type": "boolean"
         },
+        "storeys": {
+          "description": "The storeys a module of several spans (docs/adr/0796 §1); absent: one.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
         "version": {
           "format": "uint32",
           "minimum": 0,
@@ -104825,7 +104968,7 @@
       "description": "What `cad.modules.edit` does.",
       "oneOf": [
         {
-          "description": "Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts on one level) become\nthe module `name`'s definition, `base` its base point; they stay where they are as its first instance. An object\nthey lean on outside them (an opening's wall, a space's sources, a dimension's points, a tag's object) refuses it.",
+          "description": "Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts) become the module\n`name`'s definition, `base` its base point; they stay where they are as its first instance. An object they lean\non outside them (an opening's wall, a space's sources, a dimension's points, a tag's object) refuses it. Objects\non several of the project's levels make a module of as many storeys (docs/adr/0796 §1), its base level the\nlowest; levelled and unlevelled objects together refuse it (`module_levels`).",
           "properties": {
             "base": {
               "$ref": "#/$defs/Vec2",
@@ -104861,7 +105004,7 @@
           "type": "object"
         },
         {
-          "description": "Modül yerleştir: a new instance of `module` (its id or name), its base at `at`, mirrored across its own y axis\nwhen asked, then turned `rotation` radians counter-clockwise; on `level` (absent: none), in `phase`, its\nnumbers wrapped by `numbering`.",
+          "description": "Modül yerleştir: a new instance of `module` (its id or name), its base at `at`, mirrored across its own y axis\nwhen asked, then turned `rotation` radians counter-clockwise; on `level` (absent: none), in `phase`, its\nnumbers wrapped by `numbering`. A module of several storeys takes `level` as its base and the project's levels\nabove it, by elevation, for its upper storeys; too few levels above refuse it (`module_storey_missing`).",
           "properties": {
             "at": {
               "$ref": "#/$defs/Vec2",
@@ -104989,6 +105132,9 @@
             "kind": {
               "const": "repeat",
               "type": "string"
+            },
+            "loose": {
+              "type": "boolean"
             },
             "modules": {
               "items": {

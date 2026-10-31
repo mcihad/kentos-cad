@@ -243,3 +243,69 @@ fn an_object_moved_by_hand_is_said_drifted_and_restore_gives_it_back() {
     };
     assert!((b.p.x - 4.5).abs() < 1e-12);
 }
+
+const STOREYS: &str = include_str!("../../../fixtures/commands/v1/cad.modules.edit.storeys.json");
+
+/// The shared cases' duplex (objects 1–11 on two levels) defined from the window, and its hall in no module beside it
+/// (docs/adr/0796).
+fn duplex_app() -> App {
+    let mut app = app_with_drawing();
+    let file: serde_json::Value = serde_json::from_str(STOREYS).unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(file["setup"].clone()).unwrap();
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    make_cad(&mut app);
+    app.selection.set((1..=11).map(kentos_domain::Slot));
+    let _ = app.update(Message::Run("arch.modules"));
+    let _ = app.update(Message::RoomModules(Event::Name("Dubleks".into())));
+    let _ = app.update(Message::RoomModules(Event::Define));
+    app
+}
+
+#[test]
+fn the_window_defines_a_duplex_of_two_storeys_and_says_its_levels() {
+    let app = duplex_app();
+    let m = modules(&app);
+    assert_eq!(m[0].storeys(), 2);
+    let w = app.room_modules.as_ref().unwrap();
+    assert_eq!(w.rows[0].storeys, Some(2));
+    assert_eq!(w.rows[0].instances[0].levels, ["zemin", "kat1"]);
+}
+
+#[test]
+fn the_window_repeats_a_floor_with_its_loose_objects_in_one_step() {
+    let mut app = duplex_app();
+    // The project lists its levels 1. kat, zemin, 2. kat, bodrum: the ground floor is the second.
+    let _ = app.update(Message::RoomModules(Event::RepeatFrom(1)));
+    let w = app.room_modules.as_ref().unwrap();
+    assert_eq!(w.repeat_from.as_deref(), Some("zemin"));
+    let k1 = w.repeat_to.iter().position(|t| t.level == "kat1").unwrap();
+    let before = app.document.as_ref().unwrap().model.entities().count();
+    let _ = app.update(Message::RoomModules(Event::RepeatChoose(k1, true)));
+    let Some(Ok(plan)) = &app.room_modules.as_ref().unwrap().repeat_preview else {
+        panic!()
+    };
+    assert!(plan.copied.is_empty(), "without Modülsüz nesneler de");
+    let _ = app.update(Message::RoomModules(Event::RepeatLoose(true)));
+    let Some(Ok(plan)) = &app.room_modules.as_ref().unwrap().repeat_preview else {
+        panic!("{:?}", app.room_modules.as_ref().unwrap().repeat_preview)
+    };
+    assert_eq!(plan.copied.len(), 8);
+    assert_eq!(plan.report.left.len(), 3);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.entities().count(),
+        before,
+        "the plan writes nothing"
+    );
+    let _ = app.update(Message::RoomModules(Event::Repeat));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.entities().count(),
+        before + 11 + 8
+    );
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.entities().count(),
+        before
+    );
+}
