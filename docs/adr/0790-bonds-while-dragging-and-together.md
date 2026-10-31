@@ -117,7 +117,7 @@ Aynı koşuda ADR 0780'in ölçüleri: kaydırmanın önizlemesi 2,26 / 6,41 ms,
 0,52 / 2,02 ms. Bütçe her durumda tutuyor; masaüstünde her imleç hareketinde bir plan yürür (sürükleme ve Duvarı kaydır),
 400 duvarda en çok ~6 ms. Kümelerin aranması 48 denemeyle sınırlıdır: denklem çelişkisinde her deneme bir yok etmedir
 (400 duvarda bağ başına ~0,02 ms; 48 deneme ~1 ms), kaydırmalar yazılırken gelen çelişkide (kilitli katman, birleşim)
-her deneme bütün bir çözümdür ve en kötü durumda 48 × ~6 ms'ye çıkabilir; bu durum seyrektir ve ölçülmedi (Sınırlar).
+her deneme bütün bir çözümdü; ADR 0797 ölçtü (400 duvarda 366 ms) ve denklemlerle süzerek 22 ms'ye indirdi.
 
 ## Sınırlar
 

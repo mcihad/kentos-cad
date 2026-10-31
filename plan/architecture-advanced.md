@@ -99,7 +99,7 @@ Dikdörtgen duvar, kaydırmanın etkisi (önizleme kartı), Bu ölçüyü koru (
 400/100: 6,9 ms). Tutamaçla
 sürüklemede, Duvarı kaydır'da, Boy'da ve açıklığın taşınmasında yoldaki bağlar yerinde işaretli; hiçbir bağ tek başına
 geçirmiyorsa birlikte kaldırılınca geçen en küçük küme (`freesWith`) önerilir ve kartın düğmesiyle tek adımda kaldırılır.
-Öznitelikler'den yazılan değerin kartı ([ADR 0797](../docs/adr/0797-properties-bond-card.md)). Açık: gerçek pencerede elle kabul, geç çelişkide 48 denemenin en kötü süresi.
+Öznitelikler'den yazılan değerin kartı ve geç çelişkide kümelerin denklemlerle süzülmesi (400 duvarda 366 → 22 ms; [ADR 0797](../docs/adr/0797-properties-bond-card.md)). Açık: gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** “Bu odanın iç eni 3,20 m olsun; koridor 1,20 m kalsın”
 işi, çok sayıda taşı/uzat/buda işlemine dönüşmeden yapılabilsin. Önce basit ve

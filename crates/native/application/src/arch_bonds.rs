@@ -314,6 +314,8 @@ pub(crate) struct Solved {
     /// The conflict came while the shifts were written (Kaydır refused one, a bond did not settle), not from the
     /// bonds' equations.
     pub late: bool,
+    /// When Kaydır refused a shift: the var it refused and the shifts the equations gave (docs/adr/0797 §2).
+    refused_at: Option<(usize, Vec<f64>)>,
 }
 
 /// How many sets of two or three bonds a refusal tries at most before it says none frees the write (docs/adr/0790 §2).
@@ -338,12 +340,24 @@ pub(crate) fn solve(
         return out;
     }
     let view = View::new(doc);
+    // A late refusal of Kaydır (docs/adr/0797 §2): the whole set read once, so that a set the equations still shift
+    // the same up to the refused var is known to conflict the same without writing it.
+    let late = out
+        .refused_at
+        .take()
+        .map(|(k, shifts)| (k, shifts, read(&view, set, values)));
     let read = (!out.late).then(|| read(&view, set, values));
     // The set without the constraints at `gone` (indices in `set`): none when it goes through, else what still
     // conflicts (indices in `set`).
     let without = |gone: &[usize]| -> Option<Vec<usize>> {
         match &read {
             None => {
+                if let Some(still) = late
+                    .as_ref()
+                    .and_then(|(k, shifts, all)| refused_again(doc, all, *k, shifts, gone, &view, holds, before))
+                {
+                    return Some(still);
+                }
                 let kept: Vec<usize> = (0..set.constraints.len())
                     .filter(|k| !gone.contains(k))
                     .collect();
@@ -385,6 +399,45 @@ pub(crate) fn solve(
         out.frees_with = smallest(&alone, &without);
     }
     out
+}
+
+/// Without the constraints at `gone`, whether Kaydır refuses the same var again for sure (docs/adr/0797 §2): the
+/// equations alone (no writing) shift every edge up to the refused var `k` as before (`shifts`, within [`SETTLED`]), so
+/// the writes up to it are the same and it is refused the same; the bonds that move it (indices in the set). `None`:
+/// not sure, the set is solved whole.
+#[allow(clippy::too_many_arguments)]
+fn refused_again(
+    doc: &Document,
+    all: &Read,
+    k: usize,
+    shifts: &[f64],
+    gone: &[usize],
+    view: &View<'_>,
+    holds: &[Held],
+    before: Option<&HashMap<EntityId, Shape>>,
+) -> Option<Vec<usize>> {
+    let kept: Vec<usize> = (0..all.bonds.len())
+        .filter(|&b| !gone.contains(&all.rules[b]))
+        .collect();
+    let less = Read {
+        vars: all.vars.clone(),
+        rules: kept.iter().map(|&b| all.rules[b]).collect(),
+        bonds: kept.iter().map(|&b| all.bonds[b]).collect(),
+        broken: Vec::new(),
+    };
+    let (now, _) = equations(doc, &less, view, holds, before, true).ok()?;
+    let same = (0..=k).all(|i| {
+        !matches!(all.vars.get(i), Some(Var::Edge(..)))
+            || ((now[i] == 0.0) == (shifts[i] == 0.0) && (now[i] - shifts[i]).abs() <= SETTLED)
+    });
+    if !same {
+        return None;
+    }
+    let bonds: Vec<usize> = (0..less.bonds.len())
+        .filter(|&b| bond_vars(&less.bonds[b]).contains(&k))
+        .map(|b| less.rules[b])
+        .collect();
+    (!bonds.is_empty()).then_some(bonds)
 }
 
 /// The smallest set of bonds whose taking away lets a write through when none alone does (docs/adr/0790 §2): each
@@ -633,6 +686,7 @@ fn solve_once(
                 let bonds: Vec<usize> = (0..read.bonds.len())
                     .filter(|&b| bond_vars(&read.bonds[b]).contains(&k))
                     .collect();
+                out.refused_at = Some((k, shifts.clone()));
                 conflict(&mut out, bonds, words);
                 return out;
             }

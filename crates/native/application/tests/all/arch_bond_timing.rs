@@ -111,6 +111,53 @@ fn median(n: usize, mut f: impl FnMut()) -> f64 {
 fn arch_bond_timing() {
     measure(50, 200);
     measure(100, 400);
+    late(50, 200);
+    late(100, 400);
+}
+
+/// docs/adr/0790's open worst case (closed by docs/adr/0797's measurement): a conflict that comes while the shifts are
+/// written, every try a whole solve. The top room's end walls stand on a locked layer (the solve does not hold them: Kaydır
+/// drags their ends when the top wall moves); besides the chain, nine bonds hold the top wall straight from the moved
+/// one (its faces and axis to the top's), so the shift is refused whatever single bond, pair or triple goes: every bond
+/// in the way alone, then the 48 sets, none freeing.
+fn late(floors: usize, total: usize) {
+    let (doc, uids) = drawing(floors, total, false);
+    let top = &uids[floors - 1];
+    let lines = ["leftFace", "rightFace", "axis"];
+    let extra: Vec<Value> = lines
+        .iter()
+        .flat_map(|a| lines.iter().map(move |b| (a, b)))
+        .map(|(a, b)| {
+            json!({"rule": {"kind": "distance", "a": line(&uids[0], a), "b": line(top, b), "parameter": ""}})
+        })
+        .collect();
+    let mut doc = doc;
+    done(constraints_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        serde_json::from_value(json!({"edit": {"kind": "add", "constraints": extra}})).unwrap(),
+    ));
+    // The top room's two end walls onto the locked layer: the bonds hold the top wall, its shift drags their ends.
+    let mut snapshot = serde_json::to_value(doc.to_snapshot_v2()).unwrap();
+    for end in [&uids[floors + 2 * (floors - 2)], &uids[floors + 2 * (floors - 2) + 1]] {
+        let at = snapshot["uids"].as_array().unwrap().iter().position(|u| u == end).unwrap();
+        snapshot["entities"][at]["layerId"] = json!("kilitli");
+    }
+    let mut doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
+    let input: WallsEdit =
+        serde_json::from_value(json!({"uids": [uids[0]], "operation": {"kind": "shift", "by": -0.2}})).unwrap();
+    let bonds = match walls_edit::plan(&ExecutionContext::new(&mut doc), &input) {
+        CommandResult::Failed { error } => {
+            assert_eq!(error.code, "constraint_conflict", "{error:?}");
+            assert!(error.bonds.iter().all(|b| !b.frees && b.frees_with.is_empty()), "{:?}", error.bonds);
+            error.bonds.len()
+        }
+        other => panic!("{other:?}"),
+    };
+    assert!(bonds >= 10, "{bonds} bonds in the way");
+    let worst = median(5, || {
+        std::hint::black_box(walls_edit::plan(&ExecutionContext::new(&mut doc), &input));
+    });
+    println!("{total} duvar: geç çelişkide en kötü ret {worst:.2} ms ({bonds} bağ yolda, tek tek ve 48 küme denendi)");
 }
 
 fn measure(floors: usize, total: usize) {

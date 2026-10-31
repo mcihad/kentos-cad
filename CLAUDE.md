@@ -268,6 +268,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
 - **Öznitelikler'den yazılan değerin bağ kartı (31 Ekim 2026; [ADR 0797](docs/adr/0797-properties-bond-card.md), ADV-01 [~]).**
   Öznitelikler panelinden yazılan değer bağlarca reddedilince ADR 0790'ın kartı açılır (“Bağı kaldır”, “Bu iki bağı
   kaldır”): `kentos_interaction::properties::take_bonds_refused`; geçen yazma kartı kapatır.
+  Geç çelişkide (Kaydır kilitli katmandaki duvarı sürüklerken) denenen kümeler önce yalnız denklemlerle süzülür
+  (`refused_again`): 400 duvarda en kötü ret 366 → 22 ms (`arch_bond_timing`'in `late` çizimi).
 
 - **Sürüklerken yoldaki bağlar ve birlikte kaldırılınca geçen bağlar (31 Ekim 2026; [ADR 0790](docs/adr/0790-bonds-while-dragging-and-together.md), ADV-01 [~]).**
   `cad.entities.edit` ve `cad.openings.edit`'in planı, bağın andığı nesneyi değiştirdiğinde komutu okuma kopyasında yürütür
