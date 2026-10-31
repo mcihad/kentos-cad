@@ -242,6 +242,7 @@ mod leader_tools;
 mod layer_merge;
 mod joins_window;
 mod event_links_window;
+mod program_window;
 mod layer_order;
 mod layer_purge;
 mod source_reconcile;
@@ -534,6 +535,8 @@ mod block_library_scenes;
 mod slab_scenes;
 #[cfg(test)]
 mod building_parts_scenes;
+#[cfg(test)]
+mod program_scenes;
 #[cfg(test)]
 mod space_scenes;
 #[cfg(test)]

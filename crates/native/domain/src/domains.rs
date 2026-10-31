@@ -84,3 +84,49 @@ impl Document {
         })
     }
 }
+
+impl Document {
+    /// Gives the project the building program `next` (docs/adr/0773) and the spaces' groups `units` (a space's slot and
+    /// its group, none out of any) as one change named `label` (into the open transaction, else an undo step of its
+    /// own). Refused with nothing changed: a program with a problem. Whether anything changed.
+    pub fn set_program(
+        &mut self,
+        next: kentos_contracts::BuildingProgram,
+        units: Vec<(Slot, Option<String>)>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        if let Some((_, problem)) = next.problem() {
+            return Err(Refusal(problem));
+        }
+        let before = self.settings.arch.as_ref().map(|a| a.program.clone()).unwrap_or_default();
+        let changes: Vec<(Slot, kentos_contracts::Entity)> = units
+            .into_iter()
+            .filter_map(|(slot, unit)| {
+                let kentos_contracts::Entity::Space(mut s) = self.get(slot)?.clone() else {
+                    return None;
+                };
+                (s.space.unit != unit).then(|| {
+                    s.space.unit = unit;
+                    (slot, kentos_contracts::Entity::Space(s))
+                })
+            })
+            .collect();
+        if before == next && changes.is_empty() {
+            return Ok(false);
+        }
+        self.transact(label, |doc| {
+            if before != next {
+                doc.record(vec![Op::BuildingProgram { before, after: next }], label);
+            }
+            if !changes.is_empty() {
+                doc.update_many(changes, label);
+            }
+            Ok(true)
+        })
+    }
+
+    /// The building program (docs/adr/0773); empty when the project has none.
+    pub fn program(&self) -> kentos_contracts::BuildingProgram {
+        self.settings.arch.as_ref().map(|a| a.program.clone()).unwrap_or_default()
+    }
+}

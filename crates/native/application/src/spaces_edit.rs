@@ -5,8 +5,8 @@
 //! The shared cases are `fixtures/commands/v1/cad.spaces.edit.json`.
 
 use kentos_commands::{
-    CommandResult, Entity, SpaceChange, SpaceEntity, SpaceFields, SpacesEdit, SpacesEdited,
-    SpacesOperation,
+    CommandResult, CommandWarning, Entity, SpaceChange, SpaceDecision, SpaceEntity, SpaceFields, SpaceFinishes,
+    SpaceKeptBy, SpacePieceDecision, SpacesEdit, SpacesEdited, SpacesOperation,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as CoreVec2;
@@ -26,6 +26,49 @@ struct Work {
     updates: Vec<(Slot, SpaceEntity)>,
     added: Vec<SpaceEntity>,
     removed: Vec<Slot>,
+    decisions: Vec<SpaceDecision>,
+    warnings: Vec<CommandWarning>,
+}
+
+/// The fixtures standing in the parts, on the level (docs/adr/0733 §2's rule: the middle of their block's drawing).
+fn fixtures_in(doc: &Document, parts: &[kentos_commands::SpacePart], level: Option<&str>) -> Vec<String> {
+    let areas = spaces::areas(parts);
+    doc.entities()
+        .filter_map(|e| {
+            let Entity::Insert(i) = e else { return None };
+            if i.arch.level.as_deref() != level {
+                return None;
+            }
+            let m = doc.fixture_middle(i);
+            areas
+                .iter()
+                .any(|a| kentos_geometry_core::geom::region::inside_area(a, CoreVec2::new(m.x, m.y)))
+                .then(|| doc.uid(Slot(i.base.id)).map(|u| u.to_string()))
+                .flatten()
+        })
+        .collect()
+}
+
+/// The tags of the object of `uid`.
+fn tags_of(doc: &Document, uid: &str) -> Vec<String> {
+    doc.entities()
+        .filter_map(|e| {
+            let Entity::Tag(t) = e else { return None };
+            (t.tag.of == uid).then(|| doc.uid(Slot(t.base.id)).map(|u| u.to_string())).flatten()
+        })
+        .collect()
+}
+
+/// `unit_not_found` for a group the program lacks.
+fn unit_known(doc: &Document, unit: Option<&str>, path: &str) -> Result<(), Stop> {
+    match unit {
+        Some(u) if doc.program().unit(u).is_none() => Err(fail(
+            codes::UNIT_NOT_FOUND,
+            format!("“{u}” bölümü bina programında yok; önce Bina programı penceresinden ekleyin."),
+            path,
+        )),
+        _ => Ok(()),
+    }
 }
 
 fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
@@ -66,6 +109,9 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = c.void {
         f.void = v;
     }
+    if let Some(v) = &c.unit {
+        f.unit.clone_from(v);
+    }
     f
 }
 
@@ -98,6 +144,9 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             if let Some(Some(h)) = c.height {
                 checks::finite(h, "Yükseklik", "Sonlu bir sayı verin.", "operation.height")?;
             }
+            if let Some(u) = &c.unit {
+                unit_known(doc, u.as_deref(), "operation.unit")?;
+            }
             for (at, slot, s) in &list {
                 let mut f = changed(&s.space, c);
                 spaces::scope_valid(&f,&format!("uids[{at}]"))?;
@@ -118,7 +167,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 work.updates.push((*slot, e));
             }
         }
-        SpacesOperation::Merge => {
+        SpacesOperation::Merge { keep, number } => {
             if list.len() < 2 {
                 return Err(fail(
                     codes::TOO_FEW_OBJECTS,
@@ -126,6 +175,24 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                     "uids",
                 ));
             }
+            let (pick, by) = match keep {
+                Some(k) => match input
+                    .uids
+                    .iter()
+                    .position(|u| u == k)
+                    .and_then(|at| list.iter().position(|(i, _, _)| *i == at))
+                {
+                    Some(p) => (p, SpaceKeptBy::Given),
+                    None => {
+                        return Err(fail(
+                            codes::INVALID_INPUT,
+                            "Kimliği korunacak mahal birleştirilen mahallerden biri olmalı.".into(),
+                            "operation.keep",
+                        ));
+                    }
+                },
+                None => (0, SpaceKeptBy::First),
+            };
             let all: Vec<_> = list
                 .iter()
                 .flat_map(|(_, _, s)| spaces::areas(&s.space.parts))
@@ -141,7 +208,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                     "uids",
                 ));
             }
-            let (_, slot, first) = list[0];
+            let (_, slot, first) = list[pick];
             let mut e = first.clone();
             e.space.parts = one.iter().map(kentos_domain::space_follow::part).collect();
             e.space.sources = None;
@@ -149,11 +216,54 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             e.space.scope = kentos_commands::SpaceScope::Project;
             e.space.columns = kentos_commands::SpaceColumns::Ignore;
             e.space.broken = None;
+            if let Some(n) = number {
+                e.space.number.clone_from(n);
+            }
             spaces::valid(&e.space, "uids[0]")?;
+            let level = e.space.arch.level.clone();
+            let mut pieces = Vec::new();
+            for (k, (_, other, s)) in list.iter().enumerate() {
+                if k == pick {
+                    continue;
+                }
+                let uid = doc.uid(*other).map(|u| u.to_string()).unwrap_or_default();
+                if s.space.unit != e.space.unit {
+                    work.warnings.push(CommandWarning {
+                        code: codes::SPACE_UNITS_MERGED.into(),
+                        message: format!(
+                            "“{}” mahalinin bölümü korunan mahalinkinden farklıydı; korunanınki geçerli oldu.",
+                            s.space.number.as_deref().or(s.space.name.as_deref()).unwrap_or("Mahal")
+                        ),
+                        path: Some("uids".into()),
+                    });
+                }
+                pieces.push(SpacePieceDecision {
+                    tags: tags_of(doc, &uid),
+                    uid: Some(uid),
+                    number: s.space.number.clone(),
+                    area: spaces::area_of(&s.space.parts),
+                    finishes: s.space.finishes.clone(),
+                    fixtures: Vec::new(),
+                });
+            }
+            work.decisions.push(SpaceDecision {
+                kept: doc.uid(slot).map(|u| u.to_string()).unwrap_or_default(),
+                by,
+                number: e.space.number.clone(),
+                area: spaces::area_of(&e.space.parts),
+                unit: e.space.unit.clone(),
+                fixtures: fixtures_in(doc, &e.space.parts, level.as_deref()),
+                pieces,
+            });
             work.updates.push((slot, e));
-            work.removed = list[1..].iter().map(|(_, s, _)| *s).collect();
+            work.removed = list
+                .iter()
+                .enumerate()
+                .filter(|(k, _)| *k != pick)
+                .map(|(_, (_, s, _))| *s)
+                .collect();
         }
-        SpacesOperation::Split { line } => {
+        SpacesOperation::Split { line, keep, numbers, finishes } => {
             if line.len() < 2 {
                 return Err(fail(
                     codes::SPLIT_MISSED,
@@ -167,6 +277,16 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                     &format!("{}. noktanın", k + 1),
                     &format!("operation.line[{k}]"),
                 )?;
+            }
+            if let Some(p) = keep {
+                checks::point(*p, "Korunacak noktanın", "operation.keep")?;
+            }
+            if numbers.is_some() && list.len() > 1 {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Yeni numaralar yalnız tek mahal bölünürken verilir.".into(),
+                    "operation.numbers",
+                ));
             }
             let pts: Vec<CoreVec2> = line.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
             let cut = Source {
@@ -190,8 +310,36 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                         &format!("uids[{at}]"),
                     ));
                 }
-                // The largest keeps the id; the others are new, in their order by size.
+                // The others in their order by size; the one holding `keep`, else the largest, keeps the id.
                 pieces.sort_by(|a, b| net_area(b).total_cmp(&net_area(a)));
+                let by = match keep {
+                    Some(p) => {
+                        let q = CoreVec2::new(p.x, p.y);
+                        let Some(k) = pieces
+                            .iter()
+                            .position(|a| kentos_geometry_core::geom::region::inside_area(a, q))
+                        else {
+                            return Err(fail(
+                                codes::INVALID_INPUT,
+                                "Korunacak nokta bölünen parçaların hiçbirinin içinde değil; kimliği korunacak parçanın içinden bir nokta verin.".into(),
+                                "operation.keep",
+                            ));
+                        };
+                        let first = pieces.remove(k);
+                        pieces.insert(0, first);
+                        SpaceKeptBy::Given
+                    }
+                    None => SpaceKeptBy::Largest,
+                };
+                if let Some(n) = numbers
+                    && n.len() != pieces.len() - 1
+                {
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        format!("Bölme {} yeni parça yapıyor; {} numara verildi.", pieces.len() - 1, n.len()),
+                        "operation.numbers",
+                    ));
+                }
                 let mut kept = (*s).clone();
                 kept.space.parts = vec![kentos_domain::space_follow::part(&pieces[0])];
                 kept.space.sources = None;
@@ -199,16 +347,41 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 kept.space.scope = kentos_commands::SpaceScope::Project;
                 kept.space.columns = kentos_commands::SpaceColumns::Ignore;
                 kept.space.broken = None;
+                let level = kept.space.arch.level.clone();
                 work.updates.push((*slot, kept.clone()));
-                for p in &pieces[1..] {
+                let mut parts_said = Vec::new();
+                for (k, p) in pieces[1..].iter().enumerate() {
                     let mut e = kept.clone();
                     e.base.id = 0;
                     e.base.label = None;
                     e.base.label_pins.clear();
                     e.base.attachments.clear();
                     e.space.parts = vec![kentos_domain::space_follow::part(p)];
+                    // A new part takes no number unless given one: no number is written twice.
+                    e.space.number = numbers.as_ref().map(|n| n[k].clone());
+                    if !finishes.unwrap_or(true) {
+                        e.space.finishes = SpaceFinishes::default();
+                    }
+                    spaces::valid(&e.space, &format!("uids[{at}]"))?;
+                    parts_said.push(SpacePieceDecision {
+                        uid: None,
+                        number: e.space.number.clone(),
+                        area: net_area(p),
+                        finishes: e.space.finishes.clone(),
+                        tags: Vec::new(),
+                        fixtures: fixtures_in(doc, &e.space.parts, level.as_deref()),
+                    });
                     work.added.push(e);
                 }
+                work.decisions.push(SpaceDecision {
+                    kept: doc.uid(*slot).map(|u| u.to_string()).unwrap_or_default(),
+                    by,
+                    number: kept.space.number.clone(),
+                    area: net_area(&pieces[0]),
+                    unit: kept.space.unit.clone(),
+                    fixtures: fixtures_in(doc, &kept.space.parts, level.as_deref()),
+                    pieces: parts_said,
+                });
             }
         }
         SpacesOperation::Rebound { seed } => {
@@ -289,9 +462,10 @@ pub fn plan_in(doc: &Document, input: &SpacesEdit) -> CommandResult<SpacesEdited
                 added: work.added.iter().cloned().map(Entity::Space).collect(),
                 kept: kept_uids(doc, &work),
                 removed: removed_uids(doc, &work),
+                decisions: work.decisions.clone(),
                 revision: doc.revision().to_string(),
             },
-            warnings: Vec::new(),
+            warnings: work.warnings.clone(),
         },
         Err(stop) => stop.into(),
     }
@@ -314,6 +488,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: SpacesEdit) -> CommandRes
     };
     let kept = kept_uids(cx.doc, &work);
     let removed = removed_uids(cx.doc, &work);
+    let (decisions, warnings) = (work.decisions.clone(), work.warnings.clone());
     let doc = &mut *cx.doc;
     let result = doc.transact(STEP, |d| {
         d.update_many(
@@ -354,8 +529,9 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: SpacesEdit) -> CommandRes
             added,
             kept,
             removed,
+            decisions,
             revision: doc.revision().to_string(),
         },
-        warnings: Vec::new(),
+        warnings,
     }
 }

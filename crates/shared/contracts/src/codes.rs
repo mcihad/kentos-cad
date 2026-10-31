@@ -1755,6 +1755,35 @@ codes! {
     /// A node decision on a wall end that tees into nothing it can be kept at (docs/adr/0771 §1).
     WALL_NODE_UNSUPPORTED = "wall_node_unsupported", Failed, false, "Düğüm kararı yalnız düz bir duvara T birleşen düz bir uçta verilir; köşe, düz devam, serbest uç ve eğrisel birleşim için desteklenmez.";
 
+    // ── The building program (docs/adr/0773) ─────────────────────────────
+    /// A program that does not hold: a group or a brief without its id, a number or a usage given twice, a wing not of
+    /// its building, a range upside down.
+    INVALID_PROGRAM = "invalid_program", Failed, false, "Bina programı geçersiz: kimlikler, bölüm numaraları ve hedeflerin kullanımları ayrı olmalı, kanat binasının olmalı, alan aralığı doğru sırada olmalı.";
+    /// A group the program lacks.
+    UNIT_NOT_FOUND = "unit_not_found", Failed, false, "Bina programında bu kimlikte bölüm yok; önce Bina programı penceresinden bölümü ekleyin.";
+    /// A group taken away that spaces still name.
+    UNIT_IN_USE = "unit_in_use", Failed, false, "Kaldırılan bölümde hâlâ mahal var; önce mahalleri başka bölüme verin ya da bölümden çıkarın.";
+    /// Spaces of different groups merged: the kept space's group goes on.
+    SPACE_UNITS_MERGED = "space_units_merged", Warning, false, "Birleşen mahallerin bölümleri farklıydı; korunan mahalin bölümü geçerli oldu.";
+    /// Mimari denetim's program group (docs/adr/0773 §5): a space naming a group the program lacks.
+    PROGRAM_UNIT_MISSING = "program_unit_missing", Warning, false, "Mahal bina programında olmayan bir bölüme bağlı; bölümü programa ekleyin ya da mahali bölümden çıkarın.";
+    /// A space smaller than its brief's least area.
+    PROGRAM_AREA_BELOW = "program_area_below", Warning, false, "Mahalın alanı tasarım hedefinin altında (yasal sınır değil).";
+    /// A space larger than its brief's most area.
+    PROGRAM_AREA_ABOVE = "program_area_above", Warning, false, "Mahalın alanı tasarım hedefinin üstünde (yasal sınır değil).";
+    /// A space narrower than its brief's net width.
+    PROGRAM_WIDTH_NARROW = "program_width_narrow", Warning, false, "Mahalın net eni tasarım hedefinden dar (yasal sınır değil).";
+    /// A space whose passage between its doors is narrower than its brief's.
+    PROGRAM_PASSAGE_NARROW = "program_passage_narrow", Warning, false, "Kapılar arası net geçiş tasarım hedefinden dar (yasal sınır değil).";
+    /// A space without a neighbour of a usage its brief asks for.
+    PROGRAM_ADJACENT_MISSING = "program_adjacent_missing", Warning, false, "Tasarım hedefinin istediği kullanımda komşu mahal yok.";
+    /// A space that does not open into a usage its brief asks for.
+    PROGRAM_REACH_MISSING = "program_reach_missing", Warning, false, "Mahalden tasarım hedefinin istediği kullanıma kapı ya da açık geçiş yok.";
+    /// A room of a group with no door and no opening into another space.
+    PROGRAM_NO_DOOR = "program_no_door", Warning, false, "Mahalın kapısı ya da başka mahale açık geçişi yok.";
+    /// A fixture whose clearance leaves its space or meets another fixture.
+    PROGRAM_FIXTURE_CLEARANCE = "program_fixture_clearance", Warning, false, "Donatının önündeki kullanım alanı mahalden taşıyor ya da başka donatıya biniyor (tasarım hedefi).";
+
     // ── Grids, columns, stairs and ramps (docs/adr/0343) ────────────────
     /// A grid's fields that make none.
     INVALID_GRID = "invalid_grid", Failed, false, "Aksın alanları bir aks tanımlamıyor: iki ayrı nokta, boş olmayan etiket, sonlu büküm ve balon çapı.";

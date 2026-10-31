@@ -255,6 +255,10 @@ pub enum Dialog {
     Joins,
     /// Olay bağları (event_links_window.rs, docs/adr/0569); the window is `App::event_links_window`.
     EventLinks,
+    /// Bina programı (program_window.rs, docs/adr/0773); the window is `App::program_window`.
+    Program,
+    /// Mahalleri birleştir's decision, asked before writing (quantities.rs, docs/adr/0773 §4).
+    SpaceMerge,
     /// Kayıtları denetle (forms/audit.rs, docs/adr/0406); the window is `App::form_audit`.
     FormAudit,
     /// Koşullu biçim (forms/table_styles.rs, docs/adr/0413); the window is `App::table_styles`.
@@ -585,6 +589,8 @@ pub enum Message {
     Joins(crate::joins_window::Event),
     /// An event of Olay bağları (event_links_window.rs, docs/adr/0569).
     EventLinks(crate::event_links_window::Event),
+    /// An event of Bina programı (program_window.rs, docs/adr/0773).
+    Program(crate::program_window::Event),
     TableStyles(crate::forms::table_styles::Event),
     Subtypes(crate::forms::subtypes::Event),
     Contingents(crate::forms::contingents::Event),
@@ -1109,6 +1115,10 @@ pub struct App {
     pub(crate) joins_window: Option<crate::joins_window::Window>,
     /// Olay bağları (event_links_window.rs, docs/adr/0569).
     pub(crate) event_links_window: Option<crate::event_links_window::Window>,
+    /// Bina programı (program_window.rs, docs/adr/0773).
+    pub(crate) program_window: Option<crate::program_window::Window>,
+    /// Mahalleri birleştir asked: its input and its decision's words (docs/adr/0773 §4).
+    pub(crate) space_merging: Option<(kentos_commands::SpacesEdit, String)>,
     pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
     pub(crate) subtypes: Option<crate::forms::subtypes::Window>,
     pub(crate) contingents: Option<crate::forms::contingents::Window>,
@@ -1509,6 +1519,8 @@ impl App {
             relations_window: None,
             joins_window: None,
             event_links_window: None,
+            program_window: None,
+            space_merging: None,
             table_styles: None,
             subtypes: None,
             contingents: None,
@@ -2164,6 +2176,7 @@ impl App {
             Message::Relations(event) => return self.relations_event(event),
             Message::Joins(event) => return self.joins_event(event),
             Message::EventLinks(event) => return self.event_links_event(event),
+            Message::Program(event) => return self.program_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
             Message::Contingents(event) => return self.contingents_event(event),
@@ -2357,6 +2370,7 @@ impl App {
                     }
                 }
                 Some(Dialog::RemoveTemplate) => self.remove_template(),
+                Some(Dialog::SpaceMerge) => self.space_merge_confirmed(),
                 Some(Dialog::SourceDiscard) => self.bound_discard(),
                 _ => {}
             },
@@ -3146,6 +3160,8 @@ impl App {
             "network.subnetworks" => self.open_subnetworks(),
             // Olay bağları (event_links_window.rs, docs/adr/0569 §5).
             "linearRef.eventLinks" => self.open_event_links(),
+            // Bina programı (program_window.rs, docs/adr/0773).
+            "arch.program" => self.open_program(),
             // Çizgi tipleri (docs/adr/0313 §7).
             "lineTypes.manage" => self.open_line_types(),
             "hatchPatterns.manage" => self.open_hatch_patterns(),

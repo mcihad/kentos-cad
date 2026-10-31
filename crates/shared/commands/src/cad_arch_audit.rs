@@ -67,10 +67,13 @@ pub enum ArchAuditCheck {
     Ramps,
     /// Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).
     Casework,
+    /// The building program's findings (docs/adr/0773 §5): spaces against their design brief, doors, passages,
+    /// fixtures' clearances; nothing unless the project has a program.
+    Program,
 }
 
 impl ArchAuditCheck {
-    pub const ALL: [ArchAuditCheck; 14] = [
+    pub const ALL: [ArchAuditCheck; 15] = [
         ArchAuditCheck::Walls,
         ArchAuditCheck::Openings,
         ArchAuditCheck::Spaces,
@@ -85,6 +88,7 @@ impl ArchAuditCheck {
         ArchAuditCheck::Stairs,
         ArchAuditCheck::Ramps,
         ArchAuditCheck::Casework,
+        ArchAuditCheck::Program,
     ];
 
     /// Its name on the wire.
@@ -104,6 +108,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Stairs => "stairs",
             ArchAuditCheck::Ramps => "ramps",
             ArchAuditCheck::Casework => "casework",
+            ArchAuditCheck::Program => "program",
         }
     }
 
@@ -124,6 +129,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Stairs => "Merdivenler",
             ArchAuditCheck::Ramps => "Rampalar",
             ArchAuditCheck::Casework => "Mutfak dizileri",
+            ArchAuditCheck::Program => "Bina programı",
         }
     }
 }
@@ -254,7 +260,10 @@ pub struct ArchAuditFinding {
     /// `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
     /// `stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,
     /// `arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,
-    /// `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4).
+    /// `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's
+    /// `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
+    /// `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
+    /// `program_fixture_clearance` (docs/adr/0773 §5).
     pub code: String,
     /// What is wrong.
     pub message: String,

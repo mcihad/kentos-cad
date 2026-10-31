@@ -237,6 +237,11 @@ pub struct SpaceFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<SpaceBreak>,
+    /// The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor
+    /// area of the building's program, by its id. Absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
 }
 
 /// A space (docs/adr/0342).
@@ -362,6 +367,7 @@ impl SpaceFields {
             ("number", &self.number),
             ("name", &self.name),
             ("usage", &self.usage),
+            ("unit", &self.unit),
         ] {
             if v.as_deref().is_some_and(|t| t.trim().is_empty()) {
                 return Some((

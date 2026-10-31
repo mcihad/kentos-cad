@@ -1781,11 +1781,39 @@ const ENTRIES: &[Entry] = &[
                 "spaces_not_touching",
                 "split_missed",
                 "space_not_enclosed",
+                "unit_not_found",
+                "invalid_input",
+            ],
+            REVISION,
+        ],
+        warnings: &["space_units_merged"],
+        targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
+    },
+    // Bina programı (docs/adr/0773).
+    Entry {
+        id: "cad.program.edit",
+        refusals: &[
+            &[
+                "nothing_to_set",
+                "invalid_program",
+                "no_entities",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_space",
+                "unit_not_found",
+                "unit_in_use",
+                "layer_locked",
             ],
             REVISION,
         ],
         warnings: &[],
         targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
+    },
+    Entry {
+        id: "cad.program.check",
+        refusals: &[&["unit_not_found", "level_not_found", "cancelled"]],
+        warnings: &[],
+        targets: none,
     },
     // The slabs (docs/adr/0722 §4).
     Entry {

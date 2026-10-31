@@ -2301,6 +2301,17 @@ def document(d):
             or any(c.get("wrap") for st in d["settings"].get("wallStyles", []) for c in st["components"]):
         # A turning wall component, a node decision, a bound slab (docs/adr/0771).
         schema = max(schema, 137)
+
+    def programmed(e):
+        if e["kind"] == "space":
+            return "unit" in e
+        src = e.get("source") or e.get("schedule")
+        return e["kind"] == "table" and isinstance(src, dict) and any(
+            isinstance(c, dict) and c.get("field") in ("unit", "target", "targetDiff") for c in src.get("columns", []))
+    if (d["settings"].get("arch", {}).get("program") or any(programmed(e) for e in d["entities"])
+            or any(programmed(e) for b in d.get("blocks", []) for e in b.get("entities", []))):
+        # The building program, a space's group, a schedule's program field (docs/adr/0773).
+        schema = max(schema, 138)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3014,7 +3025,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-138.kcad"] = container(root(cmap(parts), version=uint(138)))
+    files["schema-version-139.kcad"] = container(root(cmap(parts), version=uint(139)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5332,6 +5343,24 @@ def build():
     parts_bad("bound-face-default", lambda d: d["entities"][3]["bound"].update(face="outline"))
     parts_bad("bound-without-seed", lambda d: d["entities"][3]["bound"].pop("seed"))
     parts_bad("bound-unknown-field", lambda d: d["entities"][3]["bound"].update(bogus=1.0))
+    # Schema 138 (docs/adr/0773): a building program (a building and its wing, a unit, a common area, a brief, a
+    # fixture's clearance) and spaces in its groups; schema 137 refuses them, and an upside-down range, a number given
+    # twice, a wing not of its building, an empty program and an outdoor flag written false are refused too.
+    bg_doc = load("building-program.json")
+    bg = document(bg_doc)
+    assert bg.count(b"\x67version\x18\x8a") == 1, "the building program is schema 138"
+    out["building-program.kcad"] = container(bg)
+    out["broken/building-program-in-schema-137.kcad"] = container(bg.replace(b"\x67version\x18\x8a", b"\x67version\x18\x89"))
+
+    def program_bad(name, change):
+        d = copy.deepcopy(bg_doc)
+        change(d)
+        out["broken/building-program-" + name + ".kcad"] = container(document(d))
+    program_bad("range-upside-down", lambda d: d["settings"]["arch"]["program"]["briefs"][0].update(areaMin=20.0))
+    program_bad("number-twice", lambda d: d["settings"]["arch"]["program"]["units"][1].update(number="1"))
+    program_bad("wing-elsewhere", lambda d: d["settings"]["arch"]["program"]["units"][0].update(wing="yok"))
+    program_bad("empty", lambda d: d["settings"]["arch"].update(program={}))
+    program_bad("outdoor-false", lambda d: d["settings"]["arch"]["program"]["briefs"][1].update(outdoor=False))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

@@ -108,7 +108,7 @@ impl Document {
             }
         }
         for op in &out { self.apply_op(op); }
-        let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. }));
+        let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. } | Op::BuildingProgram { .. }));
         let sources = ops.iter().any(|op| match op {
             Op::Add(s) | Op::Remove(s) => crate::space_follow::is_source(&s.entity),
             Op::Update { before, after } => crate::space_follow::is_source(&before.entity) || crate::space_follow::is_source(&after.entity),
@@ -133,7 +133,8 @@ impl Document {
                 continue;
             };
             let content = t.tag.content.as_deref().unwrap_or_default();
-            if !(content.contains("{netArea}") || (!net_only && (content.contains("{floorElevation}") || content.contains("{ceilingElevation}")))) {
+            let program = ["{unit}", "{target}", "{targetDiff}"].iter().any(|p| content.contains(p));
+            if !(content.contains("{netArea}") || (!net_only && (program || content.contains("{floorElevation}") || content.contains("{ceilingElevation}")))) {
                 continue;
             }
             let Some(target) = self.tag_target(&t.tag.of) else {

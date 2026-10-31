@@ -38,4 +38,8 @@ columns?: SpaceColumns, number?: string, name?: string, usage?: string, arch?: A
 /**
  * A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
  */
-void?: boolean, attrs?: { [key in string]: string }, };
+void?: boolean, 
+/**
+ * The building program's group it joins, by its id (docs/adr/0773); absent: none.
+ */
+unit?: string, attrs?: { [key in string]: string }, };

@@ -253,6 +253,23 @@
    "tests": 0
   },
   {
+   "id": "arch.program",
+   "kind": "command",
+   "title": "Bina programı",
+   "level": "semantic",
+   "via": [
+    "cad.program.edit",
+    "cad.program.check"
+   ],
+   "operation": null,
+   "python": "kentos.cad.program.edit, kentos.cad.program.check",
+   "mcp": "cad.program.edit, cad.program.check",
+   "note": "Pencere programı ve bölüme vermeyi cad.program.edit ile yazar; Denetle cad.program.check'i okuma kopyasında, iş parçacığında çalıştırır (ADR 0773).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.quantities",
    "kind": "command",
    "title": "Metraj",

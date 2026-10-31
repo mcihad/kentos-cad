@@ -355,7 +355,7 @@ CAD = [
                 {"command": "arch.revisionList", "title": "Revizyon", "label": "Revizyon listesi"},
             ]}],
           overflow=["tool.tagAll", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs"]),
-        P("Proje", "archSettings", [S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
+        P("Proje", "archSettings", [S("arch.audit"), S("arch.program"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
           overflow=["arch.sheetSet"]),
     ], works=ARCHITECTURE),

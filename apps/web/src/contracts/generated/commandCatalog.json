@@ -9293,6 +9293,13 @@
             },
             "type": "array"
           },
+          "decisions": {
+            "description": "A merge's or a split's decision, one per space named (docs/adr/0773 §4).",
+            "items": {
+              "$ref": "#/$defs/SpaceDecision"
+            },
+            "type": "array"
+          },
           "kept": {
             "description": "The ids kept, in their order.",
             "items": {
@@ -9332,6 +9339,13 @@
           "added": {
             "items": {
               "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "decisions": {
+            "description": "A merge's or a split's decision, one per space named (docs/adr/0773 §4).",
+            "items": {
+              "$ref": "#/$defs/SpaceDecision"
             },
             "type": "array"
           },
@@ -9949,7 +9963,7 @@
       "id": "cad.spaces.edit",
       "version": 1,
       "title": "Mahali düzenle",
-      "summary": "Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. operation: set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). Kat değişimi de duvar sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar; yalnız ilişkili seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar. Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir.",
+      "summary": "Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. operation: set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), unit bina programının bölümü, null bölümden çıkarır, programda olmayan unit_not_found), merge (mahaller birleşir: keep verilen mahalin, yoksa ilkinin kimliği sürer, numarası ve bölümü onun, number başka numara verir, null kaldırır; öbürleri silinir, numaraları, kaplamaları ve etiketleri onlarla gider, cevabın decisions'ı yazmadan önce söyler; bölümleri farklı mahaller space_units_merged uyarısı; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching; keep birleşenlerden değilse invalid_input), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, keep noktasını içeren parça, yoksa en büyük kimliğini korur; yeni parçalar büyüklük sırasıyla numbers numaralarını alır, verilmezse numarasız kalır (aynı numara iki kez yazılmaz), bölümü alır, finishes false değilse kaplamaları; decisions her parçanın kimliğini, numarasını, alanını, kaplamalarını ve içinde duran donatıları söyler; bölmeyen çizgi split_missed, parça sayısıyla uymayan numbers ya da hiçbir parçada olmayan keep invalid_input), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). Kat değişimi de duvar sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar; yalnız ilişkili seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar. Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -10002,6 +10016,13 @@
             },
             "type": "array"
           },
+          "decisions": {
+            "description": "A merge's or a split's decision, one per space named (docs/adr/0773 §4).",
+            "items": {
+              "$ref": "#/$defs/SpaceDecision"
+            },
+            "type": "array"
+          },
           "kept": {
             "description": "The ids kept, in their order.",
             "items": {
@@ -10041,6 +10062,13 @@
           "added": {
             "items": {
               "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "decisions": {
+            "description": "A merge's or a split's decision, one per space named (docs/adr/0773 §4).",
+            "items": {
+              "$ref": "#/$defs/SpaceDecision"
             },
             "type": "array"
           },
@@ -10099,8 +10127,13 @@
           "spaces_not_touching",
           "split_missed",
           "space_not_enclosed",
+          "unit_not_found",
+          "invalid_input",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "space_units_merged"
         ]
       },
       "examples": [
@@ -21273,6 +21306,341 @@
             "exceptions": 1,
             "revision": "8"
           }
+        }
+      ]
+    },
+    {
+      "id": "cad.program.edit",
+      "version": 1,
+      "title": "Bina programı",
+      "summary": "Bina programını ve bölümlerine verilen mahalleri yazar (docs/adr/0773); tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad), units (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç yazılmaz), briefs (kullanıma göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur: bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use (uids). Retler: nothing_to_set, invalid_program (programın yolu), no_entities, invalid_uid, entity_not_found, not_a_space, unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.program.edit` v1 (“Bina programı”): the program as it is to be (absent: as it is) and the spaces\ngiven to its groups, written as one undo step. A group spaces still name is not taken away unless they are given\nelsewhere in the same call.\n\nRefusals, in this order: `nothing_to_set`, `invalid_program` (the program's own problem, at its path), `no_entities`,\n`invalid_uid`, `entity_not_found`, `not_a_space` (`assign[i].uids[k]`), `unit_not_found` (`assign[i].unit`),\n`unit_in_use` (a group taken away that spaces still name: their ids), `invalid_revision`, `revision_conflict`,\n`layer_locked`.",
+        "properties": {
+          "assign": {
+            "items": {
+              "$ref": "#/$defs/ProgramAssign"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "program": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BuildingProgram"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ProgramEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.program.edit` v1 (its plan's too): the program as written and the spaces whose group changed.",
+        "properties": {
+          "assigned": {
+            "description": "The spaces whose group changed, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "program": {
+            "$ref": "#/$defs/BuildingProgram"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "program",
+          "revision"
+        ],
+        "title": "ProgramEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.program.edit` v1 (its plan's too): the program as written and the spaces whose group changed.",
+        "properties": {
+          "assigned": {
+            "description": "The spaces whose group changed, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "program": {
+            "$ref": "#/$defs/BuildingProgram"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "program",
+          "revision"
+        ],
+        "title": "ProgramEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "space"
+            ],
+            "refusedWith": "not_a_space"
+          }
+        ],
+        "refusals": [
+          "nothing_to_set",
+          "invalid_program",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_space",
+          "unit_not_found",
+          "unit_in_use",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki daire, ortak koridor ve yatak odasının hedefi",
+          "input": {
+            "assign": [
+              {
+                "uids": [
+                  "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61"
+                ],
+                "unit": "d1"
+              }
+            ],
+            "program": {
+              "briefs": [
+                {
+                  "areaMax": 16.0,
+                  "areaMin": 12.0,
+                  "minWidth": 2.8,
+                  "reach": [
+                    "Koridor"
+                  ],
+                  "usage": "Yatak odası"
+                },
+                {
+                  "minPassage": 1.2,
+                  "usage": "Koridor"
+                }
+              ],
+              "units": [
+                {
+                  "id": "d1",
+                  "name": "Daire 1",
+                  "number": "1"
+                },
+                {
+                  "id": "d2",
+                  "name": "Daire 2",
+                  "number": "2"
+                },
+                {
+                  "id": "ortak",
+                  "kind": "common",
+                  "name": "Ortak alan",
+                  "number": "O"
+                }
+              ],
+              "version": "Ofis konut hedefleri 2026-1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.program.check",
+      "version": 1,
+      "title": "Bina programını denetle",
+      "summary": "Bina programını çizimle karşılaştırır (salt okunur, docs/adr/0773). units: bölümlerin toplamları, her mahal bir kez: rooms (odalar), outdoor (hedefi outdoor olan balkon, teras), voids (şaft), methods (alanın alındığı yöntemler: net iç yüzler, duvar ekseni, brüt dış yüzler; birden çok ise karışık), levels (mahallerinin katları), recordedArea ve recordedDifference (kayıtlı alan yalnız okunur). totals: units, unitOutdoor, common, outdoor, voids, unassigned, all (boşluklar dışı hepsi; ortak alan bölüme girmez). spaces: mahal başına area (kendi yöntemiyle), width (içindeki en büyük dairenin çapı, net en), doors (kapılar ve başka mahale açık geçişler: ayırıcı), passage ve passageAt (hedefi minPassage olan mahalde kapılar arası en geniş geçiş ve en dar yeri), targetMin, targetMax, targetDifference (aralığın altı eksi, üstü artı, içi 0), passageDifference, adjacent ve reach (istenen kullanımlar ve onları karşılayan mahaller). findings: Mimari denetim'in program grubu: program_unit_missing (Düzelt: bölümden çıkar), program_area_below, program_area_above, program_width_narrow, program_passage_narrow, program_adjacent_missing, program_reach_missing, program_no_door, program_fixture_clearance; ileti ölçülen değeri, farkı ve kuralın sürümünü (kentos.program/1 · hedeflerin sürümü) yazar; hedefler yasal sınır değildir. findings false ise yalnız sayılar (geçiş taraması yapılmaz). units ve levels süzer. Uzun iş olarak çalışabilir: ilerlemesini söyler, durdurulunca cancelled. Retler: unit_not_found, level_not_found.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.program.check` v1 (read-only): the groups and levels read (each absent: all), the findings asked.\nA long check: run as a job it says how far it has come and stops when asked.\n\nRefusals: `unit_not_found` (`units[i]`), `level_not_found` (`levels[i]`), `cancelled` (stopped).",
+        "properties": {
+          "findings": {
+            "description": "Absent or true: the findings too; false: the numbers only (the passage scan skipped).",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "ProgramCheck",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.program.check` v1 (its plan's too).",
+        "properties": {
+          "findings": {
+            "description": "The findings (the audit's group `program`), by code then along x and y.",
+            "items": {
+              "$ref": "#/$defs/ArchAuditFinding"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rule": {
+            "description": "The rule the numbers come from and the brief's version (`kentos.program/1 · …`).",
+            "type": "string"
+          },
+          "spaces": {
+            "description": "The spaces read, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ProgramSpaceRow"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/$defs/ProgramTotals"
+          },
+          "units": {
+            "description": "The program's groups, in its order, with their totals.",
+            "items": {
+              "$ref": "#/$defs/ProgramUnitRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rule",
+          "units",
+          "totals",
+          "spaces",
+          "revision"
+        ],
+        "title": "ProgramChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.program.check` v1 (its plan's too).",
+        "properties": {
+          "findings": {
+            "description": "The findings (the audit's group `program`), by code then along x and y.",
+            "items": {
+              "$ref": "#/$defs/ArchAuditFinding"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rule": {
+            "description": "The rule the numbers come from and the brief's version (`kentos.program/1 · …`).",
+            "type": "string"
+          },
+          "spaces": {
+            "description": "The spaces read, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ProgramSpaceRow"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/$defs/ProgramTotals"
+          },
+          "units": {
+            "description": "The program's groups, in its order, with their totals.",
+            "items": {
+              "$ref": "#/$defs/ProgramUnitRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rule",
+          "units",
+          "totals",
+          "spaces",
+          "revision"
+        ],
+        "title": "ProgramChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unit_not_found",
+          "level_not_found",
+          "cancelled"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün program, bulgularıyla",
+          "input": {}
         }
       ]
     },
@@ -68448,6 +68816,84 @@
       "meaning": "Düğüm kararı yalnız düz bir duvara T birleşen düz bir uçta verilir; köşe, düz devam, serbest uç ve eğrisel birleşim için desteklenmez."
     },
     {
+      "code": "invalid_program",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bina programı geçersiz: kimlikler, bölüm numaraları ve hedeflerin kullanımları ayrı olmalı, kanat binasının olmalı, alan aralığı doğru sırada olmalı."
+    },
+    {
+      "code": "unit_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bina programında bu kimlikte bölüm yok; önce Bina programı penceresinden bölümü ekleyin."
+    },
+    {
+      "code": "unit_in_use",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaldırılan bölümde hâlâ mahal var; önce mahalleri başka bölüme verin ya da bölümden çıkarın."
+    },
+    {
+      "code": "space_units_merged",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Birleşen mahallerin bölümleri farklıydı; korunan mahalin bölümü geçerli oldu."
+    },
+    {
+      "code": "program_unit_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahal bina programında olmayan bir bölüme bağlı; bölümü programa ekleyin ya da mahali bölümden çıkarın."
+    },
+    {
+      "code": "program_area_below",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın alanı tasarım hedefinin altında (yasal sınır değil)."
+    },
+    {
+      "code": "program_area_above",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın alanı tasarım hedefinin üstünde (yasal sınır değil)."
+    },
+    {
+      "code": "program_width_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın net eni tasarım hedefinden dar (yasal sınır değil)."
+    },
+    {
+      "code": "program_passage_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapılar arası net geçiş tasarım hedefinden dar (yasal sınır değil)."
+    },
+    {
+      "code": "program_adjacent_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tasarım hedefinin istediği kullanımda komşu mahal yok."
+    },
+    {
+      "code": "program_reach_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalden tasarım hedefinin istediği kullanıma kapı ya da açık geçiş yok."
+    },
+    {
+      "code": "program_no_door",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Mahalın kapısı ya da başka mahale açık geçişi yok."
+    },
+    {
+      "code": "program_fixture_clearance",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Donatının önündeki kullanım alanı mahalden taşıyor ya da başka donatıya biniyor (tasarım hedefi)."
+    },
+    {
       "code": "invalid_grid",
       "kind": "failed",
       "retryable": false,
@@ -71711,6 +72157,11 @@
           "const": "casework",
           "description": "Kitchen runs whose wall is gone or that can no longer be laid (docs/adr/0732 §4).",
           "type": "string"
+        },
+        {
+          "const": "program",
+          "description": "The building program's findings (docs/adr/0773 §5): spaces against their design brief, doors, passages,\nfixtures' clearances; nothing unless the project has a program.",
+          "type": "string"
         }
       ]
     },
@@ -71780,7 +72231,7 @@
           "$ref": "#/$defs/ArchAuditCheck"
         },
         "code": {
-          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4).",
+          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5).",
           "type": "string"
         },
         "exception": {
@@ -72417,6 +72868,10 @@
             }
           ],
           "description": "The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are."
+        },
+        "program": {
+          "$ref": "#/$defs/BuildingProgram",
+          "description": "The building's program (docs/adr/0773, KCAD 138): buildings, wings, units and the design brief."
         },
         "spaceMethod": {
           "anyOf": [
@@ -75406,6 +75861,44 @@
           "type": "string"
         }
       ]
+    },
+    "BuildingProgram": {
+      "additionalProperties": false,
+      "description": "A building's program (docs/adr/0773, `.kcad` schema 138).",
+      "properties": {
+        "briefs": {
+          "items": {
+            "$ref": "#/$defs/SpaceBrief"
+          },
+          "type": "array"
+        },
+        "buildings": {
+          "items": {
+            "$ref": "#/$defs/ProgramBuilding"
+          },
+          "type": "array"
+        },
+        "clearances": {
+          "items": {
+            "$ref": "#/$defs/FixtureClearance"
+          },
+          "type": "array"
+        },
+        "units": {
+          "items": {
+            "$ref": "#/$defs/ProgramUnit"
+          },
+          "type": "array"
+        },
+        "version": {
+          "description": "The brief's own name and version (“Ofis konut brief'i 2026-1”), said with its findings.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
     },
     "CadElement": {
       "description": "A part of an object a constraint names.",
@@ -89276,6 +89769,32 @@
         }
       ]
     },
+    "FixtureClearance": {
+      "additionalProperties": false,
+      "description": "The free room a fixture needs in front of it: a rectangle `width` wide, `depth` deep, centred on the front of the\nblock's own box (its +y side).",
+      "properties": {
+        "block": {
+          "description": "The block's name.",
+          "type": "string"
+        },
+        "depth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "width": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "block",
+        "width",
+        "depth"
+      ],
+      "type": "object"
+    },
     "FontMatch": {
       "description": "How a named typeface is drawn.",
       "oneOf": [
@@ -102415,6 +102934,13 @@
             "null"
           ]
         },
+        "unit": {
+          "description": "The building program's group it joins, by its id (docs/adr/0773); absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "usage": {
           "type": [
             "string",
@@ -114854,6 +115380,435 @@
         }
       ]
     },
+    "ProgramAssign": {
+      "additionalProperties": false,
+      "description": "Spaces given to a group, or taken out of theirs.",
+      "properties": {
+        "uids": {
+          "description": "The spaces, by their persistent ids.",
+          "items": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "unit": {
+          "default": null,
+          "description": "The group's id; null: out of any group.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "uids"
+      ],
+      "type": "object"
+    },
+    "ProgramBuilding": {
+      "additionalProperties": false,
+      "description": "A building and its wings.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "wings": {
+          "items": {
+            "$ref": "#/$defs/ProgramWing"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ProgramLink": {
+      "description": "A brief's neighbour or reach: whether a space of the usage is one, and which.",
+      "properties": {
+        "by": {
+          "description": "The spaces of the usage that are, in the drawing's order; empty: none.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "usage": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "usage"
+      ],
+      "type": "object"
+    },
+    "ProgramSpaceRow": {
+      "description": "A space read against its brief.",
+      "properties": {
+        "adjacent": {
+          "items": {
+            "$ref": "#/$defs/ProgramLink"
+          },
+          "type": "array"
+        },
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "doors": {
+          "description": "Its doors and openings into other spaces, counted.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "method": {
+          "$ref": "#/$defs/SpaceMethod",
+          "description": "How its area was taken: its rings' method (net: the walls' finished inner faces)."
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "outdoor": {
+          "description": "Summed as its group's outdoor area (its brief says outdoor).",
+          "type": "boolean"
+        },
+        "passage": {
+          "description": "Its net passage (a brief with a least passage, two doors or more): the widest a body may be and still go\nbetween all its doors (within 1 mm).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "passageAt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Vec2"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Where it is narrowest.",
+          "x-unit": "length"
+        },
+        "passageDifference": {
+          "description": "Its passage less its brief's least passage.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "reach": {
+          "items": {
+            "$ref": "#/$defs/ProgramLink"
+          },
+          "type": "array"
+        },
+        "targetDifference": {
+          "description": "How far its area lies outside its brief's range (below minus, above plus, inside 0); none without a range.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "targetMax": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "targetMin": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "unit": {
+          "description": "Its group's id as the space names it (one the program lacks too).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "usage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "void": {
+          "type": "boolean"
+        },
+        "width": {
+          "description": "Its net width: the largest circle inside it, its diameter (within 1 mm).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "uid",
+        "method",
+        "area",
+        "width",
+        "doors"
+      ],
+      "type": "object"
+    },
+    "ProgramTotals": {
+      "description": "The drawing's totals, each space once: by kind of group, and the spaces in none.",
+      "properties": {
+        "all": {
+          "description": "All the spaces' areas but the voids: the sum of the others.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "common": {
+          "description": "The common areas' spaces (rooms and outdoor).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "outdoor": {
+          "description": "The outdoor areas' spaces.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "unassigned": {
+          "description": "The spaces in no group, or in one the program lacks.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "unitOutdoor": {
+          "description": "The independent units' outdoor spaces.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "units": {
+          "description": "The independent units' rooms.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "voids": {
+          "description": "The voids, whatever their group.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        }
+      },
+      "required": [
+        "units",
+        "unitOutdoor",
+        "common",
+        "outdoor",
+        "voids",
+        "unassigned",
+        "all"
+      ],
+      "type": "object"
+    },
+    "ProgramUnit": {
+      "additionalProperties": false,
+      "description": "A group of spaces: an independent unit, a common area or an outdoor area.",
+      "properties": {
+        "building": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/UnitKind"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "number": {
+          "description": "Its number, as the project writes it (“D1”, “1”, “Ortak”); one per group.",
+          "type": "string"
+        },
+        "recordedArea": {
+          "description": "Its recorded (official) area, m², as the user gave it (a deed's, a permit's): read beside the measured one,\nnever written by a measurement.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "wing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "number"
+      ],
+      "type": "object"
+    },
+    "ProgramUnitRow": {
+      "description": "A group's totals, each space summed once: its rooms', its outdoor spaces' (briefs marked outdoor: a balcony) and its\nvoids', m².",
+      "properties": {
+        "building": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/UnitKind"
+        },
+        "levels": {
+          "description": "The levels its spaces lie on, in the project's order (a duplex: two); a space without a level gives none.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "methods": {
+          "description": "The methods its spaces are measured by, in their order of first use: one name tells a reader how its area was\ntaken; two or more, that it mixes them.",
+          "items": {
+            "$ref": "#/$defs/SpaceMethod"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "number": {
+          "type": "string"
+        },
+        "outdoor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "recordedArea": {
+          "description": "The recorded area the program keeps for it, as given; never written by a measurement.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "recordedDifference": {
+          "description": "Its rooms less its recorded area.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "rooms": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "spaces": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "voids": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "wing": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "number",
+        "kind",
+        "spaces",
+        "rooms",
+        "outdoor",
+        "voids",
+        "methods"
+      ],
+      "type": "object"
+    },
+    "ProgramWing": {
+      "additionalProperties": false,
+      "description": "A wing of a building.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ],
+      "type": "object"
+    },
     "ProjectAccessView": {
       "description": "The caller's access to a project: the highest of ownership, a grant and the\norganisation's policy, and exactly what it allows. Buttons follow it; the\nserver checks every request itself.",
       "properties": {
@@ -119605,6 +120560,21 @@
           "const": "space",
           "description": "The space a fixture stands in, on its level: its number and name.",
           "type": "string"
+        },
+        {
+          "const": "unit",
+          "description": "A space's group in the building program: its number and name (docs/adr/0773).",
+          "type": "string"
+        },
+        {
+          "const": "target",
+          "description": "A space's design target: its brief's area range.",
+          "type": "string"
+        },
+        {
+          "const": "targetDiff",
+          "description": "How far a space's area lies outside its brief's range (below minus, above plus).",
+          "type": "string"
         }
       ]
     },
@@ -123297,6 +124267,72 @@
         }
       ]
     },
+    "SpaceBrief": {
+      "additionalProperties": false,
+      "description": "The design brief for the spaces of one usage: what the designer aims at, never a legal limit.",
+      "properties": {
+        "adjacent": {
+          "description": "Usages one of its neighbours (a wall or an opening between) should have, each.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "areaMax": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "areaMin": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "minPassage": {
+          "description": "The least net passage: the widest a body may be and still go between all the space's doors (a corridor's).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "minWidth": {
+          "description": "The least net width: the largest circle inside the space, its diameter.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "outdoor": {
+          "description": "An outdoor space of a unit (a balcony, a terrace): summed apart from its unit's rooms.",
+          "type": "boolean"
+        },
+        "reach": {
+          "description": "Usages it should open into, each: by a door, a gap or a room separator.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "usage": {
+          "description": "The usage it is for, as the spaces write it (`SpaceFields::usage`).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "usage"
+      ],
+      "type": "object"
+    },
     "SpaceColumns": {
       "description": "Persistent physical column deduction. Absence preserves legacy wall-only areas.",
       "enum": [
@@ -123305,6 +124341,56 @@
         "all"
       ],
       "type": "string"
+    },
+    "SpaceDecision": {
+      "description": "What a merge or a split does with a space's identity and its work (docs/adr/0773 §4), said before it is written.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "by": {
+          "$ref": "#/$defs/SpaceKeptBy"
+        },
+        "fixtures": {
+          "description": "The fixtures standing in it after.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kept": {
+          "description": "The id that goes on.",
+          "type": "string"
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pieces": {
+          "description": "A split's new parts, in the answer's `added` order; a merge's spaces taken in, in their order.",
+          "items": {
+            "$ref": "#/$defs/SpacePieceDecision"
+          },
+          "type": "array"
+        },
+        "unit": {
+          "description": "Its group, kept.",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kept",
+        "by",
+        "area"
+      ],
+      "type": "object"
     },
     "SpaceEntity": {
       "description": "A space (docs/adr/0342).",
@@ -123502,6 +124588,13 @@
           ],
           "x-unit": "1"
         },
+        "unit": {
+          "description": "The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor\narea of the building's program, by its id. Absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "usage": {
           "type": [
             "string",
@@ -123613,6 +124706,13 @@
             "null"
           ]
         },
+        "unit": {
+          "description": "The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor\narea of the building's program, by its id. Absent: none.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "usage": {
           "type": [
             "string",
@@ -123660,6 +124760,26 @@
         }
       },
       "type": "object"
+    },
+    "SpaceKeptBy": {
+      "description": "How the space whose id goes on was chosen.",
+      "oneOf": [
+        {
+          "const": "given",
+          "description": "Named (a merge's `keep`, a split's `keep` point).",
+          "type": "string"
+        },
+        {
+          "const": "first",
+          "description": "A merge's first space.",
+          "type": "string"
+        },
+        {
+          "const": "largest",
+          "description": "A split's largest part.",
+          "type": "string"
+        }
+      ]
     },
     "SpaceMethod": {
       "description": "What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces.",
@@ -123728,6 +124848,51 @@
       },
       "required": [
         "outer"
+      ],
+      "type": "object"
+    },
+    "SpacePieceDecision": {
+      "description": "A part a split makes, or a space a merge takes in.",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "finishes": {
+          "$ref": "#/$defs/SpaceFinishes",
+          "description": "The finishes it takes (a split's part) or that go with it (a merged space's)."
+        },
+        "fixtures": {
+          "description": "The fixtures (block inserts) standing in it, by their ids.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tags": {
+          "description": "Its tags: a merged space's lose their space; none for a split's part.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "description": "A merged space's id; a split's new part has none until written (the answer's `added`, in order).",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "area"
       ],
       "type": "object"
     },
@@ -124135,6 +125300,13 @@
                 "null"
               ]
             },
+            "unit": {
+              "description": "The building program's group, by its id (docs/adr/0773); null: out of any.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "usage": {
               "type": [
                 "string",
@@ -124161,11 +125333,24 @@
           "type": "object"
         },
         {
-          "description": "Birleştir: the spaces named one, the first's id kept; its boundary drawn.",
+          "description": "Birleştir: the spaces named one, its boundary drawn; the id of `keep` goes on (absent: the first's), with its\nnumber unless `number` gives another (null: none), its finishes and its group. The others' numbers, finishes and\ntags go with them: the answer's `decision` says so before anything is written (docs/adr/0773 §4).",
           "properties": {
+            "keep": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "kind": {
               "const": "merge",
               "type": "string"
+            },
+            "number": {
+              "type": [
+                "string",
+                "null"
+              ]
             }
           },
           "required": [
@@ -124174,8 +125359,25 @@
           "type": "object"
         },
         {
-          "description": "Böl: each space named cut along the line `line` (two points or more); the largest part keeps its id.",
+          "description": "Böl: each space named cut along the line `line` (two points or more). The part holding `keep` keeps its id\n(absent: the largest); the new parts take `numbers` in their order by size (absent: none, so no number is\nwritten twice), its group, and its finishes when `finishes` (absent: true). The answer's `decision` says each\npart's id, number, finishes and the fixtures standing in it (docs/adr/0773 §4).",
           "properties": {
+            "finishes": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "keep": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Vec2"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-unit": "length"
+            },
             "kind": {
               "const": "split",
               "type": "string"
@@ -124186,6 +125388,15 @@
               },
               "type": "array",
               "x-unit": "length"
+            },
+            "numbers": {
+              "items": {
+                "type": "string"
+              },
+              "type": [
+                "array",
+                "null"
+              ]
             }
           },
           "required": [
@@ -131665,6 +132876,26 @@
         {
           "const": "scale",
           "description": "The numbers stay: the drawing is scaled by the ratio of the two\nunits about 0,0 (4000 mm reads 4000 m, a thousand times larger).",
+          "type": "string"
+        }
+      ]
+    },
+    "UnitKind": {
+      "description": "A group of spaces' kind.",
+      "oneOf": [
+        {
+          "const": "unit",
+          "description": "Bağımsız bölüm: a flat, a shop, an office; its own spaces summed for it alone.",
+          "type": "string"
+        },
+        {
+          "const": "common",
+          "description": "Ortak alan: a shared corridor, stairs, a shaft; summed apart, never into a unit's total.",
+          "type": "string"
+        },
+        {
+          "const": "outdoor",
+          "description": "Dış alan: a garden, a car park; summed apart.",
           "type": "string"
         }
       ]

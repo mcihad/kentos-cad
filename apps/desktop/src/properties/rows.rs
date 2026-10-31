@@ -1436,7 +1436,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
         Entity::Space(sp) => {
             use kentos_commands::{SpaceChange, SpaceColumns, SpaceMethod, SpaceScope, SpacesOperation};
             let x = &sp.space;
-            let set = |c: SpaceChange| Message::Properties(Event::Space(slot, SpacesOperation::Set(c)));
+            let set = |c: SpaceChange| Message::Properties(Event::Space(slot, Box::new(SpacesOperation::Set(c))));
             let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
                 label,
                 swatch: None,
@@ -1494,6 +1494,42 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                         .filter(|v| values.contains(v))
                         .unwrap_or_else(|| "Listeden seç".into());
                     geo.push(Row::text(label, shown.clone()).editor(select(shown, items)));
+                }
+            }
+            // Bölüm (docs/adr/0773 §1): the building program's group; Tasarım hedefi and its difference, read.
+            let program = doc.model.program();
+            if !program.units.is_empty() || x.unit.is_some() {
+                let named = |u: &kentos_commands::ProgramUnit| match &u.name {
+                    Some(n) => format!("{} {n}", u.number),
+                    None => u.number.clone(),
+                };
+                let shown = match x.unit.as_deref() {
+                    Some(id) => program.unit(id).map_or_else(|| format!("{id} (programda yok)"), named),
+                    None => "Bölümsüz".to_owned(),
+                };
+                let mut items: Vec<Choice> = program
+                    .units
+                    .iter()
+                    .map(|u| {
+                        pick(
+                            named(u),
+                            x.unit.as_deref() == Some(u.id.as_str()),
+                            set(SpaceChange { unit: Some(Some(u.id.clone())), ..Default::default() }),
+                            Some("archProgram"),
+                        )
+                    })
+                    .collect();
+                items.push(pick(
+                    "Bölümsüz".into(),
+                    x.unit.is_none(),
+                    set(SpaceChange { unit: Some(None), ..Default::default() }),
+                    None,
+                ));
+                geo.push(Row::text("Bölüm", shown.clone()).editor(select(shown, items)));
+            }
+            for (label, place) in [("Tasarım hedefi", "target"), ("Hedef farkı", "targetDiff")] {
+                if let Some(v) = doc.model.arch_value(e, place, None) {
+                    geo.push(Row::text(label, doc.model.arch_value_text(&v, true)));
                 }
             }
             // Boşluk (docs/adr/0708): a shaft or an opening in the floor, drawn crossed, its area summed apart.
@@ -1614,7 +1650,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             let rebound = vec![Choice::Command {label:"İç nokta seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
                 "Duvarlardan yeniden bul".to_owned(),
                 false,
-                Message::Properties(Event::Space(slot, SpacesOperation::Rebound { seed: None })),
+                Message::Properties(Event::Space(slot, Box::new(SpacesOperation::Rebound { seed: None }))),
                 Some("space"),
             )];
             geo.push(Row::text("Sınır", bound).editor(select(bound.to_owned(), rebound)));

@@ -2077,6 +2077,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 138 (docs/adr/0773): the building program, a space's group, a schedule's program field.
+    if doc.settings.arch.as_ref().is_some_and(|a| !a.program.is_empty())
+        || objs.iter().any(building_program)
+        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(building_program))
+    {
+        return crate::SCHEMA_WITH_BUILDING_PROGRAM;
+    }
     // Schema 137 (docs/adr/0771): a turning wall component, a node decision, a bound slab.
     if objs.iter().any(building_parts)
         || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(building_parts))
@@ -3294,6 +3301,18 @@ pub(crate) fn building_parts(e: &Entity) -> bool {
                 || w.wall.joins.end_pass.is_some()
         }
         Entity::Slab(s) => s.slab.bound.is_some(),
+        _ => false,
+    }
+}
+
+/// Whether an object needs schema 138 (docs/adr/0773): a space in a group, a schedule with a program field.
+pub(crate) fn building_program(e: &Entity) -> bool {
+    match e {
+        Entity::Space(s) => s.space.unit.is_some(),
+        Entity::Table(t) => matches!(
+            &t.source,
+            Some(kentos_contracts::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_program())
+        ),
         _ => false,
     }
 }

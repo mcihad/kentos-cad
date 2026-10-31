@@ -241,6 +241,35 @@ impl Document {
                     "usage" => text(&x.usage),
                     "area" => Some(Area(area)),
                     "netArea" => crate::space_follow::SpaceSearch::new(self).net_area(x).map(Area),
+                    // The building program (docs/adr/0773): its group, its brief's range, how far out it is.
+                    "unit" => {
+                        let program = self.program();
+                        x.unit.as_deref().map(|id| {
+                            Text(match program.unit(id) {
+                                Some(u) => match &u.name {
+                                    Some(n) => format!("{} {n}", u.number),
+                                    None => u.number.clone(),
+                                },
+                                None => id.to_owned(),
+                            })
+                        })
+                    }
+                    "target" => {
+                        let program = self.program();
+                        let b = program.brief(x.usage.as_deref()?)?;
+                        let t = |v: f64, unit: bool| self.arch_value_text(&Area(v), unit);
+                        match (b.area_min, b.area_max) {
+                            (Some(lo), Some(hi)) => Some(Text(format!("{}–{}", t(lo, false), t(hi, true)))),
+                            (Some(lo), None) => Some(Text(format!("≥ {}", t(lo, true)))),
+                            (None, Some(hi)) => Some(Text(format!("≤ {}", t(hi, true)))),
+                            (None, None) => None,
+                        }
+                    }
+                    "targetDiff" => {
+                        let program = self.program();
+                        let b = program.brief(x.usage.as_deref()?)?;
+                        b.area_difference(area).map(Area)
+                    }
                     "perimeter" => {
                         Some(Length(kentos_geometry_core::geom::space::perimeter(&areas)))
                     }
@@ -370,11 +399,28 @@ impl Document {
     /// Where a fixture stands (docs/adr/0733 §2): the middle of its block's drawing as the insert places it, so that a
     /// cabinet whose point is on the wall's face stands in its room; its point when its block draws nothing.
     pub fn fixture_middle(&self, i: &kentos_contracts::InsertEntity) -> kentos_contracts::Vec2 {
-        use kentos_geometry_core::api::json::{FromJson, Json};
-        use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
-        let Some(b) = self.blocks().iter().find(|b| b.id == i.block) else {
+        let Some([x0, y0, x1, y1]) = self.block_box(i.block) else {
             return i.p;
         };
+        let (x, y) = ((x0 + x1) / 2.0, (y0 + y1) / 2.0);
+        let m = kentos_geometry_core::block::placement_xy(
+            kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
+            i.scale,
+            i.y_scale.unwrap_or(i.scale),
+            i.rotation,
+            i.mirror,
+        );
+        kentos_contracts::Vec2 {
+            x: m[0] * x + m[2] * y + m[4],
+            y: m[1] * x + m[3] * y + m[5],
+        }
+    }
+
+    /// A block's drawing's box in its own frame, its base at the origin: `[x0, y0, x1, y1]`; none when it draws nothing.
+    pub fn block_box(&self, block: kentos_contracts::identity::BlockId) -> Option<[f64; 4]> {
+        use kentos_geometry_core::api::json::{FromJson, Json};
+        use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
+        let b = self.blocks().iter().find(|b| b.id == block)?;
         let mut seen: Option<[f64; 4]> = None;
         for e in &b.entities {
             let Some(core) = serde_json::to_string(e)
@@ -393,21 +439,8 @@ impl Document {
                 Some(o) => [o[0].min(r.min_x), o[1].min(r.min_y), o[2].max(r.max_x), o[3].max(r.max_y)],
             });
         }
-        let Some([x0, y0, x1, y1]) = seen else {
-            return i.p;
-        };
-        let (x, y) = ((x0 + x1) / 2.0 - b.base.x, (y0 + y1) / 2.0 - b.base.y);
-        let m = kentos_geometry_core::block::placement_xy(
-            kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
-            i.scale,
-            i.y_scale.unwrap_or(i.scale),
-            i.rotation,
-            i.mirror,
-        );
-        kentos_contracts::Vec2 {
-            x: m[0] * x + m[2] * y + m[4],
-            y: m[1] * x + m[3] * y + m[5],
-        }
+        let [x0, y0, x1, y1] = seen?;
+        Some([x0 - b.base.x, y0 - b.base.y, x1 - b.base.x, y1 - b.base.y])
     }
 
     /// The space `p` stands in on `level` (none: among the spaces without a level), by its number and name; the first

@@ -440,6 +440,11 @@ SCHEMA_WITH_LAYER_INDEXES = 136
 # end's node decision (`joins.startPass`, `joins.endPass`), a slab bound to its walls or its space (`bound`); written
 # only when a wall, a project wall style or a slab has one.
 SCHEMA_WITH_BUILDING_PARTS = 137
+# Schema 138 (docs/adr/0773): the building program (`arch.program`: buildings, wings, units, design brief, fixture
+# clearances), a space's group (`unit`) and a schedule's program fields (`unit`, `target`, `targetDiff`); written only
+# when the project or a space has one.
+SCHEMA_WITH_BUILDING_PROGRAM = 138
+SCHEDULE_PROGRAM_FIELDS = ("unit", "target", "targetDiff")
 MAX_TABLE_CONSTRAINTS = 256
 MAX_CHECK_SQL = 8000
 MAX_CONSTRAINT_NAME = 256
@@ -743,7 +748,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_BUILDING_PARTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_BUILDING_PROGRAM)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3361,6 +3366,7 @@ class _Schema:
         self.cad_work = version >= SCHEMA_WITH_CAD_WORK
         self.layer_indexes = version >= SCHEMA_WITH_LAYER_INDEXES
         self.building_parts = version >= SCHEMA_WITH_BUILDING_PARTS
+        self.building_program = version >= SCHEMA_WITH_BUILDING_PROGRAM
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -7699,7 +7705,8 @@ class _Schema:
             if not t.strip() or any(unicodedata.category(c) == "Cc" for c in t) or len(t) > 200:
                 self.fail("bad_value", "tür süzgecinin her adı boş olmayan tek satırdır, en çok 200 harftir")
             return t
-        column = self.fields({"field": (self.enum(SCHEDULE_FIELDS + (SCHEDULE_EXTRA_FIELDS if extra else ())), True),
+        column = self.fields({"field": (self.enum(SCHEDULE_FIELDS + (SCHEDULE_EXTRA_FIELDS if extra else ())
+                                                  + (SCHEDULE_PROGRAM_FIELDS if self.building_program else ())), True),
                               "title": (self.text, False), "attr": (self.text, False)})
         flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
                            "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False),
@@ -8479,6 +8486,9 @@ class _Schema:
                     self.fail("bad_value", "kaynak kapsamı metin olmalı")
                 return self.enum(("unassigned",))(value)
             table["scope"] = (scope, False)
+        if self.building_program:
+            # Schema 138 (docs/adr/0773 §1): the program's group it belongs to.
+            table["unit"] = (text_not_blank, False)
         if self.space_voids:
             def void(value):
                 # Schema 116 (docs/adr/0708): written only when true.
@@ -8838,6 +8848,64 @@ class _Schema:
                     self.fail("bad_value", f"“{name}” duvar stilinin genişliği {st['width']:g} m; {fixed:g} m'den büyük olmalı")
         return styles
 
+    def program_(self, v):
+        """The building program (schema 138, docs/adr/0773): its buildings and wings, its groups, the design brief and
+        the fixtures' clearances; ids, numbers and usages each once, a wing of its building, a range in order; an empty
+        one is not written."""
+        def positive(x):
+            x = self.float(x)
+            if not (math.isfinite(x) and 0 < x <= 1e6):
+                self.fail("bad_value", "sıfırdan büyük, sonlu bir sayı olmalı")
+            return x
+
+        def word(x):
+            t = self.text(x)
+            if not t.strip() or t.strip() != t or len(t) > 120:
+                self.fail("bad_value", "boş, kenarı boşluklu ya da 120 harften uzun metin yazılmaz")
+            return t
+        wing = self.fields({"id": (word, True), "name": (word, True)})
+        building = self.fields({"id": (word, True), "name": (word, True), "wings": (self.array(wing), False)})
+        unit = self.fields({"id": (word, True), "number": (word, True), "name": (word, False),
+                            "kind": (self.enum(("common", "outdoor")), False), "building": (word, False),
+                            "wing": (word, False), "recordedArea": (positive, False)})
+        brief = self.fields({"usage": (word, True), "areaMin": (positive, False), "areaMax": (positive, False),
+                             "minWidth": (positive, False), "minPassage": (positive, False),
+                             "adjacent": (self.array(word), False), "reach": (self.array(word), False),
+                             "outdoor": (lambda x: x if x is True else self.fail("bad_value", "dış mahal yalnız true yazılır"), False)})
+        clearance = self.fields({"block": (word, True), "width": (positive, True), "depth": (positive, True)})
+        p = self.fields({"buildings": (self.array(building), False), "units": (self.array(unit), False),
+                         "briefs": (self.array(brief), False), "clearances": (self.array(clearance), False),
+                         "version": (word, False)})(v)
+        if not p:
+            self.fail("bad_value", "boş bina programı yazılmaz")
+        for key in ("buildings", "units", "briefs", "clearances"):
+            if key in p and not p[key]:
+                self.fail("bad_value", "boş liste yazılmaz")
+        ids = [b["id"] for b in p.get("buildings", [])] + [w["id"] for b in p.get("buildings", []) for w in b.get("wings", [])]
+        if len(ids) != len(set(ids)):
+            self.fail("bad_value", "bina ve kanat kimlikleri ayrı olmalı")
+        units = p.get("units", [])
+        for key in ("id", "number"):
+            values = [u[key] for u in units]
+            if len(values) != len(set(values)):
+                self.fail("bad_value", f"bölümlerin {key} değerleri ayrı olmalı")
+        for u in units:
+            b = next((x for x in p.get("buildings", []) if x["id"] == u.get("building")), None)
+            if "building" in u and b is None:
+                self.fail("bad_value", "bölümün binası programda yok")
+            if "wing" in u and (b is None or u["wing"] not in [w["id"] for w in b.get("wings", [])]):
+                self.fail("bad_value", "bölümün kanadı binasının değil")
+        usages = [b["usage"] for b in p.get("briefs", [])]
+        if len(usages) != len(set(usages)):
+            self.fail("bad_value", "bir kullanımın hedefi bir kez yazılır")
+        for b in p.get("briefs", []):
+            if "areaMin" in b and "areaMax" in b and b["areaMin"] > b["areaMax"]:
+                self.fail("bad_value", "en çok alan en az alandan küçük")
+        blocks = [c["block"] for c in p.get("clearances", [])]
+        if len(blocks) != len(set(blocks)):
+            self.fail("bad_value", "bir bloğun kullanım alanı bir kez yazılır")
+        return p
+
     def arch_(self, v):
         """The project's levels and the walls' detail (docs/adr/0339 §3); an empty one is not written."""
         a = self.fields({"levels": (self.array(self.fields({"id": (self.text, True), "name": (self.text, True),
@@ -8855,7 +8923,9 @@ class _Schema:
                          **({"auditExceptions": (self.array(self.fields({
                              "key": (self.text, True), "code": (self.text, True),
                              "uids": (self.array(self.uid_text), True), "digest": (self.text, True),
-                             "note": (self.text, False)})), False)} if self.audit_exceptions else {})})(v)
+                             "note": (self.text, False)})), False)} if self.audit_exceptions else {}),
+                         # Schema 138 (docs/adr/0773): the building program.
+                         **({"program": (self.program_, False)} if self.building_program else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
         ids, names = set(), set()

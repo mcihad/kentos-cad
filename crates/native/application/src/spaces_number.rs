@@ -157,6 +157,7 @@ fn output(doc: &Document, work: Work) -> SpacesEdited {
         kept: work.uids,
         added: vec![],
         removed: vec![],
+        decisions: vec![],
         revision: doc.revision().to_string(),
     }
 }

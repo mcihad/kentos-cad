@@ -121,10 +121,16 @@ pub enum ScheduleField {
     Category,
     /// The space a fixture stands in, on its level: its number and name.
     Space,
+    /// A space's group in the building program: its number and name (docs/adr/0773).
+    Unit,
+    /// A space's design target: its brief's area range.
+    Target,
+    /// How far a space's area lies outside its brief's range (below minus, above plus).
+    TargetDiff,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 28] = [
+    pub const ALL: [ScheduleField; 31] = [
         ScheduleField::Number,
         ScheduleField::Type,
         ScheduleField::Form,
@@ -153,6 +159,9 @@ impl ScheduleField {
         ScheduleField::Baseboard,
         ScheduleField::Category,
         ScheduleField::Space,
+        ScheduleField::Unit,
+        ScheduleField::Target,
+        ScheduleField::TargetDiff,
     ];
 
     /// Its heading when the column gives none.
@@ -186,6 +195,9 @@ impl ScheduleField {
             ScheduleField::Baseboard => "Süpürgelik boyu",
             ScheduleField::Category => "Kategori",
             ScheduleField::Space => "Mahal",
+            ScheduleField::Unit => "Bölüm",
+            ScheduleField::Target => "Tasarım hedefi",
+            ScheduleField::TargetDiff => "Hedef farkı",
         }
     }
 
@@ -219,6 +231,9 @@ impl ScheduleField {
             ScheduleField::Baseboard => "baseboard",
             ScheduleField::Category => "category",
             ScheduleField::Space => "space",
+            ScheduleField::Unit => "unit",
+            ScheduleField::Target => "target",
+            ScheduleField::TargetDiff => "targetDiff",
         }
     }
 
@@ -244,7 +259,8 @@ impl ScheduleField {
                 ) && !(self == Volume && of == ScheduleOf::Openings)
             }
             Form | Sill | Head | Wall => of == ScheduleOf::Openings,
-            Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard => {
+            Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard | Unit
+            | Target | TargetDiff => {
                 of == ScheduleOf::Spaces
             }
             Tag | Place => of == ScheduleOf::Columns,
@@ -303,6 +319,12 @@ impl ScheduleField {
             self,
             FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard | Category | Space
         )
+    }
+
+    /// Whether it is one of the building program's fields (docs/adr/0773, `.kcad` schema 138).
+    pub fn is_program(self) -> bool {
+        use ScheduleField::*;
+        matches!(self, Unit | Target | TargetDiff)
     }
 }
 

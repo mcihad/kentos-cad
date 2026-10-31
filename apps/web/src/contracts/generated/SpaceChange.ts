@@ -27,4 +27,8 @@ columns?: SpaceColumns, level?: string | null, phase?: ArchPhase | null, height?
 /**
  * A void or a room again (docs/adr/0708).
  */
-void?: boolean, };
+void?: boolean, 
+/**
+ * The building program's group, by its id (docs/adr/0773); null: out of any.
+ */
+unit?: string | null, };

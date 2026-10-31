@@ -1,0 +1,9122 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.spaces.edit",
+ "commandVersion": 1,
+ "title": "Mahali böl ve birleştir: kimlik, numara, kaplama ve donatı kararı",
+ "note": "ADR 0773. Beklenenler scripts/fixtures/program_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; koridorun geçişi shapely (GEOS) ile aşındırılıp ikiye bölünerek.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bina programı",
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "arch": {
+    "levels": [
+     {
+      "id": "zemin",
+      "name": "Zemin kat",
+      "elevation": 0.0,
+      "height": 3.0
+     },
+     {
+      "id": "kat-1",
+      "name": "1. kat",
+      "elevation": 3.0,
+      "height": 3.0
+     }
+    ],
+    "program": {
+     "units": [
+      {
+       "id": "d1",
+       "number": "1"
+      },
+      {
+       "id": "d2",
+       "number": "2"
+      }
+     ]
+    }
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "mahal",
+    "name": "Mahal",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "donati",
+    "name": "Donatı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "etiket",
+    "name": "Etiket",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "mahal",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "space",
+    "id": 1,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 0.0
+        },
+        {
+         "x": 6.0,
+         "y": 0.0
+        },
+        {
+         "x": 6.0,
+         "y": 4.0
+        },
+        {
+         "x": 0.0,
+         "y": 4.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "1",
+    "name": "Ofis",
+    "usage": "Ofis",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d1",
+    "finishes": {
+     "floor": "Parke"
+    }
+   },
+   {
+    "kind": "space",
+    "id": 2,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 6.0,
+         "y": 0.0
+        },
+        {
+         "x": 9.0,
+         "y": 0.0
+        },
+        {
+         "x": 9.0,
+         "y": 4.0
+        },
+        {
+         "x": 6.0,
+         "y": 4.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "2",
+    "name": "Ofis",
+    "usage": "Ofis",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d2",
+    "finishes": {
+     "floor": "Seramik"
+    }
+   },
+   {
+    "kind": "space",
+    "id": 3,
+    "layerId": "mahal",
+    "attrs": {},
+    "parts": [
+     {
+      "outer": {
+       "pts": [
+        {
+         "x": 0.0,
+         "y": 4.0
+        },
+        {
+         "x": 6.0,
+         "y": 4.0
+        },
+        {
+         "x": 6.0,
+         "y": 6.0
+        },
+        {
+         "x": 0.0,
+         "y": 6.0
+        }
+       ]
+      }
+     }
+    ],
+    "number": "3",
+    "name": "Depo",
+    "usage": "Depo",
+    "arch": {
+     "level": "zemin"
+    },
+    "unit": "d1"
+   },
+   {
+    "kind": "insert",
+    "id": 4,
+    "layerId": "donati",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+    "p": {
+     "x": 1.0,
+     "y": 2.0
+    },
+    "scale": 1,
+    "rotation": 0,
+    "arch": {
+     "level": "zemin"
+    }
+   },
+   {
+    "kind": "insert",
+    "id": 5,
+    "layerId": "donati",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+    "p": {
+     "x": 5.0,
+     "y": 2.0
+    },
+    "scale": 1,
+    "rotation": 0,
+    "arch": {
+     "level": "zemin"
+    }
+   },
+   {
+    "kind": "insert",
+    "id": 6,
+    "layerId": "donati",
+    "attrs": {},
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+    "p": {
+     "x": 7.5,
+     "y": 2.0
+    },
+    "scale": 1,
+    "rotation": 0,
+    "arch": {
+     "level": "zemin"
+    }
+   }
+  ],
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+    "name": "Masa",
+    "base": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "",
+      "attrs": {},
+      "pts": [
+       {
+        "x": -0.4,
+        "y": -0.3
+       },
+       {
+        "x": 0.4,
+        "y": -0.3
+       },
+       {
+        "x": 0.4,
+        "y": 0.3
+       },
+       {
+        "x": -0.4,
+        "y": 0.3
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Böl: büyük parça kimliğini korur; yeni parça numarasız, kaplamalarıyla, donatıları söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 5.0
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "added": [
+        {
+         "kind": "space",
+         "id": 7,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "largest",
+         "number": "1",
+         "area": 16.0,
+         "unit": "d1",
+         "fixtures": [
+          "$uidOf:4"
+         ],
+         "pieces": [
+          {
+           "area": 8.0,
+           "finishes": {
+            "floor": "Parke"
+           },
+           "fixtures": [
+            "$uidOf:5"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "number": null,
+        "unit": "d1",
+        "finishes": {
+         "floor": "Parke"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: korunacak nokta küçük parçada; kimlik ona geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 5.0
+        }
+       ],
+       "keep": {
+        "x": 5.0,
+        "y": 1.0
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "added": [
+        {
+         "kind": "space",
+         "id": 7,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "given",
+         "number": "1",
+         "area": 8.0,
+         "unit": "d1",
+         "fixtures": [
+          "$uidOf:5"
+         ],
+         "pieces": [
+          {
+           "area": 16.0,
+           "finishes": {
+            "floor": "Parke"
+           },
+           "fixtures": [
+            "$uidOf:4"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "number": null,
+        "unit": "d1",
+        "finishes": {
+         "floor": "Parke"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: yeni parçaya numara verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 5.0
+        }
+       ],
+       "numbers": [
+        "1b"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "added": [
+        {
+         "kind": "space",
+         "id": 7,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1b",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "largest",
+         "number": "1",
+         "area": 16.0,
+         "unit": "d1",
+         "fixtures": [
+          "$uidOf:4"
+         ],
+         "pieces": [
+          {
+           "area": 8.0,
+           "number": "1b",
+           "finishes": {
+            "floor": "Parke"
+           },
+           "fixtures": [
+            "$uidOf:5"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "number": "1b",
+        "unit": "d1",
+        "finishes": {
+         "floor": "Parke"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: yeni parça kaplamasız",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 5.0
+        }
+       ],
+       "finishes": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "added": [
+        {
+         "kind": "space",
+         "id": 7,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "largest",
+         "number": "1",
+         "area": 16.0,
+         "unit": "d1",
+         "fixtures": [
+          "$uidOf:4"
+         ],
+         "pieces": [
+          {
+           "area": 8.0,
+           "fixtures": [
+            "$uidOf:5"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "number": null,
+        "unit": "d1",
+        "finishes": null
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: numara, nokta ve kaplama birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 2.0,
+         "y": -1.0
+        },
+        {
+         "x": 2.0,
+         "y": 5.0
+        }
+       ],
+       "keep": {
+        "x": 1.0,
+        "y": 1.0
+       },
+       "numbers": [
+        "1a"
+       ],
+       "finishes": false
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "added": [
+        {
+         "kind": "space",
+         "id": 7,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1a",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "given",
+         "number": "1",
+         "area": 8.0,
+         "unit": "d1",
+         "fixtures": [
+          "$uidOf:4"
+         ],
+         "pieces": [
+          {
+           "area": 16.0,
+           "number": "1a",
+           "fixtures": [
+            "$uidOf:5"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "number": "1a",
+        "unit": "d1",
+        "finishes": null
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: plan kararı yazmadan söyler",
+   "steps": [
+    {
+     "op": "plan",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 5.0
+        }
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "added": [
+        {
+         "kind": "space",
+         "id": 0,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "largest",
+         "number": "1",
+         "area": 16.0,
+         "unit": "d1",
+         "fixtures": [
+          "$uidOf:4"
+         ],
+         "pieces": [
+          {
+           "area": 8.0,
+           "finishes": {
+            "floor": "Parke"
+           },
+           "fixtures": [
+            "$uidOf:5"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: bölüm ve numarası olan mahal; yeni parça bölümde kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 8.0,
+         "y": -1.0
+        },
+        {
+         "x": 8.0,
+         "y": 5.0
+        }
+       ],
+       "numbers": [
+        "2b"
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 2,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "2",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Seramik"
+         },
+         "unit": "d2"
+        }
+       ],
+       "added": [
+        {
+         "kind": "space",
+         "id": 7,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "2b",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Seramik"
+         },
+         "unit": "d2"
+        }
+       ],
+       "kept": [
+        "$uidOf:2"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:2",
+         "by": "largest",
+         "number": "2",
+         "area": 8.0,
+         "unit": "d2",
+         "fixtures": [
+          "$uidOf:6"
+         ],
+         "pieces": [
+          {
+           "area": 4.0,
+           "number": "2b",
+           "finishes": {
+            "floor": "Seramik"
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "7": {
+        "number": "2b",
+        "unit": "d2",
+        "finishes": {
+         "floor": "Seramik"
+        }
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: ilki kimliğini korur; öbürünün numarası ve kaplaması karar olarak söylenir",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "gone3"
+    },
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "operation": {
+       "kind": "merge"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "removed": [
+        "$uid:gone3"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "first",
+         "area": 36.0,
+         "unit": "d1",
+         "number": "1",
+         "fixtures": [
+          "$uidOf:4",
+          "$uidOf:5"
+         ],
+         "pieces": [
+          {
+           "uid": "$uid:gone3",
+           "number": "3",
+           "area": 12.0
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "number": "1"
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: verilen mahalin kimliği ve numarası sürer",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "gone1"
+    },
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "operation": {
+       "kind": "merge",
+       "keep": "$uidOf:3"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 3,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "3",
+         "name": "Depo",
+         "usage": "Depo",
+         "arch": {
+          "level": "zemin"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:3"
+       ],
+       "removed": [
+        "$uid:gone1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:3",
+         "by": "given",
+         "area": 36.0,
+         "unit": "d1",
+         "number": "3",
+         "fixtures": [
+          "$uidOf:4",
+          "$uidOf:5"
+         ],
+         "pieces": [
+          {
+           "uid": "$uid:gone1",
+           "number": "1",
+           "area": 24.0,
+           "finishes": {
+            "floor": "Parke"
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "3": {
+        "number": "3"
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: yeni numara verilir",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "gone3"
+    },
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "operation": {
+       "kind": "merge",
+       "number": "1-3"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1-3",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "removed": [
+        "$uid:gone3"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "first",
+         "area": 36.0,
+         "unit": "d1",
+         "number": "1-3",
+         "fixtures": [
+          "$uidOf:4",
+          "$uidOf:5"
+         ],
+         "pieces": [
+          {
+           "uid": "$uid:gone3",
+           "number": "3",
+           "area": 12.0
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "number": "1-3"
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: numara kaldırılır",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 3,
+     "as": "gone3"
+    },
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "operation": {
+       "kind": "merge",
+       "number": null
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "removed": [
+        "$uid:gone3"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "first",
+         "area": 36.0,
+         "unit": "d1",
+         "fixtures": [
+          "$uidOf:4",
+          "$uidOf:5"
+         ],
+         "pieces": [
+          {
+           "uid": "$uid:gone3",
+           "number": "3",
+           "area": 12.0
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "number": null
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: farklı bölümler uyarıyla, korunanınki geçerli",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "gone2"
+    },
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "operation": {
+       "kind": "merge"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "removed": [
+        "$uid:gone2"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "first",
+         "area": 36.0,
+         "unit": "d1",
+         "number": "1",
+         "fixtures": [
+          "$uidOf:4",
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "pieces": [
+          {
+           "uid": "$uid:gone2",
+           "number": "2",
+           "area": 12.0,
+           "finishes": {
+            "floor": "Seramik"
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "space_units_merged",
+        "message": "“2” mahalinin bölümü korunan mahalinkinden farklıydı; korunanınki geçerli oldu.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "number": "1"
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: giden mahalin etiketi karar olarak söylenir",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 2,
+     "as": "gone2"
+    },
+    {
+     "op": "execute",
+     "command": "cad.tags.create",
+     "input": {
+      "layerId": "etiket",
+      "tags": [
+       {
+        "of": "$uidOf:2",
+        "at": {
+         "x": 7.5,
+         "y": 3.0
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ],
+      "operation": {
+       "kind": "merge"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 1,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "1",
+         "name": "Ofis",
+         "usage": "Ofis",
+         "arch": {
+          "level": "zemin"
+         },
+         "finishes": {
+          "floor": "Parke"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:1"
+       ],
+       "removed": [
+        "$uid:gone2"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:1",
+         "by": "first",
+         "area": 36.0,
+         "unit": "d1",
+         "number": "1",
+         "fixtures": [
+          "$uidOf:4",
+          "$uidOf:5",
+          "$uidOf:6"
+         ],
+         "pieces": [
+          {
+           "uid": "$uid:gone2",
+           "number": "2",
+           "area": 12.0,
+           "finishes": {
+            "floor": "Seramik"
+           },
+           "tags": [
+            "$uidOf:7"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "space_units_merged",
+        "message": "“2” mahalinin bölümü korunan mahalinkinden farklıydı; korunanınki geçerli oldu.",
+        "path": "uids"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "number": "1"
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: plan kararı yazmadan söyler",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 1,
+     "as": "gone1"
+    },
+    {
+     "op": "plan",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "operation": {
+       "kind": "merge",
+       "keep": "$uidOf:3"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "spaces": [
+        {
+         "kind": "space",
+         "id": 3,
+         "layerId": "mahal",
+         "attrs": {},
+         "parts": "$any",
+         "number": "3",
+         "name": "Depo",
+         "usage": "Depo",
+         "arch": {
+          "level": "zemin"
+         },
+         "unit": "d1"
+        }
+       ],
+       "kept": [
+        "$uidOf:3"
+       ],
+       "removed": [
+        "$uid:gone1"
+       ],
+       "decisions": [
+        {
+         "kept": "$uidOf:3",
+         "by": "given",
+         "area": 36.0,
+         "unit": "d1",
+         "number": "3",
+         "fixtures": [
+          "$uidOf:4",
+          "$uidOf:5"
+         ],
+         "pieces": [
+          {
+           "uid": "$uid:gone1",
+           "number": "1",
+           "area": 24.0,
+           "finishes": {
+            "floor": "Parke"
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Birleştir: korunacak mahal birleşenlerden değil",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "operation": {
+       "kind": "merge",
+       "keep": "$uidOf:2"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Kimliği korunacak mahal birleştirilen mahallerden biri olmalı.",
+       "path": "operation.keep"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: korunacak nokta parçalarda değil",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 5.0
+        }
+       ],
+       "keep": {
+        "x": 20.0,
+        "y": 20.0
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Korunacak nokta bölünen parçaların hiçbirinin içinde değil; kimliği korunacak parçanın içinden bir nokta verin.",
+       "path": "operation.keep"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: numara sayısı parçalarla uymuyor",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 5.0
+        }
+       ],
+       "numbers": [
+        "a",
+        "b"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Bölme 1 yeni parça yapıyor; 2 numara verildi.",
+       "path": "operation.numbers"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Böl: numaralar yalnız tek mahalde",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:3"
+      ],
+      "operation": {
+       "kind": "split",
+       "line": [
+        {
+         "x": 4.0,
+         "y": -1.0
+        },
+        {
+         "x": 4.0,
+         "y": 7.0
+        }
+       ],
+       "numbers": [
+        "a"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Yeni numaralar yalnız tek mahal bölünürken verilir.",
+       "path": "operation.numbers"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Değiştir: programda olmayan bölüm",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "set",
+       "unit": "d9"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unit_not_found",
+       "message": "“d9” bölümü bina programında yok; önce Bina programı penceresinden ekleyin.",
+       "path": "operation.unit"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Değiştir: mahal başka bölüme verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "set",
+       "unit": "d2"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "unit": "d2"
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Değiştir: mahal bölümden çıkarılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.spaces.edit",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "operation": {
+       "kind": "set",
+       "unit": null
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "unit": null
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bina programı",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 50,
+     "workspace": "cad",
+     "arch": {
+      "levels": [
+       {
+        "id": "zemin",
+        "name": "Zemin kat",
+        "elevation": 0.0,
+        "height": 3.0
+       },
+       {
+        "id": "kat-1",
+        "name": "1. kat",
+        "elevation": 3.0,
+        "height": 3.0
+       }
+      ],
+      "program": {
+       "units": [
+        {
+         "id": "d1",
+         "number": "1"
+        },
+        {
+         "id": "d2",
+         "number": "2"
+        }
+       ]
+      }
+     }
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mahal",
+      "name": "Mahal",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "donati",
+      "name": "Donatı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "etiket",
+      "name": "Etiket",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "mahal",
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "entities": [
+     {
+      "kind": "space",
+      "id": 1,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 0.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "1",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1",
+      "finishes": {
+       "floor": "Parke"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 2,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 6.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 0.0
+          },
+          {
+           "x": 9.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "2",
+      "name": "Ofis",
+      "usage": "Ofis",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d2",
+      "finishes": {
+       "floor": "Seramik"
+      }
+     },
+     {
+      "kind": "space",
+      "id": 3,
+      "layerId": "mahal",
+      "attrs": {},
+      "parts": [
+       {
+        "outer": {
+         "pts": [
+          {
+           "x": 0.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 4.0
+          },
+          {
+           "x": 6.0,
+           "y": 6.0
+          },
+          {
+           "x": 0.0,
+           "y": 6.0
+          }
+         ]
+        }
+       }
+      ],
+      "number": "3",
+      "name": "Depo",
+      "usage": "Depo",
+      "arch": {
+       "level": "zemin"
+      },
+      "unit": "d1"
+     },
+     {
+      "kind": "insert",
+      "id": 4,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 1.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 5,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 5.0,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     },
+     {
+      "kind": "insert",
+      "id": 6,
+      "layerId": "donati",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "p": {
+       "x": 7.5,
+       "y": 2.0
+      },
+      "scale": 1,
+      "rotation": 0,
+      "arch": {
+       "level": "zemin"
+      }
+     }
+    ],
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7703",
+      "name": "Masa",
+      "base": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "",
+        "attrs": {},
+        "pts": [
+         {
+          "x": -0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": -0.3
+         },
+         {
+          "x": 0.4,
+          "y": 0.3
+         },
+         {
+          "x": -0.4,
+          "y": 0.3
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

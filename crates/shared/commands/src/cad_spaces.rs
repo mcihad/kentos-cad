@@ -145,6 +145,10 @@ pub struct NewSpace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub void: Option<bool>,
+    /// The building program's group it joins, by its id (docs/adr/0773); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub attrs: Option<BTreeMap<String, String>>,
@@ -304,6 +308,15 @@ pub struct SpaceChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub void: Option<bool>,
+    /// The building program's group, by its id (docs/adr/0773); null: out of any.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub unit: Option<Option<String>>,
 }
 
 /// What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).
@@ -315,12 +328,40 @@ pub struct SpaceChange {
 pub enum SpacesOperation {
     /// Değiştir: the fields given, on every space named.
     Set(SpaceChange),
-    /// Birleştir: the spaces named one, the first's id kept; its boundary drawn.
-    Merge,
-    /// Böl: each space named cut along the line `line` (two points or more); the largest part keeps its id.
+    /// Birleştir: the spaces named one, its boundary drawn; the id of `keep` goes on (absent: the first's), with its
+    /// number unless `number` gives another (null: none), its finishes and its group. The others' numbers, finishes and
+    /// tags go with them: the answer's `decision` says so before anything is written (docs/adr/0773 §4).
+    Merge {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
+        keep: Option<String>,
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+        #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+        number: Option<Option<String>>,
+    },
+    /// Böl: each space named cut along the line `line` (two points or more). The part holding `keep` keeps its id
+    /// (absent: the largest); the new parts take `numbers` in their order by size (absent: none, so no number is
+    /// written twice), its group, and its finishes when `finishes` (absent: true). The answer's `decision` says each
+    /// part's id, number, finishes and the fixtures standing in it (docs/adr/0773 §4).
     Split {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         line: Vec<Vec2>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        keep: Option<Vec2>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        numbers: Option<Vec<String>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        finishes: Option<bool>,
     },
     /// Duvarlardan bul: each space's boundary found again from the walls round `seed` (absent: its own seed, else
     /// its pole of inaccessibility).
@@ -370,8 +411,86 @@ pub struct SpacesEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub removed: Vec<String>,
+    /// A merge's or a split's decision, one per space named (docs/adr/0773 §4).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SpaceDecision>>", optional))]
+    pub decisions: Vec<SpaceDecision>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
+}
+
+/// How the space whose id goes on was chosen.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SpaceKeptBy {
+    /// Named (a merge's `keep`, a split's `keep` point).
+    Given,
+    /// A merge's first space.
+    First,
+    /// A split's largest part.
+    Largest,
+}
+
+/// A part a split makes, or a space a merge takes in.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpacePieceDecision {
+    /// A merged space's id; a split's new part has none until written (the answer's `added`, in order).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub uid: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub number: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    /// The finishes it takes (a split's part) or that go with it (a merged space's).
+    #[serde(default, skip_serializing_if = "SpaceFinishes::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SpaceFinishes>", optional))]
+    pub finishes: SpaceFinishes,
+    /// Its tags: a merged space's lose their space; none for a split's part.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub tags: Vec<String>,
+    /// The fixtures (block inserts) standing in it, by their ids.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub fixtures: Vec<String>,
+}
+
+/// What a merge or a split does with a space's identity and its work (docs/adr/0773 §4), said before it is written.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SpaceDecision {
+    /// The id that goes on.
+    pub kept: String,
+    pub by: SpaceKeptBy,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub number: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    /// Its group, kept.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub unit: Option<String>,
+    /// The fixtures standing in it after.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub fixtures: Vec<String>,
+    /// A split's new parts, in the answer's `added` order; a merge's spaces taken in, in their order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SpacePieceDecision>>", optional))]
+    pub pieces: Vec<SpacePieceDecision>,
 }
 
 /// Input of `cad.spaces.quantities` v1 (read-only): the drawing's spaces, walls and openings measured, with its slabs,

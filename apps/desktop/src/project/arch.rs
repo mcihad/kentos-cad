@@ -197,6 +197,8 @@ pub fn read(
             .collect(),
         // The audit's exceptions are Denetim's, not this form's (docs/adr/0732 §3).
         audit_exceptions: Vec::new(),
+        // So is the building's program (docs/adr/0773).
+        program: Default::default(),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

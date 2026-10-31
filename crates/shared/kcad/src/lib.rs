@@ -678,11 +678,15 @@ pub const SCHEMA_WITH_LAYER_INDEXES: u32 = 136;
 /// end's node decision (`joins.startPass`, `joins.endPass`), a slab bound to its walls or its space (`bound`); written
 /// only when a wall, a project wall style or a slab has one.
 pub const SCHEMA_WITH_BUILDING_PARTS: u32 = 137;
+/// Schema 138 (docs/adr/0773): the building program (`arch.program`: buildings, wings, units, design brief, fixture
+/// clearances), a space's group (`unit`) and a schedule's program fields (`unit`, `target`, `targetDiff`); written only
+/// when the project or a space has one.
+pub const SCHEMA_WITH_BUILDING_PROGRAM: u32 = 138;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 136] = [
+pub const SCHEMAS: [u32; 137] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -819,6 +823,7 @@ pub const SCHEMAS: [u32; 136] = [
     SCHEMA_WITH_CAD_WORK,
     SCHEMA_WITH_LAYER_INDEXES,
     SCHEMA_WITH_BUILDING_PARTS,
+    SCHEMA_WITH_BUILDING_PROGRAM,
 ];
 
 /// The file a drawing is saved as.

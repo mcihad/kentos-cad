@@ -226,7 +226,9 @@ use crate::layer::LineType;
 ///    one JSON text. The web's copy stays 53.
 /// 99 (docs/adr/0733 §1): a block insert's `arch` (level and phase): `.kcad` document schema 131; in the typed columns
 ///    an insert's option 5, its arch as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 99;
+/// 100 (docs/adr/0773): a space's `unit` (its building program group): `.kcad` document schema 138; in the typed columns
+///    it rides in a space's fields JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 100;
 
 // ── Every import ────────────────────────────────────────────────────────
 

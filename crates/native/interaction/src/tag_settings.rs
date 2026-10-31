@@ -6,7 +6,7 @@ use kentos_geometry_core::tools::point_text::parse_number;
 
 // Suggestions only: the chosen text still goes through cad.tags.create's parser.
 // No preset id or display value is stored in the document.
-const CONTENTS: [(&str, &str, &str); 8] = [
+const CONTENTS: [(&str, &str, &str); 9] = [
     ("number", "Numara", "{number}"),
     ("name", "Ad", "{name}"),
     ("net", "Net alan", "{netArea}"),
@@ -16,6 +16,8 @@ const CONTENTS: [(&str, &str, &str); 8] = [
         "Mahal ve kotlar",
         "{number}\n{name}\nNet: {netArea}\nDöşeme: {floorElevation}\nTavan: {ceilingElevation}",
     ),
+    // The building program (docs/adr/0773): the space's group, its design target and how far it is out.
+    ("program", "Bölüm ve hedef", "{number} · {unit}\n{area}\nHedef: {target}\nFark: {targetDiff}"),
     ("floor", "Döşeme kotu", "{floorElevation}"),
     ("ceiling", "Tavan kotu", "{ceilingElevation}"),
     (
@@ -118,7 +120,7 @@ impl TagTool {
             Setting::notice(
                 "A",
                 "Şablon alanları",
-                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {attr:Alan}: öznitelik. {floorElevation}: kat kotu; {ceilingElevation}: kat kotu + açık mahal yüksekliği. Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
+                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {unit}: bölüm · {target}: tasarım hedefi · {targetDiff}: hedef farkı · {attr:Alan}: öznitelik. {floorElevation}: kat kotu; {ceilingElevation}: kat kotu + açık mahal yüksekliği. Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
             ),
         ];
         if let Some(why) = &self.problem {

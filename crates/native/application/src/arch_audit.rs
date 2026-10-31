@@ -36,7 +36,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 14] = [
+const CODES: [(ArchAuditCheck, &[&str]); 15] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -87,6 +87,7 @@ const CODES: [(ArchAuditCheck, &[&str]); 14] = [
     ),
     (ArchAuditCheck::Ramps, &[codes::RAMP_NO_RUN, codes::RAMP_SLOPE_MISMATCH]),
     (ArchAuditCheck::Casework, &[codes::ARCH_CASEWORK_BROKEN]),
+    (ArchAuditCheck::Program, &crate::program_check::CODES),
 ];
 
 /// The codes only a profile finds (docs/adr/0723 §4, 0724 §2): an exception of one is not stale while its profile is not
@@ -1841,6 +1842,7 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
             ArchAuditCheck::Stairs => audit.stairs(stair_rules.as_ref()),
             ArchAuditCheck::Ramps => audit.ramps(),
             ArchAuditCheck::Casework => audit.casework(),
+            ArchAuditCheck::Program => crate::program_check::findings(doc),
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.

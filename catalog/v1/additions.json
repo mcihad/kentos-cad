@@ -2713,6 +2713,20 @@
       "status": "implemented"
     },
     {
+      "id": "arch.program",
+      "title": "Bina programı",
+      "short": "Program",
+      "icon": "archProgram",
+      "description": "Binanın bağımsız bölümlerini, ortak ve dış alanlarını ve mahal kullanımlarına göre tasarım hedeflerini (alan aralığı, net en, kapılar arası geçiş, komşuluk, geçiş) tanımlar; seçili mahalleri bölüme verir. Denetle gerçek/hedef/farkı ve bulguları arka planda, durdurulabilir olarak hesaplar; her mahal bir kez sayılır. Hedefler yasal sınır değildir.",
+      "aliases": [
+        "BINAPROGRAMI",
+        "PROGRAM"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.phase.all",
       "title": "Evre: Tümü",
       "short": "Tümü",
@@ -3719,7 +3733,8 @@
     "slab": "<path d=\"M2.5 8.5 10 4.5l7.5 4-7.5 4z\"/><path d=\"M2.5 8.5v2.5l7.5 4 7.5-4V8.5M10 12.5V15\"/>",
     "slabRailing": "<path d=\"M2.5 16.5h15\"/><path d=\"M4 9.5h12M5 16.5v-7M10 16.5v-7M15 16.5v-7\"/>",
     "slabParapet": "<path d=\"M2.5 16.5h15\"/><path d=\"M4 11h12v5.5H4z\"/><path d=\"M4 11l3 5.5M8 11l3 5.5M12 11l3 5.5\" stroke-width=\"0.8\"/>",
-    "slabHole": "<path d=\"M2.5 8.5 10 4.5l7.5 4-7.5 4z\"/><path d=\"M2.5 8.5v2.5l7.5 4 7.5-4V8.5\"/><path d=\"M7.5 8.5 10 7.2l2.5 1.3-2.5 1.3z\" fill=\"currentColor\" stroke=\"none\"/>"
+    "slabHole": "<path d=\"M2.5 8.5 10 4.5l7.5 4-7.5 4z\"/><path d=\"M2.5 8.5v2.5l7.5 4 7.5-4V8.5\"/><path d=\"M7.5 8.5 10 7.2l2.5 1.3-2.5 1.3z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "archProgram": "<path d=\"M3 17h14\"/><rect x=\"4\" y=\"5\" width=\"12\" height=\"12\" rx=\".5\"/><path d=\"M10 5v12M4 11h6\"/><circle cx=\"13\" cy=\"9\" r=\"1.6\"/>"
   },
   "tabs": [
     {
@@ -4983,6 +4998,10 @@
         },
         {
           "command": "arch.template",
+          "size": "small"
+        },
+        {
+          "command": "arch.program",
           "size": "small"
         }
       ]

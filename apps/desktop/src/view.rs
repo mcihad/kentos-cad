@@ -1978,6 +1978,8 @@ impl App {
             Asking::Relations => self.relations_view(),
             Asking::Joins => self.joins_view(),
             Asking::EventLinks => self.event_links_view(),
+            Asking::Program => self.program_view(),
+            Asking::SpaceMerge => self.space_merge_question(),
             Asking::TableStyles => self.table_styles_view(),
             Asking::Subtypes => self.subtypes_view(),
             Asking::Contingents => self.contingents_view(),

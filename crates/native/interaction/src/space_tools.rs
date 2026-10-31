@@ -633,6 +633,8 @@ pub struct SpaceSplitTool {
     hover: Option<Vec2>,
     drawn: Preview,
     why: Option<String>,
+    /// The plan's decision in words (docs/adr/0773 §4): whose id goes on, the new part's number, finishes, fixtures.
+    said: Vec<String>,
 }
 
 impl SpaceSplitTool {
@@ -665,6 +667,9 @@ impl SpaceSplitTool {
             uids: vec![uid],
             operation: SpacesOperation::Split {
                 line: vec![points::wire(a), points::wire(b)],
+                keep: None,
+                numbers: None,
+                finishes: None,
             },
             expected_revision: None,
         })
@@ -685,6 +690,7 @@ impl SpaceSplitTool {
             return;
         };
         self.drawn.guides.push([a, b]);
+        self.said.clear();
         let Some(input) = self.edit_input(a, b, cx) else {
             return;
         };
@@ -695,6 +701,23 @@ impl SpaceSplitTool {
                 }
                 for e in &output.added {
                     drawn_space(e, Tone::Snap, &mut self.drawn);
+                }
+                if let Some(d) = output.decisions.first() {
+                    let n = |v: &Option<String>| v.clone().unwrap_or_else(|| "yok".into());
+                    self.said.push(format!(
+                        "Kimliği süren: en büyük parça, numarası {}, {} m²",
+                        n(&d.number),
+                        kentos_geometry_core::display::fixed(d.area, 2)
+                    ));
+                    for p in &d.pieces {
+                        let finishes = if p.finishes.is_empty() { "kaplamasız" } else { "kaplamalarıyla" };
+                        self.said.push(format!(
+                            "Yeni parça: numarası {}, {finishes}, {} m², {} donatı",
+                            n(&p.number),
+                            kentos_geometry_core::display::fixed(p.area, 2),
+                            p.fixtures.len()
+                        ));
+                    }
                 }
             }
             CommandResult::Failed { error }
@@ -843,11 +866,16 @@ impl Tool for SpaceSplitTool {
                 at,
                 lines: vec!["Mahali böl".to_owned(), why.clone()],
             }),
+            // The decision before anything is written (docs/adr/0773 §4).
+            (None, Some(_), Some(at)) if !self.said.is_empty() => Some(Tag {
+                at,
+                lines: std::iter::once("Mahali böl".to_owned()).chain(self.said.iter().cloned()).collect(),
+            }),
             _ => None,
         };
         Preview {
             tag,
-            tag_tone: Tone::Danger,
+            tag_tone: if self.why.is_some() { Tone::Danger } else { Tone::Accent },
             ..self.drawn.clone()
         }
     }

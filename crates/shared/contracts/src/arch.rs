@@ -1290,6 +1290,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ArchAuditException>>", optional))]
     pub audit_exceptions: Vec<ArchAuditException>,
+    /// The building's program (docs/adr/0773, KCAD 138): buildings, wings, units and the design brief.
+    #[serde(default, skip_serializing_if = "crate::BuildingProgram::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::BuildingProgram>", optional))]
+    pub program: crate::BuildingProgram,
 }
 
 impl ArchSettings {
@@ -1330,6 +1334,9 @@ impl ArchSettings {
     pub fn problem(&self) -> Option<(String, String)> {
         if let Some(problem) = audit_exceptions_problem(&self.audit_exceptions) {
             return Some(problem);
+        }
+        if let Some((at, why)) = self.program.problem() {
+            return Some((format!("program.{at}"), why));
         }
         if let Some(why) = crate::annotation::names_problem(
             "kat",

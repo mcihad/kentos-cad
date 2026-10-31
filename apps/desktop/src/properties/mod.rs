@@ -105,7 +105,7 @@ pub enum Event {
     Opening(Slot, kentos_commands::OpeningsOperation),
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
-    Space(Slot, kentos_commands::SpacesOperation),
+    Space(Slot, Box<kentos_commands::SpacesOperation>),
     /// A slab's own field chosen (Tür, Kenar, Kat, Evre, Metraj; docs/adr/0722 §6): written through `cad.slabs.edit`.
     Slab(Slot, kentos_commands::SlabsOperation),
     SpaceSeparator(Slot, bool),
@@ -863,7 +863,7 @@ impl App {
             }
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
-            Event::Space(slot, op) => properties::edit_space(model, slot, op),
+            Event::Space(slot, op) => properties::edit_space(model, slot, *op),
             Event::Slab(slot, op) => properties::edit_slab(model, slot, op),
             Event::SpaceSeparator(slot, on) => {
                 let arch = on.then(|| {
