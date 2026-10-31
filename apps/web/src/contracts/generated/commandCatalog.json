@@ -21227,7 +21227,7 @@
       "id": "cad.materials.edit",
       "version": 1,
       "title": "Malzemeler",
-      "summary": "Projenin yapı malzemelerini (kalıcı kimlik, ad, kategori, metrajda alan ya da hacim, kesitin taraması ve kalemi) yönetir ve duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar (docs/adr/0785); tek geri alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation: define (name, id isteğe bağlı: adından; change: category structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern, scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin material metni, taraması ve kalemi, döşemelerin material metni yeni değerleri alır), remove (material; bağlı bir şey varsa material_in_use ve bağlı duvar ve döşemelerin kimlikleri), assign (material: kimlik ya da ad, yoksa bağdan ayırır; targets: wallStyle {style, component}, wall {uid, component}, slab {uid}; bileşen sırası soldan 0'dan), adopt (bağsız her metin malzemeden bir proje malzemesi açar ve bağlar; aynı metnin taraması ya da kalemi farklı bileşenler bağlanmaz, görünüş değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked. Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir. Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar.",
+      "summary": "Projenin yapı malzemelerini (kalıcı kimlik, ad, kategori, metrajda alan ya da hacim, kesitin taraması ve kalemi) yönetir ve duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar (docs/adr/0785); tek geri alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation: define (name, id isteğe bağlı: adından; change: category structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern, scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin material metni, taraması ve kalemi, döşemelerin material metni yeni değerleri alır), remove (material; bağlı bir şey varsa material_in_use ve bağlı duvar ve döşemelerin kimlikleri), assign (material: kimlik ya da ad, yoksa bağdan ayırır; targets: wallStyle {style, component}, wall {uid, component}, slab {uid}; bileşen sırası soldan 0'dan), adopt (bağsız her metin malzemeden bir proje malzemesi açar ve bağlar; aynı metnin taraması ya da kalemi farklı bileşenler bağlanmaz, görünüş değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked. Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir. Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar. Ofis malzeme kitaplığı (docs/adr/0791): import (library: kentos.materials 1 dosyası ya da name: KentOS kitaplığı kentos-temel; materials: kimlik ya da ad, yoksa hepsi; onConflict: refuse varsayılan material_exists, keep projeninkini korur material_kept, replace aynı kimlikliyi kitaplığınkiyle değiştirir ve bağlıları izler; başka kimlikli aynı ad keep dışında reddedilir; report.taken, replaced, kept), export (library: adı, materials: yoksa hepsi; çizim değişmez, cevabın library'si dosyanın içeriği). Bozuk ya da bilinmeyen kitaplık invalid_library.",
       "aliases": [
         "MALZEME"
       ],
@@ -21245,7 +21245,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.materials.edit` v1: the project's materials changed as one undo step “Malzeme”, with the wall styles,\nwalls and slabs bound to them. Its plan is the preview: the table and what follows, nothing written.\n\nRefusals: `invalid_material`, `material_not_found`, `material_exists`, `material_in_use`, `nothing_to_set`,\n`style_not_found`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `not_a_slab`, `component_not_found`,\n`layer_locked`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`, `material_adopt_left`.",
+        "description": "Input of `cad.materials.edit` v1: the project's materials changed as one undo step “Malzeme”, with the wall styles,\nwalls and slabs bound to them. Its plan is the preview: the table and what follows, nothing written.\n\nRefusals: `invalid_material`, `material_not_found`, `material_exists`, `material_in_use`, `nothing_to_set`,\n`style_not_found`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `not_a_slab`, `component_not_found`,\n`layer_locked`, `invalid_library`, `invalid_revision`, `revision_conflict`. Warnings: `material_locked`,\n`material_adopt_left`, `material_kept`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -21268,6 +21268,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.materials.edit` v1 (its plan's too: the preview, nothing written).",
         "properties": {
+          "library": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MaterialsFile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The office library (Export): the file's content."
+          },
           "material": {
             "description": "The material made, changed, removed or bound (its id); absent for Adopt and for leaving.",
             "type": [
@@ -21302,6 +21313,17 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.materials.edit` v1 (its plan's too: the preview, nothing written).",
         "properties": {
+          "library": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MaterialsFile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The office library (Export): the file's content."
+          },
           "material": {
             "description": "The material made, changed, removed or bound (its id); absent for Adopt and for leaving.",
             "type": [
@@ -21346,12 +21368,14 @@
           "not_a_slab",
           "component_not_found",
           "layer_locked",
+          "invalid_library",
           "invalid_revision",
           "revision_conflict"
         ],
         "warnings": [
           "material_locked",
-          "material_adopt_left"
+          "material_adopt_left",
+          "material_kept"
         ]
       },
       "examples": [
@@ -21385,6 +21409,29 @@
                   "style": "Dış duvar 25"
                 }
               ]
+            }
+          }
+        },
+        {
+          "title": "KentOS temel malzeme kitaplığından taşyünü ve EPS'i al, aynısı varsa projeninkini koru",
+          "input": {
+            "operation": {
+              "kind": "import",
+              "materials": [
+                "tasyunu",
+                "eps"
+              ],
+              "name": "kentos-temel",
+              "onConflict": "keep"
+            }
+          }
+        },
+        {
+          "title": "Projenin malzemelerini ofis kitaplığı olarak ver",
+          "input": {
+            "operation": {
+              "kind": "export",
+              "library": "Ofis malzemeleri"
             }
           }
         }
@@ -40206,7 +40253,7 @@
       "id": "cad.styles.edit",
       "version": 1,
       "title": "Yazı ve ölçü stilleri",
-      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin adlı yazı (kind text) ya da ölçü (kind dimension) stillerinden birini değiştirir (operation): create yeni stili tablonun sonuna ekler (kimliği boşsa yeni bir UUIDv7 verilir), update stilin değerlerini değiştirir: o stildeki yazılar (ölçüler) eski değeri hâlâ taşıyan alanlarında yenisini alır, elle değiştirilenler kalır; rename stilin adını değiştirir, nesneler değişmez; remove stili siler, nesneleri görünüşlerini korur ve bağlarını yitirir; export türün stillerini (styles verilmişse onları) kentos.annotation-styles dosyasının metni olarak library'de verir, yazmaz; import library'deki dosyanın stillerini adlarıyla alır: yeni ad eklenir, tablodaki ad olduğu gibi kalır (skipped) ya da replace ile yerinde güncellenir ve nesneleri izler. Adlar büyük küçük harf ayırmadan bir kez kullanılır, Standart başka stile verilmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir; izleyen nesneler tek geri alma adımında (“Yazı stili”, “Ölçü stili”) yazılır, kilitli katmandakiler değişmez ve locked'da sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update ve import'ta material_not_found ile reddedilir (docs/adr/0791).",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -40479,6 +40526,7 @@
           "invalid_library",
           "invalid_wall",
           "wall_collapses",
+          "material_not_found",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -67811,7 +67859,7 @@
       "code": "invalid_library",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Blok ya da stil dosyası okunamadı."
+      "meaning": "Blok, stil ya da malzeme dosyası okunamadı."
     },
     {
       "code": "no_item",
@@ -70224,6 +70272,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aynı adlı bazı bileşenlerin taraması ya da kalemi farklı; görünüşü değişmesin diye bağlanmadı."
+    },
+    {
+      "code": "material_kept",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kitaplığın bazı malzemeleri projede zaten vardı; projeninki korundu, kitaplığınki alınmadı."
     },
     {
       "code": "module_exists",
@@ -102070,6 +102124,26 @@
       },
       "type": "object"
     },
+    "MaterialConflict": {
+      "description": "What a library's material does when the project has one of its id, or another of its name (docs/adr/0791).",
+      "oneOf": [
+        {
+          "const": "refuse",
+          "description": "Refused (`material_exists`): nothing is taken.",
+          "type": "string"
+        },
+        {
+          "const": "keep",
+          "description": "The project's stays; the library's is not taken (`material_kept`).",
+          "type": "string"
+        },
+        {
+          "const": "replace",
+          "description": "One of the same id becomes the library's (its name, category, way of counting, hatch and pen); everything bound\nto it follows. Another material of its name is still refused.",
+          "type": "string"
+        }
+      ]
+    },
     "MaterialQuantity": {
       "description": "How Metraj counts a material: by its face area (m²: plaster, membrane, paint) or its volume (m³: concrete, masonry).",
       "enum": [
@@ -102081,6 +102155,13 @@
     "MaterialReport": {
       "description": "What a material's write takes with it: the wall styles (ids) and the walls and slabs (ids) rewritten, those left on\nlocked layers, the texts not taken in.",
       "properties": {
+        "kept": {
+          "description": "Import: the library's materials not taken, the project's kept (`keep`; the library's ids).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "left": {
           "description": "Adopt: the texts some of whose components were left unbound (their look differs from the first's).",
           "items": {
@@ -102095,6 +102176,13 @@
           },
           "type": "array"
         },
+        "replaced": {
+          "description": "Import: the project's materials that became the library's (`replace`; their ids).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "slabs": {
           "items": {
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -102103,6 +102191,13 @@
           "type": "array"
         },
         "styles": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "taken": {
+          "description": "Import: the library's materials taken in as new (their ids).",
           "items": {
             "type": "string"
           },
@@ -102265,6 +102360,39 @@
         }
       ]
     },
+    "MaterialsFile": {
+      "additionalProperties": false,
+      "description": "An office material library (Malzeme kitaplığı, docs/adr/0791): its name and its materials, each as a project keeps\nit. KentOS gives one (`kentos-temel`); an office keeps its own in its folders and writes the project's out to one.",
+      "properties": {
+        "format": {
+          "description": "`kentos.materials`.",
+          "type": "string"
+        },
+        "library": {
+          "description": "The library's name.",
+          "type": "string"
+        },
+        "materials": {
+          "items": {
+            "$ref": "#/$defs/ArchMaterial"
+          },
+          "type": "array"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "format",
+        "version",
+        "library",
+        "materials"
+      ],
+      "type": "object"
+    },
     "MaterialsOperation": {
       "description": "What `cad.materials.edit` does.",
       "oneOf": [
@@ -102370,6 +102498,68 @@
           },
           "required": [
             "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kitaplıktan al: an office library's materials (`library`, a `kentos.materials` file as its host read it) or\nKentOS's library `name` (`kentos-temel`), those named in `materials` (ids or names; none: all), taken into the\nproject; `onConflict` for one the project has.",
+          "properties": {
+            "kind": {
+              "const": "import",
+              "type": "string"
+            },
+            "library": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/MaterialsFile"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "materials": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "onConflict": {
+              "$ref": "#/$defs/MaterialConflict",
+              "default": "refuse"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kitaplığa yaz: the project's materials named (ids or names; none: all) as an office library `library`, given\nback as the file's content (its host writes it). The drawing does not change.",
+          "properties": {
+            "kind": {
+              "const": "export",
+              "type": "string"
+            },
+            "library": {
+              "type": "string"
+            },
+            "materials": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "library"
           ],
           "type": "object"
         }

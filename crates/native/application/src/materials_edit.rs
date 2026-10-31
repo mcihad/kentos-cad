@@ -9,11 +9,17 @@
 //! style (their components are the style's); a wall's own components are rewritten too. Walls and slabs on locked
 //! layers keep their older values (`material_locked`); a target named on a locked layer refuses the write
 //! (`layer_locked`).
+//!
+//! An office material library (docs/adr/0791; `kentos.materials`, a file outside the drawing, or KentOS's own) is taken
+//! in by Import: a material the project has (its id) is refused, kept or replaced as `onConflict` says, a replaced one's
+//! bound styles, walls and slabs following in the same step; Export gives the project's materials back as a library's
+//! content, writing nothing. The shared cases are `fixtures/commands/v1/cad.materials.edit.library.json`
+//! (`scripts/fixtures/material_library_cases.py`).
 
 use kentos_commands::{
-    ArchMaterial, CommandResult, CommandWarning, Entity, MaterialChange, MaterialReport, MaterialTarget,
-    MaterialsEdit, MaterialsEdited, MaterialsOperation, WallComponent, WallStyleDef, material_id_of, material_id_ok,
-    material_name_problem, materials_problem,
+    ArchMaterial, CommandResult, CommandWarning, Entity, MATERIALS_FORMAT, MATERIALS_FORMAT_VERSION, MaterialChange,
+    MaterialConflict, MaterialReport, MaterialTarget, MaterialsEdit, MaterialsEdited, MaterialsFile, MaterialsOperation,
+    WallComponent, WallStyleDef, material_id_of, material_id_ok, material_name_problem, materials_problem,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -22,6 +28,21 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 pub const STEP: &str = "Malzeme";
+
+/// The material libraries KentOS gives (docs/adr/0791), by name: common building materials with a hatch, a cut pen and
+/// a way of counting each, free to take in and to change.
+pub const BUILTIN_LIBRARIES: &[(&str, &str)] = &[(
+    "kentos-temel",
+    include_str!("../../../../catalog/v1/materials/kentos-temel.json"),
+)];
+
+/// KentOS's library `name`, read; none when KentOS gives none of that name.
+pub fn builtin_library(name: &str) -> Option<MaterialsFile> {
+    BUILTIN_LIBRARIES
+        .iter()
+        .find(|(n, _)| *n == name)
+        .and_then(|(_, text)| serde_json::from_str(text).ok())
+}
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
@@ -34,6 +55,8 @@ struct Work {
     updates: Vec<(Slot, Entity)>,
     report: MaterialReport,
     material: Option<String>,
+    /// Export's library: the drawing does not change.
+    library: Option<MaterialsFile>,
 }
 
 /// The project's material `key` names (its id, else its name, case aside), by its place.
@@ -411,6 +434,106 @@ fn bound_to(doc: &Document, id: &str) -> (Vec<String>, Vec<String>) {
     (styles, uids)
 }
 
+/// The library Import takes from: the file given, or KentOS's of the name given (one of the two); its rules hold.
+fn library_of(file: Option<&MaterialsFile>, name: Option<&str>) -> Result<MaterialsFile, Stop> {
+    let lib = match (file, name) {
+        (Some(f), None) => f.clone(),
+        (None, Some(n)) => builtin_library(n).ok_or_else(|| {
+            fail(
+                codes::INVALID_LIBRARY,
+                format!(
+                    "KentOS'un “{n}” adlı malzeme kitaplığı yok; {} verin ya da bir kitaplık dosyası seçin.",
+                    BUILTIN_LIBRARIES.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(", ")
+                ),
+                "operation.name",
+            )
+        })?,
+        _ => {
+            return Err(fail(
+                codes::INVALID_LIBRARY,
+                "Bir kitaplık dosyası (library) ya da KentOS kitaplığının adı (name) verilir; ikisi birden ya da hiçbiri değil.".into(),
+                "operation",
+            ));
+        }
+    };
+    if let Some((field, words)) = lib.problem() {
+        return Err(fail(codes::INVALID_LIBRARY, words, &format!("operation.library.{field}")));
+    }
+    Ok(lib)
+}
+
+/// The materials of `from` that `keys` name (each by its id, else its name, case aside), in `from`'s order; all of
+/// them when `keys` is empty. `where_` says where they were looked for (“Kitaplıkta”, “Projede”).
+fn chosen(from: &[ArchMaterial], keys: &[String], where_: &str) -> Result<Vec<ArchMaterial>, Stop> {
+    if keys.is_empty() {
+        return Ok(from.to_vec());
+    }
+    let mut at = Vec::new();
+    for (i, key) in keys.iter().enumerate() {
+        let folded = key.to_lowercase();
+        let found = from
+            .iter()
+            .position(|m| m.id == *key)
+            .or_else(|| from.iter().position(|m| m.name.to_lowercase() == folded))
+            .ok_or_else(|| {
+                fail(
+                    codes::MATERIAL_NOT_FOUND,
+                    format!("{where_} “{key}” kimlikli ya da adlı malzeme yok. Listedeki bir malzemeyi verin."),
+                    &format!("operation.materials[{i}]"),
+                )
+            })?;
+        if !at.contains(&found) {
+            at.push(found);
+        }
+    }
+    at.sort_unstable();
+    Ok(at.into_iter().map(|i| from[i].clone()).collect())
+}
+
+/// The library's materials `chosen` taken into `list`: a new one added; one of an id the project has refused, kept or
+/// put in its place as `on` says (the same one: nothing); one of a name another project material has (case aside)
+/// kept with `keep`, refused otherwise.
+fn import(list: &mut Vec<ArchMaterial>, chosen: &[ArchMaterial], on: MaterialConflict, report: &mut MaterialReport) -> Result<(), Stop> {
+    for m in chosen {
+        let folded = m.name.to_lowercase();
+        let same_id = list.iter().position(|p| p.id == m.id);
+        let same_name = list.iter().position(|p| p.name.to_lowercase() == folded && p.id != m.id);
+        match (same_id, same_name, on) {
+            (Some(j), _, _) if list[j] == *m => {}
+            (Some(_), _, MaterialConflict::Keep) | (None, Some(_), MaterialConflict::Keep) => report.kept.push(m.id.clone()),
+            (Some(j), None, MaterialConflict::Replace) => {
+                list[j] = m.clone();
+                report.replaced.push(m.id.clone());
+            }
+            (Some(j), _, MaterialConflict::Refuse) => {
+                return Err(fail(
+                    codes::MATERIAL_EXISTS,
+                    format!(
+                        "Projede “{}” kimlikli bir malzeme (“{}”) zaten var; projeninkini korumak için Koru, kitaplığınkini almak için Değiştir seçin.",
+                        m.id, list[j].name
+                    ),
+                    "operation.onConflict",
+                ));
+            }
+            (_, Some(k), _) => {
+                return Err(fail(
+                    codes::MATERIAL_EXISTS,
+                    format!(
+                        "Projede “{}” adında başka kimlikli (“{}”) bir malzeme var; kitaplığın “{}” malzemesi alınamaz. Koru seçin ya da projedekinin adını değiştirin.",
+                        list[k].name, list[k].id, m.id
+                    ),
+                    "operation.onConflict",
+                ));
+            }
+            (None, None, _) => {
+                list.push(m.clone());
+                report.taken.push(m.id.clone());
+            }
+        }
+    }
+    Ok(())
+}
+
 fn check(doc: &Document, input: &MaterialsEdit) -> Result<Work, Stop> {
     let mut list = doc.materials().to_vec();
     let mut styles = doc.settings().wall_styles.clone();
@@ -420,6 +543,7 @@ fn check(doc: &Document, input: &MaterialsEdit) -> Result<Work, Stop> {
         updates: Vec::new(),
         report: MaterialReport::default(),
         material: None,
+        library: None,
     };
     let mut assigned: Vec<(Slot, Entity)> = Vec::new();
     match &input.operation {
@@ -527,6 +651,41 @@ fn check(doc: &Document, input: &MaterialsEdit) -> Result<Work, Stop> {
             adopt(doc, &mut list, &mut styles, &mut assigned, &mut left_texts);
             work.report.left = left_texts;
         }
+        MaterialsOperation::Import { library, name, materials, on_conflict } => {
+            let file = library_of(library.as_ref(), name.as_deref())?;
+            let chosen = chosen(&file.materials, materials, "Kitaplıkta")?;
+            import(&mut list, &chosen, *on_conflict, &mut work.report)?;
+            if work.report.taken.is_empty() && work.report.replaced.is_empty() {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    "Kitaplıktan alınacak ya da değişecek malzeme yok: seçilenlerin hepsi projede aynısıyla var ya da korunuyor.".into(),
+                    "operation",
+                ));
+            }
+        }
+        MaterialsOperation::Export { library, materials } => {
+            if library.trim().is_empty() {
+                return Err(fail(codes::INVALID_LIBRARY, "Malzeme kitaplığının adı boş olmamalı.".into(), "operation.library"));
+            }
+            if list.is_empty() {
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    "Projede kitaplığa yazılacak malzeme yok. Önce Yeni malzeme ya da Kitaplıktan al ile malzeme açın.".into(),
+                    "operation",
+                ));
+            }
+            let chosen = chosen(&list, materials, "Projede")?;
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            work.library = Some(MaterialsFile {
+                format: MATERIALS_FORMAT.into(),
+                version: MATERIALS_FORMAT_VERSION,
+                library: library.trim().to_owned(),
+                materials: chosen,
+            });
+            work.materials = list;
+            work.styles = styles;
+            return Ok(work);
+        }
     }
     if let Some((field, words)) = materials_problem(&list) {
         return Err(invalid(&format!("operation.{field}"), words));
@@ -571,6 +730,16 @@ fn warnings(report: &MaterialReport) -> Vec<CommandWarning> {
             path: Some("report.left".into()),
         });
     }
+    if !report.kept.is_empty() {
+        out.push(CommandWarning {
+            code: codes::MATERIAL_KEPT.into(),
+            message: format!(
+                "Kitaplığın {} malzemesi projede zaten vardı; projeninki korundu, kitaplığınki alınmadı.",
+                report.kept.iter().map(|t| format!("“{t}”")).collect::<Vec<_>>().join(", ")
+            ),
+            path: Some("report.kept".into()),
+        });
+    }
     out
 }
 
@@ -597,6 +766,7 @@ pub fn plan_in(doc: &Document, input: &MaterialsEdit) -> CommandResult<Materials
                 materials: work.materials,
                 material: work.material,
                 report: work.report,
+                library: work.library,
                 revision: doc.revision().to_string(),
             },
         },
@@ -620,6 +790,19 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: MaterialsEdit) -> Command
         Err(stop) => return stop.into(),
     };
     let doc = &mut *cx.doc;
+    // Export writes nothing: the library is its answer.
+    if work.library.is_some() {
+        return CommandResult::Completed {
+            warnings: Vec::new(),
+            output: MaterialsEdited {
+                materials: work.materials,
+                material: None,
+                report: work.report,
+                library: work.library,
+                revision: doc.revision().to_string(),
+            },
+        };
+    }
     let result = doc.with_style_tables(STEP, |d| {
         d.transact(STEP, |d| {
             d.set_materials(work.materials.clone(), STEP)?;
@@ -645,6 +828,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: MaterialsEdit) -> Command
             materials: work.materials,
             material: work.material,
             report: work.report,
+            library: work.library,
             revision: doc.revision().to_string(),
         },
     }

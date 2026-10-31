@@ -6,6 +6,9 @@
 //! in. Yeni copies the chosen one, Sil takes the chosen one away (asking when walls follow it: they keep their look,
 //! without the link).
 //!
+//! A component's Malzeme binds it to a project material (docs/adr/0791) or leaves it a text (Metin): a bound row
+//! shows the material's hatch and cut pen read-only, as `cad.styles.edit` writes them.
+//!
 //! The form is a draft. Kaydet writes it through `cad.styles.edit` (kind `wall`: create, update, remove), one undo
 //! step “Duvar stilleri” in which the walls that follow a changed style take it; a style a following wall cannot take
 //! (an arc too tight for its new faces) is said and nothing is written. Vazgeç, Esc and × leave it.
@@ -16,7 +19,7 @@ use iced::widget::canvas::{self, Frame, Path, Stroke};
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    AnnotationStyleKind, ComponentHatch, Entity, StyleEditOperation, StylesEdit, WallCaps,
+    AnnotationStyleKind, ArchMaterial, ComponentHatch, Entity, StyleEditOperation, StylesEdit, WallCaps,
     WallComponent, WallDetail, WallFields, WallStyleDef, builtin_wall_styles, wall_styles_problem,
 };
 use kentos_interaction::{Format, Level};
@@ -65,6 +68,8 @@ pub struct Window {
     width_typed: String,
     usage: HashMap<String, usize>,
     asking: Option<String>,
+    /// The project's materials a component may be bound to (docs/adr/0791).
+    materials: Vec<ArchMaterial>,
 }
 
 #[derive(Debug, Clone)]
@@ -86,6 +91,8 @@ pub enum Event {
     Priority(usize, Option<u8>),
     /// A component turning at the wall's ends and its openings' jambs (docs/adr/0771 §3).
     Wrap(usize, bool),
+    /// A component bound to the project material of this id, or left a text (none; docs/adr/0791).
+    Material(usize, Option<String>),
     Add,
     Drop(usize),
     Up(usize),
@@ -242,6 +249,7 @@ impl App {
             width_typed: String::new(),
             usage,
             asking: None,
+            materials: doc.model.materials().to_vec(),
         };
         w.fill();
         self.wall_styles = Some(w);
@@ -480,6 +488,17 @@ impl App {
                 if let Some(c) = w.own().and_then(|s| s.components.get_mut(i)) {
                     c.wrap = on;
                 }
+            }
+            Event::Material(i, id) => {
+                let m = id.and_then(|id| w.materials.iter().find(|m| m.id == id).cloned());
+                if let Some(c) = w.own().and_then(|s| s.components.get_mut(i)) {
+                    // Bound: the material's text, hatch and pen; left: its text and look stay, a text material.
+                    match m {
+                        Some(m) => *c = m.bind(c),
+                        None => c.material_id = None,
+                    }
+                }
+                w.fill();
             }
             Event::Add => {
                 if let Some(s) = w.own() {
@@ -785,7 +804,60 @@ impl App {
                 },
             )
             .searchable(false);
-            let scale: Element<'_, Message> = if c.hatch.is_some() {
+            // Malzeme (docs/adr/0791): Metin or a project material; a bound row's hatch and pen are the material's.
+            let bound = c
+                .material_id
+                .as_deref()
+                .and_then(|id| w.materials.iter().find(|m| m.id == id));
+            let material: Element<'_, Message> = if w.materials.is_empty() {
+                input(Field::Material, 4, "", false).into()
+            } else {
+                let ids: Vec<String> = w.materials.iter().map(|m| m.id.clone()).collect();
+                // Unbound, the text is typed beside a narrow picker that shows nothing but its arrow.
+                let pick = Select::new(
+                    std::iter::once(Choice::new("Metin (bağsız)").shown(""))
+                        .chain(w.materials.iter().map(|m| Choice::new(m.name.clone()))),
+                    Some(bound.and_then(|m| ids.iter().position(|id| *id == m.id)).map_or(0, |k| k + 1)),
+                    move |k| msg(Event::Material(i, k.checked_sub(1).and_then(|k| ids.get(k)).cloned())),
+                );
+                if bound.is_some() {
+                    container(pick).width(iced::Length::FillPortion(4)).into()
+                } else {
+                    row![
+                        input(Field::Material, 1, "metin", false),
+                        container(pick).width(iced::Length::Fixed(40.0)),
+                    ]
+                    .spacing(2)
+                    .width(iced::Length::FillPortion(4))
+                    .into()
+                }
+            };
+            let read_only = |text: String, part: u16| -> Element<'_, Message> {
+                container(label::caption(text))
+                    .padding([0, 8])
+                    .width(iced::Length::FillPortion(part))
+                    .into()
+            };
+            let pattern: Element<'_, Message> = match bound {
+                Some(m) => {
+                    let pen = m
+                        .cut
+                        .as_ref()
+                        .and_then(|c| c.line_weight)
+                        .map_or_else(String::new, |w| format!(" · {} mm", shown(Some(w))));
+                    read_only(
+                        format!("{}{pen}", m.hatch.as_ref().map_or("Yok", |h| h.pattern.as_str())),
+                        4,
+                    )
+                }
+                None => container(pattern).width(iced::Length::FillPortion(4)).into(),
+            };
+            let scale: Element<'_, Message> = if let Some(m) = bound {
+                read_only(
+                    m.hatch.as_ref().map_or_else(String::new, |h| shown(Some(h.scale))),
+                    2,
+                )
+            } else if c.hatch.is_some() {
                 input(Field::Scale, 2, "1", number(&typed(Field::Scale)).is_err()).into()
             } else {
                 container(label::caption(""))
@@ -795,9 +867,9 @@ impl App {
             table = table.push(
                 row![
                     input(Field::Name, 4, "Ad", typed(Field::Name).trim().is_empty()),
-                    input(Field::Material, 4, "", false),
+                    material,
                     input(Field::Thickness, 4, "kalan", number(&thickness).is_err()),
-                    container(pattern).width(iced::Length::FillPortion(4)),
+                    pattern,
                     scale,
                     container(detail).width(iced::Length::FillPortion(4)),
                     container(priority).width(iced::Length::FillPortion(3)),
@@ -822,8 +894,12 @@ impl App {
                 "Bileşenler (duvarın sol yüzünden)",
                 table,
                 Some(
-                    "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Öncelik birleşimde: 1 en güçlü (çekirdek), 5 sıva; Kural 3'tür. Döner: yüzün dış katmanları duvar ucunda ve kapı ile pencere sövesinde döner."
-                        .to_owned(),
+                    if w.materials.is_empty() {
+                        "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Öncelik birleşimde: 1 en güçlü (çekirdek), 5 sıva; Kural 3'tür. Döner: yüzün dış katmanları duvar ucunda ve kapı ile pencere sövesinde döner."
+                    } else {
+                        "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Malzeme: Metin ya da projenin malzemesi; bağlı bileşenin taraması ve kesit kalemi malzemeninkidir (Malzemeler penceresinde değişir). Öncelik birleşimde: 1 en güçlü, Kural 3'tür. Döner: dış katmanlar uçta ve sövede döner."
+                    }
+                    .to_owned(),
                 ),
             ))
             .push(

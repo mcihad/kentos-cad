@@ -43,6 +43,7 @@ mod annotation_styles;
 mod wall_joins;
 mod opening_types_window;
 mod materials_window;
+mod material_library;
 mod room_modules_window;
 mod tags_check;
 mod schedule_window;
@@ -534,6 +535,8 @@ mod opening_type_scenes;
 #[cfg(test)]
 mod material_scenes;
 #[cfg(test)]
+mod material_library_scenes;
+#[cfg(test)]
 mod module_scenes;
 #[cfg(test)]
 mod special_door_scenes;
@@ -708,6 +711,8 @@ fn run(program: Option<Module>, path: Option<PathBuf>) -> ExitCode {
                 app.sources.folders = sources::SourceFolders::open(&folder);
                 // Bloklar's libraries, beside them (docs/adr/0726 §1).
                 app.blocks_panel.library = blocks_library::Library::open(&folder);
+                // Malzemeler's library folders, beside them (docs/adr/0791).
+                app.material_libraries = material_library::Libraries::open(&folder);
                 // The Python tab's unsaved script, kept beside them (docs/adr/0136).
                 app.python.script = python::script::Script::load(&folder);
                 // Each processing tool's last values (islemler.json), beside them.

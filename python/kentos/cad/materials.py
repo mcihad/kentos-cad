@@ -38,7 +38,14 @@ class _MaterialsEdit(LocalCommand[MaterialsEdit, MaterialsEdited, MaterialsEdite
     değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle
     kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked.
     Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir.
-    Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar.
+    Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar. Ofis
+    malzeme kitaplığı (docs/adr/0791): import (library: kentos.materials 1 dosyası ya da
+    name: KentOS kitaplığı kentos-temel; materials: kimlik ya da ad, yoksa hepsi;
+    onConflict: refuse varsayılan material_exists, keep projeninkini korur
+    material_kept, replace aynı kimlikliyi kitaplığınkiyle değiştirir ve bağlıları
+    izler; başka kimlikli aynı ad keep dışında reddedilir; report.taken, replaced,
+    kept), export (library: adı, materials: yoksa hepsi; çizim değişmez, cevabın
+    library'si dosyanın içeriği). Bozuk ya da bilinmeyen kitaplık invalid_library.
     """
     __slots__ = ()
     id = "cad.materials.edit"
@@ -76,7 +83,14 @@ class _MaterialsEdit(LocalCommand[MaterialsEdit, MaterialsEdited, MaterialsEdite
         değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle
         kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked.
         Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir.
-        Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar.
+        Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar. Ofis
+        malzeme kitaplığı (docs/adr/0791): import (library: kentos.materials 1 dosyası ya da
+        name: KentOS kitaplığı kentos-temel; materials: kimlik ya da ad, yoksa hepsi;
+        onConflict: refuse varsayılan material_exists, keep projeninkini korur
+        material_kept, replace aynı kimlikliyi kitaplığınkiyle değiştirir ve bağlıları
+        izler; başka kimlikli aynı ad keep dışında reddedilir; report.taken, replaced,
+        kept), export (library: adı, materials: yoksa hepsi; çizim değişmez, cevabın
+        library'si dosyanın içeriği). Bozuk ya da bilinmeyen kitaplık invalid_library.
 
         Args:
             doc: The drawing it works on.

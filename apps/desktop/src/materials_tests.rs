@@ -68,3 +68,90 @@ fn a_slab_is_bound_from_its_properties_and_metraj_groups_by_material() {
     assert_eq!(names[0], ("Tuğla", 4, 0));
     assert_eq!(names[1], ("Betonarme", 0, 3));
 }
+
+#[test]
+fn kentos_library_materials_are_taken_in_one_undo_step_the_projects_kept() {
+    let mut app = app();
+    let before = model(&app).to_snapshot_v2();
+    let _ = app.update(Message::Run("arch.materials"));
+    let _ = app.update(Message::Materials(Event::Tab(Tab::Library)));
+    let w = app.materials.as_ref().unwrap();
+    assert!(matches!(w.entries[0].place, crate::material_library::Place::Kentos("kentos-temel")));
+    // KentOS's 21, the project's Tuğla and Betonarme not ticked (they differ): 19 new ones previewed.
+    assert_eq!(w.picked.iter().filter(|p| **p).count(), 19);
+    let Some(Ok(plan)) = &w.take_preview else { panic!("{:?}", w.take_preview) };
+    assert_eq!(plan.report.taken.len(), 19);
+    assert_eq!(model(&app).to_snapshot_v2(), before, "the preview wrote nothing");
+    let _ = app.update(Message::Materials(Event::Take));
+    assert_eq!(model(&app).materials().len(), 21);
+    assert_eq!(model(&app).materials()[0].id, "tugla", "the project's stays first, as it was");
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(model(&app).materials().len(), 2);
+}
+
+#[test]
+fn replacing_from_the_library_counts_what_follows_and_export_writes_a_file_read_back() {
+    let mut app = app();
+    let _ = app.update(Message::Run("arch.materials"));
+    let _ = app.update(Message::Materials(Event::Tab(Tab::Library)));
+    let _ = app.update(Message::Materials(Event::PickAll(true)));
+    let _ = app.update(Message::Materials(Event::Conflict(Conflict::Replace)));
+    let Some(Ok(plan)) = &app.materials.as_ref().unwrap().take_preview else { panic!() };
+    assert_eq!(plan.report.replaced, ["betonarme", "tugla"]);
+    assert_eq!((plan.report.walls.len(), plan.report.slabs.len(), plan.report.locked.len()), (3, 0, 1), "the slabs keep their text: the name is the same");
+    let file = std::env::temp_dir().join(format!("kentos-malzeme-yaz-{}.kmalzeme", std::process::id()));
+    app.export_materials(&file);
+    let back = crate::material_library::read(&file).expect("the written library reads");
+    assert_eq!(back.materials, model(&app).materials());
+    assert_eq!(back.library, file.file_stem().unwrap().to_string_lossy());
+    let _ = std::fs::remove_file(&file);
+}
+
+#[test]
+fn a_wall_style_component_is_bound_in_duvar_stilleri_and_saved_in_one_step() {
+    let mut app = app();
+    let _ = app.update(Message::Run("arch.wallStyles"));
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Material(2, Some("betonarme".into()))));
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Save));
+    let style = &model(&app).settings().wall_styles[0];
+    let c = &style.components[2];
+    assert_eq!((c.material_id.as_deref(), c.material.as_deref()), (Some("betonarme"), Some("Betonarme")));
+    assert_eq!(c.hatch, model(&app).materials()[1].hatch, "the material's hatch, read-only in the window");
+    // Left again: its text and look stay, unbound.
+    let _ = app.update(Message::Run("arch.wallStyles"));
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Material(2, None)));
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Save));
+    let c = &model(&app).settings().wall_styles[0].components[2];
+    assert_eq!((c.material_id.as_deref(), c.material.as_deref()), (None, Some("Betonarme")));
+    let _ = app.update(Message::Run("edit.undo"));
+    let c = &model(&app).settings().wall_styles[0].components[2];
+    assert_eq!(c.material_id.as_deref(), Some("betonarme"), "one undo step a save");
+}
+
+#[test]
+fn a_slab_is_bound_to_a_space_of_its_level_from_its_sinir_row() {
+    let mut app = app_with_drawing();
+    crate::material_library_scenes::slab_row(&mut app);
+    let m = model(&app);
+    let (slot, slab) = m
+        .entities()
+        .find_map(|e| match e {
+            Entity::Slab(s) => Some((kentos_domain::Slot(e.base().id), s.slab.clone())),
+            _ => None,
+        })
+        .unwrap();
+    let b = slab.bound.as_ref().expect("bound");
+    assert_eq!(b.source, kentos_commands::SlabSourceKind::Space);
+    let spaces = crate::properties::wall_parts::space_choices(m, &slab);
+    // Both spaces of the level, the salon (where the slab now is) first.
+    let words: Vec<&str> = spaces.iter().map(|(_, w)| w.as_str()).collect();
+    assert_eq!(words, ["101 Salon", "102 Mutfak"]);
+    assert_eq!(crate::properties::wall_parts::bound_text(&slab, &spaces), "Mahale bağlı · 101 Salon");
+    let choices = crate::properties::wall_parts::bound_choices(&slab, &spaces);
+    let chosen: Vec<&str> = choices.iter().filter(|c| c.1).map(|c| c.0.as_str()).collect();
+    assert_eq!(chosen, ["Mahale bağlı · 101 Salon"]);
+    // One undo: bound to the kitchen's walls again.
+    let _ = app.update(Message::Run("edit.undo"));
+    let Some(Entity::Slab(s)) = model(&app).get(slot) else { panic!() };
+    assert_eq!(s.slab.bound.as_ref().unwrap().source, kentos_commands::SlabSourceKind::Walls);
+}

@@ -1,0 +1,284 @@
+{
+ "format": "kentos.materials",
+ "version": 1,
+ "library": "KentOS temel malzemeler",
+ "materials": [
+  {
+   "id": "betonarme",
+   "name": "Betonarme",
+   "category": "structure",
+   "hatch": {
+    "pattern": "NET3",
+    "scale": 1.0,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.5
+   }
+  },
+  {
+   "id": "yapi-celigi",
+   "name": "Yapı çeliği",
+   "category": "structure",
+   "hatch": {
+    "pattern": "ANSI32",
+    "scale": 1.0,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.5
+   }
+  },
+  {
+   "id": "tugla",
+   "name": "Tuğla",
+   "category": "structure",
+   "hatch": {
+    "pattern": "ANSI31",
+    "scale": 1.0,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.35
+   }
+  },
+  {
+   "id": "gazbeton",
+   "name": "Gazbeton",
+   "category": "structure",
+   "hatch": {
+    "pattern": "DOTS",
+    "scale": 1.0,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.35
+   }
+  },
+  {
+   "id": "bims-blok",
+   "name": "Bims blok",
+   "category": "structure",
+   "hatch": {
+    "pattern": "CROSS",
+    "scale": 1.0,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.35
+   }
+  },
+  {
+   "id": "moloz-tas",
+   "name": "Moloz taş",
+   "category": "structure",
+   "hatch": {
+    "pattern": "ANSI35",
+    "scale": 1.0,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.35
+   }
+  },
+  {
+   "id": "ahsap",
+   "name": "Ahşap",
+   "category": "structure",
+   "hatch": {
+    "pattern": "LINE",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.35
+   }
+  },
+  {
+   "id": "tasyunu",
+   "name": "Taşyünü",
+   "category": "insulation",
+   "hatch": {
+    "pattern": "ANSI37",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.18
+   }
+  },
+  {
+   "id": "camyunu",
+   "name": "Camyünü",
+   "category": "insulation",
+   "hatch": {
+    "pattern": "ANSI37",
+    "scale": 0.8,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.18
+   }
+  },
+  {
+   "id": "eps",
+   "name": "EPS ısı yalıtımı",
+   "category": "insulation",
+   "hatch": {
+    "pattern": "ANSI37",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.18
+   }
+  },
+  {
+   "id": "xps",
+   "name": "XPS ısı yalıtımı",
+   "category": "insulation",
+   "hatch": {
+    "pattern": "NET",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.18
+   }
+  },
+  {
+   "id": "ic-siva",
+   "name": "İç sıva",
+   "category": "finish",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "DOTS",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.13
+   }
+  },
+  {
+   "id": "dis-siva",
+   "name": "Dış sıva",
+   "category": "finish",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "DOTS",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.13
+   }
+  },
+  {
+   "id": "alci-siva",
+   "name": "Alçı sıva",
+   "category": "finish",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "DASH",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.13
+   }
+  },
+  {
+   "id": "alci-levha",
+   "name": "Alçı levha",
+   "category": "finish",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "LINE",
+    "scale": 0.3,
+    "angle": 90.0
+   },
+   "cut": {
+    "lineWeight": 0.13
+   }
+  },
+  {
+   "id": "seramik",
+   "name": "Seramik kaplama",
+   "category": "finish",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "NET",
+    "scale": 0.25,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.13
+   }
+  },
+  {
+   "id": "mermer",
+   "name": "Mermer kaplama",
+   "category": "finish",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "ANSI36",
+    "scale": 0.5,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.13
+   }
+  },
+  {
+   "id": "parke",
+   "name": "Ahşap parke",
+   "category": "finish",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "DASH",
+    "scale": 0.3,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.13
+   }
+  },
+  {
+   "id": "sap",
+   "name": "Şap",
+   "category": "finish",
+   "hatch": {
+    "pattern": "DOTS",
+    "scale": 1.0,
+    "angle": 45.0
+   },
+   "cut": {
+    "lineWeight": 0.18
+   }
+  },
+  {
+   "id": "su-yalitim-membrani",
+   "name": "Su yalıtım membranı",
+   "category": "membrane",
+   "quantity": "area",
+   "hatch": {
+    "pattern": "SOLID",
+    "scale": 1.0,
+    "angle": 0.0
+   },
+   "cut": {
+    "lineWeight": 0.25
+   }
+  },
+  {
+   "id": "buhar-dengeleyici",
+   "name": "Buhar dengeleyici",
+   "category": "membrane",
+   "quantity": "area",
+   "cut": {
+    "lineWeight": 0.13
+   }
+  }
+ ]
+}

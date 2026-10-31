@@ -1168,6 +1168,8 @@ pub struct App {
     pub(crate) opening_types: Option<crate::opening_types_window::Window>,
     /// Malzemeler's window (materials_window.rs, docs/adr/0785).
     pub(crate) materials: Option<crate::materials_window::Window>,
+    /// The office's material library folders (material_library.rs, docs/adr/0791).
+    pub(crate) material_libraries: crate::material_library::Libraries,
     /// Oda modülleri's window (room_modules_window.rs, docs/adr/0775).
     pub(crate) room_modules: Option<crate::room_modules_window::Window>,
     /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
@@ -1566,6 +1568,7 @@ impl App {
             wall_joins: None,
             opening_types: None,
             materials: None,
+            material_libraries: crate::material_library::Libraries::default(),
             room_modules: None,
             tags_check: None,
             schedule: None,

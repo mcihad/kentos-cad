@@ -967,7 +967,7 @@ codes! {
     /// Block definitions taken in without a file's text (docs/adr/0314 §3).
     NO_LIBRARY = "no_library", Failed, false, "Alınacak blok ya da stil dosyası verilmedi.";
     /// A block library file that does not read.
-    INVALID_LIBRARY = "invalid_library", Failed, false, "Blok ya da stil dosyası okunamadı.";
+    INVALID_LIBRARY = "invalid_library", Failed, false, "Blok, stil ya da malzeme dosyası okunamadı.";
     /// A library item created without the item.
     NO_ITEM = "no_item", Failed, false, "Eklenecek kitaplık öğesi verilmedi.";
     /// A library import without a .kstil file's text.
@@ -1778,6 +1778,8 @@ codes! {
     MATERIAL_LOCKED = "material_locked", Warning, false, "Malzemeye bağlı bazı nesneler kilitli katmanda; eski değerleriyle kaldı.";
     /// Text materials not taken into the table: their components' looks differ for the same text.
     MATERIAL_ADOPT_LEFT = "material_adopt_left", Warning, false, "Aynı adlı bazı bileşenlerin taraması ya da kalemi farklı; görünüşü değişmesin diye bağlanmadı.";
+    /// Library materials not taken: the project has one of their id or name, and the project's was kept (docs/adr/0791).
+    MATERIAL_KEPT = "material_kept", Warning, false, "Kitaplığın bazı malzemeleri projede zaten vardı; projeninki korundu, kitaplığınki alınmadı.";
     // Oda modülleri (docs/adr/0775).
     /// A module's id or name another module of the project has.
     MODULE_EXISTS = "module_exists", Failed, false, "Projede bu kimlikte ya da adda bir oda modülü zaten var; başka bir ad verin.";
