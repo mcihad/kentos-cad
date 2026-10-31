@@ -1249,6 +1249,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin kapı ve pencere tipleri şema 139'den beri yazılır",
                     ));
                 }
+                if !has.building_program && !a.program.is_empty() {
+                    return Err(r.fail_at(Code::UnknownField, at, "bina programı şema 140 ister"));
+                }
                 if !has.audit_exceptions && a.has_audit_exceptions() {
                     return Err(r.fail_at(
                         Code::UnknownField,

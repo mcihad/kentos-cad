@@ -428,10 +428,19 @@ class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
     değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. operation:
     set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik,
     kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince
-    sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini korur, öbürleri
-    silinir; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching), split
-    (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini
-    korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound
+    sınırı yeniden bulunur), unit bina programının bölümü, null bölümden çıkarır,
+    programda olmayan unit_not_found), merge (mahaller birleşir: keep verilen mahalin,
+    yoksa ilkinin kimliği sürer, numarası ve bölümü onun, number başka numara verir,
+    null kaldırır; öbürleri silinir, numaraları, kaplamaları ve etiketleri onlarla
+    gider, cevabın decisions'ı yazmadan önce söyler; bölümleri farklı mahaller
+    space_units_merged uyarısı; birleşen sınır çizilmiş olur; değmeyen mahaller
+    spaces_not_touching; keep birleşenlerden değilse invalid_input), split (line: iki ya
+    da daha çok nokta; mahal çizgiyle bölünür, keep noktasını içeren parça, yoksa en
+    büyük kimliğini korur; yeni parçalar büyüklük sırasıyla numbers numaralarını alır,
+    verilmezse numarasız kalır (aynı numara iki kez yazılmaz), bölümü alır, finishes
+    false değilse kaplamaları; decisions her parçanın kimliğini, numarasını, alanını,
+    kaplamalarını ve içinde duran donatıları söyler; bölmeyen çizgi split_missed, parça
+    sayısıyla uymayan numbers ya da hiçbir parçada olmayan keep invalid_input), rebound
     (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o
     da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). Kat değişimi
     de duvar sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur
@@ -465,20 +474,29 @@ class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
         """Mahali düzenle: Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı
         “Mahali düzenle”, hepsi ya da hiçbiri. operation: set (numara, ad, kullanım, yöntem,
         columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır;
-        duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), merge
-        (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır çizilmiş
-        olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha çok nokta;
-        mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni
-        mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur:
-        seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından;
-        çizilmiş mahal duvarlardan bulunan olur). Kat değişimi de duvar sınırını yeniden
-        bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve lostEnclosure
-        gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar; yalnız ilişkili
-        seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi
-        ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı mahal/sınır
-        değişimini kapsar. Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed
-        (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan
-        yazmadan mahalleri olacakları gibi gösterir.
+        duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), unit bina
+        programının bölümü, null bölümden çıkarır, programda olmayan unit_not_found), merge
+        (mahaller birleşir: keep verilen mahalin, yoksa ilkinin kimliği sürer, numarası ve
+        bölümü onun, number başka numara verir, null kaldırır; öbürleri silinir, numaraları,
+        kaplamaları ve etiketleri onlarla gider, cevabın decisions'ı yazmadan önce söyler;
+        bölümleri farklı mahaller space_units_merged uyarısı; birleşen sınır çizilmiş olur;
+        değmeyen mahaller spaces_not_touching; keep birleşenlerden değilse invalid_input),
+        split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, keep noktasını içeren
+        parça, yoksa en büyük kimliğini korur; yeni parçalar büyüklük sırasıyla numbers
+        numaralarını alır, verilmezse numarasız kalır (aynı numara iki kez yazılmaz), bölümü
+        alır, finishes false değilse kaplamaları; decisions her parçanın kimliğini,
+        numarasını, alanını, kaplamalarını ve içinde duran donatıları söyler; bölmeyen çizgi
+        split_missed, parça sayısıyla uymayan numbers ya da hiçbir parçada olmayan keep
+        invalid_input), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan,
+        yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan
+        bulunan olur). Kat değişimi de duvar sınırını yeniden bulur; seçilen kat tohumu
+        kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Kolon tercihi değişimi
+        de aynı yeniden hesabı yapar; yalnız ilişkili seed mahalda etkin olabilir.
+        Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi ignore olur; o anki delikler
+        korunur. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar. Cevap kept
+        (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler.
+        Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri
+        olacakları gibi gösterir.
 
         Args:
             doc: The drawing it works on.

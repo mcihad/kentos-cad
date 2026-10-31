@@ -2184,6 +2184,7 @@
               "removed": [
                 "$any"
               ],
+              "decisions": "$any",
               "revision": "$current"
             },
             "warnings": []
@@ -2642,6 +2643,7 @@
               "removed": [
                 "$any"
               ],
+              "decisions": "$any",
               "revision": "$current"
             },
             "warnings": []
@@ -3025,6 +3027,7 @@
                 "$any",
                 "$any"
               ],
+              "decisions": "$any",
               "revision": "$current"
             },
             "warnings": []
@@ -3302,13 +3305,13 @@
                   "layerId": "mahal",
                   "attrs": {},
                   "parts": "$any",
-                  "number": "C",
                   "name": "Ofis"
                 }
               ],
               "kept": [
                 "$any"
               ],
+              "decisions": "$any",
               "revision": "$current"
             },
             "warnings": []
@@ -3341,7 +3344,6 @@
                 "layerId": "mahal",
                 "attrs": {},
                 "parts": "$any",
-                "number": "C",
                 "name": "Ofis"
               }
             },
@@ -3370,7 +3372,6 @@
                 },
                 {
                   "uid": "$uidOf:9",
-                  "number": "C",
                   "name": "Ofis",
                   "method": "net",
                   "area": 8.0,

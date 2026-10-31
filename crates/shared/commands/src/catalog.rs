@@ -2278,7 +2278,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_SPACES_EDIT_VERSION,
             title: "Mahali düzenle".into(),
             summary: "Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. \
-                      operation: set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), merge (mahaller birleşir: ilki kimliğini korur, öbürleri silinir; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, en büyük parça kimliğini korur, öbürleri aynı alanlarla yeni mahaller; bölmeyen çizgi split_missed), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). \
+                      operation: set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), unit bina programının bölümü, null bölümden çıkarır, programda olmayan unit_not_found), merge (mahaller birleşir: keep verilen mahalin, yoksa ilkinin kimliği sürer, numarası ve bölümü onun, number başka numara verir, null kaldırır; öbürleri silinir, numaraları, kaplamaları ve etiketleri onlarla gider, cevabın decisions'ı yazmadan önce söyler; bölümleri farklı mahaller space_units_merged uyarısı; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching; keep birleşenlerden değilse invalid_input), split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, keep noktasını içeren parça, yoksa en büyük kimliğini korur; yeni parçalar büyüklük sırasıyla numbers numaralarını alır, verilmezse numarasız kalır (aynı numara iki kez yazılmaz), bölümü alır, finishes false değilse kaplamaları; decisions her parçanın kimliğini, numarasını, alanını, kaplamalarını ve içinde duran donatıları söyler; bölmeyen çizgi split_missed, parça sayısıyla uymayan numbers ya da hiçbir parçada olmayan keep invalid_input), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan bulunan olur). \
                       Kat değişimi de duvar sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar; yalnız ilişkili seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar. \
                       Cevap kept (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir."
                 .into(),
@@ -4245,6 +4245,70 @@ pub fn catalog() -> CommandCatalog {
                     output: Some(json!({ "changed": [], "exceptions": 1, "revision": "8" })),
                 },
             ],
+        },
+        // Bina programı (docs/adr/0773), held together by fixtures/commands/v1/cad.program.edit.json.
+        CommandDescriptor {
+            id: crate::CAD_PROGRAM_EDIT.into(),
+            version: crate::CAD_PROGRAM_EDIT_VERSION,
+            title: "Bina programı".into(),
+            summary: "Bina programını ve bölümlerine verilen mahalleri yazar (docs/adr/0773); tek geri alma adımı “Bina programı”, hepsi ya da hiçbiri. program (verilmezse olduğu gibi): buildings (bina ve kanatları: kimlik, ad), units (bağımsız bölüm, ortak alan ya da dış alan: kimlik, numara, ad, kind unit/common/outdoor, bina, kanat, recordedArea kayıtlı alan m²: ölçümle hiç yazılmaz), briefs (kullanıma göre tasarım hedefi: areaMin, areaMax m², minWidth net en, minPassage kapılar arası net geçiş, adjacent komşu kullanımlar, reach kapı ya da açık geçişle ulaşılacak kullanımlar, outdoor balkon gibi dış mahal; yasal sınır değildir), clearances (blok adına donatının önündeki kullanım alanı: width, depth m), version (hedeflerin adı ve sürümü, bulgularda yazılır). Kat ile bölüm arasında zorunlu bire bir bağ yoktur: bölümün katları mahallerinden okunur (dubleks iki kat). assign: uids mahalleri unit bölümüne verir (null bölümden çıkarır). Kaldırılan bölümde hâlâ mahal kalırsa unit_in_use (uids). Retler: nothing_to_set, invalid_program (programın yolu), no_entities, invalid_uid, entity_not_found, not_a_space, unit_not_found, unit_in_use, layer_locked. Çıktı yazılan program, bölümü değişen mahaller (assigned) ve revizyon. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProgramEdit>(),
+            output: schema::<crate::ProgramEdited>(),
+            plan: Some(schema::<crate::ProgramEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İki daire, ortak koridor ve yatak odasının hedefi".into(),
+                input: json!({
+                    "program": {
+                        "units": [
+                            { "id": "d1", "number": "1", "name": "Daire 1" },
+                            { "id": "d2", "number": "2", "name": "Daire 2" },
+                            { "id": "ortak", "number": "O", "name": "Ortak alan", "kind": "common" }
+                        ],
+                        "briefs": [
+                            { "usage": "Yatak odası", "areaMin": 12.0, "areaMax": 16.0, "minWidth": 2.8, "reach": ["Koridor"] },
+                            { "usage": "Koridor", "minPassage": 1.2 }
+                        ],
+                        "version": "Ofis konut hedefleri 2026-1"
+                    },
+                    "assign": [{ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61"], "unit": "d1" }]
+                }),
+                output: None,
+            }],
+        },
+        // Programı denetle (docs/adr/0773), held together by fixtures/commands/v1/cad.program.check.json.
+        CommandDescriptor {
+            id: crate::CAD_PROGRAM_CHECK.into(),
+            version: crate::CAD_PROGRAM_CHECK_VERSION,
+            title: "Bina programını denetle".into(),
+            summary: "Bina programını çizimle karşılaştırır (salt okunur, docs/adr/0773). units: bölümlerin toplamları, her mahal bir kez: rooms (odalar), outdoor (hedefi outdoor olan balkon, teras), voids (şaft), methods (alanın alındığı yöntemler: net iç yüzler, duvar ekseni, brüt dış yüzler; birden çok ise karışık), levels (mahallerinin katları), recordedArea ve recordedDifference (kayıtlı alan yalnız okunur). totals: units, unitOutdoor, common, outdoor, voids, unassigned, all (boşluklar dışı hepsi; ortak alan bölüme girmez). spaces: mahal başına area (kendi yöntemiyle), width (içindeki en büyük dairenin çapı, net en), doors (kapılar ve başka mahale açık geçişler: ayırıcı), passage ve passageAt (hedefi minPassage olan mahalde kapılar arası en geniş geçiş ve en dar yeri), targetMin, targetMax, targetDifference (aralığın altı eksi, üstü artı, içi 0), passageDifference, adjacent ve reach (istenen kullanımlar ve onları karşılayan mahaller). findings: Mimari denetim'in program grubu: program_unit_missing (Düzelt: bölümden çıkar), program_area_below, program_area_above, program_width_narrow, program_passage_narrow, program_adjacent_missing, program_reach_missing, program_no_door, program_fixture_clearance; ileti ölçülen değeri, farkı ve kuralın sürümünü (kentos.program/1 · hedeflerin sürümü) yazar; hedefler yasal sınır değildir. findings false ise yalnız sayılar (geçiş taraması yapılmaz). units ve levels süzer. Uzun iş olarak çalışabilir: ilerlemesini söyler, durdurulunca cancelled. Retler: unit_not_found, level_not_found."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProgramCheck>(),
+            output: schema::<crate::ProgramChecked>(),
+            plan: Some(schema::<crate::ProgramChecked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün program, bulgularıyla".into(),
+                input: json!({}),
+                output: None,
+            }],
         },
         // Kat ver (docs/adr/0717), held together by fixtures/commands/v1/cad.levels.assign.json.
         CommandDescriptor {
@@ -11519,6 +11583,12 @@ mod tests {
                     crate::CAD_ARCH_EXCEPTIONS => {
                         serde_json::from_value::<crate::ArchExceptions>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_PROGRAM_EDIT => {
+                        serde_json::from_value::<crate::ProgramEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROGRAM_CHECK => {
+                        serde_json::from_value::<crate::ProgramCheck>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LEVELS_ASSIGN => {
                         serde_json::from_value::<crate::LevelsAssign>(e.input.clone()).map(|_| ())
                     }
@@ -12628,6 +12698,12 @@ mod tests {
                         crate::CAD_ARCH_EXCEPTIONS => {
                             serde_json::from_value::<crate::ArchExceptionsEdited>(output.clone())
                                 .map(|_| ())
+                        }
+                        crate::CAD_PROGRAM_EDIT => {
+                            serde_json::from_value::<crate::ProgramEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_PROGRAM_CHECK => {
+                            serde_json::from_value::<crate::ProgramChecked>(output.clone()).map(|_| ())
                         }
                         crate::CAD_LEVELS_ASSIGN => {
                             serde_json::from_value::<crate::LevelsAssigned>(output.clone())

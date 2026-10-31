@@ -36,6 +36,9 @@ pub(crate) struct SpaceRest {
     pub void: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub broken: Option<SpaceBreak>,
+    /// Schema 140 (docs/adr/0773).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
 }
 
 fn is_net(m: &SpaceMethod) -> bool {
@@ -58,6 +61,7 @@ impl SpaceRest {
             finishes: f.finishes.clone(),
             void: f.void,
             broken: f.broken,
+            unit: f.unit.clone(),
         }
     }
 
@@ -77,6 +81,7 @@ impl SpaceRest {
             finishes: self.finishes,
             void: self.void,
             broken: self.broken,
+            unit: self.unit,
         }
     }
 }

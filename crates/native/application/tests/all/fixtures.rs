@@ -46,6 +46,7 @@ use kentos_native_application::{arch_exceptions, dimension_sets_create, dimensio
 use kentos_native_application::dimensions_interior;
 use kentos_native_application::spaces_separators;
 use kentos_native_application::spaces_number;
+use kentos_native_application::{program_check, program_edit};
 use kentos_native_application::donut_create;
 use kentos_native_application::drawing_compare;
 use kentos_native_application::fields_write;
@@ -926,7 +927,12 @@ impl Input for kentos_commands::SpacesEdit {
         use kentos_commands::SpacesOperation as Op;
         match &mut self.operation {
             Op::Set(c) if path == "operation.height" => c.height.as_mut()?.as_mut(),
-            Op::Split { line } => named_point(line, "operation.line", path),
+            Op::Split { keep: Some(p), .. } if path.starts_with("operation.keep.") => match path {
+                "operation.keep.x" => Some(&mut p.x),
+                "operation.keep.y" => Some(&mut p.y),
+                _ => None,
+            },
+            Op::Split { line, .. } => named_point(line, "operation.line", path),
             Op::Rebound { seed } => match path {
                 "operation.seed.x" => seed.as_mut().map(|p| &mut p.x),
                 "operation.seed.y" => seed.as_mut().map(|p| &mut p.y),
@@ -1513,6 +1519,16 @@ impl Input for kentos_commands::ColumnsDistancesInput {
     }
 }
 
+impl Input for kentos_commands::ProgramEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+impl Input for kentos_commands::ProgramCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
 impl Input for kentos_commands::LevelsAssign {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -4421,6 +4437,8 @@ fn run_op(
         kentos_commands::CAD_SPACES_EDIT => {
             run!(spaces_edit, kentos_commands::SpacesEdit)
         }
+        kentos_commands::CAD_PROGRAM_EDIT => run!(program_edit, kentos_commands::ProgramEdit),
+        kentos_commands::CAD_PROGRAM_CHECK => run!(program_check, kentos_commands::ProgramCheck),
         kentos_commands::CAD_SPACES_QUANTITIES => {
             run!(spaces_quantities, kentos_commands::SpacesQuantities)
         }

@@ -753,6 +753,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.topology.exceptions"
             // Its unmark and prune take Mimari denetim's exceptions away (docs/adr/0732 §3).
             | "cad.arch.exceptions"
+            // It replaces the building program and takes groups and spaces' memberships away (docs/adr/0773).
+            | "cad.program.edit"
             // Without srid it takes a layer's source system record away; reproject moves every object of the
             // layer (docs/adr/0583 §2).
             | "cad.layers.crs"

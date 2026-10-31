@@ -792,6 +792,8 @@ def edit(d, inp, conflict=False):
             updates.append((i, kept))
             new = copy.deepcopy(kept)
             new["parts"] = [(pieces[1], [])]
+            # A new part takes no number unless given one (docs/adr/0773 §4): no number is written twice.
+            new.pop("number", None)
             added.append((d.spaces[i][0], new, d.spaces[i][2]))
     elif kind == "rebound":
         if op.get("seed") is not None:
@@ -833,12 +835,16 @@ def edit_step(d, op, inp, non_finite=None, conflict=False):
         return s
     ents = [ent_of(i, d.spaces[i][0], u, d.spaces[i][2]) for i, u in updates]
     out = {"spaces": ents}
+    # A merge's and a split's decision (docs/adr/0773 §4): program_cases.py says them in full.
+    decided = inp["operation"]["kind"] in ("merge", "split")
     if op == "plan":
         if added:
             out["added"] = [ent_of(0, ly, a, ex) for ly, a, ex in added]
         out["kept"] = ["$any"] * len(updates)
         if removed:
             out["removed"] = ["$any"] * len(removed)
+        if decided:
+            out["decisions"] = "$any"
         out["revision"] = "$current"
         s["result"] = {"status": "completed", "output": out, "warnings": []}
         s["expect"] = {"ids": d.ids(), "revision": "same"}
@@ -857,6 +863,8 @@ def edit_step(d, op, inp, non_finite=None, conflict=False):
     out["kept"] = ["$any"] * len(updates)
     if removed:
         out["removed"] = ["$any"] * len(removed)
+    if decided:
+        out["decisions"] = "$any"
     out["revision"] = "$current"
     s["result"] = {"status": "completed", "output": out, "warnings": []}
     s["expect"] = {"ids": d.ids(), "entities": {str(i): ent_of(i, d.spaces[i][0], d.spaces[i][1], d.spaces[i][2])

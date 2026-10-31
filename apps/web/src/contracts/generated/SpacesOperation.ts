@@ -5,4 +5,4 @@ import type { Vec2 } from "./Vec2";
 /**
  * What `cad.spaces.edit` does to the spaces (docs/adr/0342 §4).
  */
-export type SpacesOperation = { "kind": "set" } & SpaceChange | { "kind": "merge" } | { "kind": "split", line: Array<Vec2>, } | { "kind": "rebound", seed?: Vec2, };
+export type SpacesOperation = { "kind": "set" } & SpaceChange | { "kind": "merge", keep?: string, number?: string | null, } | { "kind": "split", line: Array<Vec2>, keep?: Vec2, numbers?: Array<string>, finishes?: boolean, } | { "kind": "rebound", seed?: Vec2, };

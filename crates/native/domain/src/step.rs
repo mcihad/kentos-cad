@@ -751,6 +751,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::Domains { .. }
             | Op::AuditExceptions { .. }
             | Op::OpeningTypes { .. }
+            | Op::BuildingProgram { .. }
             | Op::Source { .. }
             | Op::Lineage { .. } => {
                 if !report.parts.contains(&ProjectPart::Settings) {

@@ -25,6 +25,8 @@ use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
+/// Mahalleri birleştir's question (docs/adr/0773 §4).
+pub const MERGE_TITLE: &str = "Mahalleri birleştir";
 pub const TITLE: &str = "Metraj";
 const COPY: &str = "Panoya kopyala";
 const CLOSE: &str = "Kapat";
@@ -180,7 +182,9 @@ impl App {
         self.dialog = Some(Dialog::Quantities);
     }
 
-    /// Mahalleri birleştir (`arch.spaceMerge`): the spaces selected made one.
+    /// Mahalleri birleştir (`arch.spaceMerge`): the spaces selected made one. Nothing is written before the decision
+    /// is said (docs/adr/0773 §4): whose id and number go on, whose numbers, finishes and tags go, the fixtures in it;
+    /// Birleştir writes it.
     pub(crate) fn space_merge(&mut self) {
         const WHAT: &str = "Mahalleri birleştir";
         let ids = self.selection.ids().to_vec();
@@ -200,9 +204,35 @@ impl App {
         }
         let input = SpacesEdit {
             uids: kentos_interaction::properties::uids_of(&doc.model, &spaces),
-            operation: SpacesOperation::Merge,
+            operation: SpacesOperation::Merge { keep: None, number: None },
             expected_revision: None,
         };
+        match spaces_edit::plan_in(&doc.model, &input) {
+            CommandResult::Completed { output, warnings } => {
+                let mut said = merge_words(&doc.model, &output);
+                for w in warnings {
+                    said.push_str(&format!(" {}", w.message));
+                }
+                self.space_merging = Some((input, said));
+                self.dialog = Some(Dialog::SpaceMerge);
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.warn(error.message),
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {}
+        }
+    }
+
+    /// Birleştir: the merge said, written.
+    pub(crate) fn space_merge_confirmed(&mut self) {
+        const WHAT: &str = "Mahalleri birleştir";
+        let Some((input, _)) = self.space_merging.take() else {
+            return;
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let n = input.uids.len();
         match spaces_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => {
                 let kept: Vec<_> = output
@@ -212,16 +242,23 @@ impl App {
                     .filter_map(|u| doc.model.slot_of(u))
                     .collect();
                 self.selection.set(kept);
-                self.say(
-                    Level::Success,
-                    format!("{WHAT}: {} mahal tek mahal oldu.", spaces.len()),
-                );
+                self.say(Level::Success, format!("{WHAT}: {n} mahal tek mahal oldu."));
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => self.warn(error.message),
             CommandResult::Queued { .. } | CommandResult::Cancelled => {}
         }
+    }
+
+    pub(crate) fn space_merge_question(&self) -> Element<'_, Message> {
+        let said = self.space_merging.as_ref().map(|(_, w)| w.clone()).unwrap_or_default();
+        kentos_ui::widget::overlay::modal(
+            kentos_ui::widget::Confirm::new(MERGE_TITLE, Message::DialogConfirmed, Message::DialogClosed)
+                .message(said)
+                .confirm("Birleştir"),
+            Message::DialogClosed,
+        )
     }
 
     /// The three tables of the answer, in the project's units.
@@ -1172,6 +1209,59 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// A merge's decision in words: whose id and number go on, whose number, finishes and tags go with them, the fixtures.
+fn merge_words(doc: &kentos_domain::Document, out: &kentos_commands::SpacesEdited) -> String {
+    let Some(d) = out.decisions.first() else {
+        return String::new();
+    };
+    let name = |uid: &str| -> String {
+        kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| match doc.get(s) {
+                Some(Entity::Space(x)) => {
+                    let f = &x.space;
+                    Some(match (f.number.as_deref(), f.name.as_deref().or(f.usage.as_deref())) {
+                        (Some(n), Some(w)) => format!("“{n} {w}”"),
+                        (Some(n), None) => format!("“{n}”"),
+                        (None, Some(w)) => format!("“{w}”"),
+                        (None, None) => "mahal".into(),
+                    })
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| "mahal".into())
+    };
+    let by = match d.by {
+        kentos_commands::SpaceKeptBy::Given => "verilen",
+        kentos_commands::SpaceKeptBy::First => "ilk seçilen",
+        kentos_commands::SpaceKeptBy::Largest => "en büyük parça",
+    };
+    let mut w = format!(
+        "Kimliği sürecek mahal: {} ({by}); numarası {}, alanı {} m².",
+        name(&d.kept),
+        d.number.as_deref().unwrap_or("yok"),
+        kentos_geometry_core::display::fixed(d.area, 2)
+    );
+    for p in &d.pieces {
+        let gone = p.uid.as_deref().map_or_else(|| "parça".into(), name);
+        let mut bits = vec![format!("numarası {}", p.number.as_deref().unwrap_or("yok"))];
+        let f = &p.finishes;
+        let finishes: Vec<&str> = [&f.floor, &f.base, &f.wall, &f.ceiling].into_iter().flatten().map(String::as_str).collect();
+        if !finishes.is_empty() {
+            bits.push(format!("kaplaması {}", finishes.join(", ")));
+        }
+        if !p.tags.is_empty() {
+            bits.push(format!("{} etiketi bağsız kalır", p.tags.len()));
+        }
+        w.push_str(&format!(" Gidecek: {gone} ({}).", bits.join("; ")));
+    }
+    if !d.fixtures.is_empty() {
+        w.push_str(&format!(" İçinde {} donatı kalır.", d.fixtures.len()));
+    }
+    w
 }
 
 #[cfg(test)]

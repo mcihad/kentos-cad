@@ -192,7 +192,11 @@ izlesin, örnek istisnası korunup gösterilsin. 90 cm kanat ve 90 cm kaba boşl
 aynı kabul edilmesin. Sahne, net geçiş sorgusu, etiket, çizelge, Python/MCP ve
 PDF aynı bilgiyi versin. Kapı önü çakışması çizimde açıklanabilsin.
 
-### ADV-04 — Mahalleri bina programı ve bağımsız bölüm bağlamında yönet [ ]
+### ADV-04 — Mahalleri bina programı ve bağımsız bölüm bağlamında yönet [~]
+
+_Durum (31 Ekim 2026, [ADR 0773](../docs/adr/0773-building-program-units-and-design-brief.md)):_ bölüm/ortak/dış alan
+üyeliği, tasarım hedefi ve gerçek/hedef/fark, net geçiş ve kapı/komşu/donatı denetimleri istisnalarıyla, böl/birleştir kararı
+ve durdurulabilir denetim yapıldı. Açık: bina/kanat penceresi, pay ve resmî alan profili, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Tasarımcı yalnız oluşan alanı okumakla kalmasın;
 hangi odanın hangi daireye ait olduğunu ve tasarım hedefini karşılayıp

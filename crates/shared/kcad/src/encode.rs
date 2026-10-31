@@ -2077,6 +2077,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program field.
+    if doc.settings.arch.as_ref().is_some_and(|a| !a.program.is_empty())
+        || objs.iter().any(building_program)
+        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(building_program))
+    {
+        return crate::SCHEMA_WITH_BUILDING_PROGRAM;
+    }
     // Schema 139 (docs/adr/0772): door and window types, an opening following one or built, a schedule of widths.
     let opening_typed = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_opening_types);
     if doc
@@ -3340,6 +3347,18 @@ pub(crate) fn building_parts(e: &Entity) -> bool {
                 || w.wall.joins.end_pass.is_some()
         }
         Entity::Slab(s) => s.slab.bound.is_some(),
+        _ => false,
+    }
+}
+
+/// Whether an object needs schema 140 (docs/adr/0773): a space in a group, a schedule with a program field.
+pub(crate) fn building_program(e: &Entity) -> bool {
+    match e {
+        Entity::Space(s) => s.space.unit.is_some(),
+        Entity::Table(t) => matches!(
+            &t.source,
+            Some(kentos_contracts::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_program())
+        ),
         _ => false,
     }
 }

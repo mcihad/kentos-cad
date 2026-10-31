@@ -120,7 +120,7 @@ Yüzeyde 1 mm'lik pay: değen yüz çakışma sayılmaz. İkinci bir denetim sis
 ### 7. `.kcad` şema 139
 
 Projenin tipleri, açıklığın `typeVersion`'u, `overrides`'ı, `build`'i ve çizelgenin dört genişlik sütunu şema 139'u
-seçer; hiçbiri yoksa dosya eski şemasıyla bayt bayt aynı yazılır. Şema 136 dosyasında bu alanlar `unknown_field`'dır.
+seçer; hiçbiri yoksa dosya eski şemasıyla bayt bayt aynı yazılır. Şema 138 dosyasında bu alanlar `unknown_field`'dır.
 Bağımsız Python okuyucusu ve yazıcısı (`tools/kcad/kcad.py`, `scripts/fixtures/kcad_v2_reference.py`) aynı kuralla.
 
 ### 8. Masaüstü

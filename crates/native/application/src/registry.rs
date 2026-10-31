@@ -104,7 +104,7 @@ use crate::{
     rasters_mosaic, rasters_reproject, rectangle_create, revcloud_create, revisions, roads_edit,
     scenarios_edit, schedules_create, schedules_edit, schedules_query, sector_create, set,
     settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, sheets_set,
-    slabs_create, slabs_edit, sld, snap_find, spaces_create, spaces_discover, spaces_edit,
+    slabs_create, slabs_edit, sld, snap_find, spaces_create, spaces_discover, spaces_edit, program_check, program_edit,
     spaces_finish, spaces_quantities, stairs_create, stretch, styles_edit, styles_impact,
     survey_adjust, survey_points, tables_edit, tags_check, tags_create, tags_edit, templates_apply,
     texts_check, texts_edit, time_version, transform, ucs_set, units_change, viewmarks_create,
@@ -343,6 +343,8 @@ macro_rules! by_command {
             kentos_commands::CAD_SCHEDULES_EDIT => $then!(schedules_edit, SchedulesEdit),
             kentos_commands::CAD_SCHEDULES_QUERY => $then!(schedules_query, SchedulesQuery),
             kentos_commands::CAD_SPACES_EDIT => $then!(spaces_edit, SpacesEdit),
+            kentos_commands::CAD_PROGRAM_EDIT => $then!(program_edit, kentos_commands::ProgramEdit),
+            kentos_commands::CAD_PROGRAM_CHECK => $then!(program_check, kentos_commands::ProgramCheck),
             kentos_commands::CAD_SPACES_QUANTITIES => $then!(spaces_quantities, SpacesQuantities),
             kentos_commands::CAD_ANNOTATIONS_SCALES => {
                 $then!(annotations_scales, AnnotationsScales)

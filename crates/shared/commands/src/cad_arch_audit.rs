@@ -70,6 +70,9 @@ pub enum ArchAuditCheck {
     /// Doors (docs/adr/0772 §5): a leaf's sweep clashing (physical), a use zone taken (passage), a net clear width
     /// under the rule given (`minClearWidth`); checked only when asked by name.
     Doors,
+    /// The building program's findings (docs/adr/0773 §5): spaces against their design brief, doors, passages,
+    /// fixtures' clearances; nothing unless the project has a program.
+    Program,
 }
 
 /// What kind of problem a door finding is (docs/adr/0772 §5): kept apart, never one for another.
@@ -98,7 +101,7 @@ impl ArchAuditNature {
 }
 
 impl ArchAuditCheck {
-    pub const ALL: [ArchAuditCheck; 15] = [
+    pub const ALL: [ArchAuditCheck; 16] = [
         ArchAuditCheck::Walls,
         ArchAuditCheck::Openings,
         ArchAuditCheck::Spaces,
@@ -114,6 +117,7 @@ impl ArchAuditCheck {
         ArchAuditCheck::Ramps,
         ArchAuditCheck::Casework,
         ArchAuditCheck::Doors,
+        ArchAuditCheck::Program,
     ];
 
     /// Its name on the wire.
@@ -134,6 +138,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Ramps => "ramps",
             ArchAuditCheck::Casework => "casework",
             ArchAuditCheck::Doors => "doors",
+            ArchAuditCheck::Program => "program",
         }
     }
 
@@ -155,6 +160,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Ramps => "Rampalar",
             ArchAuditCheck::Casework => "Mutfak dizileri",
             ArchAuditCheck::Doors => "Kapılar",
+            ArchAuditCheck::Program => "Bina programı",
         }
     }
 }
@@ -291,7 +297,10 @@ pub struct ArchAuditFinding {
     /// `stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,
     /// `stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,
     /// `arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,
-    /// `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4).
+    /// `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's
+    /// `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
+    /// `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
+    /// `program_fixture_clearance` (docs/adr/0773 §5).
     pub code: String,
     /// What is wrong.
     pub message: String,

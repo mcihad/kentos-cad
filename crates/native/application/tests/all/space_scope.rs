@@ -138,7 +138,7 @@ fn split_and_merge_detach_scope_preserve_physical_area_and_undo_restores_the_lin
     let split = SpacesEdit {
         uids: vec![uid.clone()],
         operation: SpacesOperation::Split {
-            line: vec![Vec2 { x: 5., y: -1. }, Vec2 { x: 5., y: 9. }],
+            line: vec![Vec2 { x: 5., y: -1. }, Vec2 { x: 5., y: 9. }], keep: None, numbers: None, finishes: None,
         },
         expected_revision: None,
     };
@@ -159,7 +159,7 @@ fn split_and_merge_detach_scope_preserve_physical_area_and_undo_restores_the_lin
     let divided = doc.to_snapshot_v2();
     let merge = SpacesEdit {
         uids: vec![uid.clone(), added_uid],
-        operation: SpacesOperation::Merge,
+        operation: SpacesOperation::Merge { keep: None, number: None },
         expected_revision: None,
     };
     completed(spaces_edit::execute(&mut ExecutionContext::new(&mut doc), merge));

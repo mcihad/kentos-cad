@@ -577,6 +577,8 @@ pub const PORTED: &[&str] = &[
     "network.subnetworks",
     // docs/adr/0569: Olay bağları (event_links_window.rs).
     "linearRef.eventLinks",
+    // docs/adr/0773: Bina programı (program_window.rs).
+    "arch.program",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).
     "lineTypes.manage",
     // docs/adr/0331 §1: Tarama desenleri (hatch_patterns_window.rs).

@@ -392,6 +392,7 @@
     "profile.window",
     "network.subnetworks",
     "linearRef.eventLinks",
+    "arch.program",
     "lineTypes.manage",
     "hatchPatterns.manage",
     "tool.layerMatch",

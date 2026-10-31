@@ -1294,6 +1294,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningType>>", optional))]
     pub opening_types: Vec<crate::OpeningType>,
+    /// The building's program (docs/adr/0773, KCAD 138): buildings, wings, units and the design brief.
+    #[serde(default, skip_serializing_if = "crate::BuildingProgram::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<crate::BuildingProgram>", optional))]
+    pub program: crate::BuildingProgram,
 }
 
 impl ArchSettings {
@@ -1351,6 +1355,9 @@ impl ArchSettings {
         }
         if let Some(problem) = crate::opening_types_problem(&self.opening_types) {
             return Some(problem);
+        }
+        if let Some((at, why)) = self.program.problem() {
+            return Some((format!("program.{at}"), why));
         }
         if let Some(why) = crate::annotation::names_problem(
             "kat",

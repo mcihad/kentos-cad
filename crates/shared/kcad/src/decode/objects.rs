@@ -328,6 +328,8 @@ pub(super) struct Features {
     /// Schema 138 (docs/adr/0771): turning wall components, node decisions, bound slabs.
     pub(super) building_parts: bool,
     pub(super) opening_types: bool,
+    /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
+    pub(super) building_program: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -532,6 +534,7 @@ impl Features {
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
+            building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,
@@ -2193,6 +2196,10 @@ pub(super) fn object(
     // Schema 138 (docs/adr/0771): a turning component, a node decision, a bound slab.
     if !has.building_parts && crate::encode::building_parts(&entity) {
         return Err(r.fail(Code::UnknownField, "dönen bileşen, düğüm kararı ya da bağlı döşeme şema 138 ister"));
+    }
+    // Schema 140 (docs/adr/0773): a space's group, a schedule's program field.
+    if !has.building_program && crate::encode::building_program(&entity) {
+        return Err(r.fail(Code::UnknownField, "mahalın bölümü ya da çizelgenin program alanı şema 140 ister"));
     }
     // Schema 115 (docs/adr/0705): a stair's or ramp's railings.
     let railed = match &entity {

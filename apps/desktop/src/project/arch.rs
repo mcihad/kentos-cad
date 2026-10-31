@@ -199,6 +199,8 @@ pub fn read(
         audit_exceptions: Vec::new(),
         // The door and window types are their window's (docs/adr/0772 §1).
         opening_types: choices.map_or_else(Vec::new, |a| a.opening_types.clone()),
+        // So is the building's program (docs/adr/0773).
+        program: Default::default(),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

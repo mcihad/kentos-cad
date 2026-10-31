@@ -44,4 +44,9 @@ height?: number, finishes?: SpaceFinishes,
  * A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area
  * kept out of the spaces' total and summed apart (schema 116). Absent: a room.
  */
-void?: boolean, broken?: SpaceBreak, };
+void?: boolean, broken?: SpaceBreak, 
+/**
+ * The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor
+ * area of the building's program, by its id. Absent: none.
+ */
+unit?: string, };

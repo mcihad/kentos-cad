@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, meshes, network, north, nurbs, objects, openings, openingtypes, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, revcloud, revisions, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
+from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, meshes, network, north, nurbs, objects, openings, openingtypes, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, records, rectangle, relations, revcloud, revisions, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.check": addresses.check,
@@ -178,6 +178,8 @@ COMMANDS: dict[str, Any] = {
     "cad.profiles.list": profiles.list,
     "cad.profiles.migrate": profiles.migrate,
     "cad.profiles.remove": profiles.remove,
+    "cad.program.check": program.check,
+    "cad.program.edit": program.edit,
     "cad.ramps.create": ramps.create,
     "cad.rasters.georef": rasters.georef,
     "cad.rasters.gpkgread": rasters.gpkgread,
@@ -319,4 +321,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "areas", "arrays", "assets", "attachments", "blocks", "casework", "changeset", "circle", "columns", "constraints", "constructions", "crs", "curves", "datasets", "dimensions", "dimensionsets", "domains", "donut", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "legends", "levels", "library", "line", "linearref", "linetypes", "meshes", "network", "north", "nurbs", "objects", "openings", "openingtypes", "parameters", "parcels", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "project", "ramps", "rasters", "records", "rectangle", "relations", "revcloud", "revisions", "roads", "scenarios", "schedules", "schema", "sector", "sensors", "settings", "shapes", "sheets", "slabs", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "survey", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "areas", "arrays", "assets", "attachments", "blocks", "casework", "changeset", "circle", "columns", "constraints", "constructions", "crs", "curves", "datasets", "dimensions", "dimensionsets", "domains", "donut", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "legends", "levels", "library", "line", "linearref", "linetypes", "meshes", "network", "north", "nurbs", "objects", "openings", "openingtypes", "parameters", "parcels", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "program", "project", "ramps", "rasters", "records", "rectangle", "relations", "revcloud", "revisions", "roads", "scenarios", "schedules", "schema", "sector", "sensors", "settings", "shapes", "sheets", "slabs", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "survey", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)

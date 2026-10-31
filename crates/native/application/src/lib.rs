@@ -339,6 +339,8 @@ mod template_review;
 pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
 pub mod spaces_edit;
+pub mod program_check;
+pub mod program_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;
 pub mod walls_joins;
@@ -829,6 +831,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_SPACES_EDIT,
         kentos_commands::CAD_SPACES_EDIT_VERSION,
+    ),
+    // Bina programı ve denetimi ([`program_edit`], [`program_check`], docs/adr/0773).
+    (
+        kentos_commands::CAD_PROGRAM_EDIT,
+        kentos_commands::CAD_PROGRAM_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PROGRAM_CHECK,
+        kentos_commands::CAD_PROGRAM_CHECK_VERSION,
     ),
     (
         kentos_commands::CAD_SPACES_QUANTITIES,
