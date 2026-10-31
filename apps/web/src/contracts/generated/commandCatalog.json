@@ -22097,6 +22097,334 @@
       ]
     },
     {
+      "id": "cad.elevations.edit",
+      "version": 1,
+      "title": "Oda iç görünüşü",
+      "summary": "Bir mahalin iç görünüşlerini modelin bildiklerinden türetir (docs/adr/0799): mahalin dış halkalarının her düz yanı (0'dan, parça parça numaralı) odanın içinden bakılarak çizilir; yüzü o yanda olan aynı kattaki duvarlar, yüksekliği (mahalinki, yoksa duvarların en alçağı: duvarın kendisi ya da katın), duvarlardaki açıklıklar denizlik ve lento kotlarıyla, açıklık numaraları, başlık ve iki ölçü. Nesneler İç görünüşler grubunda yeni bir katmanda, katmanın türetim kaydıyla (mahal, yanlar, başlangıç, her nesnenin rolü ve kimliği, çizilenin özeti); tek geri alma adımı “Oda iç görünüşü”. Modelin bilmediği çizilmez, leftOut'ta listelenir: yaylı yan (curvedSide), mahalin boşluğu (hole), odadaki kolon, merdiven, rampa ve blok (column, stair, ramp, fixture), baca (flue), kopuk açıklık (brokenOpening); üst kotu olmayan açıklığın pervazları kesikli (headUnknown). operation: derive (space, sides isteğe bağlı, at: başlangıç, yoksa mahalin kutusunun 3 m sağı; gap: yanların arası, yoksa 1 m; name: katmanın adı), refresh (layer: modelin şimdiki hâliyle yeniden çizer, nesneler rollerine göre aynı kimlikle kalır), release (layer: türetim kaydını kaldırır, çizim kalır). Kesit/görünüş işareti (cad.viewmarks.create) yalnız başvurudur; işaret koymak çizim üretmez.",
+      "aliases": [
+        "ICGORUNUS",
+        "INTERIORELEVATION"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.elevations.edit` v1.\n\nRefusals: `invalid_input`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_space`,\n`elevation_space_not_net`, `elevation_no_sides`, `layer_not_found`, `elevation_not_found`,\n`elevation_source_gone`, `layer_locked`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/ElevationsOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "ElevationsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.elevations.edit` (and its plan): the elevation's layer and name, its sides, its objects after (a\nplan's new ones without an id), how many were made, changed and deleted, what it left out.",
+        "properties": {
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "drawn": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "leftOut": {
+            "items": {
+              "$ref": "#/$defs/ElevationLeftOut"
+            },
+            "type": "array"
+          },
+          "made": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "name": {
+            "type": "string"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sides": {
+            "items": {
+              "$ref": "#/$defs/ElevationSide"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layer",
+          "name",
+          "made",
+          "changed",
+          "removed",
+          "revision"
+        ],
+        "title": "ElevationsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.elevations.edit` (and its plan): the elevation's layer and name, its sides, its objects after (a\nplan's new ones without an id), how many were made, changed and deleted, what it left out.",
+        "properties": {
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "drawn": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "leftOut": {
+            "items": {
+              "$ref": "#/$defs/ElevationLeftOut"
+            },
+            "type": "array"
+          },
+          "made": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "name": {
+            "type": "string"
+          },
+          "removed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sides": {
+            "items": {
+              "$ref": "#/$defs/ElevationSide"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layer",
+          "name",
+          "made",
+          "changed",
+          "removed",
+          "revision"
+        ],
+        "title": "ElevationsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "not_finite",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_space",
+          "elevation_space_not_net",
+          "elevation_no_sides",
+          "layer_not_found",
+          "elevation_not_found",
+          "elevation_source_gone",
+          "layer_locked",
+          "nothing_to_set",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "elevation_curved_side",
+          "elevation_side_open",
+          "elevation_height_unknown",
+          "elevation_head_unknown",
+          "elevation_not_drawn",
+          "elevation_edited_overwritten"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Salonun bütün iç görünüşleri",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7880-7000-8000-000000000005"
+            }
+          }
+        },
+        {
+          "title": "Yalnız A ve C yanları, çizimin sağında",
+          "input": {
+            "operation": {
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              },
+              "kind": "derive",
+              "sides": [
+                0,
+                2
+              ],
+              "space": "0192f5a1-7880-7000-8000-000000000005"
+            }
+          }
+        },
+        {
+          "title": "Kapı taşındıktan sonra yeniden üret",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "layer": "ic-gorunus-1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.elevations.query",
+      "version": 1,
+      "title": "İç görünüşleri oku",
+      "summary": "Çizimin türetilmiş oda iç görünüşlerini katman ağacının sırasıyla okur (docs/adr/0799); çizimi değiştirmez. Her biri için katmanı, mahali ve adı, istenen yanlar, durum: current (yeniden çizilse aynı ve nesnelerinin hepsi yerinde), stale (model değişti ya da nesnelerinden bazıları silindi), gone (mahali yok); silinmiş nesneler (missing), model değişmemişken elle değiştirilmiş nesneler (edited) ve türetildiği çizim sürümü. layer ile tek katman, uid ile nesnenin üyesi olduğu iç görünüş.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.elevations.query` v1 (read-only): every derived elevation, the one on `layer`, or the one the object\n`uid` is a member of.\n\nRefusals: `layer_not_found`, `elevation_not_found`, `invalid_uid`, `entity_not_found`.",
+        "properties": {
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uid": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ElevationsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.elevations.query`.",
+        "properties": {
+          "elevations": {
+            "items": {
+              "$ref": "#/$defs/ElevationRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "elevations",
+          "revision"
+        ],
+        "title": "ElevationsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.elevations.query`.",
+        "properties": {
+          "elevations": {
+            "items": {
+              "$ref": "#/$defs/ElevationRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "elevations",
+          "revision"
+        ],
+        "title": "ElevationsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "elevation_not_found",
+          "invalid_uid",
+          "entity_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün iç görünüşler ve güncellikleri",
+          "input": {}
+        }
+      ]
+    },
+    {
       "id": "cad.modules.query",
       "version": 1,
       "title": "Oda modüllerini oku",
@@ -70867,6 +71195,66 @@
       "meaning": "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler."
     },
     {
+      "code": "elevation_space_not_net",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Mahalin sınırı duvarların iç yüzleri değil (eksen ya da brüt); iç görünüş yalnız net sınırlı mahalden üretilir. Mahalin yöntemini Net yapın."
+    },
+    {
+      "code": "elevation_no_sides",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çizilecek düz bir yan yok: istenen yan mahalde yok ya da hepsi yaylı."
+    },
+    {
+      "code": "elevation_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu katman bir oda iç görünüşü değil (türetim kaydı yok)."
+    },
+    {
+      "code": "elevation_source_gone",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İç görünüşün mahali çizimde yok; yeniden üretilemez. Bağı koparıp çizimi koruyabilir ya da katmanı silebilirsiniz."
+    },
+    {
+      "code": "elevation_curved_side",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Yaylı yanların iç görünüşü açılmadı; yalnız düz yanlar çizildi."
+    },
+    {
+      "code": "elevation_side_open",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı yanların bir kısmında duvar yüzü yok (ayırıcı ya da boşluk); orada duvar çizilmedi."
+    },
+    {
+      "code": "elevation_height_unknown",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı yanların yüksekliği bilinmiyor (mahalin, duvarın ve katın yüksekliği yok); yalnız döşeme çizgisi çizildi."
+    },
+    {
+      "code": "elevation_head_unknown",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı açıklıkların üst kotu yok; pervazları kesikli çizildi, üstleri çizilmedi."
+    },
+    {
+      "code": "elevation_not_drawn",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Odadaki bazı nesneler çizilmedi (kolon, merdiven, rampa, donatı, baca, boşluk, kopuk açıklık); leftOut listesinde."
+    },
+    {
+      "code": "elevation_edited_overwritten",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "İç görünüşün elle değiştirilmiş nesneleri modelin çizdiğiyle yeniden yazıldı."
+    },
+    {
       "code": "module_storey_missing",
       "kind": "failed",
       "retryable": false,
@@ -88759,6 +89147,321 @@
         "element"
       ],
       "type": "object"
+    },
+    "ElevationLeft": {
+      "description": "Why something of the room is not drawn (or drawn only in part).",
+      "oneOf": [
+        {
+          "enum": [
+            "stair",
+            "ramp"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "curvedSide",
+          "description": "A curved side: an interior elevation of a curved wall is not unrolled.",
+          "type": "string"
+        },
+        {
+          "const": "hole",
+          "description": "A hole in the space (a shaft, a column's outline): what stands in it is not known.",
+          "type": "string"
+        },
+        {
+          "const": "column",
+          "description": "A column inside the room: it stands in front of the wall.",
+          "type": "string"
+        },
+        {
+          "const": "fixture",
+          "description": "A block (furniture, casework) inside the room: its height is not known.",
+          "type": "string"
+        },
+        {
+          "const": "flue",
+          "description": "A flue: inside the wall, not seen on its face.",
+          "type": "string"
+        },
+        {
+          "const": "brokenOpening",
+          "description": "An opening not where its wall says (docs/adr/0341 §3).",
+          "type": "string"
+        },
+        {
+          "const": "headUnknown",
+          "description": "An opening without a head: its jambs drawn dashed, its top not.",
+          "type": "string"
+        }
+      ]
+    },
+    "ElevationLeftOut": {
+      "description": "Something of the room the elevation does not draw, or draws in part: the side it is on, if one, and the object.",
+      "properties": {
+        "side": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "index"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "why": {
+          "$ref": "#/$defs/ElevationLeft"
+        }
+      },
+      "required": [
+        "why"
+      ],
+      "type": "object"
+    },
+    "ElevationRow": {
+      "description": "A derived elevation as `cad.elevations.query` reads it.",
+      "properties": {
+        "derivedAt": {
+          "description": "The drawing's revision it was derived at.",
+          "type": "string"
+        },
+        "edited": {
+          "description": "Its objects changed by hand (a refresh writes them back); said only while the model's drawing is unchanged.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "layer": {
+          "type": "string"
+        },
+        "members": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "missing": {
+          "description": "Its objects deleted from the drawing.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sides": {
+          "description": "The sides asked for; empty: all.",
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "index"
+        },
+        "space": {
+          "type": "string"
+        },
+        "spaceLabel": {
+          "description": "The space's number and name now (“101 Salon”); none when it is gone or has neither.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/ElevationState"
+        }
+      },
+      "required": [
+        "layer",
+        "name",
+        "space",
+        "state",
+        "members",
+        "derivedAt"
+      ],
+      "type": "object"
+    },
+    "ElevationSide": {
+      "description": "A side of the room as its elevation draws it: its number and letter, its length and height (none: not known), where\nits drawing begins, the walls whose faces it shows and the openings drawn on it, and the stretches along it no wall's\nface covers (from its left end as one looks at it).",
+      "properties": {
+        "height": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "letter": {
+          "type": "string"
+        },
+        "open": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "openings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "origin": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "side": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "walls": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "side",
+        "letter",
+        "length",
+        "origin"
+      ],
+      "type": "object"
+    },
+    "ElevationState": {
+      "description": "Whether a derived elevation still is what the model would draw.",
+      "oneOf": [
+        {
+          "const": "current",
+          "description": "Güncel: drawn again it would be the same, and all its objects are there.",
+          "type": "string"
+        },
+        {
+          "const": "stale",
+          "description": "Eski: the model changed what it draws, or some of its objects were deleted.",
+          "type": "string"
+        },
+        {
+          "const": "gone",
+          "description": "Kaynağı yok: its space is gone (or no longer a space); it cannot be drawn again.",
+          "type": "string"
+        }
+      ]
+    },
+    "ElevationsOperation": {
+      "description": "What `cad.elevations.edit` does.",
+      "oneOf": [
+        {
+          "description": "İç görünüş üret: the space `space`'s sides (`sides`, its outer rings' edges numbered from 0 in order, part by\npart; absent: all) drawn left to right from `at` (absent: 3 m right of the space's box, at its bottom), `gap`\napart (absent: 1 m), on a new layer named `name` (absent: “101 Salon iç görünüşü”) in the group İç görünüşler.",
+          "properties": {
+            "at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Vec2"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-unit": "length"
+            },
+            "gap": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "derive",
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "sides": {
+              "items": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": "array",
+              "x-unit": "index"
+            },
+            "space": {
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "space"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yeniden üret: the elevation on the layer `layer` drawn again from the model as it is now, its objects kept by\ntheir roles (the same ids), those no longer drawn deleted, new ones added.",
+          "properties": {
+            "kind": {
+              "const": "refresh",
+              "type": "string"
+            },
+            "layer": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "layer"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Bağı kopar: the layer's derivation record removed; its objects stay as ordinary drawing objects.",
+          "properties": {
+            "kind": {
+              "const": "release",
+              "type": "string"
+            },
+            "layer": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "layer"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "EllipseEntity": {
       "description": "DXF ELLIPSE: centre, major axis vector, minor/major ratio, parameters t0 → t1.",

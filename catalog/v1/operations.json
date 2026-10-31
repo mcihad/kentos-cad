@@ -2565,6 +2565,14 @@
       ],
       "note": "Tutamacın yeni yeri, yazılan en×boy ya da Öznitelikler'in Genişlik ve Yükseklik'i area işlemine orta, en ve boy olarak verilir; alanın hesabı aracın, yazma ve geri alma komutun (ADR 0789 §1, §2)."
     },
+    "tool.roomElevation": {
+      "level": "semantic",
+      "via": [
+        "cad.elevations.edit",
+        "cad.elevations.query"
+      ],
+      "note": "Tıklanan mahal, ilk yanın köşesi, Yanlar ve Aralık derive'a verilir; yanlar, açıklıklar ve leftOut komutun hesabı, önizleme planından. Öznitelikler'in durum satırı cad.elevations.query'den, Yeniden üret refresh, Bağı kopar release ile (ADR 0799)."
+    },
     "tool.modulePlace": {
       "level": "semantic",
       "via": [

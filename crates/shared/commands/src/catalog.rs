@@ -4293,6 +4293,69 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Türetilmiş çizim: oda iç görünüşü (docs/adr/0799), held together by fixtures/commands/v1/cad.elevations.edit.json
+        // and cad.elevations.query.json (scripts/fixtures/room_elevation_cases.py).
+        CommandDescriptor {
+            id: crate::CAD_ELEVATIONS_EDIT.into(),
+            version: crate::CAD_ELEVATIONS_EDIT_VERSION,
+            title: "Oda iç görünüşü".into(),
+            summary: "Bir mahalin iç görünüşlerini modelin bildiklerinden türetir (docs/adr/0799): mahalin dış halkalarının her düz yanı (0'dan, parça parça numaralı) odanın içinden bakılarak çizilir; yüzü o yanda olan aynı kattaki duvarlar, yüksekliği (mahalinki, yoksa duvarların en alçağı: duvarın kendisi ya da katın), duvarlardaki açıklıklar denizlik ve lento kotlarıyla, açıklık numaraları, başlık ve iki ölçü. Nesneler İç görünüşler grubunda yeni bir katmanda, katmanın türetim kaydıyla (mahal, yanlar, başlangıç, her nesnenin rolü ve kimliği, çizilenin özeti); tek geri alma adımı “Oda iç görünüşü”. Modelin bilmediği çizilmez, leftOut'ta listelenir: yaylı yan (curvedSide), mahalin boşluğu (hole), odadaki kolon, merdiven, rampa ve blok (column, stair, ramp, fixture), baca (flue), kopuk açıklık (brokenOpening); üst kotu olmayan açıklığın pervazları kesikli (headUnknown). operation: derive (space, sides isteğe bağlı, at: başlangıç, yoksa mahalin kutusunun 3 m sağı; gap: yanların arası, yoksa 1 m; name: katmanın adı), refresh (layer: modelin şimdiki hâliyle yeniden çizer, nesneler rollerine göre aynı kimlikle kalır), release (layer: türetim kaydını kaldırır, çizim kalır). Kesit/görünüş işareti (cad.viewmarks.create) yalnız başvurudur; işaret koymak çizim üretmez."
+                .into(),
+            aliases: vec!["ICGORUNUS".into(), "INTERIORELEVATION".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ElevationsEdit>(),
+            output: schema::<crate::ElevationsEdited>(),
+            plan: Some(schema::<crate::ElevationsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Salonun bütün iç görünüşleri".into(),
+                    input: json!({"operation": {"kind": "derive", "space": "0192f5a1-7880-7000-8000-000000000005"}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yalnız A ve C yanları, çizimin sağında".into(),
+                    input: json!({"operation": {"kind": "derive", "space": "0192f5a1-7880-7000-8000-000000000005",
+                        "sides": [0, 2], "at": {"x": 20.0, "y": 0.0}}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kapı taşındıktan sonra yeniden üret".into(),
+                    input: json!({"operation": {"kind": "refresh", "layer": "ic-gorunus-1"}}),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ELEVATIONS_QUERY.into(),
+            version: crate::CAD_ELEVATIONS_QUERY_VERSION,
+            title: "İç görünüşleri oku".into(),
+            summary: "Çizimin türetilmiş oda iç görünüşlerini katman ağacının sırasıyla okur (docs/adr/0799); çizimi değiştirmez. Her biri için katmanı, mahali ve adı, istenen yanlar, durum: current (yeniden çizilse aynı ve nesnelerinin hepsi yerinde), stale (model değişti ya da nesnelerinden bazıları silindi), gone (mahali yok); silinmiş nesneler (missing), model değişmemişken elle değiştirilmiş nesneler (edited) ve türetildiği çizim sürümü. layer ile tek katman, uid ile nesnenin üyesi olduğu iç görünüş."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ElevationsQuery>(),
+            output: schema::<crate::ElevationsQueried>(),
+            plan: Some(schema::<crate::ElevationsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün iç görünüşler ve güncellikleri".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_MODULES_QUERY.into(),
             version: crate::CAD_MODULES_QUERY_VERSION,
@@ -11837,6 +11900,12 @@ mod tests {
                     crate::CAD_OPTIONS_QUERY => {
                         serde_json::from_value::<crate::OptionsQuery>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ELEVATIONS_EDIT => {
+                        serde_json::from_value::<crate::ElevationsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ELEVATIONS_QUERY => {
+                        serde_json::from_value::<crate::ElevationsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_OPENINGS_QUERY => {
                         serde_json::from_value::<crate::OpeningsQuery>(e.input.clone()).map(|_| ())
                     }
@@ -12970,6 +13039,12 @@ mod tests {
                         }
                         crate::CAD_OPTIONS_QUERY => {
                             serde_json::from_value::<crate::OptionsQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ELEVATIONS_EDIT => {
+                            serde_json::from_value::<crate::ElevationsEdited>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_ELEVATIONS_QUERY => {
+                            serde_json::from_value::<crate::ElevationsQueried>(output.clone()).map(|_| ())
                         }
                         crate::CAD_OPENINGS_QUERY => {
                             serde_json::from_value::<crate::OpeningsQueried>(output.clone()).map(|_| ())

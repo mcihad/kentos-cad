@@ -666,6 +666,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.modules.edit"
             // Accepting or deleting an option deletes its objects (docs/adr/0788).
             | "cad.options.edit"
+            // A refresh writes over the elevation's objects and deletes those no longer drawn (docs/adr/0799).
+            | "cad.elevations.edit"
             // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
             | "cad.spaces.edit"
             | "cad.spaces.separators"

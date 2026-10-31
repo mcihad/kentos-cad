@@ -1,0 +1,2004 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.elevations.query",
+  "commandVersion": 1,
+  "title": "İç görünüşleri oku (docs/adr/0799)",
+  "note": "scripts/fixtures/room_elevation_cases.py yazar: ADR 0799'un kurallarından, KentOS kodu olmadan. Değiştirmeyin; betiği düzeltin.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Oda iç görünüşleri",
+    "uids": [
+      "0192f5a1-7990-7000-8000-000000000001",
+      "0192f5a1-7990-7000-8000-000000000002",
+      "0192f5a1-7990-7000-8000-000000000003",
+      "0192f5a1-7990-7000-8000-000000000004",
+      "0192f5a1-7990-7000-8000-000000000005",
+      "0192f5a1-7990-7000-8000-000000000006",
+      "0192f5a1-7990-7000-8000-000000000007",
+      "0192f5a1-7990-7000-8000-000000000008",
+      "0192f5a1-7990-7000-8000-000000000009",
+      "0192f5a1-7990-7000-8000-00000000000a",
+      "0192f5a1-7990-7000-8000-00000000000b",
+      "0192f5a1-7990-7000-8000-00000000000c",
+      "0192f5a1-7990-7000-8000-00000000000d",
+      "0192f5a1-7990-7000-8000-00000000000e",
+      "0192f5a1-7990-7000-8000-00000000000f",
+      "0192f5a1-7990-7000-8000-000000000010",
+      "0192f5a1-7990-7000-8000-000000000011",
+      "0192f5a1-7990-7000-8000-000000000012",
+      "0192f5a1-7990-7000-8000-000000000013",
+      "0192f5a1-7990-7000-8000-000000000014",
+      "0192f5a1-7990-7000-8000-000000000015",
+      "0192f5a1-7990-7000-8000-000000000016",
+      "0192f5a1-7990-7000-8000-000000000017",
+      "0192f5a1-7990-7000-8000-000000000018"
+    ],
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50.0,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat1",
+            "name": "1. kat",
+            "elevation": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mobilya",
+        "name": "Mobilya",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "0192f5a1-7990-7000-8000-0000000000b1",
+        "name": "Dolap",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.6,
+              "y": 0.6
+            }
+          }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 5.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 0.0
+          },
+          {
+            "x": 5.0,
+            "y": 4.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 4.0
+          },
+          {
+            "x": 0.0,
+            "y": 4.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4.0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 5,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.1,
+                  "y": 0.1
+                },
+                {
+                  "x": 4.9,
+                  "y": 0.1
+                },
+                {
+                  "x": 4.9,
+                  "y": 3.9
+                },
+                {
+                  "x": 0.1,
+                  "y": 3.9
+                }
+              ]
+            }
+          }
+        ],
+        "number": "101",
+        "name": "Salon",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "opening",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000001",
+        "at": 1.5,
+        "width": 0.9,
+        "form": "door",
+        "head": 2.1,
+        "number": "K1",
+        "place": [
+          {
+            "x": 1.05,
+            "y": 0.1
+          },
+          {
+            "x": 1.05,
+            "y": -0.1
+          },
+          {
+            "x": 1.95,
+            "y": 0.1
+          },
+          {
+            "x": 1.95,
+            "y": -0.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 7,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000002",
+        "at": 2.0,
+        "width": 1.2,
+        "form": "window",
+        "sill": 0.9,
+        "head": 2.2,
+        "number": "P1",
+        "place": [
+          {
+            "x": 4.9,
+            "y": 1.4
+          },
+          {
+            "x": 5.1,
+            "y": 1.4
+          },
+          {
+            "x": 4.9,
+            "y": 2.6
+          },
+          {
+            "x": 5.1,
+            "y": 2.6
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000003",
+        "at": 2.5,
+        "width": 1.0,
+        "form": "window",
+        "sill": 1.0,
+        "number": "P2",
+        "place": [
+          {
+            "x": 3.0,
+            "y": 3.9
+          },
+          {
+            "x": 3.0,
+            "y": 4.1
+          },
+          {
+            "x": 2.0,
+            "y": 3.9
+          },
+          {
+            "x": 2.0,
+            "y": 4.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000004",
+        "at": 2.0,
+        "width": 0.6,
+        "form": "niche",
+        "sill": 0.5,
+        "head": 1.5,
+        "depth": 0.08,
+        "place": [
+          {
+            "x": 0.1,
+            "y": 2.3
+          },
+          {
+            "x": -0.1,
+            "y": 2.3
+          },
+          {
+            "x": 0.1,
+            "y": 1.7000000000000002
+          },
+          {
+            "x": -0.1,
+            "y": 1.7000000000000002
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 10,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000004",
+        "at": 1.0,
+        "width": 0.4,
+        "form": "niche",
+        "side": "right",
+        "sill": 0.3,
+        "head": 0.9,
+        "depth": 0.08,
+        "place": [
+          {
+            "x": 0.1,
+            "y": 3.2
+          },
+          {
+            "x": -0.1,
+            "y": 3.2
+          },
+          {
+            "x": 0.1,
+            "y": 2.8
+          },
+          {
+            "x": -0.1,
+            "y": 2.8
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000002",
+        "at": 3.2,
+        "width": 0.3,
+        "form": "flue",
+        "depth": 0.1,
+        "place": [
+          {
+            "x": 4.9,
+            "y": 3.0500000000000003
+          },
+          {
+            "x": 5.1,
+            "y": 3.0500000000000003
+          },
+          {
+            "x": 4.9,
+            "y": 3.35
+          },
+          {
+            "x": 5.1,
+            "y": 3.35
+          }
+        ]
+      },
+      {
+        "kind": "column",
+        "id": 12,
+        "layerId": "mobilya",
+        "attrs": {},
+        "at": {
+          "x": 2.5,
+          "y": 2.0
+        },
+        "width": 0.3,
+        "depth": 0.3,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 13,
+        "layerId": "mobilya",
+        "attrs": {},
+        "block": "0192f5a1-7990-7000-8000-0000000000b1",
+        "p": {
+          "x": 1.0,
+          "y": 3.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 14,
+        "layerId": "mobilya",
+        "attrs": {},
+        "block": "0192f5a1-7990-7000-8000-0000000000b1",
+        "p": {
+          "x": 1.5,
+          "y": 3.0
+        },
+        "scale": 1.0,
+        "rotation": 0.0,
+        "arch": {
+          "level": "kat1"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 15,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 10.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 13.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 13.0,
+                  "y": 2.0
+                },
+                {
+                  "x": 10.0,
+                  "y": 2.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "102",
+        "name": "Mutfak",
+        "arch": {
+          "level": "kat1"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 16,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 20.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 24.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 24.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 20.0,
+                  "y": 3.0
+                }
+              ],
+              "bulges": [
+                0.0,
+                0.2,
+                0.0,
+                0.0
+              ]
+            }
+          }
+        ],
+        "number": "103",
+        "name": "Kule",
+        "height": 2.6
+      },
+      {
+        "kind": "space",
+        "id": 17,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 25.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 28.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 28.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 25.0,
+                  "y": 3.0
+                }
+              ]
+            }
+          }
+        ],
+        "method": "gross",
+        "number": "104",
+        "name": "Depo"
+      },
+      {
+        "kind": "space",
+        "id": 18,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 34.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 34.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 30.0,
+                  "y": 4.0
+                }
+              ]
+            },
+            "holes": [
+              {
+                "pts": [
+                  {
+                    "x": 31.5,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 32.5,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 32.5,
+                    "y": 2.5
+                  },
+                  {
+                    "x": 31.5,
+                    "y": 2.5
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "number": "105",
+        "name": "Hol",
+        "height": 2.5
+      },
+      {
+        "kind": "stair",
+        "id": 19,
+        "layerId": "mobilya",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 30.5,
+            "y": 0.5
+          },
+          {
+            "x": 30.5,
+            "y": 3.5
+          }
+        ],
+        "width": 1.0,
+        "risers": 16,
+        "riserHeight": 0.175,
+        "tread": 0.25
+      },
+      {
+        "kind": "ramp",
+        "id": 20,
+        "layerId": "mobilya",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 35.0,
+            "y": 0.0
+          },
+          {
+            "x": 38.0,
+            "y": 0.0
+          }
+        ],
+        "width": 1.2,
+        "rise": 0.15,
+        "slope": 5.0
+      },
+      {
+        "kind": "wall",
+        "id": 21,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 39.9,
+            "y": -0.1
+          },
+          {
+            "x": 44.1,
+            "y": -0.1
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "height": 2.7
+      },
+      {
+        "kind": "space",
+        "id": 22,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 40.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 40.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 44.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 44.0,
+                  "y": 0.0
+                }
+              ]
+            }
+          }
+        ],
+        "name": "Oda"
+      },
+      {
+        "kind": "opening",
+        "id": 23,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000015",
+        "at": 1.0,
+        "width": 0.8,
+        "form": "door",
+        "head": 2.0,
+        "number": "K9",
+        "place": [
+          {
+            "x": 40.5,
+            "y": 0.0
+          },
+          {
+            "x": 40.5,
+            "y": -0.2
+          },
+          {
+            "x": 41.3,
+            "y": 0.0
+          },
+          {
+            "x": 41.3,
+            "y": -0.2
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 24,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7990-7000-8000-000000000015",
+        "at": 3.9,
+        "width": 1.0,
+        "form": "door",
+        "head": 2.0,
+        "place": [
+          {
+            "x": 43.3,
+            "y": 0.0
+          },
+          {
+            "x": 43.3,
+            "y": -0.2
+          },
+          {
+            "x": 44.3,
+            "y": 0.0
+          },
+          {
+            "x": 44.3,
+            "y": -0.2
+          }
+        ],
+        "broken": "offWall"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "İç görünüş yokken liste boş",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Üretilen iç görünüş güncel",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan aynı cevabı verir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "plan",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı taşınınca eski",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7990-7000-8000-000000000006"
+            ],
+            "operation": {
+              "kind": "move",
+              "at": 3.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "stale",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapının taşınması geri alınınca yine güncel",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7990-7000-8000-000000000006"
+            ],
+            "operation": {
+              "kind": "move",
+              "at": 3.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Açıklığı düzenle"
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Silinen nesne eksik sayılır, iç görünüş eski",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "captureUid",
+          "id": 28,
+          "as": "n28"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uid:n28"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "stale",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon",
+                  "missing": [
+                    "$uid:n28"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Elle taşınan nesne: model aynıyken güncel, elle değişmiş sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "$uidOf:39"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 0.0,
+              "dy": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon",
+                  "edited": [
+                    "$uidOf:39"
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahal silinince kaynağı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "0192f5a1-7990-7000-8000-000000000005"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "gone",
+                  "members": 22,
+                  "derivedAt": "$any"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mahalin yüksekliği değişince eski",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7990-7000-8000-000000000005"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": 2.7
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "stale",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kolon taşınınca güncel kalır: kolon çizilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "0192f5a1-7990-7000-8000-00000000000c"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 0.5,
+              "dy": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki iç görünüş ağacın sırasıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-00000000000f"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                },
+                {
+                  "layer": "ic-gorunus-2",
+                  "name": "102 Mutfak iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-00000000000f",
+                  "state": "current",
+                  "members": 12,
+                  "derivedAt": "$any",
+                  "spaceLabel": "102 Mutfak"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Katmana göre tek iç görünüş",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000016"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "layer": "ic-gorunus-2"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-2",
+                  "name": "Oda iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000016",
+                  "state": "current",
+                  "members": 15,
+                  "derivedAt": "$any",
+                  "spaceLabel": "Oda"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: katman yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "layer": "yok"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_not_found",
+              "message": "“yok” kimlikli katman çizimde yok.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: türetim kaydı olmayan katman",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "layer": "ic-gorunusler"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "elevation_not_found",
+              "message": "“İç görünüşler” katmanı bir oda iç görünüşü değil (türetim kaydı yok).",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesnenin üyesi olduğu iç görünüş",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "uid": "$uidOf:31"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: iç görünüşün nesnesi değil",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "uid": "0192f5a1-7990-7000-8000-000000000001"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "elevation_not_found",
+              "message": "Nesne bir oda iç görünüşünün nesnesi değil.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: geçersiz kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "uid": "duvar-1"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“duvar-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: çizimde olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "uid": "0192f5a1-7990-7000-8000-000000000063"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a1-7990-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: nesne verilen katmanın iç görünüşünde değil",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-00000000000f"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {
+            "layer": "ic-gorunus-2",
+            "uid": "$uidOf:25"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "elevation_not_found",
+              "message": "Nesne verilen katmanın iç görünüşünün nesnesi değil.",
+              "path": "uid"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağı koparılan iç görünüş listelenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "release",
+              "layer": "ic-gorunus-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden üretilen iç görünüş güncel",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-000000000005"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7990-7000-8000-000000000006"
+            ],
+            "operation": {
+              "kind": "move",
+              "at": 3.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "layer": "ic-gorunus-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "101 Salon iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-000000000005",
+                  "state": "current",
+                  "members": 22,
+                  "derivedAt": "$any",
+                  "spaceLabel": "101 Salon"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Duvarsız mutfak: güncel, yalnız istenen yanlar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.elevations.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "space": "0192f5a1-7990-7000-8000-00000000000f",
+              "sides": [
+                0,
+                2
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "within": 1e-09
+        },
+        {
+          "op": "execute",
+          "command": "cad.elevations.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "elevations": [
+                {
+                  "layer": "ic-gorunus-1",
+                  "name": "102 Mutfak iç görünüşü",
+                  "space": "0192f5a1-7990-7000-8000-00000000000f",
+                  "state": "current",
+                  "members": 6,
+                  "derivedAt": "$any",
+                  "spaceLabel": "102 Mutfak",
+                  "sides": [
+                    0,
+                    2
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -284,8 +284,10 @@ yapıldı. Proje gezgini ([ADR 0778](../docs/adr/0778-project-navigator.md)): `c
 görünümler, paftalar, çizelgeler ve seçili nesnenin göründüğü yerler. Tarifin duvar ayrıntısı ve görünümün alanına kırpma
 ([ADR 0781](../docs/adr/0781-view-recipe-wall-detail-and-crop.md)). Görünüş şablonu ve kalem seti, siyah beyaz
 ([ADR 0783](../docs/adr/0783-view-templates-and-pen-sets.md)). Kırpma çerçevesinin ekranda düzenlenmesi ve 1:20 PDF incelemesi
-([ADR 0789](../docs/adr/0789-crop-frame-on-screen.md)). Açık: türetilmiş çizim, yayın/revizyon birlikteliği (paftanın yayın kaydı
-ister), gerçek pencerede elle kabul. Alanı haritadan büyük görünümün ön denetimi ([ADR 0794](../docs/adr/0794-map-view-cut-preflight.md)).
+([ADR 0789](../docs/adr/0789-crop-frame-on-screen.md)). Alanı haritadan büyük görünümün ön denetimi ([ADR 0794](../docs/adr/0794-map-view-cut-preflight.md)). Oda iç görünüşü
+türetilmiş çizim olarak ([ADR 0799](../docs/adr/0799-derived-room-interior-elevations.md)): modelin bildiği duvar, yükseklik ve
+açıklıklarla, eskiliği ve yeniden üretimi; bilinmeyenler listelenir. Açık: kanat çizimi, döşeme/tavan kesiti, sınırlı 2,5B
+kesit, yayın/revizyon birlikteliği (paftanın yayın kaydı ister), gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** Uygulama planı, mobilya planı ve tadilat planı aynı
 modelden tekrar kurulabilsin; pafta için her defasında görünürlük ayarlamak

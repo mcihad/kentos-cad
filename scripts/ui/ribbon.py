@@ -355,7 +355,8 @@ CAD = [
                 {"command": "tool.revisionMark", "title": "Revizyon", "label": "Revizyon işaretle"},
                 {"command": "arch.revisionList", "title": "Revizyon", "label": "Revizyon listesi"},
             ]}],
-          overflow=["tool.tagAll", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs"]),
+          # Oda iç görünüşü (docs/adr/0799) beside Başvurular under ▾, not in İşaret ▾: a derived drawing is not a mark.
+          overflow=["tool.tagAll", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs", "tool.roomElevation"]),
         P("Proje", "archSettings", [S("arch.audit"), S("arch.program"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
           # Kapı ve pencere tipleri (docs/adr/0772) under ▾: the tab keeps its words at 1440 px.

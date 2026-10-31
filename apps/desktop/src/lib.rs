@@ -540,6 +540,8 @@ mod material_library_scenes;
 #[cfg(test)]
 mod module_scenes;
 #[cfg(test)]
+mod derived_elevation_scenes;
+#[cfg(test)]
 mod special_door_scenes;
 #[cfg(test)]
 mod multi_slide_scenes;

@@ -107,6 +107,8 @@ pub enum Event {
     Material(kentos_commands::MaterialsOperation),
     /// A room module's action on the object's instance (docs/adr/0775 §3): written through `cad.modules.edit`.
     Module(kentos_commands::ModulesOperation),
+    /// A derived interior elevation's action (docs/adr/0799 §5): written through `cad.elevations.edit`.
+    Elevation(kentos_commands::ElevationsOperation),
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, Box<kentos_commands::SpacesOperation>),
@@ -871,6 +873,7 @@ impl App {
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Module(op) => properties::edit_module(model, op),
+            Event::Elevation(op) => properties::edit_elevation(model, op),
             Event::Material(op) => properties::edit_material(model, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, *op),
             Event::Slab(slot, op) => properties::edit_slab(model, slot, op),

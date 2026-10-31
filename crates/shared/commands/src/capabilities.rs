@@ -2105,6 +2105,31 @@ const ENTRIES: &[Entry] = &[
         warnings: &["option_member_gone"],
         targets: none,
     },
+    // Oda iç görünüşü (docs/adr/0799).
+    Entry {
+        id: "cad.elevations.edit",
+        refusals: &[
+            &["invalid_input", "not_finite", "invalid_uid", "entity_not_found", "not_a_space"],
+            &["elevation_space_not_net", "elevation_no_sides", "layer_not_found", "elevation_not_found"],
+            &["elevation_source_gone", "layer_locked", "nothing_to_set"],
+            REVISION,
+        ],
+        warnings: &[
+            "elevation_curved_side",
+            "elevation_side_open",
+            "elevation_height_unknown",
+            "elevation_head_unknown",
+            "elevation_not_drawn",
+            "elevation_edited_overwritten",
+        ],
+        targets: none,
+    },
+    Entry {
+        id: "cad.elevations.query",
+        refusals: &[&["layer_not_found", "elevation_not_found", "invalid_uid", "entity_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.modules.query",
         refusals: &[&["module_not_found", "invalid_uid", "entity_not_found", "not_in_module"]],

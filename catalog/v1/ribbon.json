@@ -1717,7 +1717,8 @@
        "tool.tagAll",
        "arch.tagsCheck",
        "arch.wallJoinCheck",
-       "arch.viewRefs"
+       "arch.viewRefs",
+       "tool.roomElevation"
       ]
      },
      {

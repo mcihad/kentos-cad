@@ -1840,6 +1840,27 @@ codes! {
     OPTION_SET_FULL = "option_set_full", Failed, false, "Kümede en çok 12 seçenek olur; birini silin ya da kabul edin.";
     /// Objects of an option no longer in the drawing.
     OPTION_MEMBER_GONE = "option_member_gone", Warning, false, "Seçeneğin bazı nesneleri çizimde yok (silinmiş); seçenekten düştüler.";
+    // Türetilmiş çizim: oda iç görünüşü (docs/adr/0799).
+    /// A space whose rings are not its walls' inner faces: its sides are not the walls one sees.
+    ELEVATION_SPACE_NOT_NET = "elevation_space_not_net", Failed, false, "Mahalin sınırı duvarların iç yüzleri değil (eksen ya da brüt); iç görünüş yalnız net sınırlı mahalden üretilir. Mahalin yöntemini Net yapın.";
+    /// No straight side to draw: none asked exists, or every one asked is curved.
+    ELEVATION_NO_SIDES = "elevation_no_sides", Failed, false, "Çizilecek düz bir yan yok: istenen yan mahalde yok ya da hepsi yaylı.";
+    /// A layer without an interior elevation's derivation record.
+    ELEVATION_NOT_FOUND = "elevation_not_found", Failed, false, "Bu katman bir oda iç görünüşü değil (türetim kaydı yok).";
+    /// An elevation whose space is gone: it cannot be drawn again.
+    ELEVATION_SOURCE_GONE = "elevation_source_gone", Failed, false, "İç görünüşün mahali çizimde yok; yeniden üretilemez. Bağı koparıp çizimi koruyabilir ya da katmanı silebilirsiniz.";
+    /// Curved sides not drawn.
+    ELEVATION_CURVED_SIDE = "elevation_curved_side", Warning, false, "Yaylı yanların iç görünüşü açılmadı; yalnız düz yanlar çizildi.";
+    /// Stretches of a side no wall's face covers.
+    ELEVATION_SIDE_OPEN = "elevation_side_open", Warning, false, "Bazı yanların bir kısmında duvar yüzü yok (ayırıcı ya da boşluk); orada duvar çizilmedi.";
+    /// A side whose height is not known: neither the space's, its walls' nor its level's.
+    ELEVATION_HEIGHT_UNKNOWN = "elevation_height_unknown", Warning, false, "Bazı yanların yüksekliği bilinmiyor (mahalin, duvarın ve katın yüksekliği yok); yalnız döşeme çizgisi çizildi.";
+    /// Openings without a head: their jambs dashed.
+    ELEVATION_HEAD_UNKNOWN = "elevation_head_unknown", Warning, false, "Bazı açıklıkların üst kotu yok; pervazları kesikli çizildi, üstleri çizilmedi.";
+    /// What the elevation does not draw: a hole, a column, a stair, a ramp, a fixture, a flue, a broken opening.
+    ELEVATION_NOT_DRAWN = "elevation_not_drawn", Warning, false, "Odadaki bazı nesneler çizilmedi (kolon, merdiven, rampa, donatı, baca, boşluk, kopuk açıklık); leftOut listesinde.";
+    /// A refresh that wrote back objects changed by hand.
+    ELEVATION_EDITED_OVERWRITTEN = "elevation_edited_overwritten", Warning, false, "İç görünüşün elle değiştirilmiş nesneleri modelin çizdiğiyle yeniden yazıldı.";
     // Çok katlı oda modülleri ve modülsüz nesnelerin tekrarı (docs/adr/0796).
     /// A module of several storeys placed where the project has too few levels above the base.
     MODULE_STOREY_MISSING = "module_storey_missing", Failed, false, "Modülün üst katlarına karşılık gelecek kat yok; daha alçak bir taban katı seçin ya da projeye kat ekleyin.";

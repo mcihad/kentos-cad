@@ -280,6 +280,8 @@ pub mod arch_tools;
 pub mod casework;
 pub mod grid_system;
 pub mod module_place;
+// Oda iç görünüşü: a derived drawing (docs/adr/0799).
+pub mod room_elevation;
 pub mod view_crop;
 pub mod tag_tools;
 pub mod viewmark_tools;

@@ -1831,6 +1831,50 @@ EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "br
 """The names of :class:`EditOperation`, for a plain string."""
 
 
+class ElevationLeft(_StrEnum):
+    """Why something of the room is not drawn (or drawn only in part).
+
+    - ``stair``
+    - ``ramp``
+    - ``curvedSide``: A curved side: an interior elevation of a curved wall is not unrolled.
+    - ``hole``: A hole in the space (a shaft, a column's outline): what stands in it is not known.
+    - ``column``: A column inside the room: it stands in front of the wall.
+    - ``fixture``: A block (furniture, casework) inside the room: its height is not known.
+    - ``flue``: A flue: inside the wall, not seen on its face.
+    - ``brokenOpening``: An opening not where its wall says (docs/adr/0341 §3).
+    - ``headUnknown``: An opening without a head: its jambs drawn dashed, its top not.
+    """
+    STAIR = "stair"
+    RAMP = "ramp"
+    CURVED_SIDE = "curvedSide"
+    HOLE = "hole"
+    COLUMN = "column"
+    FIXTURE = "fixture"
+    FLUE = "flue"
+    BROKEN_OPENING = "brokenOpening"
+    HEAD_UNKNOWN = "headUnknown"
+
+
+ElevationLeftName = Literal["stair", "ramp", "curvedSide", "hole", "column", "fixture", "flue", "brokenOpening", "headUnknown"]
+"""The names of :class:`ElevationLeft`, for a plain string."""
+
+
+class ElevationState(_StrEnum):
+    """Whether a derived elevation still is what the model would draw.
+
+    - ``current``: Güncel: drawn again it would be the same, and all its objects are there.
+    - ``stale``: Eski: the model changed what it draws, or some of its objects were deleted.
+    - ``gone``: Kaynağı yok: its space is gone (or no longer a space); it cannot be drawn again.
+    """
+    CURRENT = "current"
+    STALE = "stale"
+    GONE = "gone"
+
+
+ElevationStateName = Literal["current", "stale", "gone"]
+"""The names of :class:`ElevationState`, for a plain string."""
+
+
 class EmptyResult(_StrEnum):
     """What an empty result of the expression does.
 
@@ -7633,6 +7677,28 @@ class DomainsOp(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> DomainsOp:
         return _variant(_DOMAINS_OP, "DomainsOp", "kind", data).from_json(data)
+
+
+class ElevationsOperation(_Union):
+    """What `cad.elevations.edit` does.
+
+    One of:
+
+    - :class:`DeriveElevationsOperation` (``kind: derive``)
+    - :class:`RefreshElevationsOperation` (``kind: refresh``)
+    - :class:`ReleaseElevationsOperation` (``kind: release``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationsOperation:
+        return _variant(_ELEVATIONS_OPERATION, "ElevationsOperation", "kind", data).from_json(data)
 
 
 class Entity(_Union):
@@ -21845,6 +21911,263 @@ class ElementRef(_Model):
         return cls(
             uid=data["uid"],
             element=CadElement.from_json(data["element"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationLeftOut(_Model):
+    """Something of the room the elevation does not draw, or draws in part: the side it is on, if one, and the object.
+    Attributes:
+        side: Unit: index.
+    """
+    why: ElevationLeft | ElevationLeftName
+    side: int | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["why"] = _enum_out(self.why)
+        if self.side is not UNSET:
+            out["side"] = self.side
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationLeftOut:
+        return cls(
+            why=_enum_in(ElevationLeft, data["why"]),
+            side=data.get("side", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationRow(_Model):
+    """A derived elevation as `cad.elevations.query` reads it.
+    Attributes:
+        members: Unit: count.
+        derived_at: The drawing's revision it was derived at.
+        edited: Its objects changed by hand (a refresh writes them back); said only while the model's drawing is unchanged.
+        missing: Its objects deleted from the drawing.
+        sides: The sides asked for; empty: all. Unit: index.
+        space_label: The space's number and name now (“101 Salon”); none when it is gone or has neither.
+    """
+    layer: str
+    name: str
+    space: str
+    state: ElevationState | ElevationStateName
+    members: int
+    derived_at: str
+    edited: list[str] | Unset = UNSET
+    missing: list[str] | Unset = UNSET
+    sides: list[int] | Unset = UNSET
+    space_label: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["space"] = self.space
+        out["state"] = _enum_out(self.state)
+        out["members"] = self.members
+        out["derivedAt"] = self.derived_at
+        if self.edited is not UNSET:
+            out["edited"] = list(self.edited)
+        if self.missing is not UNSET:
+            out["missing"] = list(self.missing)
+        if self.sides is not UNSET:
+            out["sides"] = list(self.sides)
+        if self.space_label is not UNSET:
+            out["spaceLabel"] = self.space_label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationRow:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            space=data["space"],
+            state=_enum_in(ElevationState, data["state"]),
+            members=data["members"],
+            derived_at=data["derivedAt"],
+            edited=list(data["edited"]) if "edited" in data else UNSET,
+            missing=list(data["missing"]) if "missing" in data else UNSET,
+            sides=list(data["sides"]) if "sides" in data else UNSET,
+            space_label=data.get("spaceLabel", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationSide(_Model):
+    """A side of the room as its elevation draws it: its number and letter, its length and height (none: not known), where
+    its drawing begins, the walls whose faces it shows and the openings drawn on it, and the stretches along it no wall's
+    face covers (from its left end as one looks at it).
+    Attributes:
+        side: Unit: index.
+        length: Unit: length.
+        origin: Unit: length.
+        height: Unit: length.
+        open: Unit: length.
+    """
+    side: int
+    letter: str
+    length: float
+    origin: Vec2
+    height: float | None | Unset = UNSET
+    open: list[list[float]] | Unset = UNSET
+    openings: list[str] | Unset = UNSET
+    walls: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["side"] = self.side
+        out["letter"] = self.letter
+        out["length"] = float(self.length)
+        out["origin"] = _vec2_out(self.origin)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.open is not UNSET:
+            out["open"] = [[float(e1) for e1 in e0] for e0 in self.open]
+        if self.openings is not UNSET:
+            out["openings"] = list(self.openings)
+        if self.walls is not UNSET:
+            out["walls"] = list(self.walls)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationSide:
+        return cls(
+            side=data["side"],
+            letter=data["letter"],
+            length=float(data["length"]),
+            origin=Vec2.from_json(data["origin"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            open=[[float(e1) for e1 in e0] for e0 in data["open"]] if "open" in data else UNSET,
+            openings=list(data["openings"]) if "openings" in data else UNSET,
+            walls=list(data["walls"]) if "walls" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationsEdit(_Model):
+    """Input of `cad.elevations.edit` v1.
+
+    Refusals: `invalid_input`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_space`,
+    `elevation_space_not_net`, `elevation_no_sides`, `layer_not_found`, `elevation_not_found`,
+    `elevation_source_gone`, `layer_locked`, `nothing_to_set`, `invalid_revision`, `revision_conflict`.
+    """
+    operation: ElevationsOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationsEdit:
+        return cls(
+            operation=ElevationsOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationsEdited(_Model):
+    """Output of `cad.elevations.edit` (and its plan): the elevation's layer and name, its sides, its objects after (a
+    plan's new ones without an id), how many were made, changed and deleted, what it left out.
+    Attributes:
+        made: Unit: count.
+        changed: Unit: count.
+        removed: Unit: count.
+    """
+    layer: str
+    name: str
+    made: int
+    changed: int
+    removed: int
+    revision: str
+    drawn: list[Entity] | Unset = UNSET
+    left_out: list[ElevationLeftOut] | Unset = UNSET
+    sides: list[ElevationSide] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["made"] = self.made
+        out["changed"] = self.changed
+        out["removed"] = self.removed
+        out["revision"] = self.revision
+        if self.drawn is not UNSET:
+            out["drawn"] = [e0.to_json() for e0 in self.drawn]
+        if self.left_out is not UNSET:
+            out["leftOut"] = [e0.to_json() for e0 in self.left_out]
+        if self.sides is not UNSET:
+            out["sides"] = [e0.to_json() for e0 in self.sides]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationsEdited:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            made=data["made"],
+            changed=data["changed"],
+            removed=data["removed"],
+            revision=data["revision"],
+            drawn=[Entity.from_json(e0) for e0 in data["drawn"]] if "drawn" in data else UNSET,
+            left_out=[ElevationLeftOut.from_json(e0) for e0 in data["leftOut"]] if "leftOut" in data else UNSET,
+            sides=[ElevationSide.from_json(e0) for e0 in data["sides"]] if "sides" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationsQueried(_Model):
+    """Output of `cad.elevations.query`."""
+    elevations: list[ElevationRow]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["elevations"] = [e0.to_json() for e0 in self.elevations]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationsQueried:
+        return cls(
+            elevations=[ElevationRow.from_json(e0) for e0 in data["elevations"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ElevationsQuery(_Model):
+    """Input of `cad.elevations.query` v1 (read-only): every derived elevation, the one on `layer`, or the one the object
+    `uid` is a member of.
+
+    Refusals: `layer_not_found`, `elevation_not_found`, `invalid_uid`, `entity_not_found`.
+    """
+    layer: str | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ElevationsQuery:
+        return cls(
+            layer=data.get("layer", UNSET),
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -75602,6 +75925,85 @@ class LinkDomainsOp(DomainsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class DeriveElevationsOperation(ElevationsOperation):
+    """İç görünüş üret: the space `space`'s sides (`sides`, its outer rings' edges numbered from 0 in order, part by
+    part; absent: all) drawn left to right from `at` (absent: 3 m right of the space's box, at its bottom), `gap`
+    apart (absent: 1 m), on a new layer named `name` (absent: “101 Salon iç görünüşü”) in the group İç görünüşler.
+    Attributes:
+        at: Unit: length.
+        gap: Unit: length.
+        sides: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "derive"
+    space: str
+    at: Vec2 | None | Unset = UNSET
+    gap: float | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    sides: list[int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "derive"}
+        out["space"] = self.space
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.sides is not UNSET:
+            out["sides"] = list(self.sides)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeriveElevationsOperation:
+        return cls(
+            space=data["space"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
+            name=data.get("name", UNSET),
+            sides=list(data["sides"]) if "sides" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RefreshElevationsOperation(ElevationsOperation):
+    """Yeniden üret: the elevation on the layer `layer` drawn again from the model as it is now, its objects kept by
+    their roles (the same ids), those no longer drawn deleted, new ones added.
+    """
+    TAG_VALUE: ClassVar[str] = "refresh"
+    layer: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "refresh"}
+        out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshElevationsOperation:
+        return cls(
+            layer=data["layer"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReleaseElevationsOperation(ElevationsOperation):
+    """Bağı kopar: the layer's derivation record removed; its objects stay as ordinary drawing objects."""
+    TAG_VALUE: ClassVar[str] = "release"
+    layer: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "release"}
+        out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReleaseElevationsOperation:
+        return cls(
+            layer=data["layer"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PolylineEntity(PathEntity, Entity):
     """Entity ``polyline``: a :class:`PathEntity`."""
     TAG_VALUE: ClassVar[str] = "polyline"
@@ -88801,6 +89203,9 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
+_ELEVATIONS_OPERATION: dict[str, type[ElevationsOperation]] = {"derive": DeriveElevationsOperation, "refresh": RefreshElevationsOperation, "release": ReleaseElevationsOperation}
+
+
 _ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "slab": SlabEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
@@ -89644,6 +90049,7 @@ __all__ = [
     "DerivationStatus",
     "DerivationStatusName",
     "DerivationTable",
+    "DeriveElevationsOperation",
     "DeriveWork",
     "DerivedEntitiesPlan",
     "DesignOption",
@@ -89787,7 +90193,19 @@ __all__ = [
     "EditTablesOperation",
     "ElementRef",
     "ElevationDimensionMeasure",
+    "ElevationLeft",
+    "ElevationLeftName",
+    "ElevationLeftOut",
+    "ElevationRow",
     "ElevationShapeWork",
+    "ElevationSide",
+    "ElevationState",
+    "ElevationStateName",
+    "ElevationsEdit",
+    "ElevationsEdited",
+    "ElevationsOperation",
+    "ElevationsQueried",
+    "ElevationsQuery",
     "EllipseAxisCurveConstruction",
     "EllipseCentreCurveConstruction",
     "EllipseConstructedCurve",
@@ -91272,6 +91690,7 @@ __all__ = [
     "RectangleImageClipBy",
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
+    "RefreshElevationsOperation",
     "RefreshOpeningsOperation",
     "RefreshTablesOperation",
     "RegisteredArea",
@@ -91302,6 +91721,7 @@ __all__ = [
     "RelationsEdited",
     "RelationsOp",
     "ReleaseCaseworkChange",
+    "ReleaseElevationsOperation",
     "RelinkImagesOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",

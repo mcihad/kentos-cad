@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, records, rectangle, relations, revcloud, revisions, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, areas, arrays, assets, attachments, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, elevations, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, parameters, parcels, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, records, rectangle, relations, revcloud, revisions, roads, scenarios, schedules, schema, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AcceptOptionsOperation",
@@ -606,6 +606,7 @@ __all__ = [
     "DerivationStatus",
     "DerivationStatusName",
     "DerivationTable",
+    "DeriveElevationsOperation",
     "DeriveWork",
     "DerivedEntitiesPlan",
     "DesignOption",
@@ -751,7 +752,19 @@ __all__ = [
     "EditTablesOperation",
     "ElementRef",
     "ElevationDimensionMeasure",
+    "ElevationLeft",
+    "ElevationLeftName",
+    "ElevationLeftOut",
+    "ElevationRow",
     "ElevationShapeWork",
+    "ElevationSide",
+    "ElevationState",
+    "ElevationStateName",
+    "ElevationsEdit",
+    "ElevationsEdited",
+    "ElevationsOperation",
+    "ElevationsQueried",
+    "ElevationsQuery",
     "EllipseAxisCurveConstruction",
     "EllipseCentreCurveConstruction",
     "EllipseConstructedCurve",
@@ -2262,6 +2275,7 @@ __all__ = [
     "RectangleImageClipBy",
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
+    "RefreshElevationsOperation",
     "RefreshOpeningsOperation",
     "RefreshTablesOperation",
     "RegisteredArea",
@@ -2292,6 +2306,7 @@ __all__ = [
     "RelationsEdited",
     "RelationsOp",
     "ReleaseCaseworkChange",
+    "ReleaseElevationsOperation",
     "RelinkImagesOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",
@@ -3118,6 +3133,7 @@ __all__ = [
     "domains",
     "donut",
     "drawing",
+    "elevations",
     "entities",
     "fields",
     "file",

@@ -12263,6 +12263,23 @@
    "tests": 1
   },
   {
+   "id": "tool.roomElevation",
+   "kind": "command",
+   "title": "Oda iç görünüşü",
+   "level": "semantic",
+   "via": [
+    "cad.elevations.edit",
+    "cad.elevations.query"
+   ],
+   "operation": null,
+   "python": "kentos.cad.elevations.edit, kentos.cad.elevations.query",
+   "mcp": "cad.elevations.edit, cad.elevations.query",
+   "note": "Tıklanan mahal, ilk yanın köşesi, Yanlar ve Aralık derive'a verilir; yanlar, açıklıklar ve leftOut komutun hesabı, önizleme planından. Öznitelikler'in durum satırı cad.elevations.query'den, Yeniden üret refresh, Bağı kopar release ile (ADR 0799).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.rotate",
    "kind": "tool",
    "title": "Döndür",

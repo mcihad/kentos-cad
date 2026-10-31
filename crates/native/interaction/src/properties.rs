@@ -207,6 +207,13 @@ pub fn edit_module(doc: &mut Document, operation: kentos_commands::ModulesOperat
     said(kentos_native_application::modules_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A derived interior elevation's action from Öznitelikler (docs/adr/0799 §5): Yeniden üret or Bağı kopar through
+/// `cad.elevations.edit`; what to say.
+pub fn edit_elevation(doc: &mut Document, operation: kentos_commands::ElevationsOperation) -> Vec<String> {
+    let input = kentos_commands::ElevationsEdit { operation, expected_revision: None };
+    said(kentos_native_application::elevations_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// A wall's joins from Öznitelikler (docs/adr/0340 §6): `operation` through `cad.walls.edit`; what to say.
 pub fn edit_wall_op(doc: &mut Document, slot: Slot, operation: kentos_commands::WallsOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
