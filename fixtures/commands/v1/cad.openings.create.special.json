@@ -1,0 +1,2106 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.openings.create",
+ "commandVersion": 1,
+ "title": "Açıklık ekle: döner, cebe giren, katlanır kapı, sürmenin bindirmesi ve rayı; retler",
+ "note": "ADR 0777. Beklenenler scripts/fixtures/special_doors_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan. Kurulumda beş duvar (12 m, 0,10 m'lik ince, 4 m'lik kısa, köşeli, özel kapıların) ve beş açıklık (D01 döner, CG1 cebe giren, KT1 katlanır, raylı iki kanatlı sürme, Kapı 90) var; yeni nesne 11'den başlar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Özel kapılar",
+  "uids": [
+   "0192f5a1-7770-7000-8000-000000000001",
+   "0192f5a1-7770-7000-8000-000000000002",
+   "0192f5a1-7770-7000-8000-000000000003",
+   "0192f5a1-7770-7000-8000-000000000004",
+   "0192f5a1-7770-7000-8000-000000000005",
+   "0192f5a1-7770-7000-8000-000000000006",
+   "0192f5a1-7770-7000-8000-000000000007",
+   "0192f5a1-7770-7000-8000-000000000008",
+   "0192f5a1-7770-7000-8000-000000000009",
+   "0192f5a1-7770-7000-8000-00000000000a"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "arch": {
+    "openingTypes": [
+     {
+      "id": "d01",
+      "name": "D01",
+      "version": 1,
+      "form": "door",
+      "width": 2.4,
+      "leaves": 4,
+      "operation": "revolving",
+      "frame": 0.1,
+      "head": 2.4,
+      "build": {
+       "drum": 2.0
+      }
+     },
+     {
+      "id": "cg1",
+      "name": "CG1",
+      "version": 1,
+      "form": "door",
+      "width": 0.9,
+      "operation": "pocket",
+      "frame": 0.03,
+      "head": 2.1,
+      "build": {
+       "leafThickness": 0.04,
+       "lip": 0.06
+      }
+     },
+     {
+      "id": "kt1",
+      "name": "KT1",
+      "version": 1,
+      "form": "door",
+      "width": 1.6,
+      "leaves": 4,
+      "operation": "folding",
+      "frame": 0.04,
+      "head": 2.1
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "kapi",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 12.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 2,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 5.0
+     },
+     {
+      "x": 6.0,
+      "y": 5.0
+     }
+    ],
+    "width": 0.1,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 3,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 10.0
+     },
+     {
+      "x": 4.0,
+      "y": 10.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 4,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 19.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 5,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 20.0,
+      "y": 0.0
+     },
+     {
+      "x": 32.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "opening",
+    "id": 6,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 2.0,
+    "width": 2.4,
+    "form": "door",
+    "leaves": 4,
+    "operation": "revolving",
+    "frame": 0.1,
+    "head": 2.4,
+    "style": "d01",
+    "number": "D1",
+    "typeVersion": 1,
+    "build": {
+     "drum": 2.0
+    },
+    "place": [
+     {
+      "x": 20.8,
+      "y": 0.15
+     },
+     {
+      "x": 20.8,
+      "y": -0.15
+     },
+     {
+      "x": 23.2,
+      "y": 0.15
+     },
+     {
+      "x": 23.2,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 7,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 6.0,
+    "width": 0.9,
+    "form": "door",
+    "operation": "pocket",
+    "frame": 0.03,
+    "head": 2.1,
+    "style": "cg1",
+    "number": "CG1",
+    "typeVersion": 1,
+    "build": {
+     "leafThickness": 0.04,
+     "lip": 0.06
+    },
+    "place": [
+     {
+      "x": 25.55,
+      "y": 0.15
+     },
+     {
+      "x": 25.55,
+      "y": -0.15
+     },
+     {
+      "x": 26.45,
+      "y": 0.15
+     },
+     {
+      "x": 26.45,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 8,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 9.0,
+    "width": 1.6,
+    "form": "door",
+    "leaves": 4,
+    "operation": "folding",
+    "frame": 0.04,
+    "head": 2.1,
+    "style": "kt1",
+    "number": "KT1",
+    "typeVersion": 1,
+    "place": [
+     {
+      "x": 28.2,
+      "y": 0.15
+     },
+     {
+      "x": 28.2,
+      "y": -0.15
+     },
+     {
+      "x": 29.8,
+      "y": 0.15
+     },
+     {
+      "x": 29.8,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 9,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 11.2,
+    "width": 1.2,
+    "form": "door",
+    "leaves": 2,
+    "operation": "slide",
+    "frame": 0.04,
+    "head": 2.1,
+    "number": "S1",
+    "build": {
+     "overlap": 0.1,
+     "track": true
+    },
+    "place": [
+     {
+      "x": 30.6,
+      "y": 0.15
+     },
+     {
+      "x": 30.6,
+      "y": -0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": 0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 10,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000001",
+    "at": 10.5,
+    "width": 0.9,
+    "form": "door",
+    "frame": 0.05,
+    "head": 2.1,
+    "style": "kentos-kapi-90",
+    "number": "K1",
+    "place": [
+     {
+      "x": 10.05,
+      "y": 0.15
+     },
+     {
+      "x": 10.05,
+      "y": -0.15
+     },
+     {
+      "x": 10.95,
+      "y": 0.15
+     },
+     {
+      "x": 10.95,
+      "y": -0.15
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Döner: D01 tipiyle, tamburu 2 m, dört kanat",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "type": "D01"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 2.4,
+        "form": "door",
+        "leaves": 4,
+        "operation": "revolving",
+        "frame": 0.1,
+        "head": 2.4,
+        "style": "d01",
+        "typeVersion": 1,
+        "build": {
+         "drum": 2.0
+        },
+        "place": [
+         {
+          "x": 1.8,
+          "y": 0.15
+         },
+         {
+          "x": 1.8,
+          "y": -0.15
+         },
+         {
+          "x": 4.2,
+          "y": 0.15
+         },
+         {
+          "x": 4.2,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: tipsiz, üç kanat, tambur 1,8 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 2.2,
+        "operation": "revolving",
+        "leaves": 3,
+        "build": {
+         "drum": 1.8
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 2.2,
+        "form": "door",
+        "leaves": 3,
+        "operation": "revolving",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "build": {
+         "drum": 1.8
+        },
+        "place": [
+         {
+          "x": 1.9,
+          "y": 0.15
+         },
+         {
+          "x": 1.9,
+          "y": -0.15
+         },
+         {
+          "x": 4.1,
+          "y": 0.15
+         },
+         {
+          "x": 4.1,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: kanat sayısı verilmezse ret (bir kanat)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 2.2,
+        "operation": "revolving"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Döner kapının kanat sayısı 1; 3 ya da 4 olmalı.",
+       "path": "openings[0].leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: beş kanat reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 2.2,
+        "operation": "revolving",
+        "leaves": 5
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Döner kapının kanat sayısı 5; 3 ya da 4 olmalı.",
+       "path": "openings[0].leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: tambur ışıktan geniş reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 2.0,
+        "operation": "revolving",
+        "leaves": 4,
+        "build": {
+         "drum": 2.5
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Döner kapının tamburu (2.5 m) ışıktan (1.900 m) geniş; tambur kasanın içine sığmalı. Çapı küçültün ya da açıklığı genişletin.",
+       "path": "openings[0].build.drum"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner pencere olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "form": "window",
+        "operation": "revolving",
+        "leaves": 4
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Döner açılış yalnız kapınındır; pencere için Kanatlı, Sürme ya da Sabit seçin.",
+       "path": "openings[0].operation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kanatlı kapıya tambur verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "build": {
+         "drum": 0.8
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Tambur çapı yalnız döner açıklığındır; kaldırın ya da açılışı Döner yapın.",
+       "path": "openings[0].build.drum"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: CG1 tipiyle, cebi başta duvarın içinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "type": "CG1"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 2.55,
+          "y": 0.15
+         },
+         {
+          "x": 2.55,
+          "y": -0.15
+         },
+         {
+          "x": 3.45,
+          "y": 0.15
+         },
+         {
+          "x": 3.45,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: kendi payıyla, istisnası söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "type": "CG1",
+        "build": {
+         "lip": 0.1
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 3.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "overrides": [
+         "lip"
+        ],
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.1
+        },
+        "place": [
+         {
+          "x": 2.55,
+          "y": 0.15
+         },
+         {
+          "x": 2.55,
+          "y": -0.15
+         },
+         {
+          "x": 3.45,
+          "y": 0.15
+         },
+         {
+          "x": 3.45,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: duvarın başında cebi taşar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 0.6,
+        "type": "CG1"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "opening_pocket_short",
+       "message": "Cebe giren kapının cebi duvarın ucundan ya da köşesinden taşıyor: kapı ve cebi duvar boyunca -0.610–1.050 m, duvarın uzunluğu 12.000 m; cep kapıyla aynı kenarda kalmalı. Kapıyı kaydırın, menteşe yanını değiştirin ya da daraltın.",
+       "path": "openings[0].at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: duvarın başında, menteşe sonda: cep öbür yana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 0.6,
+        "type": "CG1",
+        "hand": "end"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 0.6,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "hand": "end",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 0.14999999999999997,
+          "y": 0.15
+         },
+         {
+          "x": 0.14999999999999997,
+          "y": -0.15
+         },
+         {
+          "x": 1.05,
+          "y": 0.15
+         },
+         {
+          "x": 1.05,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: 10 cm'lik duvara sığmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:2",
+        "at": 3.0,
+        "type": "CG1"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "opening_pocket_thin",
+       "message": "Cebe giren kapının cebi için duvar en az 0.110 m kalınlığında olmalı (cep ve iki yanında 2,5 cm duvar); bu duvar 0.100 m. Daha kalın bir duvar seçin, kanadı inceltin ya da kayar kapı kullanın.",
+       "path": "openings[0].operation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: 3 cm kanatla 10 cm'lik duvara sığar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:2",
+        "at": 3.0,
+        "type": "CG1",
+        "build": {
+         "leafThickness": 0.03
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:2",
+        "at": 3.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "typeVersion": 1,
+        "overrides": [
+         "leafThickness"
+        ],
+        "build": {
+         "leafThickness": 0.03,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 2.55,
+          "y": 5.05
+         },
+         {
+          "x": 2.55,
+          "y": 4.95
+         },
+         {
+          "x": 3.45,
+          "y": 5.05
+         },
+         {
+          "x": 3.45,
+          "y": 4.95
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: cebi köşeyi döner, reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:4",
+        "at": 4.3,
+        "type": "CG1",
+        "hand": "end"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "opening_pocket_short",
+       "message": "Cebe giren kapının cebi duvarın ucundan ya da köşesinden taşıyor: kapı ve cebi duvar boyunca 3.850–5.510 m, duvarın uzunluğu 9.000 m; cep kapıyla aynı kenarda kalmalı. Kapıyı kaydırın, menteşe yanını değiştirin ya da daraltın.",
+       "path": "openings[0].at"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: cebi duvardaki kapıya girer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 9.0,
+        "type": "CG1",
+        "hand": "end"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "opening_pocket_short",
+       "message": "Cebe giren kapının cebi aynı duvardaki başka bir açıklığa (10.050–10.950 m) giriyor: kapı ve cebi duvar boyunca 8.550–10.210 m. Cebin uzunluğu duvarda boş kalmalı; kapıyı kaydırın, menteşe yanını değiştirin ya da öbür açıklığı taşıyın.",
+       "path": "openings[0]"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: iki kanat iki cebe",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "operation": "pocket",
+        "leaves": 2
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "form": "door",
+        "leaves": 2,
+        "operation": "pocket",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 4.2,
+          "y": 0.15
+         },
+         {
+          "x": 4.2,
+          "y": -0.15
+         },
+         {
+          "x": 5.8,
+          "y": 0.15
+         },
+         {
+          "x": 5.8,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: üç kanat reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "operation": "pocket",
+        "leaves": 3
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Cebe giren kapının kanat sayısı 3; 1 ya da 2 olmalı.",
+       "path": "openings[0].leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır kapıya cep payı verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "operation": "folding",
+        "leaves": 4,
+        "build": {
+         "lip": 0.05
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Cepten kalan pay yalnız cebe giren açıklığındır; kaldırın ya da açılışı Cebe giren yapın.",
+       "path": "openings[0].build.lip"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır: KT1 tipiyle, dört panel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "type": "KT1"
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "form": "door",
+        "leaves": 4,
+        "operation": "folding",
+        "frame": 0.04,
+        "head": 2.1,
+        "style": "kt1",
+        "typeVersion": 1,
+        "place": [
+         {
+          "x": 4.2,
+          "y": 0.15
+         },
+         {
+          "x": 4.2,
+          "y": -0.15
+         },
+         {
+          "x": 5.8,
+          "y": 0.15
+         },
+         {
+          "x": 5.8,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır: altı panel iki yana, 45°",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 2.4,
+        "operation": "folding",
+        "leaves": 6,
+        "swing": 45.0,
+        "build": {
+         "bothSides": true
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 2.4,
+        "form": "door",
+        "leaves": 6,
+        "operation": "folding",
+        "swing": 45.0,
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "build": {
+         "bothSides": true
+        },
+        "place": [
+         {
+          "x": 3.8,
+          "y": 0.15
+         },
+         {
+          "x": 3.8,
+          "y": -0.15
+         },
+         {
+          "x": 6.2,
+          "y": 0.15
+         },
+         {
+          "x": 6.2,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır: beş panel iki yana toplanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 2.0,
+        "operation": "folding",
+        "leaves": 5,
+        "build": {
+         "bothSides": true
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "5 panel iki yana eşit toplanmaz; panel sayısını çift yapın ya da tek yana toplayın.",
+       "path": "openings[0].build.bothSides"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır: yedi panel reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 2.4,
+        "operation": "folding",
+        "leaves": 7
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Katlanır kapının panel sayısı 7; 2 ile 6 arasında olmalı.",
+       "path": "openings[0].leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme: iki kanat, 10 cm bindirme, raylı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "operation": "slide",
+        "leaves": 2,
+        "build": {
+         "overlap": 0.1,
+         "track": true
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "form": "door",
+        "leaves": 2,
+        "operation": "slide",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "build": {
+         "overlap": 0.1,
+         "track": true
+        },
+        "place": [
+         {
+          "x": 4.2,
+          "y": 0.15
+         },
+         {
+          "x": 4.2,
+          "y": -0.15
+         },
+         {
+          "x": 5.8,
+          "y": 0.15
+         },
+         {
+          "x": 5.8,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme: kapalı ray yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "operation": "slide",
+        "build": {
+         "track": false
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11
+      ],
+      "entities": {
+       "11": {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "slide",
+        "frame": 0.05,
+        "head": 2.1,
+        "style": "kentos-kapi-90",
+        "place": [
+         {
+          "x": 4.55,
+          "y": 0.15
+         },
+         {
+          "x": 4.55,
+          "y": -0.15
+         },
+         {
+          "x": 5.45,
+          "y": 0.15
+         },
+         {
+          "x": 5.45,
+          "y": -0.15
+         }
+        ]
+       }
+      },
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme: tek kanada bindirme verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "operation": "slide",
+        "build": {
+         "overlap": 0.05
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.",
+       "path": "openings[0].build.overlap"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme: ışıktan uzun bindirme reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.0,
+        "operation": "slide",
+        "leaves": 2,
+        "build": {
+         "overlap": 0.95
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Kanat bindirmesi (0.95 m) ışıktan (0.900 m) küçük olmalı.",
+       "path": "openings[0].build.overlap"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kanatlı kapıya ray verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "build": {
+         "track": true
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening",
+       "message": "Ray yalnız sürme açıklığındır; kaldırın ya da açılışı Sürme yapın.",
+       "path": "openings[0].build.track"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

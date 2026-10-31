@@ -3631,13 +3631,19 @@ class OpeningOperation(_StrEnum):
     - ``swing``: Kanatlı: about a hinge.
     - ``slide``: Sürme: along the wall.
     - ``fixed``: Sabit: it does not open.
+    - ``revolving``: Döner (docs/adr/0777 §1): 3 or 4 wings turning about the middle of a drum (`build.drum`).
+    - ``pocket``: Cebe giren (docs/adr/0777 §2): its leaves slide into a pocket inside the wall, beside the jamb at its `hand`
+    - ``folding``: Katlanır (docs/adr/0777 §3): 2 to 6 panels folding to the jamb at its `hand` (both with `build.bothSides`).
     """
     SWING = "swing"
     SLIDE = "slide"
     FIXED = "fixed"
+    REVOLVING = "revolving"
+    POCKET = "pocket"
+    FOLDING = "folding"
 
 
-OpeningOperationName = Literal["swing", "slide", "fixed"]
+OpeningOperationName = Literal["swing", "slide", "fixed", "revolving", "pocket", "folding"]
 """The names of :class:`OpeningOperation`, for a plain string."""
 
 
@@ -3710,9 +3716,14 @@ class OpeningTypeField(_StrEnum):
     MULLIONS = "mullions"
     TRANSOMS = "transoms"
     USE_ZONE = "useZone"
+    DRUM = "drum"
+    OVERLAP = "overlap"
+    TRACK = "track"
+    BOTH_SIDES = "bothSides"
+    LIP = "lip"
 
 
-OpeningTypeFieldName = Literal["width", "leaves", "operation", "swing", "showSwing", "frame", "sill", "head", "depth", "sizeBy", "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard", "mullions", "transoms", "useZone"]
+OpeningTypeFieldName = Literal["width", "leaves", "operation", "swing", "showSwing", "frame", "sill", "head", "depth", "sizeBy", "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard", "mullions", "transoms", "useZone", "drum", "overlap", "track", "bothSides", "lip"]
 """The names of :class:`OpeningTypeField`, for a plain string."""
 
 
@@ -5084,6 +5095,9 @@ class ScheduleField(_StrEnum):
     - ``unitWidth``
     - ``leafWidth``
     - ``clearWidth``
+    - ``leaves``
+    - ``drum``
+    - ``pocket``
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
     - ``baseboard``: A space's baseboard: its perimeter less the passages along it (docs/adr/0722 §5).
@@ -5093,6 +5107,7 @@ class ScheduleField(_StrEnum):
     - ``unit``: A space's group in the building program: its number and name (docs/adr/0773).
     - ``target``: A space's design target: its brief's area range.
     - ``targetDiff``: How far a space's area lies outside its brief's range (below minus, above plus).
+    - ``operation``: An opening's operation (Kanatlı, Sürme, Döner, Cebe giren, Katlanır …), its leaves (a revolving door's wings, a
     """
     NUMBER = "number"
     TYPE = "type"
@@ -5120,6 +5135,9 @@ class ScheduleField(_StrEnum):
     UNIT_WIDTH = "unitWidth"
     LEAF_WIDTH = "leafWidth"
     CLEAR_WIDTH = "clearWidth"
+    LEAVES = "leaves"
+    DRUM = "drum"
+    POCKET = "pocket"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
     BASEBOARD = "baseboard"
@@ -5129,9 +5147,10 @@ class ScheduleField(_StrEnum):
     UNIT = "unit"
     TARGET = "target"
     TARGET_DIFF = "targetDiff"
+    OPERATION = "operation"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -41759,36 +41778,54 @@ class OpeningArrayNumbering(_Model):
 class OpeningBuild(_Model):
     """A door's or window's construction (docs/adr/0772 §3), each field optional; none given draws it as before.
     Attributes:
+        both_sides: A folding door's panels fold to both jambs, half to each (an even count; docs/adr/0777 §3). Absent: all to the
+            jamb at its `hand`.
         casing: Its casing (pervaz, söve) on both wall faces beside each jamb, its width, metres; absent: none. Unit: length.
+        drum: A revolving door's drum, its inside diameter, metres (docs/adr/0777 §1); absent: the light between the frame's
+            sides. At most the light. Unit: length.
         fit: The fitting gap between the rough opening and the frame, each side, metres; absent: none. Unit: length.
         frame_depth: The frame's depth across the wall, metres; absent: the wall's thickness. Unit: length.
         frame_offset: With `frameDepth`: the frame's distance from the wall face it opens to (`side`), metres; absent: centred. Unit: length.
         leaf_thickness: A leaf's thickness, metres; absent: drawn as a line, the net clear width reads 0.04 m. Unit: length.
+        lip: How much of an open pocket door's leaf stays out of its pocket, metres (docs/adr/0777 §2); absent: 0.05. Unit: length.
         mullions: A window's mullions (dikey kayıt): its panes are one more; absent: none. Unit: count.
+        overlap: How much a two-leaf sliding door's or window's leaves overlap when shut, metres (docs/adr/0777 §4); absent: 5 %
+            of the light. Below the light. Unit: length.
         sill_board: A window's sill board (denizlik), how far it reaches past the face opposite the side it opens to, metres. Unit: length.
         size_by: Which width its nominal size names; absent: the rough opening.
         split: Two unequal leaves: the hinge-start leaf's share of the light, above 0, below 1; absent: halves. Unit: value.
         threshold: A door's threshold (eşik), its depth across the wall, metres; absent: none. Unit: length.
+        track: A sliding door's or window's track drawn in plan: the rail its leaves run on, and a one-leaf door's leaf beside
+            the wall face, over the stretch it slides to (docs/adr/0777 §4). Absent: not drawn.
         transoms: A window's transoms (yatay kayıt); plan does not show them, schedules and tags do. Unit: count.
         use_zone: The use zone in front of it on the side it opens to (kullanım alanı), its depth, metres; absent: none. Unit: length.
     """
+    both_sides: bool | None | Unset = UNSET
     casing: float | None | Unset = UNSET
+    drum: float | None | Unset = UNSET
     fit: float | None | Unset = UNSET
     frame_depth: float | None | Unset = UNSET
     frame_offset: float | None | Unset = UNSET
     leaf_thickness: float | None | Unset = UNSET
+    lip: float | None | Unset = UNSET
     mullions: int | None | Unset = UNSET
+    overlap: float | None | Unset = UNSET
     sill_board: float | None | Unset = UNSET
     size_by: OpeningSizeBy | OpeningSizeByName | None | Unset = UNSET
     split: float | None | Unset = UNSET
     threshold: float | None | Unset = UNSET
+    track: bool | None | Unset = UNSET
     transoms: int | None | Unset = UNSET
     use_zone: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.both_sides is not UNSET:
+            out["bothSides"] = self.both_sides
         if self.casing is not UNSET:
             out["casing"] = None if self.casing is None else float(self.casing)
+        if self.drum is not UNSET:
+            out["drum"] = None if self.drum is None else float(self.drum)
         if self.fit is not UNSET:
             out["fit"] = None if self.fit is None else float(self.fit)
         if self.frame_depth is not UNSET:
@@ -41797,8 +41834,12 @@ class OpeningBuild(_Model):
             out["frameOffset"] = None if self.frame_offset is None else float(self.frame_offset)
         if self.leaf_thickness is not UNSET:
             out["leafThickness"] = None if self.leaf_thickness is None else float(self.leaf_thickness)
+        if self.lip is not UNSET:
+            out["lip"] = None if self.lip is None else float(self.lip)
         if self.mullions is not UNSET:
             out["mullions"] = self.mullions
+        if self.overlap is not UNSET:
+            out["overlap"] = None if self.overlap is None else float(self.overlap)
         if self.sill_board is not UNSET:
             out["sillBoard"] = None if self.sill_board is None else float(self.sill_board)
         if self.size_by is not UNSET:
@@ -41807,6 +41848,8 @@ class OpeningBuild(_Model):
             out["split"] = None if self.split is None else float(self.split)
         if self.threshold is not UNSET:
             out["threshold"] = None if self.threshold is None else float(self.threshold)
+        if self.track is not UNSET:
+            out["track"] = self.track
         if self.transoms is not UNSET:
             out["transoms"] = self.transoms
         if self.use_zone is not UNSET:
@@ -41816,16 +41859,21 @@ class OpeningBuild(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> OpeningBuild:
         return cls(
+            both_sides=data.get("bothSides", UNSET),
             casing=UNSET if "casing" not in data else None if data["casing"] is None else float(data["casing"]),
+            drum=UNSET if "drum" not in data else None if data["drum"] is None else float(data["drum"]),
             fit=UNSET if "fit" not in data else None if data["fit"] is None else float(data["fit"]),
             frame_depth=UNSET if "frameDepth" not in data else None if data["frameDepth"] is None else float(data["frameDepth"]),
             frame_offset=UNSET if "frameOffset" not in data else None if data["frameOffset"] is None else float(data["frameOffset"]),
             leaf_thickness=UNSET if "leafThickness" not in data else None if data["leafThickness"] is None else float(data["leafThickness"]),
+            lip=UNSET if "lip" not in data else None if data["lip"] is None else float(data["lip"]),
             mullions=data.get("mullions", UNSET),
+            overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),
             sill_board=UNSET if "sillBoard" not in data else None if data["sillBoard"] is None else float(data["sillBoard"]),
             size_by=UNSET if "sizeBy" not in data else None if data["sizeBy"] is None else _enum_in(OpeningSizeBy, data["sizeBy"]),
             split=UNSET if "split" not in data else None if data["split"] is None else float(data["split"]),
             threshold=UNSET if "threshold" not in data else None if data["threshold"] is None else float(data["threshold"]),
+            track=data.get("track", UNSET),
             transoms=data.get("transoms", UNSET),
             use_zone=UNSET if "useZone" not in data else None if data["useZone"] is None else float(data["useZone"]),
         )
@@ -41960,7 +42008,7 @@ class OpeningEntity(Entity):
         inset: A flue's distance from its face (`side`) to its cavity, metres; absent: centred in its wall (docs/adr/0719). Unit: length.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
-        leaves: Its leaves, 1 or 2. Absent: 1. Unit: count.
+        leaves: Its leaves, 1 or 2; a revolving door's wings 3 or 4, a folding door's panels 2 to 6 (docs/adr/0777). Absent: 1. Unit: count.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
@@ -42215,6 +42263,34 @@ class OpeningNominal(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OpeningPocket(_Model):
+    """A pocket door's pocket (docs/adr/0777 §2): at which jamb, how far past it into the wall, how wide across it.
+    Attributes:
+        at_end: At its end jamb; else its start's.
+        length: From the jamb into the wall along it, metres. Unit: length.
+        width: Across the wall, centred in it, metres: the leaf and its play each side. Unit: length.
+    """
+    at_end: bool
+    length: float
+    width: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["atEnd"] = self.at_end
+        out["length"] = float(self.length)
+        out["width"] = float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OpeningPocket:
+        return cls(
+            at_end=data["atEnd"],
+            length=float(data["length"]),
+            width=float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OpeningQueryRow(_Model):
     """One opening as `cad.openings.query` reads it.
     Attributes:
@@ -42341,6 +42417,9 @@ class OpeningSizes(_Model):
         clear: Net geçiş: what a door leaves free with all its leaves open, from the open leaf's face to the opposite stop; a
             bare opening its light; none for a window, a niche or a flue. Unit: length.
         clear_first: A two-leaf door's net clear width with only its first leaf open. Unit: length.
+        drum: A revolving door's drum, its inside diameter (docs/adr/0777 §1). Unit: length.
+        pockets: A pocket door's pockets, each how far it runs into the wall past its jamb (docs/adr/0777 §2): the one at its
+            start first.
     """
     rough: float
     unit: float
@@ -42350,6 +42429,8 @@ class OpeningSizes(_Model):
     nominal: float
     clear: float | None | Unset = UNSET
     clear_first: float | None | Unset = UNSET
+    drum: float | None | Unset = UNSET
+    pockets: list[OpeningPocket] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -42363,6 +42444,10 @@ class OpeningSizes(_Model):
             out["clear"] = None if self.clear is None else float(self.clear)
         if self.clear_first is not UNSET:
             out["clearFirst"] = None if self.clear_first is None else float(self.clear_first)
+        if self.drum is not UNSET:
+            out["drum"] = None if self.drum is None else float(self.drum)
+        if self.pockets is not UNSET:
+            out["pockets"] = [e0.to_json() for e0 in self.pockets]
         return out
 
     @classmethod
@@ -42376,6 +42461,8 @@ class OpeningSizes(_Model):
             nominal=float(data["nominal"]),
             clear=UNSET if "clear" not in data else None if data["clear"] is None else float(data["clear"]),
             clear_first=UNSET if "clearFirst" not in data else None if data["clearFirst"] is None else float(data["clearFirst"]),
+            drum=UNSET if "drum" not in data else None if data["drum"] is None else float(data["drum"]),
+            pockets=[OpeningPocket.from_json(e0) for e0 in data["pockets"]] if "pockets" in data else UNSET,
         )
 
 
@@ -42708,7 +42795,7 @@ class OpeningsCreate(_Model):
     `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
 
     Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
-    `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `openings_overlap`, `invalid_revision`,
+    `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `opening_pocket_thin`, `opening_pocket_short` (docs/adr/0777), `openings_overlap`, `invalid_revision`,
     `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
     Warning: `layer_hidden`.
     Attributes:
@@ -42822,7 +42909,7 @@ class OpeningsEdit(_Model):
 
     Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
     `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
-    `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since
+    `recess_too_deep`, `opening_pocket_thin`, `opening_pocket_short` (docs/adr/0777), `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since
     docs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,
     `level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a
     following opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and
@@ -88205,6 +88292,7 @@ __all__ = [
     "OpeningOpeningReference",
     "OpeningOperation",
     "OpeningOperationName",
+    "OpeningPocket",
     "OpeningQueryRow",
     "OpeningReference",
     "OpeningRow",

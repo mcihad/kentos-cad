@@ -2077,6 +2077,18 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 144 (docs/adr/0777): a revolving, pocket or folding door, a sliding door's track, a schedule of them.
+    let special = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_special_doors);
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_special_doors)
+        || special(objs)
+        || doc.blocks.iter().any(|b| special(Objs::Plain(&b.entities)))
+    {
+        return crate::SCHEMA_WITH_SPECIAL_DOORS;
+    }
     // Schema 143 (docs/adr/0781): a view recipe's walls' detail or crop.
     if doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.detail.is_some() || r.crop)) {
         return crate::SCHEMA_WITH_RECIPE_DETAIL;

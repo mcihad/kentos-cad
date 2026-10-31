@@ -465,7 +465,7 @@ pub(crate) fn joined_pieces(
                     doc.openings_of(&u.to_string())
                         .into_iter()
                         .filter(|(_, o)| o.broken.is_none())
-                        .filter_map(|(_, o)| kentos_formats::openings::hole(&o))
+                        .flat_map(|(_, o)| kentos_formats::openings::holes(&o))
                         .collect()
                 })
                 .unwrap_or_default()

@@ -38,7 +38,7 @@ const IMPORT: &str = "Kitaplıktan al…";
 const EXPORT: &str = "Kitaplığa yaz…";
 
 /// The values typed as lengths in the project's unit, by form.
-const LENGTHS: [OpeningTypeField; 11] = [
+const LENGTHS: [OpeningTypeField; 14] = [
     OpeningTypeField::Frame,
     OpeningTypeField::Fit,
     OpeningTypeField::Head,
@@ -50,7 +50,13 @@ const LENGTHS: [OpeningTypeField; 11] = [
     OpeningTypeField::SillBoard,
     OpeningTypeField::UseZone,
     OpeningTypeField::Depth,
+    // A revolving door's drum, a sliding door's overlap, a pocket door's lip (docs/adr/0777).
+    OpeningTypeField::Drum,
+    OpeningTypeField::Overlap,
+    OpeningTypeField::Lip,
 ];
+/// The switches typed Evet (on) or left empty (off): a sliding door's track, a folding door's both sides.
+const SWITCHES: [OpeningTypeField; 2] = [OpeningTypeField::Track, OpeningTypeField::BothSides];
 /// The values typed as whole numbers or plain values.
 const COUNTS: [OpeningTypeField; 4] = [
     OpeningTypeField::Leaves,
@@ -59,10 +65,15 @@ const COUNTS: [OpeningTypeField; 4] = [
     OpeningTypeField::Transoms,
 ];
 
-/// Whether a type of `form` takes `field` in this window.
-fn shown(form: OpeningForm, field: OpeningTypeField) -> bool {
+/// Whether a type of `form` moving as `op` takes `field` in this window (a special door's only its own, docs/adr/0777).
+fn shown(form: OpeningForm, op: OpeningOperation, field: OpeningTypeField) -> bool {
     use OpeningTypeField::*;
+    let door = form == OpeningForm::Door;
     match field {
+        Drum => door && op == OpeningOperation::Revolving,
+        Lip => door && op == OpeningOperation::Pocket,
+        BothSides => door && op == OpeningOperation::Folding,
+        Track | Overlap => matches!(form, OpeningForm::Door | OpeningForm::Window) && op == OpeningOperation::Slide,
         Sill | SillBoard | Mullions | Transoms => form == OpeningForm::Window,
         Threshold | LeafThickness | UseZone => form == OpeningForm::Door,
         Depth => false,
@@ -338,6 +349,17 @@ impl App {
                         )));
                     }
                 }
+            } else if SWITCHES.contains(field) {
+                match text.to_lowercase().as_str() {
+                    "evet" | "e" | "1" => Value::Bool(true),
+                    "hayır" | "h" | "0" => Value::Null,
+                    _ => {
+                        return Some(Err(format!(
+                            "{}: “{text}” okunamadı; Evet yazın ya da boş bırakın.",
+                            field.label()
+                        )));
+                    }
+                }
             } else if *field == OpeningTypeField::Split {
                 match text.replace(',', ".").parse::<f64>() {
                     Ok(v) => Value::from(v),
@@ -370,6 +392,18 @@ impl App {
                 unset.push(*field);
             } else {
                 put(*field, new, &mut top, &mut build);
+            }
+        }
+        // A special door's fields another operation does not take go with the old one (docs/adr/0777).
+        for k in [
+            OpeningTypeField::Drum,
+            OpeningTypeField::Overlap,
+            OpeningTypeField::Track,
+            OpeningTypeField::BothSides,
+            OpeningTypeField::Lip,
+        ] {
+            if !shown(t.form, w.operation, k) && !t.value(k).is_null() && !unset.contains(&k) {
+                unset.push(k);
             }
         }
         let old_by = t.build.as_ref().and_then(|b| b.size_by).unwrap_or_default();
@@ -520,8 +554,14 @@ impl App {
                 self.opening_types_preview();
             }
             Event::Operation(op) => {
+                let t = self.opening_types_chosen();
+                let format = self.opening_types_format();
                 if let Some(w) = self.opening_types.as_mut() {
                     w.operation = op;
+                    // The fields of the operation chosen (docs/adr/0777): those typed kept, the others the type's.
+                    if let (Some(t), Some(f)) = (t, format) {
+                        refit(w, &t, &f);
+                    }
                 }
                 self.opening_types_preview();
             }
@@ -731,10 +771,15 @@ impl App {
         };
         let mut list = Column::new().spacing(4);
         for (i, u) in w.uses.iter().enumerate() {
-            let glyph = if u.kind.form == OpeningForm::Window {
-                "window"
-            } else {
-                "door"
+            // A door's icon by how it moves (docs/adr/0777): sliding, revolving, pocket, folding, double.
+            let glyph = match (u.kind.form, u.kind.operation, u.kind.leaves) {
+                (OpeningForm::Window, _, _) => "window",
+                (_, OpeningOperation::Slide, _) => "doorSliding",
+                (_, OpeningOperation::Revolving, _) => "doorRevolving",
+                (_, OpeningOperation::Pocket, _) => "doorPocket",
+                (_, OpeningOperation::Folding, _) => "doorFolding",
+                (_, _, 2) => "doorDouble",
+                _ => "door",
             };
             let mut facts = format!(
                 "{} · sürüm {} · {} açıklık",
@@ -953,17 +998,31 @@ fn fill(w: &mut Window, t: &OpeningType, f: &Format) {
     w.size_by = t.build.as_ref().and_then(|b| b.size_by).unwrap_or_default();
     w.nominal = f.length_bare(t.fields().sizes().nominal);
     w.operation = t.operation;
+    w.typed.clear();
+    refit(w, t, f);
+    w.preview = None;
+}
+
+/// The fields `t` takes moving as the window's operation: those already typed kept, the others `t`'s own.
+fn refit(w: &mut Window, t: &OpeningType, f: &Format) {
+    let typed = std::mem::take(&mut w.typed);
     w.typed = LENGTHS
         .iter()
         .chain(COUNTS.iter())
+        .chain(SWITCHES.iter())
         .copied()
-        .filter(|&x| shown(t.form, x))
+        .filter(|&x| shown(t.form, w.operation, x))
         // A leaves' share only for two leaves.
         .filter(|&x| x != OpeningTypeField::Split || t.leaves == 2)
         .map(|x| {
+            if let Some((_, text)) = typed.iter().find(|(k, _)| *k == x) {
+                return (x, text.clone());
+            }
             let v = t.value(x);
             let text = if LENGTHS.contains(&x) {
                 length_text(f, &v)
+            } else if SWITCHES.contains(&x) {
+                if v == Value::Bool(true) { "Evet".to_owned() } else { String::new() }
             } else {
                 v.as_f64().map_or_else(String::new, |n| {
                     if n.fract() == 0.0 {
@@ -976,7 +1035,6 @@ fn fill(w: &mut Window, t: &OpeningType, f: &Format) {
             (x, text)
         })
         .collect();
-    w.preview = None;
 }
 
 #[cfg(test)]

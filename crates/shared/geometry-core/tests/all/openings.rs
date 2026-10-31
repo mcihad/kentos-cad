@@ -13,6 +13,8 @@ use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/walls/v1/openings.json");
+/// Revolving, pocket and folding doors and the sliding door's track (docs/adr/0777; scripts/fixtures/special_doors_cases.py).
+const SPECIAL: &str = include_str!("../../../../../fixtures/walls/v1/special-doors.json");
 const TOL: f64 = 1e-9;
 
 fn pt(v: &Value) -> Vec2 {
@@ -58,6 +60,12 @@ fn same_piece(name: &str, got: &opening::Mark, want: &Value) {
                 "{name}: yay {c:?} {r} {a0} {a1}, başvuru {want}"
             );
         }
+        ("circle", Shape::Circle { c, r }) => {
+            assert!(
+                close(*c, pt(&want["c"])) && near(*r, want["r"].as_f64().unwrap()),
+                "{name}: daire {c:?} {r}, başvuru {want}"
+            );
+        }
         ("ring", Shape::Polyline { pts, closed, .. }) => {
             let wp: Vec<Vec2> = want["pts"].as_array().unwrap().iter().map(pt).collect();
             assert!(*closed, "{name}: kasa kapalı halka olmalı");
@@ -72,7 +80,18 @@ fn same_piece(name: &str, got: &opening::Mark, want: &Value) {
 
 #[test]
 fn openings_cut_their_walls_as_the_reference_says() {
-    let cases: Value = serde_json::from_str(CASES).unwrap();
+    cut_as_the_reference_says(CASES);
+}
+
+/// A revolving door's drum and wings, a pocket door's leaves and its pockets in its wall open at its jambs, a folding
+/// door's panels and the sliding doors' track, with their sweeps (docs/adr/0777).
+#[test]
+fn special_doors_cut_their_walls_as_the_reference_says() {
+    cut_as_the_reference_says(SPECIAL);
+}
+
+fn cut_as_the_reference_says(text: &str) {
+    let cases: Value = serde_json::from_str(text).unwrap();
     for c in cases["cases"].as_array().unwrap() {
         let name = c["name"].as_str().unwrap();
         let walls: Vec<(Vec<Vec2>, Spec)> = c["walls"]
@@ -90,7 +109,7 @@ fn openings_cut_their_walls_as_the_reference_says() {
             let spec = OpeningSpec::read_flat(&Json::parse(&o.to_string()).unwrap()).unwrap();
             let (at, width) = (o["at"].as_f64().unwrap(), o["width"].as_f64().unwrap());
             let (s0, s1) = opening::span(at, spec.anchor, width);
-            intervals[w].extend(opening::hole(at, width, &spec));
+            intervals[w].extend(opening::holes(at, width, &spec));
             let (pts, wall) = &walls[w];
             let path = opening::wall_path(pts, None, wall.closed).unwrap();
             let got = opening::jambs(&path, wall, s0, s1);
@@ -107,6 +126,18 @@ fn openings_cut_their_walls_as_the_reference_says() {
                     assert_eq!(symbol.len(), ws.len(), "{name}: {k}. açıklığın simgesinin parçaları {symbol:?}");
                     for (g, w) in symbol.iter().zip(ws) {
                         same_piece(name, g, w);
+                    }
+                    if let Some(zones) = c["zones"].get(k).filter(|z| !z.is_null()) {
+                        let got = opening::swing_zones(&j, &spec);
+                        let want = zones.as_array().unwrap();
+                        assert_eq!(got.len(), want.len(), "{name}: {k}. açıklığın süpürme alanları {got:?}");
+                        for (g, w) in got.iter().zip(want) {
+                            let wp: Vec<Vec2> = w.as_array().unwrap().iter().map(pt).collect();
+                            assert_eq!(g.len(), wp.len(), "{name}: süpürme alanının köşeleri");
+                            for (a, b) in g.iter().zip(&wp) {
+                                assert!(close(*a, *b), "{name}: süpürme alanı {a:?}, başvuru {b:?}");
+                            }
+                        }
                     }
                 }
                 (got, _) => panic!("{name}: {k}. açıklığın pervazları {got:?}, başvuru {want}"),

@@ -16,7 +16,7 @@ use crate::openings::{self, fail};
 
 /// A type an input names: the project's (followed), else KentOS's (copied once).
 pub(crate) enum Found {
-    Project(OpeningType),
+    Project(Box<OpeningType>),
     Builtin(OpeningTypeDef),
 }
 
@@ -24,7 +24,7 @@ pub(crate) enum Found {
 /// names there are.
 pub(crate) fn find(doc: &Document, key: &str, path: &str) -> Result<Found, Stop> {
     if let Some(t) = project_type(doc, key) {
-        return Ok(Found::Project(t));
+        return Ok(Found::Project(Box::new(t)));
     }
     let folded = key.trim().to_lowercase();
     let all = builtin_opening_types();
@@ -318,7 +318,7 @@ pub(crate) fn follow(
                 Ok(p) => p,
                 Err(stop) => {
                     let e = stop.into_error();
-                    let why = if e.code == codes::RECESS_TOO_DEEP {
+                    let why = if e.code == codes::RECESS_TOO_DEEP || e.code == codes::OPENING_POCKET_THIN {
                         OpeningLeftWhy::Invalid
                     } else {
                         OpeningLeftWhy::OffWall

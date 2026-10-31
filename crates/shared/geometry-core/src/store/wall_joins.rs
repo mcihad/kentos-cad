@@ -109,9 +109,12 @@ impl Store {
             if let Shape::Opening {
                 at, width, opening, ..
             } = &it.shape
-                && let Some(h) = opening::hole(*at, *width, opening)
             {
-                by_wall.entry(w.to_bits()).or_default().push(h);
+                // Its hole and a pocket door's cavities (docs/adr/0777 §2).
+                by_wall
+                    .entry(w.to_bits())
+                    .or_default()
+                    .extend(opening::holes(*at, *width, opening));
             }
         }
         keys.iter()

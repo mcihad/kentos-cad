@@ -1919,16 +1919,89 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 geo.push(Row::text("Menteşe", hand).editor(select(hand.to_owned(), hands)));
             }
             if matches!(x.form, OpeningForm::Door | OpeningForm::Window) {
-                let leaves = [1u8, 2]
-                    .into_iter()
+                // Its leaves as its operation allows (docs/adr/0777): a revolving door's wings, a folding one's panels.
+                let (least, most) = x.operation.leaf_range();
+                let leaves = (least..=most)
                     .map(|n| pick(n.to_string(), n == x.leaves, set(OpeningChange { leaves: Some(n), ..Default::default() }), None))
                     .collect();
-                geo.push(Row::figure("Kanat", x.leaves.to_string()).editor(select(x.leaves.to_string(), leaves)));
+                let word = if x.operation == OpeningOperation::Folding { "Panel" } else { "Kanat" };
+                geo.push(Row::figure(word, x.leaves.to_string()).editor(select(x.leaves.to_string(), leaves)));
+                // A revolving, pocket or folding door's operation only on a door; choosing it takes its leaves into
+                // its range (three wings, two panels).
                 let ops = OpeningOperation::ALL
                     .iter()
-                    .map(|&v| pick(v.label().to_owned(), v == x.operation, set(OpeningChange { operation: Some(v), ..Default::default() }), None))
+                    .filter(|o| x.form == OpeningForm::Door || !o.is_special())
+                    .map(|&v| {
+                        let (least, most) = v.leaf_range();
+                        let leaves = (!(least..=most).contains(&x.leaves)).then_some(least);
+                        pick(v.label().to_owned(), v == x.operation, set(OpeningChange { operation: Some(v), leaves, ..Default::default() }), None)
+                    })
                     .collect();
                 geo.push(Row::text("Açılış", x.operation.label()).editor(select(x.operation.label().to_owned(), ops)));
+                // A revolving door's drum, a pocket door's lip and pockets, a folding door's both sides, a sliding
+                // door's overlap and track (docs/adr/0777 §5): edited by `cad.openings.edit`'s `set` (empty: none).
+                {
+                    use kentos_commands::{OpeningBuild, OpeningTypeField};
+                    let b = x.build.clone().unwrap_or_default();
+                    let sizes = x.sizes();
+                    let length = |label: &'static str, field: OpeningTypeField, own: Option<f64>, otherwise: String| {
+                        let editor = number(Field::OpeningBuild(slot, field));
+                        match own {
+                            Some(v) => metres(label, v).editor(editor),
+                            None => Row::figure(label, otherwise).editor(editor),
+                        }
+                    };
+                    let switch = |label: &'static str, field: OpeningTypeField, on: bool| {
+                        let change = |v: bool| {
+                            if v {
+                                let mut b = OpeningBuild::default();
+                                if field == OpeningTypeField::Track {
+                                    b.track = Some(true);
+                                } else {
+                                    b.both_sides = Some(true);
+                                }
+                                OpeningChange { build: Some(Box::new(b)), ..Default::default() }
+                            } else {
+                                OpeningChange { unset: vec![field], ..Default::default() }
+                            }
+                        };
+                        let picks = [(true, "Evet"), (false, "Hayır")]
+                            .into_iter()
+                            .map(|(v, l)| pick(l.to_owned(), v == on, set(change(v)), None))
+                            .collect();
+                        let shown = if on { "Evet" } else { "Hayır" };
+                        Row::text(label, shown).editor(select(shown.to_owned(), picks))
+                    };
+                    match (x.form, x.operation) {
+                        (OpeningForm::Door, OpeningOperation::Revolving) => {
+                            let light = format!("{} · ışık", f.length(sizes.leaf));
+                            geo.push(length("Tambur çapı", OpeningTypeField::Drum, b.drum, light));
+                        }
+                        (OpeningForm::Door, OpeningOperation::Pocket) => {
+                            let lip = format!("{} · öntanımlı", f.length(kentos_commands::POCKET_LIP));
+                            geo.push(length("Cepten kalan pay", OpeningTypeField::Lip, b.lip, lip));
+                            let words: Vec<String> = sizes
+                                .pockets
+                                .iter()
+                                .map(|p| format!("{} {}", f.length(p.length), if p.at_end { "sonda" } else { "başta" }))
+                                .collect();
+                            if !words.is_empty() {
+                                geo.push(Row::text("Cep", words.join(", ")));
+                            }
+                        }
+                        (OpeningForm::Door, OpeningOperation::Folding) => {
+                            geo.push(switch("İki yana toplanır", OpeningTypeField::BothSides, b.both_sides == Some(true)));
+                        }
+                        (OpeningForm::Door | OpeningForm::Window, OpeningOperation::Slide) => {
+                            if x.leaves == 2 {
+                                let lap = format!("{} · %5", f.length(sizes.leaf * 0.05));
+                                geo.push(length("Kanat bindirmesi", OpeningTypeField::Overlap, b.overlap, lap));
+                            }
+                            geo.push(switch("Ray çizilir", OpeningTypeField::Track, b.track == Some(true)));
+                        }
+                        _ => {}
+                    }
+                }
             }
             if x.form == OpeningForm::Door && x.operation == OpeningOperation::Swing {
                 geo.push(
@@ -3924,3 +3997,4 @@ fn fixed_number(n: f64, places: usize) -> f64 {
         .parse::<f64>()
         .unwrap_or(n)
 }
+

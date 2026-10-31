@@ -1643,6 +1643,7 @@ __all__ = [
     "OpeningOpeningReference",
     "OpeningOperation",
     "OpeningOperationName",
+    "OpeningPocket",
     "OpeningQueryRow",
     "OpeningReference",
     "OpeningRow",

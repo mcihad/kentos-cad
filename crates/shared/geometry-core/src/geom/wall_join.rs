@@ -610,6 +610,9 @@ struct Cut {
     s1: f64,
     lo: f64,
     hi: f64,
+    /// At `s0` (then `s1`), a pocket's cavity it opens into (docs/adr/0777 §2), across the wall as distances to the path's
+    /// left: no line across the cavity there.
+    open: [Option<(f64, f64)>; 2],
 }
 
 /// A tee made: what its gaps need.
@@ -1337,16 +1340,17 @@ impl<'a> Solver<'a> {
                     })
                     .collect::<Option<Vec<Span>>>()?;
                 // Across the wall, as distances to the path's left: the left face down to the right one.
+                let across = |r: crate::geom::opening::Recess| {
+                    let (near, far) = r.across(spec.width);
+                    if r.right {
+                        (right + near, right + far)
+                    } else {
+                        (left - far, left - near)
+                    }
+                };
                 let (lo, hi) = match h.recess {
                     None => (right, left),
-                    Some(r) => {
-                        let (near, far) = r.across(spec.width);
-                        if r.right {
-                            (right + near, right + far)
-                        } else {
-                            (left - far, left - near)
-                        }
-                    }
+                    Some(r) => across(r),
                 };
                 Some(Cut {
                     jambs,
@@ -1355,6 +1359,7 @@ impl<'a> Solver<'a> {
                     s1,
                     lo,
                     hi,
+                    open: [h.open[0].map(across), h.open[1].map(across)],
                 })
             })
             .collect()
@@ -1491,12 +1496,30 @@ impl<'a> Solver<'a> {
         };
         for h in &holes {
             if h.lo <= right + eps && h.hi >= left - eps {
-                d.caps.push((h.jambs[0], h.jambs[1]));
-                d.caps.push((h.jambs[2], h.jambs[3]));
+                // A jamb a pocket opens at keeps only the wall each side of the cavity (docs/adr/0777 §2).
+                for (k, s) in [(0, h.s0), (1, h.s1)] {
+                    match h.open[k] {
+                        None => d.caps.push((h.jambs[2 * k], h.jambs[2 * k + 1])),
+                        Some((lo, hi)) => {
+                            d.caps.push((
+                                crate::geom::opening::beside(base, s, left),
+                                crate::geom::opening::beside(base, s, hi),
+                            ));
+                            d.caps.push((
+                                crate::geom::opening::beside(base, s, lo),
+                                crate::geom::opening::beside(base, s, right),
+                            ));
+                        }
+                    }
+                }
                 continue;
             }
-            // Its jambs as far across as it goes, and its sides inside the wall where no line of the wall runs.
-            for s in [h.s0, h.s1] {
+            // Its jambs as far across as it goes (none where it opens into a pocket's doorway), and its sides inside the
+            // wall where no line of the wall runs.
+            for (k, s) in [(0, h.s0), (1, h.s1)] {
+                if h.open[k].is_some() {
+                    continue;
+                }
                 d.caps.push((
                     crate::geom::opening::beside(base, s, h.hi),
                     crate::geom::opening::beside(base, s, h.lo),

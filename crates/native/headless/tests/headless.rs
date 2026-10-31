@@ -23,6 +23,9 @@ mod dimension_set_exports;
 #[path = "headless/room_modules.rs"]
 mod room_modules;
 
+#[path = "headless/special_doors.rs"]
+mod special_doors;
+
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 

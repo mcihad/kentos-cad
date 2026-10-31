@@ -93,7 +93,7 @@ at: number, anchor?: OpeningAnchor,
  */
 width: number, form: OpeningForm, 
 /**
- * Its leaves, 1 or 2. Absent: 1.
+ * Its leaves, 1 or 2; a revolving door's wings 3 or 4, a folding door's panels 2 to 6 (docs/adr/0777). Absent: 1.
  */
 leaves?: number, operation?: OpeningOperation, 
 /**

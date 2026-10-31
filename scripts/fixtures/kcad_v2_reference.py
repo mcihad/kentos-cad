@@ -2376,6 +2376,25 @@ def document(d):
     if any("detail" in v.get("recipe", {}) or "crop" in v.get("recipe", {}) for v in d["settings"].get("namedViews", [])):
         # A view recipe's walls' detail or crop (docs/adr/0781).
         schema = max(schema, 143)
+
+    special_fields = ("drum", "overlap", "track", "bothSides", "lip")
+
+    def special(o):
+        return (o.get("operation") in ("revolving", "pocket", "folding")
+                or any(k in (o.get("build") or {}) for k in special_fields)
+                or any(k in special_fields for k in o.get("overrides") or []))
+
+    def special_entity(e):
+        if e["kind"] == "opening":
+            return special(e)
+        src = e.get("source") or {}
+        return e["kind"] == "table" and isinstance(src, dict) and src.get("kind") == "schedule" and any(
+            c.get("field") in ("operation", "leaves", "drum", "pocket") for c in src.get("columns", []))
+    if (any(special(t) for t in (d["settings"].get("arch") or {}).get("openingTypes") or [])
+            or any(special_entity(e) for e in d["entities"])
+            or any(special_entity(e) for b in d.get("blocks") or [] for e in b.get("entities", []))):
+        # Revolving, pocket and folding doors, a sliding door's track and overlap, a schedule of them (docs/adr/0777).
+        schema = max(schema, 144)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3089,7 +3108,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-144.kcad"] = container(root(cmap(parts), version=uint(144)))
+    files["schema-version-145.kcad"] = container(root(cmap(parts), version=uint(145)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5514,6 +5533,26 @@ def build():
         vd.replace(good, cmap({"version": uint(2), "detail": text("fine"), "crop": b"\xf5"})))
     out["broken/view-recipe-crop-false.kcad"] = container(
         vd.replace(good, cmap({"version": uint(2), "detail": text("detailed"), "crop": b"\xf4"})))
+    # Schema 144 (docs/adr/0777): a revolving door with its drum, a pocket door, a folding door folding to both jambs
+    # with that its own exception, a two-leaf sliding door on its track with its overlap; schema 143 and
+    # schema 140 refuse them, and two wings on a revolving door, a folding window, a drum on
+    # a swinging door, a track written false and an odd number of panels folding both ways are refused too.
+    sd_doc = load("special-doors.json")
+    sd = document(sd_doc)
+    assert sd.count(b"\x67version\x18\x90") == 1, "the special doors are schema 144"
+    out["special-doors.kcad"] = container(sd)
+    out["broken/special-doors-in-schema-143.kcad"] = container(sd.replace(b"\x67version\x18\x90", b"\x67version\x18\x8f"))
+    out["broken/special-doors-in-schema-140.kcad"] = container(sd.replace(b"\x67version\x18\x90", b"\x67version\x18\x8c"))
+
+    def door_bad(name, change):
+        d = copy.deepcopy(sd_doc)
+        change(d)
+        out["broken/special-doors-" + name + ".kcad"] = container(document(d))
+    door_bad("revolving-two-wings", lambda d: d["entities"][1].update(leaves=2))
+    door_bad("folding-window", lambda d: d["entities"][3].update(form="window"))
+    door_bad("drum-on-swing", lambda d: (d["entities"][1].pop("operation"), d["entities"][1].pop("leaves")))
+    door_bad("track-false", lambda d: d["entities"][4]["build"].update(track=False))
+    door_bad("both-sides-odd", lambda d: d["entities"][3].update(leaves=3))
     # Schema 123 (docs/adr/0722): slabs: a floor with a hole, a balcony with its railing's run, a terrace with a parapet
     # all round, left out of the totals, a curved two-part slab.
     sl = document(load("slabs.json"))

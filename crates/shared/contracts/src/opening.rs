@@ -21,6 +21,8 @@ pub const MAX_RECESS_DEPTH: f64 = 10.0;
 pub const PLAN_CUT_HEIGHT: f64 = 1.1;
 /// A swing's default angle, degrees.
 pub const DEFAULT_SWING: f64 = 90.0;
+/// How far plan draws a folding door's panels open when it gives no angle, degrees (docs/adr/0777 §3).
+pub const FOLD_DRAWN: f64 = 30.0;
 
 /// What an opening is.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -97,13 +99,23 @@ pub enum OpeningOperation {
     Slide,
     /// Sabit: it does not open.
     Fixed,
+    /// Döner (docs/adr/0777 §1): 3 or 4 wings turning about the middle of a drum (`build.drum`).
+    Revolving,
+    /// Cebe giren (docs/adr/0777 §2): its leaves slide into a pocket inside the wall, beside the jamb at its `hand`
+    /// (both jambs for two leaves).
+    Pocket,
+    /// Katlanır (docs/adr/0777 §3): 2 to 6 panels folding to the jamb at its `hand` (both with `build.bothSides`).
+    Folding,
 }
 
 impl OpeningOperation {
-    pub const ALL: [OpeningOperation; 3] = [
+    pub const ALL: [OpeningOperation; 6] = [
         OpeningOperation::Swing,
         OpeningOperation::Slide,
         OpeningOperation::Fixed,
+        OpeningOperation::Revolving,
+        OpeningOperation::Pocket,
+        OpeningOperation::Folding,
     ];
 
     pub fn name(self) -> &'static str {
@@ -111,6 +123,9 @@ impl OpeningOperation {
             OpeningOperation::Swing => "swing",
             OpeningOperation::Slide => "slide",
             OpeningOperation::Fixed => "fixed",
+            OpeningOperation::Revolving => "revolving",
+            OpeningOperation::Pocket => "pocket",
+            OpeningOperation::Folding => "folding",
         }
     }
 
@@ -119,6 +134,34 @@ impl OpeningOperation {
             OpeningOperation::Swing => "Kanatlı",
             OpeningOperation::Slide => "Sürme",
             OpeningOperation::Fixed => "Sabit",
+            OpeningOperation::Revolving => "Döner",
+            OpeningOperation::Pocket => "Cebe giren",
+            OpeningOperation::Folding => "Katlanır",
+        }
+    }
+
+    /// One docs/adr/0777 added (`.kcad` schema 144): a door only.
+    pub fn is_special(self) -> bool {
+        matches!(
+            self,
+            OpeningOperation::Revolving | OpeningOperation::Pocket | OpeningOperation::Folding
+        )
+    }
+
+    /// How many leaves (a revolving door's wings, a folding door's panels) it may have, least and most.
+    pub fn leaf_range(self) -> (u8, u8) {
+        match self {
+            OpeningOperation::Revolving => (3, 4),
+            OpeningOperation::Folding => (2, 6),
+            _ => (1, 2),
+        }
+    }
+
+    /// What its leaves are called: kanat, a revolving door's wing (kanat), a folding door's panel.
+    pub fn leaf_word(self) -> &'static str {
+        match self {
+            OpeningOperation::Folding => "panel",
+            _ => "kanat",
         }
     }
 }
@@ -247,10 +290,10 @@ pub struct OpeningFields {
     pub width: f64,
     #[serde(default)]
     pub form: OpeningForm,
-    /// Its leaves, 1 or 2. Absent: 1.
+    /// Its leaves, 1 or 2; a revolving door's wings 3 or 4, a folding door's panels 2 to 6 (docs/adr/0777). Absent: 1.
     #[serde(default = "one", skip_serializing_if = "is_one")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u8>", optional))]
-    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 2)))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 6)))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub leaves: u8,
     #[serde(default, skip_serializing_if = "is_swing")]
@@ -394,6 +437,23 @@ pub fn needs_opening_types(e: &crate::Entity) -> bool {
     }
 }
 
+/// Whether `e` says what only schema 144 can (docs/adr/0777): a revolving, pocket or folding door, a construction's
+/// drum, overlap, track, both-sides stack or lip, or a schedule reading an opening's operation, leaves, drum or pocket.
+pub fn needs_special_doors(e: &crate::Entity) -> bool {
+    match e {
+        crate::Entity::Opening(o) => {
+            let f = &o.opening;
+            f.operation.is_special()
+                || f.build.as_ref().is_some_and(crate::OpeningBuild::is_special)
+                || f.overrides.iter().any(|o| o.is_special())
+        }
+        crate::Entity::Table(t) => matches!(&t.source,
+            Some(crate::TableSource::Schedule { columns, .. })
+                if columns.iter().any(|c| c.field.is_special())),
+        _ => false,
+    }
+}
+
 /// Whether `e` says what only schema 119 can (docs/adr/0719): a niche or flue, a depth or inset, the break
 /// `tooDeep`, or a schedule whose filter names a niche or flue.
 pub fn needs_recesses(e: &crate::Entity) -> bool {
@@ -519,6 +579,15 @@ impl OpeningFields {
         self.swing.unwrap_or(DEFAULT_SWING)
     }
 
+    /// The angle plan draws its leaves open at, degrees: its swing; a folding door's panels [`FOLD_DRAWN`] when it
+    /// gives none (docs/adr/0777 §3).
+    pub fn drawn_swing(&self) -> f64 {
+        match (self.operation, self.swing) {
+            (OpeningOperation::Folding, None) => FOLD_DRAWN,
+            _ => self.swing_angle(),
+        }
+    }
+
     /// What is wrong with the opening, said so a reader can fix it: the field and the words; none: it holds.
     pub fn problem(&self) -> Option<(String, String)> {
         if self.host.trim().is_empty() {
@@ -536,10 +605,36 @@ impl OpeningFields {
                 ),
             ));
         }
-        if !(1..=2).contains(&self.leaves) {
+        if self.operation.is_special() && self.form != OpeningForm::Door {
+            return Some((
+                "operation".into(),
+                format!(
+                    "{} açılış yalnız kapınındır; {} için Kanatlı, Sürme ya da Sabit seçin.",
+                    self.operation.label(),
+                    self.form.label().to_lowercase()
+                ),
+            ));
+        }
+        let (least, most) = self.operation.leaf_range();
+        if !(least..=most).contains(&self.leaves) {
+            let word = self.operation.leaf_word();
             return Some((
                 "leaves".into(),
-                format!("Açıklığın kanat sayısı {}; 1 ya da 2 olmalı.", self.leaves),
+                if !self.operation.is_special() {
+                    format!("Açıklığın kanat sayısı {}; 1 ya da 2 olmalı.", self.leaves)
+                } else if least + 1 == most {
+                    format!(
+                        "{} kapının {word} sayısı {}; {least} ya da {most} olmalı.",
+                        self.operation.label(),
+                        self.leaves
+                    )
+                } else {
+                    format!(
+                        "{} kapının {word} sayısı {}; {least} ile {most} arasında olmalı.",
+                        self.operation.label(),
+                        self.leaves
+                    )
+                },
             ));
         }
         if let Some(s) = self.swing
@@ -590,6 +685,9 @@ impl OpeningFields {
             .as_ref()
             .and_then(|b| b.problem(self.width, self.frame.unwrap_or(0.0)))
         {
+            return Some(why);
+        }
+        if let Some(why) = crate::special_door_problem(self) {
             return Some(why);
         }
         if self.type_version == Some(0) || (self.type_version.is_some() && self.style.is_none()) {

@@ -178,7 +178,7 @@ pub struct NewOpening {
 /// `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
 ///
 /// Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
-/// `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `openings_overlap`, `invalid_revision`,
+/// `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `opening_pocket_thin`, `opening_pocket_short` (docs/adr/0777), `openings_overlap`, `invalid_revision`,
 /// `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
 /// Warning: `layer_hidden`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -545,7 +545,7 @@ fn first_number() -> u32 {
 ///
 /// Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,
 /// `invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,
-/// `recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since
+/// `recess_too_deep`, `opening_pocket_thin`, `opening_pocket_short` (docs/adr/0777), `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since
 /// docs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,
 /// `level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a
 /// following opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and

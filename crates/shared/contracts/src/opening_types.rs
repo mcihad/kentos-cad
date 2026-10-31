@@ -22,6 +22,12 @@ use crate::{OpeningFields, OpeningForm, OpeningOperation};
 pub const DEFAULT_LEAF_THICKNESS: f64 = 0.04;
 /// How much two sliding leaves overlap, a share of the light between the frame's sides (as plan draws them).
 pub const SLIDE_LAP: f64 = 0.05;
+/// A pocket door's play each side of its leaf in its pocket, across the wall, metres (docs/adr/0777 §2).
+pub const POCKET_PLAY: f64 = 0.01;
+/// The least wall a pocket leaves each side of it, across the wall, metres: a 12.5 mm board and its stud flange.
+pub const POCKET_SKIN: f64 = 0.025;
+/// How much of an open pocket door's leaf stays out of its pocket to take hold of, metres, when it gives none.
+pub const POCKET_LIP: f64 = 0.05;
 /// The most types a project keeps.
 pub const MAX_OPENING_TYPES: usize = 1_000;
 /// The most mullions or transoms a window has.
@@ -136,11 +142,47 @@ pub struct OpeningBuild {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub use_zone: Option<f64>,
+    /// A revolving door's drum, its inside diameter, metres (docs/adr/0777 §1); absent: the light between the frame's
+    /// sides. At most the light.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub drum: Option<f64>,
+    /// How much a two-leaf sliding door's or window's leaves overlap when shut, metres (docs/adr/0777 §4); absent: 5 %
+    /// of the light. Below the light.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub overlap: Option<f64>,
+    /// A sliding door's or window's track drawn in plan: the rail its leaves run on, and a one-leaf door's leaf beside
+    /// the wall face, over the stretch it slides to (docs/adr/0777 §4). Absent: not drawn.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub track: Option<bool>,
+    /// A folding door's panels fold to both jambs, half to each (an even count; docs/adr/0777 §3). Absent: all to the
+    /// jamb at its `hand`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub both_sides: Option<bool>,
+    /// How much of an open pocket door's leaf stays out of its pocket, metres (docs/adr/0777 §2); absent: 0.05.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub lip: Option<f64>,
 }
 
 impl OpeningBuild {
     pub fn is_empty(&self) -> bool {
         self == &OpeningBuild::default()
+    }
+
+    /// Whether it has a field docs/adr/0777 added (`.kcad` schema 144).
+    pub fn is_special(&self) -> bool {
+        self.drum.is_some()
+            || self.overlap.is_some()
+            || self.track.is_some()
+            || self.both_sides.is_some()
+            || self.lip.is_some()
     }
 
     /// What is wrong with it for an opening `width` wide whose frame is `frame` wide: the field (under `build.`) and
@@ -176,6 +218,18 @@ impl OpeningBuild {
             .or_else(|| length(self.casing, "casing", "Pervaz genişliği", false))
             .or_else(|| length(self.sill_board, "sillBoard", "Denizlik çıkıntısı", false))
             .or_else(|| length(self.use_zone, "useZone", "Kullanım alanı derinliği", false))
+            .or_else(|| length(self.drum, "drum", "Tambur çapı", false))
+            .or_else(|| length(self.overlap, "overlap", "Kanatların bindirmesi", true))
+            .or_else(|| length(self.lip, "lip", "Cepten kalan pay", true))
+            .or_else(|| {
+                // A switch is written only on (docs/adr/0777 §5): one way to say it.
+                [("track", self.track, "Ray"), ("bothSides", self.both_sides, "İki yana toplanma")]
+                    .into_iter()
+                    .find_map(|(name, v, what)| {
+                        (v == Some(false))
+                            .then(|| (at(name), format!("{what} kapalıyken yazılmaz; alanı vermeyin.")))
+                    })
+            })
             .or_else(|| {
                 let s = self.split?;
                 (!(s.is_finite() && s > 0.0 && s < 1.0)).then(|| {
@@ -237,10 +291,27 @@ pub enum OpeningTypeField {
     Mullions,
     Transoms,
     UseZone,
+    Drum,
+    Overlap,
+    Track,
+    BothSides,
+    Lip,
 }
 
 impl OpeningTypeField {
-    pub const ALL: [OpeningTypeField; 21] = [
+    /// Whether only schema 144 knows it (docs/adr/0777): a special door's field.
+    pub fn is_special(self) -> bool {
+        matches!(
+            self,
+            OpeningTypeField::Drum
+                | OpeningTypeField::Overlap
+                | OpeningTypeField::Track
+                | OpeningTypeField::BothSides
+                | OpeningTypeField::Lip
+        )
+    }
+
+    pub const ALL: [OpeningTypeField; 26] = [
         OpeningTypeField::Width,
         OpeningTypeField::Leaves,
         OpeningTypeField::Operation,
@@ -262,6 +333,11 @@ impl OpeningTypeField {
         OpeningTypeField::Mullions,
         OpeningTypeField::Transoms,
         OpeningTypeField::UseZone,
+        OpeningTypeField::Drum,
+        OpeningTypeField::Overlap,
+        OpeningTypeField::Track,
+        OpeningTypeField::BothSides,
+        OpeningTypeField::Lip,
     ];
 
     pub fn name(self) -> &'static str {
@@ -288,6 +364,11 @@ impl OpeningTypeField {
             Mullions => "mullions",
             Transoms => "transoms",
             UseZone => "useZone",
+            Drum => "drum",
+            Overlap => "overlap",
+            Track => "track",
+            BothSides => "bothSides",
+            Lip => "lip",
         }
     }
 
@@ -315,6 +396,11 @@ impl OpeningTypeField {
             Mullions => "Dikey kayıt",
             Transoms => "Yatay kayıt",
             UseZone => "Kullanım alanı",
+            Drum => "Tambur çapı",
+            Overlap => "Kanat bindirmesi",
+            Track => "Ray çizilir",
+            BothSides => "İki yana toplanır",
+            Lip => "Cepten kalan pay",
         }
     }
 
@@ -352,7 +438,7 @@ pub struct OpeningType {
     pub width: f64,
     #[serde(default = "one", skip_serializing_if = "is_one")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u8>", optional))]
-    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 2), extend("x-unit" = "count")))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 6), extend("x-unit" = "count")))]
     pub leaves: u8,
     #[serde(default, skip_serializing_if = "is_swing")]
     #[cfg_attr(feature = "ts", ts(as = "Option<OpeningOperation>", optional))]
@@ -576,6 +662,11 @@ impl OpeningFields {
             Mullions => json!(b.mullions),
             Transoms => json!(b.transoms),
             UseZone => json!(b.use_zone),
+            Drum => json!(b.drum),
+            Overlap => json!(b.overlap),
+            Track => json!(b.track),
+            BothSides => json!(b.both_sides),
+            Lip => json!(b.lip),
         }
     }
 
@@ -616,6 +707,12 @@ impl OpeningFields {
             Mullions => b.mullions = read(v, field)?,
             Transoms => b.transoms = read(v, field)?,
             UseZone => b.use_zone = read(v, field)?,
+            Drum => b.drum = read(v, field)?,
+            Overlap => b.overlap = read(v, field)?,
+            // A switch turned off is not written (docs/adr/0777 §5).
+            Track => b.track = read::<Option<bool>>(v, field)?.filter(|t| *t),
+            BothSides => b.both_sides = read::<Option<bool>>(v, field)?.filter(|t| *t),
+            Lip => b.lip = read(v, field)?,
         }
         self.build = (!b.is_empty()).then_some(b);
         Ok(())
@@ -678,11 +775,38 @@ pub struct OpeningSizes {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub clear_first: Option<f64>,
+    /// A revolving door's drum, its inside diameter (docs/adr/0777 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub drum: Option<f64>,
+    /// A pocket door's pockets, each how far it runs into the wall past its jamb (docs/adr/0777 §2): the one at its
+    /// start first.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OpeningPocket>>", optional))]
+    pub pockets: Vec<OpeningPocket>,
     /// Which width its nominal size names.
     pub size_by: OpeningSizeBy,
     /// That width.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub nominal: f64,
+}
+
+/// A pocket door's pocket (docs/adr/0777 §2): at which jamb, how far past it into the wall, how wide across it.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OpeningPocket {
+    /// At its end jamb; else its start's.
+    pub at_end: bool,
+    /// From the jamb into the wall along it, metres.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    /// Across the wall, centred in it, metres: the leaf and its play each side.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
 }
 
 /// What a leaf `l` wide, `t` thick, open `angle` degrees takes from the light it closes: its projection across the light
@@ -704,23 +828,54 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
     let angle = f.swing_angle();
     let share = b.split.unwrap_or(0.5);
     let door_like = matches!(f.form, OpeningForm::Door | OpeningForm::Window);
+    let drum = (f.operation == OpeningOperation::Revolving).then(|| b.drum.unwrap_or(leaf));
+    let lip = b.lip.unwrap_or(POCKET_LIP);
     let leaves: Vec<f64> = if !door_like {
         Vec::new()
     } else {
         match (f.operation, f.leaves) {
             (OpeningOperation::Slide, 2) => {
-                let w = leaf * (1.0 + SLIDE_LAP) / 2.0;
+                let w = match b.overlap {
+                    Some(lap) => (leaf + lap) / 2.0,
+                    None => leaf * (1.0 + SLIDE_LAP) / 2.0,
+                };
                 vec![w, w]
             }
+            (OpeningOperation::Revolving, n) => vec![drum.unwrap_or(leaf) / 2.0; usize::from(n)],
+            (OpeningOperation::Folding, n) => vec![leaf / f64::from(n.max(1)); usize::from(n)],
             (_, 2) => vec![leaf * share, leaf * (1.0 - share)],
             _ => vec![leaf],
         }
+    };
+    let pockets: Vec<OpeningPocket> = if f.form == OpeningForm::Door && f.operation == OpeningOperation::Pocket {
+        let play = t + 2.0 * POCKET_PLAY;
+        let pocket = |at_end: bool, w: f64| OpeningPocket {
+            at_end,
+            length: (w - lip - fit - frame + POCKET_PLAY).max(0.0),
+            width: play,
+        };
+        match leaves.as_slice() {
+            [w] => vec![pocket(f.hand == crate::OpeningHand::End, *w)],
+            [a, z] => vec![pocket(false, *a), pocket(true, *z)],
+            _ => Vec::new(),
+        }
+    } else {
+        Vec::new()
     };
     let (clear, clear_first) = match f.form {
         OpeningForm::Door => match (f.operation, leaves.as_slice()) {
             (OpeningOperation::Fixed, _) => (Some(0.0), None),
             (OpeningOperation::Slide, [_]) => (Some(leaf), None),
             (OpeningOperation::Slide, [w, _]) => (Some(leaf - w), None),
+            // The throat between the drum's walls: the chord of its opening, 180° − 360°/n (docs/adr/0777 §1).
+            (OpeningOperation::Revolving, ws) => {
+                let n = ws.len().max(1) as f64;
+                (drum.map(|d| d * libm::cos(core::f64::consts::PI / n)), None)
+            }
+            // Each leaf leaves its lip out of its pocket.
+            (OpeningOperation::Pocket, ws) => (Some(leaf - lip * ws.len() as f64), None),
+            // The panels folded flat, side by side at their jambs.
+            (OpeningOperation::Folding, ws) => (Some(leaf - t * ws.len() as f64), None),
             (OpeningOperation::Swing, [w]) => (Some(leaf - leaf_takes(*w, t, angle)), None),
             (OpeningOperation::Swing, [a, b]) => (
                 Some(leaf - leaf_takes(*a, t, angle) - leaf_takes(*b, t, angle)),
@@ -744,8 +899,113 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
         leaves,
         clear: clear.map(|c| c.max(0.0)),
         clear_first: clear_first.map(|c| c.max(0.0)),
+        drum,
+        pockets,
         size_by,
         nominal,
+    }
+}
+
+/// What is wrong with a revolving, pocket, folding or sliding door's own fields (docs/adr/0777): a field of another
+/// operation, a drum wider than the light, an odd folding door folding to both sides, an overlap a one-leaf or too wide.
+pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
+    let b = f.build.as_ref()?;
+    let op = f.operation;
+    let only = |name: &str, what: &str, of: OpeningOperation| -> Option<(String, String)> {
+        (op != of).then(|| {
+            (
+                format!("build.{name}"),
+                format!(
+                    "{what} yalnız {} açıklığındır; kaldırın ya da açılışı {} yapın.",
+                    of.label().to_lowercase(),
+                    of.label()
+                ),
+            )
+        })
+    };
+    let s = opening_sizes(f);
+    if b.drum.is_some() {
+        if let Some(why) = only("drum", "Tambur çapı", OpeningOperation::Revolving) {
+            return Some(why);
+        }
+        let d = b.drum.unwrap_or(0.0);
+        if d > s.leaf + 1e-9 {
+            return Some((
+                "build.drum".into(),
+                format!(
+                    "Döner kapının tamburu ({d} m) ışıktan ({:.3} m) geniş; tambur kasanın içine sığmalı. Çapı küçültün ya da açıklığı genişletin.",
+                    s.leaf
+                ),
+            ));
+        }
+    }
+    if b.lip.is_some()
+        && let Some(why) = only("lip", "Cepten kalan pay", OpeningOperation::Pocket)
+    {
+        return Some(why);
+    }
+    if let Some(both) = b.both_sides {
+        if let Some(why) = only("bothSides", "İki yana toplanma", OpeningOperation::Folding) {
+            return Some(why);
+        }
+        if both && f.leaves % 2 == 1 {
+            return Some((
+                "build.bothSides".into(),
+                format!(
+                    "{} panel iki yana eşit toplanmaz; panel sayısını çift yapın ya da tek yana toplayın.",
+                    f.leaves
+                ),
+            ));
+        }
+    }
+    if b.track.is_some()
+        && let Some(why) = only("track", "Ray", OpeningOperation::Slide)
+    {
+        return Some(why);
+    }
+    if let Some(lap) = b.overlap {
+        if let Some(why) = only("overlap", "Kanat bindirmesi", OpeningOperation::Slide) {
+            return Some(why);
+        }
+        if f.leaves != 2 {
+            return Some((
+                "build.overlap".into(),
+                "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.".into(),
+            ));
+        }
+        if lap >= s.leaf {
+            return Some((
+                "build.overlap".into(),
+                format!("Kanat bindirmesi ({lap} m) ışıktan ({:.3} m) küçük olmalı.", s.leaf),
+            ));
+        }
+    }
+    None
+}
+
+impl OpeningFields {
+    /// The pockets' least wall thickness (docs/adr/0777 §2): the widest pocket and [`POCKET_SKIN`] each side; none for
+    /// one without a pocket.
+    pub fn pocket_wall(&self) -> Option<f64> {
+        let s = opening_sizes(self);
+        s.pockets
+            .iter()
+            .map(|p| p.width + 2.0 * POCKET_SKIN)
+            .reduce(f64::max)
+    }
+
+    /// Its interval along its wall with its pockets (docs/adr/0777 §2): what no other opening may run into and what must
+    /// lie on its wall's edge.
+    pub fn reach(&self) -> (f64, f64) {
+        let (mut s0, mut s1) = self.span();
+        for p in opening_sizes(self).pockets {
+            if p.at_end {
+                s1 += p.length;
+            } else {
+                s0 -= p.length;
+            }
+        }
+        (s0, s1)
     }
 }
 

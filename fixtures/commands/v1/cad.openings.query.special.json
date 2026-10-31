@@ -1,0 +1,3035 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.openings.query",
+ "commandVersion": 1,
+ "title": "Açıklıkları oku: döner, cebe giren ve katlanır kapının genişlikleri, tamburu ve cebi",
+ "note": "ADR 0777. Beklenenler scripts/fixtures/special_doors_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan. Kurulumda beş duvar (12 m, 0,10 m'lik ince, 4 m'lik kısa, köşeli, özel kapıların) ve beş açıklık (D01 döner, CG1 cebe giren, KT1 katlanır, raylı iki kanatlı sürme, Kapı 90) var; yeni nesne 11'den başlar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Özel kapılar",
+  "uids": [
+   "0192f5a1-7770-7000-8000-000000000001",
+   "0192f5a1-7770-7000-8000-000000000002",
+   "0192f5a1-7770-7000-8000-000000000003",
+   "0192f5a1-7770-7000-8000-000000000004",
+   "0192f5a1-7770-7000-8000-000000000005",
+   "0192f5a1-7770-7000-8000-000000000006",
+   "0192f5a1-7770-7000-8000-000000000007",
+   "0192f5a1-7770-7000-8000-000000000008",
+   "0192f5a1-7770-7000-8000-000000000009",
+   "0192f5a1-7770-7000-8000-00000000000a"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "arch": {
+    "openingTypes": [
+     {
+      "id": "d01",
+      "name": "D01",
+      "version": 1,
+      "form": "door",
+      "width": 2.4,
+      "leaves": 4,
+      "operation": "revolving",
+      "frame": 0.1,
+      "head": 2.4,
+      "build": {
+       "drum": 2.0
+      }
+     },
+     {
+      "id": "cg1",
+      "name": "CG1",
+      "version": 1,
+      "form": "door",
+      "width": 0.9,
+      "operation": "pocket",
+      "frame": 0.03,
+      "head": 2.1,
+      "build": {
+       "leafThickness": 0.04,
+       "lip": 0.06
+      }
+     },
+     {
+      "id": "kt1",
+      "name": "KT1",
+      "version": 1,
+      "form": "door",
+      "width": 1.6,
+      "leaves": 4,
+      "operation": "folding",
+      "frame": 0.04,
+      "head": 2.1
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "kapi",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 12.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 2,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 5.0
+     },
+     {
+      "x": 6.0,
+      "y": 5.0
+     }
+    ],
+    "width": 0.1,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 3,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 10.0
+     },
+     {
+      "x": 4.0,
+      "y": 10.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 4,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 19.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 5,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 20.0,
+      "y": 0.0
+     },
+     {
+      "x": 32.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "opening",
+    "id": 6,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 2.0,
+    "width": 2.4,
+    "form": "door",
+    "leaves": 4,
+    "operation": "revolving",
+    "frame": 0.1,
+    "head": 2.4,
+    "style": "d01",
+    "number": "D1",
+    "typeVersion": 1,
+    "build": {
+     "drum": 2.0
+    },
+    "place": [
+     {
+      "x": 20.8,
+      "y": 0.15
+     },
+     {
+      "x": 20.8,
+      "y": -0.15
+     },
+     {
+      "x": 23.2,
+      "y": 0.15
+     },
+     {
+      "x": 23.2,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 7,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 6.0,
+    "width": 0.9,
+    "form": "door",
+    "operation": "pocket",
+    "frame": 0.03,
+    "head": 2.1,
+    "style": "cg1",
+    "number": "CG1",
+    "typeVersion": 1,
+    "build": {
+     "leafThickness": 0.04,
+     "lip": 0.06
+    },
+    "place": [
+     {
+      "x": 25.55,
+      "y": 0.15
+     },
+     {
+      "x": 25.55,
+      "y": -0.15
+     },
+     {
+      "x": 26.45,
+      "y": 0.15
+     },
+     {
+      "x": 26.45,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 8,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 9.0,
+    "width": 1.6,
+    "form": "door",
+    "leaves": 4,
+    "operation": "folding",
+    "frame": 0.04,
+    "head": 2.1,
+    "style": "kt1",
+    "number": "KT1",
+    "typeVersion": 1,
+    "place": [
+     {
+      "x": 28.2,
+      "y": 0.15
+     },
+     {
+      "x": 28.2,
+      "y": -0.15
+     },
+     {
+      "x": 29.8,
+      "y": 0.15
+     },
+     {
+      "x": 29.8,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 9,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 11.2,
+    "width": 1.2,
+    "form": "door",
+    "leaves": 2,
+    "operation": "slide",
+    "frame": 0.04,
+    "head": 2.1,
+    "number": "S1",
+    "build": {
+     "overlap": 0.1,
+     "track": true
+    },
+    "place": [
+     {
+      "x": 30.6,
+      "y": 0.15
+     },
+     {
+      "x": 30.6,
+      "y": -0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": 0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 10,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000001",
+    "at": 10.5,
+    "width": 0.9,
+    "form": "door",
+    "frame": 0.05,
+    "head": 2.1,
+    "style": "kentos-kapi-90",
+    "number": "K1",
+    "place": [
+     {
+      "x": 10.05,
+      "y": 0.15
+     },
+     {
+      "x": 10.05,
+      "y": -0.15
+     },
+     {
+      "x": 10.95,
+      "y": 0.15
+     },
+     {
+      "x": 10.95,
+      "y": -0.15
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Bütün özel kapılar ve genişlikleri",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "number": "D1",
+         "type": "d01",
+         "typeName": "D01",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 2.4,
+          "unit": 2.4,
+          "leaf": 2.1999999999999997,
+          "leaves": [
+           1.0,
+           1.0,
+           1.0,
+           1.0
+          ],
+          "clear": 1.4142135623730951,
+          "drum": 2.0,
+          "sizeBy": "rough",
+          "nominal": 2.4
+         }
+        },
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "number": "CG1",
+         "type": "cg1",
+         "typeName": "CG1",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8400000000000001,
+          "leaves": [
+           0.8400000000000001
+          ],
+          "clear": 0.78,
+          "pockets": [
+           {
+            "atEnd": false,
+            "length": 0.76,
+            "width": 0.06
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        },
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "number": "KT1",
+         "type": "kt1",
+         "typeName": "KT1",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 1.6,
+          "unit": 1.6,
+          "leaf": 1.52,
+          "leaves": [
+           0.38,
+           0.38,
+           0.38,
+           0.38
+          ],
+          "clear": 1.36,
+          "sizeBy": "rough",
+          "nominal": 1.6
+         }
+        },
+        {
+         "uid": "$uidOf:9",
+         "form": "door",
+         "number": "S1",
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 1.2,
+          "unit": 1.2,
+          "leaf": 1.1199999999999999,
+          "leaves": [
+           0.61,
+           0.61
+          ],
+          "clear": 0.5099999999999999,
+          "sizeBy": "rough",
+          "nominal": 1.2
+         }
+        },
+        {
+         "uid": "$uidOf:10",
+         "form": "door",
+         "number": "K1",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8,
+          "leaves": [
+           0.8
+          ],
+          "clear": 0.76,
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: tamburun boğazı, dört kanat",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "number": "D1",
+         "type": "d01",
+         "typeName": "D01",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 2.4,
+          "unit": 2.4,
+          "leaf": 2.1999999999999997,
+          "leaves": [
+           1.0,
+           1.0,
+           1.0,
+           1.0
+          ],
+          "clear": 1.4142135623730951,
+          "drum": 2.0,
+          "sizeBy": "rough",
+          "nominal": 2.4
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: payı ve cebi",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "number": "CG1",
+         "type": "cg1",
+         "typeName": "CG1",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8400000000000001,
+          "leaves": [
+           0.8400000000000001
+          ],
+          "clear": 0.78,
+          "pockets": [
+           {
+            "atEnd": false,
+            "length": 0.76,
+            "width": 0.06
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır: paneller düz toplanır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:8",
+         "form": "door",
+         "number": "KT1",
+         "type": "kt1",
+         "typeName": "KT1",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 1.6,
+          "unit": 1.6,
+          "leaf": 1.52,
+          "leaves": [
+           0.38,
+           0.38,
+           0.38,
+           0.38
+          ],
+          "clear": 1.36,
+          "sizeBy": "rough",
+          "nominal": 1.6
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme: bindirmeli iki kanat",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:9",
+         "form": "door",
+         "number": "S1",
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 1.2,
+          "unit": 1.2,
+          "leaf": 1.1199999999999999,
+          "leaves": [
+           0.61,
+           0.61
+          ],
+          "clear": 0.5099999999999999,
+          "sizeBy": "rough",
+          "nominal": 1.2
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kanatlı kapı yanında aynı kalır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:10",
+         "form": "door",
+         "number": "K1",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8,
+          "leaves": [
+           0.8
+          ],
+          "clear": 0.76,
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "D01 tipinin kapıları",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "type": "D01"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:6",
+         "form": "door",
+         "number": "D1",
+         "type": "d01",
+         "typeName": "D01",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 2.4,
+          "unit": 2.4,
+          "leaf": 2.1999999999999997,
+          "leaves": [
+           1.0,
+           1.0,
+           1.0,
+           1.0
+          ],
+          "clear": 1.4142135623730951,
+          "drum": 2.0,
+          "sizeBy": "rough",
+          "nominal": 2.4
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "CG1 tipinin kapıları adıyla",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "type": "cg1"
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:7",
+         "form": "door",
+         "number": "CG1",
+         "type": "cg1",
+         "typeName": "CG1",
+         "typeVersion": 1,
+         "host": "$uidOf:5",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8400000000000001,
+          "leaves": [
+           0.8400000000000001
+          ],
+          "clear": 0.78,
+          "pockets": [
+           {
+            "atEnd": false,
+            "length": 0.76,
+            "width": 0.06
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: üç kanat, tambur 1,8 m: boğazı 0,9 m",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 2.2,
+        "operation": "revolving",
+        "leaves": 3,
+        "build": {
+         "drum": 1.8
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 2.2,
+          "unit": 2.2,
+          "leaf": 2.1,
+          "leaves": [
+           0.9,
+           0.9,
+           0.9
+          ],
+          "clear": 0.9000000000000002,
+          "drum": 1.8,
+          "sizeBy": "rough",
+          "nominal": 2.2
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: tamburu verilmezse ışık kadar",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 2.0,
+        "operation": "revolving",
+        "leaves": 4
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 2.0,
+          "unit": 2.0,
+          "leaf": 1.9,
+          "leaves": [
+           0.95,
+           0.95,
+           0.95,
+           0.95
+          ],
+          "clear": 1.3435028842544403,
+          "drum": 1.9,
+          "sizeBy": "rough",
+          "nominal": 2.0
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Döner: D01'in kendi tamburuyla, istisnası",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "type": "D01",
+        "build": {
+         "drum": 1.6
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "d01",
+         "typeName": "D01",
+         "typeVersion": 1,
+         "overrides": [
+          "drum"
+         ],
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 2.4,
+          "unit": 2.4,
+          "leaf": 2.1999999999999997,
+          "leaves": [
+           0.8,
+           0.8,
+           0.8,
+           0.8
+          ],
+          "clear": 1.1313708498984762,
+          "drum": 1.6,
+          "sizeBy": "rough",
+          "nominal": 2.4
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 2,
+         "stale": 0,
+         "exceptions": 1
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: iki kanat iki cebe",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "operation": "pocket",
+        "leaves": 2
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 1.6,
+          "unit": 1.6,
+          "leaf": 1.5,
+          "leaves": [
+           0.75,
+           0.75
+          ],
+          "clear": 1.4,
+          "pockets": [
+           {
+            "atEnd": false,
+            "length": 0.6599999999999999,
+            "width": 0.06
+           },
+           {
+            "atEnd": true,
+            "length": 0.6599999999999999,
+            "width": 0.06
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 1.6
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: iki kanat, pay 0,6",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "operation": "pocket",
+        "leaves": 2,
+        "build": {
+         "split": 0.6
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 1.6,
+          "unit": 1.6,
+          "leaf": 1.5,
+          "leaves": [
+           0.8999999999999999,
+           0.6000000000000001
+          ],
+          "clear": 1.4,
+          "pockets": [
+           {
+            "atEnd": false,
+            "length": 0.8099999999999998,
+            "width": 0.06
+           },
+           {
+            "atEnd": true,
+            "length": 0.51,
+            "width": 0.06
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 1.6
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: sonda, montaj boşluklu",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "operation": "pocket",
+        "hand": "end",
+        "build": {
+         "fit": 0.01
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.88,
+          "leaf": 0.78,
+          "leaves": [
+           0.78
+          ],
+          "clear": 0.73,
+          "pockets": [
+           {
+            "atEnd": true,
+            "length": 0.6799999999999999,
+            "width": 0.06
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: kalın kanat, kısa pay",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "operation": "pocket",
+        "build": {
+         "leafThickness": 0.05,
+         "lip": 0.02
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8,
+          "leaves": [
+           0.8
+          ],
+          "clear": 0.78,
+          "pockets": [
+           {
+            "atEnd": false,
+            "length": 0.74,
+            "width": 0.07
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cebe giren: CG1, 3 cm kanat",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "type": "CG1",
+        "build": {
+         "leafThickness": 0.03
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "cg1",
+         "typeName": "CG1",
+         "typeVersion": 1,
+         "overrides": [
+          "leafThickness"
+         ],
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8400000000000001,
+          "leaves": [
+           0.8400000000000001
+          ],
+          "clear": 0.78,
+          "pockets": [
+           {
+            "atEnd": false,
+            "length": 0.76,
+            "width": 0.05
+           }
+          ],
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 2,
+         "stale": 0,
+         "exceptions": 1
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır: altı ince panel",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 2.4,
+        "operation": "folding",
+        "leaves": 6,
+        "build": {
+         "leafThickness": 0.03
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 2.4,
+          "unit": 2.4,
+          "leaf": 2.3,
+          "leaves": [
+           0.3833333333333333,
+           0.3833333333333333,
+           0.3833333333333333,
+           0.3833333333333333,
+           0.3833333333333333,
+           0.3833333333333333
+          ],
+          "clear": 2.1199999999999997,
+          "sizeBy": "rough",
+          "nominal": 2.4
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katlanır: iki panel 60°, geçişi açıya bağlı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.0,
+        "operation": "folding",
+        "leaves": 2,
+        "swing": 60.0
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 1.0,
+          "unit": 1.0,
+          "leaf": 0.9,
+          "leaves": [
+           0.45,
+           0.45
+          ],
+          "clear": 0.8200000000000001,
+          "sizeBy": "rough",
+          "nominal": 1.0
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme: bindirmesiz iki kanat %5",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "width": 1.6,
+        "operation": "slide",
+        "leaves": 2
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 1.6,
+          "unit": 1.6,
+          "leaf": 1.5,
+          "leaves": [
+           0.7875000000000001,
+           0.7875000000000001
+          ],
+          "clear": 0.7124999999999999,
+          "sizeBy": "rough",
+          "nominal": 1.6
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme: tek kanat yüzde rayda",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "operation": "slide",
+        "build": {
+         "track": true
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "door",
+         "type": "kentos-kapi-90",
+         "typeName": "Kapı 90",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 0.9,
+          "unit": 0.9,
+          "leaf": 0.8,
+          "leaves": [
+           0.8
+          ],
+          "clear": 0.8,
+          "sizeBy": "rough",
+          "nominal": 0.9
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürme pencere: 8 cm bindirme, net geçişi yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.openings.create",
+     "input": {
+      "layerId": "kapi",
+      "openings": [
+       {
+        "host": "$uidOf:1",
+        "at": 5.0,
+        "form": "window",
+        "operation": "slide",
+        "build": {
+         "overlap": 0.08,
+         "track": true
+        }
+       }
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "uids": [
+        "$any"
+       ],
+       "ids": [
+        11
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "openings": [
+        {
+         "uid": "$uidOf:11",
+         "form": "window",
+         "type": "kentos-pencere-120",
+         "typeName": "Pencere 120",
+         "host": "$uidOf:1",
+         "sizes": {
+          "rough": 1.2,
+          "unit": 1.2,
+          "leaf": 1.08,
+          "leaves": [
+           0.5800000000000001,
+           0.5800000000000001
+          ],
+          "sizeBy": "rough",
+          "nominal": 1.2
+         }
+        }
+       ],
+       "types": [
+        {
+         "type": {
+          "id": "d01",
+          "name": "D01",
+          "version": 1,
+          "form": "door",
+          "width": 2.4,
+          "leaves": 4,
+          "operation": "revolving",
+          "frame": 0.1,
+          "head": 2.4,
+          "build": {
+           "drum": 2.0
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "cg1",
+          "name": "CG1",
+          "version": 1,
+          "form": "door",
+          "width": 0.9,
+          "operation": "pocket",
+          "frame": 0.03,
+          "head": 2.1,
+          "build": {
+           "leafThickness": 0.04,
+           "lip": 0.06
+          }
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        },
+        {
+         "type": {
+          "id": "kt1",
+          "name": "KT1",
+          "version": 1,
+          "form": "door",
+          "width": 1.6,
+          "leaves": 4,
+          "operation": "folding",
+          "frame": 0.04,
+          "head": 2.1
+         },
+         "count": 1,
+         "stale": 0,
+         "exceptions": 0
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -15,7 +15,7 @@ import type { NewOpening } from "./NewOpening";
  * `span` projects two jamb points onto one host edge and derives centre and width along its analytic path.
  *
  * Refusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,
- * `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `openings_overlap`, `invalid_revision`,
+ * `style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `opening_pocket_thin`, `opening_pocket_short` (docs/adr/0777), `openings_overlap`, `invalid_revision`,
  * `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.
  * Warning: `layer_hidden`.
  */

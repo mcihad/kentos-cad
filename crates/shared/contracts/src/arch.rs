@@ -1338,6 +1338,14 @@ impl ArchSettings {
             .or_else(|| self.modules.iter().find(|m| m.name.to_lowercase() == folded))
     }
 
+    /// Whether a type of the project is a revolving, pocket or folding door or has their construction (docs/adr/0777):
+    /// only schema 144 knows it.
+    pub fn has_special_doors(&self) -> bool {
+        self.opening_types
+            .iter()
+            .any(|t| t.operation.is_special() || t.build.as_ref().is_some_and(crate::OpeningBuild::is_special))
+    }
+
     /// The project's type of this id, or else of this name (case aside).
     pub fn opening_type(&self, key: &str) -> Option<&crate::OpeningType> {
         let folded = key.trim().to_lowercase();

@@ -210,6 +210,25 @@ impl OpeningTool {
                     }
                 ));
             }
+            // A special door's drum, pockets and clear width (docs/adr/0777).
+            if self.form == OpeningForm::Door && o.operation.is_special() {
+                let s = o.sizes();
+                let mut parts = Vec::new();
+                if let Some(d) = s.drum {
+                    parts.push(format!("Tambur {}", f.length(d)));
+                }
+                for p in &s.pockets {
+                    parts.push(format!(
+                        "Cep {} {}",
+                        f.length(p.length),
+                        if p.at_end { "sonda" } else { "başta" }
+                    ));
+                }
+                if let Some(c) = s.clear {
+                    parts.push(format!("Net geçiş {}", f.length(c)));
+                }
+                self.placement.info.push(format!("{}: {}", o.operation.label(), parts.join(" · ")));
+            }
             // A niche's or flue's place across its wall (docs/adr/0719).
             if let Some((near, far)) = o.recess_in(m.thickness) {
                 let face = match o.side {

@@ -226,6 +226,19 @@ impl Document {
                     "leafWidth" => matches!(x.form, OpeningForm::Door | OpeningForm::Window)
                         .then(|| Length(x.sizes().leaf)),
                     "clearWidth" => x.sizes().clear.map(Length),
+                    // How its leaves move, how many, a revolving door's drum, a pocket door's pocket (docs/adr/0777).
+                    "operation" => matches!(x.form, OpeningForm::Door | OpeningForm::Window)
+                        .then(|| Text(x.operation.label().to_owned())),
+                    "leaves" => matches!(x.form, OpeningForm::Door | OpeningForm::Window)
+                        .then_some(Count(u64::from(x.leaves))),
+                    "drum" => x.sizes().drum.map(Length),
+                    "pocket" => x
+                        .sizes()
+                        .pockets
+                        .iter()
+                        .map(|p| p.length)
+                        .reduce(f64::max)
+                        .map(Length),
                     "typeVersion" => x.type_version.map(|v| Text(format!("s{v}"))),
                     "height" => height.map(Length),
                     "sill" => Some(Length(x.sill.unwrap_or(0.0))),

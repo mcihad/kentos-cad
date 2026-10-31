@@ -292,6 +292,9 @@ pub enum Field {
     OpeningDepth(Slot),
     OpeningInset(Slot),
     OpeningNumber(Slot),
+    /// A special door's construction length (docs/adr/0777 §5): a revolving door's drum, a sliding door's overlap, a
+    /// pocket door's lip (empty: none).
+    OpeningBuild(Slot, kentos_commands::OpeningTypeField),
     /// A space's number, name, usage, height (empty: the level's) and finishes (empty: none; docs/adr/0342 §5).
     SpaceNumber(Slot),
     SpaceName(Slot),
@@ -1544,6 +1547,32 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 })
             });
         }
+        Field::OpeningBuild(slot, which) => {
+            use kentos_commands::{OpeningChange, OpeningsOperation};
+            let change = if text.trim().is_empty() {
+                OpeningChange {
+                    unset: vec![*which],
+                    ..Default::default()
+                }
+            } else {
+                let Some(n) = length(text) else {
+                    return vec!["Bir uzunluk girin; örneğin 10 cm veya 0.10 m.".into()];
+                };
+                if !n.is_finite() {
+                    return Vec::new();
+                }
+                let Ok(b) = serde_json::from_value::<kentos_commands::OpeningBuild>(
+                    serde_json::json!({ which.name(): n }),
+                ) else {
+                    return Vec::new();
+                };
+                OpeningChange {
+                    build: Some(Box::new(b)),
+                    ..Default::default()
+                }
+            };
+            return properties::edit_opening(model, *slot, OpeningsOperation::Set(change));
+        }
         Field::OpeningWidth(slot)
         | Field::OpeningAt(slot)
         | Field::OpeningSwing(slot)
@@ -2062,6 +2091,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::OpeningDepth(_)
         | Field::OpeningInset(_)
         | Field::OpeningNumber(_)
+        | Field::OpeningBuild(..)
         | Field::SpaceNumber(_)
         | Field::SpaceName(_)
         | Field::SpaceUsage(_)

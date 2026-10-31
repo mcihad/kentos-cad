@@ -1721,13 +1721,17 @@ codes! {
     /// An object an opening command was given that is no opening.
     NOT_AN_OPENING = "not_an_opening", Failed, false, "Nesne kapı, pencere ya da boşluk değil.";
     /// An opening's fields that make none.
-    INVALID_OPENING = "invalid_opening", Failed, false, "Açıklığın alanları bir açıklık tanımlamıyor: genişlik sıfırdan büyük, kanat 1 ya da 2, açı 0'dan büyük ve en çok 180°, kasa açıklığın yarısından dar.";
+    INVALID_OPENING = "invalid_opening", Failed, false, "Açıklığın alanları bir açıklık tanımlamıyor: genişlik sıfırdan büyük, kanat 1 ya da 2 (döner kapıda 3 ya da 4, katlanırda 2–6 panel), açı 0'dan büyük ve en çok 180°, kasa açıklığın yarısından dar.";
     /// An opening past its wall's end or round its corner.
     OPENING_OFF_WALL = "opening_off_wall", Failed, false, "Açıklık duvarın ucundan ya da köşesinden taşıyor: duvarın tek bir kenarında, uçlarının arasında kalmalı. Açıklığı kaydırın ya da daraltın.";
     /// Two openings of one wall running into each other.
     OPENINGS_OVERLAP = "openings_overlap", Failed, false, "Açıklık aynı duvardaki başka bir açıklığa biniyor. Açıklığı kaydırın ya da daraltın.";
     /// An opening whose wall is gone, moved along a wall it has not.
     OPENING_HOST_GONE = "opening_host_gone", Failed, false, "Açıklığın duvarı yok; duvar boyunca taşınamaz. Önce bir duvara taşıyın (Başka duvara).";
+    /// A pocket door's pocket wider than its wall leaves room for (docs/adr/0777 §2).
+    OPENING_POCKET_THIN = "opening_pocket_thin", Failed, false, "Cebe giren kapının cebi duvara sığmıyor: duvar, cebin genişliğinden ve iki yanındaki en az 2,5 cm'lik duvardan kalın olmalı. Duvarı kalınlaştırın, kanadı inceltin ya da başka açılış seçin.";
+    /// A pocket door's pocket past its wall's end or corner, or into another opening (docs/adr/0777 §2).
+    OPENING_POCKET_SHORT = "opening_pocket_short", Failed, false, "Cebe giren kapının cebi duvarın ucundan, köşesinden ya da başka bir açıklığa taşıyor: kanadın girdiği uzunluk duvarın aynı kenarında boş olmalı. Kapıyı kaydırın, menteşe yönünü değiştirin ya da kanadı daraltın.";
     /// A niche or flue that does not stay inside its wall's thickness (docs/adr/0719 §3).
     RECESS_TOO_DEEP = "recess_too_deep", Failed, false, "Niş ya da baca duvarın kalınlığına sığmıyor: niş öbür yüze, baca iki yüze varmamalı. Derinliği azaltın ya da duvarı geçen boşluk için Boşluk kullanın.";
     // ── Kapı ve pencere tipleri (docs/adr/0772) ─────────────────────────

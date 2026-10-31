@@ -1256,6 +1256,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin kapı ve pencere tipleri şema 139'den beri yazılır",
                     ));
                 }
+                if !has.special_doors && a.has_special_doors() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "döner, cebe giren ve katlanır kapı tipleri şema 144 ister",
+                    ));
+                }
                 if !has.building_program && !a.program.is_empty() {
                     return Err(r.fail_at(Code::UnknownField, at, "bina programı şema 140 ister"));
                 }

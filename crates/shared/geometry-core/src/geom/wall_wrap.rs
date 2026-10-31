@@ -265,9 +265,10 @@ impl Solver<'_> {
                 }
             }
         }
-        // The through holes' jambs, when the turns fit before the wall's ends and other holes.
+        // The through holes' jambs, when the turns fit before the wall's ends and other holes; a pocket door's stay
+        // square, its pocket opening there (docs/adr/0777 §2).
         let through: Vec<usize> = (0..holes.len())
-            .filter(|&h| holes[h].lo <= right + eps && holes[h].hi >= left - eps)
+            .filter(|&h| holes[h].lo <= right + eps && holes[h].hi >= left - eps && holes[h].open == [None, None])
             .collect();
         for &h in &through {
             let (s0, s1) = (holes[h].s0, holes[h].s1);

@@ -3,4 +3,4 @@
 /**
  * How its leaves move.
  */
-export type OpeningOperation = "swing" | "slide" | "fixed";
+export type OpeningOperation = "swing" | "slide" | "fixed" | "revolving" | "pocket" | "folding";

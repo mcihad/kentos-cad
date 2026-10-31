@@ -52,4 +52,28 @@ transoms?: number,
 /**
  * The use zone in front of it on the side it opens to (kullanım alanı), its depth, metres; absent: none.
  */
-useZone?: number, };
+useZone?: number, 
+/**
+ * A revolving door's drum, its inside diameter, metres (docs/adr/0777 §1); absent: the light between the frame's
+ * sides. At most the light.
+ */
+drum?: number, 
+/**
+ * How much a two-leaf sliding door's or window's leaves overlap when shut, metres (docs/adr/0777 §4); absent: 5 %
+ * of the light. Below the light.
+ */
+overlap?: number, 
+/**
+ * A sliding door's or window's track drawn in plan: the rail its leaves run on, and a one-leaf door's leaf beside
+ * the wall face, over the stretch it slides to (docs/adr/0777 §4). Absent: not drawn.
+ */
+track?: boolean, 
+/**
+ * A folding door's panels fold to both jambs, half to each (an even count; docs/adr/0777 §3). Absent: all to the
+ * jamb at its `hand`.
+ */
+bothSides?: boolean, 
+/**
+ * How much of an open pocket door's leaf stays out of its pocket, metres (docs/adr/0777 §2); absent: 0.05.
+ */
+lip?: number, };

@@ -1,0 +1,2171 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.openingtypes.edit",
+ "commandVersion": 1,
+ "title": "Kapı tipleri: döner, cebe giren ve katlanır tipler, izleyen kapılar, cebe sığmayan",
+ "note": "ADR 0777. Beklenenler scripts/fixtures/special_doors_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan. Kurulumda beş duvar (12 m, 0,10 m'lik ince, 4 m'lik kısa, köşeli, özel kapıların) ve beş açıklık (D01 döner, CG1 cebe giren, KT1 katlanır, raylı iki kanatlı sürme, Kapı 90) var; yeni nesne 11'den başlar.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Özel kapılar",
+  "uids": [
+   "0192f5a1-7770-7000-8000-000000000001",
+   "0192f5a1-7770-7000-8000-000000000002",
+   "0192f5a1-7770-7000-8000-000000000003",
+   "0192f5a1-7770-7000-8000-000000000004",
+   "0192f5a1-7770-7000-8000-000000000005",
+   "0192f5a1-7770-7000-8000-000000000006",
+   "0192f5a1-7770-7000-8000-000000000007",
+   "0192f5a1-7770-7000-8000-000000000008",
+   "0192f5a1-7770-7000-8000-000000000009",
+   "0192f5a1-7770-7000-8000-00000000000a"
+  ],
+  "settings": {
+   "srid": 0,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 50,
+   "workspace": "cad",
+   "arch": {
+    "openingTypes": [
+     {
+      "id": "d01",
+      "name": "D01",
+      "version": 1,
+      "form": "door",
+      "width": 2.4,
+      "leaves": 4,
+      "operation": "revolving",
+      "frame": 0.1,
+      "head": 2.4,
+      "build": {
+       "drum": 2.0
+      }
+     },
+     {
+      "id": "cg1",
+      "name": "CG1",
+      "version": 1,
+      "form": "door",
+      "width": 0.9,
+      "operation": "pocket",
+      "frame": 0.03,
+      "head": 2.1,
+      "build": {
+       "leafThickness": 0.04,
+       "lip": 0.06
+      }
+     },
+     {
+      "id": "kt1",
+      "name": "KT1",
+      "version": 1,
+      "form": "door",
+      "width": 1.6,
+      "leaves": 4,
+      "operation": "folding",
+      "frame": 0.04,
+      "head": 2.1
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 0,
+   "y": 0
+  },
+  "layers": [
+   {
+    "id": "duvar",
+    "name": "Duvar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kapi",
+    "name": "Kapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "kapi",
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "entities": [
+   {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 12.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 2,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 5.0
+     },
+     {
+      "x": 6.0,
+      "y": 5.0
+     }
+    ],
+    "width": 0.1,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 3,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 10.0
+     },
+     {
+      "x": 4.0,
+      "y": 10.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 4,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 15.0
+     },
+     {
+      "x": 5.0,
+      "y": 19.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "wall",
+    "id": 5,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 20.0,
+      "y": 0.0
+     },
+     {
+      "x": 32.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.3,
+    "justify": "center"
+   },
+   {
+    "kind": "opening",
+    "id": 6,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 2.0,
+    "width": 2.4,
+    "form": "door",
+    "leaves": 4,
+    "operation": "revolving",
+    "frame": 0.1,
+    "head": 2.4,
+    "style": "d01",
+    "number": "D1",
+    "typeVersion": 1,
+    "build": {
+     "drum": 2.0
+    },
+    "place": [
+     {
+      "x": 20.8,
+      "y": 0.15
+     },
+     {
+      "x": 20.8,
+      "y": -0.15
+     },
+     {
+      "x": 23.2,
+      "y": 0.15
+     },
+     {
+      "x": 23.2,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 7,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 6.0,
+    "width": 0.9,
+    "form": "door",
+    "operation": "pocket",
+    "frame": 0.03,
+    "head": 2.1,
+    "style": "cg1",
+    "number": "CG1",
+    "typeVersion": 1,
+    "build": {
+     "leafThickness": 0.04,
+     "lip": 0.06
+    },
+    "place": [
+     {
+      "x": 25.55,
+      "y": 0.15
+     },
+     {
+      "x": 25.55,
+      "y": -0.15
+     },
+     {
+      "x": 26.45,
+      "y": 0.15
+     },
+     {
+      "x": 26.45,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 8,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 9.0,
+    "width": 1.6,
+    "form": "door",
+    "leaves": 4,
+    "operation": "folding",
+    "frame": 0.04,
+    "head": 2.1,
+    "style": "kt1",
+    "number": "KT1",
+    "typeVersion": 1,
+    "place": [
+     {
+      "x": 28.2,
+      "y": 0.15
+     },
+     {
+      "x": 28.2,
+      "y": -0.15
+     },
+     {
+      "x": 29.8,
+      "y": 0.15
+     },
+     {
+      "x": 29.8,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 9,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000005",
+    "at": 11.2,
+    "width": 1.2,
+    "form": "door",
+    "leaves": 2,
+    "operation": "slide",
+    "frame": 0.04,
+    "head": 2.1,
+    "number": "S1",
+    "build": {
+     "overlap": 0.1,
+     "track": true
+    },
+    "place": [
+     {
+      "x": 30.6,
+      "y": 0.15
+     },
+     {
+      "x": 30.6,
+      "y": -0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": 0.15
+     },
+     {
+      "x": 31.799999999999997,
+      "y": -0.15
+     }
+    ]
+   },
+   {
+    "kind": "opening",
+    "id": 10,
+    "layerId": "kapi",
+    "attrs": {},
+    "host": "0192f5a1-7770-7000-8000-000000000001",
+    "at": 10.5,
+    "width": 0.9,
+    "form": "door",
+    "frame": 0.05,
+    "head": 2.1,
+    "style": "kentos-kapi-90",
+    "number": "K1",
+    "place": [
+     {
+      "x": 10.05,
+      "y": 0.15
+     },
+     {
+      "x": 10.05,
+      "y": -0.15
+     },
+     {
+      "x": 10.95,
+      "y": 0.15
+     },
+     {
+      "x": 10.95,
+      "y": -0.15
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "Yeni tip: üç kanatlı döner, tambur 1,8 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "D02",
+       "copyOf": "Kapı 90",
+       "change": {
+        "width": 2.0,
+        "operation": "revolving",
+        "leaves": 3,
+        "build": {
+         "drum": 1.8
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        },
+        {
+         "id": "d02",
+         "name": "D02",
+         "version": 1,
+         "form": "door",
+         "width": 2.0,
+         "leaves": 3,
+         "operation": "revolving",
+         "frame": 0.05,
+         "head": 2.1,
+         "build": {
+          "drum": 1.8
+         }
+        }
+       ],
+       "report": {
+        "applied": [],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: KT1'in kopyası, altı panel iki yana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "KT2",
+       "copyOf": "KT1",
+       "change": {
+        "width": 2.4,
+        "leaves": 6,
+        "build": {
+         "bothSides": true
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        },
+        {
+         "id": "kt2",
+         "name": "KT2",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 6,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1,
+         "build": {
+          "bothSides": true
+         }
+        }
+       ],
+       "report": {
+        "applied": [],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: iki kanatlı döner reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "D03",
+       "copyOf": "D01",
+       "change": {
+        "leaves": 2
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Döner kapının kanat sayısı 2; 3 ya da 4 olmalı.",
+       "path": "operation.change.leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "CG1'in payı 10 cm: kapısı izler, cebi kısalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "CG1",
+       "change": {
+        "build": {
+         "lip": 0.1
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 2,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.1
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        }
+       ],
+       "report": {
+        "applied": [
+         "$uidOf:7"
+        ],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": [
+         "lip"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "entities": {
+       "7": {
+        "kind": "opening",
+        "id": 7,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 6.0,
+        "width": 0.9,
+        "form": "door",
+        "operation": "pocket",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "number": "CG1",
+        "typeVersion": 2,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.1
+        },
+        "place": [
+         {
+          "x": 25.55,
+          "y": 0.15
+         },
+         {
+          "x": 25.55,
+          "y": -0.15
+         },
+         {
+          "x": 26.45,
+          "y": 0.15
+         },
+         {
+          "x": 26.45,
+          "y": -0.15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "CG1'in kanadı 25 cm: cebi 30 cm'lik duvara sığmaz, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "CG1",
+       "change": {
+        "build": {
+         "leafThickness": 0.25
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "opening_type_refused",
+       "message": "Tipi izleyen “$uidOf:7” açıklığı değişikliği alamıyor: Cebe giren kapının cebi için duvar en az 0.320 m kalınlığında olmalı (cep ve iki yanında 2,5 cm duvar); bu duvar 0.300 m. Daha kalın bir duvar seçin, kanadı inceltin ya da kayar kapı kullanın. Hiçbir şey yazılmadı; açıklığı düzeltin, tipten ayırın ya da sığmayanları atlamayı (onRefused: skip) seçin.",
+       "path": "operation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "D01 üç kanatlı olur: kapısı izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "D01",
+       "change": {
+        "leaves": 3
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 2,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 3,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        }
+       ],
+       "report": {
+        "applied": [
+         "$uidOf:6"
+        ],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": [
+         "leaves"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "entities": {
+       "6": {
+        "kind": "opening",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 2.0,
+        "width": 2.4,
+        "form": "door",
+        "leaves": 3,
+        "operation": "revolving",
+        "frame": 0.1,
+        "head": 2.4,
+        "style": "d01",
+        "number": "D1",
+        "typeVersion": 2,
+        "build": {
+         "drum": 2.0
+        },
+        "place": [
+         {
+          "x": 20.8,
+          "y": 0.15
+         },
+         {
+          "x": 20.8,
+          "y": -0.15
+         },
+         {
+          "x": 23.2,
+          "y": 0.15
+         },
+         {
+          "x": 23.2,
+          "y": -0.15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "KT1 iki yana toplanır: kapısı izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "KT1",
+       "change": {
+        "build": {
+         "bothSides": true
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 2,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1,
+         "build": {
+          "bothSides": true
+         }
+        }
+       ],
+       "report": {
+        "applied": [
+         "$uidOf:8"
+        ],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": [
+         "bothSides"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 9.0,
+        "width": 1.6,
+        "form": "door",
+        "leaves": 4,
+        "operation": "folding",
+        "frame": 0.04,
+        "head": 2.1,
+        "style": "kt1",
+        "number": "KT1",
+        "typeVersion": 2,
+        "build": {
+         "bothSides": true
+        },
+        "place": [
+         {
+          "x": 28.2,
+          "y": 0.15
+         },
+         {
+          "x": 28.2,
+          "y": -0.15
+         },
+         {
+          "x": 29.8,
+          "y": 0.15
+         },
+         {
+          "x": 29.8,
+          "y": -0.15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "KT1'e ray verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "KT1",
+       "change": {
+        "build": {
+         "track": true
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Ray yalnız sürme açıklığındır; kaldırın ya da açılışı Sürme yapın.",
+       "path": "operation.change.build.track"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: CG1'in iki kanatlı kopyası",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "CG2",
+       "copyOf": "CG1",
+       "change": {
+        "width": 1.6,
+        "leaves": 2
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        },
+        {
+         "id": "cg2",
+         "name": "CG2",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 2,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        }
+       ],
+       "report": {
+        "applied": [],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: kapalı rayı yazılmayan sürme",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "S01",
+       "copyOf": "Kapı 90",
+       "change": {
+        "operation": "slide",
+        "build": {
+         "track": false
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        },
+        {
+         "id": "s01",
+         "name": "S01",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "slide",
+         "frame": 0.05,
+         "head": 2.1
+        }
+       ],
+       "report": {
+        "applied": [],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": []
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: tek panelli katlanır reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "KT9",
+       "copyOf": "KT1",
+       "change": {
+        "leaves": 1
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Katlanır kapının panel sayısı 1; 2 ile 6 arasında olmalı.",
+       "path": "operation.change.leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: katlanır kapıya tambur verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "KT9",
+       "copyOf": "KT1",
+       "change": {
+        "build": {
+         "drum": 1.0
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Tambur çapı yalnız döner açıklığındır; kaldırın ya da açılışı Döner yapın.",
+       "path": "operation.change.build.drum"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: tek kanatlı sürmeye bindirme verilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "S09",
+       "copyOf": "Kapı 90",
+       "change": {
+        "operation": "slide",
+        "build": {
+         "overlap": 0.05
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Kanat bindirmesi iki kanatlı sürmenindir; tek kanatlıda kaldırın.",
+       "path": "operation.change.build.overlap"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tip: döner pencere olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "define",
+       "name": "P09",
+       "copyOf": "Pencere 120",
+       "change": {
+        "operation": "revolving",
+        "leaves": 4
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Döner açılış yalnız kapınındır; pencere için Kanatlı, Sürme ya da Sabit seçin.",
+       "path": "operation.change.operation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "D01'in tamburu ışıktan geniş olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "D01",
+       "change": {
+        "build": {
+         "drum": 2.4
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Döner kapının tamburu (2.4 m) ışıktan (2.200 m) geniş; tambur kasanın içine sığmalı. Çapı küçültün ya da açıklığı genişletin.",
+       "path": "operation.change.build.drum"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "D01'in tamburu 1,8 m: kapısı izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "D01",
+       "change": {
+        "build": {
+         "drum": 1.8
+        }
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 2,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 1.8
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        }
+       ],
+       "report": {
+        "applied": [
+         "$uidOf:6"
+        ],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": [
+         "drum"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "entities": {
+       "6": {
+        "kind": "opening",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 2.0,
+        "width": 2.4,
+        "form": "door",
+        "leaves": 4,
+        "operation": "revolving",
+        "frame": 0.1,
+        "head": 2.4,
+        "style": "d01",
+        "number": "D1",
+        "typeVersion": 2,
+        "build": {
+         "drum": 1.8
+        },
+        "place": [
+         {
+          "x": 20.8,
+          "y": 0.15
+         },
+         {
+          "x": 20.8,
+          "y": -0.15
+         },
+         {
+          "x": 23.2,
+          "y": 0.15
+         },
+         {
+          "x": 23.2,
+          "y": -0.15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "D01'in tamburu kaldırılır: ışık kadar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "D01",
+       "change": {
+        "unset": [
+         "drum"
+        ]
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 2,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        }
+       ],
+       "report": {
+        "applied": [
+         "$uidOf:6"
+        ],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": [
+         "drum"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "entities": {
+       "6": {
+        "kind": "opening",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 2.0,
+        "width": 2.4,
+        "form": "door",
+        "leaves": 4,
+        "operation": "revolving",
+        "frame": 0.1,
+        "head": 2.4,
+        "style": "d01",
+        "number": "D1",
+        "typeVersion": 2,
+        "place": [
+         {
+          "x": 20.8,
+          "y": 0.15
+         },
+         {
+          "x": 20.8,
+          "y": -0.15
+         },
+         {
+          "x": 23.2,
+          "y": 0.15
+         },
+         {
+          "x": 23.2,
+          "y": -0.15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "CG1 iki kanatlı olur: kapısının iki cebi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "CG1",
+       "change": {
+        "leaves": 2
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 2,
+         "form": "door",
+         "width": 0.9,
+         "leaves": 2,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 1,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 4,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        }
+       ],
+       "report": {
+        "applied": [
+         "$uidOf:7"
+        ],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": [
+         "leaves"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "entities": {
+       "7": {
+        "kind": "opening",
+        "id": 7,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 6.0,
+        "width": 0.9,
+        "form": "door",
+        "leaves": 2,
+        "operation": "pocket",
+        "frame": 0.03,
+        "head": 2.1,
+        "style": "cg1",
+        "number": "CG1",
+        "typeVersion": 2,
+        "build": {
+         "leafThickness": 0.04,
+         "lip": 0.06
+        },
+        "place": [
+         {
+          "x": 25.55,
+          "y": 0.15
+         },
+         {
+          "x": 25.55,
+          "y": -0.15
+         },
+         {
+          "x": 26.45,
+          "y": 0.15
+         },
+         {
+          "x": 26.45,
+          "y": -0.15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "CG1 iki metre olunca cebi döner kapıya girer, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "CG1",
+       "change": {
+        "width": 2.0
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "opening_type_refused",
+       "message": "Tipi izleyen “$uidOf:7” açıklığı değişikliği alamıyor: Cebe giren kapının cebi aynı duvardaki başka bir açıklığa (0.800–3.200 m) giriyor: kapı ve cebi duvar boyunca 3.140–7.000 m. Cebin uzunluğu duvarda boş kalmalı; kapıyı kaydırın, menteşe yanını değiştirin ya da öbür açıklığı taşıyın. Hiçbir şey yazılmadı; açıklığı düzeltin, tipten ayırın ya da sığmayanları atlamayı (onRefused: skip) seçin.",
+       "path": "operation"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "KT1 altı panelli olur: kapısı izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "KT1",
+       "change": {
+        "leaves": 6
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "completed",
+      "output": {
+       "types": [
+        {
+         "id": "d01",
+         "name": "D01",
+         "version": 1,
+         "form": "door",
+         "width": 2.4,
+         "leaves": 4,
+         "operation": "revolving",
+         "frame": 0.1,
+         "head": 2.4,
+         "build": {
+          "drum": 2.0
+         }
+        },
+        {
+         "id": "cg1",
+         "name": "CG1",
+         "version": 1,
+         "form": "door",
+         "width": 0.9,
+         "operation": "pocket",
+         "frame": 0.03,
+         "head": 2.1,
+         "build": {
+          "leafThickness": 0.04,
+          "lip": 0.06
+         }
+        },
+        {
+         "id": "kt1",
+         "name": "KT1",
+         "version": 2,
+         "form": "door",
+         "width": 1.6,
+         "leaves": 6,
+         "operation": "folding",
+         "frame": 0.04,
+         "head": 2.1
+        }
+       ],
+       "report": {
+        "applied": [
+         "$uidOf:8"
+        ],
+        "kept": [],
+        "skipped": [],
+        "refused": [],
+        "fields": [
+         "leaves"
+        ]
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "changed",
+      "entities": {
+       "8": {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "$uidOf:5",
+        "at": 9.0,
+        "width": 1.6,
+        "form": "door",
+        "leaves": 6,
+        "operation": "folding",
+        "frame": 0.04,
+        "head": 2.1,
+        "style": "kt1",
+        "number": "KT1",
+        "typeVersion": 2,
+        "place": [
+         {
+          "x": 28.2,
+          "y": 0.15
+         },
+         {
+          "x": 28.2,
+          "y": -0.15
+         },
+         {
+          "x": 29.8,
+          "y": 0.15
+         },
+         {
+          "x": 29.8,
+          "y": -0.15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "KT1 sürme olunca dört kanadı reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "kind": "update",
+       "type": "KT1",
+       "change": {
+        "operation": "slide"
+       }
+      }
+     },
+     "within": 1e-09,
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_opening_type",
+       "message": "Açıklığın kanat sayısı 4; 1 ya da 2 olmalı.",
+       "path": "operation.change.leaves"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

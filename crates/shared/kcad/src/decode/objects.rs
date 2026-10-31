@@ -328,6 +328,7 @@ pub(super) struct Features {
     /// Schema 138 (docs/adr/0771): turning wall components, node decisions, bound slabs.
     pub(super) building_parts: bool,
     pub(super) opening_types: bool,
+    pub(super) special_doors: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -539,6 +540,7 @@ impl Features {
             arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             building_parts: schema >= crate::SCHEMA_WITH_BUILDING_PARTS,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
+            special_doors: schema >= crate::SCHEMA_WITH_SPECIAL_DOORS,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -2255,6 +2257,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 144 (docs/adr/0777): a revolving, pocket or folding door, a sliding door's track, a schedule of them.
+    if kentos_contracts::needs_special_doors(&entity) && !has.special_doors {
+        return Err(r.fail(
+            Code::UnknownField,
+            "döner, cebe giren ve katlanır kapı, kayar kapının rayı ve bindirmesi ve çizelgenin açılış sütunları şema 144 ister",
         ));
     }
     // Schema 139 (docs/adr/0772): an opening following a type or built, a schedule of an opening's widths.

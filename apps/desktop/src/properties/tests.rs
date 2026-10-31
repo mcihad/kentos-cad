@@ -1141,6 +1141,56 @@ fn a_niches_depth_and_a_flues_inset_are_written_from_the_rows_one_step_each() {
     assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
 }
 
+// ── docs/adr/0777: a special door's rows ─────────────────────────────
+
+#[test]
+fn a_revolving_doors_drum_and_a_pocket_doors_lip_are_written_from_the_rows() {
+    use kentos_commands::{OpeningOperation, OpeningTypeField, Workspace};
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    doc.set_settings(settings);
+    let wall = add(&mut app, serde_json::from_value(json!({
+        "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
+        "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.3
+    })).unwrap());
+    let host = app.document.as_ref().unwrap().model.uid(Slot(wall)).unwrap().to_string();
+    let door = add(&mut app, serde_json::from_value(json!({
+        "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
+        "host":host, "at":5., "width":2.4, "form":"door", "leaves":4, "operation":"revolving", "place":[]
+    })).unwrap());
+    let fields = |app: &App| match entity(app, door) {
+        Entity::Opening(o) => o.opening,
+        _ => panic!("an opening"),
+    };
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Drum), "180 cm".into()));
+    assert_eq!(fields(&app).build.and_then(|b| b.drum), Some(1.8), "{:?}", warned(&app));
+    // Wider than its light: refused, said, nothing written.
+    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Drum), "3 m".into()));
+    assert_eq!(fields(&app).build.and_then(|b| b.drum), Some(1.8));
+    assert!(warned(&app).is_some_and(|w| w.contains("tamburu")), "{:?}", warned(&app));
+    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Drum), String::new()));
+    assert_eq!(fields(&app).build, None, "empty: the light");
+    assert!(undo_label(&mut app).is_some());
+    assert!(undo_label(&mut app).is_some());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    // A pocket door now: its lip.
+    let set = kentos_commands::OpeningChange {
+        operation: Some(OpeningOperation::Pocket),
+        leaves: Some(1),
+        width: Some(0.9),
+        ..Default::default()
+    };
+    event(&mut app, Event::Opening(Slot(door), kentos_commands::OpeningsOperation::Set(set)));
+    assert_eq!(fields(&app).operation, OpeningOperation::Pocket, "{:?}", warned(&app));
+    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Lip), "3 cm".into()));
+    assert_eq!(fields(&app).build.and_then(|b| b.lip), Some(0.03), "{:?}", warned(&app));
+}
+
 fn wire(x: f64, y: f64) -> Wire {
     Wire { x: E + x, y: N + y }
 }

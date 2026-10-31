@@ -3,7 +3,7 @@
 //! has no kind of its own.
 
 use kentos_contracts::{
-    ArcEntity, Entity, EntityBase, LineEntity, OpeningAnchor, OpeningFields, OpeningForm,
+    ArcEntity, CircleEntity, Entity, EntityBase, LineEntity, OpeningAnchor, OpeningFields, OpeningForm,
     OpeningHand, OpeningOperation, OpeningSide, PathEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
@@ -35,10 +35,13 @@ pub fn spec(o: &OpeningFields) -> Spec {
             OpeningOperation::Swing => Operation::Swing,
             OpeningOperation::Slide => Operation::Slide,
             OpeningOperation::Fixed => Operation::Fixed,
+            OpeningOperation::Revolving => Operation::Revolving,
+            OpeningOperation::Pocket => Operation::Pocket,
+            OpeningOperation::Folding => Operation::Folding,
         },
         hand_end: o.hand == OpeningHand::End,
         side_right: o.side == OpeningSide::Right,
-        swing: o.swing_angle(),
+        swing: o.drawn_swing(),
         show_swing: o.show_swing,
         frame: o.frame.unwrap_or(0.0),
         sill: o.sill,
@@ -65,12 +68,23 @@ pub fn build(b: Option<&kentos_contracts::OpeningBuild>) -> opening::Build {
         sill_board: b.sill_board,
         mullions: b.mullions.unwrap_or(0),
         use_zone: b.use_zone,
+        drum: b.drum,
+        overlap: b.overlap,
+        track: b.track.unwrap_or(false),
+        both_sides: b.both_sides.unwrap_or(false),
+        lip: b.lip,
     }
 }
 
 /// What it takes out of its wall in plan (docs/adr/0719 §3); none when plan does not cut it.
 pub fn hole(o: &OpeningFields) -> Option<opening::Hole> {
     opening::hole(o.at, o.width, &spec(o))
+}
+
+/// What it takes out of its wall in plan with a pocket door's cavities (docs/adr/0777 §2); none when plan does not cut
+/// it.
+pub fn holes(o: &OpeningFields) -> Vec<opening::Hole> {
+    opening::holes(o.at, o.width, &spec(o))
 }
 
 /// Its place along its wall, from its start to its end.
@@ -143,6 +157,12 @@ pub fn plain_pieces(base: &EntityBase, o: &OpeningFields) -> Vec<Entity> {
                     closed,
                     widths: None,
                 }),
+                // A revolving door's drum (docs/adr/0777 §1).
+                Shape::Circle { c, r } => Entity::Circle(CircleEntity {
+                    base: b,
+                    c: back(c),
+                    r,
+                }),
                 _ => return None,
             })
         })
@@ -167,9 +187,8 @@ pub fn spans_by_wall(
         if let Entity::Opening(o) = e
             && o.opening.broken.is_none()
             && let Some(&k) = place.get(o.opening.host.as_str())
-            && let Some(h) = hole(&o.opening)
         {
-            out[k].push(h);
+            out[k].extend(holes(&o.opening));
         }
     }
     out

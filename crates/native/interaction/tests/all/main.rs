@@ -116,6 +116,7 @@ mod column_distance;
 mod tagged_spaces;
 mod active_level;
 mod opening_numbers;
+mod opening_special;
 mod recesses;
 mod partition_arc;
 mod partition_side;

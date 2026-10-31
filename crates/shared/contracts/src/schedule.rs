@@ -133,10 +133,16 @@ pub enum ScheduleField {
     Target,
     /// How far a space's area lies outside its brief's range (below minus, above plus).
     TargetDiff,
+    /// An opening's operation (Kanatlı, Sürme, Döner, Cebe giren, Katlanır …), its leaves (a revolving door's wings, a
+    /// folding door's panels), a revolving door's drum and a pocket door's pockets' length (docs/adr/0777 §5).
+    Operation,
+    Leaves,
+    Drum,
+    Pocket,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 35] = [
+    pub const ALL: [ScheduleField; 39] = [
         ScheduleField::Number,
         ScheduleField::Type,
         ScheduleField::Form,
@@ -172,6 +178,10 @@ impl ScheduleField {
         ScheduleField::Unit,
         ScheduleField::Target,
         ScheduleField::TargetDiff,
+        ScheduleField::Operation,
+        ScheduleField::Leaves,
+        ScheduleField::Drum,
+        ScheduleField::Pocket,
     ];
 
     /// Its heading when the column gives none.
@@ -212,6 +222,10 @@ impl ScheduleField {
             ScheduleField::Unit => "Bölüm",
             ScheduleField::Target => "Tasarım hedefi",
             ScheduleField::TargetDiff => "Hedef farkı",
+            ScheduleField::Operation => "Açılış",
+            ScheduleField::Leaves => "Kanat",
+            ScheduleField::Drum => "Tambur çapı",
+            ScheduleField::Pocket => "Cep boyu",
         }
     }
 
@@ -252,6 +266,10 @@ impl ScheduleField {
             ScheduleField::Unit => "unit",
             ScheduleField::Target => "target",
             ScheduleField::TargetDiff => "targetDiff",
+            ScheduleField::Operation => "operation",
+            ScheduleField::Leaves => "leaves",
+            ScheduleField::Drum => "drum",
+            ScheduleField::Pocket => "pocket",
         }
     }
 
@@ -285,6 +303,7 @@ impl ScheduleField {
             Length | Thickness => of == ScheduleOf::Walls,
             Category | Space => of == ScheduleOf::Fixtures,
             RoughWidth | UnitWidth | LeafWidth | ClearWidth => of == ScheduleOf::Openings,
+            Operation | Leaves | Drum | Pocket => of == ScheduleOf::Openings,
         }
     }
 
@@ -328,8 +347,14 @@ impl ScheduleField {
         matches!(
             self,
             Width | Height | Sill | Head | Perimeter | Length | Thickness | Baseboard | RoughWidth | UnitWidth
-                | LeafWidth | ClearWidth
+                | LeafWidth | ClearWidth | Drum | Pocket
         )
+    }
+
+    /// Whether it is one of the fields docs/adr/0777 added (`.kcad` schema 144).
+    pub fn is_special(self) -> bool {
+        use ScheduleField::*;
+        matches!(self, Operation | Leaves | Drum | Pocket)
     }
 
     /// Whether it is one of an opening's widths docs/adr/0772 added (`.kcad` schema 137).

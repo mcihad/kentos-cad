@@ -12,7 +12,7 @@ use ts_rs::TS;
 use crate::entity::{EntityBase, Vec2};
 
 /// The places a template may name, besides `attr:Name`.
-pub const TAG_PLACES: [&str; 30] = [
+pub const TAG_PLACES: [&str; 34] = [
     "number",
     "type",
     "form",
@@ -44,6 +44,11 @@ pub const TAG_PLACES: [&str; 30] = [
     "unit",
     "target",
     "targetDiff",
+    // Revolving, pocket and folding doors (docs/adr/0777 §5): its operation, leaves, drum, pockets' length.
+    "operation",
+    "leaves",
+    "drum",
+    "pocket",
 ];
 /// The most letters a template or a tag's words hold.
 pub const MAX_TAG_LETTERS: usize = 200;

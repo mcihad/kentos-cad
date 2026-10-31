@@ -158,3 +158,40 @@ fn detach_and_reset_run_on_the_selection_in_one_step() {
     };
     assert!(o.opening.style.is_none() && o.opening.type_version.is_none());
 }
+
+/// The special doors' cases (docs/adr/0777): D01 revolving, CG1 pocket, KT1 folding, each with its door.
+const SPECIAL: &str = include_str!("../../../fixtures/commands/v1/cad.openings.create.special.json");
+
+#[test]
+fn a_types_operation_shows_its_own_fields_and_a_switch_reads_evet() {
+    let mut app = app_with_drawing();
+    let file: serde_json::Value = serde_json::from_str(SPECIAL).unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(file["setup"].clone()).unwrap();
+    let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    make_cad(&mut app);
+    let _ = app.update(Message::Run("arch.openingTypes"));
+    let fields = |app: &App| -> Vec<OpeningTypeField> {
+        app.opening_types.as_ref().unwrap().typed.iter().map(|(f, _)| *f).collect()
+    };
+    let i = app.opening_types.as_ref().unwrap().uses.iter().position(|u| u.kind.id == "cg1").unwrap();
+    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    let typed = fields(&app);
+    assert!(typed.contains(&OpeningTypeField::Lip), "{typed:?}");
+    assert!(!typed.contains(&OpeningTypeField::Drum), "a pocket door's lip, no drum");
+    // Turned to folding: both sides, no lip; the panels folding both ways typed and planned.
+    let _ = app.update(Message::OpeningTypes(Event::Operation(OpeningOperation::Folding)));
+    let typed = fields(&app);
+    assert!(typed.contains(&OpeningTypeField::BothSides) && !typed.contains(&OpeningTypeField::Lip), "{typed:?}");
+    let _ = app.update(Message::OpeningTypes(Event::Field(OpeningTypeField::Leaves, "4".into())));
+    let _ = app.update(Message::OpeningTypes(Event::Field(OpeningTypeField::BothSides, "Evet".into())));
+    let w = app.opening_types.as_ref().unwrap();
+    let Some(Ok(done)) = &w.preview else {
+        panic!("{:?}", w.preview);
+    };
+    let cg = done.types.iter().find(|t| t.id == "cg1").unwrap();
+    assert_eq!(cg.operation, OpeningOperation::Folding);
+    assert_eq!(cg.build.as_ref().and_then(|b| b.both_sides), Some(true));
+    assert_eq!(cg.build.as_ref().and_then(|b| b.lip), None, "a pocket's lip goes with the pocket");
+}

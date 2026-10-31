@@ -66,6 +66,25 @@ pub fn span(o: &OpeningFields) -> (f64, f64) {
     opening::span(o.at, anchor(o), o.width)
 }
 
+/// Its interval along its wall with a pocket door's pockets (docs/adr/0777 §2): what must lie on one edge of its wall and
+/// what no other opening may run into.
+pub fn reach(o: &OpeningFields) -> (f64, f64) {
+    let (mut s0, mut s1) = span(o);
+    for p in kentos_contracts::opening_sizes(o).pockets {
+        if p.at_end {
+            s1 += p.length;
+        } else {
+            s0 -= p.length;
+        }
+    }
+    (s0, s1)
+}
+
+/// Whether `o` is a pocket door (docs/adr/0777 §2).
+pub fn is_pocket(o: &OpeningFields) -> bool {
+    o.form == kentos_contracts::OpeningForm::Door && o.operation == kentos_contracts::OpeningOperation::Pocket
+}
+
 fn contract(p: kentos_geometry_core::Vec2) -> Vec2 {
     Vec2 { x: p.x, y: p.y }
 }
@@ -99,6 +118,16 @@ pub fn placed_on(o: &OpeningFields, wall: Option<&WallLine>, moved: bool) -> Ope
         Some(j) => {
             out.place = j.into_iter().map(contract).collect();
             out.broken = (!out.fits(w.spec.width)).then_some(OpeningBreak::TooDeep);
+            // A pocket door's pockets: its wall thick enough for them, and they on its edge (docs/adr/0777 §2).
+            if out.broken.is_none() && is_pocket(&out) {
+                let tol = 1e-9 * w.spec.width.abs().max(1.0);
+                let (r0, r1) = reach(&out);
+                if out.pocket_wall().is_some_and(|need| need > w.spec.width + tol) {
+                    out.broken = Some(OpeningBreak::TooDeep);
+                } else if opening::jambs(&w.path, &w.spec, r0, r1).is_none() {
+                    out.broken = Some(OpeningBreak::OffWall);
+                }
+            }
         }
         None => out.broken = Some(OpeningBreak::OffWall),
     }
@@ -236,14 +265,14 @@ impl Document {
                 by_host
                     .entry(f.host.clone())
                     .or_default()
-                    .push((*slot, span(f), f.clone()));
+                    .push((*slot, reach(f), f.clone()));
             }
         }
         // The other openings of those walls, as they stand.
         for (host, list) in by_host.iter_mut() {
             for (slot, o) in self.openings_of(host) {
                 if !next.contains_key(&slot) && o.broken.is_none() {
-                    list.push((slot, span(&o), o));
+                    list.push((slot, reach(&o), o));
                 }
             }
         }

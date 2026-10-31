@@ -117,7 +117,7 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
                         name: name.clone(),
                         version: 1,
                         source: None,
-                        ..t
+                        ..*t
                     },
                     Found::Builtin(t) => types::of_builtin(&t, id.clone(), name.clone()),
                 },

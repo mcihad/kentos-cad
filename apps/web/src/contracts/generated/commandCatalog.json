@@ -20621,7 +20621,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one\nundo step (“Kapı”, “Pencere”, “Boşluk”, “Niş” or “Baca”, the first's form). The tool gives the wall clicked and the\npoint, the type and the values chosen (TODOS.md CMD-07). A niche is cut from its face (`side`, absent: the side\n`point` is on) `depth` into the wall, short of its other face; a flue is a cavity `inset` from its face (absent:\ncentred) and `depth` across, clear of both faces (docs/adr/0719).\n\nWhere it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`\nwith `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes\nnearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.\nAdditive precision options: `distanceReference` selects the near jamb (default), centre or hinge;\n`span` projects two jamb points onto one host edge and derives centre and width along its analytic path.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,\n`style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `openings_overlap`, `invalid_revision`,\n`revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden`.",
+        "description": "Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one\nundo step (“Kapı”, “Pencere”, “Boşluk”, “Niş” or “Baca”, the first's form). The tool gives the wall clicked and the\npoint, the type and the values chosen (TODOS.md CMD-07). A niche is cut from its face (`side`, absent: the side\n`point` is on) `depth` into the wall, short of its other face; a flue is a cavity `inset` from its face (absent:\ncentred) and `depth` across, clear of both faces (docs/adr/0719).\n\nWhere it goes: `at`; else `point` with `distance` (its near jamb that far from the wall's end `from`); else `point`\nwith `middle` (centred on the base line's edge the point is by); else `point` (centred where the base line passes\nnearest it). It lies on one edge of its wall's base line, within its ends, clear of the wall's other openings.\nAdditive precision options: `distanceReference` selects the near jamb (default), centre or hinge;\n`span` projects two jamb points onto one host edge and derives centre and width along its analytic path.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_wall`,\n`style_not_found`, `invalid_opening`, `opening_off_wall`, `recess_too_deep`, `opening_pocket_thin`, `opening_pocket_short` (docs/adr/0777), `openings_overlap`, `invalid_revision`,\n`revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also `slots_exhausted`.\nWarning: `layer_hidden`.",
         "properties": {
           "color": {
             "type": [
@@ -20734,6 +20734,8 @@
           "invalid_opening",
           "opening_off_wall",
           "recess_too_deep",
+          "opening_pocket_thin",
+          "opening_pocket_short",
           "openings_overlap",
           "invalid_line_weight",
           "layer_not_found",
@@ -20812,7 +20814,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.openings.edit` v1: openings named by their persistent ids changed as one undo step “Açıklığı\ndüzenle”, all or none. An opening that would run off its wall or into another: nothing is written.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,\n`invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,\n`recess_too_deep`, `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since\ndocs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,\n`level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a\nfollowing opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and\none changed to a form that goes through drops its depth and inset (docs/adr/0719).",
+        "description": "Input of `cad.openings.edit` v1: openings named by their persistent ids changed as one undo step “Açıklığı\ndüzenle”, all or none. An opening that would run off its wall or into another: nothing is written.\n\nRefusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_opening`, `nothing_to_set`, `not_finite`,\n`invalid_opening`, `style_not_found`, `style_not_used`, `not_a_wall`, `opening_host_gone`, `opening_off_wall`,\n`recess_too_deep`, `opening_pocket_thin`, `opening_pocket_short` (docs/adr/0777), `openings_overlap`, `invalid_revision`, `revision_conflict`, `layer_locked`, and since\ndocs/adr/0772 `opening_type_not_found`, `opening_not_typed`, `opening_type_form`, `opening_type_refused`,\n`level_not_found`; on the desktop also `slots_exhausted`. Warnings (docs/adr/0772): `opening_type_override` when a\nfollowing opening's field set becomes its own, `opening_type_kept`, `opening_type_skipped`. A form changed to a niche or flue takes the depth of its form's first type when it has none, and\none changed to a form that goes through drops its depth and inset (docs/adr/0719).",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -20952,6 +20954,8 @@
           "opening_host_gone",
           "opening_off_wall",
           "recess_too_deep",
+          "opening_pocket_thin",
+          "opening_pocket_short",
           "openings_overlap",
           "opening_type_not_found",
           "opening_not_typed",
@@ -69633,7 +69637,7 @@
       "code": "invalid_opening",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Açıklığın alanları bir açıklık tanımlamıyor: genişlik sıfırdan büyük, kanat 1 ya da 2, açı 0'dan büyük ve en çok 180°, kasa açıklığın yarısından dar."
+      "meaning": "Açıklığın alanları bir açıklık tanımlamıyor: genişlik sıfırdan büyük, kanat 1 ya da 2 (döner kapıda 3 ya da 4, katlanırda 2–6 panel), açı 0'dan büyük ve en çok 180°, kasa açıklığın yarısından dar."
     },
     {
       "code": "opening_off_wall",
@@ -69652,6 +69656,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Açıklığın duvarı yok; duvar boyunca taşınamaz. Önce bir duvara taşıyın (Başka duvara)."
+    },
+    {
+      "code": "opening_pocket_thin",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Cebe giren kapının cebi duvara sığmıyor: duvar, cebin genişliğinden ve iki yanındaki en az 2,5 cm'lik duvardan kalın olmalı. Duvarı kalınlaştırın, kanadı inceltin ya da başka açılış seçin."
+    },
+    {
+      "code": "opening_pocket_short",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Cebe giren kapının cebi duvarın ucundan, köşesinden ya da başka bir açıklığa taşıyor: kanadın girdiği uzunluk duvarın aynı kenarında boş olmalı. Kapıyı kaydırın, menteşe yönünü değiştirin ya da kanadı daraltın."
     },
     {
       "code": "recess_too_deep",
@@ -106372,8 +106388,24 @@
       "additionalProperties": false,
       "description": "A door's or window's construction (docs/adr/0772 §3), each field optional; none given draws it as before.",
       "properties": {
+        "bothSides": {
+          "description": "A folding door's panels fold to both jambs, half to each (an even count; docs/adr/0777 §3). Absent: all to the\njamb at its `hand`.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "casing": {
           "description": "Its casing (pervaz, söve) on both wall faces beside each jamb, its width, metres; absent: none.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "drum": {
+          "description": "A revolving door's drum, its inside diameter, metres (docs/adr/0777 §1); absent: the light between the frame's\nsides. At most the light.",
           "format": "double",
           "type": [
             "number",
@@ -106417,6 +106449,15 @@
           ],
           "x-unit": "length"
         },
+        "lip": {
+          "description": "How much of an open pocket door's leaf stays out of its pocket, metres (docs/adr/0777 §2); absent: 0.05.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "mullions": {
           "description": "A window's mullions (dikey kayıt): its panes are one more; absent: none.",
           "format": "uint8",
@@ -106427,6 +106468,15 @@
             "null"
           ],
           "x-unit": "count"
+        },
+        "overlap": {
+          "description": "How much a two-leaf sliding door's or window's leaves overlap when shut, metres (docs/adr/0777 §4); absent: 5 %\nof the light. Below the light.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
         },
         "sillBoard": {
           "description": "A window's sill board (denizlik), how far it reaches past the face opposite the side it opens to, metres.",
@@ -106465,6 +106515,13 @@
             "null"
           ],
           "x-unit": "length"
+        },
+        "track": {
+          "description": "A sliding door's or window's track drawn in plan: the rail its leaves run on, and a one-leaf door's leaf beside\nthe wall face, over the stretch it slides to (docs/adr/0777 §4). Absent: not drawn.",
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "transoms": {
           "description": "A window's transoms (yatay kayıt); plan does not show them, schedules and tags do.",
@@ -106756,9 +106813,9 @@
           "type": "string"
         },
         "leaves": {
-          "description": "Its leaves, 1 or 2. Absent: 1.",
+          "description": "Its leaves, 1 or 2; a revolving door's wings 3 or 4, a folding door's panels 2 to 6 (docs/adr/0777). Absent: 1.",
           "format": "uint8",
-          "maximum": 2,
+          "maximum": 6,
           "minimum": 1,
           "type": "integer",
           "x-unit": "count"
@@ -107117,8 +107174,50 @@
           "const": "fixed",
           "description": "Sabit: it does not open.",
           "type": "string"
+        },
+        {
+          "const": "revolving",
+          "description": "Döner (docs/adr/0777 §1): 3 or 4 wings turning about the middle of a drum (`build.drum`).",
+          "type": "string"
+        },
+        {
+          "const": "pocket",
+          "description": "Cebe giren (docs/adr/0777 §2): its leaves slide into a pocket inside the wall, beside the jamb at its `hand`\n(both jambs for two leaves).",
+          "type": "string"
+        },
+        {
+          "const": "folding",
+          "description": "Katlanır (docs/adr/0777 §3): 2 to 6 panels folding to the jamb at its `hand` (both with `build.bothSides`).",
+          "type": "string"
         }
       ]
+    },
+    "OpeningPocket": {
+      "description": "A pocket door's pocket (docs/adr/0777 §2): at which jamb, how far past it into the wall, how wide across it.",
+      "properties": {
+        "atEnd": {
+          "description": "At its end jamb; else its start's.",
+          "type": "boolean"
+        },
+        "length": {
+          "description": "From the jamb into the wall along it, metres.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "width": {
+          "description": "Across the wall, centred in it, metres: the leaf and its play each side.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "atEnd",
+        "length",
+        "width"
+      ],
+      "type": "object"
     },
     "OpeningQueryRow": {
       "description": "One opening as `cad.openings.query` reads it.",
@@ -107372,6 +107471,15 @@
           ],
           "x-unit": "length"
         },
+        "drum": {
+          "description": "A revolving door's drum, its inside diameter (docs/adr/0777 §1).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "leaf": {
           "description": "Kanat eni: the light inside the frame.",
           "format": "double",
@@ -107392,6 +107500,13 @@
           "format": "double",
           "type": "number",
           "x-unit": "length"
+        },
+        "pockets": {
+          "description": "A pocket door's pockets, each how far it runs into the wall past its jamb (docs/adr/0777 §2): the one at its\nstart first.",
+          "items": {
+            "$ref": "#/$defs/OpeningPocket"
+          },
+          "type": "array"
         },
         "rough": {
           "description": "Kaba boşluk: the hole in the wall (its `width`).",
@@ -107467,7 +107582,7 @@
         },
         "leaves": {
           "format": "uint8",
-          "maximum": 2,
+          "maximum": 6,
           "minimum": 1,
           "type": "integer",
           "x-unit": "count"
@@ -107689,7 +107804,12 @@
         "sillBoard",
         "mullions",
         "transoms",
-        "useZone"
+        "useZone",
+        "drum",
+        "overlap",
+        "track",
+        "bothSides",
+        "lip"
       ],
       "type": "string"
     },
@@ -123729,7 +123849,10 @@
             "ceilingFinish",
             "unitWidth",
             "leafWidth",
-            "clearWidth"
+            "clearWidth",
+            "leaves",
+            "drum",
+            "pocket"
           ],
           "type": "string"
         },
@@ -123776,6 +123899,11 @@
         {
           "const": "targetDiff",
           "description": "How far a space's area lies outside its brief's range (below minus, above plus).",
+          "type": "string"
+        },
+        {
+          "const": "operation",
+          "description": "An opening's operation (Kanatlı, Sürme, Döner, Cebe giren, Katlanır …), its leaves (a revolving door's wings, a\nfolding door's panels), a revolving door's drum and a pocket door's pockets' length (docs/adr/0777 §5).",
           "type": "string"
         }
       ]

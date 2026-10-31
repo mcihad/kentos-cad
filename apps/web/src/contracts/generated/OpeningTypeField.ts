@@ -4,4 +4,4 @@
  * A field a type governs: an opening following the type takes it, unless the opening keeps its own (docs/adr/0772 §1).
  * The form is the type's own and never an exception; an opening's place, wall, hand, side and number are its own.
  */
-export type OpeningTypeField = "width" | "leaves" | "operation" | "swing" | "showSwing" | "frame" | "sill" | "head" | "depth" | "sizeBy" | "fit" | "leafThickness" | "split" | "frameDepth" | "frameOffset" | "threshold" | "casing" | "sillBoard" | "mullions" | "transoms" | "useZone";
+export type OpeningTypeField = "width" | "leaves" | "operation" | "swing" | "showSwing" | "frame" | "sill" | "head" | "depth" | "sizeBy" | "fit" | "leafThickness" | "split" | "frameDepth" | "frameOffset" | "threshold" | "casing" | "sillBoard" | "mullions" | "transoms" | "useZone" | "drum" | "overlap" | "track" | "bothSides" | "lip";

@@ -2394,7 +2394,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_tag",
-              "message": "Şablonda bilinmeyen yer “{volume}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, attr:Ad.",
+              "message": "Şablonda bilinmeyen yer “{volume}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, operation, leaves, drum, pocket, attr:Ad.",
               "path": "tags[0].content"
             }
           },
@@ -2510,7 +2510,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_tag",
-              "message": "Şablonda bilinmeyen yer “{volume}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, attr:Ad.",
+              "message": "Şablonda bilinmeyen yer “{volume}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, operation, leaves, drum, pocket, attr:Ad.",
               "path": "tags[0].content"
             }
           },
@@ -4414,7 +4414,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_tag",
-              "message": "Şablonda bilinmeyen yer “{numara}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, attr:Ad.",
+              "message": "Şablonda bilinmeyen yer “{numara}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, operation, leaves, drum, pocket, attr:Ad.",
               "path": "tags[0].content"
             }
           },
@@ -35807,7 +35807,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_tag",
-              "message": "Şablonda bilinmeyen yer “{bad}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, attr:Ad.",
+              "message": "Şablonda bilinmeyen yer “{bad}”; yerler: number, type, form, width, height, sill, head, name, usage, area, perimeter, level, phase, tag, place, label, style, risers, slope, floorElevation, ceilingElevation, netArea, roughWidth, unitWidth, leafWidth, clearWidth, typeVersion, unit, target, targetDiff, operation, leaves, drum, pocket, attr:Ad.",
               "path": "all.content"
             }
           },

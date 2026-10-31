@@ -45,7 +45,24 @@ pub enum Operation {
     Swing,
     Slide,
     Fixed,
+    /// Döner: wings about a drum's middle (docs/adr/0777 §1).
+    Revolving,
+    /// Cebe giren: leaves into a pocket inside the wall (docs/adr/0777 §2).
+    Pocket,
+    /// Katlanır: panels folding to a jamb (docs/adr/0777 §3).
+    Folding,
 }
+
+/// A pocket door's play each side of its leaf in its pocket (the contract's `POCKET_PLAY`), metres.
+pub const POCKET_PLAY: f64 = 0.01;
+/// How much of an open pocket door's leaf stays out of its pocket when it gives none (`POCKET_LIP`), metres.
+pub const POCKET_LIP: f64 = 0.05;
+/// A leaf's thickness when it gives none (`DEFAULT_LEAF_THICKNESS`), metres.
+pub const LEAF_THICKNESS: f64 = 0.04;
+/// How far outside a revolving door's drum its walls stand, metres (docs/adr/0777 §1).
+pub const DRUM_WALL: f64 = 0.03;
+/// How far plan draws a folding door's panels open when it gives no angle (`FOLD_DRAWN`), degrees.
+pub const FOLD_DRAWN: f64 = 30.0;
 
 /// Which point of the opening `at` names.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -102,6 +119,16 @@ pub struct Build {
     pub sill_board: Option<f64>,
     pub mullions: u8,
     pub use_zone: Option<f64>,
+    /// A revolving door's drum's inside diameter; none: the light.
+    pub drum: Option<f64>,
+    /// Two sliding leaves' overlap; none: 5 % of the light.
+    pub overlap: Option<f64>,
+    /// A sliding door's track drawn.
+    pub track: bool,
+    /// A folding door's panels fold to both jambs.
+    pub both_sides: bool,
+    /// How much of an open pocket leaf stays out of its pocket; none: [`POCKET_LIP`].
+    pub lip: Option<f64>,
 }
 
 /// How far a casing stands off its wall's face, metres (docs/adr/0772 §3).
@@ -124,6 +151,11 @@ impl Build {
             sill_board: n("sillBoard")?,
             mullions: n("mullions")?.unwrap_or(0.0).clamp(0.0, 255.0) as u8,
             use_zone: n("useZone")?,
+            drum: n("drum")?,
+            overlap: n("overlap")?,
+            track: matches!(v.get("track"), Json::Bool(true)),
+            both_sides: matches!(v.get("bothSides"), Json::Bool(true)),
+            lip: n("lip")?,
         })
     }
 }
@@ -153,6 +185,20 @@ impl ToJson for Build {
         }
         if let Some(v) = self.use_zone {
             field(out, &mut first, "useZone", &v);
+        }
+        for (name, v) in [("drum", self.drum), ("overlap", self.overlap)] {
+            if let Some(v) = v {
+                field(out, &mut first, name, &v);
+            }
+        }
+        if self.track {
+            field(out, &mut first, "track", &true);
+        }
+        if self.both_sides {
+            field(out, &mut first, "bothSides", &true);
+        }
+        if let Some(v) = self.lip {
+            field(out, &mut first, "lip", &v);
         }
         out.push('}');
     }
@@ -223,17 +269,21 @@ impl crate::api::json::Flat for Spec {
             None | Some("swing") => Operation::Swing,
             Some("slide") => Operation::Slide,
             Some("fixed") => Operation::Fixed,
+            Some("revolving") => Operation::Revolving,
+            Some("pocket") => Operation::Pocket,
+            Some("folding") => Operation::Folding,
             Some(s) => return Err(format!("bilinmeyen açılış “{s}”")),
         };
         let leaves = Option::<f64>::from_json(v.get("leaves"))?.unwrap_or(1.0);
+        let swing = Option::<f64>::from_json(v.get("swing"))?;
         Ok(Spec {
             anchor,
             form,
-            leaves: if leaves >= 2.0 { 2 } else { 1 },
+            leaves: leaves.clamp(1.0, 6.0) as u8,
             operation,
             hand_end: word(v, "hand").as_deref() == Some("end"),
             side_right: word(v, "side").as_deref() == Some("right"),
-            swing: Option::<f64>::from_json(v.get("swing"))?.unwrap_or(90.0),
+            swing: swing.unwrap_or(if operation == Operation::Folding { FOLD_DRAWN } else { 90.0 }),
             show_swing: !matches!(v.get("showSwing"), Json::Bool(false)),
             frame: Option::<f64>::from_json(v.get("frame"))?.unwrap_or(0.0),
             sill: Option::<f64>::from_json(v.get("sill"))?,
@@ -265,6 +315,9 @@ impl crate::api::json::Flat for Spec {
             Operation::Swing => {}
             Operation::Slide => field(out, first, "operation", "slide"),
             Operation::Fixed => field(out, first, "operation", "fixed"),
+            Operation::Revolving => field(out, first, "operation", "revolving"),
+            Operation::Pocket => field(out, first, "operation", "pocket"),
+            Operation::Folding => field(out, first, "operation", "folding"),
         }
         if self.hand_end {
             field(out, first, "hand", "end");
@@ -272,7 +325,8 @@ impl crate::api::json::Flat for Spec {
         if self.side_right {
             field(out, first, "side", "right");
         }
-        if self.swing != 90.0 {
+        let drawn = if self.operation == Operation::Folding { FOLD_DRAWN } else { 90.0 };
+        if self.swing != drawn {
             field(out, first, "swing", &self.swing);
         }
         if !self.show_swing {
@@ -350,13 +404,84 @@ pub struct Hole {
     pub s0: f64,
     pub s1: f64,
     pub recess: Option<Recess>,
+    /// Its jamb at `s0` (then `s1`) opens into a pocket door's pocket of this cavity (docs/adr/0777 §2): no line across
+    /// the cavity there.
+    pub open: [Option<Recess>; 2],
 }
 
 impl Hole {
     /// One that goes through the wall on `[s0, s1]`.
     pub fn through(s0: f64, s1: f64) -> Hole {
-        Hole { s0, s1, recess: None }
+        Hole {
+            s0,
+            s1,
+            recess: None,
+            open: [None, None],
+        }
     }
+}
+
+/// A pocket door's pockets (docs/adr/0777 §2; the contract's `OpeningPocket`): at its end jamb (else its start's), how
+/// far past the jamb, how wide across the wall (centred).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Pocket {
+    pub at_end: bool,
+    pub length: f64,
+    pub width: f64,
+}
+
+/// A pocket door's pockets for an opening `width` wide (rough); none for another.
+pub fn pockets(width: f64, spec: &Spec) -> Vec<Pocket> {
+    if spec.form != Form::Door || spec.operation != Operation::Pocket {
+        return Vec::new();
+    }
+    let b = &spec.build;
+    let light = width - 2.0 * b.fit - 2.0 * spec.frame;
+    let t = b.leaf_thickness.unwrap_or(LEAF_THICKNESS);
+    let lip = b.lip.unwrap_or(POCKET_LIP);
+    let pocket = |at_end: bool, w: f64| Pocket {
+        at_end,
+        length: js_max(w - lip - b.fit - spec.frame + POCKET_PLAY, 0.0),
+        width: t + 2.0 * POCKET_PLAY,
+    };
+    if spec.leaves == 2 {
+        let share = b.split.unwrap_or(0.5);
+        vec![pocket(false, light * share), pocket(true, light * (1.0 - share))]
+    } else {
+        vec![pocket(spec.hand_end, light)]
+    }
+}
+
+/// What the opening at `at` of `width` takes out of its wall in plan with its pockets (docs/adr/0777 §2): its hole, then
+/// each pocket's cavity, centred in the wall, open at the jamb it meets; none when plan does not cut it.
+pub fn holes(at: f64, width: f64, spec: &Spec) -> Vec<Hole> {
+    let Some(mut main) = hole(at, width, spec) else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for p in pockets(width, spec).into_iter().filter(|p| p.length > 0.0) {
+        let cavity = Recess {
+            right: false,
+            inset: None,
+            depth: p.width,
+        };
+        let (s0, s1, k) = if p.at_end {
+            (main.s1, main.s1 + p.length, 1)
+        } else {
+            (main.s0 - p.length, main.s0, 0)
+        };
+        main.open[k] = Some(cavity);
+        let mut open = [None, None];
+        open[1 - k] = Some(cavity);
+        out.push(Hole {
+            s0,
+            s1,
+            recess: Some(cavity),
+            open,
+        });
+    }
+    out.insert(0, main);
+    out
 }
 
 /// What the opening at `at` of `width` takes out of its wall in plan; none when plan does not cut it (or a niche or
@@ -379,7 +504,12 @@ pub fn hole(at: f64, width: f64, spec: &Spec) -> Option<Hole> {
         }),
         Form::Door | Form::Window | Form::Opening => None,
     };
-    Some(Hole { s0, s1, recess })
+    Some(Hole {
+        s0,
+        s1,
+        recess,
+        open: [None, None],
+    })
 }
 
 /// The `at` that puts an opening of `width` centred at `s` given its anchor.
@@ -769,13 +899,16 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
             out.push(line(p.along_start(fit + fr, dr), p.along_end(fit + fr, dr)));
             if spec.operation == Operation::Slide {
                 let k = depth / 12.0;
-                let lap = clear * 0.05;
+                let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
                 let half = clear / 2.0;
                 out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
                 out.push(line(
                     add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
                     add(m0, add(mul(u, clear), mul(p.f.left, -k))),
                 ));
+                if b.track {
+                    out.push(line(m0, add(m0, mul(u, clear))));
+                }
             } else {
                 out.push(line(m0, add(m0, mul(u, clear))));
             }
@@ -797,16 +930,34 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
             match spec.operation {
                 Operation::Slide => {
                     let k = depth / 8.0;
-                    if spec.leaves == 1 {
+                    if spec.leaves == 1 && b.track {
+                        out.extend(surface_slide(&p, spec));
+                    } else if spec.leaves == 1 {
                         out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, clear), mul(p.f.left, k)))));
                     } else {
-                        let lap = clear * 0.05;
+                        let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
                         let half = clear / 2.0;
                         out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
                         out.push(line(
                             add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
                             add(m0, add(mul(u, clear), mul(p.f.left, -k))),
                         ));
+                        if b.track {
+                            out.push(line(m0, add(m0, mul(u, clear))));
+                        }
+                    }
+                }
+                Operation::Revolving => out.extend(revolving(&p, spec)),
+                Operation::Pocket => out.extend(pocket_leaves(&p, spec)),
+                Operation::Folding => {
+                    for g in fold_groups(&p, spec) {
+                        let mut at = g.hinge;
+                        for i in 0..g.panels {
+                            let rise = if i % 2 == 0 { g.sin } else { -g.sin };
+                            let next = add(at, add(mul(g.dir, g.width * g.cos), mul(g.out, g.width * rise)));
+                            out.push(line(at, next));
+                            at = next;
+                        }
                     }
                 }
                 Operation::Fixed => {
@@ -862,15 +1013,166 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
     out
 }
 
-/// The sweep of each of a swinging door's leaves (docs/adr/0772 §5): its hinge and its arc's points, a closed ring; none
-/// for a door that does not swing, or a window.
+/// A revolving door's drum (docs/adr/0777 §1): its middle and inside radius, centred on the light and the band's
+/// middle; the drum at most the light.
+fn drum_of(p: &Parts, spec: &Spec) -> (Vec2, f64) {
+    let r = js_min(spec.build.drum.unwrap_or(p.clear), p.clear) / 2.0;
+    (p.along_start(p.fit + p.fr + p.clear / 2.0, p.middle()), r)
+}
+
+/// A revolving door's pieces (docs/adr/0777 §1): its drum, the drum's two walls (arcs 360°/n wide about the wall's line,
+/// [`DRUM_WALL`] outside it) and its wings from the middle, the first at 90° − 180°/n from along the wall.
+fn revolving(p: &Parts, spec: &Spec) -> Vec<Shape> {
+    let (c, r) = drum_of(p, spec);
+    if !(r > 0.0) {
+        return Vec::new();
+    }
+    let n = f64::from(spec.leaves.clamp(3, 4));
+    let pi = crate::jsmath::PI;
+    let a = atan2(p.f.along.y, p.f.along.x);
+    let half = pi / n;
+    let mut out = vec![Shape::Circle { c, r }];
+    for base in [a, a + pi] {
+        out.push(Shape::Arc {
+            c,
+            r: r + DRUM_WALL,
+            a0: base - half,
+            a1: base + half,
+        });
+    }
+    for k in 0..spec.leaves.clamp(3, 4) {
+        let ang = a + pi / 2.0 - half + 2.0 * pi * f64::from(k) / n;
+        out.push(line(c, add(c, Vec2::new(r * cos(ang), r * sin(ang)))));
+    }
+    out
+}
+
+/// A pocket door's leaves shut (docs/adr/0777 §2): bands along the band's middle across the light, its leaf's thickness
+/// (none given: [`LEAF_THICKNESS`]) wide; two split as given. Its pockets are its wall's cavities.
+fn pocket_leaves(p: &Parts, spec: &Spec) -> Vec<Shape> {
+    let t = spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS);
+    let (lo, hi) = (p.middle() - t / 2.0, p.middle() + t / 2.0);
+    let start = p.fit + p.fr;
+    let band = |s0: f64, s1: f64| {
+        closed_ring(vec![
+            p.along_start(s0, lo),
+            p.along_start(s1, lo),
+            p.along_start(s1, hi),
+            p.along_start(s0, hi),
+        ])
+    };
+    if spec.leaves == 2 {
+        let mid = start + p.clear * spec.build.split.filter(|s| *s > 0.0 && *s < 1.0).unwrap_or(0.5);
+        vec![band(start, mid), band(mid, start + p.clear)]
+    } else {
+        vec![band(start, start + p.clear)]
+    }
+}
+
+/// A one-leaf sliding door on its track (docs/adr/0777 §4): its leaf beside the wall face it opens to, over the light,
+/// [`LEAF_THICKNESS`] (or its own) deep from a quarter of the wall's thickness out; its track along that face from the
+/// light's far side to a light past the jamb at its `hand`, where it slides to.
+fn surface_slide(p: &Parts, spec: &Spec) -> Vec<Shape> {
+    let t = spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS);
+    let left = !spec.side_right;
+    let d = if left { 0.0 } else { p.f.thickness };
+    let o = p.out(left);
+    let k = p.f.thickness / 4.0;
+    let start = p.fit + p.fr;
+    let on = |s: f64, off: f64| add(p.along_start(s, d), mul(o, off));
+    let leaf = closed_ring(vec![
+        on(start, k),
+        on(start + p.clear, k),
+        on(start + p.clear, k + t),
+        on(start, k + t),
+    ]);
+    let (a, z) = if spec.hand_end {
+        (start, start + 2.0 * p.clear)
+    } else {
+        (start + p.clear, start - p.clear)
+    };
+    vec![leaf, line(on(a, k / 2.0), on(z, k / 2.0))]
+}
+
+/// A folding door's panels as they fold (docs/adr/0777 §3): from the jamb at its `hand` (or both jambs, half each), on
+/// the face it opens to, `swing` degrees open (none given: [`FOLD_DRAWN`]), zigzagging out of the wall and back.
+struct FoldGroup {
+    hinge: Vec2,
+    dir: Vec2,
+    out: Vec2,
+    panels: u8,
+    width: f64,
+    cos: f64,
+    sin: f64,
+}
+
+fn fold_groups(p: &Parts, spec: &Spec) -> Vec<FoldGroup> {
+    let n = spec.leaves.clamp(2, 6);
+    let width = p.clear / f64::from(n);
+    let face = p.face(spec);
+    let o = p.out(!spec.side_right);
+    let r = spec.swing * crate::jsmath::PI / 180.0;
+    let (c, s) = (cos(r), sin(r));
+    let at0 = p.along_start(p.fit + p.fr, face);
+    let at1 = p.along_end(p.fit + p.fr, face);
+    let u = p.f.along;
+    let group = |hinge: Vec2, dir: Vec2, panels: u8| FoldGroup {
+        hinge,
+        dir,
+        out: o,
+        panels,
+        width,
+        cos: c,
+        sin: s,
+    };
+    if spec.build.both_sides {
+        vec![group(at0, u, n / 2), group(at1, mul(u, -1.0), n - n / 2)]
+    } else if spec.hand_end {
+        vec![group(at1, mul(u, -1.0), n)]
+    } else {
+        vec![group(at0, u, n)]
+    }
+}
+
+/// The sweep of each of a swinging door's leaves (docs/adr/0772 §5): its hinge and its arc's points, a closed ring; a
+/// revolving door's drum (docs/adr/0777 §1); a folding door's panels' reach, a panel deep from each jamb they fold to
+/// (§3); none for a door that slides, a fixed door, or a window.
 pub fn swing_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
-    if spec.form != Form::Door || spec.operation != Operation::Swing {
+    if spec.form != Form::Door {
         return Vec::new();
     }
     let Some(p) = Parts::new(place, spec) else {
         return Vec::new();
     };
+    match spec.operation {
+        Operation::Revolving => {
+            let (c, r) = drum_of(&p, spec);
+            if !(r > 0.0) {
+                return Vec::new();
+            }
+            let steps = 32;
+            let ring = (0..steps)
+                .map(|k| {
+                    let a = 2.0 * crate::jsmath::PI * f64::from(k) / f64::from(steps);
+                    add(c, Vec2::new(r * cos(a), r * sin(a)))
+                })
+                .collect();
+            return vec![ring];
+        }
+        Operation::Folding => {
+            return fold_groups(&p, spec)
+                .into_iter()
+                .filter(|g| g.width > 0.0)
+                .map(|g| {
+                    let along = mul(g.dir, g.width * f64::from(g.panels));
+                    let deep = mul(g.out, g.width);
+                    vec![g.hinge, add(g.hinge, along), add(add(g.hinge, along), deep), add(g.hinge, deep)]
+                })
+                .collect();
+        }
+        Operation::Swing => {}
+        _ => return Vec::new(),
+    }
     swing_leaves(&p, spec)
         .into_iter()
         .filter(|l| l.len > 0.0)

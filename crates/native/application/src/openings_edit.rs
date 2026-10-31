@@ -406,7 +406,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
         OpeningsOperation::ReplaceType { from, to, level } => {
             // The project's type, else KentOS's as before (its refusal `style_not_found`).
             let kind = match crate::opening_types::project_type(doc, to) {
-                Some(t) => crate::opening_types::Found::Project(t),
+                Some(t) => crate::opening_types::Found::Project(Box::new(t)),
                 None => crate::opening_types::Found::Builtin(openings::find_type(to, "operation.to")?),
             };
             let mut any = false;

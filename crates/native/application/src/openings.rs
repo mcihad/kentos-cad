@@ -153,6 +153,9 @@ pub(crate) fn placed(
     path: &str,
 ) -> Result<OpeningFields, Stop> {
     let p = opening_follow::placed_on(o, Some(line), false);
+    if opening_follow::is_pocket(o) && let Some(stop) = pocket_refused(o, &p, line, path) {
+        return Err(stop);
+    }
     if p.broken == Some(kentos_commands::OpeningBreak::TooDeep) {
         let thickness = line.spec.width;
         let (near, far) = o.recess_in(thickness).unwrap_or((0.0, 0.0));
@@ -185,6 +188,45 @@ pub(crate) fn placed(
         ));
     }
     Ok(p)
+}
+
+/// A pocket door its wall cannot take (docs/adr/0777 §2): `opening_pocket_thin` when the wall is thinner than its pocket
+/// needs, `opening_pocket_short` when its pocket runs off the wall's edge though the door itself does not.
+fn pocket_refused(o: &OpeningFields, p: &OpeningFields, line: &WallLine, path: &str) -> Option<Stop> {
+    let at = |field: &str| {
+        if path.is_empty() {
+            field.to_owned()
+        } else {
+            format!("{path}.{field}")
+        }
+    };
+    let thickness = line.spec.width;
+    match p.broken {
+        Some(kentos_commands::OpeningBreak::TooDeep) => {
+            let need = p.pocket_wall().unwrap_or(0.0);
+            Some(fail(
+                codes::OPENING_POCKET_THIN,
+                format!(
+                    "Cebe giren kapının cebi için duvar en az {need:.3} m kalınlığında olmalı (cep ve iki yanında 2,5 cm duvar); bu duvar {thickness:.3} m. Daha kalın bir duvar seçin, kanadı inceltin ya da kayar kapı kullanın."
+                ),
+                &at("operation"),
+            ))
+        }
+        Some(kentos_commands::OpeningBreak::OffWall) => {
+            let (s0, s1) = opening_follow::span(o);
+            opening::jambs(&line.path, &line.spec, s0, s1)?;
+            let (r0, r1) = opening_follow::reach(o);
+            Some(fail(
+                codes::OPENING_POCKET_SHORT,
+                format!(
+                    "Cebe giren kapının cebi duvarın ucundan ya da köşesinden taşıyor: kapı ve cebi duvar boyunca {r0:.3}–{r1:.3} m, duvarın uzunluğu {:.3} m; cep kapıyla aynı kenarda kalmalı. Kapıyı kaydırın, menteşe yanını değiştirin ya da daraltın.",
+                    line.path.length
+                ),
+                &at("at"),
+            ))
+        }
+        _ => None,
+    }
 }
 
 /// Where a new opening's centre goes along `line` and the side its point is on, as `n` says; `invalid_opening` when it
@@ -345,7 +387,7 @@ pub(crate) fn clear_of_others(
             by_host
                 .entry(&f.host)
                 .or_default()
-                .push((opening_follow::span(f), Some(at.as_str()), (*f).clone()));
+                .push((opening_follow::reach(f), Some(at.as_str()), (*f).clone()));
         }
     }
     for (f, at) in new {
@@ -353,14 +395,14 @@ pub(crate) fn clear_of_others(
             by_host
                 .entry(&f.host)
                 .or_default()
-                .push((opening_follow::span(f), Some(at.as_str()), (*f).clone()));
+                .push((opening_follow::reach(f), Some(at.as_str()), (*f).clone()));
         }
     }
     let cut = kentos_commands::PLAN_CUT_HEIGHT;
     for (host, list) in by_host.iter_mut() {
         for (slot, o) in doc.openings_of(host) {
             if !changed_slots.contains(&slot) && o.broken.is_none() {
-                list.push((opening_follow::span(&o), None, o));
+                list.push((opening_follow::reach(&o), None, o));
             }
         }
         for i in 0..list.len() {
@@ -369,6 +411,17 @@ pub(crate) fn clear_of_others(
                 *j != i && opening_follow::overlap(list[i].0, *b) && list[i].2.clashes_with(g, cut)
             }) {
                 let (a, b) = (list[i].0, list[j].0);
+                // Only a pocket door's pocket runs into the other (docs/adr/0777 §2).
+                if !opening_follow::overlap(opening_follow::span(&list[i].2), opening_follow::span(&list[j].2)) {
+                    return Err(fail(
+                        codes::OPENING_POCKET_SHORT,
+                        format!(
+                            "Cebe giren kapının cebi aynı duvardaki başka bir açıklığa ({:.3}–{:.3} m) giriyor: kapı ve cebi duvar boyunca {:.3}–{:.3} m. Cebin uzunluğu duvarda boş kalmalı; kapıyı kaydırın, menteşe yanını değiştirin ya da öbür açıklığı taşıyın.",
+                            b.0, b.1, a.0, a.1
+                        ),
+                        at,
+                    ));
+                }
                 let ((h0, h1), (k0, k1)) = (list[i].2.heights(), list[j].2.heights());
                 let words = if h0 < k1 - 1e-9 && k0 < h1 - 1e-9 {
                     format!(

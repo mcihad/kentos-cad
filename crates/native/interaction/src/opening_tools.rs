@@ -33,6 +33,9 @@ use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, To
 #[path = "opening_tool_placement.rs"]
 mod placement;
 
+#[path = "opening_tool_doors.rs"]
+mod doors;
+
 pub const DOOR_ID: &str = "door";
 pub const WINDOW_ID: &str = "window";
 pub const OPENING_ID: &str = "opening";
@@ -54,6 +57,9 @@ fn type_icon(
     use kentos_commands::OpeningOperation as Op;
     match (form, leaves, operation) {
         (OpeningForm::Door, _, Op::Slide) => "doorSliding",
+        (OpeningForm::Door, _, Op::Revolving) => "doorRevolving",
+        (OpeningForm::Door, _, Op::Pocket) => "doorPocket",
+        (OpeningForm::Door, _, Op::Folding) => "doorFolding",
         (OpeningForm::Door, 2, _) => "doorDouble",
         (OpeningForm::Door, _, _) => "door",
         (OpeningForm::Window, _, Op::Fixed) => "windowFixed",
@@ -76,6 +82,12 @@ enum Ask {
     Inset,
     Sill,
     Head,
+    /// A door's leaves (K), a revolving door's drum (J), a pocket door's lip (P), two sliding leaves' overlap (S)
+    /// (docs/adr/0777 §5).
+    Leaves,
+    Drum,
+    Lip,
+    Overlap,
 }
 
 /// Kapı, Pencere or Boşluk.
@@ -102,6 +114,8 @@ pub struct OpeningTool {
     inset: Option<Option<f64>>,
     sill: Option<f64>,
     head: Option<f64>,
+    /// A door's operation, leaves and special door's construction over its type's (docs/adr/0777 §5).
+    moves: doors::Moves,
     ask: Option<Ask>,
     hover: Option<(Slot, Vec2)>,
     /// The opening the plan would write, drawn; or why it would not.
@@ -127,6 +141,7 @@ impl OpeningTool {
             inset: None,
             sill: None,
             head: None,
+            moves: doors::Moves::default(),
             ask: None,
             hover: None,
             drawn: Preview::default(),
@@ -180,14 +195,15 @@ impl OpeningTool {
         all
     }
 
-    /// The type chosen, or the form's first.
+    /// The type chosen, or the form's first of KentOS's own: what `cad.openings.create` takes when it names none
+    /// (a project's type is only ever chosen, docs/adr/0777 §5).
     fn kind_def(&self) -> Option<kentos_commands::OpeningTypeDef> {
         let all = self.all_types();
         self.kind
             .as_deref()
             .and_then(|k| all.iter().find(|t| t.id == k))
-            .or_else(|| all.iter().find(|t| t.form == self.form))
             .cloned()
+            .or_else(|| builtin_opening_types().into_iter().find(|t| t.form == self.form))
     }
 
     /// Whether Yüz, Alt and Üst apply: a form plan cuts by its heights (docs/adr/0719 §2).
@@ -256,12 +272,7 @@ impl OpeningTool {
 
     /// The type chosen, or the form's first.
     fn type_name(&self) -> String {
-        let all = self.all_types();
-        self.kind
-            .as_deref()
-            .and_then(|k| all.iter().find(|t| t.id == k))
-            .or_else(|| all.iter().find(|t| t.form == self.form))
-            .map_or_else(String::new, |t| t.name.clone())
+        self.kind_def().map_or_else(String::new, |t| t.name)
     }
 
     fn create_input(&self, slot: Slot, at: Vec2, cx: &Context<'_>) -> Option<OpeningsCreate> {
@@ -271,6 +282,7 @@ impl OpeningTool {
             .first
             .map(|(_, a)| [points::wire(a), points::wire(at)]);
         let measured = span.is_none() && !self.middle;
+        let (operation, leaves, build) = self.door_input();
         Some(OpeningsCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             openings: vec![NewOpening {
@@ -297,6 +309,9 @@ impl OpeningTool {
                 inset: self.inset.flatten().filter(|_| self.form == OpeningForm::Flue),
                 // Numara (docs/adr/0714), explicit in the input (CMD-07).
                 number: self.next_number(cx.doc),
+                operation,
+                leaves,
+                build,
                 ..NewOpening::default()
             }],
             color: cx.draft.color_text(),
@@ -512,6 +527,18 @@ impl Tool for OpeningTool {
             Some(Ask::Head) => {
                 return Prompt::new(self.label(), "üst kotunu yazın (döşemeden)").option("Geri", "G");
             }
+            Some(Ask::Leaves) => {
+                return Prompt::new(self.label(), "kanat ya da panel sayısını yazın").option("Geri", "G");
+            }
+            Some(Ask::Drum) => {
+                return Prompt::new(self.label(), "tamburun iç çapını yazın (boş: ışık kadar)").option("Geri", "G");
+            }
+            Some(Ask::Lip) => {
+                return Prompt::new(self.label(), "açıkken cepten kalan payı yazın").option("Geri", "G");
+            }
+            Some(Ask::Overlap) => {
+                return Prompt::new(self.label(), "iki kanadın bindirmesini yazın (boş: %5)").option("Geri", "G");
+            }
             None => {}
         }
         let note = if self.placement.two_points {
@@ -558,6 +585,7 @@ impl Tool for OpeningTool {
                     "Baş"
                 },
             );
+            p = self.door_prompt(p, &self.placement.format);
         }
         if self.placement.two_points {
             return p.option("Bitir", "Enter");
@@ -695,6 +723,10 @@ impl Tool for OpeningTool {
                 self.see(cx);
                 return true;
             }
+            if let Some(done) = self.door_answer(ask, text, cx) {
+                let _ = done;
+                return true;
+            }
             if ask == Ask::Inset && js_trim(text).is_empty() {
                 self.inset = Some(None);
                 self.ask = None;
@@ -718,7 +750,7 @@ impl Tool for OpeningTool {
                 ),
                 Ask::Distance if v > 0.0 => self.distance = Some(v),
                 Ask::Distance => self.distance = None,
-                Ask::Type => {}
+                Ask::Type | Ask::Leaves | Ask::Drum | Ask::Lip | Ask::Overlap => {}
             }
             self.ask = None;
             self.see(cx);
@@ -741,6 +773,7 @@ impl Tool for OpeningTool {
                 }
             }
             "M" if self.form == OpeningForm::Door => self.hand = self.hand.other(),
+            k if self.door_key(k, cx) => return true,
             _ => {
                 if self.placement.two_points
                     && !self.placement.copy
@@ -793,21 +826,30 @@ impl Tool for OpeningTool {
             .into_iter()
             .map(|(s, l, i)| choice(l.to_owned(), l.to_owned(), i, s == self.side))
             .collect(),
+            "Ç" if self.form == OpeningForm::Door => self.operation_choices(),
             _ => Vec::new(),
         }
     }
 
     fn settings(&self, f: &Format) -> Vec<crate::tool_settings::Setting> {
-        self.placement_settings(f)
+        let mut rows = self.placement_settings(f);
+        self.door_settings(f, &mut rows);
+        rows
     }
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if let Some(done) = self.door_configure(key, value, cx) {
+            return done;
+        }
         self.apply_settings(key, value, cx)
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         if matches!(key, "B" | "F" | "R") {
             return self.placement_configure(key, typed, cx);
+        }
+        if let Some(done) = self.door_configure(key, typed, cx) {
+            return done;
         }
         match key {
             "T" => {
