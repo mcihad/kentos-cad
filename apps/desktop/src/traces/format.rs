@@ -311,6 +311,19 @@ pub struct Expect {
     /// absent differ.
     #[serde(default, deserialize_with = "present")]
     pub(super) info_card: Option<Option<InfoCardExpect>>,
+    /// The project's named views in order (docs/adr/0789 §2): each one's name exactly, its middle (east and north of
+    /// `view.center`), width and height within `clickTolerance`.
+    pub(super) named_views: Option<Vec<NamedViewExpect>>,
+}
+
+/// A named view as a step expects it.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct NamedViewExpect {
+    pub(super) name: String,
+    pub(super) center: [f64; 2],
+    pub(super) width: f64,
+    pub(super) height: f64,
 }
 
 /// Bilgi's card as a step expects it: the object, its title, its rows (“ad: değer”), its text (`null`

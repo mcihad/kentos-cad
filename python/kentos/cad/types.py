@@ -9727,6 +9727,7 @@ class ViewsOp(_Union):
     - :class:`SaveViewsOp` (``kind: save``)
     - :class:`RenameViewsOp` (``kind: rename``)
     - :class:`DeleteViewsOp` (``kind: delete``)
+    - :class:`AreaViewsOp` (``kind: area``)
     - :class:`RecipeViewsOp` (``kind: recipe``)
     - :class:`TemplateViewsOp` (``kind: template``)
     - :class:`TemplateRenameViewsOp` (``kind: templateRename``)
@@ -68105,7 +68106,8 @@ class ViewsEdit(_Model):
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
     state the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).
-    Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.
+    Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe. An area
+    change (`area`) is one undo step “Görünümün alanı” (docs/adr/0789 §1); the other changes are settings edits.
     Attributes:
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
@@ -86841,6 +86843,44 @@ class DeleteViewsOp(ViewsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class AreaViewsOp(ViewsOp):
+    """Alanı değiştir (docs/adr/0789 §1; Revit's crop region grips and Size Crop): the view's area moved, resized or
+    turned, its id, name, place in the list and recipe kept. The maps linked to it follow; one undo step.
+    Attributes:
+        center: Unit: length.
+        width: Unit: length.
+        height: Unit: length.
+        twist: Radians, any turn; kept in [0, 2π). None: the view's own twist. Unit: rad.
+    """
+    TAG_VALUE: ClassVar[str] = "area"
+    name: str
+    center: Vec2
+    width: float
+    height: float
+    twist: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "area"}
+        out["name"] = self.name
+        out["center"] = _vec2_out(self.center)
+        out["width"] = float(self.width)
+        out["height"] = float(self.height)
+        if self.twist is not UNSET:
+            out["twist"] = None if self.twist is None else float(self.twist)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaViewsOp:
+        return cls(
+            name=data["name"],
+            center=Vec2.from_json(data["center"]),
+            width=float(data["width"]),
+            height=float(data["height"]),
+            twist=UNSET if "twist" not in data else None if data["twist"] is None else float(data["twist"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecipeViewsOp(ViewsOp):
     """Görünüş tarifi (docs/adr/0774 §2): the view's recipe set (its version one more) or, none, taken away; the maps
     linked to the view draw with it from then on.
@@ -87839,7 +87879,7 @@ _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "or
 _VIEW_MARKS_OPERATION: dict[str, type[ViewMarksOperation]] = {"set": SetViewMarksOperation, "retarget": RetargetViewMarksOperation, "detach": DetachViewMarksOperation}
 
 
-_VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp, "recipe": RecipeViewsOp, "template": TemplateViewsOp, "templateRename": TemplateRenameViewsOp}
+_VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp, "area": AreaViewsOp, "recipe": RecipeViewsOp, "template": TemplateViewsOp, "templateRename": TemplateRenameViewsOp}
 
 
 _WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation, "shift": ShiftWallsOperation, "distance": DistanceWallsOperation, "length": LengthWallsOperation}
@@ -88008,6 +88048,7 @@ __all__ = [
     "AreaTrimBoundaries",
     "AreaUnit",
     "AreaUnitName",
+    "AreaViewsOp",
     "AreaWork",
     "AreasEdit",
     "AreasEdited",

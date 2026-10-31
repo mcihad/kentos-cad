@@ -359,7 +359,8 @@ CAD = [
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
           # Kapı ve pencere tipleri (docs/adr/0772) under ▾: the tab keeps its words at 1440 px.
           # Oda modülleri (docs/adr/0775) and Malzemeler (docs/adr/0785) under ▾ too.
-          overflow=["arch.sheetSet", "arch.navigator", "arch.openingTypes", "arch.materials", "arch.modules",
+          # Kırpma çerçevesi (docs/adr/0789 §2) beside the navigator: a view's area edited on the model.
+          overflow=["arch.sheetSet", "arch.navigator", "tool.viewCrop", "arch.openingTypes", "arch.materials", "arch.modules",
                     "tool.modulePlace"]),
     ], works=ARCHITECTURE),
     view_tab(True),

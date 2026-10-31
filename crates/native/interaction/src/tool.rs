@@ -982,6 +982,9 @@ pub struct Memory {
     /// Resim ekle's Bağlı and Resmi kırp's Çokgen (docs/adr/0192 §5).
     pub image_linked: bool,
     pub image_clip_polygon: bool,
+    /// Kırpma çerçevesi's view by its place among the named views (docs/adr/0789 §2): the one the Görünümler window
+    /// chose for it; taken once.
+    pub view_crop: Option<usize>,
     /// Ağ analizi's tools (docs/adr/0209 §10; the web's `networkOptions`):
     /// the network last chosen by its id (empty: the first of the tool's
     /// kind), the cost by its name (empty or one the network lacks:
@@ -1346,6 +1349,7 @@ impl Default for Memory {
             centerline_chain: true,
             image_linked: false,
             image_clip_polygon: false,
+            view_crop: None,
             network: Name::EMPTY,
             network_cost: Name::EMPTY,
             network_reorder: kentos_geometry_core::ops::network::Reorder::None,

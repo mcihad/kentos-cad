@@ -535,10 +535,10 @@ pub(super) fn remove_members(
             .into_iter()
             .find(|r| gone.contains(r.as_str()))
         {
-            let (j, _) = keys
+            let j = keys
                 .iter()
                 .find(|(_, k)| *k == needed)
-                .expect("a removed key");
+                .map_or(0, |(j, _)| *j);
             let what = modules[k]
                 .member(&needed)
                 .map_or("nesne", |n| kind_words(&n.entity));
@@ -623,7 +623,7 @@ fn found_at(modules: &[ArchModule], key: &str, path: &str) -> Result<usize, Stop
 /// Katları tekrarla (docs/adr/0779 §5).
 pub(super) fn repeat(
     doc: &Document,
-    modules: &mut Vec<ArchModule>,
+    modules: &mut [ArchModule],
     from: &str,
     of: &[String],
     to: &[ModuleLevelTarget],

@@ -142,6 +142,33 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
             format!("{:?} (±{} m)", [wx, wy], trace.click_tolerance),
         );
     }
+    // The named views' areas (docs/adr/0789 §2): from drags, within the click tolerance.
+    if let Some(want) = &expect.named_views {
+        let [ox, oy] = trace.view.center;
+        let t = trace.click_tolerance;
+        let same = got.named_views.len() == want.len()
+            && got.named_views.iter().zip(want).all(|(v, w)| {
+                v.name == w.name
+                    && (v.center.x - ox - w.center[0]).hypot(v.center.y - oy - w.center[1]) <= t
+                    && (v.width - w.width).abs() <= t
+                    && (v.height - w.height).abs() <= t
+            });
+        check(
+            "namedViews",
+            same,
+            format!(
+                "{:?}",
+                got.named_views
+                    .iter()
+                    .map(|v| (v.name.clone(), [v.center.x - ox, v.center.y - oy], v.width, v.height))
+                    .collect::<Vec<_>>()
+            ),
+            format!(
+                "{:?} (±{t} m)",
+                want.iter().map(|w| (w.name.clone(), w.center, w.width, w.height)).collect::<Vec<_>>()
+            ),
+        );
+    }
     // Object tracking (docs/adr/0085): points within the click tolerance, angles exact.
     let rel = |p: [f64; 2]| [p[0] - trace.view.center[0], p[1] - trace.view.center[1]];
     let near = |a: [f64; 2], b: [f64; 2]| (a[0] - b[0]).hypot(a[1] - b[1]) <= trace.click_tolerance;

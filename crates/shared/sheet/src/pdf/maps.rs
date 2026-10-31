@@ -54,16 +54,24 @@ impl Frame {
         corners(&self.clip, self.turn)
     }
 
-    /// Whether a ground point is inside the content box (its turn taken back).
+    /// Whether a ground point is inside the content box (its turn taken back) and, for a cut map, inside its clip
+    /// shape (docs/adr/0789 §3: a text cut away is not in the file either, so a reader of its words does not find it).
     fn holds(&self, g: [f64; 2]) -> bool {
         let Some(local) = self.view.to_local(g) else {
             return false;
         };
         let c = &self.clip;
-        local[0] >= f64::from(c.left)
+        let in_box = local[0] >= f64::from(c.left)
             && local[0] <= f64::from(c.left) + f64::from(c.width)
             && local[1] >= f64::from(c.top)
-            && local[1] <= f64::from(c.top) + f64::from(c.height)
+            && local[1] <= f64::from(c.top) + f64::from(c.height);
+        if !in_box || self.shape.is_frame() || c.width <= 0 || c.height <= 0 {
+            return in_box;
+        }
+        self.shape.contains(
+            (local[0] - f64::from(c.left)) / f64::from(c.width),
+            (local[1] - f64::from(c.top)) / f64::from(c.height),
+        )
     }
 
     /// The ground the content covers (min east, min north, max east, max north).
@@ -417,6 +425,19 @@ mod tests {
             );
             assert!(!f.holds(at(0.0, 51.0)), "{turn} {view}: past the top edge");
         }
+    }
+
+    /// A cut map (docs/adr/0789 §3): a text anchored in the box but outside the clip shape is not written, so the
+    /// PDF's words are only what shows.
+    #[test]
+    fn a_text_cut_away_is_not_written() {
+        let mut m = prim(0, 0);
+        // The box's left half: 0 to 500 000 millionths across, the whole height.
+        m.clip_shape = crate::clip::Clip::Rectangle { bounds: [0, 0, 500_000, 1_000_000] };
+        let f = Frame::of(&m);
+        assert!(f.holds([499_950.0, 4_420_000.0]), "in the left half");
+        assert!(!f.holds([500_050.0, 4_420_000.0]), "in the box, outside the cut");
+        assert!(f.holds([500_000.0, 4_420_000.0]), "on the cut's edge");
     }
 
     #[test]

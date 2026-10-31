@@ -250,6 +250,9 @@ pub struct ItemTag {
 #[cfg_attr(feature = "ts", derive(TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+// A map is the display list's largest primitive (its recipe's pens and the like); the list is built once per change and
+// read in order, so the variants stay unboxed.
+#[allow(clippy::large_enum_variant)]
 pub enum Prim {
     Rect(RectPrim),
     Path(PathPrim),

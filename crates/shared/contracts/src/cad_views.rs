@@ -654,6 +654,22 @@ pub enum ViewsOp {
     Rename { name: String, to: String },
     /// Sil: a named view removed.
     Delete { name: String },
+    /// Alanı değiştir (docs/adr/0789 §1; Revit's crop region grips and Size Crop): the view's area moved, resized or
+    /// turned, its id, name, place in the list and recipe kept. The maps linked to it follow; one undo step.
+    Area {
+        name: String,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        center: Vec2,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        width: f64,
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        height: f64,
+        /// Radians, any turn; kept in [0, 2π). None: the view's own twist.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
+        twist: Option<f64>,
+    },
     /// Görünüş tarifi (docs/adr/0774 §2): the view's recipe set (its version one more) or, none, taken away; the maps
     /// linked to the view draw with it from then on.
     Recipe {
@@ -681,7 +697,8 @@ pub enum ViewsOp {
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
 /// state the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).
-/// Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.
+/// Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe. An area
+/// change (`area`) is one undo step “Görünümün alanı” (docs/adr/0789 §1); the other changes are settings edits.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

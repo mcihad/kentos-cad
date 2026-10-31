@@ -1,0 +1,239 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "view-crop",
+  "title": "Kırpma çerçevesi: adlı görünümün alanı modelde tutamaçlarla; kenar ve köşe sürükleme, Ctrl+Z ile geri alma, yazılan en×boy, iç içe çerçevede küçüğü seçme, orta tutamacı iki tıklamayla taşıma, Esc",
+  "source": "docs/adr/0789 §2",
+  "covers": [
+    "ADV-06"
+  ],
+  "document": "view-crop.kcad",
+  "view": {
+    "center": [
+      0,
+      0
+    ],
+    "metresPerPixel": 0.05
+  },
+  "draft": {
+    "snap": false
+  },
+  "clickTolerance": 0.06,
+  "steps": [
+    {
+      "run": "tool.viewCrop",
+      "expect": {
+        "tool": "viewCrop",
+        "points": 0
+      },
+      "note": "İki görünüm var: önce biri seçilir; çerçeveler modelde kesikli görünür."
+    },
+    {
+      "click": [
+        0,
+        -4
+      ],
+      "expect": {
+        "points": 1
+      },
+      "note": "Plan'ın çerçevesinin içine tıklamak onu seçer: dokuz tutamaç."
+    },
+    {
+      "drag": [
+        [
+          10,
+          0
+        ],
+        [
+          12,
+          0
+        ]
+      ],
+      "expect": {
+        "namedViews": [
+          {
+            "name": "Plan",
+            "center": [
+              1,
+              0
+            ],
+            "width": 22.0,
+            "height": 12.0
+          },
+          {
+            "name": "Detay",
+            "center": [
+              5,
+              2
+            ],
+            "width": 4.0,
+            "height": 3.0
+          }
+        ],
+        "canUndo": true,
+        "dirty": true
+      },
+      "note": "Sağ kenarın ortası 2 m doğuya: sol kenar yerinde, en 22 m, orta 1 m kayar; tek geri alma adımı."
+    },
+    {
+      "drag": [
+        [
+          -10,
+          6
+        ],
+        [
+          -11,
+          7
+        ]
+      ],
+      "expect": {
+        "namedViews": [
+          {
+            "name": "Plan",
+            "center": [
+              0.5,
+              0.5
+            ],
+            "width": 23.0,
+            "height": 13.0
+          },
+          {
+            "name": "Detay",
+            "center": [
+              5,
+              2
+            ],
+            "width": 4.0,
+            "height": 3.0
+          }
+        ]
+      },
+      "note": "Sol üst köşe iki kenarı birden taşır; sağ ve alt kenar yerinde."
+    },
+    {
+      "key": "Ctrl+Z",
+      "expect": {
+        "namedViews": [
+          {
+            "name": "Plan",
+            "center": [
+              1,
+              0
+            ],
+            "width": 22.0,
+            "height": 12.0
+          },
+          {
+            "name": "Detay",
+            "center": [
+              5,
+              2
+            ],
+            "width": 4.0,
+            "height": 3.0
+          }
+        ],
+        "canRedo": true
+      },
+      "note": "Tutamaç tutulmuyorken Ctrl+Z çizimin geri almasıdır: köşe sürüklemesi geri gelir."
+    },
+    {
+      "text": "8x6"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "namedViews": [
+          {
+            "name": "Plan",
+            "center": [
+              1,
+              0
+            ],
+            "width": 8.0,
+            "height": 6.0
+          },
+          {
+            "name": "Detay",
+            "center": [
+              5,
+              2
+            ],
+            "width": 4.0,
+            "height": 3.0
+          }
+        ]
+      },
+      "note": "Yazılan en×boy ortası çevresinde."
+    },
+    {
+      "click": [
+        5,
+        2
+      ],
+      "expect": {
+        "points": 1
+      },
+      "note": "İki çerçevenin içi: küçüğü, Detay seçilir."
+    },
+    {
+      "click": [
+        5,
+        2
+      ],
+      "expect": {
+        "points": 2
+      },
+      "note": "Detay'ın orta tutamacı basılıp yerinde bırakılır: tutamaç ikinci tıklamayı bekler."
+    },
+    {
+      "click": [
+        6,
+        3
+      ],
+      "expect": {
+        "namedViews": [
+          {
+            "name": "Plan",
+            "center": [
+              1,
+              0
+            ],
+            "width": 8.0,
+            "height": 6.0
+          },
+          {
+            "name": "Detay",
+            "center": [
+              6,
+              3
+            ],
+            "width": 4.0,
+            "height": 3.0
+          }
+        ],
+        "points": 1
+      },
+      "note": "İkinci tıklama orta tutamacı oraya koyar: Detay bütünüyle taşınır."
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "viewCrop",
+        "points": 0
+      },
+      "note": "Esc önce görünümü bırakır."
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select",
+        "journal": {
+          "edits": 0,
+          "commands": 3
+        }
+      },
+      "note": "Sonra araç biter; her yazma cad.views.edit'in komut satırıdır."
+    }
+  ]
+}

@@ -3100,15 +3100,23 @@ impl Input for SettingsSet {
 }
 
 impl Input for ViewsEdit {
-    /// A saved view's `op.center.x`, `op.center.y`, `op.width`, `op.height`, `op.twist` (docs/adr/0285 §1).
+    /// A saved view's or a new area's (docs/adr/0789 §1) `op.center.x`, `op.center.y`, `op.width`, `op.height`,
+    /// `op.twist` (docs/adr/0285 §1).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        let ViewsOp::Save {
+        let (ViewsOp::Save {
             center,
             width,
             height,
             twist,
             ..
-        } = &mut self.edit
+        }
+        | ViewsOp::Area {
+            center,
+            width,
+            height,
+            twist,
+            ..
+        }) = &mut self.edit
         else {
             return None;
         };
