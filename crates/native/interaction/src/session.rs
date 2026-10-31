@@ -119,6 +119,8 @@ pub const TOOLS: &[&str] = &[
     arch_tools::GRID_NUMBER_ID,
     crate::grid_system::ID,
     crate::module_place::ID,
+    // docs/adr/0789 §2: Kırpma çerçevesi.
+    crate::view_crop::ID,
     crate::casework::ID,
     tag_tools::TAG_ID,
     tag_tools::TAG_ALL_ID,
@@ -517,6 +519,7 @@ impl Session {
             arch_tools::GRID_NUMBER_ID => Box::new(arch_tools::GridNumberTool::new()),
             crate::grid_system::ID => Box::new(crate::grid_system::GridSystemTool::new()),
             crate::module_place::ID => Box::new(crate::module_place::ModulePlace::new()),
+            crate::view_crop::ID => Box::new(crate::view_crop::ViewCrop::new()),
             crate::casework::ID => Box::new(crate::casework::Casework::new()),
             tag_tools::TAG_ID => Box::new(tag_tools::TagTool::new()),
             tag_tools::TAG_ALL_ID => Box::new(tag_tools::TagAllTool::new()),

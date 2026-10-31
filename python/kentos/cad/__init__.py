@@ -193,6 +193,7 @@ __all__ = [
     "AreaTrimBoundaries",
     "AreaUnit",
     "AreaUnitName",
+    "AreaViewsOp",
     "AreaWork",
     "AreasEdit",
     "AreasEdited",

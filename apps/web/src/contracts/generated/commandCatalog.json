@@ -41070,7 +41070,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.views.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`,\n`far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer\nstate the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).\nWarnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.",
+        "description": "Input of `cad.views.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`,\n`far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer\nstate the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).\nWarnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe. An area\nchange (`area`) is one undo step “Görünümün alanı” (docs/adr/0789 §1); the other changes are settings edits.",
         "properties": {
           "edit": {
             "$ref": "#/$defs/ViewsOp"
@@ -138535,6 +138535,49 @@
           "required": [
             "kind",
             "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Alanı değiştir (docs/adr/0789 §1; Revit's crop region grips and Size Crop): the view's area moved, resized or\nturned, its id, name, place in the list and recipe kept. The maps linked to it follow; one undo step.",
+          "properties": {
+            "center": {
+              "$ref": "#/$defs/Vec2",
+              "x-unit": "length"
+            },
+            "height": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "area",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "twist": {
+              "description": "Radians, any turn; kept in [0, 2π). None: the view's own twist.",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "rad"
+            },
+            "width": {
+              "format": "double",
+              "type": "number",
+              "x-unit": "length"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "center",
+            "width",
+            "height"
           ],
           "type": "object"
         },

@@ -2534,6 +2534,13 @@
       ],
       "note": "Seçimin modül nesneleri removeMembers ile (ADR 0779 §2)."
     },
+    "tool.viewCrop": {
+      "level": "semantic",
+      "via": [
+        "cad.views.edit"
+      ],
+      "note": "Tutamacın yeni yeri, yazılan en×boy ya da Öznitelikler'in Genişlik ve Yükseklik'i area işlemine orta, en ve boy olarak verilir; alanın hesabı aracın, yazma ve geri alma komutun (ADR 0789 §1, §2)."
+    },
     "tool.modulePlace": {
       "level": "semantic",
       "via": [

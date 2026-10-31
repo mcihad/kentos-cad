@@ -1757,6 +1757,7 @@
       "overflow": [
        "arch.sheetSet",
        "arch.navigator",
+       "tool.viewCrop",
        "arch.openingTypes",
        "arch.materials",
        "arch.modules",

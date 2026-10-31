@@ -1,0 +1,4525 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.views.edit",
+  "commandVersion": 1,
+  "title": "Görünümün alanı (ADR 0789)",
+  "note": "scripts/fixtures/view_area_cases.py yazar; ADR 0285 ve 0789'un kuralından, KentOS kodu olmadan. Alan değişikliği tek geri alma adımıdır; öbür değişiklikler ayar düzenlemesidir.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Görünümün alanı",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ]
+      },
+      "namedViews": [
+        {
+          "id": "v-plan",
+          "name": "Plan",
+          "center": {
+            "x": 487004,
+            "y": 4420003
+          },
+          "width": 12.0,
+          "height": 8.0,
+          "twist": 0.0,
+          "recipe": {
+            "version": 2,
+            "level": {
+              "id": "zemin"
+            },
+            "scale": 50,
+            "crop": true
+          }
+        },
+        {
+          "name": "Detay",
+          "center": {
+            "x": 487002,
+            "y": 4420001
+          },
+          "width": 3.0,
+          "height": 2.0,
+          "twist": 0.5
+        },
+        {
+          "name": "Kuzey",
+          "center": {
+            "x": 487000,
+            "y": 4420000
+          },
+          "width": 40.0,
+          "height": 30.0,
+          "twist": 0.0
+        }
+      ]
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "b": {
+          "x": 487008,
+          "y": 4420006
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Alanı değiştir: orta, en ve boy yazılır; kimlik, sıra ve tarif (sürümüyle) kalır; tek geri alma adımı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dönüş verilmezse görünümün kendi dönüşü kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Detay",
+              "center": {
+                "x": 487002.5,
+                "y": 4420001
+              },
+              "width": 4.0,
+              "height": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002.5,
+                    "y": 4420001
+                  },
+                  "width": 4.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Detay",
+                "center": {
+                  "x": 487002.5,
+                  "y": 4420001
+                },
+                "width": 4.0,
+                "height": 2.0,
+                "twist": 0.5
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002.5,
+                    "y": 4420001
+                  },
+                  "width": 4.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksi çeyrek tur [0, 2π) aralığına çevrilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Detay",
+              "center": {
+                "x": 487002,
+                "y": 4420001
+              },
+              "width": 3.0,
+              "height": 2.0,
+              "twist": -1.5707963267948966
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 4.71238898038469
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Detay",
+                "center": {
+                  "x": 487002,
+                  "y": 4420001
+                },
+                "width": 3.0,
+                "height": 2.0,
+                "twist": 4.71238898038469
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 4.71238898038469
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tam tur dönüş sıfırdır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Detay",
+              "center": {
+                "x": 487002,
+                "y": 4420001
+              },
+              "width": 3.0,
+              "height": 2.0,
+              "twist": 6.283185307179586
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Detay",
+                "center": {
+                  "x": 487002,
+                  "y": 4420001
+                },
+                "width": 3.0,
+                "height": 2.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tam turdan fazlası indirgenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Kuzey",
+              "center": {
+                "x": 487000,
+                "y": 4420000
+              },
+              "width": 40.0,
+              "height": 30.0,
+              "twist": 7.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.7168146928204138
+                }
+              ],
+              "view": {
+                "name": "Kuzey",
+                "center": {
+                  "x": 487000,
+                  "y": 4420000
+                },
+                "width": 40.0,
+                "height": 30.0,
+                "twist": 0.7168146928204138
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.7168146928204138
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı alan yeniden: bir şey değişmez, geri alma adımı olmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 12.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 12.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı alan dönüşü yazılarak: değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Detay",
+              "center": {
+                "x": 487002,
+                "y": 4420001
+              },
+              "width": 3.0,
+              "height": 2.0,
+              "twist": 0.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Detay",
+                "center": {
+                  "x": 487002,
+                  "y": 4420001
+                },
+                "width": 3.0,
+                "height": 2.0,
+                "twist": 0.5
+              },
+              "changed": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geri al eski alanı verir, Yinele yenisini",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "redo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki alan değişikliği iki adım: geri almalar sırayla döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 16.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 16.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 16.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 16.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adın başındaki ve sonundaki boşluklar kırpılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "  Plan ",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 10.0,
+              "height": 6.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 10.0,
+                  "height": 6.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 10.0,
+                "height": 6.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 10.0,
+                  "height": 6.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimliksiz görünümün alanı değişir, kimlik yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Kuzey",
+              "center": {
+                "x": 487010,
+                "y": 4420005
+              },
+              "width": 20.0,
+              "height": 15.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487010,
+                    "y": 4420005
+                  },
+                  "width": 20.0,
+                  "height": 15.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Kuzey",
+                "center": {
+                  "x": 487010,
+                  "y": 4420005
+                },
+                "width": 20.0,
+                "height": 15.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487010,
+                    "y": 4420005
+                  },
+                  "width": 20.0,
+                  "height": 15.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Arada yeniden adlandırılan görünüme geri alma alanını yine verir (kalıcı kimlik)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "rename",
+              "name": "Plan",
+              "to": "Uygulama planı"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Uygulama planı",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Uygulama planı",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Uygulama planı",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Uygulama planı",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimliksiz görünüm adlandırılınca adının kimliğini alır; geri alma onu bulur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Kuzey",
+              "center": {
+                "x": 487010,
+                "y": 4420005
+              },
+              "width": 20.0,
+              "height": 15.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487010,
+                    "y": 4420005
+                  },
+                  "width": 20.0,
+                  "height": 15.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Kuzey",
+                "center": {
+                  "x": 487010,
+                  "y": 4420005
+                },
+                "width": 20.0,
+                "height": 15.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487010,
+                    "y": 4420005
+                  },
+                  "width": 20.0,
+                  "height": 15.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "rename",
+              "name": "Kuzey",
+              "to": "Vaziyet"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "id": "v-021b43ab",
+                  "name": "Vaziyet",
+                  "center": {
+                    "x": 487010,
+                    "y": 4420005
+                  },
+                  "width": 20.0,
+                  "height": 15.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-021b43ab",
+                "name": "Vaziyet",
+                "center": {
+                  "x": 487010,
+                  "y": 4420005
+                },
+                "width": 20.0,
+                "height": 15.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "id": "v-021b43ab",
+                  "name": "Vaziyet",
+                  "center": {
+                    "x": 487010,
+                    "y": 4420005
+                  },
+                  "width": 20.0,
+                  "height": 15.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "id": "v-021b43ab",
+                  "name": "Vaziyet",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Arada değişen tarif geri almada kalır: yalnız alan döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "Plan",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "scale": 20,
+                "crop": true,
+                "detail": "detailed"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 3,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 20,
+                    "crop": true,
+                    "detail": "detailed"
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 3,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 20,
+                  "crop": true,
+                  "detail": "detailed"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 3,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 20,
+                    "crop": true,
+                    "detail": "detailed"
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 3,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 20,
+                    "crop": true,
+                    "detail": "detailed"
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Arada silinen görünüme geri alma bir şey vermez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Detay",
+              "center": {
+                "x": 487003,
+                "y": 4420001
+              },
+              "width": 3.0,
+              "height": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487003,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Detay",
+                "center": {
+                  "x": 487003,
+                  "y": 4420001
+                },
+                "width": 3.0,
+                "height": 2.0,
+                "twist": 0.5
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487003,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "delete",
+              "name": "Detay"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan alanı söyler, bir şey yazmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrulama tamam der, bir şey yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen görünüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Kesit",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 5.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_view",
+              "message": "“Kesit” adlı bir görünüm yok. Adlı görünümlerden birini seçin ya da geçerli görünümü bu adla kaydedin.",
+              "path": "edit.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş ad reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "   ",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 5.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_view_name",
+              "message": "Görünüm adı boş olamaz, en çok 64 karakterdir ve denetim karakteri içermez. Başka bir ad yazın.",
+              "path": "edit.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sıfır en reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 0.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_view_size",
+              "message": "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı. Gösterilecek alanın boyunu verin.",
+              "path": "edit.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eksi boy reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 5.0,
+              "height": -1.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_view_size",
+              "message": "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı. Gösterilecek alanın boyunu verin.",
+              "path": "edit.height"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 000 km'den büyük en reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 30000000.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_view_size",
+              "message": "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı. Gösterilecek alanın boyunu verin.",
+              "path": "edit.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çok uzak orta reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 20000000.0,
+                "y": 4420000
+              },
+              "width": 5.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "far_point",
+              "message": "Görünümün ortası çizimden çok uzak: koordinatlar en çok 10 000 km olur. Çizimdeki bir noktayı verin.",
+              "path": "edit.center"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bilinmeyen görünümden önce boy denetlenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Kesit",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 0.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_view_size",
+              "message": "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı. Gösterilecek alanın boyunu verin.",
+              "path": "edit.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sonlu olmayan en reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 5.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Görünümün sayıları sonlu olmalı; NaN ya da sonsuz bir değer verildi. Sayıyı yeniden verin.",
+              "path": "edit.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "nonFinite": {
+            "edit.width": "NaN"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sonlu olmayan dönüş reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 5.0,
+              "height": 5.0,
+              "twist": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Görünümün sayıları sonlu olmalı; NaN ya da sonsuz bir değer verildi. Sayıyı yeniden verin.",
+              "path": "edit.twist"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "nonFinite": {
+            "edit.twist": "Infinity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sonlu olmayan orta reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 20000000.0,
+                "y": 4420000
+              },
+              "width": 5.0,
+              "height": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Görünümün sayıları sonlu olmalı; NaN ya da sonsuz bir değer verildi. Sayıyı yeniden verin.",
+              "path": "edit.center"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          },
+          "nonFinite": {
+            "edit.center.x": "-Infinity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Beklenen sürüm: geçersizi ve eskisi reddedilir, doğrusu yazar",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "r0"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 5.0,
+              "height": 5.0
+            },
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 12.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 14.0,
+              "height": 9.5
+            },
+            "expectedRevision": "$r0"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "id": "v-plan",
+                "name": "Plan",
+                "center": {
+                  "x": 487005,
+                  "y": 4420004
+                },
+                "width": 14.0,
+                "height": 9.5,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 2,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "scale": 50,
+                  "crop": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "area",
+              "name": "Plan",
+              "center": {
+                "x": 487005,
+                "y": 4420004
+              },
+              "width": 5.0,
+              "height": 5.0
+            },
+            "expectedRevision": "$r0"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-plan",
+                  "name": "Plan",
+                  "center": {
+                    "x": 487005,
+                    "y": 4420004
+                  },
+                  "width": 14.0,
+                  "height": 9.5,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "crop": true
+                  }
+                },
+                {
+                  "name": "Detay",
+                  "center": {
+                    "x": 487002,
+                    "y": 4420001
+                  },
+                  "width": 3.0,
+                  "height": 2.0,
+                  "twist": 0.5
+                },
+                {
+                  "name": "Kuzey",
+                  "center": {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  "width": 40.0,
+                  "height": 30.0,
+                  "twist": 0.0
+                }
+              ]
+            },
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

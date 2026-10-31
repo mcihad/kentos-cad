@@ -1,7 +1,9 @@
 //! `cad.views.edit` v1 (docs/adr/0285 §1): the project's named views. A
 //! project setting (`Document::set_settings`: an edit, no undo step); no
-//! object moves, and going to a view is the host's camera. The shared cases
-//! are `fixtures/commands/v1/cad.views.edit.json`.
+//! object moves, and going to a view is the host's camera. A view's area
+//! (`area`, docs/adr/0789 §1) is the one undo step: the crop region the
+//! sheets' linked maps cut to. The shared cases are
+//! `fixtures/commands/v1/cad.views.edit.json` and `cad.views.edit.area.json`.
 
 use kentos_commands::{
     CommandResult, CommandWarning, MOST_NAMED_VIEWS, MOST_VIEW_SIZE, MOST_VIEW_TEMPLATES, NamedView, ProjectSettings,
@@ -17,12 +19,22 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
+/// The undo step an area change is (docs/adr/0789 §1).
+pub const AREA_STEP: &str = "Görünümün alanı";
+
 const NON_FINITE: &str =
     "Görünümün sayıları sonlu olmalı; NaN ya da sonsuz bir değer verildi. Sayıyı yeniden verin.";
 
 /// The input's own checks: what needs no document.
 fn check_input(input: &ViewsEdit) -> Result<(), Stop> {
     if let ViewsOp::Save {
+        center,
+        width,
+        height,
+        twist,
+        ..
+    }
+    | ViewsOp::Area {
         center,
         width,
         height,
@@ -81,7 +93,8 @@ fn check_input(input: &ViewsEdit) -> Result<(), Stop> {
         ViewsOp::Save { name, .. }
         | ViewsOp::Delete { name }
         | ViewsOp::Recipe { name, .. }
-        | ViewsOp::Template { name, .. } => {
+        | ViewsOp::Template { name, .. }
+        | ViewsOp::Area { name, .. } => {
             vec![("edit.name", name)]
         }
         ViewsOp::Rename { name, to } | ViewsOp::TemplateRename { name, to } => {
@@ -224,6 +237,27 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
                 return Err(unknown(name));
             }
             None
+        }
+        ViewsOp::Area {
+            name,
+            center,
+            width,
+            height,
+            twist,
+        } => {
+            let name = name.trim();
+            let Some(at) = s.named_views.iter().position(|v| v.name == name) else {
+                return Err(unknown(name));
+            };
+            // Its id, name, place and recipe stay: only where it looks changes (docs/adr/0789 §1).
+            let v = &mut s.named_views[at];
+            v.center = *center;
+            v.width = *width;
+            v.height = *height;
+            if let Some(t) = twist {
+                v.twist = normal_angle(*t);
+            }
+            Some(v.clone())
         }
         ViewsOp::Recipe { name, recipe } => {
             let name = name.trim();
@@ -453,7 +487,17 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ViewsEdit) -> CommandResu
     };
     let changed = next != *cx.doc.settings();
     if changed {
-        cx.doc.set_settings(next);
+        match (&input.edit, &view) {
+            // The area is an undo step of its own (docs/adr/0789 §1): the maps linked to the view follow it.
+            (ViewsOp::Area { .. }, Some(v)) => {
+                let key = kentos_commands::view_key(v);
+                let area = kentos_domain::ViewArea::of(v);
+                if let Err(why) = cx.doc.set_view_area(&key, area, AREA_STEP) {
+                    return Stop::failed(error(codes::INVALID_VIEW_SIZE, why.0, Some("edit".into()))).into();
+                }
+            }
+            _ => cx.doc.set_settings(next),
+        }
     }
     CommandResult::Completed {
         output: answer(

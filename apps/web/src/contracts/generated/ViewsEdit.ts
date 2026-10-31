@@ -9,7 +9,8 @@ import type { ViewsOp } from "./ViewsOp";
  * `invalid_revision`, `revision_conflict` (status `conflict`);
  * `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
  * state the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).
- * Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.
+ * Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe. An area
+ * change (`area`) is one undo step “Görünümün alanı” (docs/adr/0789 §1); the other changes are settings edits.
  */
 export type ViewsEdit = { edit: ViewsOp, 
 /**

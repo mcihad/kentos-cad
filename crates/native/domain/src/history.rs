@@ -313,6 +313,13 @@ pub(crate) enum Op {
         before: kentos_contracts::BuildingProgram,
         after: kentos_contracts::BuildingProgram,
     },
+    /// A named view's area (docs/adr/0789 §1), by the view's key, before and after: the crop region its linked maps cut
+    /// to, its own undo step.
+    ViewArea {
+        key: String,
+        before: crate::view_area::ViewArea,
+        after: crate::view_area::ViewArea,
+    },
     /// The project's room modules (docs/adr/0775), before and after: a setting, written in the step with the objects
     /// placed or updated, so undo gives both back.
     ArchModules {
@@ -615,6 +622,11 @@ impl Op {
             Op::BuildingProgram { before, after } => Op::BuildingProgram {
                 before: after.clone(),
                 after: before.clone(),
+            },
+            Op::ViewArea { key, before, after } => Op::ViewArea {
+                key: key.clone(),
+                before: *after,
+                after: *before,
             },
             Op::ArchModules { before, after } => Op::ArchModules {
                 before: after.clone(),
@@ -1250,6 +1262,7 @@ impl Document {
                 | Op::Materials { .. }
                 | Op::BuildingProgram { .. }
                 | Op::ArchModules { .. }
+                | Op::ViewArea { .. }
                 | Op::Source { .. }
                 | Op::Lineage { .. }
                 | Op::Constraints { .. } => false,
@@ -1534,6 +1547,11 @@ impl Document {
                 let mut arch = self.settings.arch.take().unwrap_or_default();
                 arch.materials = after.clone();
                 self.settings.arch = (!arch.is_empty()).then_some(arch);
+                return;
+            }
+            Op::ViewArea { key, after, .. } => {
+                let (key, after) = (key.clone(), *after);
+                self.put_view_area(&key, after);
                 return;
             }
             Op::ArchModules { after, .. } => {

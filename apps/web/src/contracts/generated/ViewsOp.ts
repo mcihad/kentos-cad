@@ -9,4 +9,8 @@ export type ViewsOp = { "kind": "save", name: string, center: Vec2, width: numbe
 /**
  * Radians, any turn; kept in [0, 2π). None: 0, the north up.
  */
-twist?: number, } | { "kind": "rename", name: string, to: string, } | { "kind": "delete", name: string, } | { "kind": "recipe", name: string, recipe?: ViewRecipe, } | { "kind": "template", name: string, recipe?: ViewRecipe, } | { "kind": "templateRename", name: string, to: string, };
+twist?: number, } | { "kind": "rename", name: string, to: string, } | { "kind": "delete", name: string, } | { "kind": "area", name: string, center: Vec2, width: number, height: number, 
+/**
+ * Radians, any turn; kept in [0, 2π). None: the view's own twist.
+ */
+twist?: number, } | { "kind": "recipe", name: string, recipe?: ViewRecipe, } | { "kind": "template", name: string, recipe?: ViewRecipe, } | { "kind": "templateRename", name: string, to: string, };

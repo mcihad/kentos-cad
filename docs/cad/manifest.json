@@ -13280,6 +13280,22 @@
    "tests": 1
   },
   {
+   "id": "tool.viewCrop",
+   "kind": "command",
+   "title": "Kırpma çerçevesi",
+   "level": "semantic",
+   "via": [
+    "cad.views.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.views.edit",
+   "mcp": "cad.views.edit",
+   "note": "Tutamacın yeni yeri, yazılan en×boy ya da Öznitelikler'in Genişlik ve Yükseklik'i area işlemine orta, en ve boy olarak verilir; alanın hesabı aracın, yazma ve geri alma komutun (ADR 0789 §1, §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.viewDetail",
    "kind": "command",
    "title": "Detay",

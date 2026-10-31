@@ -14,14 +14,14 @@ use crate::tools_screens::Scene;
 use crate::view_recipe_scenes::{both_sheets, linked_sheet};
 
 /// The bathroom's area: the room between x 10–13 and y 0–4.5, its walls and a margin.
-const BATH: (f64, f64, f64, f64) = (9.6, -0.4, 13.4, 4.9);
+pub(crate) const BATH: (f64, f64, f64, f64) = (9.6, -0.4, 13.4, 4.9);
 
-fn bath_recipe(detail: &str, crop: bool) -> Value {
+pub(crate) fn bath_recipe(detail: &str, crop: bool) -> Value {
     json!({"level": {"id": "zemin"}, "scale": 50, "detail": detail, "crop": crop})
 }
 
 /// Banyo detay saved and given its recipe; its sheet linked; that sheet in front.
-fn bath(app: &mut App) {
+pub(crate) fn bath(app: &mut App) {
     let plan = both_sheets(app);
     // Layered walls, so that the detail shows: the house's own walls have no style.
     command(app, "cad.walls.edit", json!({"uids": plan.walls, "operation": {"kind": "set", "style": "Dış duvar 25"}}));

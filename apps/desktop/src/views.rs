@@ -11,6 +11,9 @@
 //! the view as it is under the name in Ad; Yeniden adlandır gives the chosen
 //! view that name. The window stays open; Kapat closes it.
 //!
+//! Alanı düzenle closes the window and starts Kırpma çerçevesi (`tool.viewCrop`, docs/adr/0789 §2) on the chosen
+//! view: its area edited with grips on the model, one undo step each.
+//!
 //! Görünümü UCS'e döndür lays the UCS's x axis horizontal (AutoCAD's PLAN),
 //! Kuzey yukarı turns the view back; Görünümü döndür is the tool
 //! (`kentos_interaction::view_twist`).
@@ -38,6 +41,8 @@ const UPDATE: &str = "Güncelle";
 const REMOVE: &str = "Sil";
 const SAVE: &str = "Yeni görünüm kaydet";
 const RENAME: &str = "Yeniden adlandır";
+/// Starts Kırpma çerçevesi on the chosen view (docs/adr/0789 §2).
+pub const CROP: &str = "Alanı düzenle";
 const CLOSE: &str = "Kapat";
 
 /// The commands this module runs.
@@ -70,6 +75,8 @@ pub enum Event {
     Show(String),
     Update,
     Remove,
+    /// Alanı düzenle: Kırpma çerçevesi on the chosen view (docs/adr/0789 §2).
+    Crop,
     Save,
     Rename,
     Name(String),
@@ -250,6 +257,14 @@ impl App {
                     self.save_view(&id);
                 }
             }
+            Event::Crop => {
+                if let Some(id) = chosen {
+                    self.memory.view_crop = self.named_views().iter().position(|v| v.name == id);
+                    self.views_window = None;
+                    self.dialog = None;
+                    return self.run("tool.viewCrop");
+                }
+            }
             Event::Remove => {
                 if let Some(id) = chosen
                     && self
@@ -369,6 +384,7 @@ impl App {
                 REMOVE,
                 chosen.filter(|_| editable).map(|_| msg(Event::Remove))
             ),
+            words::secondary(CROP, chosen.filter(|_| editable).map(|_| msg(Event::Crop))),
         ]
         .spacing(8);
         let name = kentos_ui::widget::text_field("Görünümün adı", &w.name)
@@ -423,6 +439,7 @@ impl App {
             Control::Press(SHOW) => chosen.map(|id| msg(Event::Show(id))),
             Control::Press(UPDATE) => chosen.filter(|_| editable).map(|_| msg(Event::Update)),
             Control::Press(REMOVE) => chosen.filter(|_| editable).map(|_| msg(Event::Remove)),
+            Control::Press(CROP) => chosen.filter(|_| editable).map(|_| msg(Event::Crop)),
             Control::Press(SAVE) => editable.then(|| msg(Event::Save)),
             Control::Press(RENAME) => chosen.filter(|_| editable).map(|_| msg(Event::Rename)),
             Control::Press(CLOSE) => Some(msg(Event::Close)),

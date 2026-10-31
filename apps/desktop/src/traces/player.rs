@@ -474,6 +474,8 @@ pub struct Observation {
     pub layer_compose: std::collections::BTreeMap<String, serde_json::Value>,
     /// Every object's label pins, by its id, where it has any (docs/adr/0212 §2).
     pub label_pins: BTreeMap<u32, Vec<kentos_commands::LabelPin>>,
+    /// The project's named views, in order (docs/adr/0789 §2).
+    pub named_views: Vec<kentos_commands::NamedView>,
     /// The colour and line weight new objects take now.
     pub current_color: Option<String>,
     pub current_weight: Option<f64>,
@@ -1460,6 +1462,7 @@ impl<'a> Player<'a> {
                     .map(|e| (e.base().id, e.base().label_pins.clone()))
                     .collect()
             }),
+            named_views: doc.map_or_else(Vec::new, |d| d.model.settings().named_views.clone()),
             current_color: app.draft.color_text(),
             current_weight: app.draft.line_weight,
             info_card: app.info_card.and_then(|(slot, _)| {

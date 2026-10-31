@@ -93,6 +93,8 @@ mod domains;
 mod opening_types;
 mod materials;
 mod arch_modules;
+mod view_area;
+pub use view_area::ViewArea;
 mod source_steps;
 mod lineage;
 

@@ -26,7 +26,7 @@ const COMMAND_CLICK: &str = if cfg!(target_os = "macos") {
 };
 
 /// What each mouse action does (the web's `MOUSE_ACTIONS`): its meaning, then the action.
-pub const MOUSE_ACTIONS: [(&str, &str); 22] = [
+pub const MOUSE_ACTIONS: [(&str, &str); 23] = [
     ("Seç, nokta koy, adımı onayla", "Sol tık"),
     ("Komutu onayla ya da bitir (Enter gibi)", "Sağ tık"),
     (
@@ -81,6 +81,10 @@ pub const MOUSE_ACTIONS: [(&str, &str); 22] = [
     (
         "Köşeyi taşı; kenar ortasındaki baklava köşe ekler",
         "Tutamacı sürükle",
+    ),
+    (
+        "Kırpma çerçevesinde görünümün alanı: köşe iki kenarı, kenar ortası bir kenarı, orta bütün çerçeveyi taşır",
+        "Çerçeve tutamacını sürükle",
     ),
 ];
 
