@@ -117,6 +117,8 @@ pub struct MapSource<'a> {
     /// Its pens and black and white (docs/adr/0783 §1).
     pub pens: &'a [kentos_contracts::RecipePen],
     pub mono: bool,
+    /// A linked view's design options (docs/adr/0788 §3); empty: each set's primary.
+    pub options: &'a [kentos_contracts::OptionChoice],
 }
 
 /// A box of the paper's system as a box of the project's (docs/adr/0638 §1): the store is searched in the project's.
@@ -168,7 +170,7 @@ pub(crate) fn built_layers_profile(
         .level
         .map(|l| crate::layers::level_looks(doc, l))
         .unwrap_or_default();
-    let mut phasing = crate::layers::map_drawing_of(doc, src.phase, src.hidden, src.pens, src.mono);
+    let mut phasing = crate::layers::map_drawing_of(doc, src.phase, src.hidden, src.pens, src.mono, src.options);
     for &id in &faint {
         phasing.fade(id);
     }

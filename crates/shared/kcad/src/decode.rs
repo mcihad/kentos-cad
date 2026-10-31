@@ -1193,7 +1193,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 xref_paths = paths;
             }
-            "namedViews" if has.views => named_views = views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates)?,
+            "namedViews" if has.views => {
+                named_views =
+                    views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates, has.options)?;
+            }
             // Schema 146 (docs/adr/0783 §2): the project's view templates, read whole as the contract's JSON.
             "viewTemplates" if has.view_templates => view_templates = views::view_templates(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
@@ -1246,6 +1249,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         Code::UnknownField,
                         at,
                         "projenin etkin katı ve kat görünümü şema 120'den beri yazılır",
+                    ));
+                }
+                if !has.options && a.has_options() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin tasarım seçenekleri şema 153'ten beri yazılır",
                     ));
                 }
                 if !has.module_units && kentos_contracts::modules_have_units(&a.modules) {

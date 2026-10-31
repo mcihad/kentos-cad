@@ -116,7 +116,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     let mut recessed: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
     // Each wall's pocket doors' cavities, m³ (docs/adr/0787 §3).
     let mut pocketed: BTreeMap<String, f64> = BTreeMap::new();
-    for e in doc.entities() {
+    // The options a set does not show are not built (docs/adr/0788 §5).
+    let option_out = doc.option_out();
+    for e in doc.entities().filter(|e| !option_out.contains(&kentos_domain::Slot(e.base().id))) {
         let Entity::Opening(o) = e else { continue };
         let x = &o.opening;
         let wall = doc.wall_line_of(&x.host).is_some().then(|| x.host.clone());
@@ -158,7 +160,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     }
     // One borrow owns all temporary source networks for this read-only report.
     let mut source_search = kentos_domain::space_follow::SpaceSearch::new(doc);
-    for e in doc.entities() {
+    // The options a set does not show are not built (docs/adr/0788 §5).
+    let option_out = doc.option_out();
+    for e in doc.entities().filter(|e| !option_out.contains(&kentos_domain::Slot(e.base().id))) {
         match e {
             Entity::Space(s) => {
                 let f = &s.space;

@@ -382,6 +382,23 @@
    "tests": 0
   },
   {
+   "id": "arch.options",
+   "kind": "command",
+   "title": "Tasarım seçenekleri",
+   "level": "semantic",
+   "via": [
+    "cad.options.edit",
+    "cad.options.query"
+   ],
+   "operation": null,
+   "python": "kentos.cad.options.edit, kentos.cad.options.query",
+   "mcp": "cad.options.edit, cad.options.query",
+   "note": "Seçimden tanımla, Kopyala, Birincil yap, Kabul et, Sil ve Yeniden adlandır cad.options.edit ile (önizleme planından); sayılar, alanlar ve Karşılaştır cad.options.query ile (ADR 0788).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.phase.all",
    "kind": "command",
    "title": "Evre: Tümü",

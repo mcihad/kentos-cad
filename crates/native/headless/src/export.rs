@@ -75,10 +75,16 @@ fn write_layer(doc: &Document, id: &str) -> Option<DxfWriteLayer> {
 
 /// The writer's input for `chosen` (from [`by_layer`]).
 pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteInput {
+    // Design options (docs/adr/0788 §5): DXF gets the drawing as it shows, the main model and each set's primary;
+    // the other options are not written and are said.
+    let option_out = doc.option_out();
     let mut entities: Vec<Entity> = chosen
         .iter()
         .flat_map(|(_, list)| list.iter().map(|e| (*e).clone()))
         .collect();
+    let before_options = entities.len();
+    entities.retain(|e| !option_out.contains(&kentos_domain::Slot(e.base().id)));
+    let left_out_options = before_options - entities.len();
     // The document's draw order crosses layer boundaries. Grouping is only
     // for the layer chooser, never a reason to repaint one whole layer on top.
     let order: std::collections::HashMap<_, _> = doc.entities().enumerate()
@@ -105,6 +111,16 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
             what: "İlişkili duvar ölçü grubu".into(),
             count: u32::try_from(recipe_count).unwrap_or(u32::MAX),
             reason: "Ölçülerin mevcut geometrisi yazıldı; duvar ölçü grubunun kaynak tarifi ve otomatik üye ekleme/kaldırma davranışı DXF'e yazılmaz. Grubu korumak için KCAD olarak kaydedin.".into(),
+            lines: Vec::new(),
+        });
+    }
+    if left_out_options > 0 {
+        notes.push(kentos_commands::ReportItem {
+            severity: Some(kentos_commands::ReportSeverity::Warning),
+            details: Vec::new(),
+            what: "Birincil olmayan tasarım seçeneği".into(),
+            count: u32::try_from(left_out_options).unwrap_or(u32::MAX),
+            reason: "Çizim her kümenin birincil seçeneğini gösterir; öbür seçeneklerin nesneleri DXF'e yazılmadı, seçenek kümeleri de yazılmaz. Seçenekleri korumak için KCAD olarak kaydedin.".into(),
             lines: Vec::new(),
         });
     }

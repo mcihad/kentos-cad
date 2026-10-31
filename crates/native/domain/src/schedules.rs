@@ -183,8 +183,14 @@ impl Document {
             let t = if field == ScheduleField::Share { &part.share } else { &part.gross };
             t.parse::<f64>().ok().map(ArchValue::Area)
         };
+        // The options a set does not show are not built (docs/adr/0788 §5): a schedule lists the primaries'.
+        let out = self.option_out();
         for e in self.entities() {
-            if e.kind() != of.kind() || !self.fixture(e) || !self.schedule_takes(e, filter) {
+            if e.kind() != of.kind()
+                || !self.fixture(e)
+                || !self.schedule_takes(e, filter)
+                || out.contains(&Slot(e.base().id))
+            {
                 continue;
             }
             let values: Vec<Option<ArchValue>> = columns

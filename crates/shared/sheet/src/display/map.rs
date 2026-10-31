@@ -504,6 +504,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
         wall_detail: recipe.and_then(|r| r.detail),
         pens: recipe.map(|r| r.pens.clone()).unwrap_or_default(),
         mono: recipe.is_some_and(|r| r.mono),
+        options: recipe.map(|r| r.options.clone()).unwrap_or_default().into_boxed_slice(),
         crs: m.crs.clone(),
         extent: mf.extent(),
         clip_feature,

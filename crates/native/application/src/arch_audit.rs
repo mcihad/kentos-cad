@@ -1936,7 +1936,9 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
 /// The answer and its warnings: the findings in the part asked, the project's exceptions laid on them (docs/adr/0732
 /// §3) and listed as asked.
 fn answer(doc: &Document, input: &ArchAudit) -> Result<(ArchAudited, Vec<CommandWarning>), Stop> {
-    let (all, run) = found(doc, input)?;
+    // The options a set does not show are not built (docs/adr/0788 §5): the audit reads the drawing without them.
+    let built = crate::options_edit::primary_view(doc);
+    let (all, run) = found(built.as_ref().unwrap_or(doc), input)?;
     let scope = scope_of(doc, input)?;
     let exceptions = doc.settings().arch.as_ref().map(|a| a.audit_exceptions.as_slice()).unwrap_or_default();
     let stale: Vec<String> = exceptions

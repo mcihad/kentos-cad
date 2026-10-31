@@ -292,6 +292,8 @@ pub enum Dialog {
     Materials,
     /// Oda modülleri (room_modules_window.rs, docs/adr/0775); the window is `App::room_modules`.
     RoomModules,
+    /// Tasarım seçenekleri (design_options_window.rs, docs/adr/0788); the window is `App::design_options`.
+    DesignOptions,
     /// Çizelge ayarları and Çizelgeyi dosyaya yaz (schedule_window.rs, docs/adr/0733 §5, §7); the window is
     /// `App::schedule`.
     Schedule,
@@ -622,6 +624,7 @@ pub enum Message {
     OpeningTypes(crate::opening_types_window::Event),
     Materials(crate::materials_window::Event),
     RoomModules(crate::room_modules_window::Event),
+    DesignOptions(crate::design_options_window::Event),
     TagsCheck(crate::tags_check::Event),
     Schedule(crate::schedule_window::Event),
     ViewRefs(crate::viewmark_refs::Event),
@@ -1170,6 +1173,8 @@ pub struct App {
     pub(crate) materials: Option<crate::materials_window::Window>,
     /// Oda modülleri's window (room_modules_window.rs, docs/adr/0775).
     pub(crate) room_modules: Option<crate::room_modules_window::Window>,
+    /// Tasarım seçenekleri's window (design_options_window.rs, docs/adr/0788).
+    pub(crate) design_options: Option<crate::design_options_window::Window>,
     /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
     pub(crate) tags_check: Option<crate::tags_check::Window>,
     /// Çizelge ayarları's and Dosyaya yaz's window (schedule_window.rs, docs/adr/0733 §5).
@@ -1567,6 +1572,7 @@ impl App {
             opening_types: None,
             materials: None,
             room_modules: None,
+            design_options: None,
             tags_check: None,
             schedule: None,
             view_refs: None,
@@ -2225,6 +2231,7 @@ impl App {
             Message::OpeningTypes(event) => return self.opening_types_event(event),
             Message::Materials(event) => return self.materials_event(event),
             Message::RoomModules(event) => return self.room_modules_event(event),
+            Message::DesignOptions(event) => return self.design_options_event(event),
             Message::TagsCheck(event) => return self.tags_check_event(event),
             Message::Schedule(event) => return self.schedule_event(event),
             Message::ViewRefs(event) => return self.view_refs_event(event),
@@ -2937,6 +2944,8 @@ impl App {
             "arch.materials" => self.open_materials(),
             // Oda modülleri (docs/adr/0775).
             "arch.modules" => self.open_room_modules(),
+            // Tasarım seçenekleri (docs/adr/0788).
+            "arch.options" => self.open_design_options(),
             "arch.moduleExcept" => self.room_module_selection_action(false),
             "arch.moduleRestore" => self.room_module_selection_action(true),
             "arch.moduleAddMembers" => self.room_module_add_selection(None),

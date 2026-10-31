@@ -50,6 +50,7 @@ fn twenty_native_plot_cases_combine_representations_freeze_and_cad_overrides_wit
             hidden: &[],
             pens: &[],
             mono: false,
+            options: &[],
             doc: source,
             store: spatial.store(),
             library: &library,

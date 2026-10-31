@@ -122,6 +122,15 @@ pub fn store_for_viewport(
     if !out.is_empty() {
         store.set_filtered(out.into_iter().map(|s| (s, true)));
     }
+    // The design options not shown (docs/adr/0788 §4): neither drawn, picked nor snapped to; their walls join
+    // nothing and their openings cut nothing.
+    let options: Vec<f64> = doc.option_out().into_iter().map(|s| f64::from(s.0)).collect();
+    if !options.is_empty() {
+        store.set_option_out(options.iter().copied());
+        if scope.is_none() {
+            store.set_phase_hidden(options);
+        }
+    }
     if let Some(scope) = scope {
         store.set_phase_hidden(crate::viewport_scope::hidden_entities(doc));
         crate::viewport_scope::apply_boundary(&mut store, scope);

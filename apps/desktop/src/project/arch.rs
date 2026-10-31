@@ -205,6 +205,8 @@ pub fn read(
         modules: choices.map_or_else(Vec::new, |a| a.modules.clone()),
         // So are the building materials (docs/adr/0785).
         materials: choices.map_or_else(Vec::new, |a| a.materials.clone()),
+        // So are the design options (docs/adr/0788).
+        options: choices.map_or_else(Vec::new, |a| a.options.clone()),
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

@@ -2000,6 +2000,7 @@ impl App {
             Asking::OpeningTypes => self.opening_types_view(),
             Asking::Materials => self.materials_view(),
             Asking::RoomModules => self.room_modules_view(),
+            Asking::DesignOptions => self.design_options_view(),
             Asking::TagsCheck => self.tags_check_view(),
             Asking::Schedule | Asking::ScheduleExport => self.schedule_view(),
             Asking::ViewRefs => self.view_refs_view(),

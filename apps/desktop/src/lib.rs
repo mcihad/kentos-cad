@@ -44,6 +44,7 @@ mod wall_joins;
 mod opening_types_window;
 mod materials_window;
 mod room_modules_window;
+mod design_options_window;
 mod tags_check;
 mod schedule_window;
 mod arch_audit;
@@ -541,6 +542,8 @@ mod special_door_scenes;
 mod module_flat_scenes;
 #[cfg(test)]
 mod door_clash_scenes;
+#[cfg(test)]
+mod design_option_scenes;
 #[cfg(test)]
 mod recess_scenes;
 #[cfg(test)]

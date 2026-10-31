@@ -298,6 +298,9 @@ pub struct Store {
     masks: IdSet,
     /// The objects the project's phase view hides (`set_phase_hidden`, docs/adr/0346 §2).
     phase_hidden: IdSet,
+    /// The objects of the design options the store does not show (`set_option_out`, docs/adr/0788 §4): their walls
+    /// join no wall and their openings cut no wall.
+    option_out: IdSet,
     /// The objects drawn faint under the active level (`set_unpicked`, docs/adr/0715 §2): snapped to, never picked.
     unpicked: IdSet,
     /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
@@ -544,6 +547,7 @@ impl Store {
             self.filtered.remove(&id.to_bits());
             self.masks.remove(&id.to_bits());
             self.phase_hidden.remove(&id.to_bits());
+            self.option_out.remove(&id.to_bits());
             self.unpicked.remove(&id.to_bits());
             self.labelling.objects.remove(&id.to_bits());
             self.labelling.pins.remove(&id.to_bits());

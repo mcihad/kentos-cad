@@ -363,6 +363,7 @@ mod tests {
             wall_detail: None,
             pens: Vec::new(),
             mono: false,
+            options: Default::default(),
             item: "m".into(),
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),
             rotation,

@@ -409,6 +409,24 @@ fn recipe_known(s: &ProjectSettings, r: &ViewRecipe) -> Result<(), Stop> {
             ));
         }
     }
+    // A recipe's design options are the project's sets and their options (docs/adr/0788 §3).
+    let sets = s.arch.as_ref().map_or(&[][..], |a| a.options.as_slice());
+    for (i, c) in r.options.iter().enumerate() {
+        let Some(set) = sets.iter().find(|x| x.id == c.set) else {
+            return Err(fail(
+                codes::OPTION_SET_NOT_FOUND,
+                format!("Projede “{}” kimlikli tasarım seçeneği kümesi yok. Tasarım seçenekleri'ndeki kümelerden birini verin.", c.set),
+                &format!("edit.recipe.options[{i}].set"),
+            ));
+        };
+        if !set.options.iter().any(|o| o.id == c.option) {
+            return Err(fail(
+                codes::OPTION_NOT_FOUND,
+                format!("“{}” kümesinde “{}” kimlikli seçenek yok. Kümenin seçeneklerinden birini verin.", set.name, c.option),
+                &format!("edit.recipe.options[{i}].option"),
+            ));
+        }
+    }
     if let Some(name) = &r.layer_state
         && !s.layer_states.iter().any(|st| st.name.trim() == name.trim())
     {

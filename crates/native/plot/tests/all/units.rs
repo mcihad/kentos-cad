@@ -77,6 +77,7 @@ fn map_fills(doc: &Document) -> Vec<String> {
         hidden: &[],
             pens: &[],
             mono: false,
+        options: &[],
         doc,
         store: spatial.store(),
         library: &library,

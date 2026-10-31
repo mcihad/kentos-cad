@@ -1273,14 +1273,20 @@ def view_recipe(r):
     if "mono" in r:
         assert r["mono"] is True, r
     if "template" in r and not LENIENT:
-        assert r["template"].strip() and not set(r) - {"version", "level", "crop", "template"}, r
+        assert r["template"].strip() and not set(r) - {"version", "level", "crop", "template", "options"}, r
     pen = lambda x: cmap(fields(x, {"of": (text, True), "weight": (f64, False), "color": (text, False)}, "recipe.pens"))  # noqa: E731
+    # Schema 153 (docs/adr/0788 §3): the design options the view shows, each set once.
+    if "options" in r:
+        sets = [c["set"] for c in r["options"]]
+        assert sets and len(set(sets)) == len(sets), r
+    choice = lambda c: cmap(fields(c, {"set": (text, True), "option": (text, True)}, "recipe.options"))  # noqa: E731
     level = lambda lv: cmap(fields(lv, {"id": (text, True), "below": (lambda b: b"\xf5", False)}, "recipe.level"))  # noqa: E731
     return cmap(fields(r, {"version": (uint, True), "level": (level, False), "phase": (text, False),
                            "layerState": (text, False), "hidden": (lambda xs: array([text(x) for x in xs]), False),
                            "scale": (uint, False), "detail": (text, False), "crop": (lambda b: b"\xf5", False),
                            "pens": (lambda xs: array([pen(x) for x in xs]), False), "mono": (lambda b: b"\xf5", False),
-                           "template": (text, False)}, "recipe"))
+                           "template": (text, False),
+                           "options": (lambda xs: array([choice(x) for x in xs]), False)}, "recipe"))
 
 
 # Schema 146 (docs/adr/0783 §2): the project's view templates, at most 50: an id and a name (unique) and a recipe with no
@@ -1302,7 +1308,7 @@ def view_templates(list_):
         vals = [t[k] for t in list_]
         assert len(set(vals)) == len(vals) and all(v == v.strip() and 0 < len(v) <= 64 for v in vals), vals
     for t in list_:
-        assert not {"level", "crop", "template"} & set(t["recipe"]), t
+        assert not {"level", "crop", "template", "options"} & set(t["recipe"]), t
     return array([cmap(fields(t, {"id": (text, True), "name": (text, True), "recipe": (view_recipe, True)}, "viewTemplates"))
                   for t in list_])
 
@@ -2452,6 +2458,10 @@ def document(d):
     if any("unit" in i for m in (d["settings"].get("arch") or {}).get("modules", []) for i in m.get("instances", [])):
         # A module instance's building-program group (docs/adr/0779).
         schema = max(schema, 145)
+    if (d["settings"].get("arch") or {}).get("options") or any(
+            (v.get("recipe") or {}).get("options") for v in d["settings"].get("namedViews", [])):
+        # Design option sets and a view recipe's options (docs/adr/0788; provisional).
+        schema = max(schema, 153)
     pg = (d["settings"].get("arch") or {}).get("program") or {}
 
     def shared(e):
@@ -3188,7 +3198,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-149.kcad"] = container(root(cmap(parts), version=uint(149)))
+    files["schema-version-154.kcad"] = container(root(cmap(parts), version=uint(154)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5501,6 +5511,19 @@ def build():
     bad_unit = load("module-units.json")
     bad_unit["settings"]["arch"]["modules"][0]["instances"][0]["unit"] = " "
     out["broken/module-units-empty.kcad"] = container(document(bad_unit))
+    # Schema 153 (docs/adr/0788; provisional): a kitchen's options A, B and an empty one, a view showing B; the schema
+    # before refuses them, an object in two options and a primary that is not the set's are bad values.
+    op = document(load("options.json"))
+    assert op.count(b"\x67version\x18\x99") == 1, "the options are schema 153"
+    out["options.kcad"] = container(op)
+    out["broken/options-in-schema-152.kcad"] = container(op.replace(b"\x67version\x18\x99", b"\x67version\x18\x98"))
+
+    def option_bad(name, change):
+        d = load("options.json")
+        change(d["settings"]["arch"]["options"][0])
+        out["broken/options-" + name + ".kcad"] = container(document(d))
+    option_bad("object-twice", lambda s: s["options"][1].update(members=list(s["options"][0]["members"])))
+    option_bad("primary-unknown", lambda s: s.update(primary="z"))
     # Schema 126 (docs/adr/0725): a gapped grid, a gapped arc, a column anchored at its lower left on two grids, an L
     # column anchored at its top, beside a plain grid and a plain column.
     gc = document(load("grid-column-forms.json"))

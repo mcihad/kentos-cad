@@ -51,6 +51,18 @@ pub fn plot_phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::ph
     out
 }
 
+/// The design options a view with `choices` does not show (docs/adr/0788 §3), hidden in `out`: each set's options
+/// but the one chosen, else the primary.
+fn hide_options(
+    doc: &kentos_domain::Document,
+    choices: &[kentos_contracts::OptionChoice],
+    out: &mut kentos_native_style::phases::Phasing,
+) {
+    for slot in doc.option_hidden_slots(choices) {
+        out.hide(slot.0);
+    }
+}
+
 /// The inserts of a PDF underlay set not to plot, hidden in `out`.
 fn hide_unplotted(doc: &kentos_domain::Document, out: &mut kentos_native_style::phases::Phasing) {
     let unplotted: std::collections::HashSet<kentos_contracts::BlockId> = doc
@@ -76,8 +88,9 @@ pub fn map_phasing_of(
     doc: &kentos_domain::Document,
     phase: Option<kentos_contracts::PhaseView>,
     hidden: &[kentos_contracts::ViewCategory],
+    options: &[kentos_contracts::OptionChoice],
 ) -> kentos_native_style::phases::Phasing {
-    map_drawing_of(doc, phase, hidden, &[], false)
+    map_drawing_of(doc, phase, hidden, &[], false, options)
 }
 
 /// [`map_phasing_of`] with a recipe's pens and black and white (docs/adr/0783 §1).
@@ -87,9 +100,14 @@ pub fn map_drawing_of(
     hidden: &[kentos_contracts::ViewCategory],
     pens: &[kentos_contracts::RecipePen],
     mono: bool,
+    options: &[kentos_contracts::OptionChoice],
 ) -> kentos_native_style::phases::Phasing {
     let mut out = match phase {
-        None => plot_phasing_of(doc),
+        None => {
+            let mut own = phase_only(doc);
+            hide_unplotted(doc, &mut own);
+            own
+        }
         Some(view) => {
             let mut own = kentos_native_style::phases::Phasing::of(doc.entities(), view, |u| {
                 kentos_domain::Uuid::parse_str(u)
@@ -101,6 +119,7 @@ pub fn map_drawing_of(
             own
         }
     };
+    hide_options(doc, options, &mut out);
     if !hidden.is_empty() {
         for e in doc.entities() {
             if kentos_contracts::ViewCategory::of_kind(e.kind()).is_some_and(|c| hidden.contains(&c)) {
@@ -150,8 +169,16 @@ pub fn faint_on_paper(hex: &str) -> String {
     }
 }
 
-/// The phase view's looks of `doc`'s objects (docs/adr/0346 §2); nothing to change in Tümü.
+/// The phase view's looks of `doc`'s objects (docs/adr/0346 §2), the design options not shown hidden too
+/// (docs/adr/0788 §3: each set's primary is shown); nothing to change in Tümü without options.
 pub fn phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::phases::Phasing {
+    let mut out = phase_only(doc);
+    hide_options(doc, &[], &mut out);
+    out
+}
+
+/// The phase view's looks alone.
+fn phase_only(doc: &kentos_domain::Document) -> kentos_native_style::phases::Phasing {
     let view = doc
         .settings()
         .arch

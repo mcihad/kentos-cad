@@ -87,6 +87,38 @@ impl Store {
         }
     }
 
+    /// The objects of the design options this store does not show (docs/adr/0788 §4): their walls join no other
+    /// wall and their openings cut no wall, so the options shown draw as if the others were not there. The walls
+    /// whose state changed, and the walls of the openings whose state changed, are joined again.
+    pub fn set_option_out(&mut self, ids: impl IntoIterator<Item = f64>) {
+        let next: IdSet = ids.into_iter().map(f64::to_bits).collect();
+        if next == self.option_out {
+            return;
+        }
+        let changed: Vec<u64> = next
+            .symmetric_difference(&self.option_out)
+            .copied()
+            .collect();
+        self.option_out = next;
+        for key in changed {
+            let id = f64::from_bits(key);
+            self.touch_wall(id);
+            if let Some(&w) = self.opening_hosts.get(&key) {
+                self.touch_wall(w);
+            }
+            // A wall left out is drawn on its own: joined again it would take its old joints.
+            if self.option_out.contains(&key) {
+                self.wall_drawn.remove(&key);
+            }
+        }
+        self.maybe_rebuild();
+    }
+
+    /// Whether the store shows no option's objects as out.
+    pub fn no_option_out(&self) -> bool {
+        self.option_out.is_empty()
+    }
+
     /// A wall to draw again, whatever changed about its openings.
     fn touch_wall(&mut self, wall: f64) {
         let key = wall.to_bits();
@@ -103,6 +135,9 @@ impl Store {
     fn intervals(&self, keys: &[u64]) -> Vec<Vec<opening::Hole>> {
         let mut by_wall: IdMap<Vec<opening::Hole>> = IdMap::default();
         for (&o, &w) in &self.opening_hosts {
+            if self.option_out.contains(&o) {
+                continue;
+            }
             let Some(it) = self.by_id.get(&o).and_then(|&s| self.slots[s as usize].as_ref()) else {
                 continue;
             };
@@ -189,6 +224,29 @@ impl Store {
                 })
                 .collect()
         };
+        // The walls of options not shown join nothing (docs/adr/0788 §4): drawn on their own.
+        let (context, apart): (Vec<usize>, Vec<usize>) = if self.option_out.is_empty() {
+            (context, Vec::new())
+        } else {
+            context
+                .into_iter()
+                .partition(|&i| !self.option_out.contains(&walls[i].0))
+        };
+        for &i in apart.iter().filter(|&&i| affected[i]) {
+            let (key, slot, _, _) = walls[i];
+            self.wall_drawn.remove(&key);
+            let fresh = self.slots[slot as usize]
+                .as_ref()
+                .map(|it| self.wall_expansion(it.id, &it.shape));
+            if let (Some(it), Some((expanded, bounds))) =
+                (self.slots[slot as usize].as_mut(), fresh)
+            {
+                it.bounds = bounds;
+                it.expanded = expanded;
+                it.veiled = None;
+            }
+            self.loosen(slot);
+        }
         let solved = {
             let ins: Vec<WallIn<'_>> = context
                 .iter()
