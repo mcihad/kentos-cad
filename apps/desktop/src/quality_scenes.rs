@@ -6,7 +6,7 @@
 //! takes the scenes in both themes at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=kalite-ayrinti-1mm,kalite-1-100,kalite-1-50,kalite-1-20,kalite-bilesen-1-20 cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=kalite-ayrinti-1mm,kalite-1-100,kalite-1-50,kalite-1-20,kalite-bilesen-1-20,yazi-100-daire,yazi-100-daire-iki,yazi-100-daire-cizelge cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -53,6 +53,75 @@ fn at_scale(app: &mut App, n: f64) {
     hover(app, [14.0, 11.0]);
 }
 
+/// The 2+1 apartment of the acceptance flow copied into 100 with its two schedules each (200 schedules, as
+/// `perf::flat`'s `each`), then the design change of the measures (Bölme 3's distance) and the drawing followed as
+/// the app's update does: the text layer kept object by object after an edit (docs/adr/0786).
+#[cfg(unix)]
+fn hundred_flats(app: &mut App) {
+    use crate::app::Message;
+    use serde_json::{Value, json};
+    let ask = |app: &mut App, params: Value| {
+        let answer = app
+            .agents_answer(&json!({ "id": 1, "method": "run", "params": params }))
+            .unwrap_or_else(|(code, message)| panic!("{code}: {message}"));
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer
+    };
+    let scenario: Value =
+        serde_json::from_str(crate::acceptance_flat_tests::SCENARIO).expect("the scenario");
+    let dir = crate::files_testing::scratch("yazi-100-daire");
+    let choices = kentos_headless::new_drawing(&scenario["project"]).expect("the choices");
+    let made = kentos_headless::Session::new(&choices).expect("a new project");
+    let path = dir.join("daire.kcad");
+    std::fs::write(&path, made.to_bytes().expect("its bytes")).expect("written");
+    let doc = crate::document::Document::read(&path).expect("opens");
+    let task = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    crate::files_testing::drive(app, task);
+    // The commands go as the agent link's (as `acceptance_flat_tests::opened`): it must be up.
+    let (link, _task) = crate::python::link::Link::open(&dir.join("m.sock"), |heard| {
+        Message::Python(crate::python::Event::Agent(heard))
+    })
+    .expect("the agent link");
+    app.python.link = Some(link);
+    let names = crate::acceptance_flat_tests::drawn(app);
+    let all = |app: &App| -> Vec<String> {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.entities_with_uids().map(|(u, _)| u.to_string()).collect()
+    };
+    let one = all(app);
+    for c in 1..10 {
+        ask(app, json!({ "command": "cad.entities.transform", "op": "execute", "input": {
+            "uids": one, "transform": { "kind": "move", "dx": 14.0 * f64::from(c), "dy": 0.0 }, "copy": true } }));
+    }
+    let row = all(app);
+    for r in 1..10 {
+        ask(app, json!({ "command": "cad.entities.transform", "op": "execute", "input": {
+            "uids": row, "transform": { "kind": "move", "dx": 0.0, "dy": 12.0 * f64::from(r) }, "copy": true } }));
+    }
+    app.follow_document();
+    ask(app, json!({ "command": "cad.walls.edit", "op": "execute", "input": {
+        "uids": [names["p3"]], "operation": { "kind": "distance", "side": "right", "distance": 3.8 } } }));
+    app.follow_document();
+    app.selection.clear();
+}
+
+/// The hundred flats after the change, the command history folded: the whole plan, or round `centre` at 1:`n`.
+#[cfg(unix)]
+fn hundred_at(app: &mut App, view: Option<([f64; 2], f64)>) {
+    hundred_flats(app);
+    app.command_expanded = false;
+    match view {
+        Some((centre, n)) => {
+            app.viewport.camera.center_on(kentos_interaction::Vec2::new(centre[0], centre[1]));
+            app.viewport.camera.zoom_to_screen_scale(n);
+        }
+        None => app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: -3.0, min_y: -15.0, max_x: 150.0, max_y: 118.0 },
+            24.0,
+        ),
+    }
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("kalite-ayrinti-1mm", detail),
@@ -73,6 +142,14 @@ pub(crate) fn scenes() -> Vec<Scene> {
             app.viewport.camera.zoom_to_screen_scale(20.0);
             hover(app, [6.0, 3.0]);
         }),
+        // The hundred flats and their 200 schedules after Bölme 3 moved (docs/adr/0786): the whole plan, two flats
+        // with their schedules, a schedule's rows close.
+        #[cfg(unix)]
+        ("yazi-100-daire", |app| hundred_at(app, None)),
+        #[cfg(unix)]
+        ("yazi-100-daire-iki", |app| hundred_at(app, Some(([14.0, -2.0], 200.0)))),
+        #[cfg(unix)]
+        ("yazi-100-daire-cizelge", |app| hundred_at(app, Some(([24.0, 114.0], 50.0)))),
     ]
 }
 

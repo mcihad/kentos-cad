@@ -1939,7 +1939,7 @@ impl App {
     /// (docs/adr/0029). It keys on the generation, which changes from outside
     /// move too; the revision is the saves' (docs/adr/0040). The snap marker
     /// belongs to a running tool.
-    fn follow_document(&mut self) {
+    pub(crate) fn follow_document(&mut self) {
         if !self.session.is_running() {
             self.snap = None;
         }

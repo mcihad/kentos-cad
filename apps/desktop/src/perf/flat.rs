@@ -197,9 +197,13 @@ fn flats() {
                         "uids": [p3], "operation": { "kind": "distance", "side": "right", "distance": 3.7 + 0.01 * i as f64 } } }));
                     took = ms(t);
                     assert_eq!(answer["status"], "completed", "{answer}");
+                    // The app's update follows the drawing before the frame (app.rs's `follow_document`): the
+                    // store the labels are read from takes the change (docs/adr/0786 §5).
+                    app.follow_document();
                 }));
                 command.push(took);
                 app.undo();
+                app.follow_document();
                 h.settle(&mut app);
             }
         });

@@ -9,6 +9,7 @@
 use std::cell::Cell;
 
 use iced::advanced::Renderer as _;
+use iced::advanced::graphics::mesh::{self, Renderer as _};
 use iced::advanced::graphics::geometry::Renderer as _;
 use iced::advanced::layout::{self, Layout};
 use iced::advanced::renderer;
@@ -39,6 +40,8 @@ struct State {
     content: Cell<u64>,
     /// The view the picture was made for, and its margin in pixels.
     made: Cell<Option<(Camera, f32)>>,
+    /// The texts too small to read, as one mesh made with the picture (docs/adr/0786 §4): drawn with it, kept with it.
+    bands: std::cell::RefCell<Option<mesh::Cache>>,
 }
 
 impl Layer<'_> {
@@ -61,6 +64,56 @@ impl Layer<'_> {
             && drawn.max_x + m >= seen.max_x
             && drawn.max_y + m >= seen.max_y
     }
+}
+
+/// The bands of the texts too small to read as one mesh (docs/adr/0786 §4), a colour and thickness after another in
+/// the order they came, each band in its order: the rectangle a butt-ended stroke of its thickness along its line is,
+/// two triangles; moved `by` (the picture's margin), clipped to `size`. None without a band.
+fn band_mesh(
+    looks: &[(iced::Color, f32, Vec<[iced::Point; 2]>)],
+    by: Vector,
+    size: Size,
+) -> Option<mesh::Cache> {
+    let n: usize = looks.iter().map(|(_, _, s)| s.len()).sum();
+    if n == 0 {
+        return None;
+    }
+    let mut vertices = Vec::with_capacity(n * 4);
+    let mut indices = Vec::with_capacity(n * 6);
+    for (color, thick, segments) in looks {
+        let color = iced::advanced::graphics::color::pack(*color);
+        let half = thick / 2.0;
+        for [a, b] in segments {
+            let (dx, dy) = (b.x - a.x, b.y - a.y);
+            let length = (dx * dx + dy * dy).sqrt();
+            if length.is_nan() || length <= 0.0 {
+                continue;
+            }
+            let (nx, ny) = (-dy / length * half, dx / length * half);
+            let at = vertices.len() as u32;
+            for (x, y) in [
+                (a.x + nx, a.y + ny),
+                (a.x - nx, a.y - ny),
+                (b.x - nx, b.y - ny),
+                (b.x + nx, b.y + ny),
+            ] {
+                vertices.push(mesh::SolidVertex2D {
+                    position: [x + by.x, y + by.y],
+                    color,
+                });
+            }
+            indices.extend([at, at + 1, at + 2, at, at + 2, at + 3]);
+        }
+    }
+    if indices.is_empty() {
+        return None;
+    }
+    let solid = mesh::Mesh::Solid {
+        buffers: mesh::Indexed { vertices, indices },
+        transformation: iced::Transformation::IDENTITY,
+        clip_bounds: Rectangle::new(iced::Point::ORIGIN, size),
+    };
+    Some(mesh::Cache::new(std::sync::Arc::from([solid])))
 }
 
 /// From the picture made for `made` to the view `now` at its scale: the screen's points move with the view's middle
@@ -128,12 +181,18 @@ impl Widget<Message, Theme, Renderer> for Layer<'_> {
         let geometry = state.cache.draw(renderer, size, |frame| {
             frame.translate(Vector::new(margin, margin));
             self.labels.paint_texts(frame, margin);
+            let looks = self.labels.band_looks();
+            *state.bands.borrow_mut() = band_mesh(&looks, Vector::new(margin, margin), size);
         });
         let to_view = moved(&made, &self.labels.view) - Vector::new(margin, margin);
         renderer.with_layer(bounds, |renderer| {
             renderer.with_translation(Vector::new(bounds.x, bounds.y), |renderer| {
                 renderer.with_translation(to_view, |renderer| {
                     renderer.draw_geometry(geometry);
+                    // The bands over the words, as the picture's strokes were (docs/adr/0786 §4).
+                    if let Some(bands) = state.bands.borrow().as_ref() {
+                        renderer.draw_mesh_cache(bands.clone());
+                    }
                 });
                 // The marks follow the screen, not the drawing.
                 if self.labels.map_marks.is_some() {

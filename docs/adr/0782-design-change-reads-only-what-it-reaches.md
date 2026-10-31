@@ -97,7 +97,7 @@ Bulgular (ADR 0776 §5'in sürdürülmesi):
 |---|---|---|---|
 | B6 | yüksek | Tasarım değişikliği 100 dairede 1,86 s, karesel | kapandı: 38,7 ms (binanın çizelgeleri), 81,5 ms (her dairenin) |
 | B7 | yüksek | Değişiklik sırasında bellek ikiye katlanıyordu | binanın çizelgeleriyle kapandı (+%4,4); her dairenin çizelgeleriyle B13'e bağlı |
-| B13 | orta | Yazı katmanı belge her değiştiğinde görünen bütün yazıları yeniden yerleştirir (`labels::build`, `Spatial::labels_shown_in`): 200 çizelgenin 400 000 hücresiyle kare 340 ms ve bellek +2 GB | açık: yazı katmanının değişen nesnelerle artımlı kurulması ayrı iş |
+| B13 | orta | Yazı katmanı belge her değiştiğinde görünen bütün yazıları yeniden yerleştirir (`labels::build`, `Spatial::labels_shown_in`): 200 çizelgenin 400 000 hücresiyle kare 340 ms ve bellek +2 GB | kapandı (ADR 0786): kare 351 → 163 ms, bellek +3 062 → +191 MB |
 
 ## Doğrulama
 

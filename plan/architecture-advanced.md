@@ -315,7 +315,7 @@ Kesit işareti bulunması, gerçek kesit üretimi kabulü yerine geçmesin.
 _Durum (31 Ekim 2026, [ADR 0776](../docs/adr/0776-measured-quality-acceptance-of-an-apartment.md)):_ 2+1 daire gerçek
 girdiyle iz ve bölüm ölçüsü, Python/MCP/masaüstü anlamsal eşitliği, büyük koordinat ve ölçek regresyonları, 1/20/100 daire
 ölçümü, dört küçük düzeltme. B6 ve binanın çizelgeleriyle B7 kapandı ([ADR 0782](../docs/adr/0782-design-change-reads-only-what-it-reaches.md));
-yazı katmanının artımlı kurulması (B13) açık. Açık: model alanı kalem kalınlığı, gerçek
+yazı katmanının artımlı kurulması (B13) de kapandı ([ADR 0786](../docs/adr/0786-text-layer-object-by-object.md): kare 351 → 163 ms, bellek +3 062 → +191 MB); etiket motorunun artımlı yerleşimi açık. Açık: model alanı kalem kalınlığı, gerçek
 pencerede elle kabul, kabul korpusunun öbür dört örneği.
 
 **Kullanıcı sonucu:** Özellikler tek tek gösterilirken iyi görünüp gerçek
