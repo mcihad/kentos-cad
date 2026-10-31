@@ -133,6 +133,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         ucs: _,
         named_ucs: _,
         named_views: _,
+        view_templates: _,
         forms: _,
         domains: _,
         relations: _,

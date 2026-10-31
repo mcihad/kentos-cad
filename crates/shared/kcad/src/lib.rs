@@ -706,11 +706,14 @@ pub const SCHEMA_WITH_SPECIAL_DOORS: u32 = 144;
 /// Schema 145 (docs/adr/0779): a room module instance's building-program group (`unit`: a flat placed again is its own
 /// flat); written only when an instance has one.
 pub const SCHEMA_WITH_MODULE_UNITS: u32 = 145;
+/// Schema 146 (docs/adr/0783): the settings' `viewTemplates` and a view recipe's `pens`, `mono` and `template`; written
+/// only when the project has a template or a recipe one of those.
+pub const SCHEMA_WITH_VIEW_TEMPLATES: u32 = 146;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 144] = [
+pub const SCHEMAS: [u32; 145] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -855,6 +858,7 @@ pub const SCHEMAS: [u32; 144] = [
     SCHEMA_WITH_RECIPE_DETAIL,
     SCHEMA_WITH_SPECIAL_DOORS,
     SCHEMA_WITH_MODULE_UNITS,
+    SCHEMA_WITH_VIEW_TEMPLATES,
 ];
 
 /// The file a drawing is saved as.

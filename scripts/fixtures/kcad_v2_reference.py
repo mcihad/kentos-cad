@@ -332,6 +332,8 @@ def settings(s):
                 "namedUcs": (named_ucs, False),
                 # Schema 52 (docs/adr/0285 §1): the project's named views.
                 "namedViews": (named_views, False),
+                # Schema 146 (docs/adr/0783 §2): the project's view templates.
+                "viewTemplates": (view_templates, False),
                 # Schema 50 (docs/adr/0262 §2): how lengths are written; decimal is no setting.
                 "lengthStyle": (enum(("architectural", "engineering", "fractional")), False),
                 # Schema 56 (docs/adr/0313 §1): the project's line types with patterns and its line type scale.
@@ -1257,10 +1259,52 @@ def view_recipe(r):
         assert r["detail"] in RECIPE_DETAILS, r
     if "crop" in r:
         assert r["crop"] is True, r
+    if LENIENT:
+        r = dict(r)
+    # Schema 146 (docs/adr/0783): the pens (each category once, a weight from 0 to 5 mm or a colour #rrggbb or both),
+    # black and white (written only true), the template it follows (then only the level and the crop are its own).
+    if "pens" in r and not LENIENT:
+        ofs = [x["of"] for x in r["pens"]]
+        assert ofs and len(set(ofs)) == len(ofs) and all(o in PEN_CATEGORIES for o in ofs), r
+        for x in r["pens"]:
+            assert set(x) - {"of"} and set(x) <= {"of", "weight", "color"}, x
+            assert "weight" not in x or 0.0 <= x["weight"] <= 5.0, x
+            assert "color" not in x or re.fullmatch(r"#[0-9a-fA-F]{6}", x["color"]), x
+    if "mono" in r:
+        assert r["mono"] is True, r
+    if "template" in r and not LENIENT:
+        assert r["template"].strip() and not set(r) - {"version", "level", "crop", "template"}, r
+    pen = lambda x: cmap(fields(x, {"of": (text, True), "weight": (f64, False), "color": (text, False)}, "recipe.pens"))  # noqa: E731
     level = lambda lv: cmap(fields(lv, {"id": (text, True), "below": (lambda b: b"\xf5", False)}, "recipe.level"))  # noqa: E731
     return cmap(fields(r, {"version": (uint, True), "level": (level, False), "phase": (text, False),
                            "layerState": (text, False), "hidden": (lambda xs: array([text(x) for x in xs]), False),
-                           "scale": (uint, False), "detail": (text, False), "crop": (lambda b: b"\xf5", False)}, "recipe"))
+                           "scale": (uint, False), "detail": (text, False), "crop": (lambda b: b"\xf5", False),
+                           "pens": (lambda xs: array([pen(x) for x in xs]), False), "mono": (lambda b: b"\xf5", False),
+                           "template": (text, False)}, "recipe"))
+
+
+# Schema 146 (docs/adr/0783 §2): the project's view templates, at most 50: an id and a name (unique) and a recipe with no
+# level, crop or template; not empty.
+PEN_CATEGORIES = ("walls", "openings", "columns", "stairs", "slabs", "spaces", "dimensions", "tags", "texts", "hatches",
+                  "blocks", "grids", "viewmarks", "others")
+
+
+# Broken samples of schema 146 are written with the writer's checks off (`raw_document`).
+LENIENT = False
+
+
+def view_templates(list_):
+    if LENIENT:
+        return array([cmap(fields(t, {"id": (text, True), "name": (text, True), "recipe": (view_recipe, True)}, "viewTemplates"))
+                      for t in list_])
+    assert 0 < len(list_) <= 50, list_
+    for k in ("id", "name"):
+        vals = [t[k] for t in list_]
+        assert len(set(vals)) == len(vals) and all(v == v.strip() and 0 < len(v) <= 64 for v in vals), vals
+    for t in list_:
+        assert not {"level", "crop", "template"} & set(t["recipe"]), t
+    return array([cmap(fields(t, {"id": (text, True), "name": (text, True), "recipe": (view_recipe, True)}, "viewTemplates"))
+                  for t in list_])
 
 
 def named_views(list_):
@@ -2243,6 +2287,16 @@ def fixtures_of(es):
     return False
 
 
+def raw_document(d):
+    """A broken schema-146 sample: the document written with the view templates' checks off."""
+    global LENIENT
+    LENIENT = True
+    try:
+        return container(document(d))
+    finally:
+        LENIENT = False
+
+
 def document(d):
     """The payload of a drawing given in the contract's JSON form (`DocumentSnapshotV2`)."""
     assert d["format"] == "kentos.document" and d["version"] == 2
@@ -2398,6 +2452,10 @@ def document(d):
     if any("unit" in i for m in (d["settings"].get("arch") or {}).get("modules", []) for i in m.get("instances", [])):
         # A module instance's building-program group (docs/adr/0779).
         schema = max(schema, 145)
+    if d["settings"].get("viewTemplates") or any(k in v.get("recipe", {}) for v in d["settings"].get("namedViews", [])
+                                                  for k in ("pens", "mono", "template")):
+        # View templates, a recipe's pens, black and white or template (docs/adr/0783).
+        schema = max(schema, 146)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3111,7 +3169,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-146.kcad"] = container(root(cmap(parts), version=uint(146)))
+    files["schema-version-147.kcad"] = container(root(cmap(parts), version=uint(147)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5545,6 +5603,25 @@ def build():
         vd.replace(good, cmap({"version": uint(2), "detail": text("fine"), "crop": b"\xf5"})))
     out["broken/view-recipe-crop-false.kcad"] = container(
         vd.replace(good, cmap({"version": uint(2), "detail": text("detailed"), "crop": b"\xf4"})))
+    # Schema 146 (docs/adr/0783): two view templates (pens, a scale; black and white), a view following one with its own
+    # level and crop, another with its own pens in black and white; schema 145 refuses them, and a pen twice, a pen with
+    # neither weight nor colour, a template with a level, a view following a template it lacks, and a view following a
+    # template with its own scale are refused too.
+    vt = document(load("view-templates.json"))
+    assert vt.count(b"\x67version\x18\x92") == 1, "the view templates are schema 146"
+    out["view-templates.kcad"] = container(vt)
+    out["broken/view-templates-in-schema-145.kcad"] = container(vt.replace(b"\x67version\x18\x92", b"\x67version\x18\x91"))
+
+    def template_bad(name, change):
+        d = load("view-templates.json")
+        change(d["settings"])
+        out["broken/view-templates-" + name + ".kcad"] = raw_document(d)
+
+    template_bad("pen-twice", lambda st: st["viewTemplates"][0]["recipe"]["pens"].append({"of": "walls", "weight": 0.25}))
+    template_bad("pen-empty", lambda st: st["viewTemplates"][0]["recipe"]["pens"].append({"of": "tags"}))
+    template_bad("with-level", lambda st: st["viewTemplates"][1]["recipe"].update(level={"id": "zemin"}))
+    template_bad("missing", lambda st: st["namedViews"][0]["recipe"].update(template="t-yok"))
+    template_bad("own-scale", lambda st: st["namedViews"][0]["recipe"].update(scale=20))
     # Schema 144 (docs/adr/0777): a revolving door with its drum, a pocket door, a folding door folding to both jambs
     # with that its own exception, a two-leaf sliding door on its track with its overlap; schema 143 and
     # schema 140 refuse them, and two wings on a revolving door, a folding window, a drum on

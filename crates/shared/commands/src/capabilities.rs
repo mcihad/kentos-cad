@@ -4165,8 +4165,10 @@ const ENTRIES: &[Entry] = &[
             &["unknown_view", "view_exists", "too_many_views"],
             // A view's recipe (docs/adr/0774 §1).
             &["invalid_recipe", "level_not_found", "state_not_found"],
+            // View templates (docs/adr/0783 §2).
+            &["unknown_template", "template_exists", "too_many_templates"],
         ],
-        warnings: &["view_replaced"],
+        warnings: &["view_replaced", "template_detached"],
         targets: none,
     },
     Entry {

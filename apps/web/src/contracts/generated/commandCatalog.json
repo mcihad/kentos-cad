@@ -40862,7 +40862,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.views.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`,\n`far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer\nstate the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.",
+        "description": "Input of `cad.views.edit` v1.\n\nRefusals (`CommandError.code`), checked in this order: `not_finite`,\n`far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer\nstate the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).\nWarnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.",
         "properties": {
           "edit": {
             "$ref": "#/$defs/ViewsOp"
@@ -40894,6 +40894,24 @@
             "description": "The document's revision afterwards (plan: the one it was made against).",
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ViewTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The template kept, changed or renamed; none otherwise."
+          },
+          "templates": {
+            "description": "The project's view templates afterwards (docs/adr/0783 §2).",
+            "items": {
+              "$ref": "#/$defs/ViewTemplate"
+            },
+            "type": "array"
           },
           "view": {
             "anyOf": [
@@ -40935,6 +40953,24 @@
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
           },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ViewTemplate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The template kept, changed or renamed; none otherwise."
+          },
+          "templates": {
+            "description": "The project's view templates afterwards (docs/adr/0783 §2).",
+            "items": {
+              "$ref": "#/$defs/ViewTemplate"
+            },
+            "type": "array"
+          },
           "view": {
             "anyOf": [
               {
@@ -40975,10 +41011,14 @@
           "too_many_views",
           "invalid_recipe",
           "level_not_found",
-          "state_not_found"
+          "state_not_found",
+          "unknown_template",
+          "template_exists",
+          "too_many_templates"
         ],
         "warnings": [
-          "view_replaced"
+          "view_replaced",
+          "template_detached"
         ]
       },
       "examples": [
@@ -65530,7 +65570,7 @@
       "code": "invalid_recipe",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Görünüş tarifi tutmuyor: boş, iki kez gizlenen tür ya da ölçek dışında."
+      "meaning": "Görünüş tarifi ya da şablonu tutmuyor: boş, iki kez gizlenen tür ya da kalem, ölçek ya da kalem kalınlığı dışında."
     },
     {
       "code": "invalid_view_name",
@@ -65561,6 +65601,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Aynı adlı görünümün yerine yenisi kaydedildi."
+    },
+    {
+      "code": "template_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adla başka bir görünüş şablonu var."
+    },
+    {
+      "code": "too_many_templates",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede en çok 50 görünüş şablonu olur."
+    },
+    {
+      "code": "template_detached",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Şablon kaldırıldı; ona bağlı görünümler tarifini kendi tarifi olarak tutar."
     },
     {
       "code": "invalid_form_id",
@@ -70576,7 +70634,7 @@
       "code": "unknown_template",
       "kind": "failed",
       "retryable": false,
-      "meaning": "KentOS'un bu adda çalışma şablonu yok."
+      "meaning": "Bu adla bir şablon yok."
     },
     {
       "code": "template_settings_conflict",
@@ -117002,6 +117060,46 @@
       ],
       "type": "object"
     },
+    "PenCategory": {
+      "description": "What a pen draws (docs/adr/0783 §1): the objects of a kind; `others` everything no category names.",
+      "oneOf": [
+        {
+          "enum": [
+            "walls",
+            "openings",
+            "columns",
+            "slabs",
+            "spaces",
+            "dimensions",
+            "tags",
+            "hatches",
+            "grids",
+            "viewmarks"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "stairs",
+          "description": "Stairs and ramps.",
+          "type": "string"
+        },
+        {
+          "const": "texts",
+          "description": "Texts, paragraphs and leaders.",
+          "type": "string"
+        },
+        {
+          "const": "blocks",
+          "description": "Block inserts: furniture, fixtures, symbols.",
+          "type": "string"
+        },
+        {
+          "const": "others",
+          "description": "Every other object: lines, areas, curves.",
+          "type": "string"
+        }
+      ]
+    },
     "PerpendicularReference": {
       "description": "What a perpendicular is dropped onto (Dik in): a straight edge from `a` (its start) to `b`, taken as its whole\nline, or a circle, the perpendicular then running through its centre.",
       "oneOf": [
@@ -120228,6 +120326,13 @@
           },
           "type": "array"
         },
+        "viewTemplates": {
+          "description": "The project's view templates, in the order they were kept (docs/adr/0783 §2).",
+          "items": {
+            "$ref": "#/$defs/ViewTemplate"
+          },
+          "type": "array"
+        },
         "wallStyles": {
           "description": "The project's named wall styles (docs/adr/0339 §2), in the order they were made.",
           "items": {
@@ -122276,6 +122381,35 @@
       },
       "required": [
         "id"
+      ],
+      "type": "object"
+    },
+    "RecipePen": {
+      "additionalProperties": false,
+      "description": "A pen of a recipe (docs/adr/0783 §1): a category's paper weight, its colour, or both.",
+      "properties": {
+        "color": {
+          "description": "`#rrggbb`; none: the objects' own (black with `mono`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "of": {
+          "$ref": "#/$defs/PenCategory"
+        },
+        "weight": {
+          "description": "Paper millimetres, 0 to 5; none: the objects' own.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        }
+      },
+      "required": [
+        "of"
       ],
       "type": "object"
     },
@@ -137287,6 +137421,17 @@
           ],
           "description": "The level the map draws; none: the map's own."
         },
+        "mono": {
+          "description": "Every line black, hatches grey (docs/adr/0783 §1); a pen's colour still wins.",
+          "type": "boolean"
+        },
+        "pens": {
+          "description": "The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a\nview), each category once, in their order.",
+          "items": {
+            "$ref": "#/$defs/RecipePen"
+          },
+          "type": "array"
+        },
         "phase": {
           "anyOf": [
             {
@@ -137307,6 +137452,13 @@
             "null"
           ],
           "x-unit": "scale"
+        },
+        "template": {
+          "description": "The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives\neverything but the level and the crop, which stay the view's. An input may name it.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "version": {
           "description": "1 for a new recipe, one more at each change; given in an input, it is ignored.",
@@ -137341,6 +137493,30 @@
           ]
         }
       },
+      "type": "object"
+    },
+    "ViewTemplate": {
+      "additionalProperties": false,
+      "description": "A view template of the project (docs/adr/0783 §2): a recipe kept under a name, which views follow.",
+      "properties": {
+        "id": {
+          "description": "`t-` and its first name's FNV-1a; kept when renamed.",
+          "type": "string"
+        },
+        "name": {
+          "description": "Trimmed, 1–64 characters, no control characters; unique.",
+          "type": "string"
+        },
+        "recipe": {
+          "$ref": "#/$defs/ViewRecipe",
+          "description": "What it draws: no level, crop or template."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "recipe"
+      ],
       "type": "object"
     },
     "ViewsOp": {
@@ -137451,6 +137627,54 @@
           "required": [
             "kind",
             "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Görünüş şablonu (docs/adr/0783 §2): a template kept or changed under its name (its version one more) or, no\nrecipe, removed: the views following it keep its fields as their own recipe.",
+          "properties": {
+            "kind": {
+              "const": "template",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "recipe": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ViewRecipe"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Şablonu yeniden adlandır: its id kept, the views following it too.",
+          "properties": {
+            "kind": {
+              "const": "templateRename",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "to"
           ],
           "type": "object"
         }

@@ -93,7 +93,7 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
         }
     }
     for (i, original) in parsed.iter().enumerate() {
-        let prepared=match original {Op::SetViewport(input)=>Some(Op::SetViewport(kentos_sheet::viewport::prepare_source(&book,input,&doc.settings().named_views).map_err(|e|Stop::failed(error(&e.code,e.message,Some(format!("ops[{i}]")))))?)),_=>None};
+        let prepared=match original {Op::SetViewport(input)=>Some(Op::SetViewport(kentos_sheet::viewport::prepare_source(&book,input,&doc.settings().drawn_views()).map_err(|e|Stop::failed(error(&e.code,e.message,Some(format!("ops[{i}]")))))?)),_=>None};
         let op=prepared.as_ref().unwrap_or(original);
         let applied = ops::apply(&book, op).map_err(|e| {
             let at = match &e.path {
@@ -201,7 +201,7 @@ pub fn sheets_in(doc: &Document) -> Option<Vec<SheetInfo>> {
         None => Some(Vec::new()),
         Some(kept) => read_project_sheets(kept)
             .ok()
-            .map(|(book, _)| sheets_of_with_views(&book,&doc.settings().named_views)),
+            .map(|(book, _)| sheets_of_with_views(&book,&doc.settings().drawn_views())),
     }
 }
 
@@ -234,7 +234,7 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
             .filter_map(|op| serde_json::to_value(op).ok())
             .collect(),
         inverse_pictures,
-        sheets: sheets_of_with_views(&next.book,&doc.settings().named_views),
+        sheets: sheets_of_with_views(&next.book,&doc.settings().drawn_views()),
         revision: doc.revision().to_string(),
     })
 }

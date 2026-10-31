@@ -641,6 +641,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut address_locators = Vec::new();
     let (mut ucs, mut named_ucs) = (None, Vec::new());
     let mut named_views = Vec::new();
+    let mut view_templates = Vec::new();
     let mut forms = Vec::new();
     let mut domains = Vec::new();
     let mut relations = Vec::new();
@@ -1192,7 +1193,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 xref_paths = paths;
             }
-            "namedViews" if has.views => named_views = views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail)?,
+            "namedViews" if has.views => named_views = views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates)?,
+            // Schema 146 (docs/adr/0783 §2): the project's view templates, read whole as the contract's JSON.
+            "viewTemplates" if has.view_templates => view_templates = views::view_templates(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
             "wallStyles" if has.walls => {
@@ -1386,6 +1389,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     if let Some(problem) = kentos_contracts::bases_problem(&source_bases, &sources) {
         return Err(relation("sourceBases", &problem, r));
     }
+    // A view follows a template the project keeps (docs/adr/0783 §2).
+    if let Some(problem) = kentos_contracts::templates_problem(&view_templates, &named_views) {
+        return Err(relation("namedViews", &problem, r));
+    }
     // A work is a CAD project's (docs/adr/0801).
     if cad_work.is_some() && workspace != Some(Workspace::Cad) {
         return Err(relation(
@@ -1431,6 +1438,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         ucs,
         named_ucs,
         named_views,
+        view_templates,
         forms,
         relations,
         join_views,

@@ -58,6 +58,8 @@ pub struct Window {
     name: String,
     /// The chosen view's recipe as drafted (docs/adr/0774 §2): written by Tarifi uygula.
     pub(crate) recipe: kentos_commands::ViewRecipe,
+    /// The name Şablon olarak kaydet keeps the draft under (docs/adr/0783 §3).
+    pub(crate) template_name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -86,6 +88,15 @@ pub enum Event {
     RecipeCrop(bool),
     RecipeApply,
     RecipeClear,
+    /// The template the view follows (docs/adr/0783 §2): none, or the index in the project's templates.
+    RecipeTemplate(Option<usize>),
+    /// Black and white (docs/adr/0783 §1).
+    RecipeMono(bool),
+    /// A category's pen weight: none, or the index in `views_recipe::PEN_WEIGHTS`.
+    RecipePen(kentos_commands::PenCategory, Option<usize>),
+    /// Şablon olarak kaydet's name, and the save.
+    TemplateName(String),
+    TemplateSave,
 }
 
 fn msg(event: Event) -> Message {
@@ -209,6 +220,7 @@ impl App {
             chosen: None,
             name: next_view_name(self.named_views()),
             recipe: Default::default(),
+            template_name: String::new(),
         });
         self.dialog = Some(Dialog::Views);
     }
@@ -393,7 +405,7 @@ impl App {
             body
         };
         Frame::new(VIEWS_TITLE)
-            .push(body)
+            .scroll(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .width(620.0)
             .modal(msg(Event::Close))

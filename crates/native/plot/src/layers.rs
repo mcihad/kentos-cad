@@ -77,6 +77,17 @@ pub fn map_phasing_of(
     phase: Option<kentos_contracts::PhaseView>,
     hidden: &[kentos_contracts::ViewCategory],
 ) -> kentos_native_style::phases::Phasing {
+    map_drawing_of(doc, phase, hidden, &[], false)
+}
+
+/// [`map_phasing_of`] with a recipe's pens and black and white (docs/adr/0783 §1).
+pub fn map_drawing_of(
+    doc: &kentos_domain::Document,
+    phase: Option<kentos_contracts::PhaseView>,
+    hidden: &[kentos_contracts::ViewCategory],
+    pens: &[kentos_contracts::RecipePen],
+    mono: bool,
+) -> kentos_native_style::phases::Phasing {
     let mut out = match phase {
         None => plot_phasing_of(doc),
         Some(view) => {
@@ -97,7 +108,7 @@ pub fn map_phasing_of(
             }
         }
     }
-    out
+    out.with_pens(pens, mono)
 }
 
 /// Kat görünümü as a map of `level` shows it (docs/adr/0716): Etkin kat ve alt kat with `below`, else Yalnız etkin kat.

@@ -4,8 +4,8 @@
 //! are `fixtures/commands/v1/cad.views.edit.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, MOST_NAMED_VIEWS, MOST_VIEW_SIZE, NamedView, ProjectSettings,
-    VIEW_REACH, ViewRecipe, ViewsEdit, ViewsEdited, ViewsOp, normal_angle, view_name_ok,
+    CommandResult, CommandWarning, MOST_NAMED_VIEWS, MOST_VIEW_SIZE, MOST_VIEW_TEMPLATES, NamedView, ProjectSettings,
+    VIEW_REACH, ViewRecipe, ViewTemplate, ViewsEdit, ViewsEdited, ViewsOp, normal_angle, view_name_ok,
 };
 use kentos_domain::Document;
 
@@ -68,11 +68,25 @@ fn check_input(input: &ViewsEdit) -> Result<(), Stop> {
             return Err(fail(codes::INVALID_RECIPE, format!("{why} Tarifi düzeltip yeniden verin."), "edit.recipe"));
         }
     }
+    if let ViewsOp::Template {
+        recipe: Some(r), ..
+    } = &input.edit
+    {
+        let r = ViewRecipe { version: 1, ..r.clone() };
+        if let Some(why) = kentos_commands::template_problem(&r) {
+            return Err(fail(codes::INVALID_RECIPE, format!("{why} Şablonu düzeltip yeniden verin."), "edit.recipe"));
+        }
+    }
     let names: Vec<(&str, &str)> = match &input.edit {
-        ViewsOp::Save { name, .. } | ViewsOp::Delete { name } | ViewsOp::Recipe { name, .. } => {
+        ViewsOp::Save { name, .. }
+        | ViewsOp::Delete { name }
+        | ViewsOp::Recipe { name, .. }
+        | ViewsOp::Template { name, .. } => {
             vec![("edit.name", name)]
         }
-        ViewsOp::Rename { name, to } => vec![("edit.name", name), ("edit.to", to)],
+        ViewsOp::Rename { name, to } | ViewsOp::TemplateRename { name, to } => {
+            vec![("edit.name", name), ("edit.to", to)]
+        }
     };
     for (path, name) in names {
         if !view_name_ok(name) {
@@ -96,12 +110,23 @@ fn unknown(name: &str) -> Stop {
     )
 }
 
-/// The settings afterwards, the view saved or renamed and the warnings.
-type Next = (ProjectSettings, Option<NamedView>, Vec<CommandWarning>);
+fn unknown_template(key: &str, path: &str) -> Stop {
+    fail(
+        codes::UNKNOWN_TEMPLATE,
+        format!(
+            "“{key}” adlı ya da kimlikli bir görünüş şablonu yok. Görünümler › Şablonlar'dan birini seçin ya da önce şablonu kaydedin."
+        ),
+        path,
+    )
+}
+
+/// The settings afterwards, the view saved or renamed, the template kept and the warnings.
+type Next = (ProjectSettings, Option<NamedView>, Option<ViewTemplate>, Vec<CommandWarning>);
 
 fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
     let mut s = doc.settings().clone();
     let mut warnings = Vec::new();
+    let mut template = None;
     let view = match &input.edit {
         ViewsOp::Save {
             name,
@@ -205,11 +230,25 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             let Some(at) = s.named_views.iter().position(|v| v.name == name) else {
                 return Err(unknown(name));
             };
-            if let Some(r) = recipe {
+            let mut recipe = recipe.clone();
+            if let Some(r) = recipe.as_mut() {
                 recipe_known(&s, r)?;
+                // A template named by its id or its name is kept by its id (docs/adr/0783 §2).
+                if let Some(key) = &r.template {
+                    let key = key.trim();
+                    let Some(t) = s
+                        .view_templates
+                        .iter()
+                        .find(|t| t.id == key)
+                        .or_else(|| s.view_templates.iter().find(|t| t.name == key))
+                    else {
+                        return Err(unknown_template(key, "edit.recipe.template"));
+                    };
+                    r.template = Some(t.id.clone());
+                }
             }
             let was = s.named_views[at].recipe.as_ref().map_or(0, |r| r.version);
-            let next = recipe.clone().map(|r| ViewRecipe { version: was + 1, ..r });
+            let next = recipe.map(|r| ViewRecipe { version: was + 1, ..r });
             // The same recipe again is no change: its version stays.
             let same = match (&s.named_views[at].recipe, &next) {
                 (Some(a), Some(b)) => ViewRecipe { version: 0, ..a.clone() } == ViewRecipe { version: 0, ..b.clone() },
@@ -225,8 +264,100 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             }
             Some(s.named_views[at].clone())
         }
+        ViewsOp::Template { name, recipe } => {
+            let name = name.trim();
+            let at = s.view_templates.iter().position(|t| t.name == name);
+            match recipe {
+                None => {
+                    let Some(at) = at else {
+                        return Err(unknown_template(name, "edit.name"));
+                    };
+                    let gone = s.view_templates.remove(at);
+                    // The views following it keep its fields as their own recipe, their version one more.
+                    let mut detached = Vec::new();
+                    for v in &mut s.named_views {
+                        if let Some(r) = v.recipe.as_ref()
+                            && r.template.as_deref() == Some(gone.id.as_str())
+                        {
+                            let own = ViewRecipe {
+                                version: r.version + 1,
+                                level: r.level.clone(),
+                                crop: r.crop,
+                                template: None,
+                                ..gone.recipe.clone()
+                            };
+                            v.recipe = Some(own);
+                            detached.push(format!("“{}”", v.name));
+                        }
+                    }
+                    if !detached.is_empty() {
+                        warnings.push(CommandWarning {
+                            code: codes::TEMPLATE_DETACHED.into(),
+                            message: format!(
+                                "Şablon kaldırıldı; {} görünümü tarifini kendi tarifi olarak tutar.",
+                                detached.join(", ")
+                            ),
+                            path: Some("edit.name".into()),
+                        });
+                    }
+                }
+                Some(r) => {
+                    recipe_known(&s, r)?;
+                    match at {
+                        None => {
+                            if s.view_templates.len() >= MOST_VIEW_TEMPLATES {
+                                return Err(fail(
+                                    codes::TOO_MANY_TEMPLATES,
+                                    "Projede en çok 50 görünüş şablonu olur. Kullanmadığınız birini kaldırın ya da var olanın üzerine kaydedin.".into(),
+                                    "edit.name",
+                                ));
+                            }
+                            let own = kentos_commands::template_id_of_name(name);
+                            let taken = |k: &str| s.view_templates.iter().any(|t| t.id == k);
+                            let id = if taken(&own) {
+                                (2..).map(|k| format!("{own}-{k}")).find(|k| !taken(k)).unwrap_or(own)
+                            } else {
+                                own
+                            };
+                            let t = ViewTemplate {
+                                id,
+                                name: name.to_owned(),
+                                recipe: ViewRecipe { version: 1, ..r.clone() },
+                            };
+                            s.view_templates.push(t.clone());
+                            template = Some(t);
+                        }
+                        Some(at) => {
+                            let was = &s.view_templates[at].recipe;
+                            let next = ViewRecipe { version: was.version + 1, ..r.clone() };
+                            if (ViewRecipe { version: 0, ..was.clone() }) != (ViewRecipe { version: 0, ..next.clone() }) {
+                                s.view_templates[at].recipe = next;
+                            }
+                            template = Some(s.view_templates[at].clone());
+                        }
+                    }
+                }
+            }
+            None
+        }
+        ViewsOp::TemplateRename { name, to } => {
+            let (name, to) = (name.trim(), to.trim());
+            let Some(at) = s.view_templates.iter().position(|t| t.name == name) else {
+                return Err(unknown_template(name, "edit.name"));
+            };
+            if to != name && s.view_templates.iter().any(|t| t.name == to) {
+                return Err(fail(
+                    codes::TEMPLATE_EXISTS,
+                    format!("“{to}” adlı başka bir görünüş şablonu var. Başka bir ad yazın ya da önce onu kaldırın."),
+                    "edit.to",
+                ));
+            }
+            s.view_templates[at].name = to.to_owned();
+            template = Some(s.view_templates[at].clone());
+            None
+        }
     };
-    Ok((s, view, warnings))
+    Ok((s, view, template, warnings))
 }
 
 /// A recipe's level and layer state are the project's (docs/adr/0774 §2).
@@ -265,12 +396,15 @@ fn check(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
 fn answer(
     s: &ProjectSettings,
     view: Option<NamedView>,
+    template: Option<ViewTemplate>,
     changed: bool,
     revision: String,
 ) -> ViewsEdited {
     ViewsEdited {
         views: s.named_views.clone(),
         view,
+        templates: s.view_templates.clone(),
+        template,
         changed,
         revision,
     }
@@ -290,10 +424,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ViewsEdit) -> CommandResult<(
 /// What execute would do; nothing is written.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ViewsEdit) -> CommandResult<ViewsEdited> {
     match check(cx.doc, input) {
-        Ok((next, view, warnings)) => {
+        Ok((next, view, template, warnings)) => {
             let changed = next != *cx.doc.settings();
             CommandResult::Completed {
-                output: answer(&next, view, changed, cx.doc.revision().to_string()),
+                output: answer(&next, view, template, changed, cx.doc.revision().to_string()),
                 warnings,
             }
         }
@@ -313,7 +447,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ViewsEdit) -> CommandResult
 }
 
 fn write_execute(cx: &mut ExecutionContext<'_>, input: ViewsEdit) -> CommandResult<ViewsEdited> {
-    let (next, view, warnings) = match check(cx.doc, &input) {
+    let (next, view, template, warnings) = match check(cx.doc, &input) {
         Ok(next) => next,
         Err(stop) => return stop.into(),
     };
@@ -325,6 +459,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ViewsEdit) -> CommandResu
         output: answer(
             cx.doc.settings(),
             view,
+            template,
             changed,
             cx.doc.revision().to_string(),
         ),

@@ -272,7 +272,7 @@ codes! {
     /// A view's width or height not above 0 or above 20 000 km (docs/adr/0285 §1).
     INVALID_VIEW_SIZE = "invalid_view_size", Failed, false, "Görünümün eni ve boyu 0'dan büyük ve en çok 20 000 km olmalı.";
     /// A view recipe empty, with a category twice, a blank level or state, or a scale out of 1:1–1:100 000 (docs/adr/0774 §1).
-    INVALID_RECIPE = "invalid_recipe", Failed, false, "Görünüş tarifi tutmuyor: boş, iki kez gizlenen tür ya da ölçek dışında.";
+    INVALID_RECIPE = "invalid_recipe", Failed, false, "Görünüş tarifi ya da şablonu tutmuyor: boş, iki kez gizlenen tür ya da kalem, ölçek ya da kalem kalınlığı dışında.";
     /// A view name blank, longer than 64 characters or with a control character (docs/adr/0285 §1).
     INVALID_VIEW_NAME = "invalid_view_name", Failed, false, "Görünüm adı boş, 64 karakterden uzun ya da denetim karakterli.";
     /// A named view the project has not (docs/adr/0285 §1).
@@ -283,6 +283,12 @@ codes! {
     TOO_MANY_VIEWS = "too_many_views", Failed, false, "Projede en çok 100 adlı görünüm olur.";
     /// A named view kept over one of the same name (docs/adr/0285 §1).
     VIEW_REPLACED = "view_replaced", Warning, false, "Aynı adlı görünümün yerine yenisi kaydedildi.";
+    /// A template renamed to another template's name (docs/adr/0783 §2).
+    TEMPLATE_EXISTS = "template_exists", Failed, false, "Bu adla başka bir görünüş şablonu var.";
+    /// A 51st view template (docs/adr/0783 §2).
+    TOO_MANY_TEMPLATES = "too_many_templates", Failed, false, "Projede en çok 50 görünüş şablonu olur.";
+    /// A template removed: the views following it keep its fields as their own recipe (docs/adr/0783 §2).
+    TEMPLATE_DETACHED = "template_detached", Warning, false, "Şablon kaldırıldı; ona bağlı görünümler tarifini kendi tarifi olarak tutar.";
 
     // ── Forms (docs/adr/0401) ───────────────────────────────────────────
     /// A form id that is not 1–64 letters, digits, `-`, `_` or `.`.
@@ -2026,8 +2032,9 @@ codes! {
     FINISH_REPLACED = "finish_replaced", Warning, false, "Mahalin aynı yüzdeki eski kaplaması kaldırıldı.";
 
     // ── Work templates (docs/adr/0346) ──────────────────────────────────
-    /// A template KentOS has not.
-    UNKNOWN_TEMPLATE = "unknown_template", Failed, false, "KentOS'un bu adda çalışma şablonu yok.";
+    /// A template that is not there: a work template KentOS has not, or a view template the project has not by its
+    /// name or id (docs/adr/0783 §2).
+    UNKNOWN_TEMPLATE = "unknown_template", Failed, false, "Bu adla bir şablon yok.";
     /// A template's unit that is not one a template takes.
     TEMPLATE_SETTINGS_CONFLICT = "template_settings_conflict", Failed, false, "Ayarları koru kipinde ayrıca birim verilemez.";
     INVALID_TEMPLATE_UNIT = "invalid_template_unit", Failed, false, "Şablonun birimi mm ya da cm olur.";

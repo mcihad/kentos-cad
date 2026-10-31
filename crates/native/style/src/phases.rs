@@ -6,12 +6,15 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use kentos_contracts::{Entity, LineType, PHASE_FADED, PhaseLook, PhaseView};
+use kentos_contracts::{Entity, LineType, PHASE_FADED, PenCategory, PhaseLook, PhaseView, RecipePen};
 
-/// The looks of a drawing's objects in a phase view, by their numbers; an object not listed is drawn as it is.
+/// The looks of a drawing's objects in a phase view, by their numbers; an object not listed is drawn as it is. A map's
+/// recipe adds its pens and black and white (docs/adr/0783 §1), by the objects' kinds.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Phasing {
     looks: HashMap<u32, PhaseLook>,
+    pens: Vec<RecipePen>,
+    mono: bool,
 }
 
 impl Phasing {
@@ -24,7 +27,7 @@ impl Phasing {
     ) -> Self {
         let mut looks = HashMap::new();
         if view == PhaseView::All {
-            return Self { looks };
+            return Self { looks, ..Self::default() };
         }
         for e in entities {
             let look = view.look(e.phase(&by_uid));
@@ -32,12 +35,33 @@ impl Phasing {
                 looks.insert(e.base().id, look);
             }
         }
-        Self { looks }
+        Self { looks, ..Self::default() }
     }
 
     /// Whether nothing changes.
     pub fn is_empty(&self) -> bool {
-        self.looks.is_empty()
+        self.looks.is_empty() && self.pens.is_empty() && !self.mono
+    }
+
+    /// The recipe's pens and black and white drawn too (docs/adr/0783 §1).
+    pub fn with_pens(mut self, pens: &[RecipePen], mono: bool) -> Self {
+        self.pens = pens.to_vec();
+        self.mono = mono;
+        self
+    }
+
+    /// Whether the objects' weights or colours change.
+    pub fn has_pens(&self) -> bool {
+        !self.pens.is_empty() || self.mono
+    }
+
+    /// `e` as the phasing draws it: its look, then its category's pen; none: not drawn.
+    pub fn draw<'a>(&self, e: &'a Entity) -> Option<Cow<'a, Entity>> {
+        let drawn = phased_one(e, self.look(e.base().id))?;
+        if !self.has_pens() {
+            return Some(drawn);
+        }
+        Some(Cow::Owned(penned(drawn.into_owned(), &self.pens, self.mono)))
     }
 
     /// An object's look.
@@ -94,8 +118,31 @@ pub fn phased<'a>(entities: &[&'a Entity], phasing: &Phasing) -> Vec<Cow<'a, Ent
     if phasing.is_empty() {
         return entities.iter().map(|e| Cow::Borrowed(*e)).collect();
     }
-    entities
-        .iter()
-        .filter_map(|e| phased_one(e, phasing.look(e.base().id)))
-        .collect()
+    entities.iter().filter_map(|e| phasing.draw(e)).collect()
+}
+
+/// `e` with its category's pen (docs/adr/0783 §1): the pen's weight and colour; black and white makes the rest black, a
+/// hatch grey. A pen's colour wins over black and white.
+pub fn penned(mut e: Entity, pens: &[RecipePen], mono: bool) -> Entity {
+    let category = PenCategory::of_kind(e.kind());
+    let pen = pens.iter().find(|p| p.of == category);
+    let b = e.base_mut();
+    if let Some(w) = pen.and_then(|p| p.weight) {
+        b.line_weight = Some(w);
+    }
+    match pen.and_then(|p| p.color.clone()) {
+        Some(c) => b.color = Some(c),
+        None if mono => {
+            b.color = Some(
+                if category == PenCategory::Hatches {
+                    kentos_contracts::MONO_HATCH
+                } else {
+                    kentos_contracts::MONO_LINE
+                }
+                .to_owned(),
+            )
+        }
+        None => {}
+    }
+    e
 }

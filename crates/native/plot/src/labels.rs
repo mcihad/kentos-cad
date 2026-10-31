@@ -132,7 +132,7 @@ pub fn map_labels(doc: &Document, spatial: &Spatial, m: &MapPrim) -> Vec<MapLabe
         &m.layers,
         &m.layer_overrides,
         m.level.as_ref(),
-        (m.phase, &m.hidden),
+        (m.phase, &m.hidden, &m.pens, m.mono),
         m.extent,
     )
 }
@@ -180,7 +180,12 @@ pub fn labels_in_view(
     layers: &kentos_sheet::kinds::MapLayers,
     overrides: &[kentos_sheet::kinds::LayerOverride],
     level: Option<&kentos_sheet::kinds::MapLevel>,
-    recipe: (Option<kentos_contracts::PhaseView>, &[kentos_contracts::ViewCategory]),
+    recipe: (
+        Option<kentos_contracts::PhaseView>,
+        &[kentos_contracts::ViewCategory],
+        &[kentos_contracts::RecipePen],
+        bool,
+    ),
     extent: Option<[f64; 4]>,
 ) -> Vec<MapLabel> {
     let Some(bounds) = extent else {
@@ -226,7 +231,27 @@ pub fn labels_in_view(
             l.color = crate::layers::faint_on_paper(&l.color);
         }
     };
+    // A recipe's pens and black and white (docs/adr/0783 §1): the words of an object take its category's pen colour,
+    // black in black and white; recoloured from where they start when the next object's begin, and at the end.
+    let mut pen_from: Option<(usize, String)> = None;
+    let pen_color = |kind: &str| -> Option<String> {
+        let category = kentos_contracts::PenCategory::of_kind(kind);
+        recipe
+            .2
+            .iter()
+            .find(|p| p.of == category)
+            .and_then(|p| p.color.clone())
+            .or_else(|| recipe.3.then(|| kentos_contracts::MONO_LINE.to_owned()))
+    };
+    let recolor = |out: &mut [MapLabel], c: &str| {
+        for l in out {
+            l.color = c.to_owned();
+        }
+    };
     for spot in spots {
+        if let Some((from, c)) = pen_from.take() {
+            recolor(&mut out[from..], &c);
+        }
         if let Some(from) = faint_from.take() {
             fade(&mut out[from..]);
         }
@@ -241,6 +266,9 @@ pub fn labels_in_view(
         let Some(layer) = visible.get(entity.base().layer_id.as_str()) else {
             continue;
         };
+        if let Some(c) = pen_color(entity.kind()) {
+            pen_from = Some((out.len(), c));
+        }
         let mut l = label(&layer.id, font);
         l.color = paper_color(entity.base().color.as_deref().or(Some(&layer.style.color)));
         let ground_height;
@@ -623,6 +651,9 @@ pub fn labels_in_view(
             }
             out.push(l);
         }
+    }
+    if let Some((from, c)) = pen_from {
+        recolor(&mut out[from..], &c);
     }
     if let Some(from) = faint_from {
         fade(&mut out[from..]);

@@ -8,7 +8,8 @@ import type { ViewsOp } from "./ViewsOp";
  * `far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;
  * `invalid_revision`, `revision_conflict` (status `conflict`);
  * `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
- * state the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.
+ * state the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).
+ * Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.
  */
 export type ViewsEdit = { edit: ViewsOp, 
 /**

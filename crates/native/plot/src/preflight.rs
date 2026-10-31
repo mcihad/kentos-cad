@@ -391,6 +391,8 @@ mod tests {
                 level: map.level.as_ref(),
                 phase: map.phase,
                 hidden: &map.hidden,
+                pens: &map.pens,
+                mono: map.mono,
                 doc: &doc,
                 store: spatial.store(),
                 library: &library,

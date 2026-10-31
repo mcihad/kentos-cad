@@ -197,6 +197,14 @@ pub struct MapPrim {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub wall_detail: Option<kentos_contracts::WallDetail>,
+    /// The pens it draws its categories with (docs/adr/0783 §1: its linked view's recipe, its template resolved).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<kentos_contracts::RecipePen>>", optional))]
+    pub pens: Vec<kentos_contracts::RecipePen>,
+    /// Every line black, hatches grey (docs/adr/0783 §1).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub mono: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<String>,

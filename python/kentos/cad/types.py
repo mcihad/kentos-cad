@@ -4350,6 +4350,44 @@ PdfCurveOutputName = Literal["polyline", "nurbs"]
 """The names of :class:`PdfCurveOutput`, for a plain string."""
 
 
+class PenCategory(_StrEnum):
+    """What a pen draws (docs/adr/0783 §1): the objects of a kind; `others` everything no category names.
+
+    - ``walls``
+    - ``openings``
+    - ``columns``
+    - ``slabs``
+    - ``spaces``
+    - ``dimensions``
+    - ``tags``
+    - ``hatches``
+    - ``grids``
+    - ``viewmarks``
+    - ``stairs``: Stairs and ramps.
+    - ``texts``: Texts, paragraphs and leaders.
+    - ``blocks``: Block inserts: furniture, fixtures, symbols.
+    - ``others``: Every other object: lines, areas, curves.
+    """
+    WALLS = "walls"
+    OPENINGS = "openings"
+    COLUMNS = "columns"
+    SLABS = "slabs"
+    SPACES = "spaces"
+    DIMENSIONS = "dimensions"
+    TAGS = "tags"
+    HATCHES = "hatches"
+    GRIDS = "grids"
+    VIEWMARKS = "viewmarks"
+    STAIRS = "stairs"
+    TEXTS = "texts"
+    BLOCKS = "blocks"
+    OTHERS = "others"
+
+
+PenCategoryName = Literal["walls", "openings", "columns", "slabs", "spaces", "dimensions", "tags", "hatches", "grids", "viewmarks", "stairs", "texts", "blocks", "others"]
+"""The names of :class:`PenCategory`, for a plain string."""
+
+
 class PhaseView(_StrEnum):
     """Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum."""
     ALL = "all"
@@ -9594,6 +9632,8 @@ class ViewsOp(_Union):
     - :class:`RenameViewsOp` (``kind: rename``)
     - :class:`DeleteViewsOp` (``kind: delete``)
     - :class:`RecipeViewsOp` (``kind: recipe``)
+    - :class:`TemplateViewsOp` (``kind: template``)
+    - :class:`TemplateRenameViewsOp` (``kind: templateRename``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -50914,6 +50954,7 @@ class ProjectSettings(_Model):
         ucs: The drawing's user coordinate system (docs/adr/0261 §1); none: the
             world. How points are typed and shown, never where they are.
         variables: The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
+        view_templates: The project's view templates, in the order they were kept (docs/adr/0783 §2).
         wall_styles: The project's named wall styles (docs/adr/0339 §2), in the order they were made.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
@@ -50966,6 +51007,7 @@ class ProjectSettings(_Model):
     topology: TopologySettings | None | Unset = UNSET
     ucs: Ucs | None | Unset = UNSET
     variables: list[ProjectVariable] | Unset = UNSET
+    view_templates: list[ViewTemplate] | Unset = UNSET
     wall_styles: list[WallStyleDef] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
     xref_paths: list[str] | Unset = UNSET
@@ -51056,6 +51098,8 @@ class ProjectSettings(_Model):
             out["ucs"] = None if self.ucs is None else self.ucs.to_json()
         if self.variables is not UNSET:
             out["variables"] = [e0.to_json() for e0 in self.variables]
+        if self.view_templates is not UNSET:
+            out["viewTemplates"] = [e0.to_json() for e0 in self.view_templates]
         if self.wall_styles is not UNSET:
             out["wallStyles"] = [e0.to_json() for e0 in self.wall_styles]
         if self.workspace is not UNSET:
@@ -51112,6 +51156,7 @@ class ProjectSettings(_Model):
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
             ucs=UNSET if "ucs" not in data else None if data["ucs"] is None else Ucs.from_json(data["ucs"]),
             variables=[ProjectVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else UNSET,
+            view_templates=[ViewTemplate.from_json(e0) for e0 in data["viewTemplates"]] if "viewTemplates" in data else UNSET,
             wall_styles=[WallStyleDef.from_json(e0) for e0 in data["wallStyles"]] if "wallStyles" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
             xref_paths=list(data["xrefPaths"]) if "xrefPaths" in data else UNSET,
@@ -53403,6 +53448,35 @@ class RecipeLevel(_Model):
         return cls(
             id=data["id"],
             below=data.get("below", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecipePen(_Model):
+    """A pen of a recipe (docs/adr/0783 §1): a category's paper weight, its colour, or both.
+    Attributes:
+        color: `#rrggbb`; none: the objects' own (black with `mono`).
+        weight: Paper millimetres, 0 to 5; none: the objects' own. Unit: paper-mm.
+    """
+    of: PenCategory | PenCategoryName
+    color: str | None | Unset = UNSET
+    weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["of"] = _enum_out(self.of)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.weight is not UNSET:
+            out["weight"] = None if self.weight is None else float(self.weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecipePen:
+        return cls(
+            of=_enum_in(PenCategory, data["of"]),
+            color=data.get("color", UNSET),
+            weight=UNSET if "weight" not in data else None if data["weight"] is None else float(data["weight"]),
         )
 
 
@@ -67381,8 +67455,13 @@ class ViewRecipe(_Model):
         hidden: The categories left out, in their order.
         layer_state: A layer state of the project by its name, in this view only (docs/adr/0314 §1); none: the map's layers.
         level: The level the map draws; none: the map's own.
+        mono: Every line black, hatches grey (docs/adr/0783 §1); a pen's colour still wins.
+        pens: The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a
+            view), each category once, in their order.
         phase: The phases it shows (docs/adr/0346 §2); none: the project's phase view.
         scale: The scale's denominator a linked map draws at (1:N), the view's middle kept; none: the view's box fitted. Unit: scale.
+        template: The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives
+            everything but the level and the crop, which stay the view's. An input may name it.
         version: 1 for a new recipe, one more at each change; given in an input, it is ignored. Unit: version.
     """
     crop: bool | Unset = UNSET
@@ -67390,8 +67469,11 @@ class ViewRecipe(_Model):
     hidden: list[ViewCategory | ViewCategoryName] | Unset = UNSET
     layer_state: str | None | Unset = UNSET
     level: RecipeLevel | None | Unset = UNSET
+    mono: bool | Unset = UNSET
+    pens: list[RecipePen] | Unset = UNSET
     phase: PhaseView | PhaseViewName | None | Unset = UNSET
     scale: int | None | Unset = UNSET
+    template: str | None | Unset = UNSET
     version: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -67406,10 +67488,16 @@ class ViewRecipe(_Model):
             out["layerState"] = self.layer_state
         if self.level is not UNSET:
             out["level"] = None if self.level is None else self.level.to_json()
+        if self.mono is not UNSET:
+            out["mono"] = self.mono
+        if self.pens is not UNSET:
+            out["pens"] = [e0.to_json() for e0 in self.pens]
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.scale is not UNSET:
             out["scale"] = self.scale
+        if self.template is not UNSET:
+            out["template"] = self.template
         if self.version is not UNSET:
             out["version"] = self.version
         return out
@@ -67422,8 +67510,11 @@ class ViewRecipe(_Model):
             hidden=[_enum_in(ViewCategory, e0) for e0 in data["hidden"]] if "hidden" in data else UNSET,
             layer_state=data.get("layerState", UNSET),
             level=UNSET if "level" not in data else None if data["level"] is None else RecipeLevel.from_json(data["level"]),
+            mono=data.get("mono", UNSET),
+            pens=[RecipePen.from_json(e0) for e0 in data["pens"]] if "pens" in data else UNSET,
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(PhaseView, data["phase"]),
             scale=data.get("scale", UNSET),
+            template=data.get("template", UNSET),
             version=data.get("version", UNSET),
         )
 
@@ -67455,6 +67546,34 @@ class ViewTarget(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ViewTemplate(_Model):
+    """A view template of the project (docs/adr/0783 §2): a recipe kept under a name, which views follow.
+    Attributes:
+        id: `t-` and its first name's FNV-1a; kept when renamed.
+        name: Trimmed, 1–64 characters, no control characters; unique.
+        recipe: What it draws: no level, crop or template.
+    """
+    id: str
+    name: str
+    recipe: ViewRecipe
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["recipe"] = self.recipe.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewTemplate:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            recipe=ViewRecipe.from_json(data["recipe"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ViewsEdit(_Model):
     """Input of `cad.views.edit` v1.
 
@@ -67462,7 +67581,8 @@ class ViewsEdit(_Model):
     `far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
-    state the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.
+    state the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).
+    Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.
     Attributes:
         expected_revision: The document revision the input was prepared against, as decimal text.
     """
@@ -67491,11 +67611,15 @@ class ViewsEdited(_Model):
         views: The project's named views afterwards, in order.
         changed: Whether the settings changed.
         revision: The document's revision afterwards (plan: the one it was made against).
+        template: The template kept, changed or renamed; none otherwise.
+        templates: The project's view templates afterwards (docs/adr/0783 §2).
         view: The view saved or renamed, as kept; none for a delete.
     """
     views: list[NamedView]
     changed: bool
     revision: str
+    template: ViewTemplate | None | Unset = UNSET
+    templates: list[ViewTemplate] | Unset = UNSET
     view: NamedView | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -67503,6 +67627,10 @@ class ViewsEdited(_Model):
         out["views"] = [e0.to_json() for e0 in self.views]
         out["changed"] = self.changed
         out["revision"] = self.revision
+        if self.template is not UNSET:
+            out["template"] = None if self.template is None else self.template.to_json()
+        if self.templates is not UNSET:
+            out["templates"] = [e0.to_json() for e0 in self.templates]
         if self.view is not UNSET:
             out["view"] = None if self.view is None else self.view.to_json()
         return out
@@ -67513,6 +67641,8 @@ class ViewsEdited(_Model):
             views=[NamedView.from_json(e0) for e0 in data["views"]],
             changed=data["changed"],
             revision=data["revision"],
+            template=UNSET if "template" not in data else None if data["template"] is None else ViewTemplate.from_json(data["template"]),
+            templates=[ViewTemplate.from_json(e0) for e0 in data["templates"]] if "templates" in data else UNSET,
             view=UNSET if "view" not in data else None if data["view"] is None else NamedView.from_json(data["view"]),
         )
 
@@ -86030,6 +86160,51 @@ class RecipeViewsOp(ViewsOp):
 
 
 @dataclass(kw_only=True, slots=True)
+class TemplateViewsOp(ViewsOp):
+    """Görünüş şablonu (docs/adr/0783 §2): a template kept or changed under its name (its version one more) or, no
+    recipe, removed: the views following it keep its fields as their own recipe.
+    """
+    TAG_VALUE: ClassVar[str] = "template"
+    name: str
+    recipe: ViewRecipe | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "template"}
+        out["name"] = self.name
+        if self.recipe is not UNSET:
+            out["recipe"] = None if self.recipe is None else self.recipe.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateViewsOp:
+        return cls(
+            name=data["name"],
+            recipe=UNSET if "recipe" not in data else None if data["recipe"] is None else ViewRecipe.from_json(data["recipe"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TemplateRenameViewsOp(ViewsOp):
+    """Şablonu yeniden adlandır: its id kept, the views following it too."""
+    TAG_VALUE: ClassVar[str] = "templateRename"
+    name: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "templateRename"}
+        out["name"] = self.name
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TemplateRenameViewsOp:
+        return cls(
+            name=data["name"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetWallsOperation(WallsOperation):
     """Değiştir: the fields given, on every wall named.
     Attributes:
@@ -86953,7 +87128,7 @@ _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "or
 _VIEW_MARKS_OPERATION: dict[str, type[ViewMarksOperation]] = {"set": SetViewMarksOperation, "retarget": RetargetViewMarksOperation, "detach": DetachViewMarksOperation}
 
 
-_VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp, "recipe": RecipeViewsOp}
+_VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp, "recipe": RecipeViewsOp, "template": TemplateViewsOp, "templateRename": TemplateRenameViewsOp}
 
 
 _WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation, "shift": ShiftWallsOperation, "distance": DistanceWallsOperation, "length": LengthWallsOperation}
@@ -88801,6 +88976,8 @@ __all__ = [
     "PdfPaperPrintDevice",
     "PdfRegion",
     "PdfTaken",
+    "PenCategory",
+    "PenCategoryName",
     "PercentLengthenChange",
     "PerpendicularConstraintRule",
     "PerpendicularInConstruction",
@@ -89052,6 +89229,7 @@ __all__ = [
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",
     "RecipeLevel",
+    "RecipePen",
     "RecipeViewsOp",
     "ReconcileConflict",
     "ReconcileCounts",
@@ -89617,9 +89795,11 @@ __all__ = [
     "TangentsCurveEdit",
     "TargetReference",
     "TemplatePreserved",
+    "TemplateRenameViewsOp",
     "TemplateReview",
     "TemplateSettingsMode",
     "TemplateSettingsModeName",
+    "TemplateViewsOp",
     "TemplatesApplied",
     "TemplatesApply",
     "TenantKind",
@@ -89785,6 +89965,7 @@ __all__ = [
     "ViewRecipe",
     "ViewSnapshotPaperViewportSource",
     "ViewTarget",
+    "ViewTemplate",
     "ViewmarkEntity",
     "ViewsEdit",
     "ViewsEdited",

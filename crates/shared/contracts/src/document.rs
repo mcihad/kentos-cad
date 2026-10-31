@@ -409,6 +409,10 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::NamedView>>", optional))]
     pub named_views: Vec<crate::NamedView>,
+    /// The project's view templates, in the order they were kept (docs/adr/0783 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ViewTemplate>>", optional))]
+    pub view_templates: Vec<crate::ViewTemplate>,
     /// The project's forms, in the order they were made (docs/adr/0401).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectForm>>", optional))]
@@ -832,6 +836,11 @@ impl ProjectSettings {
         crate::paper_height(self.annotation_mm(kind), self.plot_scale)
     }
 
+    /// The named views as sheets' maps draw them: each recipe following a template resolved by it (docs/adr/0783 §2).
+    pub fn drawn_views(&self) -> Vec<crate::NamedView> {
+        crate::resolved_named_views(&self.named_views, &self.view_templates)
+    }
+
     /// Whether the project has a coordinate system: the registry's, or its
     /// own definition (docs/adr/0168 §1).
     pub fn has_system(&self) -> bool {
@@ -915,6 +924,18 @@ impl ProjectSettings {
         }
         self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
         self.named_views = crate::sanitized_named_views(std::mem::take(&mut self.named_views));
+        self.view_templates = crate::sanitized_view_templates(std::mem::take(&mut self.view_templates));
+        // A view following a template the project does not keep draws on its own (docs/adr/0783 §2).
+        for v in &mut self.named_views {
+            if let Some(r) = v.recipe.as_mut()
+                && r.template.as_ref().is_some_and(|id| !self.view_templates.iter().any(|t| &t.id == id))
+            {
+                r.template = None;
+                if r.is_empty() {
+                    v.recipe = None;
+                }
+            }
+        }
         self.xref_paths = crate::sanitized_xref_paths(std::mem::take(&mut self.xref_paths));
         self.profile_files =
             crate::sanitized_profile_files(std::mem::take(&mut self.profile_files));

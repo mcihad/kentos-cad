@@ -353,6 +353,8 @@ mod tests {
             phase: None,
             hidden: Vec::new(),
             wall_detail: None,
+            pens: Vec::new(),
+            mono: false,
             item: "m".into(),
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),
             rotation,

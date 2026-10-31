@@ -28,6 +28,9 @@ mod flat_modules;
 #[path = "headless/special_doors.rs"]
 mod special_doors;
 
+#[path = "headless/special_doors.rs"]
+mod special_doors;
+
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
 

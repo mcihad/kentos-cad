@@ -150,7 +150,7 @@ pub struct RecipeLevel {
 /// A named view's architectural recipe (docs/adr/0774 §1; Revit's view properties, Archicad's view settings): what a
 /// sheet's map linked to the view draws. It is the view's, not the model's (no object changes) nor the person's (the
 /// screen's level view, theme and layer panel stay theirs). `version` counts its changes: written by `cad.views.edit`.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -191,6 +191,20 @@ pub struct ViewRecipe {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub crop: bool,
+    /// The pens the map draws its categories with (docs/adr/0783 §1; Archicad's pen sets, Revit's object styles in a
+    /// view), each category once, in their order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecipePen>>", optional))]
+    pub pens: Vec<RecipePen>,
+    /// Every line black, hatches grey (docs/adr/0783 §1); a pen's colour still wins.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub mono: bool,
+    /// The view template it follows by its id (docs/adr/0783 §2; Revit's assigned View Template): the template gives
+    /// everything but the level and the crop, which stay the view's. An input may name it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub template: Option<String>,
 }
 
 fn is_zero(v: &u32) -> bool {
@@ -207,7 +221,244 @@ impl ViewRecipe {
             && self.scale.is_none()
             && self.detail.is_none()
             && !self.crop
+            && self.pens.is_empty()
+            && !self.mono
+            && self.template.is_none()
     }
+
+    /// The pen of `category`, if the recipe gives one.
+    pub fn pen(&self, category: PenCategory) -> Option<&RecipePen> {
+        self.pens.iter().find(|p| p.of == category)
+    }
+}
+
+/// The thickest pen a recipe gives, paper millimetres.
+pub const MOST_PEN_WEIGHT: f64 = 5.0;
+/// The most view templates a project keeps.
+pub const MOST_VIEW_TEMPLATES: usize = 50;
+/// The grey hatches draw in a black-and-white map (docs/adr/0783 §1).
+pub const MONO_HATCH: &str = "#808080";
+/// The black lines draw in a black-and-white map.
+pub const MONO_LINE: &str = "#000000";
+
+/// What a pen draws (docs/adr/0783 §1): the objects of a kind; `others` everything no category names.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PenCategory {
+    Walls,
+    Openings,
+    Columns,
+    /// Stairs and ramps.
+    Stairs,
+    Slabs,
+    Spaces,
+    Dimensions,
+    Tags,
+    /// Texts, paragraphs and leaders.
+    Texts,
+    Hatches,
+    /// Block inserts: furniture, fixtures, symbols.
+    Blocks,
+    Grids,
+    Viewmarks,
+    /// Every other object: lines, areas, curves.
+    Others,
+}
+
+impl PenCategory {
+    pub const ALL: [PenCategory; 14] = [
+        PenCategory::Walls,
+        PenCategory::Openings,
+        PenCategory::Columns,
+        PenCategory::Stairs,
+        PenCategory::Slabs,
+        PenCategory::Spaces,
+        PenCategory::Dimensions,
+        PenCategory::Tags,
+        PenCategory::Texts,
+        PenCategory::Hatches,
+        PenCategory::Blocks,
+        PenCategory::Grids,
+        PenCategory::Viewmarks,
+        PenCategory::Others,
+    ];
+
+    /// Its name in the interface.
+    pub fn label(self) -> &'static str {
+        match self {
+            PenCategory::Walls => "Duvarlar",
+            PenCategory::Openings => "Kapı ve pencereler",
+            PenCategory::Columns => "Kolonlar",
+            PenCategory::Stairs => "Merdiven ve rampalar",
+            PenCategory::Slabs => "Döşemeler",
+            PenCategory::Spaces => "Mahaller",
+            PenCategory::Dimensions => "Ölçüler",
+            PenCategory::Tags => "Etiketler",
+            PenCategory::Texts => "Yazılar",
+            PenCategory::Hatches => "Taramalar",
+            PenCategory::Blocks => "Bloklar ve donatı",
+            PenCategory::Grids => "Akslar",
+            PenCategory::Viewmarks => "Görünüm işaretleri",
+            PenCategory::Others => "Öbür çizgiler",
+        }
+    }
+
+    /// The category an object of `kind` (its JSON `kind`) draws with.
+    pub fn of_kind(kind: &str) -> PenCategory {
+        match kind {
+            "wall" => PenCategory::Walls,
+            "opening" => PenCategory::Openings,
+            "column" => PenCategory::Columns,
+            "stair" | "ramp" => PenCategory::Stairs,
+            "slab" => PenCategory::Slabs,
+            "space" => PenCategory::Spaces,
+            "dimension" => PenCategory::Dimensions,
+            "tag" => PenCategory::Tags,
+            "text" | "leader" => PenCategory::Texts,
+            "hatch" => PenCategory::Hatches,
+            "insert" => PenCategory::Blocks,
+            "grid" => PenCategory::Grids,
+            "viewmark" => PenCategory::Viewmarks,
+            _ => PenCategory::Others,
+        }
+    }
+}
+
+/// A pen of a recipe (docs/adr/0783 §1): a category's paper weight, its colour, or both.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecipePen {
+    pub of: PenCategory,
+    /// Paper millimetres, 0 to 5; none: the objects' own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub weight: Option<f64>,
+    /// `#rrggbb`; none: the objects' own (black with `mono`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub color: Option<String>,
+}
+
+/// Whether `c` is a colour as `#rrggbb`.
+pub fn pen_color_ok(c: &str) -> bool {
+    c.len() == 7 && c.starts_with('#') && c[1..].chars().all(|ch| ch.is_ascii_hexdigit())
+}
+
+/// A view template of the project (docs/adr/0783 §2): a recipe kept under a name, which views follow.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ViewTemplate {
+    /// `t-` and its first name's FNV-1a; kept when renamed.
+    pub id: String,
+    /// Trimmed, 1–64 characters, no control characters; unique.
+    pub name: String,
+    /// What it draws: no level, crop or template.
+    pub recipe: ViewRecipe,
+}
+
+/// The id a template's name gives: `t-` and the name's FNV-1a in eight lowercase hexadecimal digits.
+pub fn template_id_of_name(name: &str) -> String {
+    format!("t-{}", &view_id_of_name(name)[2..])
+}
+
+/// What is wrong with a template's recipe: the recipe's own rule, then no level, crop or template.
+pub fn template_problem(r: &ViewRecipe) -> Option<String> {
+    if let Some(why) = recipe_problem(r) {
+        return Some(why);
+    }
+    if r.level.is_some() || r.crop || r.template.is_some() {
+        return Some("Görünüş şablonu kat, kırpma ya da başka şablon taşımaz: bunlar görünümündür.".into());
+    }
+    None
+}
+
+/// What is wrong with a project's templates for a reader, against its views: at most 50, names and ids that hold and
+/// are unique, recipes that hold, and every view's template one of them.
+pub fn templates_problem(templates: &[ViewTemplate], views: &[NamedView]) -> Option<String> {
+    if templates.len() > MOST_VIEW_TEMPLATES {
+        return Some(format!("En çok {MOST_VIEW_TEMPLATES} görünüş şablonu olur, {} var.", templates.len()));
+    }
+    for (i, t) in templates.iter().enumerate() {
+        if !view_name_ok(&t.name) || t.name.trim() != t.name {
+            return Some(format!("“{}” bir şablon adı olamaz.", t.name));
+        }
+        if !view_name_ok(&t.id) || t.id.trim() != t.id {
+            return Some(format!("“{}” şablonunun kimliği tutmuyor.", t.name));
+        }
+        if templates[..i].iter().any(|w| w.name == t.name || w.id == t.id) {
+            return Some(format!("“{}” adlı ya da kimlikli iki şablon var.", t.name));
+        }
+        if let Some(why) = if t.recipe.version == 0 {
+            Some("Görünüş tarifinin sürümü en az 1 olur.".to_owned())
+        } else {
+            template_problem(&t.recipe)
+        } {
+            return Some(format!("“{}” şablonunun tarifi tutmuyor: {why}", t.name));
+        }
+    }
+    for v in views {
+        if let Some(id) = v.recipe.as_ref().and_then(|r| r.template.as_ref())
+            && !templates.iter().any(|t| &t.id == id)
+        {
+            return Some(format!("“{}” görünümünün şablonu “{id}” projede yok.", v.name));
+        }
+    }
+    None
+}
+
+/// The templates a project keeps: those that hold, the first of a name or id, at most 50.
+pub fn sanitized_view_templates(templates: Vec<ViewTemplate>) -> Vec<ViewTemplate> {
+    let mut kept: Vec<ViewTemplate> = Vec::new();
+    for t in templates {
+        if kept.len() == MOST_VIEW_TEMPLATES {
+            break;
+        }
+        if templates_problem(std::slice::from_ref(&t), &[]).is_none()
+            && !kept.iter().any(|k| k.name == t.name || k.id == t.id)
+        {
+            kept.push(t);
+        }
+    }
+    kept
+}
+
+/// A recipe as a map draws it (docs/adr/0783 §2): one following a template takes its fields, keeping its own version,
+/// level and crop; the template's id is left out. One whose template is gone draws as it is.
+pub fn resolved_recipe(r: &ViewRecipe, templates: &[ViewTemplate]) -> ViewRecipe {
+    let Some(id) = &r.template else {
+        return r.clone();
+    };
+    let Some(t) = templates.iter().find(|t| &t.id == id) else {
+        return ViewRecipe { template: None, ..r.clone() };
+    };
+    ViewRecipe {
+        version: r.version,
+        level: r.level.clone(),
+        crop: r.crop,
+        template: None,
+        ..t.recipe.clone()
+    }
+}
+
+/// The named views as maps draw them: every recipe resolved by its template.
+pub fn resolved_named_views(views: &[NamedView], templates: &[ViewTemplate]) -> Vec<NamedView> {
+    views
+        .iter()
+        .map(|v| NamedView {
+            recipe: v.recipe.as_ref().map(|r| resolved_recipe(r, templates)),
+            ..v.clone()
+        })
+        .collect()
 }
 
 /// What is wrong with a recipe on its own (no project): a version, a level id, a state name, the categories once, a
@@ -217,7 +468,7 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
         return Some("Görünüş tarifinin sürümü en az 1 olur.".into());
     }
     if r.is_empty() {
-        return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin.".into());
+        return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin.".into());
     }
     if let Some(l) = &r.level
         && (l.id.trim().is_empty() || l.id.chars().count() > MOST_VIEW_NAME || l.id.chars().any(char::is_control))
@@ -238,6 +489,39 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
         && !(1..=MOST_RECIPE_SCALE).contains(&s)
     {
         return Some("Görünüş tarifinin ölçeği 1:1 ile 1:100 000 arasında olur.".into());
+    }
+    for (i, p) in r.pens.iter().enumerate() {
+        if r.pens[..i].iter().any(|q| q.of == p.of) {
+            return Some(format!("“{}” kalemlerde iki kez var.", p.of.label()));
+        }
+        if p.weight.is_none() && p.color.is_none() {
+            return Some(format!("“{}” kaleminin kalınlığı ya da rengi olmalı.", p.of.label()));
+        }
+        if let Some(w) = p.weight
+            && !(0.0..=MOST_PEN_WEIGHT).contains(&w)
+        {
+            return Some("Kalemin kalınlığı 0 ile 5 mm arasında olur.".into());
+        }
+        if let Some(c) = &p.color
+            && !pen_color_ok(c)
+        {
+            return Some("Kalemin rengi #rrggbb biçiminde olur.".into());
+        }
+    }
+    if let Some(t) = &r.template {
+        if t.trim().is_empty() || t.chars().count() > MOST_VIEW_NAME || t.chars().any(char::is_control) {
+            return Some("Görünüş tarifinin şablonu bir şablonun kimliği ya da adı olmalı.".into());
+        }
+        if r.phase.is_some()
+            || r.layer_state.is_some()
+            || r.scale.is_some()
+            || r.detail.is_some()
+            || !r.hidden.is_empty()
+            || !r.pens.is_empty()
+            || r.mono
+        {
+            return Some("Şablona bağlı tarifte yalnız kat ve kırpma görünümündür; öbürleri şablondan gelir.".into());
+        }
     }
     None
 }
@@ -378,6 +662,16 @@ pub enum ViewsOp {
         #[cfg_attr(feature = "ts", ts(optional))]
         recipe: Option<ViewRecipe>,
     },
+    /// Görünüş şablonu (docs/adr/0783 §2): a template kept or changed under its name (its version one more) or, no
+    /// recipe, removed: the views following it keep its fields as their own recipe.
+    Template {
+        name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        recipe: Option<ViewRecipe>,
+    },
+    /// Şablonu yeniden adlandır: its id kept, the views following it too.
+    TemplateRename { name: String, to: String },
 }
 
 /// Input of `cad.views.edit` v1.
@@ -386,7 +680,8 @@ pub enum ViewsOp {
 /// `far_point`, `invalid_view_size`, `invalid_view_name`, `invalid_recipe`;
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `unknown_view`, `view_exists`, `too_many_views`, `level_not_found` and `state_not_found` (a recipe's level or layer
-/// state the project does not have). Warning: `view_replaced`. A view saved over one keeps its recipe.
+/// state the project does not have), `unknown_template`, `template_exists`, `too_many_templates` (docs/adr/0783).
+/// Warnings: `view_replaced`, `template_detached`. A view saved over one keeps its recipe.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -414,6 +709,14 @@ pub struct ViewsEdited {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub view: Option<NamedView>,
+    /// The project's view templates afterwards (docs/adr/0783 §2).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ViewTemplate>>", optional))]
+    pub templates: Vec<ViewTemplate>,
+    /// The template kept, changed or renamed; none otherwise.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub template: Option<ViewTemplate>,
     /// Whether the settings changed.
     pub changed: bool,
     /// The document's revision afterwards (plan: the one it was made against).

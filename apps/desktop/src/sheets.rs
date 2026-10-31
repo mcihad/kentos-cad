@@ -237,14 +237,19 @@ impl SheetMaps {
         view: &kentos_sheet::display::MapViewPrim,
         own: (&MapLayers, &[kentos_sheet::kinds::LayerOverride]),
         level: Option<&kentos_sheet::kinds::MapLevel>,
-        recipe: (Option<kentos_commands::PhaseView>, &[kentos_commands::ViewCategory]),
+        recipe: (
+            Option<kentos_commands::PhaseView>,
+            &[kentos_commands::ViewCategory],
+            &[kentos_commands::RecipePen],
+            bool,
+        ),
     ) -> Rc<StyledAt> {
         let scale = view.scale;
         let origin = view
             .center
             .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
         let own_key = match (own, level) {
-            _ if recipe.0.is_some() || !recipe.1.is_empty() => {
+            _ if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.2.is_empty() || recipe.3 => {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
                 serde_json::to_string(&own.0).unwrap_or_default().hash(&mut h);
@@ -310,7 +315,7 @@ impl SheetMaps {
             phasing: std::sync::Arc::new({
                 // A level's plan (docs/adr/0716): the level under it faint; a linked view's phase and categories
                 // (docs/adr/0774 §3).
-                let mut p = kentos_plot::layers::map_phasing_of(&doc.model, recipe.0, recipe.1);
+                let mut p = kentos_plot::layers::map_drawing_of(&doc.model, recipe.0, recipe.1, recipe.2, recipe.3);
                 for &id in &faint {
                     p.fade(id);
                 }
@@ -580,6 +585,8 @@ impl MapPainter for SheetPainter<'_> {
                 level: primitive.level.as_ref(),
                 phase: primitive.phase,
                 hidden: &primitive.hidden,
+                pens: &primitive.pens,
+                mono: primitive.mono,
                 doc,
                 store: spatial.store(),
                 library: self.library,
@@ -678,6 +685,8 @@ impl MapPainter for SheetPainter<'_> {
             (
                 r.primitive.and_then(|p| p.phase),
                 r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
+                r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
+                r.primitive.is_some_and(|p| p.mono),
             ),
             r.extent,
         );
@@ -686,6 +695,8 @@ impl MapPainter for SheetPainter<'_> {
             level,
             phase: r.primitive.and_then(|p| p.phase),
             hidden: r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
+            pens: r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
+            mono: r.primitive.is_some_and(|p| p.mono),
             doc: &drawing.model,
             store: spatial.store(),
             library: self.library,
@@ -796,6 +807,8 @@ impl SheetPainter<'_> {
             (
                 r.primitive.and_then(|p| p.phase),
                 r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
+                r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
+                r.primitive.is_some_and(|p| p.mono),
             ),
         );
         let s = scale;
@@ -911,6 +924,8 @@ impl SheetPainter<'_> {
             (
                 r.primitive.and_then(|p| p.phase),
                 r.primitive.map_or(&[][..], |p| p.hidden.as_slice()),
+                r.primitive.map_or(&[][..], |p| p.pens.as_slice()),
+                r.primitive.is_some_and(|p| p.mono),
             ),
         );
         let s = scale;
@@ -1414,7 +1429,7 @@ impl App {
             }),
             center: doc.map(|_| GroundPoint { x: c.x, y: c.y }),
             annotation_scales: self.sheet_maps.annotation_scales.borrow().clone(),
-            named_views: settings.map_or_else(Vec::new, |s| s.named_views.clone()),
+            named_views: settings.map_or_else(Vec::new, |s| s.drawn_views()),
             drawing_bounds: self.sheet_extent.get(),
             level_bounds: self.sheet_level_extent.get(),
             selection_bounds: doc.and_then(|d| {

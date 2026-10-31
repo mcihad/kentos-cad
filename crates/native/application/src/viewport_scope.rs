@@ -21,7 +21,7 @@ pub fn resolve(doc: &Document, scope: &SheetModelScope) -> Result<Viewport, Box<
         &book,
         &scope.sheet,
         &scope.item,
-        &doc.settings().named_views,
+        &doc.settings().drawn_views(),
     )
     .map_err(|e| fail(&e.code, e.message))
 }

@@ -50,7 +50,7 @@ fn drawn_by<'a>(
             ItemKind::Map(m) => Some(m.clone()),
             _ => None,
         });
-    let views = &doc.settings().named_views;
+    let views = &doc.settings().drawn_views();
     let recipe = map
         .as_ref()
         .and_then(|m| kentos_sheet::viewport::linked_recipe(m, views))
@@ -164,7 +164,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                 };
                 let camera = kentos_sheet::model_scope::Viewport::of_with_views(
                     item,
-                    &doc.settings().named_views,
+                    &doc.settings().drawn_views(),
                 )
                 .ok();
                 let corners: Vec<Vec2> = camera
@@ -177,7 +177,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     })
                     .unwrap_or_default();
                 let target = ViewTarget::sheet(&s.id, &item.id);
-                let views = &doc.settings().named_views;
+                let views = &doc.settings().drawn_views();
                 let linked = match &m.source {
                     kentos_sheet::viewport::Source::ViewLink { view } => Some(kentos_commands::view_key(view)),
                     _ => None,
@@ -199,7 +199,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                     scale: match &m.view {
                         MapView::Fixed(_) => kentos_sheet::viewport::effective_fixed_view(
                             item,
-                            &doc.settings().named_views,
+                            &doc.settings().drawn_views(),
                         )
                         .ok()
                         .map(|v| v.denominator()),

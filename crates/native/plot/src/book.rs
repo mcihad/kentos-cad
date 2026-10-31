@@ -82,7 +82,7 @@ pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
     let name = crs_name(settings);
     RenderInputs {
         mode: RenderMode::Export,
-        named_views: settings.named_views.clone(),
+        named_views: settings.drawn_views(),
         project: ProjectInfo {
             name: doc.name().to_owned(),
             user: user.to_owned(),
@@ -259,6 +259,8 @@ impl<'a> MapDrawer<'a> {
                     level: m.level.as_ref(),
                     phase: m.phase,
                     hidden: &m.hidden,
+                    pens: &m.pens,
+                    mono: m.mono,
                     doc: copy,
                     store: spatial.store(),
                     library: self.library,
@@ -271,6 +273,8 @@ impl<'a> MapDrawer<'a> {
                 level: m.level.as_ref(),
                 phase: m.phase,
                 hidden: &m.hidden,
+                pens: &m.pens,
+                mono: m.mono,
                 doc,
                 store: self.spatial.store(),
                 library: self.library,
@@ -291,7 +295,7 @@ impl<'a> MapDrawer<'a> {
                 &m.layers,
                 &m.layer_overrides,
                 m.level.as_ref(),
-                (m.phase, &m.hidden),
+                (m.phase, &m.hidden, &m.pens, m.mono),
                 crate::maps::project_box(Some(map), extent),
             )
             .into_iter()

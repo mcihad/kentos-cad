@@ -449,6 +449,37 @@ sheet_case("Şablon kaldırılınca görünüm aynı tarifle çizer (sürümü b
            [vrs.views_edit({"kind": "template", "name": "Özel"}),
             vrs.step(vrs.Book([{**v, "recipe": {**v["recipe"], "version": 3}} if v["name"] == "Zemin" else v for v in draw]), [4, 1])])
 
+for uids, label in [([2], "1. kat kolonu Zemin şablonlu haritada yok, Kat 1 haritasında var"),
+                    ([3], "Katsız çizgi bütün haritalarda"),
+                    ([5], "Görünümün alanının dışındaki zemin kolonu"),
+                    ([6], "Projede olmayan kattaki kolon"),
+                    ([7, 8], "Evresi olan kolonlar şablonun evresizliğiyle")]:
+    sheet_case(f"Şablonla: {label}", [vrs.step(vrs.Book(draw), uids)])
+# A second view follows the same template: both maps draw by it, each its own level.
+both = copy(SHEET_VIEWS)
+for v in both:
+    if v["name"] == "Kat 1":
+        v["recipe"] = {"version": 3, "level": {"id": "kat-1"}, "template": "t-ozel"}
+bind_kat1 = vrs.views_edit({"kind": "recipe", "name": "Kat 1", "recipe": {"level": {"id": "kat-1"}, "template": "Özel"}})
+sheet_case("İkinci görünüm aynı şablona bağlanınca iki harita da şablonla çizer", [bind_kat1, vrs.step(vrs.Book(resolved(both, SHEET_TPL)))])
+sheet_case("İki bağlı görünüm, kendi katlarının kolonlarıyla", [bind_kat1, vrs.step(vrs.Book(resolved(both, SHEET_TPL)), [1, 2])])
+two = {"version": 2, "scale": 100, "phase": "demolition"}
+sheet_case("Şablon değişince iki bağlı harita birlikte değişir",
+           [bind_kat1, tpl_edit({"scale": 100, "phase": "demolition"}), vrs.step(vrs.Book(resolved(both, two)), [1, 2, 4, 7, 8])])
+sheet_case("Şablonu yeniden adlandırmak haritaları değiştirmez",
+           [{"op": "execute", "command": "cad.views.edit", "input": {"edit": {"kind": "templateRename", "name": "Özel", "to": "Uygulama"}},
+             "result": vrs.ANY, "expect": {"revision": "changed"}},
+            vrs.step(vrs.Book(draw))])
+own = copy(SHEET_VIEWS)
+for v in own:
+    if v["name"] == "Zemin":
+        v["recipe"] = {"version": 3, "level": {"id": "zemin"}, "scale": 50}
+sheet_case("Görünüm şablonu bırakıp kendi tarifine dönünce kendi tarifiyle çizer",
+           [vrs.views_edit({"kind": "recipe", "name": "Zemin", "recipe": {"level": {"id": "zemin"}, "scale": 50}}),
+            vrs.step(vrs.Book(own), [1, 4])])
+sheet_case("Aynı tarifle şablonu yeniden yazmak haritayı değiştirmez",
+           [{**tpl_edit({"hidden": ["hatches"], "scale": 100}), "expect": {"revision": "same"}}, vrs.step(vrs.Book(draw), [4])])
+
 
 def write(path, doc, label, n):
     text = json.dumps(doc, ensure_ascii=False, indent=2) + "\n"

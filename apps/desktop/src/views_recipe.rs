@@ -1,13 +1,16 @@
 //! Görünüş tarifi (docs/adr/0774 §2): the chosen named view's recipe in the Görünümler window: its level (and the one
 //! under it faint), phase, layer state, scale, the categories it leaves out, the walls' detail and the crop to the
-//! view's area (docs/adr/0781). A sheet's map linked to the view draws
+//! view's area (docs/adr/0781), the template it follows, black and white and the categories' pen weights (docs/adr/0783).
+//! A sheet's map linked to the view draws
 //! with it; the model and the screen stay as they are. Hazır ▾ fills the draft from a preset (Uygulama planı 1:50, Mobilya
 //! planı 1:100 …), the level kept; Tarifi uygula writes it with `cad.views.edit`'s `recipe` (its version one more),
 //! Tarifi kaldır takes it away.
 
 use iced::widget::{Column, container, row};
 use iced::{Element, Fill};
-use kentos_commands::{PhaseView, RecipeLevel, ViewCategory, ViewRecipe, ViewsOp, WallDetail};
+use kentos_commands::{
+    PenCategory, PhaseView, RecipeLevel, RecipePen, ViewCategory, ViewRecipe, ViewTemplate, ViewsOp, WallDetail,
+};
 use kentos_interaction::Level;
 use kentos_ui::widget::{Choice, Select};
 
@@ -82,6 +85,13 @@ pub(crate) const DETAILS: [Option<WallDetail>; 4] = [
     Some(WallDetail::Detailed),
 ];
 
+/// The pen weights the window offers, paper millimetres (ISO 128's series); none: the objects' own.
+pub(crate) const PEN_WEIGHTS: [f64; 7] = [0.13, 0.18, 0.25, 0.35, 0.5, 0.7, 1.0];
+
+fn weight_label(w: f64) -> String {
+    format!("{w} mm")
+}
+
 fn detail_label(d: Option<WallDetail>) -> &'static str {
     match d {
         None => "Ölçeğe göre",
@@ -133,11 +143,28 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
     if r.crop {
         parts.push("kırpılmış".to_owned());
     }
+    if let Some(t) = &r.template {
+        let name = app.view_templates().iter().find(|x| &x.id == t).map_or(t.clone(), |x| x.name.clone());
+        parts.push(format!("şablon {name}"));
+    }
+    if !r.pens.is_empty() {
+        parts.push(format!("{} kalem", r.pens.len()));
+    }
+    if r.mono {
+        parts.push("siyah beyaz".to_owned());
+    }
     parts.push(format!("sürüm {}", r.version));
     parts.join(" · ")
 }
 
 impl App {
+    /// The project's view templates (docs/adr/0783 §2).
+    pub(crate) fn view_templates(&self) -> &[ViewTemplate] {
+        self.document
+            .as_ref()
+            .map_or(&[][..], |d| d.model.settings().view_templates.as_slice())
+    }
+
     /// The project's level of `id`, by its name.
     pub(crate) fn recipe_level_name(&self, id: &str) -> Option<String> {
         self.document
@@ -206,8 +233,46 @@ impl App {
                 }
                 return;
             }
+            Event::TemplateSave => {
+                let Some(w) = self.views_window.as_ref() else { return };
+                let tname = w.template_name.trim().to_owned();
+                if tname.is_empty() {
+                    self.warn("Şablona bir ad verin.");
+                    return;
+                }
+                // A template is what the view draws, its level and crop aside (docs/adr/0783 §2).
+                let r = kentos_commands::resolved_recipe(&w.recipe, self.view_templates());
+                let recipe = ViewRecipe {
+                    version: 1,
+                    level: None,
+                    crop: false,
+                    template: None,
+                    ..r
+                };
+                if recipe.is_empty() {
+                    self.warn("Tarif boş: şablon olarak kaydedilecek bir şey yok.");
+                    return;
+                }
+                if self
+                    .edit_views(ViewsOp::Template {
+                        name: tname.clone(),
+                        recipe: Some(recipe),
+                    })
+                    .is_some()
+                {
+                    self.say(
+                        Level::Success,
+                        format!("“{tname}” görünüş şablonu kaydedildi; görünümler Şablon'dan ona bağlanabilir."),
+                    );
+                    if let Some(w) = self.views_window.as_mut() {
+                        w.template_name.clear();
+                    }
+                }
+                return;
+            }
             _ => {}
         }
+        let templates: Vec<ViewTemplate> = self.view_templates().to_vec();
         let levels: Vec<String> = self
             .document
             .as_ref()
@@ -256,6 +321,47 @@ impl App {
             Event::RecipeScale(i) => r.scale = SCALES.get(i).copied().flatten(),
             Event::RecipeDetail(i) => r.detail = DETAILS.get(i).copied().flatten(),
             Event::RecipeCrop(on) => r.crop = on,
+            Event::RecipeTemplate(i) => {
+                let level = r.level.clone();
+                let (version, crop) = (r.version, r.crop);
+                match i.and_then(|i| templates.get(i)) {
+                    // Following a template: its fields come from it, the level and the crop stay the view's.
+                    Some(t) => {
+                        *r = ViewRecipe {
+                            version,
+                            level,
+                            crop,
+                            template: Some(t.id.clone()),
+                            ..ViewRecipe::default()
+                        }
+                    }
+                    // Leaving it: the template's fields stay as the view's own.
+                    None => {
+                        if let Some(t) = r.template.as_ref().and_then(|id| templates.iter().find(|t| &t.id == id)) {
+                            *r = ViewRecipe {
+                                version,
+                                level,
+                                crop,
+                                template: None,
+                                ..t.recipe.clone()
+                            };
+                        } else {
+                            r.template = None;
+                        }
+                    }
+                }
+            }
+            Event::RecipeMono(on) => r.mono = on,
+            Event::RecipePen(c, i) => {
+                let color = r.pen(c).and_then(|p| p.color.clone());
+                r.pens.retain(|p| p.of != c);
+                let weight = i.and_then(|i| PEN_WEIGHTS.get(i)).copied();
+                if weight.is_some() || color.is_some() {
+                    r.pens.push(RecipePen { of: c, weight, color });
+                    r.pens.sort_by_key(|p| p.of);
+                }
+            }
+            Event::TemplateName(name) => w.template_name = name,
             Event::RecipeHide(c, on) => {
                 r.hidden.retain(|h| *h != c);
                 if on {
@@ -359,7 +465,62 @@ impl App {
                     Some(m(Event::RecipeHide(*c, !on))),
                 ))
             })
-            .wrap();
+            .wrap().vertical_spacing(6);
+        let templates = self.view_templates();
+        let template = Select::new(
+            std::iter::once(Choice::new("Yok".to_owned()))
+                .chain(templates.iter().map(|t| Choice::new(t.name.clone()))),
+            Some(
+                r.template
+                    .as_ref()
+                    .and_then(|id| templates.iter().position(|t| &t.id == id))
+                    .map_or(0, |i| i + 1),
+            ),
+            move |i| m(Event::RecipeTemplate(i.checked_sub(1))),
+        )
+        .searchable(false);
+        let followed = r
+            .template
+            .as_ref()
+            .and_then(|id| templates.iter().find(|t| &t.id == id));
+        let mono = words::check(
+            r.mono,
+            "Siyah beyaz: çizgiler siyah, taramalar gri",
+            Some(m(Event::RecipeMono(!r.mono))),
+        );
+        let pens = PenCategory::ALL
+            .iter()
+            .fold(iced::widget::Row::new().spacing(12), |acc, c| {
+                let c = *c;
+                let at = r
+                    .pen(c)
+                    .and_then(|p| p.weight)
+                    .and_then(|w| PEN_WEIGHTS.iter().position(|x| (*x - w).abs() < 1e-9));
+                let pick = Select::new(
+                    std::iter::once(Choice::new("Kendi".to_owned()))
+                        .chain(PEN_WEIGHTS.iter().map(|w| Choice::new(weight_label(*w)))),
+                    Some(at.map_or(0, |i| i + 1)),
+                    move |i| m(Event::RecipePen(c, i.checked_sub(1))),
+                )
+                .searchable(false);
+                acc.push(
+                    container(words::field(c.label(), pick, None)).width(150),
+                )
+            })
+            .wrap().vertical_spacing(6);
+        let save = row![
+            container(kentos_ui::widget::text_field("Şablonun adı", &w.template_name)
+                .on_input(move |t| m(Event::TemplateName(t)))
+                .on_submit(m(Event::TemplateSave)))
+            .width(Fill),
+            words::secondary(
+                "Şablon olarak kaydet",
+                (editable && !r.is_empty() && !w.template_name.trim().is_empty())
+                    .then(|| m(Event::TemplateSave))
+            ),
+        ]
+        .spacing(8)
+        .align_y(iced::Center);
         let version = if r.version > 0 {
             format!(
                 "Sürüm {}. Bu görünüme bağlı pafta haritaları bu tarifle çizer; model ve ekran değişmez.",
@@ -383,27 +544,44 @@ impl App {
             |title: &'static str, e: Element<'static, Message>| -> Element<'static, Message> {
                 container(words::field(title, e, None)).width(Fill).into()
             };
-        Column::new()
+        let mut body = Column::new()
             .spacing(10)
             .push(words::field("Görünüş tarifi", preset, Some(version)))
-            .push(row![cell("Kat", level.into()), cell("Evre", phase.into())].spacing(12))
-            .push(below)
-            .push(
-                row![
-                    cell("Katman durumu", state.into()),
-                    cell("Ölçek", scale.into())
-                ]
-                .spacing(12),
-            )
-            .push(
-                row![
-                    cell("Duvar ayrıntısı", detail.into()),
-                    container(crop).width(Fill).padding([22, 0])
-                ]
-                .spacing(12),
-            )
-            .push(words::field("Gizlenen türler", hide, None))
-            .push(actions)
-            .into()
+            .push(row![cell("Şablon", template.into()), cell("Kat", level.into())].spacing(12))
+            .push(below);
+        match followed {
+            // Following a template: the level and the crop are the view's, the rest the template's (docs/adr/0783 §2).
+            Some(t) => {
+                body = body
+                    .push(container(crop).width(Fill))
+                    .push(words::field(
+                        "Şablondan",
+                        kentos_ui::label::muted(recipe_caption(self, &t.recipe)),
+                        Some("Evre, katman durumu, ölçek, ayrıntı, gizlenenler ve kalemler şablondan gelir; şablon değişince bağlı paftalar da değişir.".to_owned()),
+                    ));
+            }
+            None => {
+                body = body
+                    .push(
+                        row![
+                            cell("Evre", phase.into()),
+                            cell("Katman durumu", state.into()),
+                            cell("Ölçek", scale.into())
+                        ]
+                        .spacing(12),
+                    )
+                    .push(
+                        row![
+                            cell("Duvar ayrıntısı", detail.into()),
+                            container(crop).width(Fill).padding([22, 0])
+                        ]
+                        .spacing(12),
+                    )
+                    .push(words::field("Gizlenen türler", hide, None))
+                    .push(mono)
+                    .push(words::field("Kalem kalınlıkları (kâğıtta)", pens, None));
+            }
+        }
+        body.push(actions).push(save).into()
     }
 }

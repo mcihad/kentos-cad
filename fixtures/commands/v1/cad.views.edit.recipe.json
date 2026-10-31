@@ -3172,7 +3172,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_recipe",
-              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin. Tarifi düzeltip yeniden verin.",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin. Tarifi düzeltip yeniden verin.",
               "path": "edit.recipe"
             }
           },
@@ -4206,7 +4206,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_recipe",
-              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin. Tarifi düzeltip yeniden verin.",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin. Tarifi düzeltip yeniden verin.",
               "path": "edit.recipe"
             }
           },
@@ -4619,7 +4619,7 @@
             "status": "failed",
             "error": {
               "code": "invalid_recipe",
-              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin. Tarifi düzeltip yeniden verin.",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin. Tarifi düzeltip yeniden verin.",
               "path": "edit.recipe"
             }
           },

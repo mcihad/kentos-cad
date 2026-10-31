@@ -34,6 +34,7 @@ import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { TopologySettings } from "./TopologySettings";
 import type { Ucs } from "./Ucs";
+import type { ViewTemplate } from "./ViewTemplate";
 import type { WallStyleDef } from "./WallStyleDef";
 import type { Workspace } from "./Workspace";
 
@@ -185,6 +186,10 @@ namedUcs?: Array<NamedUcs>,
  * The project's named views, in the order they were kept (docs/adr/0285 §1).
  */
 namedViews?: Array<NamedView>, 
+/**
+ * The project's view templates, in the order they were kept (docs/adr/0783 §2).
+ */
+viewTemplates?: Array<ViewTemplate>, 
 /**
  * The project's forms, in the order they were made (docs/adr/0401).
  */

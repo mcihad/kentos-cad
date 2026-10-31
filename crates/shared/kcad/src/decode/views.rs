@@ -3,7 +3,7 @@
 //! the contract's rule (`views_problem`), as the writers check them; an
 //! empty list is refused (a writer leaves it out).
 
-use kentos_contracts::{NamedView, ViewRecipe, views_problem};
+use kentos_contracts::{NamedView, ViewRecipe, ViewTemplate, views_problem};
 
 use super::{list, map, point, required, text, unknown};
 use crate::cbor::Reader;
@@ -18,6 +18,7 @@ pub(super) fn named_views(
     ids: bool,
     recipes: bool,
     detail: bool,
+    templates: bool,
 ) -> Result<Vec<NamedView>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
@@ -65,6 +66,13 @@ pub(super) fn named_views(
                             "görünüş tarifinin duvar ayrıntısı ve kırpması şema 143'ten beri yazılır",
                         ));
                     }
+                    if !templates && (!read.pens.is_empty() || read.mono || read.template.is_some()) {
+                        return Err(r.fail_at(
+                            Code::UnknownField,
+                            at,
+                            "görünüş tarifinin kalemleri, siyah beyazı ve şablonu şema 146'dan beri yazılır",
+                        ));
+                    }
                     recipe = Some(read);
                 }
                 _ => return Err(unknown(r)),
@@ -89,4 +97,35 @@ pub(super) fn named_views(
         return Err(r.fail_at(Code::BadValue, at, &problem));
     }
     Ok(all)
+}
+
+/// Schema 146 (docs/adr/0783 §2): the project's view templates, the contract's JSON as the writer writes it (no field at
+/// its default), not empty, checked by the contract's rule on their own (the views' templates are checked with the
+/// settings).
+pub(super) fn view_templates(r: &mut Reader<'_>) -> Result<Vec<ViewTemplate>, KcadError> {
+    let at = r.position();
+    let value = r.opaque()?;
+    let read: Vec<ViewTemplate> = serde_json::from_value(value.clone()).map_err(|e| {
+        let words = e.to_string();
+        let code = if words.contains("unknown field") || words.contains("unknown variant") {
+            Code::UnknownField
+        } else {
+            Code::BadValue
+        };
+        r.fail_at(code, at, &format!("görünüş şablonları okunamadı: {words}"))
+    })?;
+    if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "görünüş şablonları yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+        ));
+    }
+    if read.is_empty() {
+        return Err(r.fail_at(Code::BadValue, at, "boş görünüş şablonu listesi yazılmaz"));
+    }
+    if let Some(problem) = kentos_contracts::templates_problem(&read, &[]) {
+        return Err(r.fail_at(Code::BadValue, at, &problem));
+    }
+    Ok(read)
 }

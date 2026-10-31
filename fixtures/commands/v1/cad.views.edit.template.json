@@ -1,0 +1,7055 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.views.edit",
+  "commandVersion": 1,
+  "title": "Görünüş şablonu ve kalem seti (ADR 0783)",
+  "note": "Kural ve beklenenler scripts/fixtures/view_template_cases.py'de ADR 0783'ten, KentOS kodu olmadan yazılmıştır.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Görünüş şablonu",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 100,
+      "workspace": "cad",
+      "drawingFont": "barlow",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      },
+      "layerStates": [
+        {
+          "id": "s1",
+          "name": "Sunum",
+          "nodes": [
+            {
+              "node": "duvar",
+              "visible": true,
+              "style": {
+                "color": "ink",
+                "lineType": "continuous",
+                "lineWeight": 0.25
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "duvar",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487008,
+            "y": 4420000
+          },
+          {
+            "x": 487008,
+            "y": 4420006
+          },
+          {
+            "x": 487000,
+            "y": 4420006
+          }
+        ]
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Şablon kaydedilir: kimliği adından, sürümü 1",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Uygulama 1:50",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-86015804",
+                  "name": "Uygulama 1:50",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-86015804",
+                "name": "Uygulama 1:50",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-86015804",
+                  "name": "Uygulama 1:50",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablon değişir: sürüm 2, kimlik kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Uygulama 1:50",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-86015804",
+                  "name": "Uygulama 1:50",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-86015804",
+                "name": "Uygulama 1:50",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-86015804",
+                  "name": "Uygulama 1:50",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Uygulama 1:50",
+              "recipe": {
+                "scale": 20,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-86015804",
+                  "name": "Uygulama 1:50",
+                  "recipe": {
+                    "version": 2,
+                    "scale": 20,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-86015804",
+                "name": "Uygulama 1:50",
+                "recipe": {
+                  "version": 2,
+                  "scale": 20,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-86015804",
+                  "name": "Uygulama 1:50",
+                  "recipe": {
+                    "version": 2,
+                    "scale": 20,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı şablon yeniden: değişiklik yok, sürüm kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "A",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-c40bf6cc",
+                "name": "A",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "A",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-c40bf6cc",
+                "name": "A",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": false,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Görünüm şablona bağlanır: kat görünümün, öbürü şablonun",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "Zemin",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Zemin",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Uygulama",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-5c06606e",
+                  "name": "Uygulama",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-5c06606e",
+                "name": "Uygulama",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-5c06606e",
+                  "name": "Uygulama",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "Zemin",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "template": "t-5c06606e"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-0077f634",
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-5c06606e"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-5c06606e",
+                  "name": "Uygulama",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-0077f634",
+                "name": "Zemin",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "template": "t-5c06606e"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-0077f634",
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-5c06606e"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-5c06606e",
+                  "name": "Uygulama",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablon adıyla verilir, kimliğiyle tutulur",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "Zemin",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Zemin",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Mobilya",
+              "recipe": {
+                "scale": 100,
+                "hidden": [
+                  "dimensions",
+                  "tags"
+                ],
+                "mono": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-7a6223a6",
+                  "name": "Mobilya",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-7a6223a6",
+                "name": "Mobilya",
+                "recipe": {
+                  "version": 1,
+                  "hidden": [
+                    "dimensions",
+                    "tags"
+                  ],
+                  "scale": 100,
+                  "mono": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-7a6223a6",
+                  "name": "Mobilya",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "Zemin",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "template": "Mobilya"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-0077f634",
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-7a6223a6"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-7a6223a6",
+                  "name": "Mobilya",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-0077f634",
+                "name": "Zemin",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "template": "t-7a6223a6"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-0077f634",
+                  "name": "Zemin",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-7a6223a6"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-7a6223a6",
+                  "name": "Mobilya",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablona bağlı tarifte kırpma da görünümündür",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "Banyo",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Banyo",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "Banyo",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Banyo",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Detay",
+              "recipe": {
+                "scale": 20,
+                "detail": "detailed"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "Banyo",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-89ddc460",
+                  "name": "Detay",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 20,
+                    "detail": "detailed"
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-89ddc460",
+                "name": "Detay",
+                "recipe": {
+                  "version": 1,
+                  "scale": 20,
+                  "detail": "detailed"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "Banyo",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-89ddc460",
+                  "name": "Detay",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 20,
+                    "detail": "detailed"
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "Banyo",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "crop": true,
+                "template": "Detay"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-76006046",
+                  "name": "Banyo",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "crop": true,
+                    "template": "t-89ddc460"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-89ddc460",
+                  "name": "Detay",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 20,
+                    "detail": "detailed"
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-76006046",
+                "name": "Banyo",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "crop": true,
+                  "template": "t-89ddc460"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-76006046",
+                  "name": "Banyo",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "crop": true,
+                    "template": "t-89ddc460"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-89ddc460",
+                  "name": "Detay",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 20,
+                    "detail": "detailed"
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız şablon: katsız bağlı tarif",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Sunum",
+              "recipe": {
+                "layerState": "Sunum",
+                "mono": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-fd862c63",
+                  "name": "Sunum",
+                  "recipe": {
+                    "version": 1,
+                    "layerState": "Sunum",
+                    "mono": true
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-fd862c63",
+                "name": "Sunum",
+                "recipe": {
+                  "version": 1,
+                  "layerState": "Sunum",
+                  "mono": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-fd862c63",
+                  "name": "Sunum",
+                  "recipe": {
+                    "version": 1,
+                    "layerState": "Sunum",
+                    "mono": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "template": "Sunum"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-fd862c63"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-fd862c63",
+                  "name": "Sunum",
+                  "recipe": {
+                    "version": 1,
+                    "layerState": "Sunum",
+                    "mono": true
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "template": "t-fd862c63"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-fd862c63"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-fd862c63",
+                  "name": "Sunum",
+                  "recipe": {
+                    "version": 1,
+                    "layerState": "Sunum",
+                    "mono": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablonun değişmesi görünümün tarifini değiştirmez: sürümü kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "T",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "template": "T"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "template": "t-d10c0b43"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 100,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 2,
+                    "scale": 100,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "T",
+                "recipe": {
+                  "version": 2,
+                  "scale": 100,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 2,
+                    "scale": 100,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablon kaldırılınca bağlı görünümler tarifini kendi tarifi olarak tutar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "B",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "B",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "C",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "C",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "T",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "template": "T"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "zemin"
+                  },
+                  "template": "t-d10c0b43"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "B",
+              "recipe": {
+                "level": {
+                  "id": "kat-1",
+                  "below": true
+                },
+                "crop": true,
+                "template": "T"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "id": "v-c70bfb85",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "kat-1",
+                      "below": true
+                    },
+                    "crop": true,
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c70bfb85",
+                "name": "B",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "level": {
+                    "id": "kat-1",
+                    "below": true
+                  },
+                  "crop": true,
+                  "template": "t-d10c0b43"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "id": "v-c70bfb85",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "kat-1",
+                      "below": true
+                    },
+                    "crop": true,
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "C",
+              "recipe": {
+                "scale": 200
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "id": "v-c70bfb85",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "kat-1",
+                      "below": true
+                    },
+                    "crop": true,
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "id": "v-c60bf9f2",
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "scale": 200
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c60bf9f2",
+                "name": "C",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "scale": 200
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "id": "v-c70bfb85",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "level": {
+                      "id": "kat-1",
+                      "below": true
+                    },
+                    "crop": true,
+                    "template": "t-d10c0b43"
+                  }
+                },
+                {
+                  "id": "v-c60bf9f2",
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "scale": 200
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "v-c70bfb85",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "kat-1",
+                      "below": true
+                    },
+                    "scale": 50,
+                    "detail": "detailed",
+                    "crop": true,
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "v-c60bf9f2",
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "scale": 200
+                  }
+                }
+              ],
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "template_detached",
+                "message": "Şablon kaldırıldı; “A”, “B” görünümü tarifini kendi tarifi olarak tutar.",
+                "path": "edit.name"
+              }
+            ]
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "zemin"
+                    },
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "v-c70bfb85",
+                  "name": "B",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 2,
+                    "level": {
+                      "id": "kat-1",
+                      "below": true
+                    },
+                    "scale": 50,
+                    "detail": "detailed",
+                    "crop": true,
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "v-c60bf9f2",
+                  "name": "C",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "scale": 200
+                  }
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağlısı olmayan şablon kaldırılır: uyarısız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "T",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablon yeniden adlandırılır, kimliği ve bağlar kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "T",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "template": "T"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "template": "t-d10c0b43"
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "templateRename",
+              "name": "T",
+              "to": "Uygulama"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "Uygulama",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "Uygulama",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "template": "t-d10c0b43"
+                  }
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "Uygulama",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaldırılan adın kimliği alınmışken yeni şablon sonraki kimliği alır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "T",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "templateRename",
+              "name": "T",
+              "to": "U"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "U",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "U",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "U",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 100,
+                "hidden": [
+                  "dimensions",
+                  "tags"
+                ],
+                "mono": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "U",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "t-d10c0b43-2",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43-2",
+                "name": "T",
+                "recipe": {
+                  "version": 1,
+                  "hidden": [
+                    "dimensions",
+                    "tags"
+                  ],
+                  "scale": 100,
+                  "mono": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "U",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "t-d10c0b43-2",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalemler ve siyah beyaz görünümün kendi tarifinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "scale": 100,
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.7,
+                    "color": "#202020"
+                  },
+                  {
+                    "of": "others",
+                    "color": "#808080"
+                  }
+                ],
+                "mono": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "scale": 100,
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.7,
+                        "color": "#202020"
+                      },
+                      {
+                        "of": "others",
+                        "color": "#808080"
+                      }
+                    ],
+                    "mono": true
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "scale": 100,
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.7,
+                      "color": "#202020"
+                    },
+                    {
+                      "of": "others",
+                      "color": "#808080"
+                    }
+                  ],
+                  "mono": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "scale": 100,
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.7,
+                        "color": "#202020"
+                      },
+                      {
+                        "of": "others",
+                        "color": "#808080"
+                      }
+                    ],
+                    "mono": true
+                  }
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalem kalınlık sınırları: 0 ve 5 mm kabul",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0
+                  },
+                  {
+                    "of": "openings",
+                    "weight": 5
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0
+                      },
+                      {
+                        "of": "openings",
+                        "weight": 5
+                      }
+                    ]
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0
+                    },
+                    {
+                      "of": "openings",
+                      "weight": 5
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0
+                      },
+                      {
+                        "of": "openings",
+                        "weight": 5
+                      }
+                    ]
+                  }
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yalnız siyah beyaz tarif",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "mono": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "mono": true
+                  }
+                }
+              ],
+              "view": {
+                "id": "v-c40bf6cc",
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0,
+                "recipe": {
+                  "version": 1,
+                  "mono": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "id": "v-c40bf6cc",
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0,
+                  "recipe": {
+                    "version": 1,
+                    "mono": true
+                  }
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Siyah beyaz false yazılmaz: boş tarif",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "mono": false
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin. Tarifi düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı kalem iki kez reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "walls",
+                    "weight": 0.3
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "“Duvarlar” kalemlerde iki kez var. Tarifi düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalınlığı ve rengi olmayan kalem reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "pens": [
+                  {
+                    "of": "texts"
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "“Yazılar” kaleminin kalınlığı ya da rengi olmalı. Tarifi düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalem kalınlığı 5 mm'den büyük reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 5.5
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Kalemin kalınlığı 0 ile 5 mm arasında olur. Tarifi düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kalemin rengi #rrggbb değilse reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "pens": [
+                  {
+                    "of": "walls",
+                    "color": "kırmızı"
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Kalemin rengi #rrggbb biçiminde olur. Tarifi düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablonda kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "level": {
+                  "id": "zemin"
+                },
+                "scale": 50
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Görünüş şablonu kat, kırpma ya da başka şablon taşımaz: bunlar görünümündür. Şablonu düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablonda kırpma reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 50,
+                "crop": true
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Görünüş şablonu kat, kırpma ya da başka şablon taşımaz: bunlar görünümündür. Şablonu düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Boş şablon reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {}
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin. Şablonu düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Şablona bağlı tarifte ölçek reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "T",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "templates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-d10c0b43",
+                "name": "T",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": [
+                {
+                  "id": "t-d10c0b43",
+                  "name": "T",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "template": "T",
+                "scale": 100
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_recipe",
+              "message": "Şablona bağlı tarifte yalnız kat ve kırpma görünümündür; öbürleri şablondan gelir. Tarifi düzeltip yeniden verin.",
+              "path": "edit.recipe"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan şablona bağlanmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "save",
+              "name": "A",
+              "center": {
+                "x": 487004,
+                "y": 4420003
+              },
+              "width": 10.0,
+              "height": 8.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "view": {
+                "name": "A",
+                "center": {
+                  "x": 487004,
+                  "y": 4420003
+                },
+                "width": 10.0,
+                "height": 8.0,
+                "twist": 0.0
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": [
+                {
+                  "name": "A",
+                  "center": {
+                    "x": 487004,
+                    "y": 4420003
+                  },
+                  "width": 10.0,
+                  "height": 8.0,
+                  "twist": 0.0
+                }
+              ],
+              "viewTemplates": null
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "recipe",
+              "name": "A",
+              "recipe": {
+                "template": "Yok"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_template",
+              "message": "“Yok” adlı ya da kimlikli bir görünüş şablonu yok. Görünümler › Şablonlar'dan birini seçin ya da önce şablonu kaydedin.",
+              "path": "edit.recipe.template"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan şablonu kaldırmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Yok"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_template",
+              "message": "“Yok” adlı ya da kimlikli bir görünüş şablonu yok. Görünümler › Şablonlar'dan birini seçin ya da önce şablonu kaydedin.",
+              "path": "edit.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan şablonu yeniden adlandırmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "templateRename",
+              "name": "Yok",
+              "to": "Var"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "unknown_template",
+              "message": "“Yok” adlı ya da kimlikli bir görünüş şablonu yok. Görünümler › Şablonlar'dan birini seçin ya da önce şablonu kaydedin.",
+              "path": "edit.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başka şablonun adına yeniden adlandırmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "A",
+              "recipe": {
+                "scale": 50,
+                "detail": "detailed",
+                "pens": [
+                  {
+                    "of": "walls",
+                    "weight": 0.5
+                  },
+                  {
+                    "of": "dimensions",
+                    "weight": 0.13
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-c40bf6cc",
+                "name": "A",
+                "recipe": {
+                  "version": 1,
+                  "scale": 50,
+                  "detail": "detailed",
+                  "pens": [
+                    {
+                      "of": "walls",
+                      "weight": 0.5
+                    },
+                    {
+                      "of": "dimensions",
+                      "weight": 0.13
+                    }
+                  ]
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "B",
+              "recipe": {
+                "scale": 100,
+                "hidden": [
+                  "dimensions",
+                  "tags"
+                ],
+                "mono": true
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "views": [],
+              "templates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "t-c70bfb85",
+                  "name": "B",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ],
+              "template": {
+                "id": "t-c70bfb85",
+                "name": "B",
+                "recipe": {
+                  "version": 1,
+                  "hidden": [
+                    "dimensions",
+                    "tags"
+                  ],
+                  "scale": 100,
+                  "mono": true
+                }
+              },
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "settings": {
+              "namedViews": null,
+              "viewTemplates": [
+                {
+                  "id": "t-c40bf6cc",
+                  "name": "A",
+                  "recipe": {
+                    "version": 1,
+                    "scale": 50,
+                    "detail": "detailed",
+                    "pens": [
+                      {
+                        "of": "walls",
+                        "weight": 0.5
+                      },
+                      {
+                        "of": "dimensions",
+                        "weight": 0.13
+                      }
+                    ]
+                  }
+                },
+                {
+                  "id": "t-c70bfb85",
+                  "name": "B",
+                  "recipe": {
+                    "version": 1,
+                    "hidden": [
+                      "dimensions",
+                      "tags"
+                    ],
+                    "scale": 100,
+                    "mono": true
+                  }
+                }
+              ]
+            },
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "templateRename",
+              "name": "A",
+              "to": "B"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "template_exists",
+              "message": "“B” adlı başka bir görünüş şablonu var. Başka bir ad yazın ya da önce onu kaldırın.",
+              "path": "edit.to"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Elli birinci şablon reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş00",
+              "recipe": {
+                "scale": 100
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş01",
+              "recipe": {
+                "scale": 101
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş02",
+              "recipe": {
+                "scale": 102
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş03",
+              "recipe": {
+                "scale": 103
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş04",
+              "recipe": {
+                "scale": 104
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş05",
+              "recipe": {
+                "scale": 105
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş06",
+              "recipe": {
+                "scale": 106
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş07",
+              "recipe": {
+                "scale": 107
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş08",
+              "recipe": {
+                "scale": 108
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş09",
+              "recipe": {
+                "scale": 109
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş10",
+              "recipe": {
+                "scale": 110
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş11",
+              "recipe": {
+                "scale": 111
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş12",
+              "recipe": {
+                "scale": 112
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş13",
+              "recipe": {
+                "scale": 113
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş14",
+              "recipe": {
+                "scale": 114
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş15",
+              "recipe": {
+                "scale": 115
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş16",
+              "recipe": {
+                "scale": 116
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş17",
+              "recipe": {
+                "scale": 117
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş18",
+              "recipe": {
+                "scale": 118
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş19",
+              "recipe": {
+                "scale": 119
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş20",
+              "recipe": {
+                "scale": 120
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş21",
+              "recipe": {
+                "scale": 121
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş22",
+              "recipe": {
+                "scale": 122
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş23",
+              "recipe": {
+                "scale": 123
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş24",
+              "recipe": {
+                "scale": 124
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş25",
+              "recipe": {
+                "scale": 125
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş26",
+              "recipe": {
+                "scale": 126
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş27",
+              "recipe": {
+                "scale": 127
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş28",
+              "recipe": {
+                "scale": 128
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş29",
+              "recipe": {
+                "scale": 129
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş30",
+              "recipe": {
+                "scale": 130
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş31",
+              "recipe": {
+                "scale": 131
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş32",
+              "recipe": {
+                "scale": 132
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş33",
+              "recipe": {
+                "scale": 133
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş34",
+              "recipe": {
+                "scale": 134
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş35",
+              "recipe": {
+                "scale": 135
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş36",
+              "recipe": {
+                "scale": 136
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş37",
+              "recipe": {
+                "scale": 137
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş38",
+              "recipe": {
+                "scale": 138
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş39",
+              "recipe": {
+                "scale": 139
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş40",
+              "recipe": {
+                "scale": 140
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş41",
+              "recipe": {
+                "scale": 141
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş42",
+              "recipe": {
+                "scale": 142
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş43",
+              "recipe": {
+                "scale": 143
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş44",
+              "recipe": {
+                "scale": 144
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş45",
+              "recipe": {
+                "scale": 145
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş46",
+              "recipe": {
+                "scale": 146
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş47",
+              "recipe": {
+                "scale": 147
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş48",
+              "recipe": {
+                "scale": 148
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Ş49",
+              "recipe": {
+                "scale": 149
+              }
+            }
+          },
+          "result": "$any",
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "template",
+              "name": "Fazla",
+              "recipe": {
+                "scale": 50
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "too_many_templates",
+              "message": "Projede en çok 50 görünüş şablonu olur. Kullanmadığınız birini kaldırın ya da var olanın üzerine kaydedin.",
+              "path": "edit.name"
+            }
+          },
+          "expect": {
+            "ids": [
+              1
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

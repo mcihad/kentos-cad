@@ -504,6 +504,7 @@ impl<'d> Encoder<'d> {
             + usize::from(s.ucs.is_some())
             + usize::from(!s.named_ucs.is_empty())
             + usize::from(!s.named_views.is_empty())
+            + usize::from(!s.view_templates.is_empty())
             + usize::from(!s.forms.is_empty())
             + usize::from(!s.domains.is_empty())
             + usize::from(!s.relations.is_empty())
@@ -845,6 +846,17 @@ impl<'d> Encoder<'d> {
                     ));
                 }
                 e.float(scale)
+            })?;
+        }
+        // Schema 146 (docs/adr/0783 §2): the project's view templates, as their JSON; "viewTemplates" sorts after
+        // "lineTypeScale".
+        if !s.view_templates.is_empty() {
+            self.key("viewTemplates");
+            self.at(Seg::Name("viewTemplates"), |e| {
+                if let Some(problem) = kentos_contracts::templates_problem(&s.view_templates, &s.named_views) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                e.json(&serde_json::to_value(&s.view_templates).unwrap_or_default())
             })?;
         }
         self.key("lengthDecimals");
@@ -2077,6 +2089,14 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 146 (docs/adr/0783): view templates, a recipe's pens, black and white or template.
+    if !doc.settings.view_templates.is_empty()
+        || doc.settings.named_views.iter().any(|v| {
+            v.recipe.as_ref().is_some_and(|r| !r.pens.is_empty() || r.mono || r.template.is_some())
+        })
+    {
+        return crate::SCHEMA_WITH_VIEW_TEMPLATES;
+    }
     // Schema 145 (docs/adr/0779): a module instance's building-program group.
     if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_units(&a.modules)) {
         return crate::SCHEMA_WITH_MODULE_UNITS;

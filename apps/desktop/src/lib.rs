@@ -558,6 +558,8 @@ mod view_recipe_scenes;
 #[cfg(test)]
 mod view_detail_scenes;
 #[cfg(test)]
+mod view_template_scenes;
+#[cfg(test)]
 mod navigator_scenes;
 #[cfg(test)]
 mod space_scenes;

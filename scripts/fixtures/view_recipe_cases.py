@@ -72,7 +72,7 @@ def failed(code, message, path):
 def problem(r):
     """The recipe's own rule (no project): the words of the first thing wrong, or none."""
     if not any(k in r for k in ("level", "phase", "layerState", "scale", "detail")) and not r.get("hidden") and not r.get("crop"):
-        return "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı ya da kırpmadan birini verin."
+        return "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin."
     lvl = r.get("level")
     if lvl is not None and not lvl["id"].strip():
         return "Görünüş tarifinin katı bir kat kimliği olmalı."

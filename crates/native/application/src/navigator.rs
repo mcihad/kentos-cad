@@ -68,7 +68,7 @@ pub(crate) fn read(doc: &Document, input: &NavigatorRead) -> Result<NavigatorRea
     let by_uid = |u: &str| Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
     let levels_of = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
     let known = |id: &str| levels_of.iter().any(|l| l.id == id);
-    let views = &doc.settings().named_views;
+    let views = &doc.settings().drawn_views();
 
     // The objects on each level, and those on none (or on a level the project no longer has).
     let mut counts = vec![0u32; levels_of.len()];

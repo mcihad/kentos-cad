@@ -96,6 +96,7 @@ fn opened(n: usize) -> Opened {
         coordinate_epoch: None,
         named_ucs: Vec::new(),
         named_views: Vec::new(),
+        view_templates: Vec::new(),
         forms: Vec::new(),
         relations: Vec::new(),
         join_views: Vec::new(),
