@@ -51,6 +51,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çıkar; `arch.moduleAddMembers`, `arch.moduleRemoveMembers`; Modül yerleştir'de Bölüm. 52 + 22 ortak durum
   (`module_flats_cases.py`). Tasarım seçeneği, çok katlı tek modül açık; gerçek pencerede elle denenmedi.
 
+- **Tasarım değişikliği yalnız ulaştığını okur (31 Ekim 2026; [ADR 0782](docs/adr/0782-design-change-reads-only-what-it-reaches.md), ADV-07 [~]).**
+  Bağlı döşemenin sınırı katın bütün duvarlarından değil, tohumu çevreleyen duvar parçalarından (erim kutuları 1 m'den
+  yakın duvarlar bir parça; tohumu tutan, onlara değen ve ilk duvarın parçası) bulunur, bindirmenin başlangıcı aynı
+  kaldığından sonuç bit bit aynı (`kentos_domain::wall_pieces`, `slab_from_every_wall`); yerleri dışında aynı çizelgeler
+  adımda bir kez çıkarılır (`follow_tables`'ın `alike_but_placed`'i). 100 dairede Mesafe 1 151 → 38,7 ms, öznitelik
+  544 → 14,8 ms, değişiklikte bellek +%4,4 (binanın iki çizelgesiyle); her dairenin çizelgeleriyle (200) komut 81,5 ms,
+  karenin 340 ms'si ve belleği yazı katmanının bütün görünümü yeniden kurmasıdır (açık). Rastgele 48 düzenlemede parça
+  ile bütün kat aynı (`flat_pieces`).
+
 - **2+1 dairenin ölçülen kalite kabulü (31 Ekim 2026; [ADR 0776](docs/adr/0776-measured-quality-acceptance-of-an-apartment.md), ADV-07 [~]).**
   Aynı daire üç yoldan: masaüstünde gerçek klavye ve fare olaylarıyla iz (`acceptance-flat.json`, 167 adım, üç çeşit;
   oynatıcıya `clickNumber`: seçili duvarın geçici ölçüsüne tıklar), bölüm bölüm tık/tuş/değer/odak/kurtarma ölçüsü
@@ -2795,6 +2804,7 @@ cargo test -p kentos-launcher; ./target/debug/kentos-launcher snapshot .run/shot
 cargo build -p kentos-desktop && python3 scripts/desktop/module_links.py target/debug   # tek program, modül adları ona bağlantı (ADR 0801, 0802 §1; release'te target/release); cargo test -p kentos-desktop --lib module modüllerin komutları ve yüzeyleri; KENTOS_SHOTS_ONLY=… cargo test -p kentos-desktop --lib module_screens -- --ignored --nocapture modül resimleri, .run/shots/moduller-*
 python3 scripts/fixtures/acceptance_flat.py --check; .run/py/bin/python -m unittest python/tests/test_acceptance_flat.py; cargo test -p kentos-mcp --test acceptance_flat; cargo test -p kentos-desktop --lib acceptance_flat quality_scenes; KENTOS_TRACES_ONLY=acceptance-flat cargo test -p kentos-desktop --lib every_trace_passes   # 2+1 dairenin kabulü: 27 adımlık anlamsal akış Python, MCP ve masaüstünde (KENTOS_ACCEPTANCE_OUT=dizin ile üç çizim, `acceptance_flat.py --compare dizin` bağımsız okur), 167 adımlık iz üç çeşitte, büyük koordinat ve ölçek testleri (ADR 0776)
 python3 scripts/acceptance/trace_metrics.py fixtures/interaction/v1/acceptance-flat.json --markdown; cargo test --release -p kentos-desktop --lib perf::flat -- --ignored --nocapture --test-threads=1   # izin bölüm bölüm ölçüsü; 1, 20, 100 dairede kare, önizleme, seçme, değişiklik, Metraj ve bellek (KENTOS_PERF_PARTS=1 değişikliğin parçaları; ADR 0776)
+cargo test -p kentos-headless --test headless flat_pieces; cargo test --release -p kentos-headless --test headless flat_timing -- --ignored --nocapture   # tasarım değişikliğinin parçaları bütün katla bit bit aynı (rastgele 48 düzenleme) ve 1, 20, 100 dairede penceresiz süre ve bellek (KENTOS_PERF_SCHEDULES=each her dairenin çizelgeleri; ADR 0782)
 KENTOS_SHOTS_ONLY=kalite-ayrinti-1mm,kalite-ayrinti-1mm-ince,kalite-ayrinti-1-5,kalite-ayrinti-1-1,kalite-1-100,kalite-1-50,kalite-1-20,kalite-bilesen-1-20 cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture; ./target/debug/kentos-cad kullan acceptance-flat   # regresyon resimleri .run/shots/arac-kalite-*, izin resimleri .run/shots/kullanim/masaustu-acceptance-flat-* (ADR 0776)
 pnpm inventory           # web özellik envanteri: docs/inventory/web.{json,md}
 pnpm inventory:check     # envanter güncel değilse düşer

@@ -2969,3 +2969,9 @@ fn explicit_selection_is_atomic_and_never_an_edit() {
     let _ = s.run("cad.entities.delete", None, Op::Execute, json!({"uids":[uid]})).expect("delete");
     assert!(s.selection().is_empty());
 }
+
+#[path = "headless/flat_timing.rs"]
+mod flat_timing;
+
+#[path = "headless/flat_pieces.rs"]
+mod flat_pieces;

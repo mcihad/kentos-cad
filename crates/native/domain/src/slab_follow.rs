@@ -100,11 +100,24 @@ impl Document {
     /// wall when it has none): with `room` the room round it to their inner faces (with its holes), else the outermost
     /// outline of their line work round it to their outer faces. None when they enclose nothing round it.
     pub fn slab_from_walls(&self, seed: Vec2, level: Option<&str>, room: bool) -> Option<SpacePart> {
+        // Only the pieces of wall work round the seed (docs/adr/0782 §2): the same answer, to the bit.
+        match crate::wall_pieces::walls_round(self, seed, level) {
+            Some(walls) => Self::slab_among(&walls, seed, room),
+            None => self.slab_from_every_wall(seed, level, room),
+        }
+    }
+
+    /// [`Self::slab_from_walls`] read among every wall of the level (what the pieces must answer alike).
+    pub fn slab_from_every_wall(&self, seed: Vec2, level: Option<&str>, room: bool) -> Option<SpacePart> {
         let walls: Vec<crate::space_follow::CoreWall> = self
             .entities()
             .filter(|e| crate::space_follow::takes_level(e, level))
             .filter_map(crate::space_follow::core_wall)
             .collect();
+        Self::slab_among(&walls, seed, room)
+    }
+
+    fn slab_among(walls: &[crate::space_follow::CoreWall], seed: Vec2, room: bool) -> Option<SpacePart> {
         let ins: Vec<WallIn<'_>> = walls
             .iter()
             .map(|w| WallIn {

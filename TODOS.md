@@ -75,6 +75,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `cad.modules.query`'nin `drifted` ve `unit`'i web'in işleyicilerinde; Oda modülleri penceresinin Seçimi örneğe ekle,
   Seçimi modülden çıkar ve Katları tekrarla bölümü, Öznitelikler'in Kaynakla satırı, Modül yerleştir'in Bölüm ayarı;
   KCAD şema 145'ün okunması ve yazılması (`module-units.kcad`).
+- ADV-07b (ADR 0782): web'in belgesinde bağlı döşemenin parça okuması ve aynı çizelgelerin bir kez çıkarılması
+  (`slab_follow`, `table_cells`'in karşılıkları).
 - ADR 0781 (ADV-06): web'de tarifin Duvar ayrıntısı ve Alanına kırp seçimleri, web'in pafta haritasının `wallDetail`'i ve kırpması.
 - ADR 0778 (ADV-06): web'de `cad.navigator.read`'in işleyicisi ve Gezgin paneli (katlar, görünümler, paftalar, çizelgeler, seçili nesnenin yerleri; satırların eylemleri).
 - ADR 0774 (ADV-06): web'de adlı görünümün `recipe`'i (`.kcad` şema 141, `FORMATS_VERSION` 101), `cad.views.edit`'in `recipe`

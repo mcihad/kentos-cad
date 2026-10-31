@@ -11,7 +11,9 @@
 //! ```
 //!
 //! `KENTOS_PERF_FLATS` (comma separated) changes the counts; `KENTOS_PERF_OUT` writes
-//! `flat-desktop-<date>.json` there.
+//! `flat-desktop-<date>.json` there. `KENTOS_PERF_SCHEDULES=each` copies the flat's two schedules with it (200 at 100
+//! flats, as docs/adr/0776 measured); otherwise the building keeps its two, reading every flat (docs/adr/0782).
+//! The memory's peak during the design changes is the most `ps` saw, read every 5 ms on a thread.
 
 use std::collections::BTreeMap;
 use std::time::Instant;
@@ -55,21 +57,45 @@ fn click(at: Point) -> [Event; 3] {
     ]
 }
 
-fn uids(app: &App) -> Vec<String> {
+fn uids(app: &App, tables: bool) -> Vec<String> {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    doc.entities_with_uids().map(|(u, _)| u.to_string()).collect()
+    doc.entities_with_uids()
+        .filter(|(_, e)| tables || !matches!(e, kentos_commands::Entity::Table(_)))
+        .map(|(u, _)| u.to_string())
+        .collect()
+}
+
+/// The resident memory's peak while `work` runs, MB: `ps` read every 5 ms on a thread.
+fn peak<T>(work: impl FnOnce() -> T) -> (T, f64) {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let stop = std::sync::Arc::new(AtomicBool::new(false));
+    let watch = {
+        let stop = std::sync::Arc::clone(&stop);
+        std::thread::spawn(move || {
+            let mut most = resident();
+            while !stop.load(Ordering::Relaxed) {
+                most = most.max(resident());
+                std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+            most.max(resident())
+        })
+    };
+    let out = work();
+    stop.store(true, Ordering::Relaxed);
+    let most = watch.join().unwrap_or(f64::NAN);
+    (out, most)
 }
 
 /// The apartment copied into `n`: rows of ten, each copy one step (`cad.entities.transform`'s copy); how long.
-fn copied(app: &mut App, n: usize) -> f64 {
+fn copied(app: &mut App, n: usize, tables: bool) -> f64 {
     let t = Instant::now();
-    let one = uids(app);
+    let one = uids(app, tables);
     for c in 1..n.min(10) {
         let answer = ask(app, "run", json!({ "command": "cad.entities.transform", "op": "execute", "input": {
             "uids": one, "transform": { "kind": "move", "dx": STEP[0] * c as f64, "dy": 0.0 }, "copy": true } }));
         assert_eq!(answer["status"], "completed", "{answer}");
     }
-    let row = uids(app);
+    let row = uids(app, tables);
     for r in 1..n.div_ceil(10) {
         let answer = ask(app, "run", json!({ "command": "cad.entities.transform", "op": "execute", "input": {
             "uids": row, "transform": { "kind": "move", "dx": 0.0, "dy": STEP[1] * r as f64 }, "copy": true } }));
@@ -104,7 +130,8 @@ fn flats() {
         ]);
         app.apply_settings();
         let names: BTreeMap<String, String> = crate::acceptance_flat_tests::drawn(&mut app);
-        let copy_ms = copied(&mut app, n);
+        let each = std::env::var("KENTOS_PERF_SCHEDULES").is_ok_and(|v| v == "each");
+        let copy_ms = copied(&mut app, n, each);
         let objects = app.document.as_ref().map_or(0, |d| d.model.entities().count());
         let mut h = Harness::new();
         renderer = iced::advanced::renderer::Headless::name(&h.renderer).to_owned();
@@ -160,19 +187,23 @@ fn flats() {
         let p3 = names["p3"].clone();
         let mut change = Vec::new();
         let mut command = Vec::new();
-        for i in 0..5 {
-            let mut took = 0.0;
-            change.push(h.frame_with(&mut app, &[], |app| {
-                let t = Instant::now();
-                let answer = ask(app, "run", json!({ "command": "cad.walls.edit", "op": "execute", "input": {
-                    "uids": [p3], "operation": { "kind": "distance", "side": "right", "distance": 3.7 + 0.01 * i as f64 } } }));
-                took = ms(t);
-                assert_eq!(answer["status"], "completed", "{answer}");
-            }));
-            command.push(took);
-            app.undo();
-            h.settle(&mut app);
-        }
+        let before_change = resident();
+        let ((), change_peak) = peak(|| {
+            for i in 0..5 {
+                let mut took = 0.0;
+                change.push(h.frame_with(&mut app, &[], |app| {
+                    let t = Instant::now();
+                    let answer = ask(app, "run", json!({ "command": "cad.walls.edit", "op": "execute", "input": {
+                        "uids": [p3], "operation": { "kind": "distance", "side": "right", "distance": 3.7 + 0.01 * i as f64 } } }));
+                    took = ms(t);
+                    assert_eq!(answer["status"], "completed", "{answer}");
+                }));
+                command.push(took);
+                app.undo();
+                h.settle(&mut app);
+            }
+        });
+        let after_change = resident();
         let quantities: Vec<f64> = (0..5)
             .map(|_| {
                 let t = Instant::now();
@@ -211,7 +242,9 @@ fn flats() {
         }
         let worst =[cpu(&whole), cpu(&preview), cpu(&picks)].iter().flatten().copied().fold(0.0, f64::max);
         let row = json!({
-            "apartments": n, "objects": objects, "copyMs": copy_ms, "parts": parts, "residentMb": built, "residentAfterMb": resident(),
+            "apartments": n, "objects": objects, "schedulesEach": each, "copyMs": copy_ms, "parts": parts,
+            "residentMb": built, "residentAfterMb": resident(),
+            "changeMemoryMb": { "before": before_change, "peak": change_peak, "after": after_change },
             "panWhole": summary(&whole), "panOne": summary(&close), "doorPreview": summary(&preview),
             "pick": summary(&picks), "designChangeFrame": summary(&change),
             "designChangeCommandMs": { "p50": median(command.clone()), "max": command.iter().copied().fold(0.0, f64::max) },
