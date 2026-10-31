@@ -189,6 +189,55 @@
    "tests": 0
   },
   {
+   "id": "arch.moduleExcept",
+   "kind": "command",
+   "title": "Yerel istisna yap",
+   "level": "semantic",
+   "via": [
+    "cad.modules.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.modules.edit",
+   "mcp": "cad.modules.edit",
+   "note": "Seçili örnek nesneleri except işlemiyle (ADR 0775 §3).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.moduleRestore",
+   "kind": "command",
+   "title": "Kaynağa döndür",
+   "level": "semantic",
+   "via": [
+    "cad.modules.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.modules.edit",
+   "mcp": "cad.modules.edit",
+   "note": "Seçili örnek nesneleri restore işlemiyle (ADR 0775 §3).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.modules",
+   "kind": "command",
+   "title": "Oda modülleri",
+   "level": "semantic",
+   "via": [
+    "cad.modules.edit",
+    "cad.modules.query"
+   ],
+   "operation": null,
+   "python": "kentos.cad.modules.edit, kentos.cad.modules.query",
+   "mcp": "cad.modules.edit, cad.modules.query",
+   "note": "Tanımla, Kaynağı güncelle (önizleme planından), Bağımsızlaştır, Kaynağı sil (ADR 0775 §1, §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.openingDetach",
    "kind": "command",
    "title": "Tipten ayır",
@@ -11254,6 +11303,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.modulePlace",
+   "kind": "command",
+   "title": "Modül yerleştir",
+   "level": "semantic",
+   "via": [
+    "cad.modules.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.modules.edit",
+   "mcp": "cad.modules.edit",
+   "note": "Tıklanan nokta, açı, ayna, kat, evre ve numaralar place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.move",

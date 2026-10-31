@@ -20,6 +20,8 @@ mod walls_rectangle;
 
 #[path = "headless/dimension_set_exports.rs"]
 mod dimension_set_exports;
+#[path = "headless/room_modules.rs"]
+mod room_modules;
 
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;

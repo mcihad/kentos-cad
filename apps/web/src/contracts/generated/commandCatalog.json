@@ -20883,6 +20883,329 @@
       ]
     },
     {
+      "id": "cad.modules.edit",
+      "version": 1,
+      "title": "Oda modülü",
+      "summary": "Bir banyoyu ya da odayı bir kez çizip bağlı örnekler olarak yeniden kullanır (docs/adr/0775); her yazma tek geri alma adımı “Oda modülü”. operation: define (name, id isteğe bağlı, uids: tek kattaki düz duvarlar, açıklıklar, mahaller, donatılar, ölçüler, etiketler ve yazılar; base taban noktası; nesneler yerinde kalır ve ilk örnek olur; açıklığın duvarı, mahalin kaynakları, ölçünün noktaları ya da etiketin nesnesi seçimin dışındaysa module_outside), place (module, at, rotation radyan, mirror kendi y ekseninde aynalı, level hedef kat, phase evre, numbering: prefix ve suffix mahal, açıklık numaralarına; örnek içi duvar, mahal kaynağı, ölçü ve etiket bağları örneğin kendi nesnelerine bağlanır), update (module, from: kaynağı veren örnek, instances: güncellenecekler, boş: hepsi; tanımın sürümü bir artar, bağlı örnekler yeni tanımı alır, yerel istisna ve açıklamaların görünüşteki yeri korunur, kilitli katmandaki örnek eski sürümde kalır: module_instance_skipped), except ve restore (uids: örneğin nesneleri; yerel istisna yap, kaynağa döndür), detach (module, instance: örnek modülden ayrılır, nesneler kalır), rename, remove (tanım silinir; örneklerin nesneleri son hâliyle kalır, bağları kopuk: sourceGone). Plan yazmadan yapılacakları (created, changed, report.updated, skipped, conflicts, changedKeys) gösterir. Tekrar kat, bütün daire ve tasarım alternatifi kapsam dışıdır.",
+      "aliases": [
+        "MODUL"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.modules.edit` v1.\n\nRefusals: `invalid_input`, `invalid_uid`, `entity_not_found`, `layer_locked`, `level_not_found`, `module_exists`,\n`module_not_found`, `module_removed`, `module_kind`, `module_outside`, `module_levels`, `module_member_taken`,\n`module_instance_not_found`, `module_member_missing`, `not_in_module`, `not_finite`, `nothing_to_set`,\n`invalid_revision`, `revision_conflict`. Warnings: `module_instance_skipped`, `module_exception_kept`,\n`module_member_gone`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/ModulesOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "ModulesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.modules.edit` (and its plan): the module as it is after, the objects made and changed, the report.",
+        "properties": {
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "instance": {
+            "description": "The instance made (Yerleştir, Tanımla) or the one the operation named.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "module": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArchModule"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The module after; none once removed whole."
+          },
+          "report": {
+            "$ref": "#/$defs/ModuleReport",
+            "default": {}
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "ModulesEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.modules.edit` (and its plan): the module as it is after, the objects made and changed, the report.",
+        "properties": {
+          "changed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "created": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "instance": {
+            "description": "The instance made (Yerleştir, Tanımla) or the one the operation named.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "module": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ArchModule"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The module after; none once removed whole."
+          },
+          "report": {
+            "$ref": "#/$defs/ModuleReport",
+            "default": {}
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "ModulesEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "layer_locked",
+          "level_not_found",
+          "not_finite",
+          "module_exists",
+          "module_not_found",
+          "module_removed",
+          "module_kind",
+          "module_outside",
+          "module_levels",
+          "module_member_taken",
+          "module_instance_not_found",
+          "module_member_missing",
+          "not_in_module",
+          "nothing_to_set",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "module_instance_skipped",
+          "module_exception_kept",
+          "module_member_gone"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Banyoyu 1. katta aynalı yerleştir",
+          "input": {
+            "operation": {
+              "at": {
+                "x": 12,
+                "y": 0
+              },
+              "kind": "place",
+              "level": "kat1",
+              "mirror": true,
+              "module": "Banyo",
+              "numbering": {
+                "prefix": "D2-"
+              }
+            }
+          }
+        },
+        {
+          "title": "Birinci örnekten kaynağı güncelle",
+          "input": {
+            "operation": {
+              "from": "banyo-1",
+              "kind": "update",
+              "module": "banyo"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.modules.query",
+      "version": 1,
+      "title": "Oda modüllerini oku",
+      "summary": "Projenin oda modüllerini örnekleriyle okur (docs/adr/0775); çizimi değiştirmez. module ile tek modül, uid ile nesnenin hangi modülün hangi örneğinde ve hangi anahtarla olduğu. Her örnek: sürümü, stale (tanımdan eski), nesne sayısı, yerel istisnaları, missing (nesnesi silinmiş anahtarlar), broken (sourceGone), katı, aynalı olup olmadığı.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.modules.query` v1 (read-only): the modules (one: `module`), or the module and instance an object\n(`uid`) belongs to.\n\nRefusals: `module_not_found`, `invalid_uid`, `entity_not_found`, `not_in_module`.",
+        "properties": {
+          "module": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uid": {
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "ModulesQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.modules.query`: the modules; with `uid`, the instance it is in.",
+        "properties": {
+          "instance": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "modules": {
+            "items": {
+              "$ref": "#/$defs/ModuleRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "modules",
+          "revision"
+        ],
+        "title": "ModulesQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.modules.query`: the modules; with `uid`, the instance it is in.",
+        "properties": {
+          "instance": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "key": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "modules": {
+            "items": {
+              "$ref": "#/$defs/ModuleRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "modules",
+          "revision"
+        ],
+        "title": "ModulesQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "module_not_found",
+          "invalid_uid",
+          "entity_not_found",
+          "not_in_module"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Banyo modülünün örnekleri",
+          "input": {
+            "module": "Banyo"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.openings.query",
       "version": 1,
       "title": "Açıklıkları oku",
@@ -68742,6 +69065,84 @@
       "meaning": "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu."
     },
     {
+      "code": "module_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda bir oda modülü zaten var; başka bir ad verin."
+    },
+    {
+      "code": "module_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu kimlikte ya da adda oda modülü yok."
+    },
+    {
+      "code": "module_removed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Modülün kaynak tanımı silinmiş; örnekleri son hâliyle duruyor. Örnekleri bağımsızlaştırın ya da yeniden tanımlayın."
+    },
+    {
+      "code": "module_kind",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur; bu nesneyi seçimden çıkarın."
+    },
+    {
+      "code": "module_outside",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Modülün bir nesnesi seçimin dışındaki bir nesneye bağlı; o nesneyi de seçin ya da bağı kaldırın (kapsam dışı)."
+    },
+    {
+      "code": "module_levels",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Modülün nesneleri tek katta olur; başka kattakileri seçimden çıkarın."
+    },
+    {
+      "code": "module_member_taken",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne zaten bir modül örneğinin; önce o örneği bağımsızlaştırın."
+    },
+    {
+      "code": "module_instance_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Modülde bu kimlikte örnek yok."
+    },
+    {
+      "code": "module_member_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynağı verecek örneğin bir nesnesi silinmiş; başka bir örnekten güncelleyin ya da nesneyi geri getirin."
+    },
+    {
+      "code": "not_in_module",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne bu modülün bir örneğinde değil."
+    },
+    {
+      "code": "module_instance_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı örnekler kilitli katmandaki nesneleri yüzünden güncellenmedi; eski sürümde kaldı."
+    },
+    {
+      "code": "module_exception_kept",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı örnek nesneleri yerel istisna olduğu için kaynağın değişikliğini almadı."
+    },
+    {
+      "code": "module_member_gone",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı örneklerin nesneleri silinmiş; kaynağın değişikliği onlara gitmedi."
+    },
+    {
       "code": "not_a_space",
       "kind": "failed",
       "retryable": false,
@@ -72433,6 +72834,45 @@
       ],
       "type": "object"
     },
+    "ArchModule": {
+      "additionalProperties": false,
+      "description": "A room module: its id and name, its definition's version and members, and its instances. A removed module keeps\nits instances, broken, and no members.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "instances": {
+          "items": {
+            "$ref": "#/$defs/ModuleInstance"
+          },
+          "type": "array"
+        },
+        "members": {
+          "items": {
+            "$ref": "#/$defs/ModuleMember"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "removed": {
+          "type": "boolean"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
+      "type": "object"
+    },
     "ArchOperation": {
       "description": "What `cad.arch.edit` does (docs/adr/0343 §4).",
       "oneOf": [
@@ -72839,6 +73279,13 @@
         "levels": {
           "items": {
             "$ref": "#/$defs/ArchLevel"
+          },
+          "type": "array"
+        },
+        "modules": {
+          "description": "The project's room modules and their instances (docs/adr/0775, KCAD 138).",
+          "items": {
+            "$ref": "#/$defs/ArchModule"
           },
           "type": "array"
         },
@@ -101132,6 +101579,582 @@
           "const": "mirrored",
           "description": "Aynalı (MIRRTEXT = 1 without reversed letters): it turns with the drawing, its baseline's image read\nbackwards; upside down when that points west.",
           "type": "string"
+        }
+      ]
+    },
+    "ModuleBreak": {
+      "description": "Why an instance's link broke: its module's definition was removed; its objects stay as they last were.",
+      "enum": [
+        "sourceGone"
+      ],
+      "type": "string"
+    },
+    "ModuleConflict": {
+      "description": "An object a source update passed by: kept as a local exception, or gone from the drawing.",
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "uid": {
+          "description": "Its object; none when it is gone.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "why": {
+          "$ref": "#/$defs/ModuleConflictWhy"
+        }
+      },
+      "required": [
+        "instance",
+        "key",
+        "why"
+      ],
+      "type": "object"
+    },
+    "ModuleConflictWhy": {
+      "oneOf": [
+        {
+          "const": "exception",
+          "description": "Its object keeps its own values (a local exception).",
+          "type": "string"
+        },
+        {
+          "const": "gone",
+          "description": "Its object was deleted from the drawing.",
+          "type": "string"
+        }
+      ]
+    },
+    "ModuleInstance": {
+      "additionalProperties": false,
+      "description": "Where a module stands once: its base point, its turn (radians, counter-clockwise), whether it is mirrored (across\nits own y axis, before the turn), its level and phase, its numbering, the definition's version it took, its\nobjects and the keys it keeps as its own.",
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "broken": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModuleBreak"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exceptions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "members": {
+          "items": {
+            "$ref": "#/$defs/ModuleObject"
+          },
+          "type": "array"
+        },
+        "mirror": {
+          "type": "boolean"
+        },
+        "numbering": {
+          "$ref": "#/$defs/ModuleNumbering"
+        },
+        "phase": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchPhase"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rotation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "at",
+        "version",
+        "members"
+      ],
+      "type": "object"
+    },
+    "ModuleInstanceRow": {
+      "description": "An instance as `cad.modules.query` reads it.",
+      "properties": {
+        "broken": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ModuleBreak"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exceptions": {
+          "description": "The objects kept as local exceptions.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        },
+        "level": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mirror": {
+          "type": "boolean"
+        },
+        "missing": {
+          "description": "The keys whose objects are gone from the drawing.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "objects": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "stale": {
+          "description": "At an older version than its module's.",
+          "type": "boolean"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "stale",
+        "objects",
+        "mirror"
+      ],
+      "type": "object"
+    },
+    "ModuleMember": {
+      "additionalProperties": false,
+      "description": "One object of a module's definition: its key (the id of the object it was taken from) and the object in the\ndefinition's frame, its level and phase left to the instance.",
+      "properties": {
+        "entity": {
+          "$ref": "#/$defs/Entity"
+        },
+        "key": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "entity"
+      ],
+      "type": "object"
+    },
+    "ModuleNumbering": {
+      "additionalProperties": false,
+      "description": "How an instance numbers its spaces, openings and tags' marks: the definition's number with a prefix and a suffix.",
+      "properties": {
+        "prefix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "suffix": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ModuleObject": {
+      "additionalProperties": false,
+      "description": "One object of an instance: the definition's key and the drawing object that stands for it.",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "uid"
+      ],
+      "type": "object"
+    },
+    "ModuleReport": {
+      "description": "What a write did, or would do.",
+      "properties": {
+        "changedKeys": {
+          "description": "The definition's members whose values change, by key.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "conflicts": {
+          "items": {
+            "$ref": "#/$defs/ModuleConflict"
+          },
+          "type": "array"
+        },
+        "skipped": {
+          "items": {
+            "$ref": "#/$defs/ModuleSkipped"
+          },
+          "type": "array"
+        },
+        "updated": {
+          "description": "The instances at the new version, in their order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ModuleRow": {
+      "description": "A module as `cad.modules.query` reads it.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "instances": {
+          "items": {
+            "$ref": "#/$defs/ModuleInstanceRow"
+          },
+          "type": "array"
+        },
+        "members": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "name": {
+          "type": "string"
+        },
+        "removed": {
+          "type": "boolean"
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "version",
+        "members",
+        "removed",
+        "instances"
+      ],
+      "type": "object"
+    },
+    "ModuleSkipWhy": {
+      "description": "Why an instance did not take a source update.",
+      "oneOf": [
+        {
+          "const": "locked",
+          "description": "One of its objects is on a locked layer: it stays at its version.",
+          "type": "string"
+        }
+      ]
+    },
+    "ModuleSkipped": {
+      "description": "An instance left at its version.",
+      "properties": {
+        "instance": {
+          "type": "string"
+        },
+        "why": {
+          "$ref": "#/$defs/ModuleSkipWhy"
+        }
+      },
+      "required": [
+        "instance",
+        "why"
+      ],
+      "type": "object"
+    },
+    "ModulesOperation": {
+      "description": "What `cad.modules.edit` does.",
+      "oneOf": [
+        {
+          "description": "Modül tanımla: the objects `uids` (walls, openings, spaces, fixtures, dimensions, tags, texts on one level) become\nthe module `name`'s definition, `base` its base point; they stay where they are as its first instance. An object\nthey lean on outside them (an opening's wall, a space's sources, a dimension's points, a tag's object) refuses it.",
+          "properties": {
+            "base": {
+              "$ref": "#/$defs/Vec2",
+              "x-unit": "length"
+            },
+            "id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "kind": {
+              "const": "define",
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "name",
+            "uids",
+            "base"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Modül yerleştir: a new instance of `module` (its id or name), its base at `at`, mirrored across its own y axis\nwhen asked, then turned `rotation` radians counter-clockwise; on `level` (absent: none), in `phase`, its\nnumbers wrapped by `numbering`.",
+          "properties": {
+            "at": {
+              "$ref": "#/$defs/Vec2",
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "place",
+              "type": "string"
+            },
+            "level": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "mirror": {
+              "type": "boolean"
+            },
+            "module": {
+              "type": "string"
+            },
+            "numbering": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ModuleNumbering"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "phase": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ArchPhase"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "rotation": {
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ],
+              "x-unit": "rad"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "at"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kaynağı güncelle: the instance `from`'s objects (its local exceptions aside) become the definition, its version\none up; the other linked instances (`instances`, none: all) take it, each keeping its exceptions and its\nannotations' places. An instance with an object on a locked layer stays at its version (skipped).",
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "instances": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "update",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "from"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yerel istisna yap: these objects of an instance keep their own values; a source update passes them by.",
+          "properties": {
+            "kind": {
+              "const": "except",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kaynağa döndür: these objects of an instance give up their own values and take the definition again.",
+          "properties": {
+            "kind": {
+              "const": "restore",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            },
+            "uids": {
+              "items": {
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "uids"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Bağımsızlaştır: the instance leaves the module; its objects stay as they are, following nothing.",
+          "properties": {
+            "instance": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "detach",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "instance"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yeniden adlandır.",
+          "properties": {
+            "kind": {
+              "const": "rename",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "module",
+            "name"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Kaynağı sil: the definition goes; instances keep their objects as they last were, their link broken\n(`sourceGone`) until detached. A module with no instances goes whole.",
+          "properties": {
+            "kind": {
+              "const": "remove",
+              "type": "string"
+            },
+            "module": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "module"
+          ],
+          "type": "object"
         }
       ]
     },

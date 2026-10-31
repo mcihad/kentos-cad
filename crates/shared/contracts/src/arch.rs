@@ -1122,6 +1122,10 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningType>>", optional))]
     pub opening_types: Vec<crate::OpeningType>,
+    /// The project's room modules and their instances (docs/adr/0775, KCAD 138).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ArchModule>>", optional))]
+    pub modules: Vec<crate::ArchModule>,
 }
 
 impl ArchSettings {
@@ -1142,6 +1146,20 @@ impl ArchSettings {
     /// Whether it keeps door and window types (KCAD 137, docs/adr/0772).
     pub fn has_opening_types(&self) -> bool {
         !self.opening_types.is_empty()
+    }
+
+    /// Whether it keeps room modules (KCAD 138, docs/adr/0775).
+    pub fn has_modules(&self) -> bool {
+        !self.modules.is_empty()
+    }
+
+    /// The project's module of this id, or else of this name (case aside).
+    pub fn module(&self, key: &str) -> Option<&crate::ArchModule> {
+        let folded = key.trim().to_lowercase();
+        self.modules
+            .iter()
+            .find(|m| m.id == key)
+            .or_else(|| self.modules.iter().find(|m| m.name.to_lowercase() == folded))
     }
 
     /// The project's type of this id, or else of this name (case aside).
@@ -1178,6 +1196,9 @@ impl ArchSettings {
             return Some(problem);
         }
         if let Some(problem) = crate::opening_types_problem(&self.opening_types) {
+            return Some(problem);
+        }
+        if let Some(problem) = crate::arch_modules_problem(&self.modules) {
             return Some(problem);
         }
         if let Some(why) = crate::annotation::names_problem(

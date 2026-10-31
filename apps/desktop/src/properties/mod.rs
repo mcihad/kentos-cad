@@ -100,6 +100,8 @@ pub enum Event {
     WallOp(Slot, kentos_commands::WallsOperation),
     /// An opening's own field chosen, its type replaced (docs/adr/0341 §5): written through `cad.openings.edit`.
     Opening(Slot, kentos_commands::OpeningsOperation),
+    /// A room module's action on the object's instance (docs/adr/0775 §3): written through `cad.modules.edit`.
+    Module(kentos_commands::ModulesOperation),
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, kentos_commands::SpacesOperation),
@@ -856,6 +858,7 @@ impl App {
             Event::Wall(slot, change) => properties::edit_wall(model, slot, change),
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
+            Event::Module(op) => properties::edit_module(model, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
             Event::Slab(slot, op) => properties::edit_slab(model, slot, op),
             Event::SpaceSeparator(slot, on) => {

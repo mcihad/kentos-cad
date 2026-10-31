@@ -99,7 +99,7 @@ use crate::{
     layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
     layers_translate, leaders_edit, legends, levels_assign, library_edit, line, line_types_edit,
     linearref_define, maplibre, network_define, north, nurbs, objects_derive, offset,
-    openings_create, openings_distances, openings_edit, opening_types_edit, openings_query, parameters_edit, parcels, point,
+    openings_create, openings_distances, openings_edit, opening_types_edit, openings_query, modules_edit, modules_query, parameters_edit, parcels, point,
     points_construct, polygon, polygon_regular, polyline, qml, ramps_create, rasters_georef,
     rasters_mosaic, rasters_reproject, rectangle_create, revcloud_create, revisions, roads_edit,
     scenarios_edit, schedules_create, schedules_edit, schedules_query, sector_create, set,
@@ -272,6 +272,8 @@ macro_rules! by_command {
                 $then!(opening_types_edit, kentos_commands::OpeningTypesEdit)
             }
             kentos_commands::CAD_OPENINGS_QUERY => $then!(openings_query, kentos_commands::OpeningsQuery),
+            kentos_commands::CAD_MODULES_EDIT => $then!(modules_edit, kentos_commands::ModulesEdit),
+            kentos_commands::CAD_MODULES_QUERY => $then!(modules_query, kentos_commands::ModulesQuery),
             kentos_commands::CAD_OPENINGS_DISTANCES => $then!(openings_distances, kentos_commands::OpeningsDistancesInput),
             kentos_commands::CAD_WALLS_DISTANCES => $then!(walls_distances, kentos_commands::WallsDistancesInput),
             kentos_commands::CAD_COLUMNS_DISTANCES => $then!(columns_distances, kentos_commands::ColumnsDistancesInput),

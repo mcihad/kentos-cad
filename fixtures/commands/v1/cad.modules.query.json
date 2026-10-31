@@ -1,0 +1,2238 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.modules.query",
+  "commandVersion": 1,
+  "title": "Oda modüllerini oku (docs/adr/0775)",
+  "note": "scripts/fixtures/module_cases.py yazar: ADR 0775'in kurallarından, KentOS kodu olmadan. Değiştirmeyin; betiği düzeltin.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Oda modülleri",
+    "uids": [
+      "0192f5a1-7750-7000-8000-000000000001",
+      "0192f5a1-7750-7000-8000-000000000002",
+      "0192f5a1-7750-7000-8000-000000000003",
+      "0192f5a1-7750-7000-8000-000000000004",
+      "0192f5a1-7750-7000-8000-000000000005",
+      "0192f5a1-7750-7000-8000-000000000006",
+      "0192f5a1-7750-7000-8000-000000000007",
+      "0192f5a1-7750-7000-8000-000000000008",
+      "0192f5a1-7750-7000-8000-000000000009",
+      "0192f5a1-7750-7000-8000-00000000000a",
+      "0192f5a1-7750-7000-8000-00000000000b",
+      "0192f5a1-7750-7000-8000-00000000000c",
+      "0192f5a1-7750-7000-8000-00000000000d",
+      "0192f5a1-7750-7000-8000-00000000000e"
+    ],
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mimari",
+        "name": "Mimari",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "olcu",
+        "name": "Ölçü",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [
+      {
+        "id": "0192f5a1-7750-7000-8000-0000000000b1",
+        "name": "Lavabo",
+        "base": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "entities": [
+          {
+            "kind": "line",
+            "id": 1,
+            "layerId": "",
+            "attrs": {},
+            "a": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "b": {
+              "x": 0.5,
+              "y": 0.0
+            }
+          }
+        ]
+      }
+    ],
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 2.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 2.0,
+            "y": 0.0
+          },
+          {
+            "x": 2.0,
+            "y": 2.5
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 2.0,
+            "y": 2.5
+          },
+          {
+            "x": 0.0,
+            "y": 2.5
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 2.5
+          },
+          {
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "opening",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7750-7000-8000-000000000001",
+        "at": 1.0,
+        "width": 0.8,
+        "form": "door",
+        "frame": 0.05,
+        "number": "K1",
+        "place": [
+          {
+            "x": 0.6,
+            "y": 0.05
+          },
+          {
+            "x": 0.6,
+            "y": -0.05
+          },
+          {
+            "x": 1.4,
+            "y": 0.05
+          },
+          {
+            "x": 1.4,
+            "y": -0.05
+          }
+        ]
+      },
+      {
+        "kind": "space",
+        "id": 6,
+        "layerId": "mimari",
+        "attrs": {},
+        "sources": [
+          "0192f5a1-7750-7000-8000-000000000001",
+          "0192f5a1-7750-7000-8000-000000000002",
+          "0192f5a1-7750-7000-8000-000000000003",
+          "0192f5a1-7750-7000-8000-000000000004"
+        ],
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.05,
+                  "y": 0.05
+                },
+                {
+                  "x": 1.95,
+                  "y": 0.05
+                },
+                {
+                  "x": 1.95,
+                  "y": 2.45
+                },
+                {
+                  "x": 0.05,
+                  "y": 2.45
+                }
+              ]
+            }
+          }
+        ],
+        "seed": {
+          "x": 1.0,
+          "y": 1.25
+        },
+        "number": "B1",
+        "name": "Banyo",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "insert",
+        "id": 7,
+        "layerId": "mimari",
+        "attrs": {},
+        "block": "0192f5a1-7750-7000-8000-0000000000b1",
+        "p": {
+          "x": 0.4,
+          "y": 2.1
+        },
+        "scale": 1.0,
+        "rotation": 0.0,
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "tag",
+        "id": 8,
+        "layerId": "mimari",
+        "attrs": {},
+        "of": "0192f5a1-7750-7000-8000-000000000006",
+        "at": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "content": "{number}",
+        "text": "B1"
+      },
+      {
+        "kind": "dimension",
+        "id": 9,
+        "layerId": "olcu",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "b": {
+          "x": 2.0,
+          "y": 0.0
+        },
+        "height": 0.125,
+        "offset": -0.5,
+        "style": "linear",
+        "angle": 0.0,
+        "refs": {
+          "a": {
+            "uid": "0192f5a1-7750-7000-8000-000000000001",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            }
+          },
+          "b": {
+            "uid": "0192f5a1-7750-7000-8000-000000000001",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            }
+          }
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 10,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": -2.0
+          },
+          {
+            "x": 4.0,
+            "y": -2.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "opening",
+        "id": 11,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7750-7000-8000-00000000000a",
+        "at": 2.0,
+        "width": 0.9,
+        "form": "door",
+        "frame": 0.05,
+        "number": "K9",
+        "place": [
+          {
+            "x": 1.55,
+            "y": -1.95
+          },
+          {
+            "x": 1.55,
+            "y": -2.05
+          },
+          {
+            "x": 2.45,
+            "y": -1.95
+          },
+          {
+            "x": 2.45,
+            "y": -2.05
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 12,
+        "layerId": "duvar",
+        "attrs": {},
+        "a": {
+          "x": 5.0,
+          "y": 0.0
+        },
+        "b": {
+          "x": 6.0,
+          "y": 0.0
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 13,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 2.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "kat1"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 14,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 5.0,
+            "y": 5.0
+          },
+          {
+            "x": 7.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        },
+        "bulges": [
+          0.3,
+          0.0
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Modülsüz proje",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tanımlanan modül ve ilk örneği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kimlikle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "module": "banyo"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Adla, büyük harfle",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "module": "BANYO"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: olmayan modül",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "module": "Mutfak"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "module_not_found",
+              "message": "Projede “Mutfak” adlı ya da kimlikli oda modülü yok.",
+              "path": "module"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nesnenin örneği ve anahtarı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "0192f5a1-7750-7000-8000-000000000005"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "instance": "banyo-1",
+              "key": "0192f5a1-7750-7000-8000-000000000005",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: modülde olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "0192f5a1-7750-7000-8000-00000000000a"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_in_module",
+              "message": "Nesne bir oda modülünün örneğinde değil.",
+              "path": "uid"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: geçersiz kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "x"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“x” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+              "path": "uid"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: olmayan nesne",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "0192f5a1-7750-7000-8000-000000000063"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a1-7750-7000-8000-000000000063” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uid"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki örnek",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Banyo",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    },
+                    {
+                      "id": "banyo-2",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynalı örnek 1. katta",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Banyo",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              },
+              "mirror": true,
+              "level": "kat1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    },
+                    {
+                      "id": "banyo-2",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "kat1",
+                      "mirror": true
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerleştirilen mahalin örneği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Banyo",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:20"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    },
+                    {
+                      "id": "banyo-2",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "instance": "banyo-2",
+              "key": "0192f5a1-7750-7000-8000-000000000006",
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Silinen nesne eksik sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "0192f5a1-7750-7000-8000-000000000008"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 8,
+                      "missing": [
+                        "0192f5a1-7750-7000-8000-000000000008"
+                      ],
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerel istisna",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "except",
+              "module": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000005"
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "exceptions": [
+                        "0192f5a1-7750-7000-8000-000000000005"
+                      ],
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli örnek eski sürümde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Banyo",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7750-7000-8000-000000000005"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.9
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.layers.set",
+          "input": {
+            "operation": "locked",
+            "layer": "mimari",
+            "value": true
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Banyo",
+              "from": "banyo-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 2,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 2,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    },
+                    {
+                      "id": "banyo-2",
+                      "version": 1,
+                      "stale": true,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Güncellenen örnekler aynı sürümde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Banyo",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-7750-7000-8000-000000000005"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.9
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "module": "Banyo",
+              "from": "banyo-1"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 2,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 2,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    },
+                    {
+                      "id": "banyo-2",
+                      "version": 2,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kaynağı silinmiş modül",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "remove",
+              "module": "Banyo"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 0,
+                  "removed": true,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "broken": "sourceGone",
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ayrılan örnek listede yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Banyo",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "detach",
+              "module": "Banyo",
+              "instance": "banyo-2"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeniden adlandırılan",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "rename",
+              "module": "Banyo",
+              "name": "Ebeveyn banyosu"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Ebeveyn banyosu",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki modül",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Koridor duvarı",
+              "id": "kd",
+              "uids": [
+                "0192f5a1-7750-7000-8000-00000000000a",
+                "0192f5a1-7750-7000-8000-00000000000b"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": -2.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                },
+                {
+                  "id": "kd",
+                  "name": "Koridor duvarı",
+                  "version": 1,
+                  "members": 2,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "kd-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 2,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki modülden biri",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Koridor duvarı",
+              "id": "kd",
+              "uids": [
+                "0192f5a1-7750-7000-8000-00000000000a",
+                "0192f5a1-7750-7000-8000-00000000000b"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": -2.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "module": "kd"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "kd",
+                  "name": "Koridor duvarı",
+                  "version": 1,
+                  "members": 2,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "kd-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 2,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geri alınan yerleştirme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "define",
+              "name": "Banyo",
+              "uids": [
+                "0192f5a1-7750-7000-8000-000000000001",
+                "0192f5a1-7750-7000-8000-000000000002",
+                "0192f5a1-7750-7000-8000-000000000003",
+                "0192f5a1-7750-7000-8000-000000000004",
+                "0192f5a1-7750-7000-8000-000000000005",
+                "0192f5a1-7750-7000-8000-000000000006",
+                "0192f5a1-7750-7000-8000-000000000007",
+                "0192f5a1-7750-7000-8000-000000000008",
+                "0192f5a1-7750-7000-8000-000000000009"
+              ],
+              "base": {
+                "x": 0.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "command": "cad.modules.edit"
+        },
+        {
+          "op": "execute",
+          "command": "cad.modules.edit",
+          "input": {
+            "operation": {
+              "kind": "place",
+              "module": "Banyo",
+              "at": {
+                "x": 10.0,
+                "y": 0.0
+              },
+              "level": "zemin"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Oda modülü"
+        },
+        {
+          "op": "execute",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "modules": [
+                {
+                  "id": "banyo",
+                  "name": "Banyo",
+                  "version": 1,
+                  "members": 9,
+                  "removed": false,
+                  "instances": [
+                    {
+                      "id": "banyo-1",
+                      "version": 1,
+                      "stale": false,
+                      "objects": 9,
+                      "level": "zemin",
+                      "mirror": false
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          }
+        }
+      ]
+    }
+  ]
+}

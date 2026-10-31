@@ -1749,6 +1749,34 @@ codes! {
     OPENING_TYPE_SKIPPED = "opening_type_skipped", Warning, false, "Tipi izleyen bazı açıklıklar güncellenmedi (kilitli katman ya da sığmayan); eski sürümde kaldı.";
     /// Openings of a type that kept their own value of a field the type changed.
     OPENING_TYPE_KEPT = "opening_type_kept", Warning, false, "Tipi izleyen bazı açıklıklar değişen alanda kendi değerini (örnek istisnası) korudu.";
+    // Oda modülleri (docs/adr/0775).
+    /// A module's id or name another module of the project has.
+    MODULE_EXISTS = "module_exists", Failed, false, "Projede bu kimlikte ya da adda bir oda modülü zaten var; başka bir ad verin.";
+    /// No module of that id or name.
+    MODULE_NOT_FOUND = "module_not_found", Failed, false, "Projede bu kimlikte ya da adda oda modülü yok.";
+    /// A removed module's definition asked for: placed, updated or restored.
+    MODULE_REMOVED = "module_removed", Failed, false, "Modülün kaynak tanımı silinmiş; örnekleri son hâliyle duruyor. Örnekleri bağımsızlaştırın ya da yeniden tanımlayın.";
+    /// An object a module does not take (a stair, a curved wall …).
+    MODULE_KIND = "module_kind", Failed, false, "Oda modülünde düz duvar, açıklık, mahal, donatı, ölçü, etiket ve yazı olur; bu nesneyi seçimden çıkarın.";
+    /// A member leaning on an object outside the module: an opening's wall, a space's sources, a dimension's points,
+    /// a tag's object.
+    MODULE_OUTSIDE = "module_outside", Failed, false, "Modülün bir nesnesi seçimin dışındaki bir nesneye bağlı; o nesneyi de seçin ya da bağı kaldırın (kapsam dışı).";
+    /// Members on more than one level.
+    MODULE_LEVELS = "module_levels", Failed, false, "Modülün nesneleri tek katta olur; başka kattakileri seçimden çıkarın.";
+    /// An object already an instance's object.
+    MODULE_MEMBER_TAKEN = "module_member_taken", Failed, false, "Nesne zaten bir modül örneğinin; önce o örneği bağımsızlaştırın.";
+    /// No instance of that id in the module.
+    MODULE_INSTANCE_NOT_FOUND = "module_instance_not_found", Failed, false, "Modülde bu kimlikte örnek yok.";
+    /// The instance a source update is taken from lost one of its objects.
+    MODULE_MEMBER_MISSING = "module_member_missing", Failed, false, "Kaynağı verecek örneğin bir nesnesi silinmiş; başka bir örnekten güncelleyin ya da nesneyi geri getirin.";
+    /// An object no instance of the module has.
+    NOT_IN_MODULE = "not_in_module", Failed, false, "Nesne bu modülün bir örneğinde değil.";
+    /// Instances left at their version: an object on a locked layer.
+    MODULE_INSTANCE_SKIPPED = "module_instance_skipped", Warning, false, "Bazı örnekler kilitli katmandaki nesneleri yüzünden güncellenmedi; eski sürümde kaldı.";
+    /// Objects of instances that keep their own values (local exceptions) a source update passed by.
+    MODULE_EXCEPTION_KEPT = "module_exception_kept", Warning, false, "Bazı örnek nesneleri yerel istisna olduğu için kaynağın değişikliğini almadı.";
+    /// Objects of instances gone from the drawing a source update passed by.
+    MODULE_MEMBER_GONE = "module_member_gone", Warning, false, "Bazı örneklerin nesneleri silinmiş; kaynağın değişikliği onlara gitmedi.";
     NOT_A_SPACE = "not_a_space", Failed, false, "Nesne mahal değil.";
     INVALID_SPACE_NUMBER = "invalid_space_number", Failed, false, "Mahal numarası, farklı UUID listesi veya açık sıralama yönü geçersiz; girdiyi düzeltin.";
     SPACE_NUMBER_CONFLICT = "space_number_conflict", Failed, false, "Önerilen mahal numarası seçim dışındaki başka bir mahalde var; ilk numarayı ya da seçimi değiştirin.";

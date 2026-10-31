@@ -1752,7 +1752,9 @@
       ],
       "overflow": [
        "arch.sheetSet",
-       "arch.openingTypes"
+       "arch.openingTypes",
+       "arch.modules",
+       "tool.modulePlace"
       ]
      }
     ],

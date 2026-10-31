@@ -88,7 +88,7 @@ use kentos_native_application::{
     layers_rules, layers_service, layers_set, layers_states, layers_subtypes, layers_table,
     layers_time, layers_translate, leaders_edit, legends, levels_assign, line, linearref_define,
     network_define, north, nurbs, objects_derive, offset, openings_create, openings_distances,
-    openings_edit, opening_types_edit, openings_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
+    openings_edit, opening_types_edit, openings_query, modules_edit, modules_query, parcels, point, points_construct, polygon, polygon_regular, polyline,
     rectangle_create, revcloud_create, revisions, roads_edit, scenarios_edit, sector_create, set,
     settings_set, shape_edits, sheets_create, sheets_edit, sheets_fit, sheets_levels, slabs_create,
     slabs_edit, snap_find, spaces_create, spaces_edit, spaces_quantities, styles_edit,
@@ -1564,6 +1564,25 @@ impl Input for kentos_commands::WallsDistancesInput {
 impl Input for kentos_commands::OpeningsDistancesInput {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for kentos_commands::ModulesQuery {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ModulesEdit {
+    /// A placement's point and turn, a definition's base (docs/adr/0775).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match (&mut self.operation, path) {
+            (kentos_commands::ModulesOperation::Place { at, .. }, "operation.at.x") => Some(&mut at.x),
+            (kentos_commands::ModulesOperation::Place { at, .. }, "operation.at.y") => Some(&mut at.y),
+            (kentos_commands::ModulesOperation::Place { rotation, .. }, "operation.rotation") => rotation.as_mut(),
+            (kentos_commands::ModulesOperation::Define { base, .. }, "operation.base.x") => Some(&mut base.x),
+            _ => None,
+        }
     }
 }
 
@@ -4249,6 +4268,9 @@ fn run_op(
         kentos_commands::CAD_OPENINGS_QUERY => {
             run!(openings_query, kentos_commands::OpeningsQuery)
         }
+        // Oda modülleri (docs/adr/0775).
+        kentos_commands::CAD_MODULES_EDIT => run!(modules_edit, kentos_commands::ModulesEdit),
+        kentos_commands::CAD_MODULES_QUERY => run!(modules_query, kentos_commands::ModulesQuery),
         kentos_commands::CAD_WALLS_DISTANCES => {
             run!(walls_distances, kentos_commands::WallsDistancesInput)
         }

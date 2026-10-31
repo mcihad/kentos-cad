@@ -1,0 +1,798 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Oda modülleri",
+  "uids": [
+    "0192f5a1-7750-7000-8000-000000000001",
+    "0192f5a1-7750-7000-8000-000000000002",
+    "0192f5a1-7750-7000-8000-000000000003",
+    "0192f5a1-7750-7000-8000-000000000004",
+    "0192f5a1-7750-7000-8000-000000000005",
+    "0192f5a1-7750-7000-8000-000000000006",
+    "0192f5a1-7750-7000-8000-000000000007",
+    "0192f5a1-7750-7000-8000-000000000008",
+    "0192f5a1-7750-7000-8000-000000000009",
+    "0192f5a1-7750-7000-8000-00000000000a",
+    "0192f5a1-7750-7000-8000-00000000000b",
+    "0192f5a1-7750-7000-8000-00000000000c",
+    "0192f5a1-7750-7000-8000-00000000000d",
+    "0192f5a1-7750-7000-8000-00000000000e"
+  ],
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50,
+    "workspace": "cad",
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ],
+      "modules": [
+        {
+          "id": "banyo",
+          "name": "Banyo",
+          "version": 1,
+          "members": [
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000001",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000002",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 2.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 2.0,
+                    "y": 2.5
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000003",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 2.0,
+                    "y": 2.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 2.5
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000004",
+              "entity": {
+                "kind": "wall",
+                "id": 0,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 2.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000005",
+              "entity": {
+                "kind": "opening",
+                "id": 0,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7750-7000-8000-000000000001",
+                "at": 1.0,
+                "width": 0.8,
+                "form": "door",
+                "frame": 0.05,
+                "number": "K1",
+                "place": [
+                  {
+                    "x": 0.6,
+                    "y": 0.05
+                  },
+                  {
+                    "x": 0.6,
+                    "y": -0.05
+                  },
+                  {
+                    "x": 1.4,
+                    "y": 0.05
+                  },
+                  {
+                    "x": 1.4,
+                    "y": -0.05
+                  }
+                ]
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000006",
+              "entity": {
+                "kind": "space",
+                "id": 0,
+                "layerId": "mimari",
+                "attrs": {},
+                "sources": [
+                  "0192f5a1-7750-7000-8000-000000000001",
+                  "0192f5a1-7750-7000-8000-000000000002",
+                  "0192f5a1-7750-7000-8000-000000000003",
+                  "0192f5a1-7750-7000-8000-000000000004"
+                ],
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 0.05,
+                          "y": 0.05
+                        },
+                        {
+                          "x": 1.95,
+                          "y": 0.05
+                        },
+                        {
+                          "x": 1.95,
+                          "y": 2.45
+                        },
+                        {
+                          "x": 0.05,
+                          "y": 2.45
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "seed": {
+                  "x": 1.0,
+                  "y": 1.25
+                },
+                "number": "B1",
+                "name": "Banyo"
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000007",
+              "entity": {
+                "kind": "insert",
+                "id": 0,
+                "layerId": "mimari",
+                "attrs": {},
+                "block": "0192f5a1-7750-7000-8000-0000000000b1",
+                "p": {
+                  "x": 0.4,
+                  "y": 2.1
+                },
+                "scale": 1.0,
+                "rotation": 0.0
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000008",
+              "entity": {
+                "kind": "tag",
+                "id": 0,
+                "layerId": "mimari",
+                "attrs": {},
+                "of": "0192f5a1-7750-7000-8000-000000000006",
+                "at": {
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                "content": "{number}",
+                "text": "B1"
+              }
+            },
+            {
+              "key": "0192f5a1-7750-7000-8000-000000000009",
+              "entity": {
+                "kind": "dimension",
+                "id": 0,
+                "layerId": "olcu",
+                "attrs": {},
+                "a": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "b": {
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                "height": 0.125,
+                "offset": -0.5,
+                "style": "linear",
+                "angle": 0.0,
+                "refs": {
+                  "a": {
+                    "uid": "0192f5a1-7750-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 0
+                    }
+                  },
+                  "b": {
+                    "uid": "0192f5a1-7750-7000-8000-000000000001",
+                    "place": {
+                      "kind": "vertex",
+                      "part": 0,
+                      "ring": 0,
+                      "index": 1
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "instances": [
+            {
+              "id": "banyo-1",
+              "at": {
+                "x": 0.0,
+                "y": 0.0
+              },
+              "level": "zemin",
+              "version": 1,
+              "members": [
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000001",
+                  "uid": "0192f5a1-7750-7000-8000-000000000001"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000002",
+                  "uid": "0192f5a1-7750-7000-8000-000000000002"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000003",
+                  "uid": "0192f5a1-7750-7000-8000-000000000003"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000004",
+                  "uid": "0192f5a1-7750-7000-8000-000000000004"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000005",
+                  "uid": "0192f5a1-7750-7000-8000-000000000005"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000006",
+                  "uid": "0192f5a1-7750-7000-8000-000000000006"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000007",
+                  "uid": "0192f5a1-7750-7000-8000-000000000007"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000008",
+                  "uid": "0192f5a1-7750-7000-8000-000000000008"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-000000000009",
+                  "uid": "0192f5a1-7750-7000-8000-000000000009"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "eski",
+          "name": "Eski banyo",
+          "version": 2,
+          "removed": true,
+          "instances": [
+            {
+              "id": "eski-1",
+              "at": {
+                "x": 0.0,
+                "y": -2.0
+              },
+              "version": 2,
+              "members": [
+                {
+                  "key": "0192f5a1-7750-7000-8000-00000000000a",
+                  "uid": "0192f5a1-7750-7000-8000-00000000000a"
+                },
+                {
+                  "key": "0192f5a1-7750-7000-8000-00000000000b",
+                  "uid": "0192f5a1-7750-7000-8000-00000000000b"
+                }
+              ],
+              "broken": "sourceGone"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 0,
+    "y": 0
+  },
+  "layers": [
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "mimari",
+      "name": "Mimari",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "olcu",
+      "name": "Ölçü",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "ink",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a1-7750-7000-8000-0000000000b1",
+      "name": "Lavabo",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "entities": [
+        {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 0.5,
+            "y": 0.0
+          }
+        }
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 2.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 2,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 2.0,
+          "y": 0.0
+        },
+        {
+          "x": 2.0,
+          "y": 2.5
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 2.0,
+          "y": 2.5
+        },
+        {
+          "x": 0.0,
+          "y": 2.5
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 2.5
+        },
+        {
+          "x": 0.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "opening",
+      "id": 5,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-7750-7000-8000-000000000001",
+      "at": 1.0,
+      "width": 0.8,
+      "form": "door",
+      "frame": 0.05,
+      "number": "K1",
+      "place": [
+        {
+          "x": 0.6,
+          "y": 0.05
+        },
+        {
+          "x": 0.6,
+          "y": -0.05
+        },
+        {
+          "x": 1.4,
+          "y": 0.05
+        },
+        {
+          "x": 1.4,
+          "y": -0.05
+        }
+      ]
+    },
+    {
+      "kind": "space",
+      "id": 6,
+      "layerId": "mimari",
+      "attrs": {},
+      "sources": [
+        "0192f5a1-7750-7000-8000-000000000001",
+        "0192f5a1-7750-7000-8000-000000000002",
+        "0192f5a1-7750-7000-8000-000000000003",
+        "0192f5a1-7750-7000-8000-000000000004"
+      ],
+      "parts": [
+        {
+          "outer": {
+            "pts": [
+              {
+                "x": 0.05,
+                "y": 0.05
+              },
+              {
+                "x": 1.95,
+                "y": 0.05
+              },
+              {
+                "x": 1.95,
+                "y": 2.45
+              },
+              {
+                "x": 0.05,
+                "y": 2.45
+              }
+            ]
+          }
+        }
+      ],
+      "seed": {
+        "x": 1.0,
+        "y": 1.25
+      },
+      "number": "B1",
+      "name": "Banyo",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "insert",
+      "id": 7,
+      "layerId": "mimari",
+      "attrs": {},
+      "block": "0192f5a1-7750-7000-8000-0000000000b1",
+      "p": {
+        "x": 0.4,
+        "y": 2.1
+      },
+      "scale": 1.0,
+      "rotation": 0.0,
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "tag",
+      "id": 8,
+      "layerId": "mimari",
+      "attrs": {},
+      "of": "0192f5a1-7750-7000-8000-000000000006",
+      "at": {
+        "x": 1.0,
+        "y": 1.0
+      },
+      "content": "{number}",
+      "text": "B1"
+    },
+    {
+      "kind": "dimension",
+      "id": 9,
+      "layerId": "olcu",
+      "attrs": {},
+      "a": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 2.0,
+        "y": 0.0
+      },
+      "height": 0.125,
+      "offset": -0.5,
+      "style": "linear",
+      "angle": 0.0,
+      "refs": {
+        "a": {
+          "uid": "0192f5a1-7750-7000-8000-000000000001",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 0
+          }
+        },
+        "b": {
+          "uid": "0192f5a1-7750-7000-8000-000000000001",
+          "place": {
+            "kind": "vertex",
+            "part": 0,
+            "ring": 0,
+            "index": 1
+          }
+        }
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 10,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": -2.0
+        },
+        {
+          "x": 4.0,
+          "y": -2.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      }
+    },
+    {
+      "kind": "opening",
+      "id": 11,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-7750-7000-8000-00000000000a",
+      "at": 2.0,
+      "width": 0.9,
+      "form": "door",
+      "frame": 0.05,
+      "number": "K9",
+      "place": [
+        {
+          "x": 1.55,
+          "y": -1.95
+        },
+        {
+          "x": 1.55,
+          "y": -2.05
+        },
+        {
+          "x": 2.45,
+          "y": -1.95
+        },
+        {
+          "x": 2.45,
+          "y": -2.05
+        }
+      ]
+    },
+    {
+      "kind": "line",
+      "id": 12,
+      "layerId": "duvar",
+      "attrs": {},
+      "a": {
+        "x": 5.0,
+        "y": 0.0
+      },
+      "b": {
+        "x": 6.0,
+        "y": 0.0
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 13,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 5.0
+        },
+        {
+          "x": 2.0,
+          "y": 5.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "kat1"
+      }
+    },
+    {
+      "kind": "wall",
+      "id": 14,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 5.0,
+          "y": 5.0
+        },
+        {
+          "x": 7.0,
+          "y": 5.0
+        }
+      ],
+      "width": 0.1,
+      "justify": "center",
+      "arch": {
+        "level": "zemin"
+      },
+      "bulges": [
+        0.3,
+        0.0
+      ]
+    }
+  ]
+}

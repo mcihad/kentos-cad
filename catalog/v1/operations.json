@@ -2475,6 +2475,35 @@
         "cad.openings.edit"
       ],
       "note": "Seçili açıklıklar reset işlemiyle (ADR 0772 §1)."
+    },
+    "arch.modules": {
+      "level": "semantic",
+      "via": [
+        "cad.modules.edit",
+        "cad.modules.query"
+      ],
+      "note": "Tanımla, Kaynağı güncelle (önizleme planından), Bağımsızlaştır, Kaynağı sil (ADR 0775 §1, §3)."
+    },
+    "arch.moduleExcept": {
+      "level": "semantic",
+      "via": [
+        "cad.modules.edit"
+      ],
+      "note": "Seçili örnek nesneleri except işlemiyle (ADR 0775 §3)."
+    },
+    "arch.moduleRestore": {
+      "level": "semantic",
+      "via": [
+        "cad.modules.edit"
+      ],
+      "note": "Seçili örnek nesneleri restore işlemiyle (ADR 0775 §3)."
+    },
+    "tool.modulePlace": {
+      "level": "semantic",
+      "via": [
+        "cad.modules.edit"
+      ],
+      "note": "Tıklanan nokta, açı, ayna, kat, evre ve numaralar place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2)."
     }
   },
   "tools": {

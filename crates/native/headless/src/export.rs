@@ -108,6 +108,50 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
             lines: Vec::new(),
         });
     }
+    // Room modules (docs/adr/0775 §6): DXF gets the instances' objects as they are drawn; the definition, the links,
+    // the exceptions and the numbering rules stay in KCAD.
+    let in_module: std::collections::HashSet<String> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| {
+            a.modules
+                .iter()
+                .flat_map(|m| m.instances.iter().flat_map(|i| i.members.iter().map(|o| o.uid.clone())))
+                .collect()
+        })
+        .unwrap_or_default();
+    let instances: std::collections::HashSet<(String, String)> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| {
+            a.modules
+                .iter()
+                .flat_map(|m| {
+                    m.instances.iter().filter(|i| {
+                        i.members.iter().any(|o| {
+                            kentos_domain::Uuid::parse_str(&o.uid)
+                                .ok()
+                                .and_then(|u| doc.slot_of(u))
+                                .is_some_and(|s| chosen_slots.contains(&s.0))
+                        })
+                    })
+                    .map(|i| (m.id.clone(), i.id.clone()))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if !instances.is_empty() && !in_module.is_empty() {
+        notes.push(kentos_commands::ReportItem {
+            severity: Some(kentos_commands::ReportSeverity::Warning),
+            details: Vec::new(),
+            what: "Oda modülü örneği".into(),
+            count: u32::try_from(instances.len()).unwrap_or(u32::MAX),
+            reason: "Örneklerin nesneleri çizildiği gibi yazıldı; modülün kaynak tanımı, örneklerin bağı, yerel istisnaları ve numara kuralı DXF'e yazılmaz. Modülü korumak için KCAD olarak kaydedin.".into(),
+            lines: Vec::new(),
+        });
+    }
     // Annotative annotations (docs/adr/0323 §5): DXF gets each as its own scale draws it.
     let scaled = entities
         .iter()

@@ -678,11 +678,15 @@ pub const SCHEMA_WITH_LAYER_INDEXES: u32 = 136;
 /// opening following one (`typeVersion`, `overrides`) or with a construction (`build`), a schedule reading an opening's
 /// widths; written only when one is.
 pub const SCHEMA_WITH_OPENING_TYPES: u32 = 137;
+/// Schema 138 (docs/adr/0775): the project's room modules (the architectural settings' `modules`: definitions in their
+/// own frame and the instances' points, turns, mirrors, levels, phases, numbering, versions, objects and exceptions);
+/// written only when the project has one.
+pub const SCHEMA_WITH_MODULES: u32 = 138;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 136] = [
+pub const SCHEMAS: [u32; 137] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -819,6 +823,7 @@ pub const SCHEMAS: [u32; 136] = [
     SCHEMA_WITH_CAD_WORK,
     SCHEMA_WITH_LAYER_INDEXES,
     SCHEMA_WITH_OPENING_TYPES,
+    SCHEMA_WITH_MODULES,
 ];
 
 /// The file a drawing is saved as.
