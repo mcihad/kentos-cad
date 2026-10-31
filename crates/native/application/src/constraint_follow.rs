@@ -138,9 +138,16 @@ pub(crate) fn follow(
             let d = &solved.diagnosis;
             match d.status {
                 SolveStatus::Inconsistent => {
+                    let words = match &solved.arch_why {
+                        // The architectural bonds' own reason first (docs/adr/0770 §4).
+                        Some(why) => format!(
+                            "{why}; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin."
+                        ),
+                        None => "Düzenleme kısıtlarla birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen kısıtı kaldırın ya da kısıtları gevşeterek düzenleyin.".to_owned(),
+                    };
                     return Err(refused(
                         codes::CONSTRAINT_CONFLICT,
-                        "Düzenleme kısıtlarla birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen kısıtı kaldırın ya da kısıtları gevşeterek düzenleyin.",
+                        &words,
                         ids(&d.conflicting),
                     ));
                 }

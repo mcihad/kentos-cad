@@ -64,17 +64,41 @@ pub fn other(to: DistanceTo) -> DistanceTo {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Switch {
     /// The side's reference becomes `to`.
-    Reference { uid: Uuid, edge: u32, side: u32, to: DistanceTo },
+    Reference {
+        uid: Uuid,
+        edge: u32,
+        side: u32,
+        to: DistanceTo,
+    },
     /// The edge's fixed end becomes `anchor`.
-    Anchor { uid: Uuid, edge: u32, anchor: WallAnchor },
+    Anchor {
+        uid: Uuid,
+        edge: u32,
+        anchor: WallAnchor,
+    },
+    /// A wall's clear distance on side `side` kept as a bond (`bond` none: `value` bonded now) or let go (`bond`, the
+    /// constraint's id; docs/adr/0770 §3). Written, not a session choice.
+    Bond {
+        uid: Uuid,
+        edge: u32,
+        side: u32,
+        value: f64,
+        bond: Option<Uuid>,
+    },
 }
 
 impl Switch {
     /// Kept in `choices`.
     pub fn apply(self, choices: &mut Choices) {
         match self {
-            Switch::Reference { uid, edge, side, to } => choices.set_to(uid, edge, side, to),
+            Switch::Reference {
+                uid,
+                edge,
+                side,
+                to,
+            } => choices.set_to(uid, edge, side, to),
             Switch::Anchor { uid, edge, anchor } => choices.set_anchor(uid, edge, anchor),
+            Switch::Bond { .. } => {}
         }
     }
 }
@@ -99,9 +123,20 @@ mod tests {
     #[test]
     fn a_side_shows_its_face_until_its_grid_is_chosen() {
         assert_eq!(shown(true, true, None), Some(DistanceTo::Face));
-        assert_eq!(shown(true, true, Some(DistanceTo::Grid)), Some(DistanceTo::Grid));
-        assert_eq!(shown(false, true, Some(DistanceTo::Face)), Some(DistanceTo::Grid), "only the grid");
-        assert_eq!(shown(true, false, Some(DistanceTo::Grid)), Some(DistanceTo::Face), "only the face");
+        assert_eq!(
+            shown(true, true, Some(DistanceTo::Grid)),
+            Some(DistanceTo::Grid)
+        );
+        assert_eq!(
+            shown(false, true, Some(DistanceTo::Face)),
+            Some(DistanceTo::Grid),
+            "only the grid"
+        );
+        assert_eq!(
+            shown(true, false, Some(DistanceTo::Grid)),
+            Some(DistanceTo::Face),
+            "only the face"
+        );
         assert_eq!(shown(false, false, None), None);
         let mut c = Choices::default();
         let uid = Uuid::from_u128(7);

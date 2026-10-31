@@ -194,8 +194,16 @@ impl App {
     pub(crate) fn text_field_event(&mut self, event: Event) {
         match event {
             Event::Input(text) => {
+                let draft = self
+                    .text_field
+                    .as_ref()
+                    .is_some_and(|o| o.editing.is_none());
                 if let Some(open) = &mut self.text_field {
-                    open.text = text;
+                    open.text = text.clone();
+                }
+                // The tool that asked for the field sees what is typed (docs/adr/0770 §3).
+                if draft {
+                    self.with_tool(|s, cx| s.text_draft(&text, cx));
                 }
             }
             Event::Keep => self.close_field(true, true),

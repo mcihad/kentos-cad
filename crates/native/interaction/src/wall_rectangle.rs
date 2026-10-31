@@ -33,6 +33,10 @@ enum Ask {
     Reference,
 }
 
+/// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on.
+const ADOPT: &str = "Benimse";
+const DRAW: &str = "Çiz";
+
 #[derive(Clone, Debug, Default)]
 pub struct WallRectangle {
     d: Taken,
@@ -46,6 +50,10 @@ pub struct WallRectangle {
     drawn: wall::Drawn,
     /// The reference ring comes from the planned wall, never a second UI calculation.
     ring: Vec<Vec2>,
+    /// Ortak duvar: Çiz (draw every side) instead of Benimse (docs/adr/0770 §1).
+    own: bool,
+    /// The walls the plan adopts, drawn marked.
+    adopted: Vec<Stroke>,
 }
 
 impl WallRectangle {
@@ -81,6 +89,7 @@ impl WallRectangle {
                 },
             },
             reference: self.reference,
+            adopt: !self.own,
             rotation: (self.rotation != 0.0).then_some(self.rotation),
             width: (!fixed).then_some(cx.memory.wall_width),
             style: style.map(|s| s.id),
@@ -99,6 +108,7 @@ impl WallRectangle {
     fn refresh(&mut self, cx: &Context<'_>) {
         self.drawn = wall::Drawn::default();
         self.ring.clear();
+        self.adopted.clear();
         let (Some(a), Some(b)) = (self.d.last(), self.d.hover) else {
             return;
         };
@@ -109,10 +119,28 @@ impl WallRectangle {
             CommandResult::Completed { output, .. } => {
                 for e in &output.walls {
                     wall::add(e, &mut self.drawn);
-                    if let Entity::Wall(w) = e {
+                    if let Entity::Wall(w) = e
+                        && w.wall.closed
+                    {
                         self.ring = w.wall.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
                     }
                 }
+                // The adopted walls, marked: the room's side there is theirs (docs/adr/0770 §1).
+                let mut marked = wall::Drawn::default();
+                for uid in &output.adopted {
+                    if let Some(e) = kentos_domain::Uuid::parse_str(uid)
+                        .ok()
+                        .and_then(|u| cx.doc.slot_of(u))
+                        .and_then(|s| cx.doc.get(s))
+                    {
+                        wall::add(e, &mut marked);
+                    }
+                }
+                self.adopted = marked
+                    .strokes
+                    .into_iter()
+                    .map(|s| s.tone(crate::tool::Tone::Snap))
+                    .collect();
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -200,6 +228,10 @@ impl WallRectangle {
                     .is_some()
             {
                 cx.say(Level::Warn, "Bu stilin kalınlığı sabittir. Farklı kalınlık için Stil (S) seçeneğinden başka bir stil veya Yok seçin.");
+                return true;
+            }
+            if key == "O" {
+                self.own = !self.own;
                 return true;
             }
             self.ask = match key.as_str() {
@@ -321,6 +353,7 @@ impl Tool for WallRectangle {
             .map(|(l, w)| format!("{} × {}", self.format.length_bare(l), self.format.length(w)));
         let prompt = Prompt::new(LABEL, text)
             .option_with("Boy referansı", "R", self.reference.label())
+            .option_with("Ortak duvar", "O", if self.own { DRAW } else { ADOPT })
             .option_with(
                 "Kalınlık",
                 "E",
@@ -353,6 +386,19 @@ impl Tool for WallRectangle {
         taken
     }
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        if key == "O" {
+            return [(ADOPT, "benimse", false), (DRAW, "ciz", true)]
+                .into_iter()
+                .map(|(label, typed, own)| OptionChoice {
+                    label: label.to_owned(),
+                    typed: typed.to_owned(),
+                    icon: None,
+                    preview: None,
+                    checked: own == self.own,
+                    command: None,
+                })
+                .collect();
+        }
         if key == "R" {
             WallRectangleReference::ALL
                 .into_iter()
@@ -373,32 +419,80 @@ impl Tool for WallRectangle {
         use crate::tool_settings::{Setting, wall_rows};
         let mut rows = wall_rows(&self.seen, &self.styles, format);
         rows.retain(|r| matches!(r.key, "S" | "E"));
-        rows.push(Setting::choice("R", "Boy referansı", self.option_choices("R")));
-        rows.push(Setting::text("B", "Boylar", self.size.map(|(l,w)|
-            format!("{},{}", format.length(l), format.length(w))).unwrap_or_default()));
-        rows.push(Setting::text("D", "Açı (°)", crate::format::fixed(self.rotation * 180.0 / PI, 2)));
+        rows.push(Setting::choice(
+            "R",
+            "Boy referansı",
+            self.option_choices("R"),
+        ));
+        rows.push(Setting::choice(
+            "O",
+            "Ortak duvar",
+            self.option_choices("O"),
+        ));
+        rows.push(Setting::text(
+            "B",
+            "Boylar",
+            self.size
+                .map(|(l, w)| format!("{},{}", format.length(l), format.length(w)))
+                .unwrap_or_default(),
+        ));
+        rows.push(Setting::text(
+            "D",
+            "Açı (°)",
+            crate::format::fixed(self.rotation * 180.0 / PI, 2),
+        ));
         rows
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         if matches!(key, "S" | "E") {
             let taken = crate::tool_settings::wall_apply(key, value, cx);
-            self.see(cx); return taken;
+            self.see(cx);
+            return taken;
         }
-        if key == "R" { return self.choose_option(key, value, cx); }
-        if key == "B" && value.trim().is_empty() { self.size = None; self.see(cx); return true; }
-        let ask = match key { "B" => Ask::Size, "D" => Ask::Rotation, _ => return false };
+        if key == "R" || key == "O" {
+            return self.choose_option(key, value, cx);
+        }
+        if key == "B" && value.trim().is_empty() {
+            self.size = None;
+            self.see(cx);
+            return true;
+        }
+        let ask = match key {
+            "B" => Ask::Size,
+            "D" => Ask::Rotation,
+            _ => return false,
+        };
         let previous = self.ask;
         self.ask = Some(ask);
         let took = self.typed(value, cx) && self.ask.is_none();
         self.ask = previous;
-        if !took { cx.say(Level::Warn, "Geçerli bir değer yazın; boylar için 4m,3m gibi."); }
-        self.see(cx); took
+        if !took {
+            cx.say(
+                Level::Warn,
+                "Geçerli bir değer yazın; boylar için 4m,3m gibi.",
+            );
+        }
+        self.see(cx);
+        took
     }
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         let taken = match key {
             "R" => {
                 self.set_reference(typed, cx);
                 true
+            }
+            "O" => {
+                let k = fold_tr(js_trim(typed));
+                if k == fold_tr(ADOPT) || k == "BENIMSE" {
+                    self.own = false;
+                    true
+                } else if k == fold_tr(DRAW) || k == "CIZ" {
+                    self.own = true;
+                    true
+                } else {
+                    cx.say(Level::Warn, "Ortak duvar için Benimse ya da Çiz seçin.");
+                    false
+                }
             }
             "S" => {
                 self.ask = None;
@@ -446,10 +540,14 @@ impl Tool for WallRectangle {
             };
         }
         let mut strokes = self.drawn.strokes.clone();
+        strokes.extend(self.adopted.iter().cloned());
         if !self.ring.is_empty() {
             strokes.push(Stroke::dashed(self.ring.clone(), true, [3.0, 3.0]));
         }
         let mut lines = vec![format!("Boy referansı: {}", self.reference.label())];
+        if !self.adopted.is_empty() {
+            lines.push("Ortak duvar benimsenir".to_owned());
+        }
         if self.ring.len() == 4 {
             let (length, width) = self.size.unwrap_or_else(|| {
                 (

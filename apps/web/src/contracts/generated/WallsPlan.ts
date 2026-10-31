@@ -13,4 +13,8 @@ walls: Array<Entity>,
 /**
  * KentOS's wall styles the project would take.
  */
-stylesAdded?: Array<WallStyleDef>, revision: string, };
+stylesAdded?: Array<WallStyleDef>, 
+/**
+ * `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids.
+ */
+adopted?: Array<string>, revision: string, };

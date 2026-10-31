@@ -2290,6 +2290,10 @@ def document(d):
     if indexed(d.get("layers", [])):
         # A layer's indexes (docs/adr/0758).
         schema = max(schema, 136)
+    rules = [c["rule"] for c in d.get("constraints", {}).get("constraints", [])]
+    if any(type(r.get(k)) is dict and r[k]["element"]["kind"] in ("wall", "jamb") for r in rules for k in ("a", "b", "axis")):
+        # A constraint naming a wall's line or an opening's jamb (docs/adr/0770 §4).
+        schema = max(schema, 137)
     return root(cmap(body), version=uint(schema))
 
 
@@ -3003,7 +3007,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-137.kcad"] = container(root(cmap(parts), version=uint(137)))
+    files["schema-version-138.kcad"] = container(root(cmap(parts), version=uint(138)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5243,6 +5247,21 @@ def build():
     # Schema 136 (docs/adr/0758): a layer's indexes, a key over two fields, a plain one and a key taking empty values as
     # the same; schema 135 refuses them, an empty list, a group's, one over a field the layer lacks, empty values the
     # same on a plain index and a default written are refused too.
+    # Schema 137 (docs/adr/0770): the architectural bonds, a face to face distance, two axes parallel, a jamb to a
+    # crossing wall's face and a fixed axis; schema 136 refuses them, a wall line in a coincident and a jamb with a
+    # point are refused too.
+    bonded = load("arch-bonds.json")
+    ab = document(bonded)
+    assert ab.count(b"\x67version\x18\x89") == 1, "the bonds are schema 137"
+    out["arch-bonds.kcad"] = container(ab)
+    out["broken/arch-bonds-in-schema-136.kcad"] = container(ab.replace(b"\x67version\x18\x89", b"\x67version\x18\x88"))
+
+    def bond_bad(name, change):
+        d = copy.deepcopy(bonded)
+        change(d)
+        out["broken/arch-bonds-" + name + ".kcad"] = container(document(d))
+    bond_bad("coincident", lambda d: d["constraints"]["constraints"][1]["rule"].update(kind="coincident"))
+    bond_bad("mixed", lambda d: d["constraints"]["constraints"][2]["rule"].update(b={"uid": d["uids"][0], "element": {"kind": "point", "place": {"kind": "start"}}}))
     keyed_layer = load("layer-indexes.json")
     li = document(keyed_layer)
     assert li.count(b"\x67version\x18\x88") == 1, "the indexes are schema 136"

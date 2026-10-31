@@ -1,6 +1,7 @@
 //! Entity operations (`apps/web/src/model/ops`), one Rust module per TypeScript file.
 
 pub mod adjoin;
+pub mod arch_bonds;
 pub mod areas;
 pub mod arrange;
 pub mod assoc_array;
@@ -80,6 +81,7 @@ pub mod trace;
 pub mod transform;
 pub mod trim;
 pub mod vertex;
+pub mod wall_adopt;
 pub mod vertex_points;
 pub mod vertex_table;
 pub mod wall_edit;

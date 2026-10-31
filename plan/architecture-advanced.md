@@ -90,7 +90,12 @@ kaynak kodu biliniyormuş gibi bir öneri yapılmamaktadır.
 
 ## 3. Yedi odaklı geliştirme paketi
 
-### ADV-01 — Bağlantılı odaları net ölçüyle kur ve güvenle değiştir [ ]
+### ADV-01 — Bağlantılı odaları net ölçüyle kur ve güvenle değiştir [~]
+
+_Durum (31 Ekim 2026, [ADR 0770](../docs/adr/0770-linked-rooms-and-architectural-bonds.md)):_ ortak duvarı benimseyen
+Dikdörtgen duvar, kaydırmanın etkisi (önizleme kartı), Bu ölçüyü koru (kilit karesi), duvar çizgisi ve pervaz bağları
+(mesafe, paralel, eşit aralık, sabit) ve şema 137 yapıldı. Açık: çelişen bağın çizimde yerinde vurgusu (yalnız ileti),
+20 ms bütçesinin ölçümü, gerçek pencerede elle kabul.
 
 **Kullanıcı sonucu:** “Bu odanın iç eni 3,20 m olsun; koridor 1,20 m kalsın”
 işi, çok sayıda taşı/uzat/buda işlemine dönüşmeden yapılabilsin. Önce basit ve

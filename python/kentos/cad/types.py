@@ -2440,6 +2440,16 @@ IslandStyleName = Literal["outer", "normal", "ignore"]
 """The names of :class:`IslandStyle`, for a plain string."""
 
 
+class JambEnd(_StrEnum):
+    """An opening's jamb: at its start or at its end along its wall (docs/adr/0770 §4)."""
+    START = "start"
+    END = "end"
+
+
+JambEndName = Literal["start", "end"]
+"""The names of :class:`JambEnd`, for a plain string."""
+
+
 class JoinHow(_StrEnum):
     """What a summing column does with a record's joined records.
 
@@ -6082,6 +6092,26 @@ WallJustifyName = Literal["left", "center", "right"]
 """The names of :class:`WallJustify`, for a plain string."""
 
 
+class WallLine(_StrEnum):
+    """Which line of a wall's edge an architectural constraint names (docs/adr/0770 §4).
+
+    - ``leftFace``
+    - ``rightFace``
+    - ``rightCore``
+    - ``axis``: Halfway between the faces.
+    - ``leftCore``: The core's (the strongest component band's) left and right boundaries; a wall without components: its faces.
+    """
+    LEFT_FACE = "leftFace"
+    RIGHT_FACE = "rightFace"
+    RIGHT_CORE = "rightCore"
+    AXIS = "axis"
+    LEFT_CORE = "leftCore"
+
+
+WallLineName = Literal["leftFace", "rightFace", "rightCore", "axis", "leftCore"]
+"""The names of :class:`WallLine`, for a plain string."""
+
+
 class WallRectangleReference(_StrEnum):
     """What the rectangle's dimensions describe. Only the new rectangular wall normalizes its path
     counter-clockwise; the existing free wall keeps its own direction and justification.
@@ -6510,6 +6540,8 @@ class CadElement(_Union):
     - :class:`PointCadElement` (``kind: point``)
     - :class:`SegmentCadElement` (``kind: segment``)
     - :class:`CircleCadElement` (``kind: circle``)
+    - :class:`WallCadElement` (``kind: wall``)
+    - :class:`JambCadElement` (``kind: jamb``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -27556,6 +27588,30 @@ class FrozenBlock(_Model):
             from_=data["from"],
             values=dict(data["values"]),
             inserts=list(data["inserts"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GapChange(_Model):
+    """A clear distance beside a moved edge, before and after (docs/adr/0770 §3), metres.
+    Attributes:
+        before: Unit: length.
+        after: Unit: length.
+    """
+    before: float
+    after: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["before"] = float(self.before)
+        out["after"] = float(self.after)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GapChange:
+        return cls(
+            before=float(data["before"]),
+            after=float(data["after"]),
         )
 
 
@@ -56734,6 +56790,46 @@ class SourcesSynced(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpaceAreaChange(_Model):
+    """A space whose boundary a move changes, its area before and after by its method (m²).
+    Attributes:
+        before: Unit: area.
+        after: Unit: area.
+        broken: The walls no longer close round it (`lostEnclosure`).
+    """
+    uid: str
+    before: float
+    after: float
+    broken: bool | Unset = UNSET
+    name: str | Unset = UNSET
+    number: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["before"] = float(self.before)
+        out["after"] = float(self.after)
+        if self.broken is not UNSET:
+            out["broken"] = self.broken
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.number is not UNSET:
+            out["number"] = self.number
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpaceAreaChange:
+        return cls(
+            uid=data["uid"],
+            before=float(data["before"]),
+            after=float(data["after"]),
+            broken=data.get("broken", UNSET),
+            name=data.get("name", UNSET),
+            number=data.get("number", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpaceEntity(Entity):
     """A space (docs/adr/0342).
     Attributes:
@@ -64522,6 +64618,53 @@ class WallEdgeRef(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WallEffects(_Model):
+    """What a wall's move does round it (docs/adr/0770 §3): the clear distances beside the moved edge, the spaces, the
+    openings, dimensions and kitchen runs that follow, and the walls the bonds shift.
+    Attributes:
+        bonded: The walls the bonds shift (docs/adr/0770 §4), besides the joined ones.
+        left: The moved edge's left and right clear distances (absent: no parallel wall on that side).
+    """
+    bonded: list[str] | Unset = UNSET
+    dimensions: list[str] | Unset = UNSET
+    fixtures: list[str] | Unset = UNSET
+    left: GapChange | None | Unset = UNSET
+    openings: list[str] | Unset = UNSET
+    right: GapChange | None | Unset = UNSET
+    spaces: list[SpaceAreaChange] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.bonded is not UNSET:
+            out["bonded"] = list(self.bonded)
+        if self.dimensions is not UNSET:
+            out["dimensions"] = list(self.dimensions)
+        if self.fixtures is not UNSET:
+            out["fixtures"] = list(self.fixtures)
+        if self.left is not UNSET:
+            out["left"] = None if self.left is None else self.left.to_json()
+        if self.openings is not UNSET:
+            out["openings"] = list(self.openings)
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else self.right.to_json()
+        if self.spaces is not UNSET:
+            out["spaces"] = [e0.to_json() for e0 in self.spaces]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallEffects:
+        return cls(
+            bonded=list(data["bonded"]) if "bonded" in data else UNSET,
+            dimensions=list(data["dimensions"]) if "dimensions" in data else UNSET,
+            fixtures=list(data["fixtures"]) if "fixtures" in data else UNSET,
+            left=UNSET if "left" not in data else None if data["left"] is None else GapChange.from_json(data["left"]),
+            openings=list(data["openings"]) if "openings" in data else UNSET,
+            right=UNSET if "right" not in data else None if data["right"] is None else GapChange.from_json(data["right"]),
+            spaces=[SpaceAreaChange.from_json(e0) for e0 in data["spaces"]] if "spaces" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WallEntity(Entity):
     """A wall (`CAD-ARCH-01`, `02`): its path, the base line it was drawn along, with arcs as a polyline's bulges (one per
     vertex, as the document keeps a polyline's: an open wall's last is 0); its width; where its body lies across the
@@ -65206,11 +65349,13 @@ class WallsCreated(_Model):
     Attributes:
         uids: The walls' persistent ids, in the input's order.
         ids: Their slots in the open document. Unit: id.
+        adopted: `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.
         styles_added: The ids of KentOS's wall styles taken into the project.
     """
     uids: list[str]
     ids: list[int]
     revision: str
+    adopted: list[str] | Unset = UNSET
     styles_added: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -65218,6 +65363,8 @@ class WallsCreated(_Model):
         out["uids"] = list(self.uids)
         out["ids"] = list(self.ids)
         out["revision"] = self.revision
+        if self.adopted is not UNSET:
+            out["adopted"] = list(self.adopted)
         if self.styles_added is not UNSET:
             out["stylesAdded"] = list(self.styles_added)
         return out
@@ -65228,6 +65375,7 @@ class WallsCreated(_Model):
             uids=list(data["uids"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+            adopted=list(data["adopted"]) if "adopted" in data else UNSET,
             styles_added=list(data["stylesAdded"]) if "stylesAdded" in data else UNSET,
         )
 
@@ -65319,6 +65467,8 @@ class WallsEdited(_Model):
     Attributes:
         walls: The walls as written, in the input's order (Birleştir: the one they became).
         added: The new walls (Böl: each second part).
+        bonds: Mesafe's `keep`: the new bond's id.
+        effects: Kaydır, Mesafe and Boy: what the move does round it (docs/adr/0770 §3).
         followers: Derived source-following preview changes; absent when none. New identities are provisional.
         joined: The walls joined to it whose ends followed (Kaydır, Mesafe; docs/adr/0710; Boy, docs/adr/0728).
         removed: The walls gone, by their ids (Birleştir: all but the first).
@@ -65326,6 +65476,8 @@ class WallsEdited(_Model):
     walls: list[Entity]
     revision: str
     added: list[Entity] | Unset = UNSET
+    bonds: list[str] | Unset = UNSET
+    effects: WallEffects | None | Unset = UNSET
     followers: DerivedEntitiesPlan | Unset = UNSET
     joined: list[Entity] | Unset = UNSET
     removed: list[str] | Unset = UNSET
@@ -65337,6 +65489,10 @@ class WallsEdited(_Model):
         out["revision"] = self.revision
         if self.added is not UNSET:
             out["added"] = [e0.to_json() for e0 in self.added]
+        if self.bonds is not UNSET:
+            out["bonds"] = list(self.bonds)
+        if self.effects is not UNSET:
+            out["effects"] = None if self.effects is None else self.effects.to_json()
         if self.followers is not UNSET:
             out["followers"] = self.followers.to_json()
         if self.joined is not UNSET:
@@ -65353,6 +65509,8 @@ class WallsEdited(_Model):
             walls=[Entity.from_json(e0) for e0 in data["walls"]],
             revision=data["revision"],
             added=[Entity.from_json(e0) for e0 in data["added"]] if "added" in data else UNSET,
+            bonds=list(data["bonds"]) if "bonds" in data else UNSET,
+            effects=UNSET if "effects" not in data else None if data["effects"] is None else WallEffects.from_json(data["effects"]),
             followers=DerivedEntitiesPlan.from_json(data["followers"]) if "followers" in data else UNSET,
             joined=[Entity.from_json(e0) for e0 in data["joined"]] if "joined" in data else UNSET,
             removed=list(data["removed"]) if "removed" in data else UNSET,
@@ -65604,16 +65762,20 @@ class WallsPlan(_Model):
     """What `cad.walls.create` would write (plan mode); nothing is written.
     Attributes:
         walls: The walls as they would be stored, their `id` 0.
+        adopted: `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids.
         styles_added: KentOS's wall styles the project would take.
     """
     walls: list[Entity]
     revision: str
+    adopted: list[str] | Unset = UNSET
     styles_added: list[WallStyleDef] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["walls"] = [e0.to_json() for e0 in self.walls]
         out["revision"] = self.revision
+        if self.adopted is not UNSET:
+            out["adopted"] = list(self.adopted)
         if self.styles_added is not UNSET:
             out["stylesAdded"] = [e0.to_json() for e0 in self.styles_added]
         return out
@@ -65623,6 +65785,7 @@ class WallsPlan(_Model):
         return cls(
             walls=[Entity.from_json(e0) for e0 in data["walls"]],
             revision=data["revision"],
+            adopted=list(data["adopted"]) if "adopted" in data else UNSET,
             styles_added=[WallStyleDef.from_json(e0) for e0 in data["stylesAdded"]] if "stylesAdded" in data else UNSET,
         )
 
@@ -65639,6 +65802,8 @@ class WallsRectangle(_Model):
     component thicknesses do not fit the width is refused. For outer/centre references the clear
     inner dimensions must remain positive. A plot scale or display-unit change never rescales input.
     Attributes:
+        adopt: Ortak duvar (docs/adr/0770 §1): the sides that run on an existing wall's matching line (same level) are not
+            drawn, the existing wall adopted; what is left is written as open walls. Absent or false: one closed wall.
         height: Unit: elevation.
         line_weight: Unit: paper-mm.
         rotation: Direction of the rectangle's sides from east, counter-clockwise. Absent: zero; not used for `edge`. Unit: rad.
@@ -65646,6 +65811,7 @@ class WallsRectangle(_Model):
     """
     layer_id: str
     frame: RectangleFrame
+    adopt: bool | Unset = UNSET
     arch: ArchInfo | None | Unset = UNSET
     attrs: dict[str, str] | None | Unset = UNSET
     color: str | None | Unset = UNSET
@@ -65663,6 +65829,8 @@ class WallsRectangle(_Model):
         out: dict[str, Any] = {}
         out["layerId"] = self.layer_id
         out["frame"] = self.frame.to_json()
+        if self.adopt is not UNSET:
+            out["adopt"] = self.adopt
         if self.arch is not UNSET:
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.attrs is not UNSET:
@@ -65693,6 +65861,7 @@ class WallsRectangle(_Model):
         return cls(
             layer_id=data["layerId"],
             frame=RectangleFrame.from_json(data["frame"]),
+            adopt=data.get("adopt", UNSET),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             color=data.get("color", UNSET),
@@ -67638,6 +67807,49 @@ class CircleCadElement(CadElement):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CircleCadElement:
         return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class WallCadElement(CadElement):
+    """A line of a wall's straight edge `edge` (docs/adr/0770 §4): a face, its axis or a face of its core, left and
+    right by the path's direction. Only the architectural rules take it (distance, parallel, symmetric, fix).
+    Attributes:
+        edge: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "wall"
+    edge: int
+    line: WallLine | WallLineName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "wall"}
+        out["edge"] = self.edge
+        out["line"] = _enum_out(self.line)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallCadElement:
+        return cls(
+            edge=data["edge"],
+            line=_enum_in(WallLine, data["line"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JambCadElement(CadElement):
+    """An opening's start or end jamb, the middle of its jamb line (docs/adr/0770 §4, 0694)."""
+    TAG_VALUE: ClassVar[str] = "jamb"
+    end: JambEnd | JambEndName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "jamb"}
+        out["end"] = _enum_out(self.end)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JambCadElement:
+        return cls(
+            end=_enum_in(JambEnd, data["end"]),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -82407,11 +82619,14 @@ class DistanceWallsOperation(WallsOperation):
     Attributes:
         distance: Unit: length.
         edge: Unit: index.
+        keep: Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`
+            (its face towards this one), this wall's face on that side `b`, a new parameter its value. Faces only.
     """
     TAG_VALUE: ClassVar[str] = "distance"
     side: DimensionSetFace | DimensionSetFaceName
     distance: float
     edge: int | None | Unset = UNSET
+    keep: bool | Unset = UNSET
     to: DistanceTo | DistanceToName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -82420,6 +82635,8 @@ class DistanceWallsOperation(WallsOperation):
         out["distance"] = float(self.distance)
         if self.edge is not UNSET:
             out["edge"] = self.edge
+        if self.keep is not UNSET:
+            out["keep"] = self.keep
         if self.to is not UNSET:
             out["to"] = _enum_out(self.to)
         return out
@@ -82430,6 +82647,7 @@ class DistanceWallsOperation(WallsOperation):
             side=_enum_in(DimensionSetFace, data["side"]),
             distance=float(data["distance"]),
             edge=data.get("edge", UNSET),
+            keep=data.get("keep", UNSET),
             to=_enum_in(DistanceTo, data["to"]) if "to" in data else UNSET,
         )
 
@@ -82697,7 +82915,7 @@ _BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParame
 _BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": ToBoundChange}
 
 
-_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "circle": CircleCadElement}
+_CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement}
 
 
 _CASEWORK_CHANGE: dict[str, type[CaseworkChange]] = {"module": ModuleCaseworkChange, "recipe": RecipeCaseworkChange, "release": ReleaseCaseworkChange}
@@ -83948,6 +84166,7 @@ __all__ = [
     "FromFieldDomainsOp",
     "FromRelationJoinsOp",
     "FrozenBlock",
+    "GapChange",
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GeoidModel",
@@ -84123,6 +84342,9 @@ __all__ = [
     "IslandStyle",
     "IslandStyleName",
     "ItemWords",
+    "JambCadElement",
+    "JambEnd",
+    "JambEndName",
     "JoggedDimensionMeasure",
     "JoinAggregate",
     "JoinColumn",
@@ -85379,6 +85601,7 @@ __all__ = [
     "SourcesRelated",
     "SourcesSync",
     "SourcesSynced",
+    "SpaceAreaChange",
     "SpaceBreak",
     "SpaceBreakName",
     "SpaceColumns",
@@ -85737,12 +85960,14 @@ __all__ = [
     "VisibilityState",
     "WallAnchor",
     "WallAnchorName",
+    "WallCadElement",
     "WallCaps",
     "WallCapsName",
     "WallComponent",
     "WallDetail",
     "WallDetailName",
     "WallEdgeRef",
+    "WallEffects",
     "WallEnd",
     "WallEndName",
     "WallEntity",
@@ -85761,6 +85986,8 @@ __all__ = [
     "WallJustify",
     "WallJustifyName",
     "WallLength",
+    "WallLine",
+    "WallLineName",
     "WallOpeningReference",
     "WallPartitionPlan",
     "WallRectangleReference",

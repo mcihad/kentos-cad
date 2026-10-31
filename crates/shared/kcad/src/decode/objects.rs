@@ -323,6 +323,7 @@ pub(super) struct Features {
     pub(super) cad_work: bool,
     /// Schema 136 (docs/adr/0758): a layer's indexes.
     pub(super) layer_indexes: bool,
+    pub(super) arch_bonds: bool,
     /// Schema 105: a join view's source table and summing columns (docs/adr/0632 §4).
     pub(super) join_sources: bool,
     /// Schema 106: a layer's dataset description and derivation record (docs/adr/0633 §3).
@@ -524,6 +525,7 @@ impl Features {
             table_constraints: schema >= crate::SCHEMA_WITH_TABLE_CONSTRAINTS,
             cad_work: schema >= crate::SCHEMA_WITH_CAD_WORK,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
+            arch_bonds: schema >= crate::SCHEMA_WITH_ARCH_BONDS,
             join_sources: schema >= crate::SCHEMA_WITH_JOIN_SOURCES,
             datasets: schema >= crate::SCHEMA_WITH_DATASETS,
             labels: schema >= SCHEMA_WITH_LABELS,
@@ -1402,30 +1404,65 @@ pub(super) fn object(
             "space" => {
                 let at = r.position();
                 let value = r.opaque()?;
-                if !has.space_sources && (value.get("sources").is_some() || value.get("broken").and_then(serde_json::Value::as_str)==Some("sourceUnavailable")) {
-                    return Err(r.fail_at(Code::UnknownField,at,"mahalın seçilmiş kaynakları şema 110'dan beri yazılır"));
+                if !has.space_sources
+                    && (value.get("sources").is_some()
+                        || value.get("broken").and_then(serde_json::Value::as_str)
+                            == Some("sourceUnavailable"))
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "mahalın seçilmiş kaynakları şema 110'dan beri yazılır",
+                    ));
                 }
                 if !has.fixtures && value.get("finishes").and_then(|f| f.get("base")).is_some() {
-                    return Err(r.fail_at(Code::UnknownField,at,"mahalin süpürgelik kaplaması şema 131'den beri yazılır"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "mahalin süpürgelik kaplaması şema 131'den beri yazılır",
+                    ));
                 }
                 if !has.space_voids && value.get("void").is_some() {
-                    return Err(r.fail_at(Code::UnknownField,at,"mahalın boşluk işareti (void) şema 116'dan beri yazılır"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "mahalın boşluk işareti (void) şema 116'dan beri yazılır",
+                    ));
                 }
                 if !has.space_scope && value.get("scope").is_some() {
-                    return Err(r.fail_at(Code::UnknownField,at,"mahalın kaynak kapsamı şema 109'dan beri yazılır"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "mahalın kaynak kapsamı şema 109'dan beri yazılır",
+                    ));
                 }
                 if !has.space_columns {
                     if value.get("columns").is_some() {
-                        return Err(r.fail_at(Code::UnknownField,at,"mahalın kolon tercihi şema 108'den beri yazılır"));
+                        return Err(r.fail_at(
+                            Code::UnknownField,
+                            at,
+                            "mahalın kolon tercihi şema 108'den beri yazılır",
+                        ));
                     }
-                    if value.get("broken").and_then(serde_json::Value::as_str).is_some_and(|b| b != "lostEnclosure") {
-                        return Err(r.fail_at(Code::BadValue,at,"bu mahal kopukluk nedeni şema 108'den beri yazılır"));
+                    if value
+                        .get("broken")
+                        .and_then(serde_json::Value::as_str)
+                        .is_some_and(|b| b != "lostEnclosure")
+                    {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            at,
+                            "bu mahal kopukluk nedeni şema 108'den beri yazılır",
+                        ));
                     }
                 }
-                let (v, _): (crate::space::SpaceRest, usize) = json_value_part(r,"mahalin alanları",value,at)?;
+                let (v, _): (crate::space::SpaceRest, usize) =
+                    json_value_part(r, "mahalin alanları", value, at)?;
                 f.space = Some(v);
             }
-            "spaceSeparator" if kind == Kind::Polyline => f.space_separator = Some(json_part(r,"mahal ayırıcı rolü")?.0),
+            "spaceSeparator" if kind == Kind::Polyline => {
+                f.space_separator = Some(json_part(r, "mahal ayırıcı rolü")?.0)
+            }
             "parts" if kind == Kind::Point => f.point_parts = Some(list(r, |r, _| point_part(r))?),
             "parts" if kind == Kind::Polyline => f.parts = Some(list(r, |r, _| line_part(r, has))?),
             "parts" => f.parts = Some(list(r, |r, _| part(r, has))?),
@@ -1583,7 +1620,11 @@ pub(super) fn object(
             }
             // A wall's, and since schema 131 a block insert's level and phase (docs/adr/0733 §1).
             "arch" => {
-                let what = if kind == Kind::Insert { "yerleştirmenin katı ve evresi" } else { "duvarın mimari bilgisi" };
+                let what = if kind == Kind::Insert {
+                    "yerleştirmenin katı ve evresi"
+                } else {
+                    "duvarın mimari bilgisi"
+                };
                 let (v, at): (kentos_contracts::ArchInfo, usize) = json_part(r, what)?;
                 if v.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş mimari bilgi yazılmaz"));
@@ -1712,7 +1753,9 @@ pub(super) fn object(
                     ));
                 }
                 // Schema 122 (docs/adr/0721 §4): a block schedule's further columns.
-                if !has.schedule_columns && matches!(&v, TableSource::Blocks { columns, .. } if !columns.is_empty()) {
+                if !has.schedule_columns
+                    && matches!(&v, TableSource::Blocks { columns, .. } if !columns.is_empty())
+                {
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
@@ -1788,7 +1831,8 @@ pub(super) fn object(
                 f.look.options = Some(Box::new(o));
             }
             "level" => {
-                let (l, at): (kentos_contracts::DimensionLevel, usize) = json_part(r, "kotun katı")?;
+                let (l, at): (kentos_contracts::DimensionLevel, usize) =
+                    json_part(r, "kotun katı")?;
                 if let Some(words) = l.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &words));
                 }
@@ -2166,7 +2210,9 @@ pub(super) fn object(
         ));
     }
     // Schema 125 (docs/adr/0724): a stair bound to its level's height, or with a centre post.
-    if matches!(&entity, Entity::Stair(s) if s.stair.height_from_level || s.stair.post.is_some()) && !has.stair_levels {
+    if matches!(&entity, Entity::Stair(s) if s.stair.height_from_level || s.stair.post.is_some())
+        && !has.stair_levels
+    {
         return Err(r.fail(
             Code::BadValue,
             "merdivenin kata bağlı yüksekliği (heightFromLevel) ve merkez direği (post) şema 125 ister",
@@ -2174,15 +2220,24 @@ pub(super) fn object(
     }
     // Schema 124 (docs/adr/0723 §2): a ramp bound to its level.
     if matches!(&entity, Entity::Ramp(m) if m.ramp.base_offset.is_some()) && !has.ramp_levels {
-        return Err(r.fail(Code::BadValue, "rampanın kata göre başlangıç kotu (baseOffset) şema 124 ister"));
+        return Err(r.fail(
+            Code::BadValue,
+            "rampanın kata göre başlangıç kotu (baseOffset) şema 124 ister",
+        ));
     }
     // Schema 117 (docs/adr/0709): a curved stair's arc.
     if matches!(&entity, Entity::Stair(s) if s.stair.bulges.is_some()) && !has.stair_arcs {
-        return Err(r.fail(Code::BadValue, "döner merdivenin bükümü (bulges) şema 117 ister"));
+        return Err(r.fail(
+            Code::BadValue,
+            "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
     }
     // Schema 119 (docs/adr/0719): a niche, a flue, a depth, an inset, an opening too deep.
     if kentos_contracts::needs_recesses(&entity) && !has.recesses {
-        return Err(r.fail(Code::BadValue, "niş, baca, derinlik (depth) ve yüzden uzaklık (inset) şema 119 ister"));
+        return Err(r.fail(
+            Code::BadValue,
+            "niş, baca, derinlik (depth) ve yüzden uzaklık (inset) şema 119 ister",
+        ));
     }
     // A closed and a wide polyline's rules (docs/adr/0258).
     if let Entity::Polyline(p) = &entity
@@ -3081,15 +3136,20 @@ fn raster_georef(
 fn raster_tiles(r: &mut Reader<'_>) -> Result<kentos_contracts::RasterTiles, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let read: kentos_contracts::RasterTiles = serde_json::from_value(value.clone()).map_err(|e| {
-        let words = e.to_string();
-        let code = if words.contains("unknown field") {
-            Code::UnknownField
-        } else {
-            Code::BadValue
-        };
-        r.fail_at(code, at, &format!("rasterin karo tablosu okunamadı: {words}"))
-    })?;
+    let read: kentos_contracts::RasterTiles =
+        serde_json::from_value(value.clone()).map_err(|e| {
+            let words = e.to_string();
+            let code = if words.contains("unknown field") {
+                Code::UnknownField
+            } else {
+                Code::BadValue
+            };
+            r.fail_at(
+                code,
+                at,
+                &format!("rasterin karo tablosu okunamadı: {words}"),
+            )
+        })?;
     if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
         return Err(r.fail_at(
             Code::BadValue,
@@ -3864,7 +3924,10 @@ pub(super) fn json_part<T: serde::de::DeserializeOwned + serde::Serialize>(
 }
 
 fn json_value_part<T: serde::de::DeserializeOwned + serde::Serialize>(
-    r: &mut Reader<'_>, what: &str, value: serde_json::Value, at: usize,
+    r: &mut Reader<'_>,
+    what: &str,
+    value: serde_json::Value,
+    at: usize,
 ) -> Result<(T, usize), KcadError> {
     let read: T = serde_json::from_value(value.clone()).map_err(|e| {
         let words = e.to_string();

@@ -47,6 +47,7 @@ pub fn plan_in(doc: &Document, input: &WallsCreate) -> CommandResult<WallsPlan> 
                     .map(|((w, a), n)| entity(input, n, w, a))
                     .collect(),
                 styles_added: added,
+                adopted: Vec::new(),
                 revision: doc.revision().to_string(),
             },
             warnings,
@@ -93,6 +94,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsCreate) -> CommandRe
                 .collect(),
             ids: slots.iter().map(|s| s.0).collect(),
             styles_added: added.into_iter().map(|s| s.id).collect(),
+            adopted: Vec::new(),
             revision: doc.revision().to_string(),
         },
         warnings,

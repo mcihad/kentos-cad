@@ -226,7 +226,12 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden", "dimension_text_tight", "dimension_set_wall_skipped", "dimension_set_rounding"],
+        warnings: &[
+            "layer_hidden",
+            "dimension_text_tight",
+            "dimension_set_wall_skipped",
+            "dimension_set_rounding",
+        ],
         targets: none,
     },
     Entry {
@@ -241,7 +246,12 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden", "dimension_text_tight", "dimension_set_wall_skipped", "dimension_set_rounding"],
+        warnings: &[
+            "layer_hidden",
+            "dimension_text_tight",
+            "dimension_set_wall_skipped",
+            "dimension_set_rounding",
+        ],
         targets: none,
     },
     Entry {
@@ -848,7 +858,8 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.edit",
-        refusals: &[&["invalid_space_separator"],
+        refusals: &[
+            &["invalid_space_separator"],
             &[
                 "no_changes",
                 "invalid_uid",
@@ -907,7 +918,11 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["layer_locked", "constraints_not_copied", "room_sources_not_copied"],
+        warnings: &[
+            "layer_locked",
+            "constraints_not_copied",
+            "room_sources_not_copied",
+        ],
         targets: || {
             vec![
                 target(
@@ -954,7 +969,12 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["units_differ", "layer_hidden", "names_renamed", "room_sources_not_copied"],
+        warnings: &[
+            "units_differ",
+            "layer_hidden",
+            "names_renamed",
+            "room_sources_not_copied",
+        ],
         targets: none,
     },
     Entry {
@@ -1611,6 +1631,8 @@ const ENTRIES: &[Entry] = &[
                 "wall_collapses",
                 "level_not_found",
                 "invalid_line_weight",
+                // Ortak duvar: every side already a wall's (docs/adr/0770 §1).
+                "nothing_to_set",
             ],
             LAYER,
             REVISION,
@@ -1706,6 +1728,9 @@ const ENTRIES: &[Entry] = &[
                 "walls_differ",
                 "wall_closed",
                 "wall_misses",
+                // The architectural bonds that follow the walls, and Mesafe's `keep` (docs/adr/0770 §4, §5).
+                "constraint_conflict",
+                "invalid_constraint",
             ],
             REVISION,
         ],
@@ -1714,22 +1739,64 @@ const ENTRIES: &[Entry] = &[
             "wall_join_crowded",
             "wall_join_acute",
             "wall_join_unresolved",
+            "constraints_relaxed",
+            "constraints_removed",
         ],
         targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
     },
     // The spaces (docs/adr/0342 §4).
     Entry {
         id: "cad.spaces.number",
-        refusals: &[OBJECTS, REVISION, &["not_a_space", "layer_locked", "not_finite", "invalid_space_number", "space_number_conflict"]],
+        refusals: &[
+            OBJECTS,
+            REVISION,
+            &[
+                "not_a_space",
+                "layer_locked",
+                "not_finite",
+                "invalid_space_number",
+                "space_number_conflict",
+            ],
+        ],
         warnings: &[],
         targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
     },
     Entry {
-        id:"cad.spaces.separators",
-        refusals:&[OBJECTS,LAYER,REVISION,ATTRS,&["invalid_space_separator","too_few_points","bulge_count","not_finite","invalid_line_weight","level_not_found","slots_exhausted"]],
-        warnings:&["layer_hidden"],
-        targets:||vec![target(Some("set"),&["polyline"],&[],Some("invalid_space_separator"),Some("Tek parçalı, düzlemsel, genişliksiz çoklu çizgi")),
-            target(Some("clear"),&["polyline"],&[],Some("invalid_space_separator"),None)],
+        id: "cad.spaces.separators",
+        refusals: &[
+            OBJECTS,
+            LAYER,
+            REVISION,
+            ATTRS,
+            &[
+                "invalid_space_separator",
+                "too_few_points",
+                "bulge_count",
+                "not_finite",
+                "invalid_line_weight",
+                "level_not_found",
+                "slots_exhausted",
+            ],
+        ],
+        warnings: &["layer_hidden"],
+        targets: || {
+            vec![
+                target(
+                    Some("set"),
+                    &["polyline"],
+                    &[],
+                    Some("invalid_space_separator"),
+                    Some("Tek parçalı, düzlemsel, genişliksiz çoklu çizgi"),
+                ),
+                target(
+                    Some("clear"),
+                    &["polyline"],
+                    &[],
+                    Some("invalid_space_separator"),
+                    None,
+                ),
+            ]
+        },
     },
     Entry {
         id: "cad.spaces.discover",
@@ -1887,7 +1954,12 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.arch.audit",
-        refusals: &[&["not_finite", "invalid_arch_audit", "level_not_found", "entity_not_found"]],
+        refusals: &[&[
+            "not_finite",
+            "invalid_arch_audit",
+            "level_not_found",
+            "entity_not_found",
+        ]],
         warnings: &["exception_lapsed"],
         targets: none,
     },
@@ -1895,7 +1967,13 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.arch.exceptions",
         refusals: &[
-            &["invalid_input", "finding_not_found", "not_finite", "invalid_arch_audit", "level_not_found"],
+            &[
+                "invalid_input",
+                "finding_not_found",
+                "not_finite",
+                "invalid_arch_audit",
+                "level_not_found",
+            ],
             REVISION,
         ],
         warnings: &[],
@@ -1904,12 +1982,19 @@ const ENTRIES: &[Entry] = &[
     // Kat ver (docs/adr/0717): an object with a level of its own; a polyline only as a room separator.
     Entry {
         id: "cad.levels.assign",
-        refusals: &[OBJECTS, &["not_levelled", "level_not_found", "nothing_to_assign"], REVISION],
+        refusals: &[
+            OBJECTS,
+            &["not_levelled", "level_not_found", "nothing_to_assign"],
+            REVISION,
+        ],
         warnings: &["layer_locked", "arch_space_broken"],
         targets: || {
             vec![target(
                 None,
-                &["wall", "space", "grid", "column", "stair", "ramp", "slab", "polyline", "insert"],
+                &[
+                    "wall", "space", "grid", "column", "stair", "ramp", "slab", "polyline",
+                    "insert",
+                ],
                 &[],
                 Some("not_levelled"),
                 Some("Çoklu çizgi yalnız mahal ayırıcıysa kat alır."),
@@ -1919,7 +2004,11 @@ const ENTRIES: &[Entry] = &[
     // Kuzey oku, Revizyon işaretle and Malzeme lejandı (docs/adr/0721).
     Entry {
         id: "cad.north.create",
-        refusals: &[&["not_finite", "invalid_scale", "no_true_north"], REVISION, LAYER],
+        refusals: &[
+            &["not_finite", "invalid_scale", "no_true_north"],
+            REVISION,
+            LAYER,
+        ],
         warnings: &["layer_hidden"],
         targets: none,
     },
@@ -1947,20 +2036,42 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.legends.materials",
-        refusals: &[&["not_finite", "invalid_height", "no_materials", "no_legend"], REVISION, LAYER],
+        refusals: &[
+            &["not_finite", "invalid_height", "no_materials", "no_legend"],
+            REVISION,
+            LAYER,
+        ],
         warnings: &["layer_hidden"],
         targets: none,
     },
     Entry {
         id: "cad.casework.run",
-        refusals: &[&["not_finite", "invalid_casework", "invalid_line_weight"], REVISION, LAYER],
-        warnings: &["layer_hidden", "casework_filler", "casework_blind_corner", "casework_clash"],
+        refusals: &[
+            &["not_finite", "invalid_casework", "invalid_line_weight"],
+            REVISION,
+            LAYER,
+        ],
+        warnings: &[
+            "layer_hidden",
+            "casework_filler",
+            "casework_blind_corner",
+            "casework_clash",
+        ],
         targets: none,
     },
     Entry {
         id: "cad.casework.edit",
-        refusals: &[&["casework_not_found", "not_finite", "invalid_casework"], REVISION, LAYER],
-        warnings: &["layer_hidden", "casework_filler", "casework_blind_corner", "casework_clash"],
+        refusals: &[
+            &["casework_not_found", "not_finite", "invalid_casework"],
+            REVISION,
+            LAYER,
+        ],
+        warnings: &[
+            "layer_hidden",
+            "casework_filler",
+            "casework_blind_corner",
+            "casework_clash",
+        ],
         targets: none,
     },
     Entry {
@@ -1972,7 +2083,13 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.dimensions.interior",
         refusals: &[
-            &["not_finite", "invalid_height", "level_not_found", "unknown_style", "no_dimension"],
+            &[
+                "not_finite",
+                "invalid_height",
+                "level_not_found",
+                "unknown_style",
+                "no_dimension",
+            ],
             LAYER,
             LOOK,
             REVISION,
@@ -1982,13 +2099,19 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.columns.distances",
-        refusals: &[&["no_entities", "invalid_uid", "entity_not_found"], &["not_a_column"]],
+        refusals: &[
+            &["no_entities", "invalid_uid", "entity_not_found"],
+            &["not_a_column"],
+        ],
         warnings: &[],
         targets: || vec![target(None, &["column"], &[], Some("not_a_column"), None)],
     },
     Entry {
         id: "cad.walls.distances",
-        refusals: &[&["no_entities", "invalid_uid", "entity_not_found"], &["not_a_wall", "invalid_wall"]],
+        refusals: &[
+            &["no_entities", "invalid_uid", "entity_not_found"],
+            &["not_a_wall", "invalid_wall"],
+        ],
         warnings: &[],
         targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
     },
@@ -2757,7 +2880,17 @@ const ENTRIES: &[Entry] = &[
     // Work templates (docs/adr/0346 §1).
     Entry {
         id: "cad.templates.apply",
-        refusals: &[&["unknown_template", "invalid_template_unit", "template_settings_conflict", "unit_needs_local", "book_unreadable"], SHEET_CORE, REVISION],
+        refusals: &[
+            &[
+                "unknown_template",
+                "invalid_template_unit",
+                "template_settings_conflict",
+                "unit_needs_local",
+                "book_unreadable",
+            ],
+            SHEET_CORE,
+            REVISION,
+        ],
         warnings: &["template_unit_kept"],
         targets: none,
     },
@@ -4299,7 +4432,12 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             SHEET_CORE,
             REVISION,
-            &["no_operations", "invalid_operation", "book_unreadable", "level_not_found"],
+            &[
+                "no_operations",
+                "invalid_operation",
+                "book_unreadable",
+                "level_not_found",
+            ],
         ],
         warnings: &[],
         targets: none,
@@ -5440,7 +5578,12 @@ const ENTRIES: &[Entry] = &[
         id: "file.import.block",
         refusals: &[
             &["invalid_file_path", "invalid_block_card", "invalid_input"],
-            &["file_not_found", "import_unreadable", "unsupported_cad_version", "source_unit_unknown"],
+            &[
+                "file_not_found",
+                "import_unreadable",
+                "unsupported_cad_version",
+                "source_unit_unknown",
+            ],
             REVISION,
             &["nothing_to_import", "unknown_block", "block_refused"],
         ],

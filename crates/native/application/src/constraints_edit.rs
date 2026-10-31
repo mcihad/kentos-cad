@@ -176,6 +176,10 @@ fn id_of(text: &str) -> Option<ConstraintId> {
 /// What a rule's parts must be, by its kind: point, segment, circle; for two the first's options.
 fn fits(rule: &ConstraintRule) -> bool {
     use CadElement as E;
+    // An architectural rule's parts are the contract's rules (docs/adr/0770 §4).
+    if kentos_commands::rule_is_architectural(rule) {
+        return true;
+    }
     let point = |e: &ElementRef| matches!(e.element, E::Point { .. });
     let seg = |e: &ElementRef| matches!(e.element, E::Segment { .. });
     let circle = |e: &ElementRef| matches!(e.element, E::Circle);
@@ -223,6 +227,32 @@ fn shape_of(
 
 /// A new constraint's sense read from the drawing (docs/adr/0335 §2).
 fn sensed(doc: &Document, mut rule: ConstraintRule) -> ConstraintRule {
+    // A wall line's or a jamb's side is the architectural adapter's (docs/adr/0770 §4); two jambs in their order
+    // along the wall.
+    if kentos_commands::rule_is_architectural(&rule) {
+        if let ConstraintRule::Distance { a, b, left, .. } = &mut rule {
+            if let (CadElement::Jamb { .. }, CadElement::Jamb { .. }) = (a.element, b.element) {
+                if crate::arch_bonds::measured(
+                    doc,
+                    &ConstraintRule::Distance {
+                        a: *a,
+                        b: *b,
+                        axis: DistanceAxis::Aligned,
+                        left: false,
+                        parameter: String::new(),
+                    },
+                )
+                .is_some_and(|g| g < 0.0)
+                {
+                    std::mem::swap(a, b);
+                }
+                *left = false;
+            } else {
+                *left = crate::arch_bonds::side_now(doc, a, b).unwrap_or(true);
+            }
+        }
+        return rule;
+    }
     let shapes = shape_of(doc);
     let measure = |r: &ConstraintRule| measure_with(r, &shapes);
     let probe = |a: ElementRef, b: ElementRef| ConstraintRule::Distance {
@@ -339,7 +369,7 @@ fn flipped(rule: &ConstraintRule) -> Option<ConstraintRule> {
         ConstraintRule::Distance {
             a, b, axis, left, ..
         } => match (b.element, *axis) {
-            (CadElement::Segment { .. }, _) => *left = !*left,
+            (CadElement::Segment { .. } | CadElement::Wall { .. }, _) => *left = !*left,
             (_, DistanceAxis::Horizontal | DistanceAxis::Vertical) => std::mem::swap(a, b),
             _ => return None,
         },
@@ -450,6 +480,35 @@ fn check_shape(edit: &ConstraintEdit) -> Result<(), Stop> {
 
 /// The objects and parts a rule names, found in the drawing.
 fn check_parts(doc: &Document, rule: &ConstraintRule, at: &str) -> Result<(), Stop> {
+    // A wall line or a jamb: the architectural adapter reads the parts (docs/adr/0770 §5); a wall's or an opening's
+    // own relations (joins, its host) are what it works with, not another authority.
+    if kentos_commands::rule_is_architectural(rule) {
+        for e in rule.elements() {
+            let uid = Uuid::from_bytes(e.uid.0);
+            if doc.slot_of(uid).is_none() {
+                return Err(refuse_ids(
+                    codes::ENTITY_NOT_FOUND,
+                    format!(
+                        "{uid} kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir."
+                    ),
+                    at,
+                    vec![uid.to_string()],
+                ));
+            }
+        }
+        if let Some(why) = crate::arch_bonds::rule_problem(doc, rule) {
+            return Err(refuse_ids(
+                codes::INVALID_CONSTRAINT,
+                format!("Bağ kurulamıyor: {why}."),
+                at,
+                rule.elements()
+                    .iter()
+                    .map(|e| Uuid::from_bytes(e.uid.0).to_string())
+                    .collect(),
+            ));
+        }
+        return Ok(());
+    }
     for e in rule.elements() {
         let uid = Uuid::from_bytes(e.uid.0);
         let Some(entity) = doc.slot_of(uid).and_then(|s| doc.get(s)) else {
@@ -518,7 +577,12 @@ fn unsolvable(u: Unsolvable) -> Stop {
 
 /// The value a dimension measures now as its parameter's expression.
 fn measured_text(doc: &Document, rule: &ConstraintRule, kind: ParameterKind) -> String {
-    let v = measure_with(rule, &shape_of(doc)).unwrap_or(0.0);
+    let v = if kentos_commands::rule_is_architectural(rule) {
+        crate::arch_bonds::measured(doc, rule)
+    } else {
+        measure_with(rule, &shape_of(doc))
+    }
+    .unwrap_or(0.0);
     value_text(in_parameter_unit(units(doc), kind, v))
 }
 
@@ -854,4 +918,39 @@ fn all_locked(doc: &Document, set: &ConstraintSet, ids: &[ConstraintId]) -> bool
                     })
                 })
         })
+}
+
+/// A new architectural distance bond and its parameter, its value what the drawing measures now, written into the open
+/// step as `label` (docs/adr/0770 §5: Mesafe's `keep`). Its id.
+pub(crate) fn add_bond(
+    doc: &mut Document,
+    rule: ConstraintRule,
+    label: &str,
+) -> Result<String, Stop> {
+    check_parts(doc, &rule, "operation")?;
+    let mut set = doc.constraints().clone();
+    let mut rule = sensed(doc, rule);
+    let kind = kind_of(&rule);
+    let expression = measured_text(doc, &rule, kind);
+    let fresh = next_name(&set.parameters, &rule);
+    if let Some(name) = parameter_mut(&mut rule) {
+        *name = fresh;
+        set.parameters.push(CadParameter {
+            name: name.clone(),
+            kind,
+            expression,
+            min: None,
+            max: None,
+            description: String::new(),
+        });
+    }
+    let id = ConstraintId(Uuid::now_v7().into_bytes());
+    set.constraints.push(Constraint {
+        id,
+        rule,
+        reference: false,
+    });
+    doc.set_constraints(set, label)
+        .map_err(|why| refuse(codes::INVALID_CONSTRAINT, why.to_string(), "operation"))?;
+    Ok(Uuid::from_bytes(id.0).to_string())
 }

@@ -2077,6 +2077,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 137 (docs/adr/0770): a constraint naming a wall's line or an opening's jamb.
+    if doc
+        .constraints
+        .constraints
+        .iter()
+        .any(|c| kentos_contracts::rule_is_architectural(&c.rule))
+    {
+        return crate::SCHEMA_WITH_ARCH_BONDS;
+    }
     // Schema 136 (docs/adr/0758): a layer's indexes.
     fn indexed(nodes: &[LayerNode]) -> bool {
         nodes
@@ -2135,7 +2144,12 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
             _ => false,
         })
     };
-    if fixtures(objs) || doc.blocks.iter().any(|b| fixtures(Objs::Plain(&b.entities))) {
+    if fixtures(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| fixtures(Objs::Plain(&b.entities)))
+    {
         return crate::SCHEMA_WITH_FIXTURES;
     }
     // Schema 130 (docs/adr/0732 §3): Mimari denetim's exceptions.
@@ -2174,14 +2188,16 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_GRID_COLUMN_FORMS;
     }
     // Schema 125 (docs/adr/0724): a stair whose rise is its level's height, or with a centre post.
-    if objs
-        .iter()
-        .any(|e| matches!(e, Entity::Stair(s) if s.stair.height_from_level || s.stair.post.is_some()))
-    {
+    if objs.iter().any(
+        |e| matches!(e, Entity::Stair(s) if s.stair.height_from_level || s.stair.post.is_some()),
+    ) {
         return crate::SCHEMA_WITH_STAIR_LEVELS;
     }
     // Schema 124 (docs/adr/0723 §2): a ramp bound to its level.
-    if objs.iter().any(|e| matches!(e, Entity::Ramp(r) if r.ramp.base_offset.is_some())) {
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::Ramp(r) if r.ramp.base_offset.is_some()))
+    {
         return crate::SCHEMA_WITH_RAMP_LEVELS;
     }
     // Schema 123 (docs/adr/0722): a slab.
@@ -2195,12 +2211,25 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
                 if matches!(&t.source, Some(kentos_contracts::TableSource::Blocks { columns, .. }) if !columns.is_empty()))
         })
     };
-    if columned(objs) || doc.blocks.iter().any(|b| columned(Objs::Plain(&b.entities))) {
+    if columned(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| columned(Objs::Plain(&b.entities)))
+    {
         return crate::SCHEMA_WITH_SCHEDULE_COLUMNS;
     }
     // Schema 121 (docs/adr/0721): a Kot bound to a level (of the drawing or a block).
-    let levelled = |list: Objs<'_>| list.iter().any(|e| matches!(e, Entity::Dimension(d) if d.level.is_some()));
-    if levelled(objs) || doc.blocks.iter().any(|b| levelled(Objs::Plain(&b.entities))) {
+    let levelled = |list: Objs<'_>| {
+        list.iter()
+            .any(|e| matches!(e, Entity::Dimension(d) if d.level.is_some()))
+    };
+    if levelled(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| levelled(Objs::Plain(&b.entities)))
+    {
         return crate::SCHEMA_WITH_DIMENSION_LEVELS;
     }
     // Schema 120 (docs/adr/0720): the level and view the drawing opens with.
@@ -2215,7 +2244,12 @@ fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     // Schema 119 (docs/adr/0719): a niche or flue, an opening too deep for its wall or a schedule of niches (of the
     // drawing or a block).
     let recessed = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_recesses);
-    if recessed(objs) || doc.blocks.iter().any(|b| recessed(Objs::Plain(&b.entities))) {
+    if recessed(objs)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| recessed(Objs::Plain(&b.entities)))
+    {
         return crate::SCHEMA_WITH_RECESSES;
     }
     // Schema 118 (docs/adr/0711): a dimension (of the drawing or of a block) whose references follow a cut.

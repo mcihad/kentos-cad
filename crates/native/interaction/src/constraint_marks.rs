@@ -79,6 +79,11 @@ fn part(
     uid: kentos_commands::EntityId,
     element: &CadElement,
 ) -> Option<(Vec2, Vec<Vec<Vec2>>)> {
+    if element.is_architectural() {
+        // An architectural part (docs/adr/0770 §6): its adapter says where it is.
+        let (at, line) = kentos_native_application::arch_bonds::part_place(doc, uid, element)?;
+        return Some((at, line.map(|(a, b)| vec![vec![a, b]]).unwrap_or_default()));
+    }
     let (e, shape) = object(doc, uid)?;
     let core = core_entity(e);
     match element {
@@ -96,6 +101,7 @@ fn part(
             let (a, b) = kentos_geometry_core::ops::subref::edge_line(&core, place)?;
             Some((at, vec![vec![a, b]]))
         }
+        CadElement::Wall { .. } | CadElement::Jamb { .. } => None,
         CadElement::Circle => {
             let (c, r) = match shape {
                 Shape::Circle { c, r } | Shape::Arc { c, r, .. } => (c, r),

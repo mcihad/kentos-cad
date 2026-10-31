@@ -16,6 +16,74 @@ use crate::{ExecutionContext, codes, shapes, walls_create};
 /// Stable failure used by every mode when the chosen reference would leave no inner rectangle.
 const NO_INTERIOR: &str = "Dikdörtgenin içi duvar kalınlığından sonra kapanıyor. Boyları büyütün, kalınlığı azaltın ya da İç net seçin.";
 
+/// The user's rectangle as the wall request, and with `adopt` (docs/adr/0770 §1) the walls it would run on left out:
+/// what is left as open walls, the adopted walls' ids. Writes nothing.
+fn request_in(
+    doc: &Document,
+    input: &WallsRectangle,
+) -> Result<(WallsCreate, Vec<String>), Box<CommandError>> {
+    let mut wall = request(input)?;
+    if !input.adopt {
+        return Ok((wall, Vec::new()));
+    }
+    use kentos_geometry_core::Vec2 as P;
+    use kentos_geometry_core::geom::wall_join::WallIn;
+    use kentos_geometry_core::ops::wall_adopt::{Reference, adopt};
+    let level = input.arch.as_ref().and_then(|a| a.level.clone());
+    let mut uids = Vec::new();
+    let mut shapes = Vec::new();
+    for e in doc.entities() {
+        if let Entity::Wall(w) = e
+            && w.wall.arch.level == level
+            && let Some(u) = doc.uid(kentos_domain::Slot(e.base().id))
+        {
+            uids.push(u.to_string());
+            shapes.push(crate::walls::core_shape(w));
+        }
+    }
+    let ins: Vec<WallIn<'_>> = shapes
+        .iter()
+        .filter_map(|s| match s {
+            kentos_geometry_core::entity::Shape::Wall { pts, bulges, wall } => Some(WallIn {
+                pts,
+                bulges: bulges.as_deref(),
+                spec: wall,
+            }),
+            _ => None,
+        })
+        .collect();
+    let template = wall.walls.remove(0);
+    let ring: Vec<P> = template.pts.iter().map(|p| P::new(p.x, p.y)).collect();
+    let reference = match input.reference {
+        WallRectangleReference::Inner => Reference::Inner,
+        WallRectangleReference::Outer => Reference::Outer,
+        WallRectangleReference::Center => Reference::Center,
+    };
+    let left = adopt(&ring, reference, &ins);
+    if left.paths.is_empty() {
+        return Err(Box::new(error(
+            codes::NOTHING_TO_SET,
+            "Dikdörtgenin bütün kenarları var olan duvarlarda; çizilecek yeni duvar kalmadı."
+                .into(),
+            Some("frame".into()),
+        )));
+    }
+    for path in left.paths {
+        wall.walls.push(NewWall {
+            pts: path
+                .into_iter()
+                .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
+                .collect(),
+            closed: left.closed,
+            ..template.clone()
+        });
+    }
+    Ok((
+        wall,
+        left.walls.into_iter().map(|j| uids[j].clone()).collect(),
+    ))
+}
+
 /// The user's rectangle converted to the existing wall request. This writes neither geometry nor styles.
 fn request(input: &WallsRectangle) -> Result<WallsCreate, Box<CommandError>> {
     let rectangle = RectangleCreate {
@@ -177,8 +245,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsRectangle) -> CommandResult<
 
 /// The tool's preview; the exact wall and style values execute will write, without changing the document.
 pub fn plan_in(doc: &Document, input: &WallsRectangle) -> CommandResult<WallsPlan> {
-    match request(input) {
-        Ok(wall) => checked_plan(doc, input, &wall),
+    match request_in(doc, input) {
+        Ok((wall, adopted)) => match checked_plan(doc, input, &wall) {
+            CommandResult::Completed {
+                mut output,
+                warnings,
+            } => {
+                output.adopted = adopted;
+                CommandResult::Completed { output, warnings }
+            }
+            other => other,
+        },
         Err(error) => CommandResult::Failed { error: *error },
     }
 }
@@ -200,12 +277,21 @@ fn write_execute(
     cx: &mut ExecutionContext<'_>,
     input: WallsRectangle,
 ) -> CommandResult<WallsCreated> {
-    let wall = match request(&input) {
-        Ok(wall) => wall,
+    let (wall, adopted) = match request_in(cx.doc, &input) {
+        Ok(w) => w,
         Err(error) => return CommandResult::Failed { error: *error },
     };
     match checked_plan(cx.doc, &input, &wall) {
-        CommandResult::Completed { .. } => public_paths(walls_create::execute(cx, wall)),
+        CommandResult::Completed { .. } => match public_paths(walls_create::execute(cx, wall)) {
+            CommandResult::Completed {
+                mut output,
+                warnings,
+            } => {
+                output.adopted = adopted;
+                CommandResult::Completed { output, warnings }
+            }
+            other => other,
+        },
         CommandResult::Failed { error } => CommandResult::Failed { error },
         CommandResult::Conflict { error } => CommandResult::Conflict { error },
         CommandResult::NeedsInput { error } => CommandResult::NeedsInput { error },

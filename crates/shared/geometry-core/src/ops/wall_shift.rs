@@ -9,9 +9,11 @@
 //!   along the other edge. A path end slides along the one wall whose end meets it, that end following to the same
 //!   point (a corner); along the wall it stands in (a tee: that wall stays), or along the line of two walls meeting
 //!   it in one line; square to the edge when nothing joins it (or its join is `none`). The ends of the walls standing
-//!   in the edge (tees into it) slide along their own last edge with it. Refused, nothing moving: an arc where a
+//!   in the edge (tees into it) slide along their own last edge with it, and so do the ends at a vertex between two
+//!   edges that run along the edge the vertex slides on (docs/adr/0770 §2). Refused, nothing moving: an arc where a
 //!   vertex slides, an adjacent edge along the same line, a wall end meeting it in one line, more walls at an end,
-//!   another wall's end at a vertex between two edges, or an edge that would shrink to nothing or turn round.
+//!   another wall's end at a vertex between two edges at another angle, or an edge that would shrink to nothing or
+//!   turn round.
 
 use crate::geom::wall::{JoinMode, left_face};
 use crate::geom::wall_join::{INLINE_DEGREES, JOIN_TOLERANCE, WallIn};
@@ -390,13 +392,19 @@ pub fn shift(walls: &[WallIn<'_>], w: usize, k: usize, by: f64) -> Result<Vec<Mo
                 "Kaydırılan kenarın bitişiğindeki kenar aynı doğrultuda; o köşeyi kaldırın.".into(),
             );
         }
-        if !ends_at(walls, w, p)?.is_empty() {
+        // Another wall's end at the corner goes with it when it runs along the edge the corner slides on (an
+        // adjacent room drawn on the axis, docs/adr/0770 §2); one at any other angle holds the corner.
+        let others = ends_at(walls, w, p)?;
+        if others.iter().any(|e| cross(v, e.dir).abs() > inline()) {
             return Err(
                 "Kaydırılan kenarın köşesine başka bir duvarın ucu bağlı; kaydırılamıyor.".into(),
             );
         }
         let q = slide(p, v, n, by).ok_or_else(|| "Bitişik kenar aynı doğrultuda.".to_owned())?;
         set(&mut moved, w, vertex, q);
+        for e in &others {
+            set(&mut moved, e.wall, e.vertex, q);
+        }
     }
     // The walls standing in the edge (tees into it) go with it.
     let lf = left_face(me.spec);

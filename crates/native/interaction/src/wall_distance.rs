@@ -8,16 +8,19 @@
 //! Esc leaves it as it was.
 
 use kentos_commands::{
-    DimensionSetFace, DistanceTo, Entity, TextAlign, WallAnchor, WallFields, WallGaps, WallJustify, WallsEdit,
-    WallsOperation,
+    DimensionSetFace, DistanceTo, Entity, TextAlign, WallAnchor, WallFields, WallGaps, WallJustify,
+    WallsEdit, WallsOperation,
 };
 use kentos_domain::{Slot, Uuid};
-use kentos_native_application::{ExecutionContext, wall_distances, walls_edit};
+use kentos_native_application::{
+    ExecutionContext, arch_bonds, constraints_edit, parameters_edit, wall_distances, walls_edit,
+};
 
 use crate::prompt::Prompt;
 use crate::temporary_refs::{Choices, Switch, other, shown};
 use crate::tool::{
-    Context, Flow, Marker, MarkerShape, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange,
+    Context, Flow, Label, Marker, MarkerShape, Pointer, Preview, Stroke, Tag, TextField, TextGhost,
+    Tone, Tool, ViewChange,
 };
 use crate::{Format, Level, Vec2, dimension_layout};
 
@@ -28,6 +31,8 @@ pub const LENGTH_LABEL: &str = "Duvarın boyu";
 
 /// The numbers' height, logical pixels: readable at any zoom.
 const TEXT_PX: f64 = 12.0;
+/// The effects card under the text field's hint, logical pixels below the field's middle.
+const CARD_PX: f64 = 40.0;
 /// The length's dimension out of the wall's face, logical pixels.
 const GAP_PX: f64 = 22.0;
 
@@ -38,6 +43,8 @@ pub struct Side {
     pub value: f64,
     pub text_at: Vec2,
     pub to: DistanceTo,
+    /// The distance bond that keeps it (docs/adr/0770 §3): its parameter's name.
+    pub bond: Option<String>,
 }
 
 /// The edge's length dimension: its value, where its number stands and the end that stays.
@@ -168,7 +175,8 @@ impl Overlay {
             return;
         };
         let scale = cx.view.world_length(1.0).to_bits();
-        if self.edge == Some(edge) && self.scale == Some(scale) && !self.preview.strokes.is_empty() {
+        if self.edge == Some(edge) && self.scale == Some(scale) && !self.preview.strokes.is_empty()
+        {
             return;
         }
         self.edge = Some(edge);
@@ -200,17 +208,26 @@ impl Overlay {
     fn dimension(&mut self, from: Vec2, to: Vec2, offset: f64, cx: &Context<'_>) -> Vec2 {
         let height = cx.view.world_length(TEXT_PX);
         let entity = crate::opening_distance::dimension(from, to, offset, height);
-        let mut drawn =
-            crate::wall_dimensions::dimension_preview(&entity, &cx.format(), cx.doc.settings().drawing_font);
+        let mut drawn = crate::wall_dimensions::dimension_preview(
+            &entity,
+            &cx.format(),
+            cx.doc.settings().drawing_font,
+        );
         for s in &mut drawn.strokes {
             s.tone = Tone::Snap;
         }
         self.preview.strokes.extend(drawn.strokes);
         // The number over a mask of the view's ground: the line it stands on does not cross it.
-        self.preview
-            .texts
-            .extend(drawn.texts.into_iter().map(|t| TextGhost { mask: true, ..t }));
-        dimension_layout(&entity).map_or(Vec2::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0), |l| l.text_at)
+        self.preview.texts.extend(
+            drawn
+                .texts
+                .into_iter()
+                .map(|t| TextGhost { mask: true, ..t }),
+        );
+        dimension_layout(&entity).map_or(
+            Vec2::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0),
+            |l| l.text_at,
+        )
     }
 
     /// The gaps of `g` drawn across them (each side's chosen reference), the faces or grids met marked where they are
@@ -218,9 +235,16 @@ impl Overlay {
     fn draw(&mut self, g: &WallGaps, choices: &Choices, cx: &Context<'_>) {
         let Some(uid) = self.uid else { return };
         let height = cx.view.world_length(TEXT_PX);
-        for (left, face, grid) in [(true, &g.left, &g.left_grid), (false, &g.right, &g.right_grid)] {
+        for (left, face, grid) in [
+            (true, &g.left, &g.left_grid),
+            (false, &g.right, &g.right_grid),
+        ] {
             let side = u32::from(!left);
-            let Some(to) = shown(face.is_some(), grid.is_some(), choices.to(uid, g.edge, side)) else {
+            let Some(to) = shown(
+                face.is_some(),
+                grid.is_some(),
+                choices.to(uid, g.edge, side),
+            ) else {
                 continue;
             };
             let (from, at, value) = match (to, face, grid) {
@@ -236,7 +260,10 @@ impl Overlay {
                 let (dx, dy) = ((at.x - from.x) / length, (at.y - from.y) / length);
                 let n = (-dy * height * 0.8, dx * height * 0.8);
                 let mut mark = Stroke::solid(
-                    vec![Vec2::new(at.x - n.0, at.y - n.1), Vec2::new(at.x + n.0, at.y + n.1)],
+                    vec![
+                        Vec2::new(at.x - n.0, at.y - n.1),
+                        Vec2::new(at.x + n.0, at.y + n.1),
+                    ],
                     false,
                 );
                 mark.tone = Tone::Snap;
@@ -268,11 +295,57 @@ impl Overlay {
                     },
                 ));
             }
+            // The padlock beside the number: a click keeps the distance as a bond, or lets the bond go (§3).
+            let bond = (to == DistanceTo::Face)
+                .then(|| {
+                    arch_bonds::side_bonds(cx.doc, uid, g.edge)
+                        .into_iter()
+                        .find(|b| b.left == left && !b.reference)
+                })
+                .flatten();
+            if to == DistanceTo::Face && length > 1e-9 {
+                // Across the dimension, on the same hand for both sides: above it, or right of an upright one.
+                let (dx, dy) = ((at.x - from.x) / length, (at.y - from.y) / length);
+                let (nx, ny) =
+                    if dx.abs() > 1e-9 && dx.signum() < 0.0 || dx.abs() <= 1e-9 && dy > 0.0 {
+                        (dy, -dx)
+                    } else {
+                        (-dy, dx)
+                    };
+                let lock = Vec2::new(text_at.x + nx * height * 1.9, text_at.y + ny * height * 1.9);
+                match &bond {
+                    Some(b) => {
+                        self.preview.markers.push(Marker {
+                            at: lock,
+                            shape: MarkerShape::Square(4.5),
+                            tone: Tone::Accent,
+                        });
+                        self.preview.labels.push(Label {
+                            at: lock,
+                            text: b.parameter.clone(),
+                            offset: [9.0, -7.0],
+                            tone: Tone::Accent,
+                        });
+                    }
+                    None => self.preview.squares.push(lock),
+                }
+                self.squares.push((
+                    lock,
+                    Switch::Bond {
+                        uid,
+                        edge: g.edge,
+                        side,
+                        value,
+                        bond: bond.as_ref().map(|b| b.id),
+                    },
+                ));
+            }
             self.sides.push(Side {
                 left,
                 value,
                 text_at,
                 to,
+                bond: bond.map(|b| b.parameter),
             });
         }
         if let Some(l) = &g.length {
@@ -282,9 +355,19 @@ impl Overlay {
 
     /// The edge's length along it, out of the face where no gap is drawn (with both, beyond the longer one, whose number
     /// stands farther out of the wall; neither, its right), the end that stays solid.
-    fn draw_length(&mut self, g: &WallGaps, l: &kentos_commands::WallLength, choices: &Choices, cx: &Context<'_>) {
-        let (Some(uid), Some(slot)) = (self.uid, self.slot) else { return };
-        let Some(Entity::Wall(w)) = cx.doc.get(slot) else { return };
+    fn draw_length(
+        &mut self,
+        g: &WallGaps,
+        l: &kentos_commands::WallLength,
+        choices: &Choices,
+        cx: &Context<'_>,
+    ) {
+        let (Some(uid), Some(slot)) = (self.uid, self.slot) else {
+            return;
+        };
+        let Some(Entity::Wall(w)) = cx.doc.get(slot) else {
+            return;
+        };
         let (lf, rf) = faces(&w.wall);
         let gap = cx.view.world_length(GAP_PX);
         let value = |left: bool| self.sides.iter().find(|s| s.left == left).map(|s| s.value);
@@ -301,7 +384,10 @@ impl Overlay {
         let length = (b.x - a.x).hypot(b.y - a.y);
         let on_line = |p: Vec2| {
             if length > 1e-12 {
-                Vec2::new(p.x - (b.y - a.y) / length * offset, p.y + (b.x - a.x) / length * offset)
+                Vec2::new(
+                    p.x - (b.y - a.y) / length * offset,
+                    p.y + (b.x - a.x) / length * offset,
+                )
             } else {
                 p
             }
@@ -343,7 +429,11 @@ impl Overlay {
             Side(&'a Side),
             Length(&'a Length),
         }
-        let mut numbers: Vec<(Vec2, Number<'_>)> = self.sides.iter().map(|s| (s.text_at, Number::Side(s))).collect();
+        let mut numbers: Vec<(Vec2, Number<'_>)> = self
+            .sides
+            .iter()
+            .map(|s| (s.text_at, Number::Side(s)))
+            .collect();
         if let Some(l) = &self.length {
             numbers.push((l.text_at, Number::Length(l)));
         }
@@ -361,6 +451,8 @@ impl Overlay {
                 to: side.to,
                 at: side.text_at,
                 value: side.value,
+                bond: side.bond.clone(),
+                card: None,
                 done: false,
             }),
             Number::Length(l) => Box::new(WallLength {
@@ -376,7 +468,13 @@ impl Overlay {
 }
 
 /// A text field's `ViewChange` at `at`, its value `initial`, saying `hint`.
-fn field(at: Vec2, initial: String, placeholder: &'static str, hint: &'static str, cx: &mut Context<'_>) {
+fn field(
+    at: Vec2,
+    initial: String,
+    placeholder: &'static str,
+    hint: &'static str,
+    cx: &mut Context<'_>,
+) {
     cx.view_changes.push(ViewChange::Text(TextField {
         at,
         height: cx.view.world_length(14.0),
@@ -400,11 +498,21 @@ pub struct WallDistance {
     to: DistanceTo,
     at: Vec2,
     value: f64,
+    /// The bond that keeps this side: its parameter's name; Enter sets it (docs/adr/0770 §3).
+    bond: Option<String>,
+    /// What the value typed would do, where it stands (under the field's hint) and its tone (the danger colour:
+    /// refused).
+    card: Option<(Vec<String>, Vec2, Tone)>,
     done: bool,
 }
 
 impl WallDistance {
     fn field(&self, initial: String, cx: &mut Context<'_>) {
+        if self.bond.is_some() {
+            let hint = "Bağın yeni değerini yazın; Enter bağı değiştirir, bağlı duvarlar izler; Esc vazgeçer.";
+            field(self.at, initial, "Bağ", hint, cx);
+            return;
+        }
         let hint = match self.to {
             DistanceTo::Face => {
                 "Yeni net mesafeyi yazın (2.40, 240 cm); Enter duvarı kaydırır, karşıdaki duvar yerinde kalır; Esc vazgeçer."
@@ -467,6 +575,31 @@ impl Tool for WallDistance {
             self.field(text.to_owned(), cx);
             return;
         };
+        // A bonded side: its parameter takes the value, the bonded walls follow (docs/adr/0770 §3).
+        if let Some(name) = self.bond.clone() {
+            let expression = cx.format().from_metres(distance).to_string();
+            let input = kentos_commands::ParametersEdit {
+                edits: vec![kentos_commands::ParameterEdit::Set {
+                    name: name.clone(),
+                    expression: Some(expression),
+                    min: None,
+                    max: None,
+                    description: None,
+                }],
+                allow_flip: false,
+                expected_revision: None,
+            };
+            let result = parameters_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+            if crate::points::written(result, cx).is_some() {
+                let shown = cx.format().length(distance);
+                cx.say(
+                    Level::Success,
+                    format!("Bağ {name} = {shown}; bağlı duvarlar izledi."),
+                );
+            }
+            self.done = true;
+            return;
+        }
         let input = WallsEdit {
             uids: vec![self.uid.to_string()],
             expected_revision: None,
@@ -475,6 +608,7 @@ impl Tool for WallDistance {
                 side: self.side,
                 distance,
                 to: self.to,
+                keep: false,
             },
         };
         let result = walls_edit::execute(&mut ExecutionContext::new(cx.doc), input);
@@ -503,8 +637,206 @@ impl Tool for WallDistance {
     fn finished(&self) -> bool {
         self.done
     }
+    fn text_draft(&mut self, text: &str, cx: &mut Context<'_>) {
+        let below = Vec2::new(self.at.x, self.at.y - cx.view.world_length(CARD_PX));
+        self.card = cx
+            .typed_length(text)
+            .filter(|d| d.is_finite())
+            .map(|distance| {
+                let (lines, tone) = self.effects_card(distance, cx);
+                (lines, below, tone)
+            });
+    }
     fn preview(&self, _: &Format) -> Preview {
-        Preview::default()
+        let Some((lines, at, tone)) = &self.card else {
+            return Preview::default();
+        };
+        Preview {
+            tag: Some(Tag {
+                at: *at,
+                lines: lines.clone(),
+            }),
+            tag_tone: *tone,
+            ..Preview::default()
+        }
+    }
+}
+
+impl WallDistance {
+    /// What `distance` would do, planned and not written: the card's lines (docs/adr/0770 §3).
+    fn effects_card(&self, distance: f64, cx: &mut Context<'_>) -> (Vec<String>, Tone) {
+        let f = cx.format();
+        if let Some(name) = &self.bond {
+            return (
+                vec![
+                    format!(
+                        "Bağ {name}: {} → {}",
+                        f.length(self.value),
+                        f.length(distance)
+                    ),
+                    "Bağlı duvarlar yeni değere göre kayar.".to_owned(),
+                ],
+                Tone::Accent,
+            );
+        }
+        let input = WallsEdit {
+            uids: vec![self.uid.to_string()],
+            expected_revision: None,
+            operation: WallsOperation::Distance {
+                edge: Some(self.edge),
+                side: self.side,
+                distance,
+                to: self.to,
+                keep: false,
+            },
+        };
+        match walls_edit::plan(&ExecutionContext::new(cx.doc), &input) {
+            kentos_commands::CommandResult::Completed { output, .. } => {
+                let lines = output.effects.as_ref().map_or_else(Vec::new, |e| {
+                    effect_lines(
+                        e,
+                        output.joined.len(),
+                        Some(self.side == DimensionSetFace::Left),
+                        &f,
+                    )
+                });
+                (lines, Tone::Accent)
+            }
+            kentos_commands::CommandResult::Failed { error }
+            | kentos_commands::CommandResult::Conflict { error }
+            | kentos_commands::CommandResult::NeedsInput { error } => {
+                (vec![error.message], Tone::Danger)
+            }
+            _ => (Vec::new(), Tone::Accent),
+        }
+    }
+}
+
+/// The lines of what a move does round it (docs/adr/0770 §3): the clear distances before and after, the rooms' areas,
+/// then how many openings, dimensions, fixtures and walls follow.
+/// `typed`: the side whose distance is typed (its left), named “Bu yan” and the other “Karşı yan”; else left and right.
+pub fn effect_lines(
+    e: &kentos_commands::WallEffects,
+    joined: usize,
+    typed: Option<bool>,
+    f: &Format,
+) -> Vec<String> {
+    let mut lines = Vec::new();
+    let name = |left: bool| match typed {
+        Some(t) if t == left => "Bu yan",
+        Some(_) => "Karşı yan",
+        None if left => "Sol",
+        None => "Sağ",
+    };
+    let mut gaps = [(name(true), &e.left, true), (name(false), &e.right, false)];
+    // The side typed first.
+    if typed == Some(false) {
+        gaps.swap(0, 1);
+    }
+    for (side, gap, _) in gaps {
+        if let Some(g) = gap {
+            lines.push(format!(
+                "{side} mesafe: {} → {}",
+                f.length(g.before),
+                f.length(g.after)
+            ));
+        }
+    }
+    for space in &e.spaces {
+        let name = [space.number.as_str(), space.name.as_str()]
+            .iter()
+            .filter(|t| !t.is_empty())
+            .copied()
+            .collect::<Vec<_>>()
+            .join(" ");
+        let name = if name.is_empty() {
+            "Mahal".to_owned()
+        } else {
+            format!("Mahal {name}")
+        };
+        let broken = if space.broken { " (kapanmıyor)" } else { "" };
+        lines.push(format!(
+            "{name}: {} → {}{broken}",
+            f.area(space.before),
+            f.area(space.after)
+        ));
+    }
+    let counts = [
+        (joined, "bitişik duvar izler"),
+        (e.bonded.len(), "bağlı duvar kayar"),
+        (e.openings.len(), "açıklık taşınır"),
+        (e.dimensions.len(), "ölçü yenilenir"),
+        (e.fixtures.len(), "donatı izler"),
+    ];
+    for (n, what) in counts {
+        if n > 0 {
+            lines.push(format!("{n} {what}"));
+        }
+    }
+    if lines.is_empty() {
+        lines.push("Başka bir şey değişmez.".to_owned());
+    }
+    lines
+}
+
+/// A padlock's click (docs/adr/0770 §3): the side's distance kept as a bond (`cad.walls.edit`'s `keep`, nothing moving),
+/// or its bond let go (`cad.constraints.edit`'s `remove`); one undo step.
+pub fn toggle_bond(switch: crate::temporary_refs::Switch, cx: &mut Context<'_>) {
+    let crate::temporary_refs::Switch::Bond {
+        uid,
+        edge,
+        side,
+        value,
+        bond,
+    } = switch
+    else {
+        return;
+    };
+    match bond {
+        Some(id) => {
+            let input = kentos_commands::ConstraintsEdit {
+                edit: kentos_commands::ConstraintEdit::Remove {
+                    ids: vec![id.to_string()],
+                },
+                hold: Vec::new(),
+                allow_flip: false,
+                expected_revision: None,
+            };
+            let result = constraints_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+            if crate::points::written(result, cx).is_some() {
+                cx.say(Level::Success, "Bağ kaldırıldı; duvar artık serbest.");
+            }
+        }
+        None => {
+            let input = WallsEdit {
+                uids: vec![uid.to_string()],
+                expected_revision: None,
+                operation: WallsOperation::Distance {
+                    edge: Some(edge),
+                    side: if side == 0 {
+                        DimensionSetFace::Left
+                    } else {
+                        DimensionSetFace::Right
+                    },
+                    distance: value,
+                    to: DistanceTo::Face,
+                    keep: true,
+                },
+            };
+            let result = walls_edit::execute(&mut ExecutionContext::new(cx.doc), input);
+            if crate::points::written(result, cx).is_some() {
+                let name = arch_bonds::side_bonds(cx.doc, uid, edge)
+                    .into_iter()
+                    .rfind(|b| b.left == (side == 0))
+                    .map(|b| b.parameter)
+                    .unwrap_or_default();
+                let shown = cx.format().length(value);
+                cx.say(
+                    Level::Success,
+                    format!("Mesafe bağlandı ({name} = {shown}): karşıdaki duvar kayınca bu duvar izler."),
+                );
+            }
+        }
     }
 }
 
@@ -525,7 +857,9 @@ impl WallLength {
             WallAnchor::End => {
                 "Kenarın yeni boyunu yazın (4.20, 420 cm); Enter başını kaydırır, işaretli sonu yerinde kalır; Esc vazgeçer."
             }
-            _ => "Kenarın yeni boyunu yazın (4.20, 420 cm); Enter sonunu kaydırır, işaretli başı yerinde kalır; Esc vazgeçer.",
+            _ => {
+                "Kenarın yeni boyunu yazın (4.20, 420 cm); Enter sonunu kaydırır, işaretli başı yerinde kalır; Esc vazgeçer."
+            }
         };
         field(self.at, initial, "Boy", hint, cx);
     }
@@ -624,9 +958,23 @@ mod tests {
     #[test]
     fn the_end_that_stays_is_the_one_that_cannot_move_else_the_choice_else_the_start() {
         assert_eq!(anchor_of(true, true, None), WallAnchor::Start);
-        assert_eq!(anchor_of(true, true, Some(WallAnchor::End)), WallAnchor::End);
-        assert_eq!(anchor_of(true, true, Some(WallAnchor::Middle)), WallAnchor::Start, "not offered here");
-        assert_eq!(anchor_of(true, false, Some(WallAnchor::Start)), WallAnchor::End, "only its start moves");
-        assert_eq!(anchor_of(false, true, Some(WallAnchor::End)), WallAnchor::Start);
+        assert_eq!(
+            anchor_of(true, true, Some(WallAnchor::End)),
+            WallAnchor::End
+        );
+        assert_eq!(
+            anchor_of(true, true, Some(WallAnchor::Middle)),
+            WallAnchor::Start,
+            "not offered here"
+        );
+        assert_eq!(
+            anchor_of(true, false, Some(WallAnchor::Start)),
+            WallAnchor::End,
+            "only its start moves"
+        );
+        assert_eq!(
+            anchor_of(false, true, Some(WallAnchor::End)),
+            WallAnchor::Start
+        );
     }
 }

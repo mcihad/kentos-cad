@@ -57,6 +57,12 @@ pub fn core_element(e: &CadElement) -> Element {
             index: *index,
         },
         CadElement::Circle => Element::Circle,
+        // Architectural parts are their adapter's (docs/adr/0770 §4); to the core solver a part no object has.
+        CadElement::Wall { .. } | CadElement::Jamb { .. } => Element::Segment {
+            part: u32::MAX,
+            ring: u32::MAX,
+            index: u32::MAX,
+        },
     }
 }
 
@@ -232,6 +238,32 @@ impl Document {
             let Some(entity) = now(&r.uid) else {
                 return true;
             };
+            // An architectural part (docs/adr/0770 §4): a wall line goes when its wall's layout (vertex count,
+            // closedness) changed or the edge is gone or an arc; a jamb when it is no longer an opening's.
+            match r.element {
+                CadElement::Wall { edge, .. } => {
+                    let Entity::Wall(w) = entity.as_ref() else {
+                        return true;
+                    };
+                    let layout =
+                        |w: &kentos_contracts::WallEntity| (w.wall.pts.len(), w.wall.closed);
+                    let edges = if w.wall.closed {
+                        w.wall.pts.len()
+                    } else {
+                        w.wall.pts.len().saturating_sub(1)
+                    };
+                    let arc = w
+                        .wall
+                        .bulges
+                        .as_ref()
+                        .and_then(|b| b.get(edge as usize))
+                        .is_some_and(|b| *b != 0.0);
+                    let reshaped = matches!(before.get(&r.uid).map(|e| e.as_ref()), Some(Entity::Wall(was)) if layout(was) != layout(w));
+                    return reshaped || edge as usize >= edges || arc;
+                }
+                CadElement::Jamb { .. } => return !matches!(entity.as_ref(), Entity::Opening(_)),
+                _ => {}
+            }
             let Some(was) = before.get(&r.uid) else {
                 return false;
             };
@@ -248,7 +280,7 @@ impl Document {
                 CadElement::Point { place } => {
                     matches!(place, SubPlace::Vertex { .. } | SubPlace::Node { .. })
                 }
-                CadElement::Circle => false,
+                _ => false,
             };
             (indexed && !*same) || !has_part(shape, &core_element(&r.element))
         };

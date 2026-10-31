@@ -66,6 +66,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (modül başına galeri ve öntanımlı pafta) web'de de kullanılabilir; web'in pafta kipi bugünkü gibi türe göre çalışır.
   Modül programları (tek `kentos-cad` dosyası, modül adlarıyla; ADR 0802 §1) ve KentOS Launcher (ADR 0800) masaüstünündür; web'de
   karşılığı yoktur.
+- ADR 0770 (ADV-01): web'de Dikdörtgen duvarın Ortak duvar'ı (`adopt`), duvarın geçici ölçüsünde yazarken etki kartı
+  (`WallEffects`) ve kilit kareleri (Bu ölçüyü koru, bağı kaldır, bağlı yanın parametresi), kısıt motorunda duvar çizgisi
+  ve pervaz parçaları (mimari bağdaştırıcı `ops::arch_bonds`, WASM'a bağlayıcı), `.kcad` şema 137 okuma ve yazma.
 - ADR 0760: denetimin `leave` zamanı (Alandan çıkınca). Web'in formu alanın odak kaybında (`change` ya da `blur`) ve
   seçilen değerde o öğeyi çıkılmış saymalı, kararı çekirdekten (`kentos_forms`'un `validate_left`'i WASM'a bağlanınca); web'in
   tasarımcısında Ne zaman'a Alandan çıkınca. Ortak durumlar `fixtures/forms/v1/cases.json`'un `moments` grubu.

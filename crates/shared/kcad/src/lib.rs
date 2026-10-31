@@ -674,11 +674,14 @@ pub const SCHEMA_WITH_CAD_WORK: u32 = 135;
 /// Schema 136 (docs/adr/0758): a layer's indexes (`indexes`: name, fields' keys, `unique`, `nullsEqual`), its keys when
 /// unique; written only when a layer has one.
 pub const SCHEMA_WITH_LAYER_INDEXES: u32 = 136;
+/// Schema 137 (docs/adr/0770): constraints that name a wall's line or an opening's jamb (`wall`, `jamb` parts, the
+/// architectural bonds); written only when one does.
+pub const SCHEMA_WITH_ARCH_BONDS: u32 = 137;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 135] = [
+pub const SCHEMAS: [u32; 136] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -814,6 +817,7 @@ pub const SCHEMAS: [u32; 135] = [
     SCHEMA_WITH_TABLE_CONSTRAINTS,
     SCHEMA_WITH_CAD_WORK,
     SCHEMA_WITH_LAYER_INDEXES,
+    SCHEMA_WITH_ARCH_BONDS,
 ];
 
 /// The file a drawing is saved as.

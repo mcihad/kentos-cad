@@ -226,7 +226,7 @@ use crate::layer::LineType;
 ///    one JSON text. The web's copy stays 53.
 /// 99 (docs/adr/0733 §1): a block insert's `arch` (level and phase): `.kcad` document schema 131; in the typed columns
 ///    an insert's option 5, its arch as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 99;
+pub const FORMATS_VERSION: u32 = 100;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -288,7 +288,11 @@ pub struct ImportLayer {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
-pub enum ReportSeverity { Info, Warning, Error }
+pub enum ReportSeverity {
+    Info,
+    Warning,
+    Error,
+}
 
 /// A bounded source sample for an aggregated CAD loss report.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1016,8 +1020,14 @@ pub struct CadImportScale {
 }
 impl CadImportScale {
     pub fn factor(self) -> Option<f64> {
-        let factor=self.real_length/self.source_length;
-        (self.source_length.is_finite() && self.source_length>0. && self.real_length.is_finite() && self.real_length>0. && factor.is_finite() && factor>0.).then_some(factor)
+        let factor = self.real_length / self.source_length;
+        (self.source_length.is_finite()
+            && self.source_length > 0.
+            && self.real_length.is_finite()
+            && self.real_length > 0.
+            && factor.is_finite()
+            && factor > 0.)
+            .then_some(factor)
     }
 }
 

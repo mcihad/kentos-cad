@@ -47,6 +47,70 @@ pub enum CadElement {
     },
     /// A circle, or an arc's circle.
     Circle,
+    /// A line of a wall's straight edge `edge` (docs/adr/0770 §4): a face, its axis or a face of its core, left and
+    /// right by the path's direction. Only the architectural rules take it (distance, parallel, symmetric, fix).
+    Wall {
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        edge: u32,
+        line: WallLine,
+    },
+    /// An opening's start or end jamb, the middle of its jamb line (docs/adr/0770 §4, 0694).
+    Jamb { end: JambEnd },
+}
+
+/// Which line of a wall's edge an architectural constraint names (docs/adr/0770 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum WallLine {
+    LeftFace,
+    RightFace,
+    /// Halfway between the faces.
+    Axis,
+    /// The core's (the strongest component band's) left and right boundaries; a wall without components: its faces.
+    LeftCore,
+    RightCore,
+}
+
+impl WallLine {
+    pub const ALL: [WallLine; 5] = [
+        WallLine::LeftFace,
+        WallLine::RightFace,
+        WallLine::Axis,
+        WallLine::LeftCore,
+        WallLine::RightCore,
+    ];
+
+    /// Its Turkish name.
+    pub fn label(self) -> &'static str {
+        match self {
+            WallLine::LeftFace => "sol yüz",
+            WallLine::RightFace => "sağ yüz",
+            WallLine::Axis => "eksen",
+            WallLine::LeftCore => "çekirdeğin sol yüzü",
+            WallLine::RightCore => "çekirdeğin sağ yüzü",
+        }
+    }
+}
+
+/// An opening's jamb: at its start or at its end along its wall (docs/adr/0770 §4).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum JambEnd {
+    Start,
+    End,
+}
+
+impl CadElement {
+    /// Whether it is an architectural part (a wall line or a jamb): docs/adr/0770 §4.
+    pub fn is_architectural(&self) -> bool {
+        matches!(self, CadElement::Wall { .. } | CadElement::Jamb { .. })
+    }
 }
 
 /// A part of an object by the object's persistent id.
@@ -403,6 +467,8 @@ enum Shape {
     Point,
     Segment,
     Circle,
+    WallLine,
+    Jamb,
 }
 
 fn shape(e: &ElementRef) -> Shape {
@@ -410,6 +476,8 @@ fn shape(e: &ElementRef) -> Shape {
         CadElement::Point { .. } => Shape::Point,
         CadElement::Segment { .. } => Shape::Segment,
         CadElement::Circle => Shape::Circle,
+        CadElement::Wall { .. } => Shape::WallLine,
+        CadElement::Jamb { .. } => Shape::Jamb,
     }
 }
 
@@ -432,8 +500,44 @@ fn element_problem(e: &ElementRef) -> Option<String> {
         CadElement::Segment { part, ring, index: i } if index(part) || index(ring) || index(i) => {
             Some("kenarın sırası sınırı aşıyor".into())
         }
+        CadElement::Wall { edge, .. } if index(edge) => Some("duvar kenarının sırası sınırı aşıyor".into()),
         _ => None,
     }
+}
+
+/// Whether a rule names an architectural part (docs/adr/0770 §4): the architectural adapter solves it, the general
+/// solver never sees it.
+pub fn rule_is_architectural(rule: &ConstraintRule) -> bool {
+    rule.elements().iter().any(|e| e.element.is_architectural())
+}
+
+/// Why an architectural rule's parts do not fit it (docs/adr/0770 §4): only distance, parallel, symmetric and fix, and
+/// architectural parts only.
+fn architectural_problem(rule: &ConstraintRule, kinds: &[Shape]) -> Option<String> {
+    use Shape::{Jamb, WallLine};
+    if kinds.iter().any(|k| !matches!(k, WallLine | Jamb)) {
+        return Some("duvar çizgisi ve pervaz yalnız duvar çizgisi ve pervazla bağlanır".into());
+    }
+    let fits = match rule {
+        ConstraintRule::Distance { axis, left, .. } => {
+            *axis == DistanceAxis::Aligned
+                && match (kinds[0], kinds[1]) {
+                    (WallLine, WallLine) | (Jamb, WallLine) => true,
+                    (Jamb, Jamb) => !left,
+                    _ => false,
+                }
+        }
+        ConstraintRule::Parallel { .. } => kinds == [WallLine, WallLine],
+        ConstraintRule::Symmetric { .. } => kinds == [WallLine, WallLine, WallLine],
+        ConstraintRule::Fix { .. } => true,
+        _ => false,
+    };
+    (!fits).then(|| {
+        format!(
+            "{} kısıtı duvar çizgisi ve pervaz almaz; mimari bağlar uzaklık, paralel, simetrik (eşit aralık) ve sabittir",
+            rule_label(rule)
+        )
+    })
 }
 
 /// Why `rule`'s parts do not fit it (docs/adr/0334 §2).
@@ -451,6 +555,9 @@ fn rule_problem(rule: &ConstraintRule) -> Option<String> {
         }
     }
     let kinds: Vec<Shape> = elements.iter().map(|e| shape(e)).collect();
+    if rule_is_architectural(rule) {
+        return architectural_problem(rule, &kinds);
+    }
     let fits = match rule {
         ConstraintRule::Coincident { .. } => kinds[0] == Point,
         ConstraintRule::Horizontal { b, .. } | ConstraintRule::Vertical { b, .. } => match b {
@@ -463,7 +570,7 @@ fn rule_problem(rule: &ConstraintRule) -> Option<String> {
         ConstraintRule::Tangent { inside, left, .. } => match kinds[0] {
             Segment => kinds[1] == Circle && !inside,
             Circle => kinds[1] == Circle && !left,
-            Point => false,
+            _ => false,
         },
         ConstraintRule::Concentric { .. } => kinds == [Circle, Circle],
         ConstraintRule::Equal { .. } => kinds == [Segment, Segment] || kinds == [Circle, Circle],
@@ -472,7 +579,7 @@ fn rule_problem(rule: &ConstraintRule) -> Option<String> {
         ConstraintRule::Distance { axis, left, .. } => match kinds[1] {
             Point => kinds[0] == Point && !left,
             Segment => kinds[0] == Point && *axis == DistanceAxis::Aligned,
-            Circle => false,
+            _ => false,
         },
         ConstraintRule::Angle { .. } => kinds == [Segment, Segment],
         ConstraintRule::Radius { .. } | ConstraintRule::Diameter { .. } => kinds[0] == Circle,

@@ -11,8 +11,9 @@
 //! are drawn from the walls); what then does not join is said, with what resolves it.
 
 use kentos_commands::{
-    CommandResult, Entity, OpeningEntity, Vec2, WallChange, WallEnd, WallEntity, WallFields, WallJoin, WallJoins,
-    WallJustify, WallStyleDef, WallsEdit, WallsEdited, WallsOperation, fixed_width,
+    CommandResult, Entity, OpeningEntity, Vec2, WallChange, WallEnd, WallEntity, WallFields,
+    WallJoin, WallJoins, WallJustify, WallStyleDef, WallsEdit, WallsEdited, WallsOperation,
+    fixed_width,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::Vec2 as CoreVec2;
@@ -42,6 +43,10 @@ struct Work {
     named: Option<usize>,
     /// Kaydır: the locked layer of a wall that would follow, refused after the walls named.
     blocked: Option<String>,
+    /// Kaydır, Mesafe and Boy: the edge moved (docs/adr/0770 §3).
+    edge: Option<usize>,
+    /// Mesafe's `keep`: the bond to write in the same step (docs/adr/0770 §5).
+    keep: Option<kentos_commands::ConstraintRule>,
 }
 
 /// The wall an opening goes into.
@@ -59,12 +64,19 @@ fn carry(doc: &Document, work: &Work) -> Vec<(Slot, OpeningEntity, Carrier)> {
     use kentos_geometry_core::geom::opening::{centre, read_back};
     use kentos_geometry_core::ops::path::{nearest_s, point_at_s};
     let line = |w: &WallEntity| wall_line(&Entity::Wall(w.clone()));
-    let kept: Vec<(Slot, Option<WallLine>)> = work.updates.iter().map(|(s, w)| (*s, line(w))).collect();
+    let kept: Vec<(Slot, Option<WallLine>)> =
+        work.updates.iter().map(|(s, w)| (*s, line(w))).collect();
     let added: Vec<Option<WallLine>> = work.added.iter().map(line).collect();
     let mut out = Vec::new();
-    let sources = work.updates.iter().map(|(s, _)| *s).chain(work.removed.iter().copied());
+    let sources = work
+        .updates
+        .iter()
+        .map(|(s, _)| *s)
+        .chain(work.removed.iter().copied());
     for source in sources {
-        let Some(uid) = doc.uid(source).map(|u| u.to_string()) else { continue };
+        let Some(uid) = doc.uid(source).map(|u| u.to_string()) else {
+            continue;
+        };
         let mut cands: Vec<(Carrier, &WallLine)> = Vec::new();
         match kept.iter().find(|(s, _)| *s == source) {
             Some((s, l)) => {
@@ -83,7 +95,9 @@ fn carry(doc: &Document, work: &Work) -> Vec<(Slot, OpeningEntity, Carrier)> {
             }
         }
         for (slot, o) in doc.openings_of(&uid) {
-            let Some(Entity::Opening(e)) = doc.get(slot) else { continue };
+            let Some(Entity::Opening(e)) = doc.get(slot) else {
+                continue;
+            };
             let place: Vec<CoreVec2> = o.place.iter().map(|q| CoreVec2::new(q.x, q.y)).collect();
             let Some(m) = centre(&place) else { continue };
             let off = |l: &WallLine| {
@@ -664,15 +678,21 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
         }
         WallsOperation::Shift { edge, by } => {
             checks::finite(*by, "Kaydırma", "Sonlu bir uzunluk verin.", "operation.by")?;
-            shifted(doc, &walls_found, *edge, None, *by, &mut work)?;
+            shifted(doc, &walls_found, *edge, None, *by, false, &mut work)?;
         }
         WallsOperation::Distance {
             edge,
             side,
             distance,
             to,
+            keep,
         } => {
-            checks::finite(*distance, "Mesafe", "Sonlu bir uzunluk verin.", "operation.distance")?;
+            checks::finite(
+                *distance,
+                "Mesafe",
+                "Sonlu bir uzunluk verin.",
+                "operation.distance",
+            )?;
             if *distance < 0.0 {
                 return Err(fail(
                     codes::INVALID_WALL,
@@ -680,14 +700,30 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
                     "operation.distance",
                 ));
             }
-            shifted(doc, &walls_found, *edge, Some((*side, *distance, *to)), 0.0, &mut work)?;
+            shifted(
+                doc,
+                &walls_found,
+                *edge,
+                Some((*side, *distance, *to)),
+                0.0,
+                *keep,
+                &mut work,
+            )?;
+            if *keep {
+                work.keep = Some(kept(doc, &walls_found, *edge, *side, *to)?);
+            }
         }
         WallsOperation::Length {
             edge,
             length,
             anchor,
         } => {
-            checks::finite(*length, "Boy", "Sonlu bir uzunluk verin.", "operation.length")?;
+            checks::finite(
+                *length,
+                "Boy",
+                "Sonlu bir uzunluk verin.",
+                "operation.length",
+            )?;
             lengthened(doc, &walls_found, *edge, *length, *anchor, &mut work)?;
         }
     }
@@ -747,8 +783,13 @@ fn shifted(
     doc: &Document,
     found: &[(usize, Slot, &WallEntity)],
     edge: Option<u32>,
-    target: Option<(kentos_commands::DimensionSetFace, f64, kentos_commands::DistanceTo)>,
+    target: Option<(
+        kentos_commands::DimensionSetFace,
+        f64,
+        kentos_commands::DistanceTo,
+    )>,
     by: f64,
+    keep: bool,
     work: &mut Work,
 ) -> Result<(), Stop> {
     use kentos_geometry_core::ops::wall_shift;
@@ -762,7 +803,8 @@ fn shifted(
     let walls = crate::wall_distances::Walls::of(doc, *slot, wall);
     let ins = walls.ins();
     let k = edge.unwrap_or(0) as usize;
-    let gaps = wall_shift::gaps(&ins, 0, k).map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+    let gaps = wall_shift::gaps(&ins, 0, k)
+        .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
     let by = match target {
         None => by,
         Some((side, distance, to)) => {
@@ -773,8 +815,12 @@ fn shifted(
                     let grids = crate::grid_refs::Grids::of(doc);
                     let (at, u) = wall_shift::axis_middle(&ins, 0, k)
                         .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
-                    kentos_geometry_core::ops::grid_ref::beside(&grids.ins(), wall_shift::level(&ins[0]), at, u)
-                        [usize::from(!left)]
+                    kentos_geometry_core::ops::grid_ref::beside(
+                        &grids.ins(),
+                        wall_shift::level(&ins[0]),
+                        at,
+                        u,
+                    )[usize::from(!left)]
                     .map(|g| g.distance)
                 }
             };
@@ -789,26 +835,45 @@ fn shifted(
                         "Duvarın {} yanında ona paralel bir {what} yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.",
                         if left { "sol" } else { "sağ" }
                     ),
-                    if to == kentos_commands::DistanceTo::Grid { "operation.to" } else { "operation.side" },
+                    if to == kentos_commands::DistanceTo::Grid {
+                        "operation.to"
+                    } else {
+                        "operation.side"
+                    },
                 ));
             };
             if left { gap - distance } else { distance - gap }
         }
     };
     if by.abs() <= wall_shift::TIE {
+        // The distance kept as it is (docs/adr/0770 §3): only the bond is written.
+        if keep {
+            work.edge = Some(k);
+            work.named = Some(0);
+            return Ok(());
+        }
         return Err(fail(
             codes::NOTHING_TO_SET,
             "Duvar zaten bu konumda; kaydırılacak bir şey yok.".into(),
             "operation",
         ));
     }
-    let moved = wall_shift::shift(&ins, 0, k, by).map_err(|why| fail(codes::INVALID_WALL, why, "operation"))?;
+    let moved = wall_shift::shift(&ins, 0, k, by)
+        .map_err(|why| fail(codes::INVALID_WALL, why, "operation"))?;
+    work.edge = Some(k);
     for m in moved {
         let s = walls.slots[m.wall];
-        let Some(Entity::Wall(w)) = doc.get(s) else { continue };
+        let Some(Entity::Wall(w)) = doc.get(s) else {
+            continue;
+        };
         if m.wall != 0 && work.blocked.is_none() && doc.layers().is_locked(&w.base.layer_id) {
             let id = &w.base.layer_id;
-            work.blocked = Some(doc.layers().get(id).map_or(id.as_str(), |n| n.name.as_str()).to_owned());
+            work.blocked = Some(
+                doc.layers()
+                    .get(id)
+                    .map_or(id.as_str(), |n| n.name.as_str())
+                    .to_owned(),
+            );
         }
         let mut out = w.clone();
         out.wall.pts = m.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
@@ -842,7 +907,8 @@ fn lengthened(
     let walls = crate::wall_distances::Walls::of(doc, *slot, wall);
     let ins = walls.ins();
     let k = edge.unwrap_or(0) as usize;
-    let now = wall_shift::edge_length(&ins, 0, k).map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+    let now = wall_shift::edge_length(&ins, 0, k)
+        .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
     if (length - now).abs() <= wall_shift::TIE {
         return Err(fail(
             codes::NOTHING_TO_SET,
@@ -856,15 +922,26 @@ fn lengthened(
         kentos_commands::WallAnchor::Middle => wall_shift::Anchor::Middle,
     };
     let moved = wall_shift::lengthen(&ins, 0, k, length, anchor).map_err(|why| {
-        let path = if why.starts_with("Boy ") { "operation.length" } else { "operation" };
+        let path = if why.starts_with("Boy ") {
+            "operation.length"
+        } else {
+            "operation"
+        };
         fail(codes::INVALID_WALL, why, path)
     })?;
     for m in moved {
         let s = walls.slots[m.wall];
-        let Some(Entity::Wall(w)) = doc.get(s) else { continue };
+        let Some(Entity::Wall(w)) = doc.get(s) else {
+            continue;
+        };
         if m.wall != 0 && work.blocked.is_none() && doc.layers().is_locked(&w.base.layer_id) {
             let id = &w.base.layer_id;
-            work.blocked = Some(doc.layers().get(id).map_or(id.as_str(), |n| n.name.as_str()).to_owned());
+            work.blocked = Some(
+                doc.layers()
+                    .get(id)
+                    .map_or(id.as_str(), |n| n.name.as_str())
+                    .to_owned(),
+            );
         }
         let mut out = w.clone();
         out.wall.pts = m.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect();
@@ -874,6 +951,7 @@ fn lengthened(
         work.updates.push((s, out));
     }
     work.named = Some(1);
+    work.edge = Some(k);
     Ok(())
 }
 
@@ -921,6 +999,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsEdit) -> CommandResult<Walls
                 .collect();
             let adds: Vec<_> = work.added.iter().cloned().map(Entity::Wall).collect();
             let followers = crate::dimension_sets::derived(cx.doc, &updates, &adds, &work.removed);
+            let effects = match effects(cx.doc, &work) {
+                Ok(e) => e,
+                Err(stop) => return stop.into(),
+            };
             let named = work.named.unwrap_or(work.updates.len());
             CommandResult::Completed {
                 output: WallsEdited {
@@ -936,6 +1018,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsEdit) -> CommandResult<Walls
                     added: work.added.iter().cloned().map(Entity::Wall).collect(),
                     removed: removed_uids(cx.doc, &work),
                     styles_added: work.styles.iter().map(|s| s.id.clone()).collect(),
+                    effects,
+                    bonds: Vec::new(),
                     revision: cx.doc.revision().to_string(),
                 },
                 warnings,
@@ -962,6 +1046,10 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
     };
     let warnings = warnings(cx.doc, &work);
     let removed = removed_uids(cx.doc, &work);
+    let effects = match effects(cx.doc, &work) {
+        Ok(e) => e,
+        Err(stop) => return stop.into(),
+    };
     let doc = &mut *cx.doc;
     let mut entities: Vec<Entity> = work
         .updates
@@ -999,6 +1087,16 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
         d.remove(&work.removed);
         Ok::<_, kentos_domain::SlotsExhausted>(slots)
     });
+    // Bu ölçüyü koru: the bond and its parameter in the same step (docs/adr/0770 §5).
+    let mut bonds = Vec::new();
+    if result.is_ok()
+        && let Some(rule) = &work.keep
+    {
+        match crate::constraints_edit::add_bond(doc, rule.clone(), STEP) {
+            Ok(id) => bonds.push(id),
+            Err(stop) => return stop.into(),
+        }
+    }
     let slots = match result {
         Ok(slots) => slots,
         Err(_) => {
@@ -1020,8 +1118,188 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResu
             added,
             removed,
             styles_added: work.styles.into_iter().map(|s| s.id).collect(),
+            effects,
+            bonds,
             revision: doc.revision().to_string(),
         },
         warnings,
+    }
+}
+
+/// Mesafe's `keep` (docs/adr/0770 §5): the distance bond from the wall across on `side` (its face towards this one,
+/// `a`) to this wall's face on that side (`b`); faces only (a grid is not a wall).
+fn kept(
+    doc: &Document,
+    found: &[(usize, Slot, &WallEntity)],
+    edge: Option<u32>,
+    side: kentos_commands::DimensionSetFace,
+    to: kentos_commands::DistanceTo,
+) -> Result<kentos_commands::ConstraintRule, Stop> {
+    use kentos_commands::{
+        CadElement, ConstraintRule, DimensionSetFace, ElementRef, EntityId, WallLine,
+    };
+    use kentos_geometry_core::ops::wall_shift;
+    if to == kentos_commands::DistanceTo::Grid {
+        return Err(fail(
+            codes::INVALID_WALL,
+            "Bu ölçüyü koru yalnız duvar yüzüne olan mesafede olur; aks bağlanmaz.".into(),
+            "operation.keep",
+        ));
+    }
+    let [(_, slot, wall)] = found else {
+        return Err(fail(codes::INVALID_WALL, "Tek duvar verin.".into(), "uids"));
+    };
+    let walls = crate::wall_distances::Walls::of(doc, *slot, wall);
+    let ins = walls.ins();
+    let k = edge.unwrap_or(0) as usize;
+    let gaps = wall_shift::gaps(&ins, 0, k)
+        .map_err(|why| fail(codes::INVALID_WALL, why, "operation.edge"))?;
+    let left = side == DimensionSetFace::Left;
+    let Some(g) = gaps[usize::from(!left)] else {
+        return Err(fail(
+            codes::INVALID_WALL,
+            "Bu yanda paralel bir duvar yok; bağlanacak yüz bulunamadı.".into(),
+            "operation.side",
+        ));
+    };
+    let uid = |s: Slot| doc.uid(s).map(|u| EntityId(u.into_bytes()));
+    let (Some(across), Some(me)) = (uid(walls.slots[g.wall]), uid(*slot)) else {
+        return Err(fail(
+            codes::INVALID_WALL,
+            "Duvarın kimliği yok.".into(),
+            "uids",
+        ));
+    };
+    let a = ElementRef {
+        uid: across,
+        element: CadElement::Wall {
+            edge: g.edge as u32,
+            line: if g.left_face {
+                WallLine::LeftFace
+            } else {
+                WallLine::RightFace
+            },
+        },
+    };
+    let b = ElementRef {
+        uid: me,
+        element: CadElement::Wall {
+            edge: k as u32,
+            line: if left {
+                WallLine::LeftFace
+            } else {
+                WallLine::RightFace
+            },
+        },
+    };
+    Ok(ConstraintRule::Distance {
+        a,
+        b,
+        axis: kentos_commands::DistanceAxis::Aligned,
+        left: false,
+        parameter: String::new(),
+    })
+}
+
+/// What a Kaydır, Mesafe or Boy does round it (docs/adr/0770 §3): the step run whole on a copy of the drawing (its
+/// bonds, openings, spaces and dimensions following) and read against the drawing. The bonds' refusal when they
+/// cannot follow. None for the other operations.
+fn effects(doc: &Document, work: &Work) -> Result<Option<kentos_commands::WallEffects>, Stop> {
+    use kentos_commands::{GapChange, SpaceAreaChange, WallEffects};
+    use kentos_geometry_core::ops::wall_shift;
+    let (Some(k), Some((first, _))) = (work.edge, work.updates.first()) else {
+        return Ok(None);
+    };
+    let gaps = |d: &Document| -> [Option<f64>; 2] {
+        let Some(Entity::Wall(w)) = d.get(*first) else {
+            return [None, None];
+        };
+        let walls = crate::wall_distances::Walls::of(d, *first, w);
+        match wall_shift::gaps(&walls.ins(), 0, k) {
+            Ok(g) => [g[0].map(|g| g.distance), g[1].map(|g| g.distance)],
+            Err(_) => [None, None],
+        }
+    };
+    let before = gaps(doc);
+    let mut copy = doc.reading_copy();
+    let written: Result<(), Stop> = copy.transact(STEP, |d| {
+        d.update_many(
+            work.updates
+                .iter()
+                .map(|(s, w)| (*s, Entity::Wall(w.clone())))
+                .chain(work.openings.iter().filter_map(|(s, o, c)| match c {
+                    Carrier::Kept(_) => Some((*s, Entity::Opening(o.clone()))),
+                    Carrier::Added(_) => None,
+                }))
+                .collect(),
+            STEP,
+        );
+        crate::constraint_follow::follow(d, kentos_commands::CAD_WALLS_EDIT, false, &|| false)
+            .map(|_| ())
+    });
+    written?;
+    let after = gaps(&copy);
+    let mut out = WallEffects {
+        left: before[0].zip(after[0]).map(|(b, a)| GapChange {
+            before: b,
+            after: a,
+        }),
+        right: before[1].zip(after[1]).map(|(b, a)| GapChange {
+            before: b,
+            after: a,
+        }),
+        ..WallEffects::default()
+    };
+    let named: Vec<Slot> = work.updates.iter().map(|(s, _)| *s).collect();
+    for e in doc.entities() {
+        let slot = Slot(e.base().id);
+        let Some(now) = copy.get(slot) else { continue };
+        if std::ptr::eq(e, now) || !differs(e, now) {
+            continue;
+        }
+        let Some(uid) = doc.uid(slot).map(|u| u.to_string()) else {
+            continue;
+        };
+        match (e, now) {
+            (Entity::Space(b), Entity::Space(a)) => out.spaces.push(SpaceAreaChange {
+                uid,
+                number: b.space.number.clone().unwrap_or_default(),
+                name: b.space.name.clone().unwrap_or_default(),
+                before: crate::spaces::area_of(&b.space.parts),
+                after: crate::spaces::area_of(&a.space.parts),
+                broken: a.space.broken.is_some(),
+            }),
+            (Entity::Opening(_), _) => out.openings.push(uid),
+            (Entity::Dimension(_), _) => out.dimensions.push(uid),
+            (Entity::Insert(_), _) => out.fixtures.push(uid),
+            (Entity::Wall(_), _) if !named.contains(&slot) => out.bonded.push(uid),
+            _ => {}
+        }
+    }
+    Ok(Some(out))
+}
+
+/// Whether two objects differ by more than a nanometre in a number, or at all in anything else (docs/adr/0770 §3: a
+/// follower written again where it was is not an effect).
+fn differs(a: &Entity, b: &Entity) -> bool {
+    fn apart(x: &serde_json::Value, y: &serde_json::Value) -> bool {
+        use serde_json::Value as V;
+        match (x, y) {
+            (V::Number(p), V::Number(q)) => match (p.as_f64(), q.as_f64()) {
+                (Some(p), Some(q)) => (p - q).abs() > 1e-9,
+                _ => p != q,
+            },
+            (V::Array(p), V::Array(q)) => {
+                p.len() != q.len() || p.iter().zip(q).any(|(p, q)| apart(p, q))
+            }
+            (V::Object(p), V::Object(q)) => {
+                p.len() != q.len() || p.iter().any(|(k, v)| q.get(k).is_none_or(|w| apart(v, w)))
+            }
+            _ => x != y,
+        }
+    }
+    match (serde_json::to_value(a), serde_json::to_value(b)) {
+        (Ok(x), Ok(y)) => apart(&x, &y),
+        _ => true,
     }
 }

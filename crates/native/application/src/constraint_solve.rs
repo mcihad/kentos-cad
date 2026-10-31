@@ -78,6 +78,9 @@ pub fn core_rule(doc: &Document, mapped: &mut Mapped, rule: &ConstraintRule) -> 
 
 /// What a dimension measures now in the drawing, in metres or radians.
 pub fn measured_now(doc: &Document, rule: &ConstraintRule) -> Option<f64> {
+    if kentos_commands::rule_is_architectural(rule) {
+        return crate::arch_bonds::measured(doc, rule);
+    }
     let mut mapped = Mapped {
         slots: Vec::new(),
         shapes: Vec::new(),
@@ -91,7 +94,7 @@ pub fn measured_now(doc: &Document, rule: &ConstraintRule) -> Option<f64> {
 }
 
 /// A parameter's value in metres or radians from its value in its own unit.
-fn to_base(units: ParamUnits, kind: ParameterKind, v: f64) -> f64 {
+pub(crate) fn to_base(units: ParamUnits, kind: ParameterKind, v: f64) -> f64 {
     match kind {
         ParameterKind::Length => v * units.metres_per_unit,
         ParameterKind::Angle => v * units.radians_per_unit,
@@ -209,6 +212,8 @@ pub struct Solved {
     pub changed: Vec<(Slot, Entity)>,
     /// The objects that would turn inside out (docs/adr/0335 §4).
     pub flipped: Vec<Slot>,
+    /// Why the architectural bonds do not hold (docs/adr/0770 §4), in Turkish.
+    pub arch_why: Option<String>,
 }
 
 /// The constraints of `set` (those at `only`, or all) the drawing as it is does not meet (docs/adr/0337): every
@@ -232,12 +237,14 @@ pub fn unmet(
         return Vec::new();
     };
     let o = &solved.outcome;
+    let metres = metres(doc, set);
     let mut out: Vec<usize> = o
         .conflicting
         .iter()
         .chain(&o.singular)
         .chain(&o.broken)
         .copied()
+        .chain(crate::arch_bonds::unmet(doc, set, &metres))
         .filter(|i| only.is_none_or(|s| s.contains(i)))
         .collect();
     out.sort_unstable();
@@ -269,7 +276,13 @@ pub fn solve_set(
         index: HashMap::new(),
     };
     let mut constraints = Vec::with_capacity(set.constraints.len());
-    for c in &set.constraints {
+    // The core's constraints are the set's general ones; the architectural ones go to their adapter.
+    let mut index: Vec<usize> = Vec::with_capacity(set.constraints.len());
+    for (i, c) in set.constraints.iter().enumerate() {
+        if kentos_commands::rule_is_architectural(&c.rule) {
+            continue;
+        }
+        index.push(i);
         let rule = core_rule(doc, &mut mapped, &c.rule);
         let value = match c.rule.parameter() {
             None => 0.0,
@@ -330,7 +343,7 @@ pub fn solve_set(
                 out
             })
     });
-    let outcome = solve(
+    let mut outcome = solve(
         &Problem {
             shapes: &mapped.shapes,
             constraints: &constraints,
@@ -339,6 +352,27 @@ pub fn solve_set(
         },
         stop,
     );
+    for list in [
+        &mut outcome.redundant,
+        &mut outcome.conflicting,
+        &mut outcome.singular,
+        &mut outcome.broken,
+    ] {
+        for k in list.iter_mut() {
+            *k = index[*k];
+        }
+    }
+    let arch = crate::arch_bonds::solve(doc, set, &metres(doc, set), held, fix_from);
+    if arch.any {
+        outcome.conflicting.extend(&arch.conflicting);
+        outcome.broken.extend(&arch.broken);
+        outcome.dof += arch.dof;
+        if !arch.conflicting.is_empty() && !matches!(outcome.status, Status::Cancelled) {
+            outcome.status = Status::Inconsistent;
+        } else if outcome.status == Status::Fully && arch.dof > 0 {
+            outcome.status = Status::Under;
+        }
+    }
     let ids: Vec<ConstraintId> = set.constraints.iter().map(|c| c.id).collect();
     let uid_of = |i: usize| {
         mapped.slots[i]
@@ -379,13 +413,34 @@ pub fn solve_set(
             changed.push((slot, next));
         }
     }
+    if arch.conflicting.is_empty() {
+        changed.extend(arch.changed);
+    }
     Ok(Solved {
         outcome,
         mapped,
         diagnosis,
         changed,
         flipped,
+        arch_why: arch.why,
     })
+}
+
+/// Every length parameter's value in metres (the architectural bonds' values); none that cannot be worked out.
+pub(crate) fn metres(doc: &Document, set: &ConstraintSet) -> BTreeMap<String, f64> {
+    let Ok(values) = parameter_values(doc, set) else {
+        return BTreeMap::new();
+    };
+    let u = units(doc);
+    values
+        .into_iter()
+        .map(|(name, v)| {
+            let kind = set
+                .parameter(&name)
+                .map_or(ParameterKind::Length, |p| p.kind);
+            (name, to_base(u, kind, v))
+        })
+        .collect()
 }
 
 /// Points a rule's parts at missing objects past the solver's shapes, so they are broken.

@@ -77,7 +77,9 @@ impl Pointer {
 /// The drawing area as a tool needs it: the camera's mapping, nothing else.
 pub trait View {
     /// Physical viewport denominator when editing through paper, independent of screen zoom.
-    fn paper_scale(&self)->Option<f64> {None}
+    fn paper_scale(&self) -> Option<f64> {
+        None
+    }
     /// Where a world point is on the area, in logical pixels.
     fn to_screen(&self, p: Vec2) -> [f64; 2];
     /// How much world `px` logical pixels span at the current zoom.
@@ -1449,7 +1451,12 @@ impl Context<'_> {
     /// The same in the drawing at the plot scale, metres (`mm / 1000 ×
     /// scale`, the expression every tool writes with).
     pub fn annotation_height(&self, kind: AnnotationKind) -> f64 {
-        kentos_commands::paper_height(self.annotation_mm(kind), self.view.paper_scale().unwrap_or(self.doc.settings().plot_scale))
+        kentos_commands::paper_height(
+            self.annotation_mm(kind),
+            self.view
+                .paper_scale()
+                .unwrap_or(self.doc.settings().plot_scale),
+        )
     }
 
     /// The symbol a new object takes: its object template's (docs/adr/0176
@@ -1785,9 +1792,13 @@ pub trait Tool {
         Vec::new()
     }
     /// Values for the active tool's separate settings pane, never the selection's properties.
-    fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> { Vec::new() }
+    fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> {
+        Vec::new()
+    }
     /// An explicit field commit (Enter/blur); typing a draft in the host writes nothing.
-    fn configure(&mut self, _key: &str, _value: &str, _cx: &mut Context<'_>) -> bool { false }
+    fn configure(&mut self, _key: &str, _value: &str, _cx: &mut Context<'_>) -> bool {
+        false
+    }
     /// One of `option_choices(key)` chosen, as typing the key and then
     /// `typed`; false when this step takes none (the web's `chooseOption`).
     fn choose_option(&mut self, _key: &str, _typed: &str, _cx: &mut Context<'_>) -> bool {
@@ -1823,12 +1834,19 @@ pub trait Tool {
     /// The answer of a text field it asked for ([`ViewChange::Text`]): the
     /// typed text (Enter, a click elsewhere), or none (Esc).
     fn text_typed(&mut self, _text: Option<&str>, _cx: &mut Context<'_>) {}
+    /// What its text field holds as it is typed (before Enter): a tool that shows what the value would do
+    /// (Duvarın mesafesi's effects, docs/adr/0770 §3) reads it here.
+    fn text_draft(&mut self, _text: &str, _cx: &mut Context<'_>) {}
     /// The answer of the paragraph editor it asked for
     /// ([`ViewChange::Paragraph`]): the text, its letter formats and its layout (Tamam; docs/adr/0324 §3),
     /// or none (Vazgeç).
     fn paragraph_typed(
         &mut self,
-        _typed: Option<(&str, &[kentos_commands::TextRun], Option<&kentos_commands::ParagraphLayout>)>,
+        _typed: Option<(
+            &str,
+            &[kentos_commands::TextRun],
+            Option<&kentos_commands::ParagraphLayout>,
+        )>,
         _cx: &mut Context<'_>,
     ) {
     }

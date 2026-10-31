@@ -473,7 +473,7 @@ impl Select {
 
     /// A click on a temporary dimension's square: its reference or fixed end switched for the session, drawn again;
     /// whether one was there (docs/adr/0728 §2).
-    pub fn switch_at(&mut self, screen: [f64; 2], cx: &Context<'_>) -> bool {
+    pub fn switch_at(&mut self, screen: [f64; 2], cx: &mut Context<'_>) -> bool {
         if self.grip.is_some() || self.param.is_some() || self.start.is_some() {
             return false;
         }
@@ -488,7 +488,12 @@ impl Select {
         let Some(switch) = crate::temporary_refs::square_at(&squares, screen, cx) else {
             return false;
         };
-        switch.apply(&mut self.choices);
+        // A padlock writes the bond (docs/adr/0770 §3); the others are the session's.
+        if matches!(switch, crate::temporary_refs::Switch::Bond { .. }) {
+            crate::wall_distance::toggle_bond(switch, cx);
+        } else {
+            switch.apply(&mut self.choices);
+        }
         self.temporary.redraw();
         self.wall_temporary.redraw();
         self.column_temporary.redraw();
@@ -497,7 +502,11 @@ impl Select {
     }
 
     /// The text field of the temporary dimension whose number is under the pointer, to run (docs/adr/0701, 0710).
-    pub fn temporary_at(&self, screen: [f64; 2], cx: &Context<'_>) -> Option<Box<dyn crate::tool::Tool>> {
+    pub fn temporary_at(
+        &self,
+        screen: [f64; 2],
+        cx: &Context<'_>,
+    ) -> Option<Box<dyn crate::tool::Tool>> {
         if self.grip.is_some() || self.param.is_some() || self.start.is_some() {
             return None;
         }
@@ -507,7 +516,9 @@ impl Select {
         if let Some(field) = self.wall_temporary.at(screen, cx) {
             return Some(field);
         }
-        self.column_temporary.at(screen, cx).map(|f| Box::new(f) as Box<dyn crate::tool::Tool>)
+        self.column_temporary
+            .at(screen, cx)
+            .map(|f| Box::new(f) as Box<dyn crate::tool::Tool>)
     }
 
     /// Whether a grip is being moved: the select tool then takes points,
@@ -674,7 +685,8 @@ impl Select {
         .chain(g.others.iter().copied())
         .collect();
         if self.commit_tag_grip(&grips, dx, dy, copy, cx)
-            || self.commit_opening_grip(&grips, dx, dy, copy, cx) {
+            || self.commit_opening_grip(&grips, dx, dy, copy, cx)
+        {
             if let Some(mut g) = keep {
                 g.hot = true;
                 g.modes.placed += 1;
@@ -801,8 +813,10 @@ impl Select {
                     .map(|n| n.shapes)
                     .unwrap_or_default();
                 // A wall's dimension rows, openings and spaces follow it in the same step: shown before it is written.
-                let updates: Vec<(Slot, kentos_commands::Entity)> =
-                    moved.iter().map(|(slot, _, after)| (*slot, after.clone())).collect();
+                let updates: Vec<(Slot, kentos_commands::Entity)> = moved
+                    .iter()
+                    .map(|(slot, _, after)| (*slot, after.clone()))
+                    .collect();
                 let delta = cx.doc.preview_followers(&updates, &[], &[]);
                 let followers = kentos_commands::DerivedEntitiesPlan {
                     added: delta.added.into_iter().map(|(_, e)| e).collect(),
@@ -884,7 +898,8 @@ impl Select {
                 if self.wall_temporary.shows() {
                     return Some(self.wall_temporary.preview.clone());
                 }
-                return (!self.column_temporary.sides.is_empty()).then(|| self.column_temporary.preview.clone());
+                return (!self.column_temporary.sides.is_empty())
+                    .then(|| self.column_temporary.preview.clone());
             };
             let mut lines: Vec<String> = tag
                 .z

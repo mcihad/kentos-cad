@@ -1054,6 +1054,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         *,
         layer_id: str,
         frame: RectangleFrame,
+        adopt: bool | Unset = UNSET,
         arch: ArchInfo | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
@@ -1086,6 +1087,8 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
             doc: The drawing it works on.
             layer_id:
             frame:
+            adopt: Ortak duvar (docs/adr/0770 §1): the sides that run on an existing wall's matching line (same level) are not
+                drawn, the existing wall adopted; what is left is written as open walls. Absent or false: one closed wall.
             arch:
             attrs:
             color:
@@ -1113,6 +1116,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         return self.execute_input(doc, WallsRectangle(
             layer_id=layer_id,
             frame=frame,
+            adopt=adopt,
             arch=arch,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
@@ -1134,6 +1138,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         *,
         layer_id: str,
         frame: RectangleFrame,
+        adopt: bool | Unset = UNSET,
         arch: ArchInfo | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
@@ -1153,6 +1158,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         return self.plan_input(doc, WallsRectangle(
             layer_id=layer_id,
             frame=frame,
+            adopt=adopt,
             arch=arch,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
@@ -1174,6 +1180,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         *,
         layer_id: str,
         frame: RectangleFrame,
+        adopt: bool | Unset = UNSET,
         arch: ArchInfo | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
@@ -1193,6 +1200,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         return self.validate_input(doc, WallsRectangle(
             layer_id=layer_id,
             frame=frame,
+            adopt=adopt,
             arch=arch,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,
@@ -1214,6 +1222,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         *,
         layer_id: str,
         frame: RectangleFrame,
+        adopt: bool | Unset = UNSET,
         arch: ArchInfo | None | Unset = UNSET,
         attrs: Mapping[str, str] | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
@@ -1238,6 +1247,7 @@ class _WallsRectangle(LocalCommand[WallsRectangle, WallsCreated, WallsPlan]):
         return self.answer_input(doc, WallsRectangle(
             layer_id=layer_id,
             frame=frame,
+            adopt=adopt,
             arch=arch,
             attrs=_opt(attrs, lambda x: dict(x)),
             color=color,

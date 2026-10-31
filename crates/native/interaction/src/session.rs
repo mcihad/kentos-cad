@@ -61,13 +61,14 @@ use crate::trim::{self, Boundary};
 use crate::vertex::{self, Vertex};
 use crate::wall_rectangle;
 use crate::{
-    adjoin, angle, area, between, block_define, block_insert, boundary, cleanup, cloud_query,
-    construction, continuation, coordinate, coordinate_labels, copy_base, dimension,
+    adjoin, angle, arch_tools, area, between, block_define, block_insert, boundary, cleanup,
+    cloud_query, construction, continuation, coordinate, coordinate_labels, copy_base, dimension,
     dimension_chain, divide, donut, draw_order, ellipse, hatch, hatch_selected, holes,
-    labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
-    parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
-    select_containing, select_fence, select_polygon, select_similar, set_elevation, spline, split,
-    station_offset, text, text_file, topology, vertex_points, wall, wall_edit_tools, wall_from_lines, opening_tools, space_tools, arch_tools, tag_tools, viewmark_tools,
+    labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, opening_tools,
+    paragraph, parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
+    select_containing, select_fence, select_polygon, select_similar, set_elevation, space_tools,
+    spline, split, station_offset, tag_tools, text, text_file, topology, vertex_points,
+    viewmark_tools, wall, wall_edit_tools, wall_from_lines,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -477,7 +478,9 @@ impl Session {
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
             crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
-            crate::interior_dims::ID => Box::new(crate::interior_dims::InteriorDimensions::default()),
+            crate::interior_dims::ID => {
+                Box::new(crate::interior_dims::InteriorDimensions::default())
+            }
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }
@@ -515,17 +518,33 @@ impl Session {
             crate::casework::ID => Box::new(crate::casework::Casework::new()),
             tag_tools::TAG_ID => Box::new(tag_tools::TagTool::new()),
             tag_tools::TAG_ALL_ID => Box::new(tag_tools::TagAllTool::new()),
-            tag_tools::SCHEDULE_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Openings)),
-            tag_tools::SCHEDULE_SPACES_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Spaces)),
-            tag_tools::SCHEDULE_FINISHES_ID => {
-                Box::new(tag_tools::ScheduleTool::of_preset(tag_tools::SchedulePreset::Finishes))
-            }
-            tag_tools::SCHEDULE_FIXTURES_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Fixtures)),
-            viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Section)),
-            viewmark_tools::ELEVATION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Elevation)),
-            viewmark_tools::DETAIL_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Detail)),
-            viewmark_tools::FLOOR_ID => Box::new(viewmark_tools::FinishTool::new(kentos_commands::FinishSurface::Floor)),
-            viewmark_tools::CEILING_ID => Box::new(viewmark_tools::FinishTool::new(kentos_commands::FinishSurface::Ceiling)),
+            tag_tools::SCHEDULE_ID => Box::new(tag_tools::ScheduleTool::new(
+                kentos_commands::ScheduleOf::Openings,
+            )),
+            tag_tools::SCHEDULE_SPACES_ID => Box::new(tag_tools::ScheduleTool::new(
+                kentos_commands::ScheduleOf::Spaces,
+            )),
+            tag_tools::SCHEDULE_FINISHES_ID => Box::new(tag_tools::ScheduleTool::of_preset(
+                tag_tools::SchedulePreset::Finishes,
+            )),
+            tag_tools::SCHEDULE_FIXTURES_ID => Box::new(tag_tools::ScheduleTool::new(
+                kentos_commands::ScheduleOf::Fixtures,
+            )),
+            viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(
+                kentos_commands::ViewMarkForm::Section,
+            )),
+            viewmark_tools::ELEVATION_ID => Box::new(viewmark_tools::ViewMarkTool::new(
+                kentos_commands::ViewMarkForm::Elevation,
+            )),
+            viewmark_tools::DETAIL_ID => Box::new(viewmark_tools::ViewMarkTool::new(
+                kentos_commands::ViewMarkForm::Detail,
+            )),
+            viewmark_tools::FLOOR_ID => Box::new(viewmark_tools::FinishTool::new(
+                kentos_commands::FinishSurface::Floor,
+            )),
+            viewmark_tools::CEILING_ID => Box::new(viewmark_tools::FinishTool::new(
+                kentos_commands::FinishSurface::Ceiling,
+            )),
             path::POLYLINE_ID => Box::new(Path::polyline()),
             path::SPACE_SEPARATOR_ID => Box::new(Path::space_separator()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
@@ -1601,10 +1620,21 @@ impl Session {
         self.settle(cx);
     }
 
+    /// What the running tool's text field holds as it is typed.
+    pub fn text_draft(&mut self, text: &str, cx: &mut Context<'_>) {
+        if let Some(tool) = self.tool.as_mut() {
+            tool.text_draft(text, cx);
+        }
+    }
+
     /// The paragraph editor's answer for the running tool (Çok satırlı yazı, docs/adr/0182 §4).
     pub fn paragraph_typed(
         &mut self,
-        typed: Option<(&str, &[kentos_commands::TextRun], Option<&kentos_commands::ParagraphLayout>)>,
+        typed: Option<(
+            &str,
+            &[kentos_commands::TextRun],
+            Option<&kentos_commands::ParagraphLayout>,
+        )>,
         cx: &mut Context<'_>,
     ) {
         if let Some(tool) = self.tool.as_mut() {
@@ -1783,10 +1813,15 @@ impl Session {
     }
 
     pub fn settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
-        self.tool.as_ref().map_or_else(Vec::new, |tool| tool.settings(format))
+        self.tool
+            .as_ref()
+            .map_or_else(Vec::new, |tool| tool.settings(format))
     }
     pub fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        let taken = self.tool.as_mut().is_some_and(|tool| tool.configure(key, value, cx));
+        let taken = self
+            .tool
+            .as_mut()
+            .is_some_and(|tool| tool.configure(key, value, cx));
         self.settle(cx);
         taken
     }

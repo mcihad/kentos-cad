@@ -156,6 +156,12 @@ ENTITIES = [
     wall(52, [(0, 180), (4, 180)], arch={"level": "kat-2"}),
     wall(53, [(0, 190), (4, 190)], justify="left", arch={"level": "kat-2"}),
     grid(54, (-5, 191), (10, 191), "I", level="kat-2"),
+    # A room drawn on the axis and a wall beside it on the same axis (docs/adr/0770 §2): its open path ends at the
+    # first's corner, running along its edge there; and a wall whose end meets a corner square to the edge.
+    wall(55, [(0, 200), (4, 200), (4, 203), (0, 203)], closed=True),
+    wall(56, [(4, 200), (7, 200), (7, 203)]),
+    wall(57, [(0, 210), (4, 210), (4, 213), (0, 213)], closed=True),
+    wall(58, [(4, 213), (4, 216)]),
 ]
 SETUP = {
     "format": "kentos.document", "version": 2, "name": "Duvar kaydırma", "settings": SETTINGS, "origin": P(0, 0),
@@ -406,9 +412,15 @@ def shift(state, first, k, by):
         v = unit(*ed)
         if abs(cross(u, v)) <= PARALLEL:
             raise Refused("operation", "Kaydırılan kenarın bitişiğindeki kenar aynı doğrultuda; o köşeyi kaldırın.")
-        if ends_at(state, order, first, p):
+        # Another wall's end at the corner goes with it when it runs along the edge the corner slides on (docs/adr/0770
+        # §2); one at another angle holds the corner.
+        others = ends_at(state, order, first, p)
+        if any(abs(cross(v, d)) > INLINE for (_, _, d) in others):
             raise Refused("operation", "Kaydırılan kenarın köşesine başka bir duvarın ucu bağlı; kaydırılamıyor.")
-        put(first, vertex, slide(p, v, n, by))
+        q = slide(p, v, n, by)
+        put(first, vertex, q)
+        for (j, vtx, _) in others:
+            put(j, vtx, q)
     lf = left_face(me)
     rf = lf - me["width"]
     for j in order[1:]:
@@ -737,7 +749,36 @@ def edit(state, inp):
     output = {"walls": walls_out, "revision": "$current"}
     if joined:
         output["joined"] = joined
-    return {"status": "completed", "output": output, "warnings": warn}, {**changed, **carried(state, moved)}
+    everything = {**changed, **carried(state, moved)}
+    output["effects"] = effects(state, first, k, everything)
+    return {"status": "completed", "output": output, "warnings": warn}, everything
+
+
+def moved_beyond(a, b, tol=1e-9):
+    """Whether two objects differ by more than `tol` in a number (or at all in anything else)."""
+    if isinstance(a, dict) and isinstance(b, dict):
+        return a.keys() != b.keys() or any(moved_beyond(a[k], b[k], tol) for k in a)
+    if isinstance(a, list) and isinstance(b, list):
+        return len(a) != len(b) or any(moved_beyond(x, y, tol) for x, y in zip(a, b))
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)) and not isinstance(a, bool):
+        return abs(a - b) > tol
+    return a != b
+
+
+def effects(state, first, k, changed):
+    """What the move does round it (docs/adr/0770 §3): the edge's clear distances on each side before and after, the
+    openings that change (by more than 1e-9 m), in the drawing's order. This drawing has no spaces, dimensions,
+    kitchen runs or bonds."""
+    after = {**state, **changed}
+    gb, ga = gaps(state, first, k), gaps(after, first, k)
+    out = {}
+    for side, name in ((0, "left"), (1, "right")):
+        if gb[side] is not None and ga[side] is not None:
+            out[name] = {"before": gb[side]["distance"], "after": ga[side]["distance"]}
+    openings = [uid(i) for i in sorted(changed) if state[i]["kind"] == "opening" and moved_beyond(state[i], changed[i])]
+    if openings:
+        out["openings"] = openings
+    return out
 
 
 def step(op, inp, non_finite=None, state=None):
@@ -824,14 +865,22 @@ def edit_cases():
         ("aksa mesafe 0: duvarın ekseni aksın üstüne", distance_in(46, "left", 0.0, to="grid")),
         ("aksa mesafe: sola hizalı duvarın ekseni aksa 0,50 m", distance_in(53, "left", 0.5, to="grid")),
         ("aksa mesafe 30° dönük duvarda", distance_in(47, "left", 1.0, to="grid")),
+        ("eksende bitişik oda: ortak kenar 40 cm doğuya, köşedeki komşu duvarın ucu kendi kenarı boyunca izler",
+         shift_in(55, -0.4, edge=1)),
+        ("eksende bitişik oda: ortak kenar 40 cm batıya, komşu duvar uzar", shift_in(55, 0.4, edge=1)),
     ]:
         s, _ = step("execute", inp)
+        if name.startswith("eksende bitişik oda"):
+            # A path end at a closed wall's corner, in line with its edge: what the joins say there is ADR 0340's
+            # (wall_join_cases.py and the core differ on it); the move is what this case holds.
+            s["result"]["warnings"] = "$any"
         add(name, [s])
     s, _ = step("plan", shift_in(2, -0.2))
     add("plan duvarı ve izleyenleri yazmadan gösterir", [s])
     s, _ = step("validate", shift_in(2, -0.2))
     add("doğrula yazmaz", [s])
     for name, inp, nf in [
+        ("köşesine dik bir duvarın ucu bağlı kenar reddedilir", shift_in(57, 0.3, edge=1), None),
         ("uç uca aynı doğrultudaki duvara bağlı duvar reddedilir", shift_in(12, 0.3), None),
         ("ucunda iki duvar birleşen duvar reddedilir", shift_in(14, 0.3), None),
         ("yay duvar reddedilir", shift_in(20, 0.3), None),

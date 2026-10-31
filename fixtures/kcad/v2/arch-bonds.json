@@ -1,0 +1,260 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Mimari bağlar",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#1E88E5",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000051",
+    "0192f5a1-2590-7000-8000-000000000052",
+    "0192f5a1-2590-7000-8000-000000000071",
+    "0192f5a1-2590-7000-8000-000000000072"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.2,
+      "justify": "center"
+    },
+    {
+      "kind": "opening",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-2590-7000-8000-000000000051",
+      "at": 1.5,
+      "width": 0.9,
+      "form": "door",
+      "hand": "end",
+      "side": "right",
+      "frame": 0.05,
+      "style": "kentos-kapi-90",
+      "number": "K1",
+      "place": [
+        {
+          "x": 1.05,
+          "y": 0.1
+        },
+        {
+          "x": 1.05,
+          "y": -0.1
+        },
+        {
+          "x": 1.95,
+          "y": 0.1
+        },
+        {
+          "x": 1.95,
+          "y": -0.1
+        }
+      ]
+    },
+    {
+      "kind": "wall",
+      "id": 3,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 3.0
+        },
+        {
+          "x": 6.0,
+          "y": 3.0
+        }
+      ],
+      "width": 0.2,
+      "justify": "center"
+    },
+    {
+      "kind": "wall",
+      "id": 4,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": -0.1
+        },
+        {
+          "x": 0.0,
+          "y": 3.1
+        }
+      ],
+      "width": 0.2,
+      "justify": "center"
+    }
+  ],
+  "constraints": {
+    "parameters": [
+      {
+        "name": "d1",
+        "kind": "length",
+        "expression": "2.8"
+      },
+      {
+        "name": "d2",
+        "kind": "length",
+        "expression": "0.95"
+      }
+    ],
+    "constraints": [
+      {
+        "id": "0192f5a1-2590-7000-8000-0000000000a1",
+        "rule": {
+          "kind": "distance",
+          "a": {
+            "uid": "0192f5a1-2590-7000-8000-000000000051",
+            "element": {
+              "kind": "wall",
+              "edge": 0,
+              "line": "leftFace"
+            }
+          },
+          "b": {
+            "uid": "0192f5a1-2590-7000-8000-000000000071",
+            "element": {
+              "kind": "wall",
+              "edge": 0,
+              "line": "rightFace"
+            }
+          },
+          "left": true,
+          "parameter": "d1"
+        }
+      },
+      {
+        "id": "0192f5a1-2590-7000-8000-0000000000a2",
+        "rule": {
+          "kind": "parallel",
+          "a": {
+            "uid": "0192f5a1-2590-7000-8000-000000000051",
+            "element": {
+              "kind": "wall",
+              "edge": 0,
+              "line": "axis"
+            }
+          },
+          "b": {
+            "uid": "0192f5a1-2590-7000-8000-000000000071",
+            "element": {
+              "kind": "wall",
+              "edge": 0,
+              "line": "axis"
+            }
+          }
+        }
+      },
+      {
+        "id": "0192f5a1-2590-7000-8000-0000000000a3",
+        "rule": {
+          "kind": "distance",
+          "a": {
+            "uid": "0192f5a1-2590-7000-8000-000000000052",
+            "element": {
+              "kind": "jamb",
+              "end": "start"
+            }
+          },
+          "b": {
+            "uid": "0192f5a1-2590-7000-8000-000000000072",
+            "element": {
+              "kind": "wall",
+              "edge": 0,
+              "line": "rightFace"
+            }
+          },
+          "parameter": "d2"
+        }
+      },
+      {
+        "id": "0192f5a1-2590-7000-8000-0000000000a4",
+        "rule": {
+          "kind": "fix",
+          "a": {
+            "uid": "0192f5a1-2590-7000-8000-000000000072",
+            "element": {
+              "kind": "wall",
+              "edge": 0,
+              "line": "axis"
+            }
+          }
+        }
+      }
+    ]
+  }
+}

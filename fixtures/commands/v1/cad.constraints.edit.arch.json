@@ -1,0 +1,5433 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.constraints.edit",
+  "commandVersion": 1,
+  "title": "Mimari bağlar: duvar yüzü, eksen ve pervaz arasında kalıcı ölçü (ADR 0770)",
+  "note": "Beklenenler scripts/fixtures/arch_bond_cases.py'den: ADR 0770 §4'ün doğrusal kuralları, Kaydır ve açıklıkların taşınması wall_shift_cases.py'nin bağımsız kuralıyla; KentOS kodu kullanılmadı.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Mimari bağlar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-2",
+            "name": "2. kat",
+            "elevation": 6.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "aks",
+        "name": "Aks",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 0.0
+          },
+          {
+            "x": 8.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 5.0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 5,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 4.0,
+            "y": 0.0
+          },
+          {
+            "x": 4.0,
+            "y": 5.0
+          }
+        ],
+        "width": 0.1,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 6,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 1.35
+          },
+          {
+            "x": 4.0,
+            "y": 1.35
+          }
+        ],
+        "width": 0.1,
+        "justify": "center"
+      },
+      {
+        "kind": "opening",
+        "id": 7,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7100-7000-8000-000000000001",
+        "at": 2.0,
+        "width": 0.9,
+        "form": "door",
+        "place": [
+          {
+            "x": 1.55,
+            "y": 0.1
+          },
+          {
+            "x": 1.55,
+            "y": -0.1
+          },
+          {
+            "x": 2.45,
+            "y": 0.1
+          },
+          {
+            "x": 2.45,
+            "y": -0.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 8,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7100-7000-8000-000000000001",
+        "at": 6.0,
+        "width": 0.9,
+        "form": "door",
+        "place": [
+          {
+            "x": 5.55,
+            "y": 0.1
+          },
+          {
+            "x": 5.55,
+            "y": -0.1
+          },
+          {
+            "x": 6.45,
+            "y": 0.1
+          },
+          {
+            "x": 6.45,
+            "y": -0.1
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 9,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-7100-7000-8000-000000000005",
+        "at": 3.0,
+        "width": 0.8,
+        "form": "door",
+        "place": [
+          {
+            "x": 3.95,
+            "y": 2.6
+          },
+          {
+            "x": 4.05,
+            "y": 2.6
+          },
+          {
+            "x": 3.95,
+            "y": 3.4
+          },
+          {
+            "x": 4.05,
+            "y": 3.4
+          }
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 10,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 20.0
+          },
+          {
+            "x": 4.0,
+            "y": 20.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "bulges": [
+          0.3,
+          0.0
+        ]
+      },
+      {
+        "kind": "wall",
+        "id": 11,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 22.0
+          },
+          {
+            "x": 4.0,
+            "y": 22.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 12,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 23.2
+          },
+          {
+            "x": 4.0,
+            "y": 23.2
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      }
+    ],
+    "uids": [
+      "0192f5a1-7100-7000-8000-000000000001",
+      "0192f5a1-7100-7000-8000-000000000002",
+      "0192f5a1-7100-7000-8000-000000000003",
+      "0192f5a1-7100-7000-8000-000000000004",
+      "0192f5a1-7100-7000-8000-000000000005",
+      "0192f5a1-7100-7000-8000-000000000006",
+      "0192f5a1-7100-7000-8000-000000000007",
+      "0192f5a1-7100-7000-8000-000000000008",
+      "0192f5a1-7100-7000-8000-000000000009",
+      "0192f5a1-7100-7000-8000-00000000000a",
+      "0192f5a1-7100-7000-8000-00000000000b",
+      "0192f5a1-7100-7000-8000-00000000000c"
+    ]
+  },
+  "cases": [
+    {
+      "name": "Koridor bağı: ölçülen 1,20 m değer olur, hiçbir şey kımıldamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koridor bağı tutar: güney duvarı 50 cm dışa, koridor duvarı da 50 cm izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.8499999999999999
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.8499999999999999
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağsız: güney duvarı kayar, koridor duvarı yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Koridor duvarını kaydırmak bağın öbür yanını (dış duvar) da kaydırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": 0.3
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.30000000000000004
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.30000000000000004
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 0.30000000000000004
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 0.30000000000000004
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 0.30000000000000004
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.6500000000000001
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.6500000000000001
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": 0.20000000000000004
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.20000000000000004
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": 0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": 0.20000000000000004
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.20000000000000004
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 2.7,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6000000000000005
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6000000000000005
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4000000000000004
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4000000000000004
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sabit dış duvar ve koridor bağı: koridor duvarını kaydırmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                },
+                {
+                  "rule": {
+                    "kind": "fix",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any",
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance",
+              "fix"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "constraint_conflict",
+              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sabit duvarı kaydırmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "fix",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "fix"
+            ],
+            "parameters": [],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "constraint_conflict",
+              "message": "Sabit bağlı bir duvar ya da açıklık oynatılamaz; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Aynı yüzler arasına iki değer: ikisi birlikte eklenmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                },
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  },
+                  "value": "1.5"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "constraint_conflict",
+              "message": "$any",
+              "path": "edit",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same",
+            "constraintKinds": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "Parametre 1,50 m: bağın b yanı (koridor duvarı) kayar, dış duvar yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.parameters.edit",
+          "input": {
+            "edits": [
+              {
+                "kind": "set",
+                "name": "d1",
+                "expression": "1.5"
+              }
+            ]
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.5"
+              }
+            ],
+            "entities": {
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.6500000000000001
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.6500000000000001
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yeni bağ başka değerle: a yerinde, b kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  },
+                  "value": "1.0"
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [
+                "0192f5a1-7100-7000-8000-000000000006"
+              ],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.0"
+              }
+            ],
+            "entities": {
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.1500000000000001
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.1500000000000001
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşit aralık: bölme iki yan duvarın ortasında; doğu duvarı 1 m dışa, bölme 50 cm izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "symmetric",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000004",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000002",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "axis": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000005",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "symmetric"
+            ],
+            "parameters": [],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -1.0
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "symmetric"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 9.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 9.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "3": {
+                "kind": "wall",
+                "id": 3,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 9.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.5,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.5,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.35
+                  },
+                  {
+                    "x": 4.5,
+                    "y": 1.35
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.0,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 4.45,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.55,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.45,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.55,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Eşit aralığın eksenini (bölmeyi) kaydırmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "symmetric",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000004",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000002",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "axis": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000005",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "symmetric"
+            ],
+            "parameters": [],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "constraint_conflict",
+              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı pervazı batı duvarına 1,45 m: batı duvarı 50 cm dışa, kapı da 50 cm kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000007",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "start"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000004",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.45"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:4"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "3": {
+                "kind": "wall",
+                "id": 3,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": -0.5,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": 5.0
+                  },
+                  {
+                    "x": -0.5,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": 1.35
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.35
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.05,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.05,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 1.9500000000000002,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.9500000000000002,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.5,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki kapı arası 3,10 m: ikinci kapı 40 cm doğuya, ilki izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000007",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "end"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000008",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "start"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "3.1"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "move",
+              "by": 0.4
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.4,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.95,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.95,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.85,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.85,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.4,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.95,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.95,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 6.8500000000000005,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 6.8500000000000005,
+                    "y": -0.1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağlar zinciri: koridor ve oda derinliği; güney duvarı dışa, ikisi de izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                },
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000003",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any",
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance",
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              },
+              {
+                "name": "d2",
+                "kind": "length",
+                "expression": "3.5"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance",
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 4.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "3": {
+                "kind": "wall",
+                "id": 3,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 4.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 4.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 4.5
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.5
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.8499999999999999
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.8499999999999999
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gevşeterek düzenleme: koridor bağı kalkar, koridor duvarı yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "relaxConstraints": true,
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli katmandaki duvar bağla kımıldamaz: bağlı duvarı kaydırmak reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-00000000000b",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-00000000000c",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": 0.4
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "constraint_conflict",
+              "message": "Bağlar birlikte tutmuyor; hiçbir şey yazılmadı. Çelişen bağı kaldırın ya da kısıtları gevşeterek düzenleyin.",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Başvuru (yalnız ölçen) bağ kımıldatmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  },
+                  "reference": true
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel bağ: iki eksen paralel, kaydırma izin verilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "parallel",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000003",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "parallel"
+            ],
+            "parameters": [],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "parallel"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geri al: bağın kaydırdığı da tek adımda geri gelir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.8499999999999999
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 0.8499999999999999
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Duvarı düzenle",
+          "within": 1e-09,
+          "expect": {
+            "canRedo": true,
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.35
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.35
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kuzey duvarı içe: oda derinliği bağı koridor duvarını iter",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000006",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000003",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "3.5"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:3"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": 0.3
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 4.7
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "3": {
+                "kind": "wall",
+                "id": 3,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 4.7
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 4.7
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 4.7
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 4.7
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.0500000000000003
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.0500000000000003
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.0,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bölmedeki kapının pervazı güney duvarına: güney duvarı dışa, kapı bölme boyunca izler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000009",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "start"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "within": 1e-09,
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": [
+                "$any"
+              ],
+              "removed": [],
+              "changed": [],
+              "diagnosis": "$any",
+              "revision": "$current"
+            },
+            "warnings": "$any"
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "2.5"
+              }
+            ],
+            "entities": {}
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.4
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.4
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.4
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.30000000000000004
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.30000000000000004
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.5
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.30000000000000004
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.30000000000000004
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.5
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 2.9999999999999996,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.1999999999999997
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.1999999999999997
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 2.9999999999999996
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.9999999999999996
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru: koridor 1,20 → 1,50 m, bağ aynı adımda; güney duvarı dışa, koridor duvarı izler",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "right",
+              "distance": 1.5,
+              "keep": true
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.5"
+              }
+            ],
+            "entities": {
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.6500000000000001
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.6500000000000001
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "shift",
+              "by": -0.5
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "entities": {
+              "1": {
+                "kind": "wall",
+                "id": 1,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "2": {
+                "kind": "wall",
+                "id": 2,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 8.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "4": {
+                "kind": "wall",
+                "id": 4,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 5.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": -0.5
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              },
+              "5": {
+                "kind": "wall",
+                "id": 5,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 4.0,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 5.0
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "6": {
+                "kind": "wall",
+                "id": 6,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 1.1500000000000001
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 1.1500000000000001
+                  }
+                ],
+                "width": 0.1,
+                "justify": "center"
+              },
+              "7": {
+                "kind": "opening",
+                "id": 7,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "8": {
+                "kind": "opening",
+                "id": 8,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000001",
+                "at": 6.0,
+                "width": 0.9,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 5.55,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 5.55,
+                    "y": -0.6
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.4
+                  },
+                  {
+                    "x": 6.45,
+                    "y": -0.6
+                  }
+                ]
+              },
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "0192f5a1-7100-7000-8000-000000000005",
+                "at": 3.5,
+                "width": 0.8,
+                "form": "door",
+                "place": [
+                  {
+                    "x": 3.95,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 2.6
+                  },
+                  {
+                    "x": 3.95,
+                    "y": 3.4
+                  },
+                  {
+                    "x": 4.05,
+                    "y": 3.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru, mesafe değişmeden: yalnız bağ yazılır, hiçbir şey kımıldamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "right",
+              "distance": 1.2,
+              "keep": true
+            }
+          },
+          "within": 1e-09,
+          "result": "$any",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "changed",
+            "constraintKinds": [
+              "distance"
+            ],
+            "parameters": [
+              {
+                "name": "d1",
+                "kind": "length",
+                "expression": "1.2"
+              }
+            ],
+            "entities": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru aksa: yanında aks yoksa reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:6"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "right",
+              "distance": 1.2,
+              "keep": true,
+              "to": "grid"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Duvarın sağ yanında ona paralel bir aks yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.",
+              "path": "operation.to"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bu ölçüyü koru, o yanda paralel duvar yok: reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.walls.edit",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "distance",
+              "side": "left",
+              "distance": 1.0,
+              "keep": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Duvarın sol yanında ona paralel bir duvar yok; mesafe ölçülemiyor. Kaydır ile uzaklık verin.",
+              "path": "operation.side"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yay kenara bağ kurulmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-00000000000a",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-00000000000c",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: duvarın 1. kenarının eksen bulunamadı: kenar yay ya da yok, ya da açıklık duvarının dışında.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Olmayan kenara bağ kurulmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 3,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000003",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: duvarın 4. kenarının eksen bulunamadı: kenar yay ya da yok, ya da açıklık duvarının dışında.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Paralel olmayan duvar çizgileri arasına uzaklık kurulmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000002",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "axis"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: bağlanan duvar çizgileri paralel olmalı.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pervaz kendi duvarına paralel çizgiye bağlanmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000007",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "start"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000003",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "rightFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: pervazın bağlandığı duvar çizgisi açıklığın duvarını en az 30° ile kesmeli.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki pervaz ayrı duvarlarda olamaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000007",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "start"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000009",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "start"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: iki pervaz aynı duvarın aynı kenarında olmalı.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pervaz bir açıklığın olmalı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "add",
+              "constraints": [
+                {
+                  "rule": {
+                    "kind": "distance",
+                    "a": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000001",
+                      "element": {
+                        "kind": "jamb",
+                        "end": "start"
+                      }
+                    },
+                    "b": {
+                      "uid": "0192f5a1-7100-7000-8000-000000000004",
+                      "element": {
+                        "kind": "wall",
+                        "edge": 0,
+                        "line": "leftFace"
+                      }
+                    },
+                    "parameter": ""
+                  }
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_constraint",
+              "message": "Bağ kurulamıyor: pervaz yalnız bir açıklıkta olur.",
+              "path": "edit.constraints[0].rule",
+              "uids": "$any"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

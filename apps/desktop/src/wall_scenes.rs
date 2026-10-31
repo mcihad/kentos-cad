@@ -29,7 +29,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=gecici-olcu,gecici-olcu-dis,gecici-olcu-yazi-kutusu,gecici-olcu-tasindi,gecici-olcu-geri-alindi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
-//! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
+//! KENTOS_SHOTS_ONLY=duvar-mesafe,duvar-mesafe-yazi-kutusu,duvar-mesafe-kaydirildi,duvar-mesafe-oda,duvar-mesafe-oda-genisledi,duvar-mesafe-etki,duvar-mesafe-bag,duvar-mesafe-bag-etki,duvar-mesafe-bag-izledi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0710
 //! KENTOS_SHOTS_ONLY=mimari-bolme-yay,mimari-bolme-yay-arasi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture   # docs/adr/0734
 //! ```
 //!
@@ -387,7 +387,9 @@ fn opening_distance_field(app: &mut App) {
 /// 1 m typed, Enter: the door moved, the corner fixed; its new distances.
 fn opening_distance_written(app: &mut App) {
     opening_distance_field(app);
-    let _ = app.update(Message::TextField(crate::text_field::Event::Input("1 m".into())));
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input(
+        "1 m".into(),
+    )));
     let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
     hover(app, [2.0, 1.2]);
 }
@@ -411,14 +413,20 @@ fn wall_distances(app: &mut App) {
 fn wall_distance_field(app: &mut App) {
     wall_distances(app);
     let n = app.session.temporary_numbers();
-    let west = n.iter().min_by(|a, b| a.x.total_cmp(&b.x)).copied().expect("a number");
+    let west = n
+        .iter()
+        .min_by(|a, b| a.x.total_cmp(&b.x))
+        .copied()
+        .expect("a number");
     click(app, [west.x - E, west.y - N]);
 }
 
 /// 3.60 typed, Enter: the inner wall 40 cm west, its ends sliding along the outer wall; its new distances.
 fn wall_distance_written(app: &mut App) {
     wall_distance_field(app);
-    let _ = app.update(Message::TextField(crate::text_field::Event::Input("3.60".into())));
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input(
+        "3.60".into(),
+    )));
     let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
     hover(app, [3.2, 2.5]);
 }
@@ -435,9 +443,96 @@ fn wall_distance_room_wider(app: &mut App) {
     wall_distance_room(app);
     let n = app.session.temporary_numbers();
     click(app, [n[0].x - E, n[0].y - N]);
-    let _ = app.update(Message::TextField(crate::text_field::Event::Input("3.00".into())));
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input(
+        "3.00".into(),
+    )));
     let _ = app.update(Message::TextField(crate::text_field::Event::Keep));
     hover(app, [7.0, 2.5]);
+}
+
+/// docs/adr/0770 §3: 3.60 typed in the west number's field, not yet kept: the card of what it would do.
+fn wall_distance_effects(app: &mut App) {
+    wall_distance_field(app);
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input(
+        "3.60".into(),
+    )));
+}
+
+/// The east padlock clicked: the inner wall's east distance kept as a bond, its padlock filled and named.
+fn wall_distance_bonded(app: &mut App) {
+    wall_distances(app);
+    let numbers = app.session.temporary_numbers();
+    let east = numbers
+        .iter()
+        .max_by(|a, b| a.x.total_cmp(&b.x))
+        .copied()
+        .expect("a number");
+    let lock = app
+        .session
+        .temporary_squares()
+        .into_iter()
+        .min_by(|a, b| {
+            (a.x - east.x)
+                .hypot(a.y - east.y)
+                .total_cmp(&(b.x - east.x).hypot(b.y - east.y))
+        })
+        .expect("a padlock");
+    click(app, [lock.x - E, lock.y - N]);
+    hover(app, [3.6, 2.5]);
+}
+
+/// The outer wall's east edge given 3.00 while the inner wall is bonded to it: the card says it follows.
+fn wall_distance_bonded_effects(app: &mut App) {
+    wall_distance_bonded(app);
+    app.selection.set([Slot(1)]);
+    hover(app, [6.6, 2.5]);
+    let n = app.session.temporary_numbers();
+    click(app, [n[0].x - E, n[0].y - N]);
+    let _ = app.update(Message::TextField(crate::text_field::Event::Input(
+        "3.00".into(),
+    )));
+}
+
+/// The outer wall's east edge shifted 40 cm east (Kaydır, as a grip writes it): the bonded inner wall follows, its east
+/// distance as it was.
+fn wall_distance_bonded_followed(app: &mut App) {
+    wall_distance_bonded(app);
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let Some(kentos_commands::Entity::Wall(w)) = doc.get(Slot(1)) else {
+        panic!("the outer wall")
+    };
+    let pts = &w.wall.pts;
+    let n = pts.len();
+    let east = (0..n)
+        .max_by(|&a, &b| {
+            (pts[a].x + pts[(a + 1) % n].x).total_cmp(&(pts[b].x + pts[(b + 1) % n].x))
+        })
+        .expect("an edge");
+    // The edge's left is (-dy, dx): east is its left when dy < 0.
+    let by = if pts[(east + 1) % n].y - pts[east].y < 0.0 {
+        0.4
+    } else {
+        -0.4
+    };
+    let uid = doc.uid(Slot(1)).expect("an id").to_string();
+    let input = kentos_commands::WallsEdit {
+        uids: vec![uid],
+        expected_revision: None,
+        operation: kentos_commands::WallsOperation::Shift {
+            edge: Some(east as u32),
+            by,
+        },
+    };
+    let done = kentos_native_application::walls_edit::execute(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        input,
+    );
+    assert!(
+        matches!(done, kentos_commands::CommandResult::Completed { .. }),
+        "{done:?}"
+    );
+    app.selection.set([Slot(2)]);
+    hover(app, [4.4, 2.5]);
 }
 
 /// Duvar ölçüleri on the closed room: the right edge under the pointer, its outer face, the window's jambs.
@@ -505,9 +600,9 @@ fn dimensions_around_undone(app: &mut App) {
 fn style_renamed(app: &mut App) {
     room(app, 50.0);
     run(app, "arch.wallStyles");
-    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Choose(Some(
-        "kentos-dis-duvar-25".into(),
-    ))));
+    let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Choose(
+        Some("kentos-dis-duvar-25".into()),
+    )));
     let _ = app.update(Message::WallStyles(crate::wall_styles::Event::Name(
         "Dış duvar 25 QA".into(),
     )));
@@ -534,6 +629,10 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("duvar-mesafe-kaydirildi", wall_distance_written),
         ("duvar-mesafe-oda", wall_distance_room),
         ("duvar-mesafe-oda-genisledi", wall_distance_room_wider),
+        ("duvar-mesafe-etki", wall_distance_effects),
+        ("duvar-mesafe-bag", wall_distance_bonded),
+        ("duvar-mesafe-bag-etki", wall_distance_bonded_effects),
+        ("duvar-mesafe-bag-izledi", wall_distance_bonded_followed),
         ("olcu-kenar", dimensions_edge),
         ("olcu-aciksiz-duvar", dimensions_plain_wall),
         ("olcu-butun-kenarlar", dimensions_around),
@@ -655,7 +754,10 @@ fn partition_arc_between(app: &mut App) {
     let m = 8.0 * std::f64::consts::FRAC_1_SQRT_2;
     click(app, [m, m]);
     for deg in [15.0f64, 75.0] {
-        click(app, [6.0 * deg.to_radians().cos(), 6.0 * deg.to_radians().sin()]);
+        click(
+            app,
+            [6.0 * deg.to_radians().cos(), 6.0 * deg.to_radians().sin()],
+        );
     }
     // Placed on the inside: the written wall between the two radial walls.
     click(app, [5.5, 0.6]);
@@ -692,4 +794,102 @@ fn architecture_space_context(app: &mut App) {
     crate::space_scenes::spaces(app);
     app.selection.set([Slot(12)]);
     app.ribbon_context = true;
+}
+
+#[cfg(test)]
+mod bond_tests {
+    use super::*;
+
+    /// The sample drawing with its drawing area 1100 × 600 (as the screens' window lays it out).
+    fn sized() -> App {
+        let mut app = crate::files_testing::app_with_drawing();
+        app.viewport.camera.set_size(1100.0, 600.0);
+        app
+    }
+
+    fn inner_x(app: &App) -> f64 {
+        match app.document.as_ref().expect("a drawing").model.get(Slot(2)) {
+            Some(kentos_commands::Entity::Wall(w)) => w.wall.pts[0].x,
+            _ => panic!("the inner wall"),
+        }
+    }
+
+    /// docs/adr/0770 §3: the padlock keeps the distance as a bond without moving anything; the outer wall shifted, the
+    /// bonded inner wall follows it; one undo takes both back; a second click on the padlock lets the bond go.
+    #[test]
+    fn the_padlock_bonds_and_the_bonded_wall_follows() {
+        let mut app = sized();
+        wall_distance_bonded(&mut app);
+        let set = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .constraints()
+            .clone();
+        assert_eq!(set.constraints.len(), 1, "one bond");
+        assert_eq!(set.parameters[0].name, "d1");
+        let before = inner_x(&app);
+        let mut app = sized();
+        wall_distance_bonded_followed(&mut app);
+        assert!(
+            (inner_x(&app) - before - 0.4).abs() < 1e-9,
+            "{} {before}",
+            inner_x(&app)
+        );
+        run(&mut app, "edit.undo");
+        assert!(
+            (inner_x(&app) - before).abs() < 1e-9,
+            "one undo takes the follow back"
+        );
+        hover(&mut app, [3.6, 2.5]);
+        // The padlock again: the bond goes, nothing moves.
+        let numbers = app.session.temporary_numbers();
+        let east = numbers
+            .iter()
+            .max_by(|a, b| a.x.total_cmp(&b.x))
+            .copied()
+            .expect("a number");
+        let lock = app
+            .session
+            .temporary_squares()
+            .into_iter()
+            .min_by(|a, b| {
+                (a.x - east.x)
+                    .hypot(a.y - east.y)
+                    .total_cmp(&(b.x - east.x).hypot(b.y - east.y))
+            })
+            .expect("a padlock");
+        click(&mut app, [lock.x - E, lock.y - N]);
+        let model = &app.document.as_ref().expect("a drawing").model;
+        assert!(
+            model.constraints().constraints.is_empty(),
+            "the bond let go"
+        );
+        assert!((inner_x(&app) - before).abs() < 1e-9);
+    }
+
+    /// Typing in the field shows what the value would do, before Enter; nothing is written.
+    #[test]
+    fn typing_shows_the_effects_and_writes_nothing() {
+        let mut app = sized();
+        wall_distance_effects(&mut app);
+        let before = inner_x(&app);
+        let tag = app
+            .session
+            .preview(&app.format())
+            .and_then(|p| p.tag)
+            .expect("the card");
+        assert!(
+            tag.lines.iter().any(|l| l.starts_with("Bu yan mesafe:")),
+            "{:?}",
+            tag.lines
+        );
+        assert!(
+            tag.lines.iter().any(|l| l.starts_with("Karşı yan mesafe:")),
+            "{:?}",
+            tag.lines
+        );
+        assert_eq!(inner_x(&app), before, "nothing written");
+    }
 }

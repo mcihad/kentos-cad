@@ -23,4 +23,9 @@ rotation?: number,
 /**
  * Wall thickness, metres. Absent: the style's width, else 0.2 m.
  */
-width?: number, style?: string, height?: number, arch?: ArchInfo, color?: string, lineWeight?: number, lineType?: LineType, attrs?: { [key in string]: string }, label?: string, expectedRevision?: string, };
+width?: number, style?: string, height?: number, arch?: ArchInfo, 
+/**
+ * Ortak duvar (docs/adr/0770 §1): the sides that run on an existing wall's matching line (same level) are not
+ * drawn, the existing wall adopted; what is left is written as open walls. Absent or false: one closed wall.
+ */
+adopt?: boolean, color?: string, lineWeight?: number, lineType?: LineType, attrs?: { [key in string]: string }, label?: string, expectedRevision?: string, };

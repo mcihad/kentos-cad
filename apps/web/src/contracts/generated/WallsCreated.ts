@@ -15,4 +15,8 @@ ids: Array<number>,
 /**
  * The ids of KentOS's wall styles taken into the project.
  */
-stylesAdded?: Array<string>, revision: string, };
+stylesAdded?: Array<string>, 
+/**
+ * `cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.
+ */
+adopted?: Array<string>, revision: string, };

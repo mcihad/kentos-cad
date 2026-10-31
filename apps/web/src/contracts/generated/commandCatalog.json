@@ -7734,6 +7734,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.walls.create` v1.",
         "properties": {
+          "adopted": {
+            "description": "`cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "ids": {
             "description": "Their slots in the open document.",
             "items": {
@@ -7775,6 +7782,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.walls.create` would write (plan mode); nothing is written.",
         "properties": {
+          "adopted": {
+            "description": "`cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
@@ -7923,6 +7937,10 @@
         "additionalProperties": false,
         "description": "Input of `cad.walls.rectangle` v1 (plan/architecture.md ARCH-DRAW-01).\nCoordinates and lengths are metres; rotation is radians. The rectangle is the inner clear face\nunless `reference` says otherwise. Its first vertex stays first; its winding is normalized\ncounter-clockwise independently of the quadrant clicked. One ordinary closed wall is written,\nnot a new persistent entity kind or four independent walls. No space or tag is created.\n\nA style and an explicit width follow `cad.walls.create`'s rules: a fixed-component style whose\ncomponent thicknesses do not fit the width is refused. For outer/centre references the clear\ninner dimensions must remain positive. A plot scale or display-unit change never rescales input.",
         "properties": {
+          "adopt": {
+            "description": "Ortak duvar (docs/adr/0770 §1): the sides that run on an existing wall's matching line (same level) are not\ndrawn, the existing wall adopted; what is left is written as open walls. Absent or false: one closed wall.",
+            "type": "boolean"
+          },
           "arch": {
             "anyOf": [
               {
@@ -8035,6 +8053,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.walls.create` v1.",
         "properties": {
+          "adopted": {
+            "description": "`cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "ids": {
             "description": "Their slots in the open document.",
             "items": {
@@ -8076,6 +8101,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "What `cad.walls.create` would write (plan mode); nothing is written.",
         "properties": {
+          "adopted": {
+            "description": "`cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
@@ -8113,6 +8145,7 @@
           "wall_collapses",
           "level_not_found",
           "invalid_line_weight",
+          "nothing_to_set",
           "layer_not_found",
           "not_a_layer",
           "layer_locked",
@@ -8214,6 +8247,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.walls.create` v1.",
         "properties": {
+          "adopted": {
+            "description": "`cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "ids": {
             "description": "Their slots in the open document.",
             "items": {
@@ -8649,6 +8689,24 @@
             },
             "type": "array"
           },
+          "bonds": {
+            "description": "Mesafe's `keep`: the new bond's id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "effects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WallEffects"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Kaydır, Mesafe and Boy: what the move does round it (docs/adr/0770 §3)."
+          },
           "followers": {
             "$ref": "#/$defs/DerivedEntitiesPlan",
             "description": "Derived source-following preview changes; absent when none. New identities are provisional."
@@ -8702,6 +8760,24 @@
               "$ref": "#/$defs/Entity"
             },
             "type": "array"
+          },
+          "bonds": {
+            "description": "Mesafe's `keep`: the new bond's id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "effects": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/WallEffects"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Kaydır, Mesafe and Boy: what the move does round it (docs/adr/0770 §3)."
           },
           "followers": {
             "$ref": "#/$defs/DerivedEntitiesPlan",
@@ -8775,6 +8851,8 @@
           "walls_differ",
           "wall_closed",
           "wall_misses",
+          "constraint_conflict",
+          "invalid_constraint",
           "invalid_revision",
           "revision_conflict"
         ],
@@ -8782,7 +8860,9 @@
           "wall_join_overlap",
           "wall_join_crowded",
           "wall_join_acute",
-          "wall_join_unresolved"
+          "wall_join_unresolved",
+          "constraints_relaxed",
+          "constraints_removed"
         ]
       },
       "examples": [
@@ -75419,6 +75499,49 @@
             "kind"
           ],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "A line of a wall's straight edge `edge` (docs/adr/0770 §4): a face, its axis or a face of its core, left and\nright by the path's direction. Only the architectural rules take it (distance, parallel, symmetric, fix).",
+          "properties": {
+            "edge": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer",
+              "x-unit": "index"
+            },
+            "kind": {
+              "const": "wall",
+              "type": "string"
+            },
+            "line": {
+              "$ref": "#/$defs/WallLine"
+            }
+          },
+          "required": [
+            "kind",
+            "edge",
+            "line"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An opening's start or end jamb, the middle of its jamb line (docs/adr/0770 §4, 0694).",
+          "properties": {
+            "end": {
+              "$ref": "#/$defs/JambEnd"
+            },
+            "kind": {
+              "const": "jamb",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "end"
+          ],
+          "type": "object"
         }
       ]
     },
@@ -90964,6 +91087,26 @@
       ],
       "type": "object"
     },
+    "GapChange": {
+      "description": "A clear distance beside a moved edge, before and after (docs/adr/0770 §3), metres.",
+      "properties": {
+        "after": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "before": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
     "GeographicDefinition": {
       "description": "Latitude and longitude on a datum.",
       "properties": {
@@ -94723,6 +94866,14 @@
         }
       },
       "type": "object"
+    },
+    "JambEnd": {
+      "description": "An opening's jamb: at its start or at its end along its wall (docs/adr/0770 §4).",
+      "enum": [
+        "start",
+        "end"
+      ],
+      "type": "string"
     },
     "JoinAggregate": {
       "additionalProperties": false,
@@ -122974,6 +123125,40 @@
       ],
       "type": "object"
     },
+    "SpaceAreaChange": {
+      "description": "A space whose boundary a move changes, its area before and after by its method (m²).",
+      "properties": {
+        "after": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "before": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "broken": {
+          "description": "The walls no longer close round it (`lostEnclosure`).",
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
     "SpaceBreak": {
       "description": "Why a space's boundary is not what its walls say.",
       "oneOf": [
@@ -132215,6 +132400,64 @@
       ],
       "type": "object"
     },
+    "WallEffects": {
+      "description": "What a wall's move does round it (docs/adr/0770 §3): the clear distances beside the moved edge, the spaces, the\nopenings, dimensions and kitchen runs that follow, and the walls the bonds shift.",
+      "properties": {
+        "bonded": {
+          "description": "The walls the bonds shift (docs/adr/0770 §4), besides the joined ones.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "dimensions": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "fixtures": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "left": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GapChange"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The moved edge's left and right clear distances (absent: no parallel wall on that side)."
+        },
+        "openings": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "right": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GapChange"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spaces": {
+          "items": {
+            "$ref": "#/$defs/SpaceAreaChange"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "WallEnd": {
       "description": "A wall's end.",
       "enum": [
@@ -132823,6 +133066,29 @@
       ],
       "type": "object"
     },
+    "WallLine": {
+      "description": "Which line of a wall's edge an architectural constraint names (docs/adr/0770 §4).",
+      "oneOf": [
+        {
+          "enum": [
+            "leftFace",
+            "rightFace",
+            "rightCore"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "axis",
+          "description": "Halfway between the faces.",
+          "type": "string"
+        },
+        {
+          "const": "leftCore",
+          "description": "The core's (the strongest component band's) left and right boundaries; a wall without components: its faces.",
+          "type": "string"
+        }
+      ]
+    },
     "WallRectangleReference": {
       "description": "What the rectangle's dimensions describe. Only the new rectangular wall normalizes its path\ncounter-clockwise; the existing free wall keeps its own direction and justification.",
       "oneOf": [
@@ -133413,6 +133679,10 @@
               ],
               "x-unit": "index"
             },
+            "keep": {
+              "description": "Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`\n(its face towards this one), this wall's face on that side `b`, a new parameter its value. Faces only.",
+              "type": "boolean"
+            },
             "kind": {
               "const": "distance",
               "type": "string"
@@ -133467,6 +133737,13 @@
     "WallsPlan": {
       "description": "What `cad.walls.create` would write (plan mode); nothing is written.",
       "properties": {
+        "adopted": {
+          "description": "`cad.walls.rectangle`'s adopted walls (docs/adr/0770 §1), by their ids.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "revision": {
           "pattern": "^(0|[1-9][0-9]*)$",
           "type": "string"

@@ -10,4 +10,9 @@ import type { WallJoin } from "./WallJoin";
 /**
  * What `cad.walls.edit` does to the walls (docs/adr/0339 §5, 0340 §4).
  */
-export type WallsOperation = { "kind": "set" } & WallChange | { "kind": "split", at: Vec2, } | { "kind": "join" } | { "kind": "extend", to: string, end?: WallEnd, } | { "kind": "trim", to: string, keep?: Vec2, } | { "kind": "flip" } | { "kind": "replaceStyle", from: string, to: string, } | { "kind": "joins", start?: WallJoin, end?: WallJoin, cleanup?: boolean, } | { "kind": "resetJoins" } | { "kind": "shift", edge?: number, by: number, } | { "kind": "distance", edge?: number, side: DimensionSetFace, distance: number, to?: DistanceTo, } | { "kind": "length", edge?: number, length: number, anchor?: WallAnchor, };
+export type WallsOperation = { "kind": "set" } & WallChange | { "kind": "split", at: Vec2, } | { "kind": "join" } | { "kind": "extend", to: string, end?: WallEnd, } | { "kind": "trim", to: string, keep?: Vec2, } | { "kind": "flip" } | { "kind": "replaceStyle", from: string, to: string, } | { "kind": "joins", start?: WallJoin, end?: WallJoin, cleanup?: boolean, } | { "kind": "resetJoins" } | { "kind": "shift", edge?: number, by: number, } | { "kind": "distance", edge?: number, side: DimensionSetFace, distance: number, to?: DistanceTo, 
+/**
+ * Bu ölçüyü koru (docs/adr/0770 §5): in the same step a lasting distance bond holds it, the wall across `a`
+ * (its face towards this one), this wall's face on that side `b`, a new parameter its value. Faces only.
+ */
+keep?: boolean, } | { "kind": "length", edge?: number, length: number, anchor?: WallAnchor, };

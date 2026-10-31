@@ -324,8 +324,12 @@ fn body(r: &mut Reader<'_>, schema: u32) -> Result<DocumentSnapshotV2, KcadError
             "settings" => settings_ = Some(settings(r, has)?),
             "projectId" => project_id = Some(ProjectId(id16(r)?)),
             "activeLayer" => active_layer = Some(text(r)?),
-            "constraints" if has.constraints => constraints_ = Some(constraints(r)?),
-            "dimensionSets" if has.dimension_sets => dimension_sets_ = Some(dimension_sets(r, has)?),
+            "constraints" if has.constraints => {
+                constraints_ = Some(constraints(r, has.arch_bonds)?)
+            }
+            "dimensionSets" if has.dimension_sets => {
+                dimension_sets_ = Some(dimension_sets(r, has)?)
+            }
             "migratedFrom" => migrated_from = Some(source(r)?),
             _ => return Err(unknown(r)),
         }
@@ -393,7 +397,13 @@ fn casework(r: &mut Reader<'_>) -> Result<Vec<kentos_contracts::CaseworkRecord>,
     let at = r.position();
     let value = r.opaque()?;
     let runs: Vec<kentos_contracts::CaseworkRecord> = serde_json::from_value(value.clone())
-        .map_err(|e| r.fail_at(Code::BadValue, at, &format!("mutfak dizileri okunamadı: {e}")))?;
+        .map_err(|e| {
+            r.fail_at(
+                Code::BadValue,
+                at,
+                &format!("mutfak dizileri okunamadı: {e}"),
+            )
+        })?;
     if runs.is_empty() || serde_json::to_value(&runs).ok().as_ref() != Some(&value) {
         return Err(r.fail_at(
             Code::BadValue,
@@ -473,7 +483,10 @@ fn dimension_sets(
 
 /// Schema 73's constraints (docs/adr/0334): the contract value read whole, exactly as the writer writes it (no
 /// field at its default, not empty), and its rules that need no objects; the objects' ids are checked once known.
-fn constraints(r: &mut Reader<'_>) -> Result<(usize, kentos_contracts::ConstraintSet), KcadError> {
+fn constraints(
+    r: &mut Reader<'_>,
+    arch: bool,
+) -> Result<(usize, kentos_contracts::ConstraintSet), KcadError> {
     let at = r.position();
     let value = r.opaque()?;
     let set: kentos_contracts::ConstraintSet =
@@ -498,6 +511,19 @@ fn constraints(r: &mut Reader<'_>) -> Result<(usize, kentos_contracts::Constrain
             Code::BadValue,
             at,
             "boş kısıt kümesi yazılmaz; kısıt yoksa alan hiç yazılmaz",
+        ));
+    }
+    // Schema 137 (docs/adr/0770): a wall's line or an opening's jamb only from it on.
+    if !arch
+        && set
+            .constraints
+            .iter()
+            .any(|c| kentos_contracts::rule_is_architectural(&c.rule))
+    {
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "duvar çizgisi ve pervaz kısıtları şema 137'den önce yazılmaz",
         ));
     }
     if let Some((place, problem)) = kentos_contracts::constraints_problem(&set, None) {

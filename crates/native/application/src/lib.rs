@@ -277,6 +277,7 @@ pub mod column_distances;
 pub use column_distances::distances as columns_distances;
 // Mimari denetim (docs/adr/0703).
 pub mod arch_audit;
+pub mod arch_bonds;
 pub mod arch_exceptions;
 pub use opening_distances::distances as openings_distances;
 pub use wall_distances::distances as walls_distances;
